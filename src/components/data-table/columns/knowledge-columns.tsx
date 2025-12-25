@@ -199,6 +199,9 @@ export const createKnowledgeColumns = ({
   // Checkbox column for row selection
   {
     id: 'select',
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -223,6 +226,9 @@ export const createKnowledgeColumns = ({
   {
     id: 'source',
     accessorKey: 'source',
+    size: 280,
+    minSize: 180,
+    maxSize: 350,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Source" />
     ),
@@ -240,7 +246,7 @@ export const createKnowledgeColumns = ({
           <div className={`p-1.5 rounded-md shrink-0 ${isProperty || isSitemap ? 'bg-primary/10' : 'bg-accent'}`}>
             <Icon className={`h-4 w-4 ${isProperty || isSitemap ? 'text-primary' : 'text-accent-foreground'}`} />
           </div>
-          <span className="font-medium truncate">{displayName}</span>
+          <span className="font-medium truncate max-w-[280px]" title={displayName}>{displayName}</span>
         </div>
       );
     },
@@ -249,6 +255,9 @@ export const createKnowledgeColumns = ({
   // Type badge
   {
     id: 'type',
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: () => <span>Type</span>,
     cell: ({ row }) => {
       const label = getSourceTypeLabel(row.original);
@@ -264,6 +273,9 @@ export const createKnowledgeColumns = ({
   // Status with icon and outdated indicator
   {
     accessorKey: 'status',
+    size: 140,
+    minSize: 100,
+    maxSize: 180,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
@@ -301,6 +313,9 @@ export const createKnowledgeColumns = ({
   // Refresh strategy
   {
     id: 'refresh',
+    size: 90,
+    minSize: 70,
+    maxSize: 110,
     header: () => <span>Refresh</span>,
     cell: ({ row }) => {
       const strategy = row.original.refresh_strategy || 'manual';
@@ -317,6 +332,9 @@ export const createKnowledgeColumns = ({
   // Pages/Chunks count
   {
     id: 'content',
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: () => <span>Content</span>,
     cell: ({ row }) => {
       const text = getPagesOrChunks(row.original);
@@ -331,6 +349,9 @@ export const createKnowledgeColumns = ({
   // Date added
   {
     accessorKey: 'created_at',
+    size: 110,
+    minSize: 90,
+    maxSize: 140,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Added" />
     ),
@@ -338,7 +359,7 @@ export const createKnowledgeColumns = ({
       const date = row.original.created_at;
       if (!date) return <span className="text-muted-foreground">-</span>;
       return (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
           {formatDistanceToNow(new Date(date), { addSuffix: true })}
         </span>
       );
@@ -348,6 +369,9 @@ export const createKnowledgeColumns = ({
   // Actions column
   {
     id: 'actions',
+    size: 90,
+    minSize: 70,
+    maxSize: 100,
     header: () => <span>Actions</span>,
     cell: ({ row }) => {
       const source = row.original;

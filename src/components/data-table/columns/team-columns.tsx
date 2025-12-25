@@ -62,9 +62,14 @@ export const createTeamColumns = ({
 }: TeamColumnsProps): ColumnDef<TeamMember>[] => [
   {
     accessorKey: 'display_name',
+    size: 280,
+    minSize: 200,
+    maxSize: 350,
     header: 'Team Member',
     cell: ({ row }) => {
       const member = row.original;
+      const displayName = member.display_name || 'No name provided';
+      const email = member.email || '';
       return (
         <div className="flex items-center space-x-3 min-w-0">
           <Avatar className="h-8 w-8 flex-shrink-0">
@@ -73,12 +78,12 @@ export const createTeamColumns = ({
               {getInitials(member.display_name, member.email)}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col min-w-0 max-w-xs">
-            <div className="font-medium text-sm truncate">
-              {member.display_name || 'No name provided'}
+          <div className="flex flex-col min-w-0">
+            <div className="font-medium text-sm truncate max-w-[200px]" title={displayName}>
+              {displayName}
             </div>
-            <div className="text-xs text-muted-foreground truncate">
-              {member.email}
+            <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={email}>
+              {email}
             </div>
           </div>
         </div>
@@ -87,6 +92,9 @@ export const createTeamColumns = ({
   },
   {
     accessorKey: 'role',
+    size: 120,
+    minSize: 80,
+    maxSize: 150,
     header: 'Role',
     cell: ({ row }) => (
       <Badge
@@ -99,6 +107,9 @@ export const createTeamColumns = ({
   },
   {
     id: 'actions',
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     header: () => <span className="w-24">Actions</span>,
     cell: ({ row }) => {
       const member = row.original;
