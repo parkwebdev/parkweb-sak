@@ -13,7 +13,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 
 
@@ -225,7 +225,13 @@ export const NotificationSettings: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingState />;
+    return (
+      <div className="space-y-6">
+        <SkeletonSettingsCard />
+        <SkeletonSettingsCard />
+        <SkeletonSettingsCard />
+      </div>
+    );
   }
 
   if (!preferences) {

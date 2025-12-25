@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { CopyButton } from '@/components/ui/copy-button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonListSection } from '@/components/ui/skeleton';
 import { Trash01, Key01, AlertCircle, Edit03 } from '@untitledui/icons';
 import { useAgentApiKeys } from '@/hooks/useAgentApiKeys';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -92,7 +92,7 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
   };
 
   if (loading) {
-    return <LoadingState size="sm" text="Loading API keys..." />;
+    return <SkeletonListSection items={2} />;
   }
 
   return (

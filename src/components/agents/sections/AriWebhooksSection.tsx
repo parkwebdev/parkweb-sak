@@ -17,7 +17,7 @@ import { EditWebhookDialog } from '@/components/agents/webhooks/EditWebhookDialo
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { DebugConsole } from '@/components/agents/DebugConsole';
 import { AriSectionHeader } from './AriSectionHeader';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonListSection } from '@/components/ui/skeleton';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { toast } from '@/lib/toast';
 
@@ -129,7 +129,7 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
   };
 
   if (loading) {
-    return <LoadingState text="Loading webhooks..." />;
+    return <SkeletonListSection items={2} />;
   }
 
   return (

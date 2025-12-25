@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trash01, Link03, Edit03, PlayCircle, ChevronDown, Plus, Lightbulb02, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonListSection } from '@/components/ui/skeleton';
 import { AriSectionHeader } from './AriSectionHeader';
 import { CreateToolDialog } from '@/components/agents/CreateToolDialog';
 import { EditToolDialog } from '@/components/agents/EditToolDialog';
@@ -265,7 +265,7 @@ export const AriCustomToolsSection: React.FC<AriCustomToolsSectionProps> = ({ ag
   };
 
   if (loading) {
-    return <LoadingState text="Loading custom tools..." />;
+    return <SkeletonListSection items={3} />;
   }
 
   return (

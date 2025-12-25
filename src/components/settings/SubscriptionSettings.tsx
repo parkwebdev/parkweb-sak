@@ -16,7 +16,7 @@ import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt, Zap, Cal
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/lib/toast';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonSettingsCard, SkeletonTableRow, Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
 import CreditCard from '@/components/shared-assets/credit-card/credit-card';
@@ -96,7 +96,12 @@ export const SubscriptionSettings = () => {
   }, [user]);
 
   if (loading) {
-    return <LoadingState size="lg" className="py-16" />;
+    return (
+      <div className="space-y-6">
+        <SkeletonSettingsCard />
+        <SkeletonSettingsCard />
+      </div>
+    );
   }
 
   const plan = subscription?.plans;
@@ -303,8 +308,10 @@ export const SubscriptionSettings = () => {
         <Card>
           <CardContent className="p-0">
             {invoicesLoading ? (
-              <div className="p-8">
-                <LoadingState size="md" />
+              <div className="p-4 space-y-1">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <SkeletonTableRow key={i} columns={5} />
+                ))}
               </div>
             ) : invoices.length === 0 ? (
               <div className="p-8">

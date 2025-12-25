@@ -18,7 +18,7 @@ import { SavedIndicator } from './SavedIndicator';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { uploadAvatar } from '@/lib/avatar-upload';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonProfileCard, SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
@@ -280,7 +280,12 @@ export const ProfileSettings: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingState size="lg" className="py-16" />;
+    return (
+      <div className="space-y-4">
+        <SkeletonProfileCard />
+        <SkeletonSettingsCard />
+      </div>
+    );
   }
 
   return (

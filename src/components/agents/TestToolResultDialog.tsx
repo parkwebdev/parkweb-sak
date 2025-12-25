@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, PlayCircle } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
-import { LoadingState } from '@/components/ui/loading-state';
+import { Skeleton, SkeletonText } from '@/components/ui/skeleton';
 
 interface TestResult {
   success: boolean;
@@ -52,7 +52,13 @@ export const TestToolResultDialog = ({
 
         <div className="overflow-y-auto flex-1 space-y-4">
           {loading ? (
-            <LoadingState text="Testing endpoint..." />
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <SkeletonText lines={4} />
+            </div>
           ) : result ? (
             <>
               {/* Status */}

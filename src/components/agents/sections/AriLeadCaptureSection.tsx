@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ContactFormSection } from '@/components/agents/embed/sections/ContactFormSection';
 import { AriSectionHeader } from './AriSectionHeader';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonFormSection } from '@/components/ui/skeleton';
 
 interface AriLeadCaptureSectionProps {
   agentId: string;
@@ -43,7 +43,7 @@ export const AriLeadCaptureSection: React.FC<AriLeadCaptureSectionProps> = ({ ag
   };
 
   if (loading) {
-    return <LoadingState text="Loading lead capture settings..." />;
+    return <SkeletonFormSection />;
   }
 
   return (

@@ -24,7 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/ui/empty-state';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonTableSection } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
@@ -593,7 +593,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   const otherCategories = categories.filter(c => c.name !== deletingCategoryName);
 
   if (loading) {
-    return <LoadingState size="md" text="Loading help articles..." />;
+    return <SkeletonTableSection rows={5} />;
   }
 
   // Filter Popover component

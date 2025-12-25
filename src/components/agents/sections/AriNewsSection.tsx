@@ -29,7 +29,7 @@ import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { uploadFeaturedImage, deleteArticleImage } from '@/lib/article-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonCard } from '@/components/ui/skeleton';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { logger } from '@/utils/logger';
 import { format } from 'date-fns';
@@ -569,7 +569,11 @@ export const AriNewsSection: React.FC<AriNewsSectionProps> = ({ agentId, userId 
         <SavedIndicator show={showSaved} message="Order saved" />
 
         {loading ? (
-          <LoadingState text="Loading news..." />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} withHeader withFooter />
+            ))}
+          </div>
         ) : newsItems.length === 0 ? (
           <EmptyState
             icon={<Image03 className="h-5 w-5 text-muted-foreground/50" />}
