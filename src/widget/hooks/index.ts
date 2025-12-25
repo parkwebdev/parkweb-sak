@@ -7,20 +7,31 @@
  * @module widget/hooks
  * 
  * @example
- * import { useWidgetConfig, useSoundSettings } from '@/widget/hooks';
+ * import { useWidgetConfig, useSoundSettings, useWidgetMessaging } from '@/widget/hooks';
  */
+
+// ============================================================================
+// Configuration Hooks
+// ============================================================================
 
 /** Widget configuration management and loading states */
 export { useWidgetConfig } from './useWidgetConfig';
 
-/** Sound preference persistence to localStorage */
-export { useSoundSettings } from './useSoundSettings';
+/** Real-time config updates via Supabase */
+export { useRealtimeConfig } from './useRealtimeConfig';
 
-/** Visitor ID generation and page tracking analytics */
-export { useVisitorAnalytics } from './useVisitorAnalytics';
+// ============================================================================
+// Messaging Hooks
+// ============================================================================
 
-/** Parent window postMessage communication for iframe mode */
-export { useParentMessages } from './useParentMessages';
+/** 
+ * Message sending, input state, file handling, form submission
+ * @see useWidgetMessaging - Phase 1 refactor (extracted from ChatWidget.tsx)
+ */
+export { useWidgetMessaging } from './useWidgetMessaging';
+
+/** Conversation CRUD operations and localStorage persistence */
+export { useConversations } from './useConversations';
 
 /** Real-time message subscriptions via Supabase */
 export { useRealtimeMessages } from './useRealtimeMessages';
@@ -31,20 +42,39 @@ export { useConversationStatus } from './useConversationStatus';
 /** Typing indicator state management */
 export { useTypingIndicator } from './useTypingIndicator';
 
+// ============================================================================
+// Communication Hooks
+// ============================================================================
+
+/** Parent window postMessage communication for iframe mode */
+export { useParentMessages } from './useParentMessages';
+
+// ============================================================================
+// Analytics & Presence Hooks
+// ============================================================================
+
+/** Visitor ID generation and page tracking analytics */
+export { useVisitorAnalytics } from './useVisitorAnalytics';
+
 /** Real-time visitor presence broadcasting */
 export { useVisitorPresence } from './useVisitorPresence';
 
-/** Conversation CRUD operations and localStorage persistence */
-export { useConversations } from './useConversations';
+// ============================================================================
+// Preference Hooks
+// ============================================================================
 
-/** Real-time config updates via Supabase */
-export { useRealtimeConfig } from './useRealtimeConfig';
-
-/** Mobile keyboard height detection for viewport adjustments */
-export { useKeyboardHeight } from './useKeyboardHeight';
+/** Sound preference persistence to localStorage */
+export { useSoundSettings } from './useSoundSettings';
 
 /** System theme detection for mobile dark mode updates */
 export { useSystemTheme } from './useSystemTheme';
+
+// ============================================================================
+// Mobile & Location Hooks
+// ============================================================================
+
+/** Mobile keyboard height detection for viewport adjustments */
+export { useKeyboardHeight } from './useKeyboardHeight';
 
 /** Smart location detection from URL patterns and WordPress API */
 export { useLocationDetection } from './useLocationDetection';

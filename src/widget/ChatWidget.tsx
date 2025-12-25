@@ -27,12 +27,12 @@
  * ```
  */
 import { useState, useEffect, useRef, Suspense, lazy } from 'react';
-import { createLead, sendChatMessage, submitConversationRating, widgetSupabase, type WidgetConfig, type ReferrerJourney } from './api';
+import { submitConversationRating, type WidgetConfig } from './api';
 import { widgetLogger, configureWidgetLogger } from './utils';
 
 // Types and constants extracted for maintainability
-import type { ViewType, ChatUser, Message, ChatWidgetProps } from './types';
-import { WIDGET_CSS_VARS, getIsMobileFullScreen, positionClasses } from './constants';
+import type { ViewType, ChatUser, ChatWidgetProps } from './types';
+import { getIsMobileFullScreen, positionClasses } from './constants';
 
 // Extracted hooks for state management
 import {
@@ -45,6 +45,7 @@ import {
   useTypingIndicator,
   useVisitorPresence,
   useConversations,
+  useWidgetMessaging,
 } from './hooks';
 
 // View Components - HomeView and ChatView are always needed, lazy-load the rest
@@ -89,38 +90,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     return stored ? JSON.parse(stored) : null;
   });
   
-  const [isTyping, setIsTyping] = useState(false);
+  // Audio recording state (not extracted - tightly coupled to UI)
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [messageInput, setMessageInput] = useState('');
-  const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([]);
   const [formLoadTime] = useState(() => Date.now());
   
-  const [isHumanTakeover, setIsHumanTakeover] = useState(false);
+  // Human typing indicator (received from hook, not takeover state)
   const [isHumanTyping, setIsHumanTyping] = useState(false);
   const [typingAgentName, setTypingAgentName] = useState<string | undefined>();
-  const [takeoverAgentName, setTakeoverAgentName] = useState<string | undefined>();
-  const [takeoverAgentAvatar, setTakeoverAgentAvatar] = useState<string | undefined>();
+  
   const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
-  
-  // Satisfaction rating state
-  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
-  const [ratingTriggerType, setRatingTriggerType] = useState<'team_closed' | 'ai_marked_complete'>('ai_marked_complete');
-  const hasShownRatingRef = useRef(false); // Track if rating has been shown this session
-  
-  // Refs for quick reply auto-send (must be before early return to maintain hooks order)
-  const quickReplyPendingRef = useRef<string | null>(null);
-  const handleSendMessageRef = useRef<(() => void) | null>(null);
-  // Ref for tracking recently added chunk IDs to prevent realtime duplicates
-  const recentChunkIdsRef = useRef<Set<string>>(new Set());
-  // State for tracking new message IDs for slide-in animations
-  const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
   
   // Visitor ID state
   const [visitorId] = useState(() => {
@@ -173,6 +158,49 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     visitorId,
     previewMode,
     activeConversationId,
+  });
+
+  // Messaging via extracted hook (PHASE 1 REFACTOR)
+  const {
+    messageInput,
+    setMessageInput,
+    pendingFiles,
+    setPendingFiles,
+    isTyping,
+    setIsTyping,
+    newMessageIds,
+    recentChunkIdsRef,
+    handleSendMessage,
+    handleQuickReplySelectWithSend,
+    handleFormSubmit,
+    showRatingPrompt,
+    setShowRatingPrompt,
+    ratingTriggerType,
+    setRatingTriggerType,
+    hasShownRatingRef,
+    isHumanTakeover,
+    setIsHumanTakeover,
+    takeoverAgentName,
+    setTakeoverAgentName,
+    takeoverAgentAvatar,
+    setTakeoverAgentAvatar,
+  } = useWidgetMessaging({
+    config: config as WidgetConfig,
+    chatUser,
+    setChatUser,
+    activeConversationId,
+    setActiveConversationId,
+    pageVisits,
+    setPageVisits,
+    referrerJourney,
+    visitorId,
+    isOpen,
+    currentView,
+    setMessages,
+    markConversationFetched,
+    isActivelySendingRef,
+    currentPageRef,
+    browserLanguageRef,
   });
 
   // Parent window communication via extracted hook
@@ -246,14 +274,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     chatUser,
   });
 
-  // Preview mode greeting removed - AI generates personalized greetings now
-
   // Scroll to bottom when file attachment opens
   useEffect(() => {
     if (isAttachingFiles && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [isAttachingFiles]);
+  }, [isAttachingFiles, messagesEndRef]);
 
   // Immediately clear parent badge when widget opens
   useEffect(() => {
@@ -306,17 +332,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       };
     }
   }, [messages, currentView, chatUser, previewMode]);
-
-  // Effect to auto-send quick reply (must be before early return to maintain hooks order)
-  useEffect(() => {
-    if (messageInput.trim() && !isActivelySendingRef.current) {
-      const shouldAutoSend = quickReplyPendingRef.current === messageInput;
-      if (shouldAutoSend) {
-        quickReplyPendingRef.current = null;
-        handleSendMessageRef.current?.();
-      }
-    }
-  }, [messageInput]);
 
   // Only return null for simple config loading, not when parent handles config
   if (!parentHandlesConfig && (loading || !config)) return null;
@@ -380,282 +395,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setShowConversationList(false);
   };
 
-  const handleSendMessage = async (overrideMessage?: string) => {
-    const messageToSend = overrideMessage ?? messageInput;
-    if (!messageToSend.trim() && pendingFiles.length === 0) return;
-
-    // Mark as actively sending to prevent DB fetch from overwriting local messages
-    isActivelySendingRef.current = true;
-
-    const userContent = pendingFiles.length > 0 ? (messageToSend || 'Sent files') : messageToSend;
-    
-    // Upload files to Supabase storage and get real URLs
-    let uploadedFiles: Array<{ name: string; url: string; type: string; size: number }> | undefined;
-    if (pendingFiles.length > 0) {
-      try {
-        uploadedFiles = await Promise.all(
-          pendingFiles.map(async (pf) => {
-            const fileName = `widget/${activeConversationId || 'temp'}/${Date.now()}-${pf.file.name}`;
-            const { data, error } = await widgetSupabase.storage
-              .from('conversation-files')
-              .upload(fileName, pf.file, { upsert: false });
-            
-            if (error) throw error;
-            
-            const { data: urlData } = widgetSupabase.storage
-              .from('conversation-files')
-              .getPublicUrl(data.path);
-            
-            return { name: pf.file.name, url: urlData.publicUrl, type: pf.file.type, size: pf.file.size };
-          })
-        );
-      } catch (uploadError) {
-        widgetLogger.error('[Widget] Error uploading files to storage:', uploadError);
-        widgetLogger.error('[Widget] Upload error details:', {
-          bucket: 'conversation-files',
-          conversationId: activeConversationId,
-          fileCount: pendingFiles.length,
-          fileNames: pendingFiles.map(pf => pf.file.name),
-        });
-        // Fall back to blob URLs if upload fails (will show broken on app side)
-        uploadedFiles = pendingFiles.map(pf => ({ name: pf.file.name, url: pf.preview, type: pf.file.type, size: pf.file.size }));
-      }
-    }
-    
-    // Create optimistic message with temp ID for tracking
-    const tempId = `temp-${Date.now()}`;
-    const userMsgId = `user-${Date.now()}`;
-    const newMessage: Message = {
-      id: userMsgId,
-      tempId,
-      role: 'user',
-      content: userContent,
-      read: false,
-      timestamp: new Date(),
-      type: pendingFiles.length > 0 ? 'file' : 'text',
-      files: uploadedFiles,
-      reactions: [],
-    };
-    
-    // Mark this message ID for animation
-    setNewMessageIds(prev => new Set([...prev, userMsgId]));
-    setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(userMsgId); return n; }), 300);
-    
-    setMessages(prev => [...prev, newMessage]);
-    setPendingFiles([]);
-    setMessageInput('');
-    setIsTyping(true);
-
-    try {
-      // PHASE 5: Send only the new user message - edge function fetches history from DB
-      const newUserMessage = {
-        role: newMessage.role,
-        content: newMessage.content,
-        files: newMessage.files,
-      };
-
-      let finalPageVisits = [...pageVisits];
-      if (currentPageRef.current.url && currentPageRef.current.entered_at) {
-        const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
-        const lastIndex = finalPageVisits.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
-        if (lastIndex !== -1) {
-          finalPageVisits[lastIndex] = { ...finalPageVisits[lastIndex], duration_ms: duration };
-        }
-        setPageVisits(finalPageVisits);
-      }
-
-      widgetLogger.info('[Widget] Sending message with:', {
-        pageVisitsCount: finalPageVisits.length,
-        referrerJourney: referrerJourney ? 'present' : 'null',
-        conversationId: activeConversationId,
-        browserLanguage: browserLanguageRef.current,
-      });
-
-      const response = await sendChatMessage(
-        config.agentId,
-        activeConversationId,
-        newUserMessage,
-        chatUser?.leadId,
-        finalPageVisits.length > 0 ? finalPageVisits : undefined,
-        referrerJourney || undefined,
-        visitorId,
-        undefined, // locationId
-        undefined, // previewMode
-        browserLanguageRef.current // Browser language preference
-      );
-
-      if (response.conversationId && response.conversationId !== activeConversationId) {
-        // CRITICAL: Mark as fetched BEFORE setting activeConversationId
-        // This prevents the useEffect from triggering a DB fetch that overwrites local messages
-        markConversationFetched(response.conversationId);
-        
-        setActiveConversationId(response.conversationId);
-        
-        if (chatUser) {
-          const updatedUser = { ...chatUser, conversationId: response.conversationId };
-          setChatUser(updatedUser);
-          localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
-        }
-      }
-
-      if (response.status === 'human_takeover') {
-        setIsHumanTakeover(true);
-        if (response.takenOverBy) {
-          setTakeoverAgentName(response.takenOverBy.name);
-          setTakeoverAgentAvatar(response.takenOverBy.avatar);
-        }
-        if (response.userMessageId) {
-          setMessages(prev => {
-            const updated = [...prev];
-            for (let i = updated.length - 1; i >= 0; i--) {
-              if (updated[i].role === 'user' && !updated[i].id) {
-                updated[i] = { ...updated[i], id: response.userMessageId };
-                break;
-              }
-            }
-            return updated;
-          });
-        }
-      } else if (response.response) {
-        // Update user message with ID
-        if (response.userMessageId) {
-          setMessages(prev => {
-            const updated = [...prev];
-            for (let i = updated.length - 1; i >= 0; i--) {
-              if (updated[i].role === 'user' && !updated[i].id) {
-                updated[i] = { ...updated[i], id: response.userMessageId };
-                break;
-              }
-            }
-            return updated;
-          });
-        }
-        
-        // Check for chunked messages (new multi-message format)
-        if (response.messages && response.messages.length > 0) {
-          // Pre-register all chunk IDs to prevent realtime duplicates
-          response.messages.forEach(chunk => {
-            if (chunk.id) recentChunkIdsRef.current.add(chunk.id);
-          });
-          
-          // Display chunks with staggered delays for natural feel
-          for (let i = 0; i < response.messages.length; i++) {
-            const chunk = response.messages[i];
-            const isLastChunk = i === response.messages.length - 1;
-            
-            // Add random delay between 750-1000ms (except for first chunk)
-            if (i > 0) {
-              const delay = 750 + Math.random() * 250; // 750-1000ms
-              setIsTyping(true); // Show typing indicator between chunks
-              await new Promise(resolve => setTimeout(resolve, delay));
-            }
-            
-            setIsTyping(false);
-            
-            // Mark chunk for animation
-            if (chunk.id) {
-              setNewMessageIds(prev => new Set([...prev, chunk.id]));
-              setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(chunk.id); return n; }), 300);
-            }
-            
-            setMessages(prev => [...prev, { 
-              id: chunk.id,
-              role: 'assistant', 
-              content: chunk.content, 
-              read: isOpen && currentView === 'messages', 
-              timestamp: new Date(), 
-              type: 'text', 
-              reactions: [],
-              // Only attach link previews, quick replies, call actions, and booking components to the last chunk
-              linkPreviews: isLastChunk ? response.linkPreviews : undefined,
-              quickReplies: isLastChunk ? response.quickReplies : undefined,
-              callActions: isLastChunk ? response.callActions : undefined,
-              dayPicker: isLastChunk ? response.dayPicker : undefined,
-              timePicker: isLastChunk ? response.timePicker : undefined,
-              bookingConfirmed: isLastChunk ? response.bookingConfirmed : undefined,
-            }]);
-          }
-          
-          // Clear chunk IDs after delay to allow realtime cleanup
-          setTimeout(() => {
-            response.messages?.forEach(chunk => {
-              if (chunk.id) recentChunkIdsRef.current.delete(chunk.id);
-            });
-          }, 5000);
-          
-          // Check if AI marked conversation complete - show rating after delay
-          if (response.aiMarkedComplete && !hasShownRatingRef.current) {
-            setTimeout(() => {
-              setRatingTriggerType('ai_marked_complete');
-              setShowRatingPrompt(true);
-              hasShownRatingRef.current = true;
-            }, 3000); // 3 second delay after last chunk
-          }
-        } else {
-          // Legacy single message fallback - mark for animation
-          const msgId = response.assistantMessageId || `legacy-${Date.now()}`;
-          setNewMessageIds(prev => new Set([...prev, msgId]));
-          setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(msgId); return n; }), 300);
-          
-          setMessages(prev => [...prev, { 
-            id: msgId,
-            role: 'assistant', 
-            content: response.response, 
-            read: isOpen && currentView === 'messages', 
-            timestamp: new Date(), 
-            type: 'text', 
-            reactions: [],
-            linkPreviews: response.linkPreviews,
-            quickReplies: response.quickReplies,
-            callActions: response.callActions,
-            dayPicker: response.dayPicker,
-            timePicker: response.timePicker,
-            bookingConfirmed: response.bookingConfirmed,
-          }]);
-          
-          // Check if AI marked conversation complete - show rating after delay
-          if (response.aiMarkedComplete && !hasShownRatingRef.current) {
-            setTimeout(() => {
-              setRatingTriggerType('ai_marked_complete');
-              setShowRatingPrompt(true);
-              hasShownRatingRef.current = true;
-            }, 3000);
-          }
-        }
-      }
-    } catch (error) {
-      widgetLogger.error('Error sending message:', error);
-      // Mark the optimistic user message as failed
-      setMessages(prev => prev.map(msg => 
-        msg.tempId === tempId 
-          ? { ...msg, failed: true }
-          : msg
-      ));
-    } finally {
-      setIsTyping(false);
-      // Defer ref reset to next tick to ensure React effects have completed
-      setTimeout(() => {
-        isActivelySendingRef.current = false;
-      }, 0);
-    }
-  };
-
-  // Update ref after handleSendMessage is defined
-  handleSendMessageRef.current = handleSendMessage;
-  
-  // Handle quick reply selection - set input and trigger auto-send
-  const handleQuickReplySelectWithSend = (suggestion: string) => {
-    // Clear quick replies from current message
-    setMessages(prev => prev.map((msg, idx) => 
-      idx === prev.length - 1 && msg.quickReplies 
-        ? { ...msg, quickReplies: undefined }
-        : msg
-    ));
-    // Mark as pending and set input
-    quickReplyPendingRef.current = suggestion;
-    setMessageInput(suggestion);
-  };
-
+  // Audio recording handlers (kept here - tightly coupled to UI refs)
   const startAudioRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -709,71 +449,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       recordingIntervalRef.current = null;
     }
     chunksRef.current = [];
-  };
-
-  const handleFormSubmit = async (userData: ChatUser, conversationId?: string) => {
-    localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
-    setChatUser(userData);
-    
-    // Clear messages and set up for AI greeting
-    setMessages([]);
-    
-    // CRITICAL: Mark conversation as fetched BEFORE setting activeConversationId
-    // This prevents the useEffect from triggering a DB fetch that overwrites messages
-    if (conversationId) {
-      markConversationFetched(conversationId);
-    }
-    
-    setActiveConversationId(conversationId || 'new');
-    
-    // Trigger AI to generate personalized greeting using lead data
-    setIsTyping(true);
-    try {
-      const response = await sendChatMessage(
-        config.agentId,
-        conversationId || 'new',
-        { role: 'user', content: '__GREETING_REQUEST__' },
-        userData.leadId,
-        pageVisits.length > 0 ? pageVisits : undefined,
-        referrerJourney || undefined,
-        visitorId
-      );
-      
-      if (response.conversationId && response.conversationId !== conversationId) {
-        markConversationFetched(response.conversationId);
-        setActiveConversationId(response.conversationId);
-        
-        const updatedUser = { ...userData, conversationId: response.conversationId };
-        setChatUser(updatedUser);
-        localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
-      }
-      
-      if (response.response) {
-        setMessages([{ 
-          id: response.assistantMessageId,
-          role: 'assistant', 
-          content: response.response, 
-          read: true, 
-          timestamp: new Date(), 
-          type: 'text', 
-          reactions: [],
-          linkPreviews: response.linkPreviews,
-        }]);
-      }
-    } catch (error) {
-      widgetLogger.error('Error getting AI greeting:', error);
-      // Fallback to a simple greeting if AI fails
-      setMessages([{ 
-        role: 'assistant', 
-        content: `Welcome! How can I help you today?`, 
-        read: true, 
-        timestamp: new Date(), 
-        type: 'text', 
-        reactions: [] 
-      }]);
-    } finally {
-      setIsTyping(false);
-    }
   };
 
   // Loading state
@@ -945,9 +620,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     );
   }
 
-  // Default mode: fixed positioning for standalone widget
+  // Default mode: fixed position (for admin preview or standalone testing)
   return (
-    <div className={`fixed z-[9999] ${positionClasses[position] || positionClasses['bottom-right']}`}>
+    <div className={`fixed ${positionClasses[position]} z-[9999] p-4`}>
       {widgetContent}
     </div>
   );
