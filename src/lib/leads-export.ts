@@ -170,7 +170,9 @@ export function generateCSV(leads: Lead[], options: ExportOptions): string {
 }
 
 export function downloadCSV(csv: string, filename: string): void {
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  // Add UTF-8 BOM for Excel compatibility
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
