@@ -1,3 +1,23 @@
+/**
+ * SimpleDeleteDialog Component
+ * 
+ * A pre-configured delete confirmation dialog built on AlertDialog.
+ * Provides consistent delete UX with loading states and customizable text.
+ * 
+ * @module components/ui/simple-delete-dialog
+ * 
+ * @example
+ * ```tsx
+ * <SimpleDeleteDialog
+ *   open={isOpen}
+ *   onOpenChange={setIsOpen}
+ *   title="Delete Item"
+ *   description="Are you sure? This cannot be undone."
+ *   onConfirm={handleDelete}
+ *   isDeleting={isPending}
+ * />
+ * ```
+ */
 import {
   AlertDialog,
   AlertDialogAction,

@@ -1,3 +1,28 @@
+/**
+ * Sidebar Components
+ * 
+ * A complete sidebar system with collapsible state, mobile sheet variant,
+ * and various sub-components for navigation, headers, and footers.
+ * Built on Radix UI Sheet for mobile and native for desktop.
+ * 
+ * @module components/ui/sidebar
+ * 
+ * @example
+ * ```tsx
+ * <SidebarProvider>
+ *   <Sidebar>
+ *     <SidebarHeader>Logo</SidebarHeader>
+ *     <SidebarContent>
+ *       <SidebarMenu>
+ *         <SidebarMenuItem>
+ *           <SidebarMenuButton>Dashboard</SidebarMenuButton>
+ *         </SidebarMenuItem>
+ *       </SidebarMenu>
+ *     </SidebarContent>
+ *   </Sidebar>
+ * </SidebarProvider>
+ * ```
+ */
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
