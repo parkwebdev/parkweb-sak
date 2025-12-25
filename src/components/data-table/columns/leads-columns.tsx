@@ -24,6 +24,9 @@ export const createLeadsColumns = ({
 }: LeadsColumnsProps): ColumnDef<Lead>[] => [
   {
     id: 'select',
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
     header: ({ table }) => (
       <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
         <Checkbox
@@ -44,27 +47,46 @@ export const createLeadsColumns = ({
     ),
     enableSorting: false,
     enableHiding: false,
-    size: 40,
-    maxSize: 40,
   },
   {
     accessorKey: 'name',
+    size: 160,
+    minSize: 120,
+    maxSize: 200,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.name || '-'}</span>
-    ),
+    cell: ({ row }) => {
+      const name = row.original.name || '-';
+      return (
+        <span className="font-medium truncate block" title={name !== '-' ? name : undefined}>
+          {name}
+        </span>
+      );
+    },
   },
   {
     accessorKey: 'email',
+    size: 200,
+    minSize: 150,
+    maxSize: 280,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Email" />
     ),
-    cell: ({ row }) => row.original.email || '-',
+    cell: ({ row }) => {
+      const email = row.original.email || '-';
+      return (
+        <span className="truncate block" title={email !== '-' ? email : undefined}>
+          {email}
+        </span>
+      );
+    },
   },
   {
     accessorKey: 'phone',
+    size: 130,
+    minSize: 100,
+    maxSize: 150,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Phone" />
     ),
@@ -80,6 +102,9 @@ export const createLeadsColumns = ({
   },
   {
     accessorKey: 'stage_id',
+    size: 140,
+    minSize: 100,
+    maxSize: 180,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Stage" />
     ),
@@ -94,6 +119,9 @@ export const createLeadsColumns = ({
   },
   {
     accessorKey: 'location',
+    size: 140,
+    minSize: 100,
+    maxSize: 180,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Location" />
     ),
@@ -102,30 +130,49 @@ export const createLeadsColumns = ({
       const city = data['city'] || data['City'];
       const state = data['state'] || data['State'];
       
-      if (city && state) return `${city}, ${state}`;
-      if (city) return String(city);
-      if (state) return String(state);
-      
-      // Try to get location from metadata if conversation is linked
-      const conversations = row.original.conversations;
-      if (conversations?.metadata) {
-        const metadata = conversations.metadata as Record<string, unknown>;
-        if (metadata.city && metadata.state) return `${metadata.city}, ${metadata.state}`;
-        if (metadata.city) return String(metadata.city);
-        if (metadata.state) return String(metadata.state);
-        if (metadata.country) return String(metadata.country);
+      let locationText = '-';
+      if (city && state) {
+        locationText = `${city}, ${state}`;
+      } else if (city) {
+        locationText = String(city);
+      } else if (state) {
+        locationText = String(state);
+      } else {
+        // Try to get location from metadata if conversation is linked
+        const conversations = row.original.conversations;
+        if (conversations?.metadata) {
+          const metadata = conversations.metadata as Record<string, unknown>;
+          if (metadata.city && metadata.state) {
+            locationText = `${metadata.city}, ${metadata.state}`;
+          } else if (metadata.city) {
+            locationText = String(metadata.city);
+          } else if (metadata.state) {
+            locationText = String(metadata.state);
+          } else if (metadata.country) {
+            locationText = String(metadata.country);
+          }
+        }
       }
       
-      return '-';
+      return (
+        <span className="truncate block" title={locationText !== '-' ? locationText : undefined}>
+          {locationText}
+        </span>
+      );
     },
   },
   {
     accessorKey: 'source',
+    size: 140,
+    minSize: 100,
+    maxSize: 180,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Source" />
     ),
     cell: ({ row }) => {
+      let sourceText = '-';
       const conversations = row.original.conversations;
+      
       if (conversations?.metadata) {
         const metadata = conversations.metadata as Record<string, unknown>;
         
@@ -134,38 +181,44 @@ export const createLeadsColumns = ({
         if (referrerJourney?.referrer_url) {
           try {
             const url = new URL(String(referrerJourney.referrer_url));
-            return url.hostname.replace('www.', '');
+            sourceText = url.hostname.replace('www.', '');
           } catch {
-            return String(referrerJourney.referrer_url).slice(0, 30);
+            sourceText = String(referrerJourney.referrer_url).slice(0, 30);
           }
-        }
-        
-        // Fallback to landing page from referrer_journey
-        if (referrerJourney?.landing_page) {
+        } else if (referrerJourney?.landing_page) {
+          // Fallback to landing page from referrer_journey
           try {
             const url = new URL(String(referrerJourney.landing_page));
-            return url.pathname.slice(0, 30) || '/';
+            sourceText = url.pathname.slice(0, 30) || '/';
           } catch {
-            return String(referrerJourney.landing_page).slice(0, 30);
+            sourceText = String(referrerJourney.landing_page).slice(0, 30);
           }
-        }
-        
-        // Legacy fallback for older data
-        const referrer = metadata.referer_url || metadata.referrer_url;
-        if (referrer) {
-          try {
-            const url = new URL(String(referrer));
-            return url.hostname.replace('www.', '');
-          } catch {
-            return String(referrer).slice(0, 30);
+        } else {
+          // Legacy fallback for older data
+          const referrer = metadata.referer_url || metadata.referrer_url;
+          if (referrer) {
+            try {
+              const url = new URL(String(referrer));
+              sourceText = url.hostname.replace('www.', '');
+            } catch {
+              sourceText = String(referrer).slice(0, 30);
+            }
           }
         }
       }
-      return '-';
+      
+      return (
+        <span className="truncate block" title={sourceText !== '-' ? sourceText : undefined}>
+          {sourceText}
+        </span>
+      );
     },
   },
   {
     accessorKey: 'created_at',
+    size: 120,
+    minSize: 100,
+    maxSize: 140,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Created" />
     ),
@@ -174,6 +227,9 @@ export const createLeadsColumns = ({
   },
   {
     accessorKey: 'updated_at',
+    size: 120,
+    minSize: 100,
+    maxSize: 140,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Updated" />
     ),
