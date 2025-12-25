@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -69,6 +69,19 @@ export function ExportLeadsDialog({
   const [includeHeaders, setIncludeHeaders] = useState(true);
   const [useCurrentView, setUseCurrentView] = useState(false);
 
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setSelectedColumns(DEFAULT_COLUMNS);
+      setSelectedStatuses(STATUS_OPTIONS.map(s => s.value));
+      setDateRange('all');
+      setCustomDateStart(undefined);
+      setCustomDateEnd(undefined);
+      setIncludeHeaders(true);
+      setUseCurrentView(false);
+    }
+  }, [open]);
+
   // Calculate preview count
   const previewCount = useMemo(() => {
     const options: ExportOptions = {
@@ -93,32 +106,31 @@ export function ExportLeadsDialog({
     allLeads,
     filteredLeads,
   ]);
-
-  const handleColumnToggle = (column: ExportColumn) => {
+  const handleColumnToggle = useCallback((column: ExportColumn) => {
     setSelectedColumns(prev =>
       prev.includes(column)
         ? prev.filter(c => c !== column)
         : [...prev, column]
     );
-  };
+  }, []);
 
-  const handleSelectAllColumns = () => {
+  const handleSelectAllColumns = useCallback(() => {
     setSelectedColumns([...ALL_COLUMNS]);
-  };
+  }, []);
 
-  const handleDeselectAllColumns = () => {
+  const handleDeselectAllColumns = useCallback(() => {
     setSelectedColumns([]);
-  };
+  }, []);
 
-  const handleStatusToggle = (status: Enums<'lead_status'>) => {
+  const handleStatusToggle = useCallback((status: Enums<'lead_status'>) => {
     setSelectedStatuses(prev =>
       prev.includes(status)
         ? prev.filter(s => s !== status)
         : [...prev, status]
     );
-  };
+  }, []);
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     if (selectedColumns.length === 0) {
       toast.error('Please select at least one column to export');
       return;
@@ -142,10 +154,9 @@ export function ExportLeadsDialog({
     } else {
       toast.error('No leads to export with the selected filters');
     }
-  };
+  }, [selectedColumns, selectedStatuses, dateRange, customDateStart, customDateEnd, includeHeaders, useCurrentView, allLeads, filteredLeads, onOpenChange]);
 
   const canExport = selectedColumns.length > 0 && previewCount > 0;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
