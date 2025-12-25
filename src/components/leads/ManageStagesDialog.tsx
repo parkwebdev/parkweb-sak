@@ -109,6 +109,7 @@ function SortableStageItem({
         {...attributes}
         {...listeners}
         className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
+        aria-label="Drag to reorder stage"
       >
         <DotsGrid size={16} />
       </button>
@@ -119,6 +120,7 @@ function SortableStageItem({
           onClick={() => setShowColors(!showColors)}
           className="w-5 h-5 rounded-full border-2 border-background shadow-sm"
           style={{ backgroundColor: stage.color }}
+          aria-label={`Select color for ${stage.name}`}
         />
         {showColors && (
           <div className="absolute left-0 top-8 z-50 p-2 bg-popover border rounded-lg shadow-lg grid grid-cols-5 gap-1">
@@ -131,6 +133,7 @@ function SortableStageItem({
                   stage.color === color ? 'border-foreground' : 'border-transparent'
                 )}
                 style={{ backgroundColor: color }}
+                aria-label={`Select ${color} color`}
               />
             ))}
           </div>
