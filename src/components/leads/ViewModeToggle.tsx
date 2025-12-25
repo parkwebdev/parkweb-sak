@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { LayoutAlt04, List } from '@untitledui/icons';
+import { LayoutAlt04, Rows03 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
 interface ViewModeToggleProps {
@@ -52,7 +52,7 @@ export const ViewModeToggle = React.memo(function ViewModeToggle({
         onClick={() => onViewModeChange('kanban')}
         onMouseEnter={() => setHoveredMode('kanban')}
         className={cn(
-          'relative z-10 flex h-7 w-8 items-center justify-center rounded-md transition-colors',
+          'relative z-10 flex h-8 w-9 items-center justify-center rounded-md transition-colors',
           viewMode === 'kanban'
             ? 'text-foreground'
             : 'text-muted-foreground hover:text-foreground'
@@ -69,7 +69,7 @@ export const ViewModeToggle = React.memo(function ViewModeToggle({
         onClick={() => onViewModeChange('table')}
         onMouseEnter={() => setHoveredMode('table')}
         className={cn(
-          'relative z-10 flex h-7 w-8 items-center justify-center rounded-md transition-colors',
+          'relative z-10 flex h-8 w-9 items-center justify-center rounded-md transition-colors',
           viewMode === 'table'
             ? 'text-foreground'
             : 'text-muted-foreground hover:text-foreground'
@@ -77,7 +77,7 @@ export const ViewModeToggle = React.memo(function ViewModeToggle({
         aria-label="Table view"
         aria-pressed={viewMode === 'table'}
       >
-        <List className="h-4 w-4" />
+        <Rows03 className="h-4 w-4" />
       </button>
     </div>
   );
