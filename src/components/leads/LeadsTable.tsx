@@ -148,14 +148,13 @@ export const LeadsTable = React.memo(function LeadsTable({
         searchPlaceholder="Search leads..."
         globalFilter
         showViewOptions
-        filterContent={
-          <DataTableFacetedFilter
-            column={table.getColumn('status')}
-            title="Status"
-            options={STATUS_OPTIONS}
-          />
-        }
-      />
+      >
+        <DataTableFacetedFilter
+          column={table.getColumn('status')}
+          title="Status"
+          options={STATUS_OPTIONS}
+        />
+      </DataTableToolbar>
       <DataTable
         table={table}
         columns={columns}
