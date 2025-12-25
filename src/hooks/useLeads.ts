@@ -87,6 +87,18 @@ export const useLeads = () => {
   };
 
   const updateLead = async (id: string, updates: Partial<Tables<'leads'>>) => {
+    // Get the current lead to find conversation_id for sync
+    const currentLead = leads.find(l => l.id === id);
+    const previousLeads = queryClient.getQueryData<Lead[]>(queryKeys.leads.list());
+
+    // Optimistically update cache immediately to prevent reverting
+    queryClient.setQueryData<Lead[]>(queryKeys.leads.list(), (oldLeads) => {
+      if (!oldLeads) return oldLeads;
+      return oldLeads.map(lead => 
+        lead.id === id ? { ...lead, ...updates } as Lead : lead
+      );
+    });
+
     try {
       const { error } = await supabase
         .from('leads')
@@ -95,9 +107,50 @@ export const useLeads = () => {
 
       if (error) throw error;
 
-      // Invalidate cache to trigger refetch
-      await queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+      // Sync lead changes with conversation metadata if conversation exists
+      if (currentLead?.conversation_id) {
+        const metadataUpdates: Record<string, string | null> = {};
+        
+        if ('name' in updates) {
+          metadataUpdates.lead_name = updates.name || null;
+        }
+        if ('email' in updates) {
+          metadataUpdates.lead_email = updates.email || null;
+        }
+        if ('phone' in updates) {
+          metadataUpdates.lead_phone = updates.phone || null;
+        }
+        
+        if (Object.keys(metadataUpdates).length > 0) {
+          // Get current conversation metadata and merge updates
+          const { data: conversation } = await supabase
+            .from('conversations')
+            .select('metadata')
+            .eq('id', currentLead.conversation_id)
+            .single();
+          
+          if (conversation) {
+            const currentMetadata = (conversation.metadata || {}) as Record<string, unknown>;
+            const mergedMetadata = { ...currentMetadata, ...metadataUpdates } as Record<string, unknown>;
+            await supabase
+              .from('conversations')
+              .update({ 
+                metadata: mergedMetadata as unknown as Tables<'conversations'>['metadata']
+              })
+              .eq('id', currentLead.conversation_id);
+            
+            // Invalidate conversations cache to reflect changes
+            queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
+          }
+        }
+      }
+
+      // Don't refetch since we already updated optimistically
     } catch (error: unknown) {
+      // Revert on error
+      if (previousLeads) {
+        queryClient.setQueryData(queryKeys.leads.list(), previousLeads);
+      }
       toast.error('Error updating lead', {
         description: getErrorMessage(error),
       });
