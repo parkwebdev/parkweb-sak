@@ -11,6 +11,7 @@ import { Suspense, RefObject } from 'react';
 import { updateMessageReaction } from '../api';
 import { MessageBubble, ContactForm, MessageInput, TypingIndicator, QuickReplies, CallButton } from '../components';
 import { FileDropZone } from '../constants';
+import { WidgetSkeletonMessage } from '../ui';
 import type { Message, ChatUser, BookingDay, BookingTime } from '../types';
 import type { WidgetConfig } from '../api';
 
@@ -157,11 +158,10 @@ export const ChatView = ({
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 messages-container min-h-0">
         {/* Loading indicator when fetching messages */}
         {isLoadingMessages && messages.length === 0 && chatUser && (
-          <div className="flex items-center justify-center py-8">
-            <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              <span>Loading messages...</span>
-            </div>
+          <div className="py-4 space-y-4">
+            <WidgetSkeletonMessage />
+            <WidgetSkeletonMessage isUser />
+            <WidgetSkeletonMessage />
           </div>
         )}
 

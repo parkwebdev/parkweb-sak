@@ -9,14 +9,14 @@
 
 import { lazy, Suspense } from 'react';
 import { PageTransition } from '@/components/ui/page-transition';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonCalendarPage } from '@/components/ui/page-skeleton';
 
 const Planner = lazy(() => import('./Planner'));
 
 const PlannerWrapper = () => {
   return (
     <PageTransition>
-      <Suspense fallback={<LoadingState text="Loading calendar..." className="min-h-[400px]" />}>
+      <Suspense fallback={<SkeletonCalendarPage className="min-h-[400px]" />}>
         <Planner />
       </Suspense>
     </PageTransition>

@@ -9,14 +9,14 @@
 
 import { lazy, Suspense } from 'react';
 import { PageTransition } from '@/components/ui/page-transition';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonDashboardPage } from '@/components/ui/page-skeleton';
 
 const Dashboard = lazy(() => import('./Dashboard').then(module => ({ default: module.Dashboard })));
 
 const DashboardWrapper = () => {
   return (
     <PageTransition>
-      <Suspense fallback={<LoadingState text="Loading dashboard..." className="min-h-[400px]" />}>
+      <Suspense fallback={<SkeletonDashboardPage className="min-h-[400px]" />}>
         <Dashboard />
       </Suspense>
     </PageTransition>

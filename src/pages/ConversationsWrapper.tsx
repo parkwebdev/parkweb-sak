@@ -9,14 +9,14 @@
 
 import { lazy, Suspense } from 'react';
 import { PageTransition } from '@/components/ui/page-transition';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonChatPage } from '@/components/ui/page-skeleton';
 
 const Conversations = lazy(() => import('./Conversations'));
 
 const ConversationsWrapper = () => {
   return (
     <PageTransition>
-      <Suspense fallback={<LoadingState text="Loading conversations..." className="min-h-[400px]" />}>
+      <Suspense fallback={<SkeletonChatPage className="min-h-[400px]" />}>
         <Conversations />
       </Suspense>
     </PageTransition>

@@ -11,7 +11,7 @@ import {
 import { DataTable } from '@/components/data-table';
 import { createTeamColumns } from '@/components/data-table/columns/team-columns';
 import { EmptyState } from '@/components/ui/empty-state';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonTeamTable } from '@/components/ui/page-skeleton';
 import { TeamMember } from '@/types/team';
 import { Users01 } from '@untitledui/icons';
 
@@ -53,11 +53,7 @@ export const TeamMembersTable = React.memo(function TeamMembersTable({
   });
 
   if (loading) {
-    return (
-      <div className="w-full bg-card border border-border rounded-xl">
-        <LoadingState className="p-8" />
-      </div>
-    );
+    return <SkeletonTeamTable />;
   }
 
   if (teamMembers.length === 0) {

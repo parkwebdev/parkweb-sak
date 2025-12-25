@@ -22,6 +22,7 @@ import { logger } from '@/utils/logger';
 import { AriSectionMenu, type AriSection } from '@/components/agents/AriSectionMenu';
 import { AriPreviewColumn } from '@/components/agents/AriPreviewColumn';
 import { MultiStepLoader } from '@/components/ui/multi-step-loader';
+import { SkeletonAriConfiguratorPage } from '@/components/ui/page-skeleton';
 import { ChatWidget } from '@/widget/ChatWidget';
 import type { Tables } from '@/integrations/supabase/types';
 import type { WidgetConfig } from '@/widget/api';
@@ -232,16 +233,9 @@ const AriConfigurator = () => {
     );
   }
 
-  // Show spinner while agent data loads (after MultiStepLoader completes)
+  // Show skeleton while agent data loads (after MultiStepLoader completes)
   if (!agent || agentLoading) {
-    return (
-      <div className="flex-1 h-full min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading Ari...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonAriConfiguratorPage />;
   }
 
   const renderSectionContent = () => {
