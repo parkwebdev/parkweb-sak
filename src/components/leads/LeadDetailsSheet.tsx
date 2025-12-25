@@ -19,6 +19,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { SkeletonLeadDetails } from '@/components/ui/page-skeleton';
 import type { Tables, Enums, Json } from '@/integrations/supabase/types';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 
 interface LeadDetailsSheetProps {
   lead: Tables<'leads'> | null;
@@ -38,12 +39,14 @@ export const LeadDetailsSheet = ({
   const navigate = useNavigate();
   const [editedLead, setEditedLead] = useState<Partial<Tables<'leads'>>>({});
   const [editedCustomData, setEditedCustomData] = useState<Record<string, unknown>>({});
+  const [showSaved, setShowSaved] = useState(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset edited state when lead changes
   useEffect(() => {
     setEditedLead({});
     setEditedCustomData({});
+    setShowSaved(false);
   }, [lead?.id]);
 
   // Auto-save with debounce
@@ -66,6 +69,8 @@ export const LeadDetailsSheet = ({
     onUpdate(lead.id, updates);
     setEditedLead({});
     setEditedCustomData({});
+    setShowSaved(true);
+    setTimeout(() => setShowSaved(false), 2000);
   }, [lead, editedLead, editedCustomData, onUpdate]);
 
   // Debounced auto-save effect
@@ -269,12 +274,15 @@ export const LeadDetailsSheet = ({
         ) : (
           <>
             <SheetHeader>
-              <div className="flex items-center gap-3">
-                <SheetTitle>Lead Details</SheetTitle>
-                <LeadStatusDropdown
-                  status={{ ...lead, ...editedLead }.status}
-                  onStatusChange={(status) => setEditedLead({ ...editedLead, status: status as Enums<'lead_status'> })}
-                />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <SheetTitle>Lead Details</SheetTitle>
+                  <LeadStatusDropdown
+                    status={{ ...lead, ...editedLead }.status}
+                    onStatusChange={(status) => setEditedLead({ ...editedLead, status: status as Enums<'lead_status'> })}
+                  />
+                </div>
+                <SavedIndicator show={showSaved} />
               </div>
             </SheetHeader>
 
