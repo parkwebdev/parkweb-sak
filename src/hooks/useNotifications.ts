@@ -2,12 +2,54 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import type { Json } from '@/integrations/supabase/types';
+
+// Type-safe notification data types (exported for consumers)
+export interface ConversationNotificationData {
+  conversationId: string;
+  leadName?: string;
+  leadEmail?: string;
+  preview?: string;
+}
+
+export interface LeadNotificationData {
+  leadId: string;
+  leadName?: string;
+  leadEmail?: string;
+  status?: string;
+}
+
+export interface TeamNotificationData {
+  memberId?: string;
+  memberName?: string;
+  action?: 'invited' | 'joined' | 'removed' | 'role_changed';
+}
+
+export interface ReportNotificationData {
+  reportId?: string;
+  reportName?: string;
+  format?: 'pdf' | 'csv';
+}
+
+export interface SystemNotificationData {
+  category?: 'update' | 'maintenance' | 'security' | 'billing';
+  actionUrl?: string;
+}
+
+export type NotificationData = 
+  | ConversationNotificationData 
+  | LeadNotificationData 
+  | TeamNotificationData 
+  | ReportNotificationData 
+  | SystemNotificationData
+  | Record<string, unknown>
+  | null;
 
 interface CreateNotificationParams {
   type: 'conversation' | 'lead' | 'team' | 'report' | 'system';
   title: string;
   message: string;
-  data?: any;
+  data?: NotificationData;
   userId?: string; // Optional - will use current user if not provided
 }
 
@@ -49,7 +91,7 @@ export const useNotifications = () => {
           type,
           title,
           message,
-          data,
+          data: data as Json,
           read: false
         })
         .select()
@@ -70,7 +112,7 @@ export const useNotifications = () => {
   const createConversationNotification = async (
     title: string,
     message: string,
-    conversationData?: any,
+    conversationData?: ConversationNotificationData | Record<string, unknown>,
     userId?: string
   ) => {
     return createNotification({
@@ -85,7 +127,7 @@ export const useNotifications = () => {
   const createLeadNotification = async (
     title: string,
     message: string,
-    leadData?: any,
+    leadData?: LeadNotificationData | Record<string, unknown>,
     userId?: string
   ) => {
     return createNotification({
@@ -100,7 +142,7 @@ export const useNotifications = () => {
   const createReportNotification = async (
     title: string,
     message: string,
-    reportData?: any,
+    reportData?: ReportNotificationData | Record<string, unknown>,
     userId?: string
   ) => {
     return createNotification({
@@ -115,7 +157,7 @@ export const useNotifications = () => {
   const createSystemNotification = async (
     title: string,
     message: string,
-    systemData?: any,
+    systemData?: SystemNotificationData | Record<string, unknown>,
     userId?: string
   ) => {
     return createNotification({
@@ -130,7 +172,7 @@ export const useNotifications = () => {
   const createTeamNotification = async (
     title: string,
     message: string,
-    teamData?: any,
+    teamData?: TeamNotificationData | Record<string, unknown>,
     userId?: string
   ) => {
     return createNotification({

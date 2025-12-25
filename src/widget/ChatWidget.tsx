@@ -101,8 +101,14 @@ const ChatWidgetInner = ({
   const [currentView, setCurrentView] = useState<ViewType>('home');
   
   const [chatUser, setChatUser] = useState<ChatUser | null>(() => {
-    const stored = localStorage.getItem(`chatpad_user_${agentId}`);
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem(`chatpad_user_${agentId}`);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      // Handle corrupted localStorage data gracefully
+      localStorage.removeItem(`chatpad_user_${agentId}`);
+      return null;
+    }
   });
   // File attachment state (kept local - simple UI toggle)
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
