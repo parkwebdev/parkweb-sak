@@ -42,7 +42,7 @@ import { AriWebhooksSection } from '@/components/agents/sections/AriWebhooksSect
 import { AriIntegrationsSection } from '@/components/agents/sections/AriIntegrationsSection';
 import { AriApiAccessSection } from '@/components/agents/sections/AriApiAccessSection';
 import { AriInstallationSection } from '@/components/agents/sections/AriInstallationSection';
-
+import { SectionErrorBoundary } from '@/components/agents/sections/SectionErrorBoundary';
 type Agent = Tables<'agents'>;
 
 // Loading step timing
@@ -145,77 +145,80 @@ const AriConfigurator = () => {
     action_url: a.action_url || null,
   }));
 
-  const widgetConfig: WidgetConfig | null = agent ? {
-    agentId: embedConfig.agentId || agent.id,
-    userId: embedConfig.userId || agent.user_id,
-    position: embedConfig.position,
-    primaryColor: embedConfig.primaryColor,
-    useGradientHeader: embedConfig.useGradientHeader,
-    gradientStartColor: embedConfig.gradientStartColor,
-    gradientEndColor: embedConfig.gradientEndColor,
-    welcomeTitle: embedConfig.welcomeTitle,
-    welcomeSubtitle: embedConfig.welcomeSubtitle,
-    welcomeEmoji: embedConfig.welcomeEmoji,
-    showTeamAvatars: false,
-    teamAvatarUrls: [],
-    animation: embedConfig.animation,
-    buttonAnimation: embedConfig.animation,
-    enableHomeTab: true,
-    enableMessagesTab: embedConfig.enableMessagesTab,
-    enableHelpTab: embedConfig.enableHelpTab,
-    enableNewsTab: embedConfig.enableNewsTab || false,
-    showBottomNav: embedConfig.showBottomNav,
-    enableContactForm: embedConfig.enableContactForm,
-    contactFormTitle: embedConfig.contactFormTitle,
-    contactFormSubtitle: embedConfig.contactFormSubtitle,
-    customFields: embedConfig.customFields,
-    quickActions: embedConfig.quickActions.map(qa => ({
-      id: qa.id,
-      label: qa.title,
-      subtitle: qa.subtitle,
-      icon: qa.icon,
-      actionType: qa.action,
-      action: qa.action,
-    })),
-    announcements: activeAnnouncements.map(a => ({
-      id: a.id,
-      title: a.title,
-      subtitle: a.subtitle || undefined,
-      image_url: a.image_url || undefined,
-      background_color: a.background_color || '#ffffff',
-      title_color: a.title_color || '#000000',
-      action_type: a.action_type || undefined,
-      action_url: a.action_url || undefined,
-    })),
-    helpCategories: helpCategories.map((cat) => ({
-      id: cat.id,
-      name: cat.name,
-      description: cat.description || undefined,
-      icon: undefined,
-    })),
-    helpArticles: helpArticles.map(art => {
-      const category = helpCategories.find(c => c.name === art.category);
-      return {
-        id: art.id,
-        category_id: category?.id || '',
-        category: art.category,
-        title: art.title,
-        content: art.content,
-        order: art.order || 0,
-      };
-    }),
-    newsItems: [],
-    enableVoiceMessages: true,
-    enableFileAttachments: true,
-    allowedFileTypes: ['image', 'document'],
-    enableMessageReactions: true,
-    showReadReceipts: true,
-    showBranding: embedConfig.showBranding,
-    locations: [],
-    wordpressSiteUrl: embedConfig.wordpressSiteUrl,
-    defaultLocationSlug: embedConfig.defaultLocationSlug,
-    enableAutoLocationDetection: embedConfig.enableAutoLocationDetection ?? true,
-  } : null;
+  const widgetConfig = useMemo<WidgetConfig | null>(() => {
+    if (!agent) return null;
+    return {
+      agentId: embedConfig.agentId || agent.id,
+      userId: embedConfig.userId || agent.user_id,
+      position: embedConfig.position,
+      primaryColor: embedConfig.primaryColor,
+      useGradientHeader: embedConfig.useGradientHeader,
+      gradientStartColor: embedConfig.gradientStartColor,
+      gradientEndColor: embedConfig.gradientEndColor,
+      welcomeTitle: embedConfig.welcomeTitle,
+      welcomeSubtitle: embedConfig.welcomeSubtitle,
+      welcomeEmoji: embedConfig.welcomeEmoji,
+      showTeamAvatars: false,
+      teamAvatarUrls: [],
+      animation: embedConfig.animation,
+      buttonAnimation: embedConfig.animation,
+      enableHomeTab: true,
+      enableMessagesTab: embedConfig.enableMessagesTab,
+      enableHelpTab: embedConfig.enableHelpTab,
+      enableNewsTab: embedConfig.enableNewsTab || false,
+      showBottomNav: embedConfig.showBottomNav,
+      enableContactForm: embedConfig.enableContactForm,
+      contactFormTitle: embedConfig.contactFormTitle,
+      contactFormSubtitle: embedConfig.contactFormSubtitle,
+      customFields: embedConfig.customFields,
+      quickActions: embedConfig.quickActions.map(qa => ({
+        id: qa.id,
+        label: qa.title,
+        subtitle: qa.subtitle,
+        icon: qa.icon,
+        actionType: qa.action,
+        action: qa.action,
+      })),
+      announcements: activeAnnouncements.map(a => ({
+        id: a.id,
+        title: a.title,
+        subtitle: a.subtitle || undefined,
+        image_url: a.image_url || undefined,
+        background_color: a.background_color || '#ffffff',
+        title_color: a.title_color || '#000000',
+        action_type: a.action_type || undefined,
+        action_url: a.action_url || undefined,
+      })),
+      helpCategories: helpCategories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        description: cat.description || undefined,
+        icon: undefined,
+      })),
+      helpArticles: helpArticles.map(art => {
+        const category = helpCategories.find(c => c.name === art.category);
+        return {
+          id: art.id,
+          category_id: category?.id || '',
+          category: art.category,
+          title: art.title,
+          content: art.content,
+          order: art.order || 0,
+        };
+      }),
+      newsItems: [],
+      enableVoiceMessages: true,
+      enableFileAttachments: true,
+      allowedFileTypes: ['image', 'document'],
+      enableMessageReactions: true,
+      showReadReceipts: true,
+      showBranding: embedConfig.showBranding,
+      locations: [],
+      wordpressSiteUrl: embedConfig.wordpressSiteUrl,
+      defaultLocationSlug: embedConfig.defaultLocationSlug,
+      enableAutoLocationDetection: embedConfig.enableAutoLocationDetection ?? true,
+    };
+  }, [agent, embedConfig, activeAnnouncements, helpCategories, helpArticles]);
 
   // Show loader until minimum display time elapsed
   if (showLoader) {
@@ -244,40 +247,48 @@ const AriConfigurator = () => {
   const renderSectionContent = () => {
     const commonProps = { agent, onUpdate: handleUpdate };
     
-    switch (activeSection) {
-      case 'model-behavior':
-        return <AriModelBehaviorSection {...commonProps} />;
-      case 'system-prompt':
-        return <AriSystemPromptSection {...commonProps} />;
-      case 'appearance':
-        return <AriAppearanceSection agentId={agent.id} />;
-      case 'welcome-messages':
-        return <AriWelcomeMessagesSection agentId={agent.id} />;
-      case 'lead-capture':
-        return <AriLeadCaptureSection agentId={agent.id} />;
-      case 'knowledge':
-        return <AriKnowledgeSection agentId={agent.id} userId={agent.user_id} />;
-      case 'locations':
-        return <AriLocationsSection agentId={agent.id} userId={agent.user_id} />;
-      case 'help-articles':
-        return <AriHelpArticlesSection agentId={agent.id} userId={agent.user_id} />;
-      case 'announcements':
-        return <AriAnnouncementsSection agentId={agent.id} userId={agent.user_id} />;
-      case 'news':
-        return <AriNewsSection agentId={agent.id} userId={agent.user_id} />;
-      case 'custom-tools':
-        return <AriCustomToolsSection agentId={agent.id} />;
-      case 'webhooks':
-        return <AriWebhooksSection agentId={agent.id} />;
-      case 'integrations':
-        return <AriIntegrationsSection agentId={agent.id} />;
-      case 'api-access':
-        return <AriApiAccessSection agentId={agent.id} />;
-      case 'installation':
-        return <AriInstallationSection agentId={agent.id} />;
-      default:
-        return null;
-    }
+    const getSectionContent = () => {
+      switch (activeSection) {
+        case 'model-behavior':
+          return <AriModelBehaviorSection {...commonProps} />;
+        case 'system-prompt':
+          return <AriSystemPromptSection {...commonProps} />;
+        case 'appearance':
+          return <AriAppearanceSection agentId={agent.id} />;
+        case 'welcome-messages':
+          return <AriWelcomeMessagesSection agentId={agent.id} />;
+        case 'lead-capture':
+          return <AriLeadCaptureSection agentId={agent.id} />;
+        case 'knowledge':
+          return <AriKnowledgeSection agentId={agent.id} userId={agent.user_id} />;
+        case 'locations':
+          return <AriLocationsSection agentId={agent.id} userId={agent.user_id} />;
+        case 'help-articles':
+          return <AriHelpArticlesSection agentId={agent.id} userId={agent.user_id} />;
+        case 'announcements':
+          return <AriAnnouncementsSection agentId={agent.id} userId={agent.user_id} />;
+        case 'news':
+          return <AriNewsSection agentId={agent.id} userId={agent.user_id} />;
+        case 'custom-tools':
+          return <AriCustomToolsSection agentId={agent.id} />;
+        case 'webhooks':
+          return <AriWebhooksSection agentId={agent.id} />;
+        case 'integrations':
+          return <AriIntegrationsSection agentId={agent.id} />;
+        case 'api-access':
+          return <AriApiAccessSection agentId={agent.id} />;
+        case 'installation':
+          return <AriInstallationSection agentId={agent.id} />;
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <SectionErrorBoundary key={activeSection} sectionName={activeSection.replace('-', ' ')}>
+        {getSectionContent()}
+      </SectionErrorBoundary>
+    );
   };
 
   return (
