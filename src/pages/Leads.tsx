@@ -21,12 +21,17 @@ import { LeadsTable } from '@/components/leads/LeadsTable';
 import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
-import { LeadsViewSettingsSheet } from '@/components/leads/LeadsViewSettingsSheet';
+import { 
+  LeadsViewSettingsSheet,
+  TABLE_VISIBILITY_STORAGE_KEY,
+  DEFAULT_TABLE_COLUMN_VISIBILITY,
+} from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
 import { Settings01 } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
+import type { VisibilityState } from '@tanstack/react-table';
 
 /** Props for the Leads page */
 interface LeadsProps {
@@ -65,6 +70,24 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     }
     return getDefaultVisibleFields();
   });
+
+  // Table column visibility state with localStorage persistence
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
+    try {
+      const stored = localStorage.getItem(TABLE_VISIBILITY_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored) as VisibilityState;
+      }
+    } catch {
+      // Fallback to defaults on parse error
+    }
+    return { ...DEFAULT_TABLE_COLUMN_VISIBILITY };
+  });
+
+  const handleColumnVisibilityChange = useCallback((visibility: VisibilityState) => {
+    setColumnVisibility(visibility);
+    localStorage.setItem(TABLE_VISIBILITY_STORAGE_KEY, JSON.stringify(visibility));
+  }, []);
 
   const handleToggleField = useCallback((field: CardFieldKey) => {
     setVisibleCardFields(prev => {
@@ -268,6 +291,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   onOpenSettings={() => setIsSettingsSheetOpen(true)}
+                  columnVisibility={columnVisibility}
+                  onColumnVisibilityChange={handleColumnVisibilityChange}
                 />
               </motion.div>
             )}
@@ -315,6 +340,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         visibleFields={visibleCardFields}
         onToggleField={handleToggleField}
         onSetFields={handleSetFields}
+        columnVisibility={columnVisibility}
+        onColumnVisibilityChange={handleColumnVisibilityChange}
         allLeads={leads}
         filteredLeads={filteredLeads}
       />

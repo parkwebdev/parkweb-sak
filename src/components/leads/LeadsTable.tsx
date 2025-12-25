@@ -43,6 +43,9 @@ interface LeadsTableProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onOpenSettings?: () => void;
+  // External column visibility control
+  columnVisibility: VisibilityState;
+  onColumnVisibilityChange: (visibility: VisibilityState) => void;
 }
 
 export const LeadsTable = React.memo(function LeadsTable({
@@ -58,10 +61,11 @@ export const LeadsTable = React.memo(function LeadsTable({
   searchQuery,
   onSearchChange,
   onOpenSettings,
+  columnVisibility,
+  onColumnVisibilityChange,
 }: LeadsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const rowSelection = useMemo(() => {
     const selection: RowSelectionState = {};
@@ -117,7 +121,10 @@ export const LeadsTable = React.memo(function LeadsTable({
     onSortingChange: setSorting,
     onRowSelectionChange: handleRowSelectionChange,
     onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: (updater) => {
+      const newVisibility = typeof updater === 'function' ? updater(columnVisibility) : updater;
+      onColumnVisibilityChange(newVisibility);
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
