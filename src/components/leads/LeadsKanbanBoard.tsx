@@ -1,14 +1,14 @@
 /**
  * @fileoverview Kanban board for managing leads with drag-and-drop status updates.
- * Uses the shadcn kanban pattern with render props.
+ * Uses dynamic stages from the database with inline editing support.
  */
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Mail01, Phone, Building02, Eye } from "@untitledui/icons";
+import { Mail01, Phone, Building02 } from "@untitledui/icons";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   KanbanProvider,
   KanbanBoard,
@@ -16,18 +16,8 @@ import {
   KanbanCards,
   KanbanCard,
 } from "@/components/ui/kanban";
-import type { Tables, Enums } from "@/integrations/supabase/types";
-
-// Column definitions with status mapping and colors
-const COLUMNS = [
-  { id: "new", name: "New", colorClass: "bg-blue-500" },
-  { id: "contacted", name: "Contacted", colorClass: "bg-purple-500" },
-  { id: "qualified", name: "Qualified", colorClass: "bg-emerald-500" },
-  { id: "converted", name: "Converted", colorClass: "bg-green-600" },
-  { id: "lost", name: "Lost", colorClass: "bg-muted-foreground" },
-] as const;
-
-type LeadStatus = (typeof COLUMNS)[number]["id"];
+import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
+import type { Tables } from "@/integrations/supabase/types";
 
 // Kanban-compatible lead type
 type KanbanLead = {
@@ -37,15 +27,81 @@ type KanbanLead = {
   email: string | null;
   phone: string | null;
   company: string | null;
-  status: string;
+  stage_id: string | null;
   created_at: string;
 };
 
 interface LeadsKanbanBoardProps {
   leads: Tables<"leads">[];
-  onStatusChange: (leadId: string, status: Enums<"lead_status">) => void;
+  onStatusChange: (leadId: string, stageId: string) => void;
   onViewLead: (lead: Tables<"leads">) => void;
-  onOrderChange?: (updates: { id: string; kanban_order: number; status?: Enums<"lead_status"> }[]) => void;
+  onOrderChange?: (updates: { id: string; kanban_order: number; stage_id?: string }[]) => void;
+}
+
+// Inline editable column header
+function InlineStageHeader({
+  stage,
+  count,
+  onUpdate,
+}: {
+  stage: LeadStage;
+  count: number;
+  onUpdate: (id: string, updates: Partial<Pick<LeadStage, 'name' | 'color'>>) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(stage.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleSave = useCallback(() => {
+    if (editName.trim() && editName !== stage.name) {
+      onUpdate(stage.id, { name: editName.trim() });
+    } else {
+      setEditName(stage.name);
+    }
+    setIsEditing(false);
+  }, [editName, stage.id, stage.name, onUpdate]);
+
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className="h-2 w-2 rounded-full"
+        style={{ backgroundColor: stage.color }}
+      />
+      {isEditing ? (
+        <Input
+          ref={inputRef}
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleSave();
+            if (e.key === 'Escape') {
+              setEditName(stage.name);
+              setIsEditing(false);
+            }
+          }}
+          className="h-6 w-24 text-sm font-medium px-1"
+        />
+      ) : (
+        <button
+          onClick={() => setIsEditing(true)}
+          className="text-sm font-medium hover:text-primary transition-colors"
+        >
+          {stage.name}
+        </button>
+      )}
+      <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+        {count}
+      </Badge>
+    </div>
+  );
 }
 
 // Individual lead card content - memoized for performance
@@ -83,7 +139,6 @@ export const LeadCardContent = React.memo(function LeadCardContent({ lead }: { l
           </div>
         )}
       </div>
-
     </div>
   );
 });
@@ -94,20 +149,36 @@ export function LeadsKanbanBoard({
   onViewLead,
   onOrderChange,
 }: LeadsKanbanBoardProps) {
-  // Transform leads to kanban format with column property
+  const { stages, loading: stagesLoading, updateStage } = useLeadStages();
+
+  // Build columns from stages
+  const columns = useMemo(() => 
+    stages.map(stage => ({
+      id: stage.id,
+      name: stage.name,
+    })),
+    [stages]
+  );
+
+  // Transform leads to kanban format with stage_id as column
   const kanbanLeads = useMemo<KanbanLead[]>(
     () =>
-      leads.map((lead) => ({
-        id: lead.id,
-        name: lead.name || "Unnamed Lead",
-        column: lead.status,
-        email: lead.email,
-        phone: lead.phone,
-        company: lead.company,
-        status: lead.status,
-        created_at: lead.created_at,
-      })),
-    [leads]
+      leads.map((lead) => {
+        // Find matching stage - fallback to first stage if not found
+        const stageId = lead.stage_id || stages.find(s => s.is_default)?.id || stages[0]?.id || '';
+        
+        return {
+          id: lead.id,
+          name: lead.name || "Unnamed Lead",
+          column: stageId,
+          email: lead.email,
+          phone: lead.phone,
+          company: lead.company,
+          stage_id: lead.stage_id,
+          created_at: lead.created_at,
+        };
+      }),
+    [leads, stages]
   );
 
   // Get count for each column
@@ -130,7 +201,7 @@ export function LeadsKanbanBoard({
         for (const item of newData) {
           const original = kanbanLeads.find((l) => l.id === item.id);
           if (original && original.column !== item.column) {
-            onStatusChange(item.id, item.column as Enums<"lead_status">);
+            onStatusChange(item.id, item.column);
             break;
           }
         }
@@ -138,7 +209,7 @@ export function LeadsKanbanBoard({
       }
 
       // Build updates for all leads that changed position or column
-      const updates: { id: string; kanban_order: number; status?: Enums<"lead_status"> }[] = [];
+      const updates: { id: string; kanban_order: number; stage_id?: string }[] = [];
       
       // Group new data by column to calculate order within each column
       const byColumn = new Map<string, KanbanLead[]>();
@@ -163,7 +234,7 @@ export function LeadsKanbanBoard({
             updates.push({
               id: item.id,
               kanban_order: index + 1,
-              ...(columnChanged && { status: item.column as Enums<"lead_status"> }),
+              ...(columnChanged && { stage_id: item.column }),
             });
           }
         });
@@ -186,50 +257,76 @@ export function LeadsKanbanBoard({
     []
   );
 
+  // Handle stage name updates
+  const handleStageUpdate = useCallback(
+    (id: string, updates: Partial<Pick<LeadStage, 'name' | 'color'>>) => {
+      updateStage(id, updates);
+    },
+    [updateStage]
+  );
+
+  // Loading state
+  if (stagesLoading || stages.length === 0) {
+    return (
+      <div className="w-full min-w-0">
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex-shrink-0 w-72">
+              <div className="h-8 bg-muted animate-pulse rounded mb-2" />
+              <div className="space-y-2">
+                <div className="h-24 bg-muted animate-pulse rounded" />
+                <div className="h-24 bg-muted animate-pulse rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-w-0">
       <div className="overflow-x-auto pb-4">
         <KanbanProvider
-          columns={COLUMNS as unknown as { id: string; name: string }[]}
+          columns={columns}
           data={kanbanLeads}
           onDataChange={handleDataChange}
           renderOverlay={renderCardOverlay}
         >
-          {(column) => (
-            <KanbanBoard key={column.id} id={column.id}>
-              <KanbanHeader>
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`h-2 w-2 rounded-full ${
-                      COLUMNS.find((c) => c.id === column.id)?.colorClass
-                    }`}
+          {(column) => {
+            const stage = stages.find(s => s.id === column.id);
+            if (!stage) return null;
+
+            return (
+              <KanbanBoard key={column.id} id={column.id}>
+                <KanbanHeader>
+                  <InlineStageHeader
+                    stage={stage}
+                    count={getColumnCount(column.id)}
+                    onUpdate={handleStageUpdate}
                   />
-                  <span className="text-sm font-medium">{column.name}</span>
-                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                    {getColumnCount(column.id)}
-                  </Badge>
-                </div>
-              </KanbanHeader>
-              <KanbanCards id={column.id}>
-                {(lead: KanbanLead) => (
-                  <KanbanCard
-                    key={lead.id}
-                    id={lead.id}
-                    name={lead.name}
-                    column={lead.column}
-                    onClick={() => {
-                      const originalLead = findOriginalLead(lead.id);
-                      if (originalLead) {
-                        onViewLead(originalLead);
-                      }
-                    }}
-                  >
-                    <LeadCardContent lead={lead} />
-                  </KanbanCard>
-                )}
-              </KanbanCards>
-            </KanbanBoard>
-          )}
+                </KanbanHeader>
+                <KanbanCards id={column.id}>
+                  {(lead: KanbanLead) => (
+                    <KanbanCard
+                      key={lead.id}
+                      id={lead.id}
+                      name={lead.name}
+                      column={lead.column}
+                      onClick={() => {
+                        const originalLead = findOriginalLead(lead.id);
+                        if (originalLead) {
+                          onViewLead(originalLead);
+                        }
+                      }}
+                    >
+                      <LeadCardContent lead={lead} />
+                    </KanbanCard>
+                  )}
+                </KanbanCards>
+              </KanbanBoard>
+            );
+          }}
         </KanbanProvider>
       </div>
     </div>

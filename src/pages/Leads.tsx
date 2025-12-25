@@ -14,6 +14,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
@@ -22,8 +23,10 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
+import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
+import { Settings01 } from '@untitledui/icons';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 
 /** Props for the Leads page */
@@ -50,6 +53,9 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   
   // Export dialog state
   const [isExportOpen, setIsExportOpen] = useState(false);
+  
+  // Manage stages dialog state
+  const [isManageStagesOpen, setIsManageStagesOpen] = useState(false);
   
   // Shared search state for filtering across both views
   const [searchQuery, setSearchQuery] = useState('');
@@ -200,14 +206,24 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                     </svg>
                   </div>
-                  <ViewModeToggle
-                    viewMode={viewMode}
-                    onViewModeChange={setViewMode}
-                  />
+                  <div className="flex items-center gap-2">
+                    <IconButton
+                      label="Manage stages"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsManageStagesOpen(true)}
+                    >
+                      <Settings01 size={16} />
+                    </IconButton>
+                    <ViewModeToggle
+                      viewMode={viewMode}
+                      onViewModeChange={setViewMode}
+                    />
+                  </div>
                 </div>
                 <LeadsKanbanBoard
                   leads={filteredLeads}
-                  onStatusChange={(leadId, status) => updateLead(leadId, { status })}
+                  onStatusChange={(leadId, stageId) => updateLead(leadId, { stage_id: stageId })}
                   onViewLead={handleViewLead}
                   onOrderChange={updateLeadOrders}
                 />

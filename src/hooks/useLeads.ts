@@ -162,7 +162,7 @@ export const useLeads = () => {
    * Batch update kanban order for multiple leads (used for drag-and-drop reordering)
    * Optimistically updates local state, then persists to database
    */
-  const updateLeadOrders = async (updates: { id: string; kanban_order: number; status?: Enums<'lead_status'> }[]) => {
+  const updateLeadOrders = async (updates: { id: string; kanban_order: number; status?: Enums<'lead_status'>; stage_id?: string }[]) => {
     if (updates.length === 0) return;
 
     const previousLeads = queryClient.getQueryData<Lead[]>(queryKeys.leads.list());
@@ -179,6 +179,7 @@ export const useLeads = () => {
             ...lead, 
             kanban_order: update.kanban_order,
             status: update.status ?? lead.status,
+            stage_id: update.stage_id ?? lead.stage_id,
           } as Lead;
         }
         return lead;
@@ -187,10 +188,10 @@ export const useLeads = () => {
 
     try {
       // Batch update using Promise.all for efficiency
-      const updatePromises = updates.map(({ id, kanban_order, status }) => 
+      const updatePromises = updates.map(({ id, kanban_order, status, stage_id }) => 
         supabase
           .from('leads')
-          .update({ kanban_order, ...(status && { status }) })
+          .update({ kanban_order, ...(status && { status }), ...(stage_id && { stage_id }) })
           .eq('id', id)
       );
       
