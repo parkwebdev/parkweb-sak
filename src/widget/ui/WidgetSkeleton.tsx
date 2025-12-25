@@ -126,3 +126,40 @@ export function WidgetSkeletonLinkPreview() {
     </div>
   );
 }
+
+/** Full widget loading skeleton (replaces spinner) */
+export function WidgetSkeletonLoader() {
+  return (
+    <div className="w-full h-full flex flex-col bg-background">
+      {/* Header skeleton */}
+      <div className="p-4 border-b flex items-center gap-3">
+        <WidgetSkeleton className="h-8 w-8 rounded-full" />
+        <WidgetSkeleton className="h-5 w-24" />
+      </div>
+      {/* Content skeleton */}
+      <div className="flex-1 p-4 space-y-4">
+        <WidgetSkeletonMessage />
+        <WidgetSkeletonMessage isUser />
+        <WidgetSkeletonMessage />
+      </div>
+      {/* Input skeleton */}
+      <div className="p-4 border-t">
+        <WidgetSkeleton className="h-10 w-full rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
+/** View loading skeleton for lazy-loaded views (Help, News) */
+export function WidgetSkeletonView() {
+  return (
+    <div className="flex-1 p-4 space-y-4">
+      <WidgetSkeleton className="h-6 w-32" />
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <WidgetSkeletonListItem key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}

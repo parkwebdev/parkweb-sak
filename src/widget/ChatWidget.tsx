@@ -62,7 +62,7 @@ const NewsView = lazy(() => import('./views/NewsView').then(m => ({ default: m.N
 
 // UI Components
 import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating } from './components';
-import { WidgetCard } from './ui';
+import { WidgetCard, WidgetSkeletonView, WidgetSkeletonLoader } from './ui';
 
 /**
  * Props for the inner widget component that requires a non-null config
@@ -490,7 +490,7 @@ const ChatWidgetInner = ({
               )}
 
               {currentView === 'help' && (
-                <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                <Suspense fallback={<WidgetSkeletonView />}>
                   <HelpView
                     config={config}
                     helpCategories={config.helpCategories}
@@ -500,7 +500,7 @@ const ChatWidgetInner = ({
               )}
 
               {currentView === 'news' && (
-                <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                <Suspense fallback={<WidgetSkeletonView />}>
                   <NewsView
                     config={config}
                     newsItems={config.newsItems || []}
@@ -581,14 +581,7 @@ export const ChatWidget = ({
 
   // Show loading state while config is being fetched
   if (loading || !config) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-background">
-        <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-      </div>
-    );
+    return <WidgetSkeletonLoader />;
   }
 
   // Config is guaranteed non-null here, render the inner widget

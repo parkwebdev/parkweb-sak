@@ -39,5 +39,7 @@ export {
   WidgetSkeletonArticleContent,
   WidgetSkeletonWelcome,
   WidgetSkeletonBooking,
-  WidgetSkeletonLinkPreview
+  WidgetSkeletonLinkPreview,
+  WidgetSkeletonLoader,
+  WidgetSkeletonView,
 } from './WidgetSkeleton';
