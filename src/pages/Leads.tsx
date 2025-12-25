@@ -28,10 +28,9 @@ import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
 import { KanbanCardFieldsSheet } from '@/components/leads/KanbanCardFieldsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
-import { LayoutGrid01 } from '@untitledui/icons';
+import { List } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
-import { Settings01 } from '@untitledui/icons';
 import type { Tables } from '@/integrations/supabase/types';
 
 /** Props for the Leads page */
@@ -244,10 +243,10 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="gap-2"
+                      className="h-8 gap-2"
                       onClick={() => setIsFieldsSheetOpen(true)}
                     >
-                      <LayoutGrid01 size={16} />
+                      <List size={16} />
                       <span className="hidden sm:inline">Fields</span>
                     </Button>
                     <TooltipProvider>
@@ -257,9 +256,10 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                             label="Manage stages"
                             variant="outline"
                             size="sm"
+                            className="h-8 w-8"
                             onClick={() => setIsManageStagesOpen(true)}
                           >
-                            <Settings01 size={16} />
+                            <List size={16} />
                           </IconButton>
                         </TooltipTrigger>
                         <TooltipContent>
