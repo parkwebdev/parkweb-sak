@@ -16,8 +16,8 @@ import { logger } from '@/utils/logger';
 interface Props {
   /** Child components to render */
   children: ReactNode;
-  /** Optional custom fallback UI to display on error */
-  fallback?: ReactNode;
+  /** Optional custom fallback UI to display on error - can be a ReactNode or render function */
+  fallback?: ReactNode | ((error: Error | null) => ReactNode);
 }
 
 /**
@@ -79,7 +79,11 @@ class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      // Support both ReactNode and render function fallbacks
       if (this.props.fallback) {
+        if (typeof this.props.fallback === 'function') {
+          return this.props.fallback(this.state.error);
+        }
         return this.props.fallback;
       }
 

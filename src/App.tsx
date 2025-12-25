@@ -56,7 +56,7 @@ const ProtectedLayout = () => (
  * Configures providers and routes for the entire application.
  */
 const App = () => (
-  <ErrorBoundary fallback={<RouteErrorFallback />}>
+  <ErrorBoundary fallback={(error) => <RouteErrorFallback error={error ?? undefined} />}>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="app-ui-theme">
         <TooltipProvider>
