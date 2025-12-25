@@ -18,7 +18,6 @@ import { LayoutAlt04, List } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
-import { LeadsToolbar } from '@/components/leads/LeadsToolbar';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
@@ -39,9 +38,6 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   
-  // Shared filter state
-  const [searchQuery, setSearchQuery] = useState('');
-  
   // Bulk selection state
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -50,7 +46,10 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   // Single lead delete from details sheet
   const [singleDeleteLeadId, setSingleDeleteLeadId] = useState<string | null>(null);
   const [isSingleDeleteOpen, setIsSingleDeleteOpen] = useState(false);
-
+  
+  // Shared search state for filtering across both views
+  const [searchQuery, setSearchQuery] = useState('');
+  
   // Filter leads based on search query (shared across views)
   const filteredLeads = useMemo(() => {
     if (!searchQuery.trim()) return leads;
@@ -192,12 +191,6 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* Shared Search */}
-        <LeadsToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-
         {/* Content */}
         {loading ? (
           <SkeletonLeadsPage />
@@ -212,8 +205,20 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="space-y-4"
               >
-                {/* View toggle for Kanban */}
-                <div className="flex justify-end">
+                {/* Kanban toolbar with search and view toggle */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="relative w-full max-w-sm">
+                    <input
+                      type="text"
+                      placeholder="Search leads..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                    <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                  </div>
                   <div className="flex border rounded-lg">
                     <Button
                       variant="secondary"
@@ -261,6 +266,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                   }}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
                 />
               </motion.div>
             )}

@@ -40,6 +40,8 @@ interface LeadsTableProps {
   onBulkDelete?: (ids: string[]) => void;
   viewMode: 'kanban' | 'table';
   onViewModeChange: (mode: 'kanban' | 'table') => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
 }
 
 const STATUS_OPTIONS = [
@@ -61,6 +63,8 @@ export const LeadsTable = React.memo(function LeadsTable({
   onBulkDelete,
   viewMode,
   onViewModeChange,
+  searchQuery,
+  onSearchChange,
 }: LeadsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -149,33 +153,36 @@ export const LeadsTable = React.memo(function LeadsTable({
     <div className="space-y-4">
       <DataTableToolbar
         table={table}
-        searchPlaceholder="Filter by name..."
-        globalFilter
+        searchPlaceholder="Search leads..."
         showViewOptions
+        searchValue={searchQuery}
+        onSearchChange={onSearchChange}
+        endContent={
+          <div className="flex border rounded-lg">
+            <Button
+              variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => onViewModeChange('kanban')}
+              aria-label="Kanban view"
+            >
+              <LayoutAlt04 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => onViewModeChange('table')}
+              aria-label="Table view"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        }
       >
         <DataTableFacetedFilter
           column={table.getColumn('status')}
           title="Status"
           options={STATUS_OPTIONS}
         />
-        <div className="flex border rounded-lg">
-          <Button
-            variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => onViewModeChange('kanban')}
-            aria-label="Kanban view"
-          >
-            <LayoutAlt04 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => onViewModeChange('table')}
-            aria-label="Table view"
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
       </DataTableToolbar>
       <DataTable
         table={table}
