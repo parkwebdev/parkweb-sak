@@ -24,6 +24,12 @@ interface DataTableToolbarProps<TData> {
   filterContent?: React.ReactNode;
   /** Show column visibility toggle */
   showViewOptions?: boolean;
+  /** Content rendered after the Columns button (e.g., view toggle) */
+  endContent?: React.ReactNode;
+  /** Controlled search value (when provided, search becomes controlled) */
+  searchValue?: string;
+  /** Callback when search value changes (required when searchValue is provided) */
+  onSearchChange?: (value: string) => void;
 }
 
 export function DataTableToolbar<TData>({
@@ -37,8 +43,15 @@ export function DataTableToolbar<TData>({
   searchClassName,
   filterContent,
   showViewOptions = false,
+  endContent,
+  searchValue: controlledSearchValue,
+  onSearchChange: controlledOnSearchChange,
 }: DataTableToolbarProps<TData>) {
-  const isFiltered = globalFilter
+  // Determine if search is controlled externally
+  const isControlled = controlledSearchValue !== undefined;
+  const isFiltered = isControlled
+    ? !!controlledSearchValue
+    : globalFilter
     ? table.getState().globalFilter
     : searchColumn
     ? table.getColumn(searchColumn)?.getFilterValue()
@@ -48,7 +61,9 @@ export function DataTableToolbar<TData>({
   const hasColumnFilters = table.getState().columnFilters.length > 0;
 
   const handleSearchChange = (value: string) => {
-    if (globalFilter) {
+    if (isControlled) {
+      controlledOnSearchChange?.(value);
+    } else if (globalFilter) {
       table.setGlobalFilter(value);
     } else if (searchColumn) {
       table.getColumn(searchColumn)?.setFilterValue(value);
@@ -56,7 +71,9 @@ export function DataTableToolbar<TData>({
   };
 
   const handleClear = () => {
-    if (globalFilter) {
+    if (isControlled) {
+      controlledOnSearchChange?.('');
+    } else if (globalFilter) {
       table.setGlobalFilter('');
     } else if (searchColumn) {
       table.getColumn(searchColumn)?.setFilterValue('');
@@ -65,12 +82,16 @@ export function DataTableToolbar<TData>({
 
   const handleResetFilters = () => {
     table.resetColumnFilters();
-    if (globalFilter) {
+    if (isControlled) {
+      controlledOnSearchChange?.('');
+    } else if (globalFilter) {
       table.setGlobalFilter('');
     }
   };
 
-  const searchValue = globalFilter
+  const searchDisplayValue = isControlled
+    ? controlledSearchValue
+    : globalFilter
     ? (table.getState().globalFilter as string) ?? ''
     : searchColumn
     ? (table.getColumn(searchColumn)?.getFilterValue() as string) ?? ''
@@ -84,7 +105,7 @@ export function DataTableToolbar<TData>({
           <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
-            value={searchValue}
+            value={searchDisplayValue}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9 pr-9"
           />
@@ -116,6 +137,7 @@ export function DataTableToolbar<TData>({
       <div className="flex items-center gap-2">
         {children}
         {showViewOptions && <DataTableViewOptions table={table} />}
+        {endContent}
       </div>
     </div>
   );
