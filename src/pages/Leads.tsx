@@ -14,10 +14,10 @@
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { LayoutAlt04, List } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
+import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
@@ -219,24 +219,10 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                     </svg>
                   </div>
-                  <div className="flex border rounded-lg">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setViewMode('kanban')}
-                      aria-label="Kanban view"
-                    >
-                      <LayoutAlt04 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setViewMode('table')}
-                      aria-label="Table view"
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <ViewModeToggle
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                  />
                 </div>
                 <LeadsKanbanBoard
                   leads={filteredLeads}

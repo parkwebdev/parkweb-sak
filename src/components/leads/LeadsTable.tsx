@@ -18,7 +18,7 @@ import {
   VisibilityState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { Trash01, Download01, LayoutAlt04, List } from '@untitledui/icons';
+import { Trash01, Download01 } from '@untitledui/icons';
 import {
   DataTable,
   DataTablePagination,
@@ -28,6 +28,7 @@ import {
 } from '@/components/data-table';
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
+import { ViewModeToggle } from './ViewModeToggle';
 import { Button } from '@/components/ui/button';
 
 interface LeadsTableProps {
@@ -158,24 +159,10 @@ export const LeadsTable = React.memo(function LeadsTable({
         searchValue={searchQuery}
         onSearchChange={onSearchChange}
         endContent={
-          <div className="flex border rounded-lg">
-            <Button
-              variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('kanban')}
-              aria-label="Kanban view"
-            >
-              <LayoutAlt04 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('table')}
-              aria-label="Table view"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+          <ViewModeToggle
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+          />
         }
       >
         <DataTableFacetedFilter
