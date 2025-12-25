@@ -76,6 +76,12 @@ export interface UseWidgetMessagingProps {
   browserLanguageRef: React.MutableRefObject<string>;
   /** Callback to trigger rating prompt (from useWidgetRating) */
   triggerRating?: (type: 'team_closed' | 'ai_marked_complete') => void;
+  /** Callback to set human takeover state (from useWidgetTakeover) */
+  setIsHumanTakeover?: (value: boolean) => void;
+  /** Callback to set takeover agent name (from useWidgetTakeover) */
+  setTakeoverAgentName?: (name: string | undefined) => void;
+  /** Callback to set takeover agent avatar (from useWidgetTakeover) */
+  setTakeoverAgentAvatar?: (avatar: string | undefined) => void;
 }
 
 export interface UseWidgetMessagingReturn {
@@ -109,19 +115,6 @@ export interface UseWidgetMessagingReturn {
   /** Handle contact form submission with AI greeting */
   handleFormSubmit: (userData: ChatUser, conversationId?: string) => Promise<void>;
   
-  // === Takeover State ===
-  /** Whether human takeover is active */
-  isHumanTakeover: boolean;
-  /** Set human takeover state */
-  setIsHumanTakeover: (value: boolean) => void;
-  /** Takeover agent name */
-  takeoverAgentName: string | undefined;
-  /** Set takeover agent name */
-  setTakeoverAgentName: (name: string | undefined) => void;
-  /** Takeover agent avatar URL */
-  takeoverAgentAvatar: string | undefined;
-  /** Set takeover agent avatar */
-  setTakeoverAgentAvatar: (avatar: string | undefined) => void;
 }
 
 // ============================================================================
@@ -146,6 +139,9 @@ export function useWidgetMessaging({
   currentPageRef,
   browserLanguageRef,
   triggerRating,
+  setIsHumanTakeover,
+  setTakeoverAgentName,
+  setTakeoverAgentAvatar,
 }: UseWidgetMessagingProps): UseWidgetMessagingReturn {
   // === Input State ===
   const [messageInput, setMessageInput] = useState('');
@@ -154,11 +150,6 @@ export function useWidgetMessaging({
   // === UI State ===
   const [isTyping, setIsTyping] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
-  
-  // === Takeover State ===
-  const [isHumanTakeover, setIsHumanTakeover] = useState(false);
-  const [takeoverAgentName, setTakeoverAgentName] = useState<string | undefined>();
-  const [takeoverAgentAvatar, setTakeoverAgentAvatar] = useState<string | undefined>();
   
   // === Refs ===
   const recentChunkIdsRef = useRef<Set<string>>(new Set());
@@ -285,10 +276,10 @@ export function useWidgetMessaging({
       }
 
       if (response.status === 'human_takeover') {
-        setIsHumanTakeover(true);
+        setIsHumanTakeover?.(true);
         if (response.takenOverBy) {
-          setTakeoverAgentName(response.takenOverBy.name);
-          setTakeoverAgentAvatar(response.takenOverBy.avatar);
+          setTakeoverAgentName?.(response.takenOverBy.name);
+          setTakeoverAgentAvatar?.(response.takenOverBy.avatar);
         }
         if (response.userMessageId) {
           setMessages(prev => {
@@ -562,13 +553,5 @@ export function useWidgetMessaging({
     handleSendMessage,
     handleQuickReplySelectWithSend,
     handleFormSubmit,
-    
-    // Takeover State
-    isHumanTakeover,
-    setIsHumanTakeover,
-    takeoverAgentName,
-    setTakeoverAgentName,
-    takeoverAgentAvatar,
-    setTakeoverAgentAvatar,
   };
 }

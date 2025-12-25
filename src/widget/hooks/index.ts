@@ -73,6 +73,16 @@ export { useWidgetNavigation } from './useWidgetNavigation';
 export { useWidgetRating } from './useWidgetRating';
 
 // ============================================================================
+// Takeover Hooks
+// ============================================================================
+
+/**
+ * Human takeover and typing indicator state
+ * @see useWidgetTakeover - Phase 5 refactor (extracted from useWidgetMessaging + ChatWidget)
+ */
+export { useWidgetTakeover } from './useWidgetTakeover';
+
+// ============================================================================
 // Communication Hooks
 // ============================================================================
 

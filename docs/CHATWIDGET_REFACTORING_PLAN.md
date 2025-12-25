@@ -1,7 +1,7 @@
 # ChatWidget Refactoring Plan
 
 > **Last Updated**: December 2024  
-> **Status**: Phases 1-4 COMPLETE ✅ | Phases 5-9 Ready for Implementation  
+> **Status**: Phases 1-5 COMPLETE ✅ | Phases 6-9 Ready for Implementation  
 > **Priority**: 🟡 MEDIUM  
 > **Risk Level**: LOW (documentation/hook extraction only, no UI changes)
 
@@ -48,6 +48,21 @@
 - `setShowRatingPrompt` / `setRatingTriggerType` direct setters
 **Integration**: `useWidgetMessaging` now accepts optional `triggerRating` callback prop
 **Barrel exports updated**: Added Rating Hooks section
+
+## ✅ Phase 5: VERIFIED COMPLETE
+
+**Hook Created**: `src/widget/hooks/useWidgetTakeover.ts` (~89 lines)
+**ChatWidget.tsx**: 550 → 556 lines (+6 lines due to cleaner hook organization)
+**useWidgetMessaging.ts reduced**: 572 → 557 lines (-15 lines, takeover state removed)
+**Extracted**:
+- `isHumanTakeover` / `setIsHumanTakeover` state
+- `takeoverAgentName` / `setTakeoverAgentName` state
+- `takeoverAgentAvatar` / `setTakeoverAgentAvatar` state
+- `isHumanTyping` / `setIsHumanTyping` state (moved from ChatWidget.tsx)
+- `typingAgentName` / `setTypingAgentName` state (moved from ChatWidget.tsx)
+**Integration**: `useWidgetMessaging` now accepts optional takeover setters as callback props
+**Barrel exports updated**: Added Takeover Hooks section
+
 
 Transform `ChatWidget.tsx` from a **954-line monolith** into a **lean ~400-line orchestrator** by extracting inline logic into dedicated hooks. This refactoring:
 
