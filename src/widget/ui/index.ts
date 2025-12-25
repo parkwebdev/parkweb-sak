@@ -42,4 +42,7 @@ export {
   WidgetSkeletonLinkPreview,
   WidgetSkeletonLoader,
   WidgetSkeletonView,
+  WidgetSkeletonCategory,
+  WidgetSkeletonNewsItem,
+  WidgetSkeletonConversationItem,
 } from './WidgetSkeleton';

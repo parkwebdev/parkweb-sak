@@ -418,6 +418,98 @@ function SkeletonLeadsPage({ className }: { className?: string }) {
   );
 }
 
+// =============================================================================
+// ADDITIONAL UTILITY SKELETONS
+// =============================================================================
+
+/**
+ * Badge skeleton for status indicators
+ */
+function SkeletonBadge({ width = "w-16", className }: { width?: string; className?: string }) {
+  return <Skeleton className={cn("h-5 rounded-full", width, className)} />;
+}
+
+/**
+ * Chart skeleton for analytics loading
+ */
+function SkeletonChart({ height = "h-64", className }: { height?: string; className?: string }) {
+  return (
+    <div className={cn("rounded-lg border bg-card p-4 space-y-3", className)}>
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-8 w-24" />
+      </div>
+      <Skeleton className={cn("w-full rounded-lg", height)} />
+    </div>
+  );
+}
+
+/**
+ * Form skeleton with configurable number of fields
+ */
+function SkeletonForm({ fields = 3, className }: { fields?: number; className?: string }) {
+  return (
+    <div className={cn("space-y-4", className)}>
+      {Array.from({ length: fields }).map((_, i) => (
+        <SkeletonFormField key={i} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Metric card skeleton for dashboards
+ */
+function SkeletonMetricCard({ className }: { className?: string }) {
+  return (
+    <div className={cn("rounded-lg border bg-card p-4 space-y-3", className)}>
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-24" />
+        <SkeletonBadge width="w-12" />
+      </div>
+      <Skeleton className="h-8 w-20" />
+      <Skeleton className="h-12 w-full" />
+    </div>
+  );
+}
+
+/**
+ * Button skeleton
+ */
+function SkeletonButton({ size = "default", className }: { size?: "sm" | "default" | "lg"; className?: string }) {
+  const sizeClasses = {
+    sm: "h-8 w-20",
+    default: "h-9 w-24",
+    lg: "h-10 w-28",
+  };
+  return <Skeleton className={cn("rounded-md", sizeClasses[size], className)} />;
+}
+
+/**
+ * Input skeleton
+ */
+function SkeletonInput({ className }: { className?: string }) {
+  return <Skeleton className={cn("h-10 w-full rounded-md", className)} />;
+}
+
+/**
+ * Toggle/Switch skeleton
+ */
+function SkeletonToggle({ className }: { className?: string }) {
+  return <Skeleton className={cn("h-5 w-9 rounded-full", className)} />;
+}
+
+/**
+ * Icon button skeleton
+ */
+function SkeletonIconButton({ size = "default", className }: { size?: "sm" | "default"; className?: string }) {
+  const sizeClasses = {
+    sm: "h-8 w-8",
+    default: "h-9 w-9",
+  };
+  return <Skeleton className={cn("rounded-md", sizeClasses[size], className)} />;
+}
+
 export {
   Skeleton,
   SkeletonText,
@@ -434,4 +526,12 @@ export {
   SkeletonProfileCard,
   SkeletonNotificationList,
   SkeletonLeadsPage,
+  SkeletonBadge,
+  SkeletonChart,
+  SkeletonForm,
+  SkeletonMetricCard,
+  SkeletonButton,
+  SkeletonInput,
+  SkeletonToggle,
+  SkeletonIconButton,
 };

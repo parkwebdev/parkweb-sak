@@ -163,3 +163,51 @@ export function WidgetSkeletonView() {
     </div>
   );
 }
+
+/** Category section skeleton for HelpView */
+export function WidgetSkeletonCategory() {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 p-2">
+        <WidgetSkeleton className="h-5 w-5" />
+        <WidgetSkeleton className="h-4 w-32" />
+      </div>
+      <div className="pl-7 space-y-1">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <WidgetSkeleton key={i} className="h-10 w-full rounded-lg" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** News item skeleton for NewsView */
+export function WidgetSkeletonNewsItem() {
+  return (
+    <div className="p-4 border-b space-y-3">
+      <div className="flex items-center gap-2">
+        <WidgetSkeleton className="h-6 w-6 rounded-full" />
+        <WidgetSkeleton className="h-3 w-24" />
+      </div>
+      <WidgetSkeleton className="h-5 w-3/4" />
+      <WidgetSkeleton className="h-32 w-full rounded-lg" />
+      <WidgetSkeletonText lines={2} />
+    </div>
+  );
+}
+
+/** Conversation list item skeleton for MessagesView */
+export function WidgetSkeletonConversationItem() {
+  return (
+    <div className="flex items-center gap-3 p-3 border-b">
+      <WidgetSkeleton className="h-10 w-10 rounded-full shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="flex items-center justify-between">
+          <WidgetSkeleton className="h-4 w-24" />
+          <WidgetSkeleton className="h-3 w-12" />
+        </div>
+        <WidgetSkeleton className="h-3 w-full" />
+      </div>
+    </div>
+  );
+}

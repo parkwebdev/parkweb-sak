@@ -407,3 +407,421 @@ export function SkeletonTeamTable({ className }: { className?: string }) {
     </div>
   );
 }
+
+// =============================================================================
+// DETAIL SHEET SKELETONS
+// =============================================================================
+
+/**
+ * Lead details sheet skeleton
+ */
+export function SkeletonLeadDetails({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6 p-6", className)}>
+      {/* Header with avatar */}
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-16 w-16 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+      </div>
+      {/* Status badge */}
+      <Skeleton className="h-6 w-20 rounded-full" />
+      {/* Contact info */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-24" />
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+      </div>
+      {/* Notes section */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-24 w-full rounded-md" />
+      </div>
+      {/* Actions */}
+      <div className="flex gap-2">
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Location details sheet skeleton
+ */
+export function SkeletonLocationDetails({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6 p-6", className)}>
+      {/* Header */}
+      <div className="space-y-2">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+      {/* Address */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+      {/* Contact info */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-28" />
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-36" />
+          </div>
+        </div>
+      </div>
+      {/* Business hours */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-32" />
+        <div className="space-y-2">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex justify-between">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Knowledge source details skeleton
+ */
+export function SkeletonKnowledgeDetails({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6 p-6", className)}>
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-10 w-10 rounded-lg" />
+        <div className="space-y-1.5">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      </div>
+      {/* Status */}
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+      {/* Source URL/Content */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-10 w-full rounded-md" />
+      </div>
+      {/* Metadata */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-20" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <div className="space-y-1">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-4 w-28" />
+          </div>
+        </div>
+      </div>
+      {/* Content preview */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-32 w-full rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Article details skeleton
+ */
+export function SkeletonArticleDetails({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6 p-6", className)}>
+      {/* Header */}
+      <div className="space-y-2">
+        <Skeleton className="h-6 w-3/4" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+      {/* Featured image */}
+      <Skeleton className="h-48 w-full rounded-lg" />
+      {/* Content editor */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-20" />
+        <div className="rounded-md border p-4 space-y-2">
+          <div className="flex gap-1 pb-2 border-b">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-8" />
+            ))}
+          </div>
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-4/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// ARI SECTION SKELETONS
+// =============================================================================
+
+/**
+ * Knowledge section skeleton for Ari configurator
+ */
+export function SkeletonKnowledgeSection({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6", className)}>
+      {/* Header */}
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-4 w-72" />
+      </div>
+      {/* Add button */}
+      <Skeleton className="h-9 w-36" />
+      {/* Knowledge cards */}
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-lg border bg-card p-4">
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-3 w-32" />
+              </div>
+              <Skeleton className="h-8 w-8" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Help articles section skeleton
+ */
+export function SkeletonHelpArticlesSection({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6", className)}>
+      {/* Header */}
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      {/* Categories */}
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="rounded-lg border">
+            <div className="p-4 flex items-center justify-between border-b">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-8 rounded-full" />
+              </div>
+              <Skeleton className="h-8 w-8" />
+            </div>
+            <div className="p-2 space-y-1">
+              {Array.from({ length: 2 }).map((_, j) => (
+                <div key={j} className="flex items-center gap-2 p-2 rounded">
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Model behavior section skeleton
+ */
+export function SkeletonModelBehaviorSection({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6", className)}>
+      {/* Header */}
+      <div className="space-y-1.5">
+        <Skeleton className="h-6 w-36" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+      {/* Model selector */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-10 w-full rounded-md" />
+      </div>
+      {/* Temperature slider */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-8" />
+        </div>
+        <Skeleton className="h-2 w-full rounded-full" />
+      </div>
+      {/* Max tokens */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-12" />
+        </div>
+        <Skeleton className="h-2 w-full rounded-full" />
+      </div>
+      {/* System prompt */}
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-40 w-full rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// CHART SKELETONS
+// =============================================================================
+
+/**
+ * Line chart skeleton
+ */
+export function SkeletonLineChart({ className }: { className?: string }) {
+  return (
+    <div className={cn("rounded-lg border bg-card p-4 space-y-4", className)}>
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-5 w-36" />
+        <Skeleton className="h-8 w-28" />
+      </div>
+      <div className="relative h-[250px] w-full">
+        {/* Y-axis labels */}
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-3 w-8" />
+          ))}
+        </div>
+        {/* Chart area */}
+        <div className="ml-12 h-full border-l border-b flex items-end justify-around gap-2 px-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-1 flex-1">
+              <Skeleton 
+                className="w-full rounded-t" 
+                style={{ height: `${Math.random() * 60 + 20}%` }}
+              />
+            </div>
+          ))}
+        </div>
+        {/* X-axis labels */}
+        <div className="ml-12 flex justify-around mt-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-3 w-8" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Bar chart skeleton
+ */
+export function SkeletonBarChart({ className }: { className?: string }) {
+  return (
+    <div className={cn("rounded-lg border bg-card p-4 space-y-4", className)}>
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-8 w-24" />
+      </div>
+      <div className="h-[200px] flex items-end justify-around gap-3 px-4">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div key={i} className="flex flex-col items-center gap-2 flex-1">
+            <Skeleton 
+              className="w-full rounded-t max-w-[40px]" 
+              style={{ height: `${Math.random() * 70 + 30}%` }}
+            />
+            <Skeleton className="h-3 w-8" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Pie/Donut chart skeleton
+ */
+export function SkeletonPieChart({ className }: { className?: string }) {
+  return (
+    <div className={cn("rounded-lg border bg-card p-4 space-y-4", className)}>
+      <Skeleton className="h-5 w-28" />
+      <div className="flex items-center justify-center gap-8">
+        {/* Pie chart circle */}
+        <Skeleton className="h-40 w-40 rounded-full" />
+        {/* Legend */}
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Skeleton className="h-3 w-3 rounded-full" />
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-8" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Heatmap skeleton for analytics
+ */
+export function SkeletonHeatmap({ className }: { className?: string }) {
+  return (
+    <div className={cn("rounded-lg border bg-card p-4 space-y-4", className)}>
+      <Skeleton className="h-5 w-36" />
+      <div className="space-y-1">
+        {Array.from({ length: 7 }).map((_, row) => (
+          <div key={row} className="flex gap-1">
+            <Skeleton className="h-4 w-12 shrink-0" />
+            {Array.from({ length: 24 }).map((_, col) => (
+              <Skeleton 
+                key={col} 
+                className="h-6 flex-1 rounded-sm"
+                style={{ opacity: Math.random() * 0.5 + 0.3 }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
