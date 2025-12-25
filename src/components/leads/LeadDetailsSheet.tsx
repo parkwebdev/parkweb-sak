@@ -65,7 +65,7 @@ interface ConversationMetadata {
 
 // Priority options with colors
 const PRIORITY_OPTIONS = [
-  { value: '', label: 'Not Set', color: 'bg-muted' },
+  { value: 'none', label: 'Not Set', color: 'bg-muted' },
   { value: 'low', label: 'Low', color: 'bg-blue-500' },
   { value: 'normal', label: 'Normal', color: 'bg-green-500' },
   { value: 'high', label: 'High', color: 'bg-amber-500' },
@@ -288,7 +288,7 @@ export const LeadDetailsSheet = ({
 
   // Handle priority change
   const handlePriorityChange = useCallback((value: string) => {
-    const priority = value === '' ? undefined : (value as ConversationMetadata['priority']);
+    const priority = value === 'none' ? undefined : (value as ConversationMetadata['priority']);
     updateConversationMetadata({ priority }, 'priority');
   }, [updateConversationMetadata]);
 
@@ -689,7 +689,7 @@ export const LeadDetailsSheet = ({
                       <SavedIndicator show={savedField === 'priority'} />
                     </div>
                     <Select
-                      value={conversationMetadata.priority || ''}
+                      value={conversationMetadata.priority || 'none'}
                       onValueChange={handlePriorityChange}
                     >
                       <SelectTrigger className="w-full">
@@ -697,10 +697,10 @@ export const LeadDetailsSheet = ({
                           <div className="flex items-center gap-2">
                             <span
                               className={`h-2 w-2 rounded-full ${
-                                PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || ''))?.color || 'bg-muted'
+                                PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.color || 'bg-muted'
                               }`}
                             />
-                            {PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || ''))?.label || 'Not Set'}
+                            {PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.label || 'Not Set'}
                           </div>
                         </SelectValue>
                       </SelectTrigger>
