@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonNotificationList } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -330,8 +330,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           </CardHeader>
           
           {loading ? (
-            <CardContent>
-              <LoadingState size="md" />
+            <CardContent className="p-0">
+              <SkeletonNotificationList items={4} />
             </CardContent>
           ) : notifications.length === 0 ? (
             <CardContent>

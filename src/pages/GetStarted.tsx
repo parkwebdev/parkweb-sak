@@ -14,8 +14,8 @@ import { motion } from 'motion/react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboardingProgress, OnboardingStep } from '@/hooks/useOnboardingProgress';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { LoadingState } from '@/components/ui/loading-state';
-import { 
+import { SkeletonGetStartedPage } from '@/components/ui/page-skeleton';
+import {
   SetupChecklist, 
   GoFurtherSection,
   CompletionCelebration,
@@ -140,7 +140,7 @@ export const GetStarted: React.FC = () => {
   }, [navigate]);
 
   if (isLoading) {
-    return <LoadingState size="xl" fullPage />;
+    return <SkeletonGetStartedPage />;
   }
 
   return (

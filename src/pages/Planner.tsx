@@ -20,7 +20,7 @@ import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { DeleteEventDialog } from '@/components/calendar/DeleteEventDialog';
 import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDialog';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonCalendarPage } from '@/components/ui/page-skeleton';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
@@ -203,17 +203,7 @@ const Planner: React.FC = () => {
   }, [dbEvents]);
 
   if (isLoading) {
-    return (
-      <main className="flex-1 bg-muted/30 h-full overflow-auto">
-        <PageHeader
-          title="Planner"
-          description="Manage your property showings and bookings"
-        />
-        <div className="flex items-center justify-center h-[60vh]">
-          <LoadingState text="Loading calendar..." />
-        </div>
-      </main>
-    );
+    return <SkeletonCalendarPage />;
   }
 
   return (
