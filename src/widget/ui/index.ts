@@ -34,5 +34,10 @@ export {
   WidgetSkeletonText, 
   WidgetSkeletonMessage, 
   WidgetSkeletonChatView, 
-  WidgetSkeletonListItem 
+  WidgetSkeletonListItem,
+  WidgetSkeletonCard,
+  WidgetSkeletonArticleContent,
+  WidgetSkeletonWelcome,
+  WidgetSkeletonBooking,
+  WidgetSkeletonLinkPreview
 } from './WidgetSkeleton';

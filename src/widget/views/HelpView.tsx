@@ -9,8 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { WidgetButton } from '../ui';
-import { WidgetInput } from '../ui';
+import { WidgetButton, WidgetInput, WidgetSkeletonArticleContent } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, ThumbsUp, ThumbsDown, CheckCircle } from '../icons';
@@ -315,11 +314,7 @@ export const HelpView = ({
                 {/* Article Content below hero */}
                 <div className="p-4">
                   {isLoadingContent ? (
-                    <div className="space-y-2 animate-pulse">
-                      <div className="h-4 bg-muted rounded w-full" />
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-4 bg-muted rounded w-5/6" />
-                    </div>
+                    <WidgetSkeletonArticleContent lines={3} />
                   ) : (
                     <div 
                       className="article-content max-w-none" 
@@ -346,11 +341,7 @@ export const HelpView = ({
                 
                 {/* Article content */}
                 {isLoadingContent ? (
-                  <div className="space-y-2 animate-pulse">
-                    <div className="h-4 bg-muted rounded w-full" />
-                    <div className="h-4 bg-muted rounded w-3/4" />
-                    <div className="h-4 bg-muted rounded w-5/6" />
-                  </div>
+                  <WidgetSkeletonArticleContent lines={3} />
                 ) : (
                   <div 
                     className="article-content max-w-none" 

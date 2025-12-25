@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from '../icons';
-import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
+import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback, WidgetSkeletonArticleContent } from '../ui';
 import { CSSAnimatedList } from '../CSSAnimatedList';
 import { CSSAnimatedItem } from '../CSSAnimatedItem';
 import type { WidgetConfig } from '../api';
@@ -154,11 +154,7 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
 
             {/* Article body */}
             {isLoadingContent ? (
-              <div className="space-y-2 animate-pulse">
-                <div className="h-4 bg-muted rounded w-full" />
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-4 bg-muted rounded w-5/6" />
-              </div>
+              <WidgetSkeletonArticleContent lines={3} />
             ) : (
               <div 
                 className="article-content max-w-none"

@@ -8,7 +8,7 @@
  */
 
 import { useRef } from 'react';
-import { WidgetButton } from '../ui';
+import { WidgetButton, WidgetSkeletonWelcome, WidgetSkeletonCard } from '../ui';
 import { X, ChevronRight, MessageChatCircle, BookOpen01, Zap } from '../icons';
 import { WidgetStarIcon } from '../icons/WidgetStarIcon';
 import { CSSAnimatedList } from '../CSSAnimatedList';
@@ -105,10 +105,7 @@ export const HomeView = ({
           style={{ opacity: logoOpacity }}
         >
           {isContentLoading ? (
-            <div className="space-y-2">
-              <span className="inline-block w-24 h-8 bg-foreground/20 rounded animate-pulse" />
-              <span className="inline-block w-48 h-5 bg-foreground/20 rounded animate-pulse" />
-            </div>
+            <WidgetSkeletonWelcome />
           ) : (
             <>
               {/* Large title with emoji */}
@@ -132,18 +129,9 @@ export const HomeView = ({
             }}
           >
             {isContentLoading ? (
-              // Skeleton loading state
               <div className="space-y-3">
                 {[1, 2].map((i) => (
-                  <div key={i} className="p-4 border rounded-lg animate-pulse">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-muted w-10 h-10" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-muted rounded w-24" />
-                        <div className="h-3 bg-muted rounded w-40" />
-                      </div>
-                    </div>
-                  </div>
+                  <WidgetSkeletonCard key={i} />
                 ))}
               </div>
             ) : (

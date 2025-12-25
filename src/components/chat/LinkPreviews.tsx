@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { LinkPreviewCard, LinkPreviewData } from './LinkPreviewCard';
 import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // URL regex that matches http/https URLs
 const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
@@ -103,10 +104,10 @@ export function LinkPreviews({ content, compact = false, cachedPreviews }: LinkP
   if (loading) {
     return (
       <div className="space-y-2">
-        <div className="rounded-lg border border-border bg-muted/30 p-3 animate-pulse">
-          <div className="h-3 bg-muted rounded w-24 mb-2" />
-          <div className="h-4 bg-muted rounded w-3/4 mb-1" />
-          <div className="h-3 bg-muted rounded w-full" />
+        <div className="rounded-lg border border-border bg-muted/30 p-3">
+          <Skeleton className="h-3 w-24 mb-2" />
+          <Skeleton className="h-4 w-3/4 mb-1" />
+          <Skeleton className="h-3 w-full" />
         </div>
       </div>
     );

@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { sendChatMessage, type ChatResponse } from '@/widget/api';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
@@ -336,7 +337,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                       {/* Day Picker */}
                       {message.dayPicker && (
                         <div className="ml-9">
-                          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                          <Suspense fallback={<Skeleton className="h-32 rounded-xl" />}>
                             <DayPicker 
                               data={message.dayPicker} 
                               onSelect={handleBookingDaySelect} 
@@ -349,7 +350,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                       {/* Time Picker */}
                       {message.timePicker && (
                         <div className="ml-9">
-                          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                          <Suspense fallback={<Skeleton className="h-32 rounded-xl" />}>
                             <TimePicker 
                               data={message.timePicker} 
                               onSelect={handleBookingTimeSelect} 
@@ -363,7 +364,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                       {/* Booking Confirmed */}
                       {message.bookingConfirmed && (
                         <div className="ml-9">
-                          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                          <Suspense fallback={<Skeleton className="h-32 rounded-xl" />}>
                             <BookingConfirmed 
                               data={message.bookingConfirmed} 
                               primaryColor={primaryColor} 
