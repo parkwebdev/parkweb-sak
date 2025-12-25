@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon } from '@untitledui/icons';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import type { Tables, Enums } from '@/integrations/supabase/types';
+import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
 import {
   ExportColumn,
@@ -34,13 +34,14 @@ import {
   COLUMN_LABELS,
   DEFAULT_COLUMNS,
   ALL_COLUMNS,
-  STATUS_OPTIONS,
   CONVERSATION_COLUMNS,
   LeadWithMetadata,
+  LeadStage,
   filterLeads,
   exportLeads,
   needsConversationMetadata,
 } from '@/lib/leads-export';
+import { useLeadStages } from '@/hooks/useLeadStages';
 
 type Lead = Tables<'leads'>;
 
@@ -104,13 +105,13 @@ export function ExportLeadsDialog({
   allLeads,
   filteredLeads,
 }: ExportLeadsDialogProps) {
+  const { stages } = useLeadStages();
+  
   // Column selection
   const [selectedColumns, setSelectedColumns] = useState<ExportColumn[]>(DEFAULT_COLUMNS);
   
-  // Status filter
-  const [selectedStatuses, setSelectedStatuses] = useState<Enums<'lead_status'>[]>(
-    STATUS_OPTIONS.map(s => s.value)
-  );
+  // Stage filter
+  const [selectedStageIds, setSelectedStageIds] = useState<string[]>([]);
   
   // Date range
   const [dateRange, setDateRange] = useState<'all' | '7days' | '30days' | '90days' | 'custom'>('all');
@@ -128,7 +129,7 @@ export function ExportLeadsDialog({
   useEffect(() => {
     if (open) {
       setSelectedColumns(DEFAULT_COLUMNS);
-      setSelectedStatuses(STATUS_OPTIONS.map(s => s.value));
+      setSelectedStageIds(stages.map(s => s.id));
       setDateRange('all');
       setCustomDateStart(undefined);
       setCustomDateEnd(undefined);
@@ -136,13 +137,15 @@ export function ExportLeadsDialog({
       setUseCurrentView(false);
       setIsExporting(false);
     }
-  }, [open]);
+  }, [open, stages]);
 
   // Calculate preview count
   const previewCount = useMemo(() => {
+    const stageOptions: LeadStage[] = stages.map(s => ({ id: s.id, name: s.name, color: s.color }));
     const options: ExportOptions = {
       columns: selectedColumns,
-      statuses: selectedStatuses,
+      stageIds: selectedStageIds,
+      stages: stageOptions,
       dateRange,
       customDateStart,
       customDateEnd,
@@ -154,7 +157,8 @@ export function ExportLeadsDialog({
     return filterLeads(sourceLeads, options).length;
   }, [
     selectedColumns,
-    selectedStatuses,
+    selectedStageIds,
+    stages,
     dateRange,
     customDateStart,
     customDateEnd,
@@ -185,11 +189,11 @@ export function ExportLeadsDialog({
     setSelectedColumns([]);
   }, []);
 
-  const handleStatusToggle = useCallback((status: Enums<'lead_status'>) => {
-    setSelectedStatuses(prev =>
-      prev.includes(status)
-        ? prev.filter(s => s !== status)
-        : [...prev, status]
+  const handleStageToggle = useCallback((stageId: string) => {
+    setSelectedStageIds(prev =>
+      prev.includes(stageId)
+        ? prev.filter(s => s !== stageId)
+        : [...prev, stageId]
     );
   }, []);
 
@@ -202,9 +206,11 @@ export function ExportLeadsDialog({
     setIsExporting(true);
 
     try {
+      const stageOptions: LeadStage[] = stages.map(s => ({ id: s.id, name: s.name, color: s.color }));
       const options: ExportOptions = {
         columns: selectedColumns,
-        statuses: selectedStatuses,
+        stageIds: selectedStageIds,
+        stages: stageOptions,
         dateRange,
         customDateStart,
         customDateEnd,
@@ -241,7 +247,8 @@ export function ExportLeadsDialog({
     }
   }, [
     selectedColumns,
-    selectedStatuses,
+    selectedStageIds,
+    stages,
     dateRange,
     customDateStart,
     customDateEnd,
@@ -315,27 +322,31 @@ export function ExportLeadsDialog({
           <div className="space-y-4">
             <Label className="text-sm font-medium">Filter leads</Label>
             
-            {/* Status Filter */}
+            {/* Stage Filter */}
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Status</Label>
+              <Label className="text-xs text-muted-foreground">Stage</Label>
               <div className="flex flex-wrap gap-2">
-                {STATUS_OPTIONS.map(status => (
+                {stages.map(stage => (
                   <div
-                    key={status.value}
+                    key={stage.id}
                     className={cn(
                       'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs cursor-pointer transition-colors',
-                      selectedStatuses.includes(status.value)
+                      selectedStageIds.includes(stage.id)
                         ? 'bg-primary/10 border-primary text-primary'
                         : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
                     )}
-                    onClick={() => handleStatusToggle(status.value)}
+                    onClick={() => handleStageToggle(stage.id)}
                   >
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: stage.color }}
+                    />
                     <Checkbox
-                      checked={selectedStatuses.includes(status.value)}
-                      onCheckedChange={() => handleStatusToggle(status.value)}
+                      checked={selectedStageIds.includes(stage.id)}
+                      onCheckedChange={() => handleStageToggle(stage.id)}
                       className="h-3 w-3"
                     />
-                    {status.label}
+                    {stage.name}
                   </div>
                 ))}
               </div>

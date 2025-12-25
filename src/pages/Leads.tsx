@@ -15,7 +15,9 @@ import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLeads } from '@/hooks/useLeads';
+import { useLeadStages } from '@/hooks/useLeadStages';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
@@ -27,7 +29,7 @@ import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import { Settings01 } from '@untitledui/icons';
-import type { Tables, Enums } from '@/integrations/supabase/types';
+import type { Tables } from '@/integrations/supabase/types';
 
 /** Props for the Leads page */
 interface LeadsProps {
@@ -37,6 +39,7 @@ interface LeadsProps {
 
 const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const { leads, loading, createLead, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
+  const { stages } = useLeadStages();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -130,13 +133,15 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     }
   }, [deleteLead, singleDeleteLeadId]);
 
-  const stats = {
-    total: leads.length,
-    new: leads.filter((l) => l.status === 'new').length,
-    contacted: leads.filter((l) => l.status === 'contacted').length,
-    qualified: leads.filter((l) => l.status === 'qualified').length,
-    converted: leads.filter((l) => l.status === 'converted').length,
-  };
+  // Calculate stats based on dynamic stages
+  const stageStats = useMemo(() => {
+    return stages.map(stage => ({
+      id: stage.id,
+      name: stage.name,
+      color: stage.color,
+      count: leads.filter(l => l.stage_id === stage.id).length,
+    }));
+  }, [stages, leads]);
 
   return (
     <div className="flex flex-col h-full w-full min-w-0 bg-muted/30 overflow-y-auto">
@@ -156,26 +161,18 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
       <div className="px-4 lg:px-8 mt-6 space-y-6 min-w-0">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="p-4 border rounded-lg">
-            <div className="text-xl font-bold">{stats.total}</div>
+          <div className="p-4 border rounded-lg bg-card">
+            <div className="text-xl font-bold">{leads.length}</div>
             <div className="text-xs text-muted-foreground">Total Leads</div>
           </div>
-          <div className="p-4 border rounded-lg">
-            <div className="text-xl font-bold text-blue-500">{stats.new}</div>
-            <div className="text-xs text-muted-foreground">New</div>
-          </div>
-          <div className="p-4 border rounded-lg">
-            <div className="text-xl font-bold text-purple-500">{stats.contacted}</div>
-            <div className="text-xs text-muted-foreground">Contacted</div>
-          </div>
-          <div className="p-4 border rounded-lg">
-            <div className="text-xl font-bold text-green-500">{stats.qualified}</div>
-            <div className="text-xs text-muted-foreground">Qualified</div>
-          </div>
-          <div className="p-4 border rounded-lg">
-            <div className="text-xl font-bold text-success">{stats.converted}</div>
-            <div className="text-xs text-muted-foreground">Converted</div>
-          </div>
+          {stageStats.slice(0, 4).map((stage) => (
+            <div key={stage.id} className="p-4 border rounded-lg bg-card">
+              <div className="text-xl font-bold" style={{ color: stage.color }}>
+                {stage.count}
+              </div>
+              <div className="text-xs text-muted-foreground">{stage.name}</div>
+            </div>
+          ))}
         </div>
 
         {/* Content */}
@@ -207,14 +204,23 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                     </svg>
                   </div>
                   <div className="flex items-center gap-2">
-                    <IconButton
-                      label="Manage stages"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsManageStagesOpen(true)}
-                    >
-                      <Settings01 size={16} />
-                    </IconButton>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <IconButton
+                            label="Manage stages"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsManageStagesOpen(true)}
+                          >
+                            <Settings01 size={16} />
+                          </IconButton>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Manage pipeline stages</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <ViewModeToggle
                       viewMode={viewMode}
                       onViewModeChange={setViewMode}

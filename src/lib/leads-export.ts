@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import type { Tables, Enums } from '@/integrations/supabase/types';
+import type { Tables } from '@/integrations/supabase/types';
 
 type Lead = Tables<'leads'>;
 
@@ -17,7 +17,7 @@ export type ExportColumn =
   | 'email'
   | 'phone'
   | 'company'
-  | 'status'
+  | 'stage'
   | 'id'
   | 'created_at'
   | 'updated_at'
@@ -27,9 +27,16 @@ export type ExportColumn =
   | 'tags'
   | 'notes';
 
+export interface LeadStage {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface ExportOptions {
   columns: ExportColumn[];
-  statuses: Enums<'lead_status'>[];
+  stageIds: string[];
+  stages: LeadStage[];
   dateRange: 'all' | '7days' | '30days' | '90days' | 'custom';
   customDateStart?: Date;
   customDateEnd?: Date;
@@ -42,7 +49,7 @@ export const COLUMN_LABELS: Record<ExportColumn, string> = {
   email: 'Email',
   phone: 'Phone',
   company: 'Company',
-  status: 'Status',
+  stage: 'Stage',
   id: 'Lead ID',
   created_at: 'Created Date',
   updated_at: 'Updated Date',
@@ -53,14 +60,14 @@ export const COLUMN_LABELS: Record<ExportColumn, string> = {
   notes: 'Internal Notes',
 };
 
-export const DEFAULT_COLUMNS: ExportColumn[] = ['name', 'email', 'phone', 'company', 'status'];
+export const DEFAULT_COLUMNS: ExportColumn[] = ['name', 'email', 'phone', 'company', 'stage'];
 
 export const ALL_COLUMNS: ExportColumn[] = [
   'name',
   'email',
   'phone',
   'company',
-  'status',
+  'stage',
   'priority',
   'tags',
   'notes',
@@ -73,13 +80,6 @@ export const ALL_COLUMNS: ExportColumn[] = [
 
 // Columns that require conversation metadata
 export const CONVERSATION_COLUMNS: ExportColumn[] = ['priority', 'tags', 'notes'];
-
-export const STATUS_OPTIONS: { value: Enums<'lead_status'>; label: string }[] = [
-  { value: 'new', label: 'New' },
-  { value: 'contacted', label: 'Contacted' },
-  { value: 'qualified', label: 'Qualified' },
-  { value: 'converted', label: 'Converted' },
-];
 
 function formatDate(date: string | null): string {
   if (!date) return '';
@@ -94,7 +94,7 @@ function escapeCSVValue(value: string): string {
   return value;
 }
 
-function getColumnValue(lead: LeadWithMetadata, column: ExportColumn): string {
+function getColumnValue(lead: LeadWithMetadata, column: ExportColumn, stages: LeadStage[]): string {
   switch (column) {
     case 'name':
       return lead.name || '';
@@ -104,8 +104,9 @@ function getColumnValue(lead: LeadWithMetadata, column: ExportColumn): string {
       return lead.phone || '';
     case 'company':
       return lead.company || '';
-    case 'status':
-      return lead.status;
+    case 'stage':
+      const stage = stages.find(s => s.id === lead.stage_id);
+      return stage?.name || '';
     case 'id':
       return lead.id;
     case 'created_at':
@@ -130,9 +131,9 @@ function getColumnValue(lead: LeadWithMetadata, column: ExportColumn): string {
 export function filterLeads<T extends Lead>(leads: T[], options: ExportOptions): T[] {
   let filtered = [...leads];
 
-  // Filter by status
-  if (options.statuses.length > 0 && options.statuses.length < STATUS_OPTIONS.length) {
-    filtered = filtered.filter(lead => options.statuses.includes(lead.status));
+  // Filter by stage
+  if (options.stageIds.length > 0 && options.stageIds.length < options.stages.length) {
+    filtered = filtered.filter(lead => lead.stage_id && options.stageIds.includes(lead.stage_id));
   }
 
   // Filter by date range
@@ -188,7 +189,7 @@ export function generateCSV(leads: LeadWithMetadata[], options: ExportOptions): 
   // Add data rows
   for (const lead of leads) {
     const values = options.columns.map(col => 
-      escapeCSVValue(getColumnValue(lead, col))
+      escapeCSVValue(getColumnValue(lead, col, options.stages))
     );
     rows.push(values.join(','));
   }

@@ -63,13 +63,13 @@ interface ConversationMetadata {
   notes?: string;
 }
 
-// Priority options with colors
+// Priority options with semantic colors
 const PRIORITY_OPTIONS = [
   { value: 'none', label: 'Not Set', color: 'bg-muted' },
-  { value: 'low', label: 'Low', color: 'bg-blue-500' },
-  { value: 'normal', label: 'Normal', color: 'bg-green-500' },
-  { value: 'high', label: 'High', color: 'bg-amber-500' },
-  { value: 'urgent', label: 'Urgent', color: 'bg-red-500' },
+  { value: 'low', label: 'Low', color: 'bg-info' },
+  { value: 'normal', label: 'Normal', color: 'bg-success' },
+  { value: 'high', label: 'High', color: 'bg-warning' },
+  { value: 'urgent', label: 'Urgent', color: 'bg-destructive' },
 ];
 
 // Preset tags for quick selection
