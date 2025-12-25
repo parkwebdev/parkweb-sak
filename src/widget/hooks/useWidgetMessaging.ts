@@ -74,6 +74,8 @@ export interface UseWidgetMessagingProps {
   currentPageRef: React.MutableRefObject<{ url: string; entered_at: string }>;
   /** Browser language ref */
   browserLanguageRef: React.MutableRefObject<string>;
+  /** Callback to trigger rating prompt (from useWidgetRating) */
+  triggerRating?: (type: 'team_closed' | 'ai_marked_complete') => void;
 }
 
 export interface UseWidgetMessagingReturn {
@@ -106,18 +108,6 @@ export interface UseWidgetMessagingReturn {
   handleQuickReplySelectWithSend: (suggestion: string) => void;
   /** Handle contact form submission with AI greeting */
   handleFormSubmit: (userData: ChatUser, conversationId?: string) => Promise<void>;
-  
-  // === Rating State ===
-  /** Whether to show rating prompt */
-  showRatingPrompt: boolean;
-  /** Set rating prompt visibility */
-  setShowRatingPrompt: (value: boolean) => void;
-  /** Rating trigger type */
-  ratingTriggerType: 'team_closed' | 'ai_marked_complete';
-  /** Set rating trigger type */
-  setRatingTriggerType: (type: 'team_closed' | 'ai_marked_complete') => void;
-  /** Ref tracking if rating was shown this session */
-  hasShownRatingRef: React.MutableRefObject<boolean>;
   
   // === Takeover State ===
   /** Whether human takeover is active */
@@ -155,6 +145,7 @@ export function useWidgetMessaging({
   isActivelySendingRef,
   currentPageRef,
   browserLanguageRef,
+  triggerRating,
 }: UseWidgetMessagingProps): UseWidgetMessagingReturn {
   // === Input State ===
   const [messageInput, setMessageInput] = useState('');
@@ -163,11 +154,6 @@ export function useWidgetMessaging({
   // === UI State ===
   const [isTyping, setIsTyping] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
-  
-  // === Rating State ===
-  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
-  const [ratingTriggerType, setRatingTriggerType] = useState<'team_closed' | 'ai_marked_complete'>('ai_marked_complete');
-  const hasShownRatingRef = useRef(false);
   
   // === Takeover State ===
   const [isHumanTakeover, setIsHumanTakeover] = useState(false);
@@ -383,12 +369,10 @@ export function useWidgetMessaging({
             });
           }, 5000);
           
-          // Check if AI marked conversation complete - show rating after delay
-          if (response.aiMarkedComplete && !hasShownRatingRef.current) {
+          // Check if AI marked conversation complete - trigger rating after delay
+          if (response.aiMarkedComplete && triggerRating) {
             setTimeout(() => {
-              setRatingTriggerType('ai_marked_complete');
-              setShowRatingPrompt(true);
-              hasShownRatingRef.current = true;
+              triggerRating('ai_marked_complete');
             }, 3000); // 3 second delay after last chunk
           }
         } else {
@@ -413,12 +397,10 @@ export function useWidgetMessaging({
             bookingConfirmed: response.bookingConfirmed,
           }]);
           
-          // Check if AI marked conversation complete - show rating after delay
-          if (response.aiMarkedComplete && !hasShownRatingRef.current) {
+          // Check if AI marked conversation complete - trigger rating after delay
+          if (response.aiMarkedComplete && triggerRating) {
             setTimeout(() => {
-              setRatingTriggerType('ai_marked_complete');
-              setShowRatingPrompt(true);
-              hasShownRatingRef.current = true;
+              triggerRating('ai_marked_complete');
             }, 3000);
           }
         }
@@ -580,13 +562,6 @@ export function useWidgetMessaging({
     handleSendMessage,
     handleQuickReplySelectWithSend,
     handleFormSubmit,
-    
-    // Rating State
-    showRatingPrompt,
-    setShowRatingPrompt,
-    ratingTriggerType,
-    setRatingTriggerType,
-    hasShownRatingRef,
     
     // Takeover State
     isHumanTakeover,

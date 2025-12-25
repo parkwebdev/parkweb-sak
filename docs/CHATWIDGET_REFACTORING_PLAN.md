@@ -1,7 +1,7 @@
 # ChatWidget Refactoring Plan
 
 > **Last Updated**: December 2024  
-> **Status**: Phases 1-3 COMPLETE ✅ | Phases 4-9 Ready for Implementation  
+> **Status**: Phases 1-4 COMPLETE ✅ | Phases 5-9 Ready for Implementation  
 > **Priority**: 🟡 MEDIUM  
 > **Risk Level**: LOW (documentation/hook extraction only, no UI changes)
 
@@ -34,6 +34,20 @@
 **Note**: `currentView` state remains in ChatWidget.tsx (useConversations depends on it)
 **Barrel exports updated**: Added Navigation Hooks section
 
+## ✅ Phase 4: VERIFIED COMPLETE
+
+**Hook Created**: `src/widget/hooks/useWidgetRating.ts` (~95 lines)
+**ChatWidget.tsx reduced**: 547 → 550 lines (+3 lines due to cleaner hook usage patterns)
+**useWidgetMessaging.ts reduced**: 599 → 572 lines (-27 lines, rating state removed)
+**Extracted**:
+- `showRatingPrompt` state
+- `ratingTriggerType` state  
+- `hasShownRatingRef` ref
+- `triggerRating` function (respects hasShownRating to prevent duplicate prompts)
+- `dismissRating` function
+- `setShowRatingPrompt` / `setRatingTriggerType` direct setters
+**Integration**: `useWidgetMessaging` now accepts optional `triggerRating` callback prop
+**Barrel exports updated**: Added Rating Hooks section
 
 Transform `ChatWidget.tsx` from a **954-line monolith** into a **lean ~400-line orchestrator** by extracting inline logic into dedicated hooks. This refactoring:
 
