@@ -44,7 +44,7 @@ import {
   useConversationStatus,
   useTypingIndicator,
   useVisitorPresence,
-  useConversations,
+  useWidgetConversations,
   useWidgetMessaging,
   useWidgetAudioRecording,
   useWidgetNavigation,
@@ -139,7 +139,7 @@ const ChatWidgetInner = ({
     clearMessagesAndFetch,
     isActivelySendingRef,
     markConversationFetched,
-  } = useConversations({
+  } = useWidgetConversations({
     agentId,
     chatUser,
     previewMode,

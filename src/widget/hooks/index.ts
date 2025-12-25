@@ -30,8 +30,11 @@ export { useRealtimeConfig } from './useRealtimeConfig';
  */
 export { useWidgetMessaging } from './useWidgetMessaging';
 
-/** Conversation CRUD operations and localStorage persistence */
-export { useConversations } from './useConversations';
+/** 
+ * Widget-specific conversation state management
+ * NOTE: Renamed from useConversations to avoid confusion with admin hook
+ */
+export { useWidgetConversations } from './useWidgetConversations';
 
 /** Real-time message subscriptions via Supabase */
 export { useRealtimeMessages } from './useRealtimeMessages';

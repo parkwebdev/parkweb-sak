@@ -24,3 +24,4 @@ export { AriIntegrationsSection } from './AriIntegrationsSection';
 export { AriApiAccessSection } from './AriApiAccessSection';
 export { AriInstallationSection } from './AriInstallationSection';
 export { AriSectionHeader } from './AriSectionHeader';
+export { SectionErrorBoundary } from './SectionErrorBoundary';

@@ -79,7 +79,9 @@ const App = () => (
                     <Route path="/leads" element={<LeadsWrapper />} />
                     <Route path="/analytics" element={<AnalyticsWrapper />} />
                     <Route path="/settings" element={<SettingsWrapper />} />
-                    <Route path="/booking-test" element={<BookingComponentsTest />} />
+                    {import.meta.env.DEV && (
+                      <Route path="/booking-test" element={<BookingComponentsTest />} />
+                    )}
                   </Route>
                   
                   <Route path="*" element={<NotFound />} />

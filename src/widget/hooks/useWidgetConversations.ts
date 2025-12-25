@@ -1,10 +1,13 @@
 /**
- * useConversations Hook
+ * useWidgetConversations Hook
  * 
  * Manages conversation and message state using the database as the source of truth.
  * Handles message fetching, auto-scrolling, read receipts, and real-time updates.
  * 
- * @module widget/hooks/useConversations
+ * NOTE: This is the WIDGET-specific conversation hook.
+ * For admin-side conversations, use src/hooks/useConversations.ts
+ * 
+ * @module widget/hooks/useWidgetConversations
  * 
  * @example
  * ```tsx
@@ -13,7 +16,7 @@
  *   setMessages,
  *   activeConversationId,
  *   messagesEndRef
- * } = useConversations({
+ * } = useWidgetConversations({
  *   agentId: 'abc-123',
  *   chatUser: currentUser,
  *   previewMode: false,
@@ -29,8 +32,8 @@ import { isValidUUID } from '../utils';
 import type { Message, ChatUser, WidgetMessageMetadata } from '../types';
 import { logger } from '@/utils/logger';
 
-/** Options for the useConversations hook */
-interface UseConversationsOptions {
+/** Options for the useWidgetConversations hook */
+interface UseWidgetConversationsOptions {
   /** Agent ID for the current widget instance */
   agentId: string;
   /** Current chat user (from contact form submission) */
@@ -44,12 +47,12 @@ interface UseConversationsOptions {
 }
 
 /**
- * Hook for managing conversation and message state.
+ * Hook for managing widget conversation and message state.
  * 
  * @param options - Configuration options for the hook
  * @returns Conversation state, setters, refs, and utility functions
  */
-export function useConversations(options: UseConversationsOptions) {
+export function useWidgetConversations(options: UseWidgetConversationsOptions) {
   const { agentId, chatUser, previewMode, isOpen, currentView } = options;
 
   const [messages, setMessagesInternal] = useState<Message[]>([]);
