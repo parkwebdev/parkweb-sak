@@ -328,7 +328,7 @@ export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
                   />
                   <label htmlFor="sheet-featured-image-upload" className="cursor-pointer block">
                     {featuredImageUploading ? (
-                      <div className="flex flex-col items-center">
+                      <div className="flex flex-col items-center py-2">
                         <div className="h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-2" />
                         <p className="text-sm text-muted-foreground">Uploading...</p>
                       </div>

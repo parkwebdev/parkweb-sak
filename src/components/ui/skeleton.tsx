@@ -356,6 +356,68 @@ function SkeletonProfileCard({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Skeleton for notification list items
+ */
+function SkeletonNotificationList({ items = 5, className }: { items?: number; className?: string }) {
+  return (
+    <div className={cn("space-y-1", className)}>
+      {Array.from({ length: items }).map((_, i) => (
+        <div key={i} className="flex items-start gap-3 p-4">
+          <Skeleton className="h-4 w-4 rounded-full shrink-0 mt-0.5" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-1/3" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Skeleton for leads page with stats and content
+ */
+function SkeletonLeadsPage({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6 px-4 lg:px-8 mt-6", className)}>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="p-4 border rounded-lg space-y-2">
+            <Skeleton className="h-6 w-12" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        ))}
+      </div>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <Skeleton className="h-10 w-full max-w-sm" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-9 w-20" />
+        </div>
+      </div>
+      {/* Content - Kanban columns */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="space-y-3">
+            <Skeleton className="h-6 w-24" />
+            {Array.from({ length: 3 }).map((_, j) => (
+              <div key={j} className="rounded-lg border bg-card p-4 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export {
   Skeleton,
   SkeletonText,
@@ -370,4 +432,6 @@ export {
   SkeletonCodeSection,
   SkeletonSettingsCard,
   SkeletonProfileCard,
+  SkeletonNotificationList,
+  SkeletonLeadsPage,
 };

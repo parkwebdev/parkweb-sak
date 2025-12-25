@@ -24,7 +24,7 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { PageHeader } from '@/components/ui/page-header';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 
 /** Props for the Leads page */
@@ -269,7 +269,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
 
         {/* Content */}
         {loading ? (
-          <LoadingState text="Loading leads..." />
+          <SkeletonLeadsPage />
         ) : (
           <AnimatePresence mode="wait">
             <motion.div

@@ -10,14 +10,14 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Cube01 as Bot } from '@untitledui/icons';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonDashboardPage } from '@/components/ui/page-skeleton';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
 export const Dashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
 
   if (authLoading) {
-    return <LoadingState size="xl" fullPage />;
+    return <SkeletonDashboardPage />;
   }
 
   if (!user) {
