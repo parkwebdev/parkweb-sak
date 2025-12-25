@@ -46,6 +46,7 @@ import {
   useVisitorPresence,
   useConversations,
   useWidgetMessaging,
+  useWidgetAudioRecording,
 } from './hooks';
 
 // View Components - HomeView and ChatView are always needed, lazy-load the rest
@@ -89,14 +90,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     const stored = localStorage.getItem(`chatpad_user_${agentId}`);
     return stored ? JSON.parse(stored) : null;
   });
-  
-  // Audio recording state (not extracted - tightly coupled to UI)
-  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  // File attachment state (kept local - simple UI toggle)
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [formLoadTime] = useState(() => Date.now());
   
   // Human typing indicator (received from hook, not takeover state)
@@ -203,7 +198,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     browserLanguageRef,
   });
 
-  // Parent window communication via extracted hook
+  // Audio recording via extracted hook (PHASE 2 REFACTOR)
+  const {
+    isRecordingAudio,
+    recordingTime,
+    startAudioRecording,
+    stopAudioRecording,
+    cancelAudioRecording,
+  } = useWidgetAudioRecording({ setMessages });
+
   const { notifyUnreadCount, notifyClose } = useParentMessages(
     {
       previewMode,
@@ -395,61 +398,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setShowConversationList(false);
   };
 
-  // Audio recording handlers (kept here - tightly coupled to UI refs)
-  const startAudioRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        setMessages(prev => [...prev, { role: 'user', content: 'Voice message', read: false, timestamp: new Date(), type: 'audio', audioUrl, reactions: [] }]);
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecordingAudio(true);
-      setRecordingTime(0);
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-    } catch (error) {
-      widgetLogger.error('Error starting recording:', error);
-    }
-  };
-
-  const stopAudioRecording = () => {
-    if (mediaRecorderRef.current && isRecordingAudio) {
-      mediaRecorderRef.current.stop();
-      setIsRecordingAudio(false);
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-        recordingIntervalRef.current = null;
-      }
-    }
-  };
-
-  const cancelAudioRecording = () => {
-    if (mediaRecorderRef.current && isRecordingAudio) {
-      mediaRecorderRef.current.onstop = null;
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream?.getTracks().forEach(track => track.stop());
-    }
-    setIsRecordingAudio(false);
-    setRecordingTime(0);
-    if (recordingIntervalRef.current) {
-      clearInterval(recordingIntervalRef.current);
-      recordingIntervalRef.current = null;
-    }
-    chunksRef.current = [];
-  };
 
   // Loading state
   if (loading || !config) {

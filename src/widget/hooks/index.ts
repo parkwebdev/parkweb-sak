@@ -43,6 +43,16 @@ export { useConversationStatus } from './useConversationStatus';
 export { useTypingIndicator } from './useTypingIndicator';
 
 // ============================================================================
+// Audio Hooks
+// ============================================================================
+
+/**
+ * Audio recording state and controls
+ * @see useWidgetAudioRecording - Phase 2 refactor (extracted from ChatWidget.tsx)
+ */
+export { useWidgetAudioRecording } from './useWidgetAudioRecording';
+
+// ============================================================================
 // Communication Hooks
 // ============================================================================
 
