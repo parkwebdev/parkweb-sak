@@ -21,6 +21,7 @@ import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
+import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables, Enums } from '@/integrations/supabase/types';
@@ -47,6 +48,9 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const [singleDeleteLeadId, setSingleDeleteLeadId] = useState<string | null>(null);
   const [isSingleDeleteOpen, setIsSingleDeleteOpen] = useState(false);
   
+  // Export dialog state
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  
   // Shared search state for filtering across both views
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -69,29 +73,6 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     setSelectedLead(lead);
     setIsDetailsOpen(true);
   }, []);
-
-  const handleExport = useCallback(() => {
-    const csv = [
-      ['Name', 'Email', 'Phone', 'Company', 'Status', 'Created'],
-      ...filteredLeads.map((lead) => [
-        lead.name || '',
-        lead.email || '',
-        lead.phone || '',
-        lead.company || '',
-        lead.status,
-        new Date(lead.created_at).toLocaleDateString(),
-      ]),
-    ]
-      .map((row) => row.join(','))
-      .join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `leads-${new Date().toISOString()}.csv`;
-    a.click();
-  }, [filteredLeads]);
 
   // Selection handlers
   const handleSelectAll = useCallback((checked: boolean) => {
@@ -158,7 +139,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         description="Track and manage leads captured from conversations"
         onMenuClick={onMenuClick}
       >
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={leads.length === 0}>
+        <Button variant="outline" size="sm" onClick={() => setIsExportOpen(true)} disabled={leads.length === 0}>
           Export
         </Button>
         <Button size="sm" onClick={() => setIsCreateOpen(true)}>
@@ -300,6 +281,13 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         hasConversations={singleDeleteLeadId ? getLeadsWithConversations([singleDeleteLeadId]) : false}
         onConfirm={handleSingleDeleteConfirm}
         isDeleting={isDeleting}
+      />
+
+      <ExportLeadsDialog
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        allLeads={leads}
+        filteredLeads={filteredLeads}
       />
     </div>
   );
