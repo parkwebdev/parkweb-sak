@@ -8,12 +8,12 @@ export type Lead = Tables<'leads'>;
 
 interface LeadsColumnsProps {
   onView: (lead: Lead) => void;
-  onStatusChange: (leadId: string, status: string) => void;
-  StatusDropdown: React.ComponentType<{ status: string; onStatusChange: (status: string) => void }>;
+  onStageChange: (leadId: string, stageId: string) => void;
+  StatusDropdown: React.ComponentType<{ stageId: string | null; onStageChange: (stageId: string) => void }>;
 }
 
 export const createLeadsColumns = ({
-  onStatusChange,
+  onStageChange,
   StatusDropdown,
 }: LeadsColumnsProps): ColumnDef<Lead>[] => [
   {
@@ -73,15 +73,15 @@ export const createLeadsColumns = ({
     },
   },
   {
-    accessorKey: 'status',
+    accessorKey: 'stage_id',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="Stage" />
     ),
     cell: ({ row }) => (
       <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
         <StatusDropdown
-          status={row.original.status}
-          onStatusChange={(status) => onStatusChange(row.original.id, status)}
+          stageId={row.original.stage_id}
+          onStageChange={(stageId) => onStageChange(row.original.id, stageId)}
         />
       </div>
     ),

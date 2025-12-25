@@ -1,6 +1,6 @@
 /**
- * @fileoverview Lead status dropdown with color-coded badges.
- * Provides status options: new, contacted, qualified, converted, lost.
+ * @fileoverview Lead status dropdown using dynamic stages from database.
+ * Displays color-coded badges for each pipeline stage.
  */
 
 import { useState, useRef } from 'react';
@@ -13,27 +13,23 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown } from '@untitledui/icons';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { useLeadStages } from '@/hooks/useLeadStages';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface LeadStatusDropdownProps {
-  status: string;
-  onStatusChange: (status: string) => void;
+  stageId: string | null;
+  onStageChange: (stageId: string) => void;
 }
 
-const statusOptions = [
-  { value: 'new', label: 'New', color: 'bg-info/10 text-info border-info/20' },
-  { value: 'contacted', label: 'Contacted', color: 'bg-chart-4/10 text-chart-4 border-chart-4/20' },
-  { value: 'qualified', label: 'Qualified', color: 'bg-success/10 text-success border-success/20' },
-  { value: 'converted', label: 'Converted', color: 'bg-status-active/10 text-status-active border-status-active/20' },
-  { value: 'lost', label: 'Lost', color: 'bg-muted text-muted-foreground border-border' },
-];
-
-export const LeadStatusDropdown = ({ status, onStatusChange }: LeadStatusDropdownProps) => {
-  const currentStatus = statusOptions.find((s) => s.value === status) || statusOptions[0];
+export const LeadStatusDropdown = ({ stageId, onStageChange }: LeadStatusDropdownProps) => {
+  const { stages, loading } = useLeadStages();
   const [showSaved, setShowSaved] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout>();
 
-  const handleStatusChange = (newStatus: string) => {
-    onStatusChange(newStatus);
+  const currentStage = stages.find((s) => s.id === stageId) || stages.find(s => s.is_default) || stages[0];
+
+  const handleStageChange = (newStageId: string) => {
+    onStageChange(newStageId);
     
     // Clear existing timer
     if (saveTimerRef.current) {
@@ -47,25 +43,44 @@ export const LeadStatusDropdown = ({ status, onStatusChange }: LeadStatusDropdow
     }, 500);
   };
 
+  if (loading || !currentStage) {
+    return <Skeleton className="h-6 w-20" />;
+  }
+
   return (
     <div className="flex items-center gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-1">
-            <Badge variant="outline" className={currentStatus.color}>
-              {currentStatus.label}
+            <Badge 
+              variant="outline" 
+              className="border-current"
+              style={{ 
+                backgroundColor: `${currentStage.color}15`,
+                color: currentStage.color,
+                borderColor: `${currentStage.color}30`,
+              }}
+            >
+              {currentStage.name}
             </Badge>
             <ChevronDown className="h-3 w-3 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="bg-background z-50">
-          {statusOptions.map((option) => (
+          {stages.map((stage) => (
             <DropdownMenuItem
-              key={option.value}
-              onClick={() => handleStatusChange(option.value)}
+              key={stage.id}
+              onClick={() => handleStageChange(stage.id)}
             >
-              <Badge variant="outline" className={option.color}>
-                {option.label}
+              <Badge 
+                variant="outline"
+                style={{ 
+                  backgroundColor: `${stage.color}15`,
+                  color: stage.color,
+                  borderColor: `${stage.color}30`,
+                }}
+              >
+                {stage.name}
               </Badge>
             </DropdownMenuItem>
           ))}

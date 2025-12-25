@@ -35,7 +35,7 @@ interface LeadsTableProps {
   leads: Lead[];
   selectedIds: Set<string>;
   onView: (lead: Lead) => void;
-  onStatusChange: (leadId: string, status: string) => void;
+  onStageChange: (leadId: string, stageId: string) => void;
   onSelectionChange: (id: string, checked: boolean) => void;
   onSelectAll: (checked: boolean) => void;
   onBulkDelete?: (ids: string[]) => void;
@@ -45,20 +45,11 @@ interface LeadsTableProps {
   onSearchChange: (query: string) => void;
 }
 
-const STATUS_OPTIONS = [
-  { label: 'New', value: 'new' },
-  { label: 'Contacted', value: 'contacted' },
-  { label: 'Qualified', value: 'qualified' },
-  { label: 'Proposal', value: 'proposal' },
-  { label: 'Won', value: 'won' },
-  { label: 'Lost', value: 'lost' },
-];
-
 export const LeadsTable = React.memo(function LeadsTable({
   leads,
   selectedIds,
   onView,
-  onStatusChange,
+  onStageChange,
   onSelectionChange,
   onSelectAll,
   onBulkDelete,
@@ -85,10 +76,10 @@ export const LeadsTable = React.memo(function LeadsTable({
     () =>
       createLeadsColumns({
         onView,
-        onStatusChange,
+        onStageChange,
         StatusDropdown: LeadStatusDropdown,
       }),
-    [onView, onStatusChange]
+    [onView, onStageChange]
   );
 
   const handleRowSelectionChange = useCallback((updater: RowSelectionState | ((prev: RowSelectionState) => RowSelectionState)) => {
@@ -165,11 +156,6 @@ export const LeadsTable = React.memo(function LeadsTable({
           />
         }
       >
-        <DataTableFacetedFilter
-          column={table.getColumn('status')}
-          title="Status"
-          options={STATUS_OPTIONS}
-        />
       </DataTableToolbar>
       <DataTable
         table={table}
