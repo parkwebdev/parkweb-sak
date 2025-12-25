@@ -430,6 +430,12 @@ export function useWidgetMessaging({
     isActivelySendingRef,
     currentPageRef,
     browserLanguageRef,
+    // Takeover callbacks
+    setIsHumanTakeover,
+    setTakeoverAgentName,
+    setTakeoverAgentAvatar,
+    // Rating callback
+    triggerRating,
   ]);
 
   // Update ref after handleSendMessage is defined
