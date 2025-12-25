@@ -589,7 +589,7 @@ export function ColorPicker({
               id={id}
               type="button"
               className={cn(
-                "w-5 h-5 rounded-full border-2 border-background shadow-sm hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                "w-5 h-5 rounded-full border-2 border-background shadow-sm hover:ring-2 hover:ring-ring hover:ring-offset-1 transition-shadow focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                 className
               )}
               style={{ backgroundColor: color.hex() }}
