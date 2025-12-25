@@ -64,12 +64,30 @@ const NewsView = lazy(() => import('./views/NewsView').then(m => ({ default: m.N
 import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating } from './components';
 import { WidgetCard } from './ui';
 
-export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
-  // Configure logger once on mount based on previewMode
-  useEffect(() => {
-    configureWidgetLogger({ previewMode });
-  }, [previewMode]);
+/**
+ * Props for the inner widget component that requires a non-null config
+ */
+interface ChatWidgetInnerProps {
+  config: WidgetConfig;
+  previewMode: boolean;
+  containedPreview: boolean;
+  isContentLoading: boolean;
+  parentHandlesConfig: boolean;
+}
 
+/**
+ * Inner widget component that contains all the hooks and UI logic.
+ * Only rendered when config is guaranteed to be non-null.
+ */
+const ChatWidgetInner = ({ 
+  config, 
+  previewMode, 
+  containedPreview, 
+  isContentLoading,
+  parentHandlesConfig,
+}: ChatWidgetInnerProps) => {
+  const agentId = config.agentId;
+  
   // Mobile detection for removing border radius on full-screen mobile
   const [isMobileFullScreen, setIsMobileFullScreen] = useState(getIsMobileFullScreen);
   
@@ -78,13 +96,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Config management via extracted hook
-  const { config, loading, isContentLoading, agentId, parentHandlesConfig } = useWidgetConfig(
-    configProp,
-    isLoadingProp,
-    previewMode
-  );
   
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
@@ -190,7 +201,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     handleQuickReplySelectWithSend,
     handleFormSubmit,
   } = useWidgetMessaging({
-    config: config as WidgetConfig,
+    config,
     chatUser,
     setChatUser,
     activeConversationId,
@@ -362,9 +373,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [messages, currentView, chatUser, previewMode]);
 
-  // Only return null for simple config loading, not when parent handles config
-  if (!parentHandlesConfig && (loading || !config)) return null;
-
   // Calculate logo opacity based on scroll
   const logoOpacity = Math.max(0, 1 - Math.pow(headerScrollY / 120, 1.5));
 
@@ -377,18 +385,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       notifyClose();
     }
   };
-
-  // Loading state
-  if (loading || !config) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-background">
-        <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-      </div>
-    );
-  }
 
   // Widget content
   const widgetContent = (
@@ -552,5 +548,51 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     <div className={`fixed ${positionClasses[position]} z-[9999] p-4`}>
       {widgetContent}
     </div>
+  );
+};
+
+/**
+ * Outer shell component that handles config loading before rendering the inner widget.
+ * This ensures hooks in ChatWidgetInner are never called with null config.
+ */
+export const ChatWidget = ({ 
+  config: configProp, 
+  previewMode = false, 
+  containedPreview = false, 
+  isLoading: isLoadingProp = false 
+}: ChatWidgetProps) => {
+  // Configure logger once on mount based on previewMode
+  useEffect(() => {
+    configureWidgetLogger({ previewMode });
+  }, [previewMode]);
+
+  // Config management via extracted hook
+  const { config, loading, isContentLoading, parentHandlesConfig } = useWidgetConfig(
+    configProp,
+    isLoadingProp,
+    previewMode
+  );
+
+  // Show loading state while config is being fetched
+  if (loading || !config) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-background">
+        <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+      </div>
+    );
+  }
+
+  // Config is guaranteed non-null here, render the inner widget
+  return (
+    <ChatWidgetInner
+      config={config}
+      previewMode={previewMode}
+      containedPreview={containedPreview}
+      isContentLoading={isContentLoading}
+      parentHandlesConfig={parentHandlesConfig}
+    />
   );
 };
