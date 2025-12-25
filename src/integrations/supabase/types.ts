@@ -951,6 +951,39 @@ export type Database = {
           },
         ]
       }
+      lead_stages: {
+        Row: {
+          color: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          order_index: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          order_index?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          order_index?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           company: string | null
@@ -962,6 +995,7 @@ export type Database = {
           kanban_order: number | null
           name: string | null
           phone: string | null
+          stage_id: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
           user_id: string
@@ -976,6 +1010,7 @@ export type Database = {
           kanban_order?: number | null
           name?: string | null
           phone?: string | null
+          stage_id?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           user_id: string
@@ -990,6 +1025,7 @@ export type Database = {
           kanban_order?: number | null
           name?: string | null
           phone?: string | null
+          stage_id?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           user_id?: string
@@ -1007,6 +1043,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "widget_conversations_secure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "lead_stages"
             referencedColumns: ["id"]
           },
         ]
@@ -2150,6 +2193,10 @@ export type Database = {
           source: string
           type: string
         }[]
+      }
+      seed_default_lead_stages: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       validate_api_key: {
         Args: { p_agent_id: string; p_key_hash: string }

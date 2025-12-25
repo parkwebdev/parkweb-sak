@@ -105,6 +105,9 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.leads.details(), id] as const,
   },
 
+  // Lead stages
+  leadStages: ['lead-stages'] as const,
+
   // Analytics
   analytics: {
     all: ['analytics'] as const,
