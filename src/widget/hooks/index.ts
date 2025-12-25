@@ -63,6 +63,16 @@ export { useWidgetAudioRecording } from './useWidgetAudioRecording';
 export { useWidgetNavigation } from './useWidgetNavigation';
 
 // ============================================================================
+// Rating Hooks
+// ============================================================================
+
+/**
+ * Satisfaction rating prompt state and handlers
+ * @see useWidgetRating - Phase 4 refactor (extracted from useWidgetMessaging)
+ */
+export { useWidgetRating } from './useWidgetRating';
+
+// ============================================================================
 // Communication Hooks
 // ============================================================================
 

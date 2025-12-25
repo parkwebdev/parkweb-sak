@@ -48,6 +48,7 @@ import {
   useWidgetMessaging,
   useWidgetAudioRecording,
   useWidgetNavigation,
+  useWidgetRating,
 } from './hooks';
 
 // View Components - HomeView and ChatView are always needed, lazy-load the rest
@@ -156,6 +157,16 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     activeConversationId,
   });
 
+  // Rating state via extracted hook (PHASE 4 REFACTOR)
+  const {
+    showRatingPrompt,
+    setShowRatingPrompt,
+    ratingTriggerType,
+    triggerRating,
+    dismissRating,
+    hasShownRatingRef,
+  } = useWidgetRating();
+
   // Messaging via extracted hook (PHASE 1 REFACTOR)
   const {
     messageInput,
@@ -169,11 +180,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     handleSendMessage,
     handleQuickReplySelectWithSend,
     handleFormSubmit,
-    showRatingPrompt,
-    setShowRatingPrompt,
-    ratingTriggerType,
-    setRatingTriggerType,
-    hasShownRatingRef,
     isHumanTakeover,
     setIsHumanTakeover,
     takeoverAgentName,
@@ -197,6 +203,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     isActivelySendingRef,
     currentPageRef,
     browserLanguageRef,
+    triggerRating,
   });
 
   // Audio recording via extracted hook (PHASE 2 REFACTOR)
@@ -268,12 +275,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setTakeoverAgentAvatar,
     setMessages,
     onConversationClosed: () => {
-      // Team member closed conversation - show rating prompt
-      if (!hasShownRatingRef.current) {
-        setRatingTriggerType('team_closed');
-        setShowRatingPrompt(true);
-        hasShownRatingRef.current = true;
-      }
+      // Team member closed conversation - trigger rating prompt
+      triggerRating('team_closed');
     },
   });
 
@@ -472,7 +475,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       onSubmit={async (rating, feedback) => {
                         await submitConversationRating(activeConversationId, rating, ratingTriggerType, feedback);
                       }}
-                      onDismiss={() => setShowRatingPrompt(false)}
+                      onDismiss={dismissRating}
                     />
                   )}
                 </div>
