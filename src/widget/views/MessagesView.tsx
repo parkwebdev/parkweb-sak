@@ -7,7 +7,7 @@
  * @module widget/views/MessagesView
  */
 
-import { WidgetButton } from '../ui';
+import { WidgetButton, WidgetSkeletonConversationItem } from '../ui';
 import { MessageChatCircle, ChevronRight } from '../icons';
 import { formatTimestamp } from '../utils';
 import type { Conversation } from '../types';

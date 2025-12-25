@@ -510,6 +510,93 @@ function SkeletonIconButton({ size = "default", className }: { size?: "sm" | "de
   return <Skeleton className={cn("rounded-md", sizeClasses[size], className)} />;
 }
 
+/**
+ * Conversation list skeleton for inbox sidebar
+ */
+function SkeletonConversationList({ items = 5, className }: { items?: number; className?: string }) {
+  return (
+    <div className={cn("space-y-1", className)}>
+      {Array.from({ length: items }).map((_, i) => (
+        <div key={i} className="p-3 flex items-start gap-3">
+          <SkeletonAvatar size="sm" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-12" />
+            </div>
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-3/4" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Message thread skeleton for chat messages
+ */
+function SkeletonMessageThread({ messages = 4, className }: { messages?: number; className?: string }) {
+  return (
+    <div className={cn("space-y-4 px-6 py-4", className)}>
+      {Array.from({ length: messages }).map((_, i) => {
+        const isUser = i % 2 === 0;
+        return (
+          <div key={i} className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}>
+            {!isUser && <SkeletonAvatar size="sm" />}
+            <div className={cn("space-y-2 max-w-[70%]", isUser ? "items-end" : "items-start")}>
+              <Skeleton className={cn("h-16 rounded-2xl", isUser ? "w-48" : "w-56")} />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * User account card skeleton for sidebar
+ */
+function SkeletonUserCard({ isCollapsed = false, className }: { isCollapsed?: boolean; className?: string }) {
+  if (isCollapsed) {
+    return (
+      <div className={cn("flex justify-center p-[6px]", className)}>
+        <SkeletonAvatar size="sm" />
+      </div>
+    );
+  }
+  
+  return (
+    <div className={cn("flex items-center gap-3 p-[11px]", className)}>
+      <SkeletonAvatar size="sm" />
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <Skeleton className="h-3.5 w-24" />
+        <Skeleton className="h-3 w-32" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Search results skeleton for global search
+ */
+function SkeletonSearchResults({ items = 5, className }: { items?: number; className?: string }) {
+  return (
+    <div className={cn("py-2", className)}>
+      {Array.from({ length: items }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 px-3 py-2">
+          <Skeleton className="h-4 w-4 rounded" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export {
   Skeleton,
   SkeletonText,
@@ -534,4 +621,8 @@ export {
   SkeletonInput,
   SkeletonToggle,
   SkeletonIconButton,
+  SkeletonConversationList,
+  SkeletonMessageThread,
+  SkeletonUserCard,
+  SkeletonSearchResults,
 };

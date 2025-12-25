@@ -15,6 +15,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { LocationDetails } from './LocationDetails';
+import { SkeletonLocationDetails } from '@/components/ui/page-skeleton';
 import type { Tables } from '@/integrations/supabase/types';
 import type { LocationFormData } from '@/types/locations';
 
@@ -55,7 +56,9 @@ export const LocationDetailsSheet: React.FC<LocationDetailsSheetProps> = ({
           <SheetTitle>{location?.name || 'Location Details'}</SheetTitle>
         </SheetHeader>
         
-        {contentReady && location && (
+        {!contentReady || !location ? (
+          <SkeletonLocationDetails />
+        ) : (
           <LocationDetails
             location={location}
             agentId={agentId}

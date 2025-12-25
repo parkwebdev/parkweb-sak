@@ -16,6 +16,7 @@ import { Trash02, Save01, LinkExternal02, InfoCircle } from '@untitledui/icons';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { SkeletonLeadDetails } from '@/components/ui/page-skeleton';
 import type { Tables, Enums, Json } from '@/integrations/supabase/types';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 
@@ -239,7 +240,9 @@ export const LeadDetailsSheet = ({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-xl overflow-y-auto">
-        {lead && (
+        {!lead ? (
+          <SkeletonLeadDetails />
+        ) : (
           <>
             <SheetHeader>
               <SheetTitle className="flex items-center justify-between">

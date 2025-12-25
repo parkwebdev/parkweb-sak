@@ -29,6 +29,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { toast } from '@/lib/toast';
 import { uploadFeaturedImage } from '@/lib/article-image-upload';
 import { CATEGORY_ICON_OPTIONS, CategoryIcon, type CategoryIconName } from '@/widget/category-icons';
+import { SkeletonArticleDetails } from '@/components/ui/page-skeleton';
 import type { HelpArticleWithMeta } from '@/components/data-table/columns/help-articles-columns';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -238,7 +239,9 @@ export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
           </div>
         </SheetHeader>
 
-        {contentReady && (
+        {!contentReady ? (
+          <SkeletonArticleDetails />
+        ) : (
           <div className="space-y-6">
             {/* Article Details Section */}
             <section className="space-y-4">

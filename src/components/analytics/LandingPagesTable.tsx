@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable, DataTableToolbar } from '@/components/data-table';
 import { landingPagesColumns, type LandingPageData } from '@/components/data-table/columns/landing-pages-columns';
+import { SkeletonTableSection } from '@/components/ui/skeleton';
 
 interface LandingPagesTableProps {
   data: LandingPageData[];
@@ -44,14 +45,8 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
         <CardHeader>
           <CardTitle className="text-base">Popular Landing Pages</CardTitle>
         </CardHeader>
-        <CardContent className="h-[400px] flex items-center justify-center">
-          <span 
-            className="text-muted-foreground text-sm"
-            role="status"
-            aria-live="polite"
-          >
-            Loading...
-          </span>
+        <CardContent>
+          <SkeletonTableSection rows={6} />
         </CardContent>
       </Card>
     );
