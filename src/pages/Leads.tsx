@@ -26,6 +26,8 @@ import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
+import { KanbanCardFieldsFilter } from '@/components/leads/KanbanCardFieldsFilter';
+import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import { Settings01 } from '@untitledui/icons';
@@ -59,6 +61,32 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   
   // Manage stages dialog state
   const [isManageStagesOpen, setIsManageStagesOpen] = useState(false);
+  
+  // Kanban card field visibility state with localStorage persistence
+  const [visibleCardFields, setVisibleCardFields] = useState<Set<CardFieldKey>>(() => {
+    try {
+      const stored = localStorage.getItem(KANBAN_FIELDS_STORAGE_KEY);
+      if (stored) {
+        return new Set(JSON.parse(stored) as CardFieldKey[]);
+      }
+    } catch {
+      // Fallback to defaults on parse error
+    }
+    return getDefaultVisibleFields();
+  });
+
+  const handleToggleField = useCallback((field: CardFieldKey) => {
+    setVisibleCardFields(prev => {
+      const next = new Set(prev);
+      if (next.has(field)) {
+        next.delete(field);
+      } else {
+        next.add(field);
+      }
+      localStorage.setItem(KANBAN_FIELDS_STORAGE_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
   
   // Shared search state for filtering across both views
   const [searchQuery, setSearchQuery] = useState('');
@@ -204,6 +232,10 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                     </svg>
                   </div>
                   <div className="flex items-center gap-2">
+                    <KanbanCardFieldsFilter
+                      visibleFields={visibleCardFields}
+                      onToggleField={handleToggleField}
+                    />
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -232,6 +264,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                   onStatusChange={(leadId, stageId) => updateLead(leadId, { stage_id: stageId })}
                   onViewLead={handleViewLead}
                   onOrderChange={updateLeadOrders}
+                  visibleFields={visibleCardFields}
                 />
               </motion.div>
             ) : (
