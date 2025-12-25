@@ -5,7 +5,7 @@
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Mail01, Phone, Building02 } from "@untitledui/icons";
+import { Mail01, Phone, Building02, MessageChatCircle } from "@untitledui/icons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import {
   KanbanCard,
 } from "@/components/ui/kanban";
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
+import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
 import type { Tables } from "@/integrations/supabase/types";
 
 // Kanban-compatible lead type
@@ -29,6 +30,7 @@ type KanbanLead = {
   company: string | null;
   stage_id: string | null;
   created_at: string;
+  hasConversation?: boolean;
 };
 
 interface LeadsKanbanBoardProps {
@@ -36,6 +38,7 @@ interface LeadsKanbanBoardProps {
   onStatusChange: (leadId: string, stageId: string) => void;
   onViewLead: (lead: Tables<"leads">) => void;
   onOrderChange?: (updates: { id: string; kanban_order: number; stage_id?: string }[]) => void;
+  visibleFields?: Set<CardFieldKey>;
 }
 
 // Inline editable column header
@@ -105,7 +108,13 @@ function InlineStageHeader({
 }
 
 // Individual lead card content - memoized for performance
-export const LeadCardContent = React.memo(function LeadCardContent({ lead }: { lead: KanbanLead }) {
+export const LeadCardContent = React.memo(function LeadCardContent({ 
+  lead,
+  visibleFields = getDefaultVisibleFields(),
+}: { 
+  lead: KanbanLead;
+  visibleFields?: Set<CardFieldKey>;
+}) {
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-2">
@@ -113,26 +122,31 @@ export const LeadCardContent = React.memo(function LeadCardContent({ lead }: { l
           <p className="truncate text-sm font-medium text-foreground">
             {lead.name || "Unnamed Lead"}
           </p>
-          <p className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(lead.created_at), { addSuffix: true })}
-          </p>
+          {visibleFields.has('createdAt') && (
+            <p className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(lead.created_at), { addSuffix: true })}
+            </p>
+          )}
         </div>
+        {visibleFields.has('conversation') && lead.hasConversation && (
+          <MessageChatCircle size={14} className="shrink-0 text-primary" />
+        )}
       </div>
 
       <div className="space-y-1">
-        {lead.email && (
+        {visibleFields.has('email') && lead.email && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Mail01 size={12} className="shrink-0" />
             <span className="truncate">{lead.email}</span>
           </div>
         )}
-        {lead.phone && (
+        {visibleFields.has('phone') && lead.phone && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Phone size={12} className="shrink-0" />
             <span className="truncate">{lead.phone}</span>
           </div>
         )}
-        {lead.company && (
+        {visibleFields.has('company') && lead.company && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Building02 size={12} className="shrink-0" />
             <span className="truncate">{lead.company}</span>
@@ -148,6 +162,7 @@ export function LeadsKanbanBoard({
   onStatusChange,
   onViewLead,
   onOrderChange,
+  visibleFields = getDefaultVisibleFields(),
 }: LeadsKanbanBoardProps) {
   const { stages, loading: stagesLoading, updateStage } = useLeadStages();
 
@@ -176,6 +191,7 @@ export function LeadsKanbanBoard({
           company: lead.company,
           stage_id: lead.stage_id,
           created_at: lead.created_at,
+          hasConversation: !!lead.conversation_id,
         };
       }),
     [leads, stages]
@@ -251,10 +267,10 @@ export function LeadsKanbanBoard({
   const renderCardOverlay = useCallback(
     (lead: KanbanLead) => (
       <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-md">
-        <LeadCardContent lead={lead} />
+        <LeadCardContent lead={lead} visibleFields={visibleFields} />
       </Card>
     ),
-    []
+    [visibleFields]
   );
 
   // Handle stage name updates
@@ -320,7 +336,7 @@ export function LeadsKanbanBoard({
                         }
                       }}
                     >
-                      <LeadCardContent lead={lead} />
+                      <LeadCardContent lead={lead} visibleFields={visibleFields} />
                     </KanbanCard>
                   )}
                 </KanbanCards>
