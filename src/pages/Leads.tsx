@@ -240,7 +240,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                   leads={filteredLeads}
                   selectedIds={selectedLeadIds}
                   onView={handleViewLead}
-                  onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
+                  onStageChange={(leadId, stageId) => updateLead(leadId, { stage_id: stageId })}
                   onSelectionChange={handleSelectLead}
                   onSelectAll={handleSelectAll}
                   onBulkDelete={(ids) => {
@@ -304,6 +304,11 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         onOpenChange={setIsExportOpen}
         allLeads={leads}
         filteredLeads={filteredLeads}
+      />
+
+      <ManageStagesDialog
+        open={isManageStagesOpen}
+        onOpenChange={setIsManageStagesOpen}
       />
     </div>
   );

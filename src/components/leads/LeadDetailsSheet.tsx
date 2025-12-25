@@ -517,10 +517,10 @@ export const LeadDetailsSheet = ({
               <div className="flex items-center gap-3">
                 <SheetTitle>Lead Details</SheetTitle>
                 <LeadStatusDropdown
-                  status={{ ...lead, ...editedLead }.status}
-                  onStatusChange={(status) => {
-                    lastEditedFieldRef.current = 'status';
-                    setEditedLead({ ...editedLead, status: status as Enums<'lead_status'> });
+                  stageId={{ ...lead, ...editedLead }.stage_id}
+                  onStageChange={(stageId) => {
+                    lastEditedFieldRef.current = 'stage_id';
+                    setEditedLead({ ...editedLead, stage_id: stageId });
                   }}
                 />
               </div>
