@@ -154,7 +154,6 @@ export const LeadsTable = React.memo(function LeadsTable({
       <DataTableToolbar
         table={table}
         searchPlaceholder="Search leads..."
-        showViewOptions
         searchValue={searchQuery}
         onSearchChange={onSearchChange}
         prefix={
