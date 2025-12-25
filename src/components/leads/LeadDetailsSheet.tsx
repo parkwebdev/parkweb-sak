@@ -12,7 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash02, LinkExternal02, InfoCircle, Globe01, Monitor01, Clock, Browser, Link01 } from '@untitledui/icons';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Trash02, LinkExternal02, InfoCircle, Globe01, Monitor01, Clock, Browser, Link01, Plus, XClose } from '@untitledui/icons';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -21,7 +23,7 @@ import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import type { Tables, Enums, Json } from '@/integrations/supabase/types';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface LeadDetailsSheetProps {
   lead: Tables<'leads'> | null;
@@ -55,7 +57,23 @@ interface ConversationMetadata {
     utm_medium?: string | null;
     utm_campaign?: string | null;
   };
+  // Priority, Tags, Notes
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  tags?: string[];
+  notes?: string;
 }
+
+// Priority options with colors
+const PRIORITY_OPTIONS = [
+  { value: '', label: 'Not Set', color: 'bg-muted' },
+  { value: 'low', label: 'Low', color: 'bg-blue-500' },
+  { value: 'normal', label: 'Normal', color: 'bg-green-500' },
+  { value: 'high', label: 'High', color: 'bg-amber-500' },
+  { value: 'urgent', label: 'Urgent', color: 'bg-red-500' },
+];
+
+// Preset tags for quick selection
+const PRESET_TAGS = ['VIP', 'Follow-up', 'Hot Lead', 'Cold Lead', 'Needs Review', 'Bug Report'];
 
 // Helper to convert country code to emoji flag
 const countryCodeToFlag = (code: string): string => {
@@ -101,13 +119,19 @@ export const LeadDetailsSheet = ({
   onDelete,
 }: LeadDetailsSheetProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [editedLead, setEditedLead] = useState<Partial<Tables<'leads'>>>({});
   const [editedCustomData, setEditedCustomData] = useState<Record<string, unknown>>({});
   const [savedField, setSavedField] = useState<string | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // State for Priority, Tags, Notes
+  const [newTag, setNewTag] = useState('');
+  const [internalNotes, setInternalNotes] = useState('');
+  const notesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Fetch conversation data if lead has a conversation_id
-  const { data: conversation } = useQuery({
+  const { data: conversation, refetch: refetchConversation } = useQuery({
     queryKey: ['conversation-for-lead', lead?.conversation_id],
     queryFn: async () => {
       if (!lead?.conversation_id) return null;
@@ -125,11 +149,20 @@ export const LeadDetailsSheet = ({
 
   const conversationMetadata = (conversation?.metadata || {}) as ConversationMetadata;
 
+  // Initialize notes from conversation metadata
+  useEffect(() => {
+    if (conversation?.metadata) {
+      const meta = conversation.metadata as ConversationMetadata;
+      setInternalNotes(meta.notes || '');
+    }
+  }, [conversation?.id, conversation?.metadata]);
+
   // Reset edited state when lead changes
   useEffect(() => {
     setEditedLead({});
     setEditedCustomData({});
     setSavedField(null);
+    setNewTag('');
   }, [lead?.id]);
 
   // Track which field was last edited
@@ -222,6 +255,70 @@ export const LeadDetailsSheet = ({
       navigate(`/conversations?id=${lead.conversation_id}`);
     }
   };
+
+  // Update conversation metadata (for priority, tags, notes)
+  const updateConversationMetadata = useCallback(async (
+    updates: Partial<Pick<ConversationMetadata, 'priority' | 'tags' | 'notes'>>,
+    fieldName: string
+  ) => {
+    if (!lead?.conversation_id || !conversation) return;
+
+    const currentMetadata = (conversation.metadata || {}) as ConversationMetadata;
+    const newMetadata = { ...currentMetadata, ...updates };
+
+    const { error } = await supabase
+      .from('conversations')
+      .update({ metadata: newMetadata as Json })
+      .eq('id', lead.conversation_id);
+
+    if (!error) {
+      // Update local cache
+      queryClient.setQueryData(['conversation-for-lead', lead.conversation_id], {
+        ...conversation,
+        metadata: newMetadata,
+      });
+      // Invalidate conversations list for sync
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      
+      // Show saved indicator
+      setSavedField(fieldName);
+      setTimeout(() => setSavedField(null), 2000);
+    }
+  }, [lead?.conversation_id, conversation, queryClient]);
+
+  // Handle priority change
+  const handlePriorityChange = useCallback((value: string) => {
+    const priority = value === '' ? undefined : (value as ConversationMetadata['priority']);
+    updateConversationMetadata({ priority }, 'priority');
+  }, [updateConversationMetadata]);
+
+  // Handle adding a tag
+  const handleAddTag = useCallback((tag: string) => {
+    if (!tag.trim()) return;
+    const currentTags = conversationMetadata.tags || [];
+    if (currentTags.includes(tag.trim())) return;
+    updateConversationMetadata({ tags: [...currentTags, tag.trim()] }, 'tags');
+    setNewTag('');
+  }, [conversationMetadata.tags, updateConversationMetadata]);
+
+  // Handle removing a tag
+  const handleRemoveTag = useCallback((tagToRemove: string) => {
+    const currentTags = conversationMetadata.tags || [];
+    updateConversationMetadata({ tags: currentTags.filter(t => t !== tagToRemove) }, 'tags');
+  }, [conversationMetadata.tags, updateConversationMetadata]);
+
+  // Handle notes change with debounce
+  const handleNotesChange = useCallback((value: string) => {
+    setInternalNotes(value);
+    
+    if (notesTimeoutRef.current) {
+      clearTimeout(notesTimeoutRef.current);
+    }
+    
+    notesTimeoutRef.current = setTimeout(() => {
+      updateConversationMetadata({ notes: value }, 'notes');
+    }, 1000);
+  }, [updateConversationMetadata]);
 
   // Helper to format field label from key
   const formatLabel = (key: string): string => {
@@ -577,6 +674,134 @@ export const LeadDetailsSheet = ({
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
+                </>
+              )}
+
+              {/* Priority, Tags, and Internal Notes - only show if conversation exists */}
+              {lead.conversation_id && (
+                <>
+                  <Separator />
+                  
+                  {/* Priority */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Priority</Label>
+                      <SavedIndicator show={savedField === 'priority'} />
+                    </div>
+                    <Select
+                      value={conversationMetadata.priority || ''}
+                      onValueChange={handlePriorityChange}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Not Set">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || ''))?.color || 'bg-muted'
+                              }`}
+                            />
+                            {PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || ''))?.label || 'Not Set'}
+                          </div>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRIORITY_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            <div className="flex items-center gap-2">
+                              <span className={`h-2 w-2 rounded-full ${option.color}`} />
+                              {option.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Tags</Label>
+                      <SavedIndicator show={savedField === 'tags'} />
+                    </div>
+                    
+                    {/* Current tags */}
+                    {(conversationMetadata.tags?.length ?? 0) > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {conversationMetadata.tags?.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="gap-1 pr-1"
+                          >
+                            {tag}
+                            <button
+                              onClick={() => handleRemoveTag(tag)}
+                              className="ml-1 hover:bg-muted rounded p-0.5"
+                              aria-label={`Remove ${tag} tag`}
+                            >
+                              <XClose className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Add new tag */}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Add tag..."
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddTag(newTag);
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleAddTag(newTag)}
+                        disabled={!newTag.trim()}
+                        aria-label="Add tag"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {/* Preset tags */}
+                    <div className="flex flex-wrap gap-1">
+                      {PRESET_TAGS.filter(t => !conversationMetadata.tags?.includes(t)).slice(0, 4).map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => handleAddTag(tag)}
+                          className="text-xs px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Internal Notes */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Internal Notes</Label>
+                      <SavedIndicator show={savedField === 'notes'} />
+                    </div>
+                    <Textarea
+                      placeholder="Add internal notes about this lead..."
+                      value={internalNotes}
+                      onChange={(e) => handleNotesChange(e.target.value)}
+                      rows={3}
+                      className="resize-none"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Notes auto-save after 1 second
+                    </p>
+                  </div>
                 </>
               )}
 
