@@ -1,7 +1,7 @@
 # ChatWidget Refactoring Plan
 
 > **Last Updated**: December 2024  
-> **Status**: Phase 1 COMPLETE ✅ | Phases 2-9 Ready for Implementation  
+> **Status**: Phases 1-2 COMPLETE ✅ | Phases 3-9 Ready for Implementation  
 > **Priority**: 🟡 MEDIUM  
 > **Risk Level**: LOW (documentation/hook extraction only, no UI changes)
 
@@ -10,6 +10,17 @@
 **Hook Created**: `src/widget/hooks/useWidgetMessaging.ts` (~490 lines)
 **ChatWidget.tsx reduced**: 954 → 605 lines (-349 lines, 37% reduction)
 **Barrel exports updated**: `src/widget/hooks/index.ts` with organized sections
+
+## ✅ Phase 2: VERIFIED COMPLETE
+
+**Hook Created**: `src/widget/hooks/useWidgetAudioRecording.ts` (~140 lines)
+**ChatWidget.tsx reduced**: 605 → 578 lines (-27 lines additional)
+**Extracted**:
+- `isRecordingAudio` state
+- `recordingTime` state
+- `mediaRecorderRef`, `chunksRef`, `recordingIntervalRef` refs
+- `startAudioRecording`, `stopAudioRecording`, `cancelAudioRecording` handlers
+**Barrel exports updated**: Added Audio Hooks section
 
 Transform `ChatWidget.tsx` from a **954-line monolith** into a **lean ~400-line orchestrator** by extracting inline logic into dedicated hooks. This refactoring:
 
