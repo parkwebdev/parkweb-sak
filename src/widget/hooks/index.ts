@@ -53,6 +53,16 @@ export { useTypingIndicator } from './useTypingIndicator';
 export { useWidgetAudioRecording } from './useWidgetAudioRecording';
 
 // ============================================================================
+// Navigation Hooks
+// ============================================================================
+
+/**
+ * View navigation state and handlers
+ * @see useWidgetNavigation - Phase 3 refactor (extracted from ChatWidget.tsx)
+ */
+export { useWidgetNavigation } from './useWidgetNavigation';
+
+// ============================================================================
 // Communication Hooks
 // ============================================================================
 
