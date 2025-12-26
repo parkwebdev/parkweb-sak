@@ -214,7 +214,7 @@ const Analytics: React.FC = () => {
   const trafficSources = mockMode && mockData ? mockData.trafficSources : realTrafficSources;
   const landingPages = mockMode && mockData ? mockData.landingPages : realLandingPages;
   const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
-  const locationData = realLocationData; // Location data doesn't have mock version yet
+  const locationData = mockMode && mockData ? mockData.locationData : realLocationData;
 
 
   // Calculate KPIs
