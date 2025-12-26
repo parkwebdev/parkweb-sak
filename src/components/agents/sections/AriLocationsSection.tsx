@@ -299,7 +299,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
       if (error) throw error;
       toast.success('Property deleted');
       refetchProperties();
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to delete property');
     } finally {
       setDeleteProperty(null);

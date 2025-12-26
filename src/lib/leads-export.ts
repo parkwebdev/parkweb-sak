@@ -240,7 +240,7 @@ export function exportLeads(
     downloadCSV(csv, filename);
     
     return { count: leadsToExport.length, success: true };
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Export failed:', error);
     return { count: 0, success: false };
   }

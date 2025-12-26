@@ -299,7 +299,7 @@ const NewsDialog = ({
       
       onSave({ ...formData, featured_image_url: finalImageUrl });
       onClose();
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error saving news item:', error);
       toast.error('Failed to save news item');
     } finally {

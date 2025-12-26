@@ -101,7 +101,7 @@ export function useWidgetAudioRecording({
       }, 1000);
       
       widgetLogger.info('[AudioRecording] Recording started');
-    } catch (error) {
+    } catch (error: unknown) {
       widgetLogger.error('[AudioRecording] Error starting recording:', error);
     }
   }, [setMessages]);

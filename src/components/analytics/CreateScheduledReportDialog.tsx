@@ -81,7 +81,7 @@ export const CreateScheduledReportDialog = ({ open, onOpenChange }: CreateSchedu
       setFrequency('weekly');
       setTimeOfDay('09:00');
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error creating scheduled report:', error);
     } finally {
       setLoading(false);

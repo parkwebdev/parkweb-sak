@@ -59,7 +59,7 @@ export const SubscriptionSettings = () => {
 
         if (error && error.code !== 'PGRST116') throw error;
         setSubscription(data);
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Error fetching subscription:', error);
       } finally {
         setLoading(false);
@@ -80,7 +80,7 @@ export const SubscriptionSettings = () => {
       if (data?.invoices) {
         setInvoices(data.invoices);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error fetching invoices:', error);
       toast.error('Failed to load billing history');
     } finally {

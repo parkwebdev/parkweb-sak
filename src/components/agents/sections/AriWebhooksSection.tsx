@@ -70,7 +70,7 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
       await createWebhook(data);
       addDebugLog('success', 'Webhook created successfully');
       setShowCreateDialog(false);
-    } catch (error) {
+    } catch (error: unknown) {
       addDebugLog('error', 'Failed to create webhook', error);
     }
   };
@@ -81,7 +81,7 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
       await updateWebhook(id, data);
       addDebugLog('success', 'Webhook updated successfully');
       setEditingWebhook(null);
-    } catch (error) {
+    } catch (error: unknown) {
       addDebugLog('error', 'Failed to update webhook', error);
     }
   };
@@ -114,7 +114,7 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
         addDebugLog('error', 'Webhook test failed', result);
         toast.error('Webhook test failed');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       addDebugLog('error', 'Webhook test error', error);
       toast.error('Webhook test error');
     } finally {

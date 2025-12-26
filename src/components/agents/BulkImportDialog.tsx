@@ -237,7 +237,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
         icon,
       })));
       handleClose();
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Import failed:', error);
     } finally {
       setImporting(false);
