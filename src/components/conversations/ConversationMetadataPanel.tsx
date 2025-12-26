@@ -80,6 +80,7 @@ const countryCodeToFlag = (code: string): string => {
 
 import { formatDistanceToNow, format } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
+import type { ConversationMetadata, VisitedPage, ReferrerJourney } from '@/types/metadata';
 import { cn } from '@/lib/utils';
 
 type Conversation = Tables<'conversations'> & {
@@ -122,54 +123,8 @@ const getChannelLabel = (channel: string): string => {
   }
 };
 
-interface PageVisit {
-  url: string;
-  entered_at: string;
-  duration_ms: number;
-}
-
-interface ReferrerJourney {
-  referrer_url: string | null;
-  landing_page: string | null;
-  utm_source?: string | null;
-  utm_medium?: string | null;
-  utm_campaign?: string | null;
-  utm_term?: string | null;
-  utm_content?: string | null;
-  entry_type?: 'direct' | 'organic' | 'referral' | 'social' | 'paid' | 'email';
-}
-
-interface ConversationMetadata {
-  lead_id?: string;
-  lead_name?: string;
-  lead_email?: string;
-  lead_phone?: string;
-  lead_company?: string;
-  custom_fields?: Record<string, any>;
-  ip_address?: string;
-  country?: string;
-  city?: string;
-  country_code?: string;
-  region?: string;
-  device_type?: 'desktop' | 'mobile' | 'tablet';
-  device?: string;
-  browser?: string;
-  os?: string;
-  referrer_url?: string;
-  referer_url?: string; // Alternative spelling from edge function
-  session_started_at?: string;
-  first_message_at?: string;
-  messages_count?: number;
-  tags?: string[];
-  priority?: 'not_set' | 'low' | 'normal' | 'high' | 'urgent';
-  assigned_to?: string;
-  notes?: string;
-  visited_pages?: PageVisit[];
-  referrer_journey?: ReferrerJourney;
-  // Language detection
-  detected_language?: string;
-  detected_language_code?: string;
-}
+// Re-export for local use (types already imported from @/types/metadata)
+type PageVisit = VisitedPage & { entered_at?: string; duration_ms?: number };
 
 interface ConversationMetadataPanelProps {
   conversation: Conversation;

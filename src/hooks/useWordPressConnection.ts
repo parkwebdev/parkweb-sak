@@ -13,6 +13,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import type { Tables } from '@/integrations/supabase/types';
+import type { AgentDeploymentConfig } from '@/types/metadata';
 
 interface WordPressConfig {
   site_url: string;
@@ -70,8 +71,8 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   // Extract WordPress config from agent
   const wordpressConfig = useMemo((): WordPressConfig | null => {
     if (!agent?.deployment_config) return null;
-    const config = agent.deployment_config as Record<string, unknown>;
-    return (config.wordpress as WordPressConfig) || null;
+    const config = agent.deployment_config as AgentDeploymentConfig & { wordpress?: WordPressConfig };
+    return config.wordpress || null;
   }, [agent?.deployment_config]);
 
   // Reset local state when agent config changes

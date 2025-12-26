@@ -72,8 +72,8 @@ const DEFAULT_WELCOME_SUBTITLE = 'How can we help you today?';
 function hasCustomAppearance(deploymentConfig: AgentDeploymentConfig | null | undefined): boolean {
   if (!deploymentConfig) return false;
   
-  const config = deploymentConfig as Record<string, unknown>;
-  const embeddedChat = config.embedded_chat as Record<string, unknown> | undefined;
+  // Access embedded_chat config (extended type from agent storage)
+  const embeddedChat = (deploymentConfig as AgentDeploymentConfig & { embedded_chat?: Record<string, unknown> }).embedded_chat;
   
   if (!embeddedChat) return false;
   

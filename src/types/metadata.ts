@@ -26,9 +26,13 @@ export interface VisitedPage {
   /** Full URL of the visited page */
   url: string;
   /** ISO timestamp when page was visited */
-  visitedAt: string;
+  visitedAt?: string;
+  /** Alternative timestamp format from edge functions */
+  entered_at?: string;
   /** Time spent on page in seconds */
   duration?: number;
+  /** Time spent on page in milliseconds (alternative format) */
+  duration_ms?: number;
 }
 
 /**
@@ -47,6 +51,12 @@ export interface ConversationMetadata {
   lead_name?: string;
   /** Lead email from contact form */
   lead_email?: string;
+  /** Lead phone from contact form */
+  lead_phone?: string;
+  /** Lead company from contact form */
+  lead_company?: string;
+  /** Custom fields from contact form */
+  custom_fields?: Record<string, string | number | boolean>;
 
   // Message tracking
   /** Timestamp when admin last read messages in this conversation */
@@ -59,40 +69,74 @@ export interface ConversationMetadata {
   last_message_role?: 'user' | 'assistant' | 'human';
   /** Truncated preview of the last message */
   last_message_preview?: string;
+  /** Timestamp of first message */
+  first_message_at?: string;
+  /** Message count in conversation */
+  messages_count?: number;
 
   // Admin-editable fields
   /** Conversation priority for triage */
-  priority?: 'low' | 'medium' | 'high';
+  priority?: 'low' | 'normal' | 'high' | 'urgent' | 'not_set';
   /** Tags for categorization */
   tags?: string[];
   /** Internal notes visible only to team */
   notes?: string;
+  /** Assigned team member */
+  assigned_to?: string;
 
   // Session analytics
   /** Visitor's IP address */
   ip_address?: string;
   /** Country derived from IP geolocation */
   country?: string;
+  /** City derived from IP geolocation */
+  city?: string;
+  /** Country code (ISO 3166-1 alpha-2) */
+  country_code?: string;
+  /** Region/state from geolocation */
+  region?: string;
   /** Device category */
   device_type?: 'desktop' | 'mobile' | 'tablet';
+  /** Device name */
+  device?: string;
   /** Browser name and version */
   browser?: string;
   /** Operating system */
   os?: string;
-  /** Referring URL that brought visitor to site */
+  /** Referring URL that brought visitor to site (canonical spelling) */
+  referrer_url?: string;
+  /** @deprecated Use referrer_url instead (kept for backward compatibility with legacy data) */
+  referer_url?: string;
+  /** General referrer field */
   referrer?: string;
   /** First page visited in session */
   landing_page?: string;
+  /** Session start timestamp */
+  session_started_at?: string;
   /** All pages visited during session */
   visited_pages?: VisitedPage[];
-  /** Custom fields from contact form or integrations */
-  custom_fields?: Record<string, string | number | boolean>;
+  /** Referrer journey with UTM tracking */
+  referrer_journey?: ReferrerJourney;
 
   // Language detection
   /** ISO language code detected from conversation (e.g., 'es', 'fr', 'pt-BR') */
   detected_language_code?: string;
   /** Human-readable language name (e.g., 'Spanish', 'French') */
   detected_language?: string;
+}
+
+/**
+ * Referrer journey tracking with UTM parameters.
+ */
+export interface ReferrerJourney {
+  referrer_url?: string | null;
+  landing_page?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_term?: string | null;
+  utm_content?: string | null;
+  entry_type?: 'direct' | 'organic' | 'referral' | 'social' | 'paid' | 'email';
 }
 
 /**

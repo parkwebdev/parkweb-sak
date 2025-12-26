@@ -29,18 +29,7 @@ import {
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
 import type { Tables } from "@/integrations/supabase/types";
-
-// Type for conversation metadata
-interface ConversationMetadata {
-  city?: string;
-  country?: string;
-  priority?: 'high' | 'medium' | 'low';
-  tags?: string[];
-  notes?: string;
-  referrer_journey?: {
-    landing_page?: string;
-  };
-}
+import type { ConversationMetadata } from "@/types/metadata";
 
 // Kanban-compatible lead type with extended fields
 type KanbanLead = {
@@ -336,6 +325,20 @@ export function LeadsKanbanBoard({
         // Format entry page
         const entryPage = formatEntryPage(metadata.referrer_journey?.landing_page);
         
+        // Map priority from ConversationMetadata to KanbanLead format
+        let priority: 'high' | 'medium' | 'low' | null = null;
+        if (metadata.priority) {
+          // Map 'normal' → 'medium', 'urgent' → 'high', ignore 'not_set'
+          const priorityMap: Record<string, 'high' | 'medium' | 'low' | null> = {
+            'high': 'high',
+            'urgent': 'high',
+            'normal': 'medium',
+            'low': 'low',
+            'not_set': null,
+          };
+          priority = priorityMap[metadata.priority] ?? null;
+        }
+        
         return {
           id: lead.id,
           name: lead.name || "Unnamed Lead",
@@ -350,7 +353,7 @@ export function LeadsKanbanBoard({
           hasConversation: !!lead.conversation_id,
           location,
           entryPage,
-          priority: metadata.priority || null,
+          priority,
           tags: metadata.tags || [],
           notes: metadata.notes || null,
         };
