@@ -5,6 +5,75 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ============================================================================
+// SSRF Protection - Block internal/private network addresses
+// ============================================================================
+const BLOCKED_URL_PATTERNS = [
+  /^localhost$/i,
+  /^127\./,
+  /^10\./,
+  /^172\.(1[6-9]|2[0-9]|3[01])\./,
+  /^192\.168\./,
+  /^169\.254\./,         // Link-local
+  /^0\.0\.0\.0$/,
+  /^metadata\.google\.internal$/i,
+  /^metadata\.goog$/i,
+  /^instance-data$/i,
+  /\.internal$/i,
+  /^fc00:/i,             // IPv6 private
+  /^fe80:/i,             // IPv6 link-local
+  /^::1$/,               // IPv6 localhost
+];
+
+function isBlockedUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    const hostname = parsedUrl.hostname.toLowerCase();
+    
+    return BLOCKED_URL_PATTERNS.some(pattern => pattern.test(hostname));
+  } catch {
+    return true; // Block invalid URLs
+  }
+}
+
+// ============================================================================
+// Rate Limiting - 10 requests per minute per IP
+// ============================================================================
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 10;
+
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function isRateLimited(clientIp: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(clientIp);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    return true;
+  }
+
+  record.count++;
+  return false;
+}
+
+// Cleanup old entries periodically
+function cleanupRateLimitMap() {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitMap.entries()) {
+    if (now > record.resetTime + RATE_LIMIT_WINDOW_MS) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}
+
+// ============================================================================
+// Link Preview Types and Helpers
+// ============================================================================
 interface LinkPreviewData {
   url: string;
   title?: string;
@@ -151,8 +220,9 @@ async function fetchOEmbedData(url: string, videoType: string): Promise<{ title?
       author: data.author_name,
       thumbnail: data.thumbnail_url,
     };
-  } catch (error) {
-    console.log(`oEmbed fetch failed for ${videoType}:`, error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.log(`oEmbed fetch failed for ${videoType}:`, message);
     return null;
   }
 }
@@ -293,6 +363,25 @@ serve(async (req) => {
   }
 
   try {
+    // Get client IP for rate limiting
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('cf-connecting-ip') || 
+                     'unknown';
+
+    // Check rate limit
+    if (isRateLimited(clientIp)) {
+      console.log(`Rate limited IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Periodic cleanup
+    if (Math.random() < 0.01) {
+      cleanupRateLimitMap();
+    }
+
     const { url } = await req.json();
 
     if (!url || typeof url !== 'string') {
@@ -312,6 +401,15 @@ serve(async (req) => {
     } catch {
       return new Response(
         JSON.stringify({ error: 'Invalid URL format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // SSRF Protection: Block internal/private network addresses
+    if (isBlockedUrl(url)) {
+      console.warn(`SSRF blocked URL: ${url}`);
+      return new Response(
+        JSON.stringify({ error: 'URL not allowed' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -421,7 +519,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching link preview:', error);
     
     // For network errors (DNS, connection, timeout), return minimal preview data
@@ -442,8 +540,9 @@ serve(async (req) => {
       );
     }
 
+    const message = error instanceof Error ? error.message : 'Failed to fetch link preview';
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to fetch link preview' }),
+      JSON.stringify({ error: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
