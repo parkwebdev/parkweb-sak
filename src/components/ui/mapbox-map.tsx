@@ -8,8 +8,8 @@ import Map, {
   NavigationControl,
   FullscreenControl,
   type MapRef,
-  type MapLayerMouseEvent,
-} from "react-map-gl";
+  type MapMouseEvent,
+} from "react-map-gl/mapbox";
 import type { CircleLayer, SymbolLayer } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
@@ -212,7 +212,7 @@ export function MapboxMap({
   }, [fitBounds, fitBoundsPadding]);
 
   // Handle cluster click - zoom in
-  const onClick = React.useCallback((event: MapLayerMouseEvent) => {
+  const onClick = React.useCallback((event: MapMouseEvent) => {
     const feature = event.features?.[0];
     if (!feature || !mapRef.current) return;
 
@@ -239,7 +239,7 @@ export function MapboxMap({
   }, []);
 
   // Handle mouse enter on points
-  const onMouseEnter = React.useCallback((event: MapLayerMouseEvent) => {
+  const onMouseEnter = React.useCallback((event: MapMouseEvent) => {
     const feature = event.features?.[0];
     if (!feature) return;
 
