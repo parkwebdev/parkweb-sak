@@ -19,6 +19,17 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import type { DataTableColumnMeta } from './types';
+
+/** Get alignment class from column meta */
+function getAlignmentClass(meta: DataTableColumnMeta | undefined): string | undefined {
+  if (!meta?.align) return undefined;
+  switch (meta.align) {
+    case 'right': return 'text-right';
+    case 'center': return 'text-center';
+    default: return undefined;
+  }
+}
 
 interface DataTableProps<TData, TValue> {
   table: TanStackTable<TData>;
@@ -74,11 +85,14 @@ export function DataTable<TData, TValue>({
                 const columnDef = header.column.columnDef;
                 const size = header.column.getSize();
                 const hasCustomSize = size !== 150; // 150 is TanStack's default
+                const meta = columnDef.meta as DataTableColumnMeta | undefined;
+                const alignClass = getAlignmentClass(meta);
                 
                 return (
                   <TableHead 
                     key={header.id} 
                     colSpan={header.colSpan}
+                    className={alignClass}
                     style={{ 
                       width: hasCustomSize ? size : undefined,
                       minWidth: columnDef.minSize,
@@ -114,10 +128,13 @@ export function DataTable<TData, TValue>({
                   const columnDef = cell.column.columnDef;
                   const size = cell.column.getSize();
                   const hasCustomSize = size !== 150;
+                  const meta = columnDef.meta as DataTableColumnMeta | undefined;
+                  const alignClass = getAlignmentClass(meta);
                   
                   return (
                     <TableCell 
                       key={cell.id}
+                      className={alignClass}
                       style={{ 
                         width: hasCustomSize ? size : undefined,
                         minWidth: columnDef.minSize,

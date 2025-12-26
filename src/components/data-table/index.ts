@@ -6,3 +6,4 @@ export { DataTableViewOptions } from './DataTableViewOptions';
 export { DataTableFacetedFilter } from './DataTableFacetedFilter';
 export { DataTableFloatingBar } from './DataTableFloatingBar';
 export * from './columns';
+export type { DataTableColumnMeta } from './types';

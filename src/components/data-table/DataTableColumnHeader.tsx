@@ -1,6 +1,7 @@
 /**
  * @fileoverview Sortable column header component for data tables.
  * Shows sort direction indicators and handles sort toggle.
+ * Reads alignment from column meta for consistent positioning.
  */
 
 import React from 'react';
@@ -12,6 +13,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from '@untitledui/icons';
+import type { DataTableColumnMeta } from './types';
 
 interface DataTableColumnHeaderProps<TData, TValue>
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -24,10 +26,21 @@ export function DataTableColumnHeader<TData, TValue>({
   title,
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
-  const isRightAligned = className?.includes('justify-end');
+  // Read alignment from column meta (standardized approach)
+  const meta = column.columnDef.meta as DataTableColumnMeta | undefined;
+  const isRightAligned = meta?.align === 'right';
+  const isCenterAligned = meta?.align === 'center';
 
   if (!column.getCanSort()) {
-    return <div className={cn(className)}>{title}</div>;
+    return (
+      <div className={cn(
+        isRightAligned && 'text-right',
+        isCenterAligned && 'text-center',
+        className
+      )}>
+        {title}
+      </div>
+    );
   }
 
   const sorted = column.getIsSorted();
