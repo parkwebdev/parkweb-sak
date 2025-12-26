@@ -150,7 +150,7 @@ export function PreviewChat({
         bookingConfirmed: response.bookingConfirmed,
       };
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Preview chat error:', error);
       // Add error message
       const errorMessage: Message = {

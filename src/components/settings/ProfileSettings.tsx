@@ -77,7 +77,7 @@ export function ProfileSettings() {
           avatar_url: '',
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in fetchProfile:', error);
     } finally {
       setLoading(false);
@@ -112,7 +112,7 @@ export function ProfileSettings() {
           .eq('user_id', user.id);
         showSaved('display_name');
         setInitialProfile(profile);
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Error auto-saving display name:', error);
       }
     }, 1000);
@@ -135,7 +135,7 @@ export function ProfileSettings() {
           .eq('user_id', user.id);
         showSaved('email');
         setInitialProfile(profile);
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Error auto-saving email:', error);
       }
     }, 1000);
@@ -168,7 +168,7 @@ export function ProfileSettings() {
       toast.success("Profile updated", {
         description: "Your profile has been updated successfully.",
       });
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in handleSave:', error);
     } finally {
       setUpdating(false);
@@ -272,7 +272,7 @@ export function ProfileSettings() {
       toast.success("Password updated", {
         description: "Your password has been updated successfully.",
       });
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in handlePasswordUpdate:', error);
     } finally {
       setUpdating(false);

@@ -78,7 +78,7 @@ export const useKnowledgeSources = (agentId?: string) => {
           },
         })
         .eq('id', sourceId);
-    } catch (e) {
+    } catch (e: unknown) {
       logger.error('Failed to mark source as error', e);
     }
   };

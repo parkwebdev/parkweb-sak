@@ -59,7 +59,7 @@ export function GeneralSettings() {
           default_project_view: data.default_project_view ?? 'dashboard',
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in fetchPreferences:', error);
     } finally {
       setLoading(false);
@@ -131,7 +131,7 @@ export function GeneralSettings() {
 
         // Show saved indicator
         setShowSaved({ ...showSaved, [key]: true });
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Error in updatePreference:', error);
         // Revert local state on error
         setPreferences({ ...preferences, [key]: prevValue });

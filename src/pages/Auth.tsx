@@ -235,7 +235,7 @@ const Auth = () => {
           await supabase.functions.invoke('handle-signup', {
             body: { email, user_id: 'pending' }
           });
-        } catch (err) {
+        } catch (err: unknown) {
           logger.error('Error processing signup completion:', err);
         }
       }

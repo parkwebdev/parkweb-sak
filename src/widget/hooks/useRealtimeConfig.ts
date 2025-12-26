@@ -52,7 +52,7 @@ export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealt
       try {
         const newConfig = await fetchWidgetConfig(agentId);
         onConfigUpdate(newConfig);
-      } catch (err) {
+      } catch (err: unknown) {
         widgetLogger.error('Failed to refresh widget config:', err);
       }
     }, 300); // 300ms debounce to batch rapid changes

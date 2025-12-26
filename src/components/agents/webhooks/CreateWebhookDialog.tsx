@@ -120,7 +120,7 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
       setCustomHeaders([{ id: crypto.randomUUID(), key: '', value: '' }]);
       setConditions({ rules: [], logic: 'AND' });
       setResponseActions([]);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error creating webhook:', error);
       toast.error('Failed to create webhook');
     } finally {

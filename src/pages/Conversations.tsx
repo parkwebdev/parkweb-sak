@@ -314,7 +314,7 @@ function Conversations() {
       
       setTranslatedMessages(translations);
       setShowTranslation(true);
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error('Failed to translate messages');
       logger.error('Translation error', err);
     } finally {
@@ -346,7 +346,7 @@ function Conversations() {
         setMessageInput(translated);
         toast.success(`Translated to ${targetLangName}`);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       toast.error('Failed to translate message');
       logger.error('Outbound translation error', err);
     } finally {

@@ -575,7 +575,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       });
       if (error) throw error;
       toast.success('Article re-embedded successfully');
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error('Re-embed failed:', err);
       toast.error('Failed to re-embed article');
     }
