@@ -23,6 +23,8 @@ Comprehensive design system documentation for consistent UI development.
 11. [WCAG 2.2 Compliance](#wcag-22-compliance)
 12. [Type Conventions](#type-conventions-jsonb-metadata)
 13. [Coding Standards](#coding-standards)
+    - [Component Declaration Pattern](#component-declaration-pattern)
+    - [Error Handling Pattern](#error-handling-pattern)
 
 ---
 
@@ -1010,6 +1012,81 @@ const Card: FC<CardProps> = ({ title, children }) => {
 - All 96+ components in the codebase have been migrated to direct function declarations
 - New components MUST follow this pattern
 - If you encounter legacy `React.FC` usage, refactor it during your changes
+
+---
+
+### Error Handling Pattern
+
+All catch blocks **MUST** use `unknown` error type and the `getErrorMessage()` utility for type-safe error handling.
+
+#### The getErrorMessage Utility
+
+Located in `src/types/errors.ts`, this utility safely extracts error messages from any error type:
+
+```typescript
+import { getErrorMessage } from '@/types/errors';
+
+// ✅ CORRECT - Type-safe error handling
+try {
+  await riskyOperation();
+} catch (error: unknown) {
+  toast.error('Operation failed', { description: getErrorMessage(error) });
+}
+
+// ✅ CORRECT - With console logging
+try {
+  await fetchData();
+} catch (error: unknown) {
+  console.error('Fetch failed:', getErrorMessage(error));
+  throw error;
+}
+```
+
+#### Why This Pattern?
+
+1. **Type Safety**: `catch (error: unknown)` prevents implicit `any` typing
+2. **Graceful Fallbacks**: `getErrorMessage()` handles all error types (Error objects, strings, objects with message property, etc.)
+3. **Consistent UX**: Users always see meaningful error messages, never raw error objects
+4. **ESLint Enforced**: Rules `@typescript-eslint/no-unsafe-*` catch violations
+
+#### Available Error Utilities
+
+| Function | Purpose |
+|----------|---------|
+| `getErrorMessage(error: unknown)` | Extract string message from any error type |
+| `hasErrorMessage(error: unknown)` | Type guard for errors with message property |
+| `hasErrorCode(error: unknown)` | Type guard for errors with code property (e.g., Supabase) |
+
+#### Incorrect Patterns
+
+```typescript
+// ❌ WRONG - Implicit any type
+try {
+  await operation();
+} catch (error) {  // TypeScript infers 'any'
+  console.error(error.message);  // Unsafe member access
+}
+
+// ❌ WRONG - Explicit any type
+try {
+  await operation();
+} catch (error: any) {
+  toast.error(error.message);  // No type safety
+}
+
+// ❌ WRONG - Assuming Error type without check
+try {
+  await operation();
+} catch (error: unknown) {
+  toast.error((error as Error).message);  // Unsafe cast
+}
+```
+
+#### Migration Notes
+
+- All 100+ catch blocks in the codebase have been migrated to this pattern
+- ESLint rules enforce `unknown` error types going forward
+- If you encounter legacy `catch (error: any)`, refactor during your changes
 
 ---
 
