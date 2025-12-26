@@ -40,19 +40,45 @@ interface MapProps extends React.ComponentProps<typeof MapContainer> {
 const Map = React.forwardRef<L.Map, MapProps>(
   ({ children, className, ...props }, ref) => {
     const { theme: currentTheme } = useTheme();
-    // Resolve system theme to actual theme
-    const resolvedTheme = currentTheme === "system" 
-      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-      : currentTheme;
-    const theme = (resolvedTheme === "dark" ? "dark" : "light") as "light" | "dark";
+
+    const [mounted, setMounted] = React.useState(false);
+    const [theme, setTheme] = React.useState<"light" | "dark">("light");
+
+    React.useEffect(() => {
+      setMounted(true);
+    }, []);
+
+    React.useEffect(() => {
+      if (currentTheme === "system") {
+        const mql: MediaQueryList = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        );
+        const apply = () => setTheme(mql.matches ? "dark" : "light");
+        apply();
+
+        // Safari (<=13) uses addListener/removeListener
+        if (typeof mql.addEventListener === "function") {
+          mql.addEventListener("change", apply);
+          return () => mql.removeEventListener("change", apply);
+        }
+
+        (mql as unknown as { addListener: (cb: () => void) => void }).addListener(apply);
+        return () =>
+          (mql as unknown as { removeListener: (cb: () => void) => void }).removeListener(apply);
+      }
+
+      setTheme(currentTheme === "dark" ? "dark" : "light");
+      return;
+    }, [currentTheme]);
+
+    // Prevent react-leaflet from initializing before the client is mounted.
+    if (!mounted) {
+      return <div className={className} style={props.style} />;
+    }
 
     return (
       <MapThemeContext.Provider value={theme}>
-        <MapContainer
-          ref={ref}
-          className={className}
-          {...props}
-        >
+        <MapContainer ref={ref} className={className} {...props}>
           {children}
         </MapContainer>
       </MapThemeContext.Provider>
