@@ -131,6 +131,37 @@ export const AnalyticsDatePicker = ({
     return `${format(start, 'MMM d')} - ${format(end, 'MMM d')}`;
   };
 
+  // Check if current date range matches a preset
+  const getActivePreset = (): number | null => {
+    const today = new Date();
+    const todayStart = new Date(today);
+    todayStart.setHours(0, 0, 0, 0);
+    
+    for (const preset of presets) {
+      const expectedEnd = new Date(today);
+      const expectedStart = new Date(today);
+      
+      if (preset.days === 0) {
+        expectedStart.setHours(0, 0, 0, 0);
+        expectedEnd.setHours(23, 59, 59, 999);
+      } else {
+        expectedStart.setDate(expectedStart.getDate() - preset.days);
+      }
+      
+      // Compare dates (ignoring time for non-today presets)
+      const startMatches = preset.days === 0 
+        ? startDate.toDateString() === expectedStart.toDateString()
+        : startDate.toDateString() === expectedStart.toDateString();
+      const endMatches = endDate.toDateString() === expectedEnd.toDateString();
+      
+      if (startMatches && endMatches) {
+        return preset.days;
+      }
+    }
+    return null;
+  };
+
+  const activePreset = getActivePreset();
   const showCustomComparison = comparisonMode && comparisonType === 'custom';
 
   return (
@@ -185,7 +216,12 @@ export const AnalyticsDatePicker = ({
                 {presets.map((preset) => (
                   <button
                     key={preset.label}
-                    className="text-xs px-2 py-1.5 rounded-md hover:bg-muted transition-colors text-center"
+                    className={cn(
+                      "text-xs px-2 py-1.5 rounded-md transition-colors text-center",
+                      activePreset === preset.days
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    )}
                     onClick={() => handlePresetClick(preset.days)}
                   >
                     {preset.label}
