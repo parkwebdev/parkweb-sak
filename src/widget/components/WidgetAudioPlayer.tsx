@@ -81,7 +81,7 @@ export function WidgetAudioPlayer({
 
       setWaveformData(filteredData);
       tempContext.close();
-    } catch (error) {
+    } catch (error: unknown) {
       // Waveform generation error - continue without waveform
       onError?.(error instanceof Error ? error : new Error('Failed to generate waveform'));
     }
@@ -153,7 +153,7 @@ export function WidgetAudioPlayer({
       sourceNodeRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
       sourceNodeRef.current.connect(analyserRef.current);
       analyserRef.current.connect(audioContextRef.current.destination);
-    } catch (error) {
+    } catch (error: unknown) {
       // Audio analyser setup error - continue without visualization
     }
   }, []);

@@ -66,7 +66,7 @@ export function RoleManagementDialog({
       }
 
       setCurrentUserRole(data?.role || 'member');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in fetchCurrentUserRole:', error);
     }
   };
@@ -99,7 +99,7 @@ export function RoleManagementDialog({
         setRole('member');
         setPermissions([]);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in fetchMemberRole:', error);
     }
   };
@@ -151,7 +151,7 @@ export function RoleManagementDialog({
         setShowSaved(false);
         onClose();
       }, 1500);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in handleSave:', error);
       
       // Log failed role change attempt

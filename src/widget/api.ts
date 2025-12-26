@@ -708,7 +708,7 @@ export async function updateMessageReaction(
     }
 
     return response.json();
-  } catch (error) {
+  } catch (error: unknown) {
     widgetLogger.error('Error updating reaction:', error);
     return { success: false };
   }
@@ -1003,7 +1003,7 @@ export async function updateVisitorPresence(
       leadEmail: options.leadEmail,
       startedAt: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch (error: unknown) {
     widgetLogger.error('Error updating presence:', error);
   }
 }
@@ -1060,7 +1060,7 @@ export async function submitConversationRating(
     }
 
     return { success: true };
-  } catch (error) {
+  } catch (error: unknown) {
     widgetLogger.error('Error submitting rating:', error);
     return { success: false };
   }

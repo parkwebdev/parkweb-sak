@@ -396,7 +396,7 @@ export function useWidgetMessaging({
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       widgetLogger.error('Error sending message:', error);
       // Mark the optimistic user message as failed
       setMessages(prev => prev.map(msg => 
@@ -515,7 +515,7 @@ export function useWidgetMessaging({
           linkPreviews: response.linkPreviews,
         }]);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       widgetLogger.error('Error getting AI greeting:', error);
       // Fallback to a simple greeting if AI fails
       setMessages([{ 

@@ -104,7 +104,7 @@ export const ChatView = ({
         }
         return { ...m, reactions: [...existing, { emoji, count: 1, userReacted: true }] };
       }));
-    } catch (err) {
+    } catch (err: unknown) {
       // Reaction error handled silently in production
     }
   };
@@ -126,7 +126,7 @@ export const ChatView = ({
         }
         return m;
       }));
-    } catch (err) {
+    } catch (err: unknown) {
       // Reaction error handled silently in production
     }
   };

@@ -39,7 +39,7 @@ const CopyButton = React.forwardRef<HTMLButtonElement, CopyButtonProps>(
           toast.success(toastMessage)
         }
         setTimeout(() => setCopied(false), 2000)
-      } catch (err) {
+      } catch (err: unknown) {
         logger.error("Failed to copy:", err)
         toast.error("Failed to copy")
       }

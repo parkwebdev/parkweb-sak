@@ -68,7 +68,7 @@ export function NotificationCenter({ onNotificationClick }: NotificationCenterPr
 
       setNotifications(data || []);
       setUnreadCount((data || []).filter(n => !n.read).length);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in fetchNotifications:', error);
     } finally {
       setLoading(false);
@@ -157,7 +157,7 @@ export function NotificationCenter({ onNotificationClick }: NotificationCenterPr
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in markAsRead:', error);
     }
   };
@@ -183,7 +183,7 @@ export function NotificationCenter({ onNotificationClick }: NotificationCenterPr
       toast.success("All notifications marked as read", {
         description: "You're all caught up!",
       });
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in markAllAsRead:', error);
     }
   };
@@ -208,7 +208,7 @@ export function NotificationCenter({ onNotificationClick }: NotificationCenterPr
       if (deletedNotification && !deletedNotification.read) {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in deleteNotification:', error);
     }
   };

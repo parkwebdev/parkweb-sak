@@ -176,7 +176,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           logger.error('Error creating notification preferences:', error);
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in createOrUpdateProfile:', error);
     }
   };
