@@ -25,11 +25,11 @@ interface LocationDetailsProps {
   onUpdate: (id: string, data: Partial<LocationFormData>) => Promise<boolean>;
 }
 
-export const LocationDetails: React.FC<LocationDetailsProps> = ({
+export function LocationDetails({
   location,
   agentId,
   onUpdate,
-}) => {
+}: LocationDetailsProps) {
   const [formData, setFormData] = useState<LocationFormData>({
     name: location.name,
     address: location.address || '',

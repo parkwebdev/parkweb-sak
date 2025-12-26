@@ -34,7 +34,7 @@ const STEP_GRADIENTS: Record<string, string> = {
 
 const DEFAULT_GRADIENT = STEP_GRADIENTS.personality;
 
-export const VideoPlaceholder: React.FC<VideoPlaceholderProps> = ({ stepId }) => {
+export function VideoPlaceholder({ stepId }: VideoPlaceholderProps) {
   const prefersReducedMotion = useReducedMotion();
   const gradient = STEP_GRADIENTS[stepId] || DEFAULT_GRADIENT;
 

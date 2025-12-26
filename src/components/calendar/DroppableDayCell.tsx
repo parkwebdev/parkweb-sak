@@ -14,12 +14,12 @@ interface DroppableDayCellProps {
   onClick?: () => void;
 }
 
-export const DroppableDayCell: React.FC<DroppableDayCellProps> = ({
+export function DroppableDayCell({
   date,
   children,
   className,
   onClick,
-}) => {
+}: DroppableDayCellProps) {
   const slotId = `day-${date.toISOString().split('T')[0]}`;
   
   const { setNodeRef, isOver } = useDroppable({

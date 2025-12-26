@@ -1,14 +1,13 @@
-import React from 'react';
-
 interface PlayIconProps {
   size?: number;
   className?: string;
 }
 
-export const PlayIcon: React.FC<PlayIconProps> = ({ 
+export function PlayIcon({ 
   size = 24, 
   className 
-}) => (
+}: PlayIconProps) {
+  return (
   <svg 
     width={size} 
     height={size} 
@@ -23,4 +22,5 @@ export const PlayIcon: React.FC<PlayIconProps> = ({
       fill="currentColor"
     />
   </svg>
-);
+  );
+}

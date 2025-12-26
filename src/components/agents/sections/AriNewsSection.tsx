@@ -498,7 +498,7 @@ const NewsDialog = ({
   );
 };
 
-export const AriNewsSection: React.FC<AriNewsSectionProps> = ({ agentId, userId }) => {
+export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
   const { newsItems, loading, addNewsItem, updateNewsItem, deleteNewsItem, reorderNewsItems } = useNewsItems(agentId);
   
   const [editingNewsItem, setEditingNewsItem] = useState<NewsItem | null>(null);

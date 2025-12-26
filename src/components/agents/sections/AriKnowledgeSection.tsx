@@ -66,7 +66,7 @@ const STATUS_LABELS: Record<string, string> = {
   error: 'Error',
 };
 
-const AriKnowledgeSectionComponent: React.FC<AriKnowledgeSectionProps> = ({ agentId, userId }) => {
+function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionProps) {
   const { 
     sources, 
     loading, 

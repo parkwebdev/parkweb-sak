@@ -15,10 +15,10 @@ interface QuickEmojiButtonProps {
 
 const QUICK_EMOJIS = ['😊', '👍', '❤️', '😂', '🎉', '👋', '🙏', '✨'];
 
-export const QuickEmojiButton: React.FC<QuickEmojiButtonProps> = ({
+export function QuickEmojiButton({
   onEmojiSelect,
   disabled = false,
-}) => {
+}: QuickEmojiButtonProps) {
   const [open, setOpen] = useState(false);
 
   const handleSelect = (emoji: string) => {

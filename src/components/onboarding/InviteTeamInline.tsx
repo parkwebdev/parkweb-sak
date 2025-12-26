@@ -17,7 +17,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { isValidEmail } from '@/utils/validation';
 
-export const InviteTeamInline: React.FC = () => {
+export function InviteTeamInline() {
   const { user } = useAuth();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);

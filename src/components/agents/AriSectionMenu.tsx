@@ -137,4 +137,4 @@ export function AriSectionMenu({
       ))}
     </nav>
   );
-};
+}

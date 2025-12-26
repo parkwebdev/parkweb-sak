@@ -14,7 +14,7 @@ interface AriAppearanceSectionProps {
   agentId: string;
 }
 
-export const AriAppearanceSection: React.FC<AriAppearanceSectionProps> = ({ agentId }) => {
+export function AriAppearanceSection({ agentId }: AriAppearanceSectionProps) {
   const { config, loading, saveConfig } = useEmbeddedChatConfig(agentId);
   const [localConfig, setLocalConfig] = useState(config);
   const [showSaved, setShowSaved] = useState(false);

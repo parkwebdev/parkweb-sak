@@ -63,9 +63,9 @@ interface WidgetQuickEmojiPickerProps {
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
 
-export const WidgetQuickEmojiPicker: React.FC<WidgetQuickEmojiPickerProps> = ({
+export function WidgetQuickEmojiPicker({
   onEmojiSelect,
-}) => {
+}: WidgetQuickEmojiPickerProps) {
   return (
     <div className="flex items-center gap-1 px-3 py-1 bg-popover border border-border shadow-lg max-w-[180px] overflow-x-auto rounded-full">
       {QUICK_EMOJIS.map((emoji) => (
@@ -92,10 +92,10 @@ interface WidgetEmojiPickerProps {
   primaryColor: string;
 }
 
-export const WidgetEmojiPicker: React.FC<WidgetEmojiPickerProps> = ({
+export function WidgetEmojiPicker({
   onEmojiSelect,
   primaryColor,
-}) => {
+}: WidgetEmojiPickerProps) {
   const [activeTab, setActiveTab] = useState<CategoryKey>('smileys');
 
   return (

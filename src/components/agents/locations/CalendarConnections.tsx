@@ -23,10 +23,10 @@ interface CalendarConnectionsProps {
   agentId: string;
 }
 
-export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
+export function CalendarConnections({
   locationId,
   agentId,
-}) => {
+}: CalendarConnectionsProps) {
   const { accounts, loading, disconnectAccount } = useConnectedAccounts(locationId, agentId);
   const [disconnectId, setDisconnectId] = useState<string | null>(null);
   const [connecting, setConnecting] = useState<'google' | 'outlook' | null>(null);

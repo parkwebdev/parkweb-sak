@@ -23,12 +23,12 @@ interface LocationListProps {
   onDelete: (id: string) => void;
 }
 
-export const LocationList: React.FC<LocationListProps> = ({
+export function LocationList({
   locations,
   selectedId,
   onSelect,
   onDelete,
-}) => {
+}: LocationListProps) {
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
   const locationToDelete = locations.find(l => l.id === deleteId);
 
