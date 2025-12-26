@@ -107,7 +107,7 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
       } else {
         setProfile(data);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in fetchProfile:', error);
     } finally {
       setLoading(false);
@@ -121,7 +121,7 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
         description: "You have been signed out successfully.",
       });
       navigate('/login');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Error", {
         description: "Failed to sign out. Please try again.",
       });

@@ -411,7 +411,7 @@ export async function fetchTakeoverAgent(conversationId: string): Promise<{ name
 
     const data = await response.json();
     return data.agent || null;
-  } catch (error) {
+  } catch (error: unknown) {
     widgetLogger.error('Error fetching takeover agent:', error);
     return null;
   }
@@ -577,7 +577,7 @@ export async function updatePageVisit(
     }
 
     return { success: true };
-  } catch (error) {
+  } catch (error: unknown) {
     widgetLogger.error('Error updating page visit:', error);
     return { success: false };
   }
@@ -616,7 +616,7 @@ export async function fetchConversationMessages(conversationId: string): Promise
     }
 
     return data || [];
-  } catch (error) {
+  } catch (error: unknown) {
     widgetLogger.error('[Widget API] Error fetching messages:', error);
     return [];
   }
@@ -656,7 +656,7 @@ export async function markMessagesRead(
     }
 
     return response.json();
-  } catch (error) {
+  } catch (error: unknown) {
     widgetLogger.error('Error marking messages as read:', error);
     return { success: false };
   }

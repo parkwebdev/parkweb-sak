@@ -117,7 +117,7 @@ export const useAgentApiKeys = (agentId: string) => {
       
       // Return the raw key (only time it's visible)
       return rawKey;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error creating API key:', error);
       toast.error('Failed to create API key');
       return null;
@@ -137,7 +137,7 @@ export const useAgentApiKeys = (agentId: string) => {
 
       invalidateKeys();
       toast.success('API key revoked');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error revoking API key:', error);
       toast.error('Failed to revoke API key');
     }
@@ -158,7 +158,7 @@ export const useAgentApiKeys = (agentId: string) => {
 
       invalidateKeys();
       toast.success('API key updated');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error updating API key:', error);
       toast.error('Failed to update API key');
     }
