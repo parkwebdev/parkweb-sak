@@ -5,7 +5,9 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 import { getLanguageFlag } from '@/lib/language-utils';
+import { isPhoneFieldKey, isConsentFieldKey } from '@/lib/field-keys';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -380,9 +382,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   // Skip internal rich text content fields (used for consent tooltips)
                   if (key.endsWith('_content')) return;
                   
-                  const lowerKey = key.toLowerCase();
-                  const isPhoneField = lowerKey.includes('phone') || lowerKey.includes('mobile') || lowerKey.includes('cell') || lowerKey.includes('tel');
-                  if (isPhoneField) {
+                  if (isPhoneFieldKey(key)) {
                     phoneFieldEntries.push([key, value]);
                   } else {
                     otherFieldEntries.push([key, value]);
@@ -463,9 +463,16 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                         {otherFieldEntries.map(([key, value]) => {
                           const IconComponent = getCustomFieldIcon(key);
                           const isBoolean = typeof value === 'boolean';
-                          const isConsentField = key.toLowerCase().includes('consent');
+                          const isConsent = isConsentFieldKey(key);
                           const consentContentKey = `${key}_content`;
                           const consentContent = customFields[consentContentKey] as string | undefined;
+                          // Sanitize consent content to prevent XSS
+                          const sanitizedConsentContent = consentContent 
+                            ? DOMPurify.sanitize(consentContent, {
+                                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'span'],
+                                ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                              })
+                            : '';
                           
                           return (
                             <div key={key} className="flex items-start gap-2.5 text-sm">
@@ -473,7 +480,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                               <div className="min-w-0">
                                 <span className="text-muted-foreground">{key}:</span>{' '}
                                 {isBoolean ? (
-                                  isConsentField && consentContent ? (
+                                  isConsent && sanitizedConsentContent ? (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <span className="inline-flex items-center gap-1 cursor-default">
@@ -484,7 +491,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                                       <TooltipContent side="left" className="max-w-xs">
                                         <div 
                                           className="text-xs [&_a]:text-primary [&_a]:underline"
-                                          dangerouslySetInnerHTML={{ __html: consentContent }} 
+                                          dangerouslySetInnerHTML={{ __html: sanitizedConsentContent }} 
                                         />
                                       </TooltipContent>
                                     </Tooltip>

@@ -2,6 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
+import { PHONE_FIELD_KEYS } from '@/lib/field-keys';
 import type { Tables } from '@/integrations/supabase/types';
 
 export type Lead = Tables<'leads'> & {
@@ -96,8 +97,7 @@ export const createLeadsColumns = ({
       
       // Fallback for legacy leads: Search data JSONB for common phone field names
       const data = (row.original.data || {}) as Record<string, unknown>;
-      const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'Phone Number', 'telephone', 'mobile', 'Mobile'];
-      for (const key of phoneKeys) {
+      for (const key of PHONE_FIELD_KEYS) {
         if (data[key]) return String(data[key]);
       }
       return '-';

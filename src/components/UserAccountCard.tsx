@@ -148,7 +148,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="bg-green-500 absolute rounded-full border-[1.5px] border-sidebar w-2.5 h-2.5 bottom-0 right-0" />
+            <div className="bg-status-active absolute rounded-full border-[1.5px] border-sidebar w-2.5 h-2.5 bottom-0 right-0" />
           </div>
           {!isCollapsed && (
             <div className="text-left min-w-0 flex-1 overflow-hidden">
