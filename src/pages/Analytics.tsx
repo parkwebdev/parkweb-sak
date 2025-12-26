@@ -483,67 +483,84 @@ const Analytics: React.FC = () => {
                   metrics={comparisonMetrics} 
                 />
               ) : (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-                  <MetricCardWithChart
-                    title={totalConversations.toLocaleString()}
-                    subtitle="Total Conversations"
-                    description="Chat sessions started with Ari"
-                    change={calculatePeriodChange(conversationTrend)}
-                    changeType="percentage"
-                    changeLabel="vs last period"
-                    chartData={generateChartData(conversationTrend)}
-                    animationDelay={0}
-                  />
-                  <MetricCardWithChart
-                    title={totalLeads.toLocaleString()}
-                    subtitle="Total Leads"
-                    description="Visitors who shared contact info"
-                    change={calculatePeriodChange(leadTrend)}
-                    changeType="percentage"
-                    changeLabel="vs last period"
-                    chartData={generateChartData(leadTrend)}
-                    animationDelay={0.05}
-                  />
-                  <MetricCardWithChart
-                    title={`${conversionRate}%`}
-                    subtitle="Conversion Rate"
-                    description="Leads marked as won or converted"
-                    change={calculatePointChange(conversionTrend)}
-                    changeType="points"
-                    changeLabel="vs last period"
-                    chartData={generateChartData(conversionTrend)}
-                    animationDelay={0.1}
-                  />
-                  <MetricCardWithChart
-                    title={totalBookings.toLocaleString()}
-                    subtitle="Total Bookings"
-                    description="Appointments scheduled via Ari"
-                    change={calculatePeriodChange(bookingTrend)}
-                    changeType="percentage"
-                    changeLabel="vs last period"
-                    chartData={generateChartData(bookingTrend)}
-                    animationDelay={0.15}
-                  />
-                  <MetricCardWithChart
-                    title={avgSatisfaction.toFixed(1)}
-                    subtitle="Avg Satisfaction"
-                    description="User ratings out of 5 stars"
-                    change={calculatePointChange(satisfactionTrend)}
-                    changeType="points"
-                    changeLabel="vs last period"
-                    chartData={generateChartData(satisfactionTrend)}
-                    animationDelay={0.2}
-                  />
-                  <MetricCardWithChart
-                    title={`${containmentRate.toFixed(0)}%`}
-                    subtitle="AI Containment"
-                    description="Chats resolved without human help"
-                    change={calculatePointChange(containmentTrend)}
-                    changeType="points"
-                    changeLabel="vs last period"
-                    chartData={generateChartData(containmentTrend)}
-                    animationDelay={0.25}
-                  />
+                <div className="space-y-6">
+                  {/* Engagement Metrics */}
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">
+                      Engagement
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+                      <MetricCardWithChart
+                        title={totalConversations.toLocaleString()}
+                        subtitle="Total Conversations"
+                        description="Chat sessions started with Ari"
+                        change={calculatePeriodChange(conversationTrend)}
+                        changeType="percentage"
+                        changeLabel="vs last period"
+                        chartData={generateChartData(conversationTrend)}
+                        animationDelay={0}
+                      />
+                      <MetricCardWithChart
+                        title={totalLeads.toLocaleString()}
+                        subtitle="Total Leads"
+                        description="Visitors who shared contact info"
+                        change={calculatePeriodChange(leadTrend)}
+                        changeType="percentage"
+                        changeLabel="vs last period"
+                        chartData={generateChartData(leadTrend)}
+                        animationDelay={0.05}
+                      />
+                      <MetricCardWithChart
+                        title={`${conversionRate}%`}
+                        subtitle="Conversion Rate"
+                        description="Leads marked as won or converted"
+                        change={calculatePointChange(conversionTrend)}
+                        changeType="points"
+                        changeLabel="vs last period"
+                        chartData={generateChartData(conversionTrend)}
+                        animationDelay={0.1}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Outcomes Metrics */}
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">
+                      Outcomes
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+                      <MetricCardWithChart
+                        title={totalBookings.toLocaleString()}
+                        subtitle="Total Bookings"
+                        description="Appointments scheduled via Ari"
+                        change={calculatePeriodChange(bookingTrend)}
+                        changeType="percentage"
+                        changeLabel="vs last period"
+                        chartData={generateChartData(bookingTrend)}
+                        animationDelay={0.15}
+                      />
+                      <MetricCardWithChart
+                        title={avgSatisfaction.toFixed(1)}
+                        subtitle="Avg Satisfaction"
+                        description="User ratings out of 5 stars"
+                        change={calculatePointChange(satisfactionTrend)}
+                        changeType="points"
+                        changeLabel="vs last period"
+                        chartData={generateChartData(satisfactionTrend)}
+                        animationDelay={0.2}
+                      />
+                      <MetricCardWithChart
+                        title={`${containmentRate.toFixed(0)}%`}
+                        subtitle="AI Containment"
+                        description="Chats resolved without human help"
+                        change={calculatePointChange(containmentTrend)}
+                        changeType="points"
+                        changeLabel="vs last period"
+                        chartData={generateChartData(containmentTrend)}
+                        animationDelay={0.25}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
