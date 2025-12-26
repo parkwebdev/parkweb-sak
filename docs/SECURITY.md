@@ -16,7 +16,8 @@ Security implementation details for the ChatPad platform.
 4. [API Security](#api-security)
 5. [Widget Security](#widget-security)
 6. [Data Protection](#data-protection)
-7. [Audit Logging](#audit-logging)
+7. [Type-Safe Error Handling](#type-safe-error-handling)
+8. [Audit Logging](#audit-logging)
 
 ---
 
@@ -497,6 +498,43 @@ if (file.size > MAX_FILE_SIZE) {
 ### Image Optimization
 
 Images optimized before storage to reduce attack surface:
+
+---
+
+## Type-Safe Error Handling
+
+ChatPad enforces type-safe error handling to prevent accidental exposure of raw error objects or stack traces to users.
+
+### The Pattern
+
+All catch blocks **MUST** use `unknown` error type with `getErrorMessage()`:
+
+```typescript
+import { getErrorMessage } from '@/types/errors';
+
+try {
+  await riskyOperation();
+} catch (error: unknown) {
+  // Safe - extracts string message, never exposes internals
+  toast.error('Operation failed', { description: getErrorMessage(error) });
+  console.error('Error details:', getErrorMessage(error));
+}
+```
+
+### Security Benefits
+
+1. **Prevents stack trace leakage**: Raw error objects may contain file paths, line numbers, or internal details
+2. **Consistent user messaging**: Users always see meaningful messages, never `[object Object]`
+3. **Type safety**: ESLint rules catch violations at development time
+4. **Defensive coding**: Handles unexpected error types gracefully
+
+### Enforced By
+
+- ESLint rules: `@typescript-eslint/no-unsafe-*`
+- Code review standards
+- All 100+ catch blocks in codebase follow this pattern
+
+**See**: [DESIGN_SYSTEM.md#error-handling-pattern](./DESIGN_SYSTEM.md#error-handling-pattern) for full documentation.
 
 ```typescript
 // Resize and convert to WebP

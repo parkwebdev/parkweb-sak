@@ -12,6 +12,7 @@ Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design syste
 
 1. [Core Responsibilities](#core-responsibilities)
 2. [Code Implementation Rules](#code-implementation-rules)
+   - [Error Handling in Components](#error-handling-in-components)
 3. [Accessibility Standards](#accessibility-standards)
 4. [Button & Input Standards](#button--input-standards)
 5. [ChatPad Component Library](#chatpad-component-library)
@@ -82,6 +83,27 @@ Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design syste
 - Use render props or compound components for flexible APIs
 - Implement proper loading and error states
 - Support controlled and uncontrolled component modes
+
+### Error Handling in Components
+
+All catch blocks **MUST** use `unknown` error type with `getErrorMessage()` utility. See [DESIGN_SYSTEM.md#error-handling-pattern](./DESIGN_SYSTEM.md#error-handling-pattern) for full documentation.
+
+```tsx
+import { getErrorMessage } from '@/types/errors';
+
+// ✅ CORRECT - In async component operations
+async function handleSubmit() {
+  try {
+    await saveData();
+  } catch (error: unknown) {
+    toast.error('Save failed', { description: getErrorMessage(error) });
+  }
+}
+
+// ❌ WRONG - Never use any or assume Error type
+catch (error: any) { ... }
+catch (error) { console.log(error.message); }
+```
 
 ---
 

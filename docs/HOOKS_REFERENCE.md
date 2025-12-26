@@ -11,8 +11,9 @@ Complete reference for all custom React hooks in the ChatPad application.
 ## Table of Contents
 
 1. [React Query Infrastructure](#react-query-infrastructure)
-2. [Data Hooks](#data-hooks)
-3. [UI & State Hooks](#ui--state-hooks)
+2. [Error Handling Convention](#error-handling-convention)
+3. [Data Hooks](#data-hooks)
+4. [UI & State Hooks](#ui--state-hooks)
 4. [Authentication & Security Hooks](#authentication--security-hooks)
 5. [Widget Hooks](#widget-hooks)
 6. [Usage Patterns](#usage-patterns)
@@ -81,6 +82,36 @@ const mutation = useSupabaseMutation({
 - `realtime`: Optional config for real-time subscription
 - `enabled`: Whether to run the query
 - All standard React Query options
+
+---
+
+## Error Handling Convention
+
+All hooks use type-safe error handling with `catch (error: unknown)` and the `getErrorMessage()` utility from `src/types/errors.ts`.
+
+```tsx
+import { getErrorMessage } from '@/types/errors';
+
+// Standard pattern used in all hooks
+const mutation = useMutation({
+  mutationFn: async (data) => {
+    // ... mutation logic
+  },
+  onError: (error: unknown) => {
+    toast.error('Operation failed', { description: getErrorMessage(error) });
+  },
+});
+
+// In async operations within hooks
+try {
+  await supabase.from('table').insert(data);
+} catch (error: unknown) {
+  console.error('Insert failed:', getErrorMessage(error));
+  throw error;
+}
+```
+
+**See**: [DESIGN_SYSTEM.md#error-handling-pattern](./DESIGN_SYSTEM.md#error-handling-pattern) for full documentation.
 
 ---
 
