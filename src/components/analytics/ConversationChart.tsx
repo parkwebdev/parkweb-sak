@@ -25,7 +25,7 @@ export const ConversationChart = React.memo(function ConversationChart({ data }:
   const isDesktop = useBreakpoint('lg');
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="text-base font-semibold">Conversation Volume</CardTitle>
         <CardDescription className="text-sm">Daily breakdown of active, closed, and total chat sessions</CardDescription>

@@ -40,7 +40,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   // Loading state
   if (loading) {
     return (
-      <Card className={cn(className)}>
+      <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
           <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
@@ -62,7 +62,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   // Empty state
   if (chartData.length === 0 || total === 0) {
     return (
-      <Card className={cn(className)}>
+      <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
           <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
@@ -79,7 +79,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   }
 
   return (
-    <Card className={cn(className)}>
+    <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
           <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
