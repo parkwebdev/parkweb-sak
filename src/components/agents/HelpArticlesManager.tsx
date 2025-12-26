@@ -284,7 +284,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
 
     try {
       await reorderArticles(updatedArticles);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to reorder article');
     }
   }, [articles, getArticlesByCategoryOrder, reorderArticles]);
@@ -308,7 +308,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
 
     try {
       await reorderArticles(updatedArticles);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to reorder article');
     }
   }, [articles, getArticlesByCategoryOrder, reorderArticles]);
@@ -344,7 +344,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         setSelectedArticle(null);
       }
       setDeleteArticle(null);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to delete article');
     }
   }, [deleteArticle, deleteArticle_, selectedArticle]);
@@ -406,7 +406,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       await Promise.all(selectedRows.map(row => deleteArticle(row.original.id)));
       toast.success(`Deleted ${count} article${count > 1 ? 's' : ''}`);
       setRowSelection({});
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to delete some articles');
     } finally {
       setBulkDeletePending(false);
@@ -425,7 +425,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       toast.success('Article added');
       resetForm();
       setDialogOpen(false);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to save article');
     }
   };
@@ -448,7 +448,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       setFormData(prev => ({ ...prev, category: categoryName }));
       setNewCategoryForm({ name: '', description: '', icon: 'book' });
       setNewCategoryDialogOpen(false);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to add category');
     }
   };
@@ -477,7 +477,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       setEditCategoryDialogOpen(false);
       setEditingCategoryName('');
       setEditCategoryForm({ name: '', description: '', icon: 'book' });
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to update category');
     }
   };
@@ -498,7 +498,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       }
       setDeleteCategoryDialogOpen(false);
       setDeletingCategoryName('');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to delete category');
     }
   };
@@ -518,7 +518,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       const imageUrl = await uploadFeaturedImage(file, userId, agentId);
       setFormData({ ...formData, featured_image: imageUrl });
       toast.success('Featured image uploaded');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Featured image upload error:', error);
       toast.error('Failed to upload featured image');
     } finally {
@@ -536,7 +536,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         setEmbeddingProgress({ current, total });
       });
       toast.success(`Embedded ${count} articles for RAG`);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to embed articles');
     } finally {
       setIsEmbedding(false);

@@ -140,7 +140,7 @@ export function ArticleDetailsSheet({
       });
       toast.success('Article saved');
       setHasChanges(false);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to save article');
     } finally {
       setIsSaving(false);
@@ -153,7 +153,7 @@ export function ArticleDetailsSheet({
       setIsReembedding(true);
       await onReembed(article.id);
       toast.success('Article re-embedded');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to re-embed article');
     } finally {
       setIsReembedding(false);
@@ -174,7 +174,7 @@ export function ArticleDetailsSheet({
       const imageUrl = await uploadFeaturedImage(file, userId, agentId);
       setFeaturedImage(imageUrl);
       toast.success('Featured image uploaded');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to upload featured image');
     } finally {
       setFeaturedImageUploading(false);

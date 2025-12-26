@@ -24,7 +24,7 @@ export const downloadFile = async (url: string, fileName: string): Promise<void>
     
     // Clean up the blob URL
     URL.revokeObjectURL(blobUrl);
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Download failed:', error);
     // Fallback: open in new tab
     window.open(url, '_blank');

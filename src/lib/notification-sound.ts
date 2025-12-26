@@ -48,7 +48,7 @@ export const playNotificationSound = (): void => {
     audio.play().catch(() => {
       // Autoplay may be blocked by browser, silently ignore
     });
-  } catch (error) {
+  } catch (error: unknown) {
     // Silently fail if audio cannot be played
   }
 };

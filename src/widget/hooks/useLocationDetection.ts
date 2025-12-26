@@ -130,7 +130,7 @@ export function useLocationDetection({
           state: loc.state || undefined,
         })));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       widgetLogger.error('Error fetching locations:', error);
     }
   }, [agentId]);
@@ -160,7 +160,7 @@ export function useLocationDetection({
         };
       }
       return null;
-    } catch (error) {
+    } catch (error: unknown) {
       widgetLogger.error('Error looking up location by slug:', error);
       return null;
     }
@@ -186,7 +186,7 @@ export function useLocationDetection({
         return homes[0].acf.community_slug;
       }
       return null;
-    } catch (error) {
+    } catch (error: unknown) {
       widgetLogger.error('WordPress API lookup failed:', error);
       return null;
     }
@@ -281,7 +281,7 @@ export function useLocationDetection({
         }
         
         // No location detected - location will be null until user selects or AI prompts
-      } catch (error) {
+      } catch (error: unknown) {
         widgetLogger.error('Detection error:', error);
       } finally {
         setIsDetecting(false);

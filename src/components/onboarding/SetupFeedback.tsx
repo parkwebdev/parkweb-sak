@@ -50,7 +50,7 @@ export function SetupFeedback({ hasRated = false }: SetupFeedbackProps) {
       if (error) throw error;
 
       setIsSubmitted(true);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to save rating:', error);
       toast.error('Failed to save feedback');
       setSelectedRating(null);

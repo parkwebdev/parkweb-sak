@@ -169,7 +169,7 @@ export const ContactForm = ({
       };
       
       onSubmit(userData, conversationId);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error creating lead:', error);
     }
   };
