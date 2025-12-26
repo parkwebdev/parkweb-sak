@@ -251,15 +251,15 @@ export interface ArticleUsefulnessStats {
 #### 5a. BookingsByLocationChart
 **File**: `src/components/analytics/BookingsByLocationChart.tsx`
 
-- [ ] Create component with proper JSDoc header
-- [ ] Define `BookingsByLocationChartProps` interface
-- [ ] Use horizontal `BarChart` from Recharts (`layout=\"vertical\"`)
-- [ ] Match existing chart styling (margins, fonts, grids)
-- [ ] Use `hsl(var(--primary))` for bar fill
-- [ ] Use `ChartTooltipContent` from `charts-base.tsx`
-- [ ] Add skeleton loading state
-- [ ] Add empty state when no data
-- [ ] Wrap in `Card` component
+- [x] Create component with proper JSDoc header
+- [x] Define `BookingsByLocationChartProps` interface
+- [x] Use horizontal `BarChart` from Recharts (`layout="vertical"`)
+- [x] Match existing chart styling (margins, fonts, grids)
+- [x] Use `hsl(var(--primary))` for bar fill
+- [x] Use `ChartTooltipContent` from `charts-base.tsx`
+- [x] Add skeleton loading state
+- [x] Add empty state when no data
+- [x] Wrap in `Card` component
 
 **Props:**
 ```typescript
@@ -273,20 +273,20 @@ interface BookingsByLocationChartProps {
 #### 5b. BookingStatusChart
 **File**: `src/components/analytics/BookingStatusChart.tsx`
 
-- [ ] Create component with proper JSDoc header
-- [ ] Define `BookingStatusChartProps` interface
-- [ ] Use `PieChart` with `innerRadius` for donut style
-- [ ] Match `TrafficSourceChart` pattern exactly
-- [ ] Center label shows show rate percentage
-- [ ] Use semantic colors:
+- [x] Create component with proper JSDoc header
+- [x] Define `BookingStatusChartProps` interface
+- [x] Use `PieChart` with `innerRadius` for donut style
+- [x] Match `TrafficSourceChart` pattern exactly
+- [x] Center label shows show rate percentage
+- [x] Use semantic colors:
   - Completed: `hsl(var(--success))`
   - Pending: `hsl(var(--primary))`
   - Cancelled: `hsl(var(--destructive))`
   - No-show: `hsl(var(--muted-foreground))`
-- [ ] Add legend below chart
-- [ ] Add skeleton loading state
-- [ ] Add empty state when no data
-- [ ] Wrap in `Card` component
+- [x] Add legend below chart
+- [x] Add skeleton loading state
+- [x] Add empty state when no data
+- [x] Wrap in `Card` component
 
 **Props:**
 ```typescript
@@ -301,16 +301,16 @@ interface BookingStatusChartProps {
 #### 5c. SatisfactionScoreCard
 **File**: `src/components/analytics/SatisfactionScoreCard.tsx`
 
-- [ ] Create component with proper JSDoc header
-- [ ] Define `SatisfactionScoreCardProps` interface
-- [ ] Display large average rating (e.g., \"4.2\")
-- [ ] Display star icons using `Star01` from UntitledUI (filled/outline based on rating)
-- [ ] Display total ratings count
-- [ ] Display horizontal distribution bars for each 1-5 rating
-- [ ] Use `Progress` component for distribution bars
-- [ ] Add skeleton loading state
-- [ ] Add empty state when no ratings
-- [ ] Wrap in `Card` component
+- [x] Create component with proper JSDoc header
+- [x] Define `SatisfactionScoreCardProps` interface
+- [x] Display large average rating (e.g., "4.2")
+- [x] Display star icons using `Star01` from UntitledUI (filled/outline based on rating)
+- [x] Display total ratings count
+- [x] Display horizontal distribution bars for each 1-5 rating
+- [x] Use `Progress` component for distribution bars
+- [x] Add skeleton loading state
+- [x] Add empty state when no ratings
+- [x] Wrap in `Card` component
 
 **Props:**
 ```typescript
@@ -326,17 +326,17 @@ interface SatisfactionScoreCardProps {
 #### 5d. AIPerformanceCard
 **File**: `src/components/analytics/AIPerformanceCard.tsx`
 
-- [ ] Create component with proper JSDoc header
-- [ ] Define `AIPerformanceCardProps` interface
-- [ ] Display containment rate as percentage with progress ring/bar
-- [ ] Display resolution rate as percentage with progress ring/bar
-- [ ] Use `Progress` component with appropriate colors
-- [ ] Add descriptive labels (\"AI Handled\", \"Human Takeover\")
-- [ ] Use `Bot` or `Cpu01` icon from UntitledUI
-- [ ] Add skeleton loading state
-- [ ] Add empty state when no conversations
-- [ ] Wrap in `Card` component
-- [ ] **DO NOT include response time** (excluded per user request)
+- [x] Create component with proper JSDoc header
+- [x] Define `AIPerformanceCardProps` interface
+- [x] Display containment rate as percentage with progress ring/bar
+- [x] Display resolution rate as percentage with progress ring/bar
+- [x] Use `Progress` component with appropriate colors
+- [x] Add descriptive labels ("AI Handled", "Human Takeover")
+- [x] Use `Bot` or `Cpu01` icon from UntitledUI
+- [x] Add skeleton loading state
+- [x] Add empty state when no conversations
+- [x] Wrap in `Card` component
+- [x] **DO NOT include response time** (excluded per user request)
 
 **Props:**
 ```typescript
@@ -350,25 +350,26 @@ interface AIPerformanceCardProps {
 #### 5e. TicketsResolvedCard
 **File**: `src/components/analytics/TicketsResolvedCard.tsx`
 
-- [ ] Create component with proper JSDoc header
-- [ ] Display \"Coming Soon\" badge
-- [ ] Show placeholder icon (Ticket02 from UntitledUI)
-- [ ] Gray out / reduce opacity for disabled state
-- [ ] Brief description of what will be tracked
-- [ ] Wrap in `Card` component
+- [x] Create component with proper JSDoc header
+- [x] Display "Coming Soon" badge
+- [x] Show placeholder icon (Ticket02 from UntitledUI)
+- [x] Gray out / reduce opacity for disabled state
+- [x] Brief description of what will be tracked
+- [x] Wrap in `Card` component
 
 ---
 
-### Phase 6: Update useAnalytics Hook
+### Phase 6: Update useAnalytics Hook ✅ COMPLETE
 **File**: `src/hooks/useAnalytics.ts`
 
-- [ ] Add booking trend data for sparkline KPI
-- [ ] Add satisfaction trend data for sparkline KPI
-- [ ] Add containment rate trend data for sparkline KPI
-- [ ] Keep existing `conversationStats` logic
-- [ ] Keep existing `leadStats` logic
-- [ ] Remove any multi-agent filtering remnants
-- [ ] Update return type to include new trend data
+- [x] Add booking trend data for sparkline KPI
+- [x] Add satisfaction trend data for sparkline KPI
+- [x] Add containment rate trend data for sparkline KPI
+- [x] Keep existing `conversationStats` logic
+- [x] Keep existing `leadStats` logic
+- [x] Remove any multi-agent filtering remnants
+- [x] Update return type to include new trend data
+- [x] Add real-time subscriptions for calendar_events and conversation_ratings
 
 **New Return Shape:**
 ```typescript
@@ -377,15 +378,17 @@ return {
   conversationStats,
   leadStats,
   stageInfo,
-  rawConversations,
-  rawLeads,
+  agentPerformance,
+  usageMetrics,
+  conversations,
+  leads,
   loading,
   refetch,
   
   // New additions
-  bookingTrend: BookingTrendData[],
-  satisfactionTrend: SatisfactionTrendData[],
-  containmentTrend: { date: string; rate: number }[],
+  bookingTrend: SparklineDataPoint[],
+  satisfactionTrend: SparklineDataPoint[],
+  containmentTrend: SparklineDataPoint[],
 };
 ```
 
@@ -474,7 +477,7 @@ grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
 | CREATE | `src/components/analytics/SatisfactionScoreCard.tsx` | ✅ Complete |
 | CREATE | `src/components/analytics/AIPerformanceCard.tsx` | ✅ Complete |
 | CREATE | `src/components/analytics/TicketsResolvedCard.tsx` | ✅ Complete |
-| MODIFY | `src/hooks/useAnalytics.ts` | ⬜ Pending |
+| MODIFY | `src/hooks/useAnalytics.ts` | ✅ Complete |
 | MODIFY | `src/pages/Analytics.tsx` | ⬜ Pending |
 | DELETE | `src/components/analytics/AgentPerformanceChart.tsx` | ⬜ Pending |
 | DELETE | `src/components/analytics/UsageMetricsChart.tsx` | ⬜ Pending |
