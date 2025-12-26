@@ -2,30 +2,37 @@
  * Analytics Page
  * 
  * Comprehensive analytics dashboard providing insights into conversations,
- * leads, agent performance, traffic sources, and usage metrics.
+ * leads, bookings, customer satisfaction, AI performance, and traffic sources.
  * Features include:
- * - KPI overview with trend indicators
+ * - KPI overview with trend indicators and sparkline charts
  * - Date range and filter controls
  * - Comparison mode for period-over-period analysis
+ * - Business outcome metrics (bookings, satisfaction, containment)
  * - Multiple chart visualizations
  * - Report generation (CSV/PDF export)
  * - Scheduled report management
- * - Real-time data tables
  * 
  * @page
+ * @see docs/ANALYTICS_REDESIGN_PLAN.md
  */
 
 import { useState, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
+import { useSatisfactionAnalytics } from '@/hooks/useSatisfactionAnalytics';
+import { useAIPerformanceAnalytics } from '@/hooks/useAIPerformanceAnalytics';
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgent } from '@/hooks/useAgent';
 import { ComparisonView } from '@/components/analytics/ComparisonView';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
-import { AgentPerformanceChart } from '@/components/analytics/AgentPerformanceChart';
-import { UsageMetricsChart } from '@/components/analytics/UsageMetricsChart';
+import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocationChart';
+import { BookingStatusChart } from '@/components/analytics/BookingStatusChart';
+import { SatisfactionScoreCard } from '@/components/analytics/SatisfactionScoreCard';
+import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
+import { TicketsResolvedCard } from '@/components/analytics/TicketsResolvedCard';
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
 import { PageVisitHeatmap } from '@/components/analytics/PageVisitHeatmap';
@@ -139,17 +146,38 @@ const Analytics: React.FC = () => {
     includeTables: true,
   });
 
-  // Fetch analytics data
+  // Fetch core analytics data
   const {
     conversationStats,
     leadStats,
     agentPerformance,
     usageMetrics,
+    bookingTrend: bookingTrendRaw,
+    satisfactionTrend: satisfactionTrendRaw,
+    containmentTrend: containmentTrendRaw,
     conversations: analyticsConversations,
     leads,
     loading,
     refetch,
   } = useAnalytics(startDate, endDate, filters);
+
+  // Fetch booking analytics for detailed charts
+  const {
+    stats: bookingStats,
+    loading: bookingLoading,
+  } = useBookingAnalytics(startDate, endDate);
+
+  // Fetch satisfaction analytics for detailed charts
+  const {
+    stats: satisfactionStats,
+    loading: satisfactionLoading,
+  } = useSatisfactionAnalytics(startDate, endDate);
+
+  // Fetch AI performance analytics for detailed charts
+  const {
+    stats: aiPerformanceStats,
+    loading: aiPerformanceLoading,
+  } = useAIPerformanceAnalytics(startDate, endDate);
 
   // Fetch traffic analytics
   const {
@@ -197,8 +225,19 @@ const Analytics: React.FC = () => {
       const converted = (stat.converted as number) || (stat.won as number) || 0;
       return stat.total > 0 ? (converted / stat.total) * 100 : 0;
     }), [leadStats]);
-  const messageTrend = useMemo(() => 
-    usageMetrics.map(metric => metric.messages), [usageMetrics]);
+
+  // New business outcome trend data
+  const bookingTrend = useMemo(() => 
+    bookingTrendRaw.map(d => d.value), [bookingTrendRaw]);
+  const satisfactionTrend = useMemo(() => 
+    satisfactionTrendRaw.map(d => d.value), [satisfactionTrendRaw]);
+  const containmentTrend = useMemo(() => 
+    containmentTrendRaw.map(d => d.value), [containmentTrendRaw]);
+
+  // Calculate KPI values from new hooks
+  const totalBookings = bookingStats?.totalBookings ?? 0;
+  const avgSatisfaction = satisfactionStats?.averageRating ?? 0;
+  const containmentRate = aiPerformanceStats?.containmentRate ?? 0;
 
   // Calculate trend changes
   const calculateChange = (trend: number[]): number => {
@@ -359,7 +398,7 @@ const Analytics: React.FC = () => {
               metrics={comparisonMetrics} 
             />
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 lg:gap-6">
               <MetricCardWithChart
                 title={totalConversations.toLocaleString()}
                 subtitle="Total Conversations"
@@ -385,33 +424,84 @@ const Analytics: React.FC = () => {
                 animationDelay={0.1}
               />
               <MetricCardWithChart
-                title={totalMessages.toLocaleString()}
-                subtitle="Total Messages"
-                change={calculateChange(messageTrend)}
+                title={totalBookings.toLocaleString()}
+                subtitle="Total Bookings"
+                change={calculateChange(bookingTrend)}
                 changeLabel="vs last period"
-                chartData={generateChartData(messageTrend)}
+                chartData={generateChartData(bookingTrend)}
                 animationDelay={0.15}
+              />
+              <MetricCardWithChart
+                title={avgSatisfaction.toFixed(1)}
+                subtitle="Avg Satisfaction"
+                change={calculateChange(satisfactionTrend)}
+                changeLabel="vs last period"
+                chartData={generateChartData(satisfactionTrend)}
+                animationDelay={0.2}
+              />
+              <MetricCardWithChart
+                title={`${containmentRate.toFixed(0)}%`}
+                subtitle="AI Containment"
+                change={calculateChange(containmentTrend)}
+                changeLabel="vs last period"
+                chartData={generateChartData(containmentTrend)}
+                animationDelay={0.25}
               />
             </div>
           )}
 
-          {loading ? (
+          {/* Charts Grid */}
+          {loading || bookingLoading || satisfactionLoading || aiPerformanceLoading ? (
             <div className="text-center py-12 text-muted-foreground">
               Loading analytics data...
             </div>
           ) : (
             <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+              {/* Row 1: Conversations & Leads */}
               <AnimatedItem>
                 <ConversationChart data={conversationStats} />
               </AnimatedItem>
               <AnimatedItem>
                 <LeadConversionChart data={leadStats} />
               </AnimatedItem>
+              
+              {/* Row 2: Bookings & Satisfaction */}
               <AnimatedItem>
-                <AgentPerformanceChart data={agentPerformance} />
+                <BookingsByLocationChart 
+                  data={bookingStats?.byLocation ?? []} 
+                  loading={bookingLoading}
+                />
               </AnimatedItem>
               <AnimatedItem>
-                <UsageMetricsChart data={usageMetrics} />
+                <SatisfactionScoreCard 
+                  averageRating={satisfactionStats?.averageRating ?? 0}
+                  totalRatings={satisfactionStats?.totalRatings ?? 0}
+                  distribution={satisfactionStats?.distribution ?? []}
+                  loading={satisfactionLoading}
+                />
+              </AnimatedItem>
+              
+              {/* Row 3: AI Performance & Booking Status */}
+              <AnimatedItem>
+                <AIPerformanceCard 
+                  containmentRate={aiPerformanceStats?.containmentRate ?? 0}
+                  resolutionRate={aiPerformanceStats?.resolutionRate ?? 0}
+                  totalConversations={aiPerformanceStats?.totalConversations ?? 0}
+                  humanTakeover={aiPerformanceStats?.humanTakeover ?? 0}
+                  loading={aiPerformanceLoading}
+                />
+              </AnimatedItem>
+              <AnimatedItem>
+                <BookingStatusChart 
+                  data={bookingStats?.byStatus ?? []} 
+                  showRate={bookingStats?.showRate ?? 0}
+                  loading={bookingLoading}
+                />
+              </AnimatedItem>
+              
+              {/* Row 4: Tickets (Coming Soon) */}
+              <AnimatedItem>
+                <TicketsResolvedCard comingSoon={true} />
               </AnimatedItem>
             </AnimatedList>
           )}

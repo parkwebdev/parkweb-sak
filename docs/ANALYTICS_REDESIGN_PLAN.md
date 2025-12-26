@@ -394,32 +394,33 @@ return {
 
 ---
 
-### Phase 7: Update Analytics Page
+### Phase 7: Update Analytics Page ✅ COMPLETE
 **File**: `src/pages/Analytics.tsx`
 
-- [ ] Import new hooks: `useBookingAnalytics`, `useSatisfactionAnalytics`, `useAIPerformanceAnalytics`
-- [ ] Import new components
-- [ ] Update KPI cards row:
-  - [ ] Keep \"Total Conversations\" sparkline
-  - [ ] Keep \"Total Leads\" sparkline
-  - [ ] Keep \"Conversion Rate\" sparkline
-  - [ ] Add \"Total Bookings\" sparkline (NEW)
-  - [ ] Add \"Avg Satisfaction\" sparkline (NEW)
-  - [ ] Add \"Containment Rate\" sparkline (NEW)
-- [ ] Add new chart grid section:
-  - [ ] `BookingsByLocationChart` (left)
-  - [ ] `SatisfactionScoreCard` (right)
-  - [ ] `LeadConversionChart` (left) - KEEP EXISTING
-  - [ ] `AIPerformanceCard` (right) - REPLACES AgentPerformanceChart
-  - [ ] `BookingStatusChart` (left)
-  - [ ] `TicketsResolvedCard` (right)
-- [ ] Keep existing `ConversationChart` full-width
-- [ ] Keep existing tab structure (Overview, Traffic, Data Table)
-- [ ] Ensure responsive grid layout
+- [x] Import new hooks: `useBookingAnalytics`, `useSatisfactionAnalytics`, `useAIPerformanceAnalytics`
+- [x] Import new components
+- [x] Update KPI cards row:
+  - [x] Keep "Total Conversations" sparkline
+  - [x] Keep "Total Leads" sparkline
+  - [x] Keep "Conversion Rate" sparkline
+  - [x] Add "Total Bookings" sparkline (NEW)
+  - [x] Add "Avg Satisfaction" sparkline (NEW)
+  - [x] Add "Containment Rate" sparkline (NEW)
+- [x] Add new chart grid section:
+  - [x] `BookingsByLocationChart` (left)
+  - [x] `SatisfactionScoreCard` (right)
+  - [x] `LeadConversionChart` (left) - KEEP EXISTING
+  - [x] `AIPerformanceCard` (right) - REPLACES AgentPerformanceChart
+  - [x] `BookingStatusChart` (left)
+  - [x] `TicketsResolvedCard` (right)
+- [x] Keep existing `ConversationChart` full-width
+- [x] Keep existing tab structure (Overview, Traffic, Reports, Schedule)
+- [x] Ensure responsive grid layout (6-column on xl, 3-column on lg, 2-column on sm)
 
 **Layout Grid:**
 ```
-grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
+KPIs: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6
+Charts: grid-cols-1 lg:grid-cols-2 gap-6
 ```
 
 ---
@@ -478,7 +479,7 @@ grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
 | CREATE | `src/components/analytics/AIPerformanceCard.tsx` | ✅ Complete |
 | CREATE | `src/components/analytics/TicketsResolvedCard.tsx` | ✅ Complete |
 | MODIFY | `src/hooks/useAnalytics.ts` | ✅ Complete |
-| MODIFY | `src/pages/Analytics.tsx` | ⬜ Pending |
+| MODIFY | `src/pages/Analytics.tsx` | ✅ Complete |
 | DELETE | `src/components/analytics/AgentPerformanceChart.tsx` | ⬜ Pending |
 | DELETE | `src/components/analytics/UsageMetricsChart.tsx` | ⬜ Pending |
 | UPDATE | `docs/HOOKS_REFERENCE.md` | ✅ Complete |
