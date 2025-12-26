@@ -63,8 +63,8 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Booking Status</CardTitle>
-          <p className="text-xs text-muted-foreground">Appointment outcomes and show rate</p>
+          <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
+          <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
           <div className="relative" role="status" aria-label="Loading booking status">
@@ -81,8 +81,8 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Booking Status</CardTitle>
-          <p className="text-xs text-muted-foreground">Appointment outcomes and show rate</p>
+          <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
+          <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>
         </CardHeader>
         <CardContent>
           <EmptyState
@@ -98,8 +98,8 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
   return (
     <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Booking Status</CardTitle>
-          <p className="text-xs text-muted-foreground">Appointment outcomes and show rate</p>
+          <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
+          <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>
         </CardHeader>
       <CardContent>
         <div className="h-[300px] relative">

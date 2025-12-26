@@ -42,8 +42,8 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Bookings by Location</CardTitle>
-          <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
+          <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
+          <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-3" role="status" aria-label="Loading bookings by location">
@@ -64,8 +64,8 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Bookings by Location</CardTitle>
-          <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
+          <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
+          <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
         </CardHeader>
         <CardContent>
           <EmptyState
@@ -81,8 +81,8 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   return (
     <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Bookings by Location</CardTitle>
-          <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
+          <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
+          <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
         </CardHeader>
       <CardContent>
         <div className="h-[280px]">
