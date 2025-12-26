@@ -645,21 +645,30 @@ const Analytics: React.FC = () => {
           {/* Traffic Section */}
           {activeTab === 'traffic' && (
             <div className="space-y-6">
-              {/* Active Visitors */}
-              <ActiveVisitorsCard agentId={agentId} />
+              {/* Real-Time Section */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Real-Time</h3>
+                <ActiveVisitorsCard agentId={agentId} />
+              </div>
               
-              {/* Traffic Charts */}
-              <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                <AnimatedItem>
-                  <TrafficSourceChart data={trafficSources} loading={trafficLoading} />
-                </AnimatedItem>
-                <AnimatedItem>
-                  <PageVisitHeatmap data={pageVisits} loading={trafficLoading} />
-                </AnimatedItem>
-              </AnimatedList>
+              {/* Sources & Behavior Section */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sources & Behavior</h3>
+                <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                  <AnimatedItem>
+                    <TrafficSourceChart data={trafficSources} loading={trafficLoading} />
+                  </AnimatedItem>
+                  <AnimatedItem>
+                    <PageVisitHeatmap data={pageVisits} loading={trafficLoading} />
+                  </AnimatedItem>
+                </AnimatedList>
+              </div>
               
-              {/* Landing Pages Table - Full Width */}
-              <LandingPagesTable data={landingPages} loading={trafficLoading} />
+              {/* Top Pages Section */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Top Pages</h3>
+                <LandingPagesTable data={landingPages} loading={trafficLoading} />
+              </div>
             </div>
           )}
 
