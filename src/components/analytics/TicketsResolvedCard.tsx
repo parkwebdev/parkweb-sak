@@ -5,7 +5,6 @@
  * overlay with description of planned functionality.
  * 
  * @module components/analytics/TicketsResolvedCard
- * @see docs/ANALYTICS_REDESIGN_PLAN.md - Phase 5e
  */
 
 import React from 'react';

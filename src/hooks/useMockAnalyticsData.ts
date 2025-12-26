@@ -5,7 +5,6 @@
  * Enable via localStorage key 'analytics_mock_mode' or dev toggle.
  * 
  * @hook
- * @see docs/ANALYTICS_REDESIGN_PLAN.md
  */
 
 import { useState, useEffect, useMemo } from 'react';

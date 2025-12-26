@@ -5,7 +5,6 @@
  * star visualization and rating distribution bars.
  * 
  * @module components/analytics/SatisfactionScoreCard
- * @see docs/ANALYTICS_REDESIGN_PLAN.md - Phase 5c
  */
 
 import React from 'react';

@@ -6,7 +6,6 @@
  * Uses React Query for caching and Supabase real-time for automatic updates.
  * 
  * @module hooks/useAIPerformanceAnalytics
- * @see docs/ANALYTICS_REDESIGN_PLAN.md
  * @see src/types/analytics.ts
  */
 

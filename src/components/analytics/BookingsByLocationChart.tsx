@@ -5,7 +5,6 @@
  * Shows total bookings per location with hover tooltips for details.
  * 
  * @module components/analytics/BookingsByLocationChart
- * @see docs/ANALYTICS_REDESIGN_PLAN.md - Phase 5a
  */
 
 import React from 'react';

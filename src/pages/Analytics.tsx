@@ -13,7 +13,6 @@
  * - Scheduled report management
  * 
  * @page
- * @see docs/ANALYTICS_REDESIGN_PLAN.md
  */
 
 import { useState, useMemo, useCallback } from 'react';

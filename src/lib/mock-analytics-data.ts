@@ -5,7 +5,6 @@
  * Used when mock mode is enabled via localStorage or dev toggle.
  * 
  * @module lib/mock-analytics-data
- * @see docs/ANALYTICS_REDESIGN_PLAN.md
  */
 
 import { subDays, format } from 'date-fns';

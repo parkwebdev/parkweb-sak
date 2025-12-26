@@ -6,7 +6,6 @@
  * and now includes trend data for new KPI sparklines (bookings, satisfaction, containment).
  * 
  * @module hooks/useAnalytics
- * @see docs/ANALYTICS_REDESIGN_PLAN.md
  * @see src/types/analytics.ts
  */
 

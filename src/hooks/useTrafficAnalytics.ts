@@ -6,7 +6,6 @@
  * Uses React Query for caching and Supabase real-time for automatic updates.
  * 
  * @module hooks/useTrafficAnalytics
- * @see docs/ANALYTICS_REDESIGN_PLAN.md
  */
 
 import { useMemo } from 'react';
