@@ -118,6 +118,11 @@ export function MapboxMap({
 
     map.on("error", (e) => {
       console.error("[MapboxMap] map error", e?.error || e);
+      // Check if this is a tile loading error
+      const errorMessage = e?.error?.message || "";
+      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
+        console.warn("[MapboxMap] Tile loading blocked - likely CSP issue");
+      }
     });
 
     map.on("load", () => {
