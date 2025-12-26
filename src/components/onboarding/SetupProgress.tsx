@@ -14,10 +14,10 @@ interface SetupProgressProps {
   totalCount: number;
 }
 
-export const SetupProgress: React.FC<SetupProgressProps> = ({
+export function SetupProgress({
   completedCount,
   totalCount,
-}) => {
+}: SetupProgressProps) {
   const isAllComplete = completedCount === totalCount;
   const progress = totalCount > 0 ? (completedCount / totalCount) : 0;
   const circumference = 2 * Math.PI * 6; // radius = 6

@@ -29,13 +29,13 @@ interface LocationDetailsSheetProps {
   onUpdate: (id: string, data: Partial<LocationFormData>) => Promise<boolean>;
 }
 
-export const LocationDetailsSheet: React.FC<LocationDetailsSheetProps> = ({
+export function LocationDetailsSheet({
   location,
   open,
   onOpenChange,
   agentId,
   onUpdate,
-}) => {
+}: LocationDetailsSheetProps) {
   // Defer content mounting until after sheet animation starts
   const [contentReady, setContentReady] = useState(false);
 

@@ -57,7 +57,7 @@ interface ArticleDetailsSheetProps {
   userId: string;
 }
 
-export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
+export function ArticleDetailsSheet({
   article,
   open,
   onOpenChange,
@@ -67,7 +67,7 @@ export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
   categories,
   agentId,
   userId,
-}) => {
+}: ArticleDetailsSheetProps) {
   // Defer content mounting until after sheet animation starts
   const [contentReady, setContentReady] = useState(false);
   

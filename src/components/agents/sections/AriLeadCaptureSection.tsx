@@ -14,7 +14,7 @@ interface AriLeadCaptureSectionProps {
   agentId: string;
 }
 
-export const AriLeadCaptureSection: React.FC<AriLeadCaptureSectionProps> = ({ agentId }) => {
+export function AriLeadCaptureSection({ agentId }: AriLeadCaptureSectionProps) {
   const { config, loading, saveConfig } = useEmbeddedChatConfig(agentId);
   const [localConfig, setLocalConfig] = useState(config);
   const [showSaved, setShowSaved] = useState(false);

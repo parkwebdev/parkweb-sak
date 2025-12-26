@@ -23,7 +23,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 
-export const ProfileSettings: React.FC = () => {
+export function ProfileSettings() {
   const [profile, setProfile] = useState({
     display_name: '',
     email: '',

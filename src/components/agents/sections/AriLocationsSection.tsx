@@ -47,7 +47,7 @@ interface ActiveFilter {
 
 type ViewMode = 'communities' | 'properties';
 
-export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentId, userId }) => {
+export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProps) {
   const { locations, loading: locationsLoading, createLocation, updateLocation, deleteLocation, refetch } = useLocations(agentId);
   const { propertiesWithLocation, loading: propertiesLoading, validationStats, uniqueLocations, locationIdsByName, refetch: refetchProperties } = useProperties(agentId);
   const { agent, refetch: refetchAgent } = useAgent();

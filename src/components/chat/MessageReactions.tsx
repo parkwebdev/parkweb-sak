@@ -25,14 +25,14 @@ interface MessageReactionsProps {
   isUserMessage?: boolean;
 }
 
-export const MessageReactions: React.FC<MessageReactionsProps> = ({
+export function MessageReactions({
   reactions,
   onAddReaction,
   onRemoveReaction,
   primaryColor,
   compact = false,
   isUserMessage = false,
-}) => {
+}: MessageReactionsProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const handleReactionClick = (reaction: Reaction) => {

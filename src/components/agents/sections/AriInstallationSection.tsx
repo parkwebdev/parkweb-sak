@@ -18,7 +18,7 @@ interface AriInstallationSectionProps {
   agentId: string;
 }
 
-export const AriInstallationSection: React.FC<AriInstallationSectionProps> = ({ agentId }) => {
+export function AriInstallationSection({ agentId }: AriInstallationSectionProps) {
   const { loading, generateEmbedCode } = useEmbeddedChatConfig(agentId);
   const { agent } = useAgent();
 

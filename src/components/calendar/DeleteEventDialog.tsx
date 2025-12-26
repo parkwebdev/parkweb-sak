@@ -24,13 +24,13 @@ interface DeleteEventDialogProps {
   isDeleting?: boolean;
 }
 
-export const DeleteEventDialog: React.FC<DeleteEventDialogProps> = ({
+export function DeleteEventDialog({
   open,
   onOpenChange,
   event,
   onConfirmDelete,
   isDeleting = false,
-}) => {
+}: DeleteEventDialogProps) {
   if (!event) return null;
 
   return (

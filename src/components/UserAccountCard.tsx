@@ -68,7 +68,7 @@ const formatShortcut = (shortcut: KeyboardShortcut) => {
   return keys;
 };
 
-export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = false }) => {
+export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);

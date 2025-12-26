@@ -12,7 +12,7 @@ import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { logger } from '@/utils/logger';
 
-export const NextLevelVideoSection: React.FC = () => {
+export function NextLevelVideoSection() {
   const prefersReducedMotion = useReducedMotion();
   const [isPlaying, setIsPlaying] = useState(false);
 

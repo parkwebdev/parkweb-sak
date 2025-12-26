@@ -13,7 +13,7 @@ import { SkeletonGetStartedPage } from '@/components/ui/page-skeleton';
 
 const GetStarted = lazy(() => import('./GetStarted').then(module => ({ default: module.GetStarted })));
 
-const GetStartedWrapper: React.FC = () => {
+function GetStartedWrapper() {
   return (
     <PageTransition>
       <Suspense fallback={<SkeletonGetStartedPage className="min-h-[400px]" />}>

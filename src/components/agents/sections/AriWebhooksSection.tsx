@@ -33,7 +33,7 @@ interface AriWebhooksSectionProps {
   agentId: string;
 }
 
-export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId }) => {
+export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
   const { webhooks, loading, createWebhook, updateWebhook, deleteWebhook, testWebhook, fetchLogs } = useWebhooks(agentId);
   
   // Dialog states

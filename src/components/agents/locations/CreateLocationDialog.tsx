@@ -27,11 +27,11 @@ interface CreateLocationDialogProps {
   onCreate: (data: LocationFormData) => Promise<void>;
 }
 
-export const CreateLocationDialog: React.FC<CreateLocationDialogProps> = ({
+export function CreateLocationDialog({
   open,
   onOpenChange,
   onCreate,
-}) => {
+}: CreateLocationDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<LocationFormData>({
     name: '',

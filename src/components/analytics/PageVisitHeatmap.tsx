@@ -155,4 +155,4 @@ export function PageVisitHeatmap({ data, loading }: PageVisitHeatmapProps) {
       </CardContent>
     </Card>
   );
-};
+}

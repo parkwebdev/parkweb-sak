@@ -20,7 +20,7 @@ interface TeamSettingsProps {
   openMemberId?: string | null;
 }
 
-export const TeamSettings: React.FC<TeamSettingsProps> = ({ openMemberId }) => {
+export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);

@@ -72,9 +72,9 @@ export function useConflictingEvents({
 /**
  * Conflict warning banner component with amber styling
  */
-export const ConflictWarningBanner: React.FC<ConflictWarningBannerProps> = ({
+export function ConflictWarningBanner({
   conflictingEvents,
-}) => {
+}: ConflictWarningBannerProps) {
   if (conflictingEvents.length === 0) return null;
 
   return (
@@ -95,7 +95,7 @@ export const ConflictWarningBanner: React.FC<ConflictWarningBannerProps> = ({
 /**
  * Self-contained conflict warning that calculates conflicts internally
  */
-export const ConflictWarning: React.FC<ConflictCheckProps> = (props) => {
+export function ConflictWarning(props: ConflictCheckProps) {
   const conflictingEvents = useConflictingEvents(props);
   return <ConflictWarningBanner conflictingEvents={conflictingEvents} />;
-};
+}

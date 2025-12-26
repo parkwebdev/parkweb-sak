@@ -295,4 +295,4 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
       </div>
     </div>
   );
-};
+}
