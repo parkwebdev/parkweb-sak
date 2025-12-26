@@ -268,6 +268,50 @@ const {
 
 ---
 
+### useLeadStages
+
+Manages custom lead pipeline stages with drag-and-drop reordering. **Powered by React Query** with real-time updates.
+
+```tsx
+import { useLeadStages } from '@/hooks/useLeadStages';
+
+const {
+  stages,             // LeadStage[] - All stages sorted by order_index
+  loading,            // boolean - Loading state
+  createStage,        // (name, color?) => Promise<LeadStage> - Create stage
+  updateStage,        // (id, updates) => Promise - Update name/color/default
+  deleteStage,        // (id) => Promise<boolean> - Delete (checks lead count)
+  reorderStages,      // (orderedIds[]) => Promise - Reorder stages
+  getLeadCountByStage, // (stageId) => Promise<number> - Get lead count
+  refetch,            // () => void - Trigger background refetch
+} = useLeadStages();
+```
+
+**LeadStage Interface**:
+```typescript
+interface LeadStage {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;          // Hex color for stage badge
+  order_index: number;    // Display order (0-based)
+  is_default: boolean;    // Default stage for new leads
+  created_at: string;
+  updated_at: string;
+}
+```
+
+**Key Features**:
+- React Query caching with real-time updates
+- Auto-seeds default stages (New, Contacted, Qualified, Converted) on first use
+- Prevents deletion of stages with active leads
+- Single default stage enforcement (auto-unsets previous default)
+- Integrates with `LeadsKanbanBoard` for drag-and-drop
+
+**File**: `src/hooks/useLeadStages.ts`
+
+---
+
 ### useKnowledgeSources
 
 Manages knowledge sources for RAG. **Powered by React Query** with real-time updates.
