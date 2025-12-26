@@ -5,11 +5,45 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
 
-// Mapbox styles for light/dark themes
-const MAP_STYLES = {
-  light: "mapbox://styles/mapbox/light-v11",
-  dark: "mapbox://styles/mapbox/dark-v11",
-} as const;
+// Raster tile styles (no Mapbox-hosted tiles, so they render even with strict token restrictions)
+const RASTER_STYLES: Record<"light" | "dark", mapboxgl.Style> = {
+  light: {
+    version: 8,
+    sources: {
+      carto: {
+        type: "raster",
+        tiles: [
+          "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+          "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+          "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+          "https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        ],
+        tileSize: 256,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      },
+    },
+    layers: [{ id: "carto", type: "raster", source: "carto" }],
+  },
+  dark: {
+    version: 8,
+    sources: {
+      carto: {
+        type: "raster",
+        tiles: [
+          "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+          "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+          "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+          "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        ],
+        tileSize: 256,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      },
+    },
+    layers: [{ id: "carto", type: "raster", source: "carto" }],
+  },
+};
 
 interface MapboxMapProps {
   className?: string;
@@ -72,7 +106,7 @@ export function MapboxMap({
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: MAP_STYLES[resolvedTheme],
+      style: RASTER_STYLES[resolvedTheme],
       center: center,
       zoom: zoom,
       projection: "mercator",
@@ -81,6 +115,10 @@ export function MapboxMap({
 
     map.addControl(new mapboxgl.NavigationControl({ visualizePitch: false }), "top-right");
     map.scrollZoom.disable();
+
+    map.on("error", (e) => {
+      console.error("[MapboxMap] map error", e?.error || e);
+    });
 
     map.on("load", () => {
       onLoad?.(map);
@@ -107,7 +145,7 @@ export function MapboxMap({
   // Update style when theme changes
   React.useEffect(() => {
     if (mapRef.current && mounted) {
-      mapRef.current.setStyle(MAP_STYLES[resolvedTheme]);
+      mapRef.current.setStyle(RASTER_STYLES[resolvedTheme]);
     }
   }, [resolvedTheme, mounted]);
 
