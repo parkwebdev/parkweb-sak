@@ -197,8 +197,35 @@ serve(async (req) => {
 
     const conversationId = conversation?.id || null;
 
-    // Create lead (exclude internal fields from customFields)
-    const { _formLoadTime: _, ...cleanCustomFields } = customFields || {};
+    // Process custom fields: extract phone from type-tagged fields and flatten for storage
+    const { _formLoadTime: _, ...rawCustomFields } = customFields || {};
+    
+    let extractedPhone: string | null = null;
+    const flattenedCustomFields: Record<string, unknown> = {};
+
+    for (const [label, fieldData] of Object.entries(rawCustomFields)) {
+      if (typeof fieldData === 'object' && fieldData !== null && 'type' in fieldData && 'value' in fieldData) {
+        // New structured format with type metadata
+        const typedField = fieldData as { value: unknown; type: string };
+        flattenedCustomFields[label] = typedField.value;
+        
+        // Extract phone value from any field with type: 'phone'
+        if (typedField.type === 'phone' && typedField.value) {
+          extractedPhone = String(typedField.value);
+          console.log(`Extracted phone from field "${label}": ${extractedPhone}`);
+        }
+      } else {
+        // Legacy format (backward compatible) - also check for phone in field name
+        flattenedCustomFields[label] = fieldData;
+        
+        // Fallback: detect phone by common field names for legacy data
+        const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'Phone Number', 'telephone', 'mobile', 'Mobile'];
+        if (!extractedPhone && phoneKeys.some(k => label.toLowerCase().includes(k.toLowerCase()))) {
+          extractedPhone = String(fieldData);
+          console.log(`Extracted phone from legacy field "${label}": ${extractedPhone}`);
+        }
+      }
+    }
     
     const { data: lead, error: leadError } = await supabase
       .from('leads')
@@ -206,7 +233,8 @@ serve(async (req) => {
         user_id: agent.user_id,
         name: `${sanitizedFirstName} ${sanitizedLastName}`,
         email: sanitizedEmail,
-        data: { firstName: sanitizedFirstName, lastName: sanitizedLastName, ...cleanCustomFields },
+        phone: extractedPhone,
+        data: { firstName: sanitizedFirstName, lastName: sanitizedLastName, ...flattenedCustomFields },
         status: 'new',
         conversation_id: conversationId,
       })

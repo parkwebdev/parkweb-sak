@@ -80,26 +80,35 @@ export const ContactForm = ({
     const lastName = formData.get('lastName') as string;
     const email = formData.get('email') as string;
     const honeypot = formData.get('website') as string;
-    const customFieldData: Record<string, any> = {};
+    const customFieldData: Record<string, { value: unknown; type: string }> = {};
 
     if (honeypot) {
       logger.debug('Spam detected: honeypot filled');
       return;
     }
 
-    // Collect custom field values
+    // Collect custom field values with type metadata for proper extraction
     customFields.forEach(field => {
       if (field.fieldType === 'checkbox') {
-        // Store checkbox value as boolean
-        customFieldData[field.label] = checkboxValues[field.id] || false;
+        // Store checkbox value with type info
+        customFieldData[field.label] = {
+          value: checkboxValues[field.id] || false,
+          type: 'checkbox'
+        };
         // Also store the rich text content for display in lead details
         if (field.richTextContent) {
-          customFieldData[`${field.label}_content`] = field.richTextContent;
+          customFieldData[`${field.label}_content`] = {
+            value: field.richTextContent,
+            type: 'text'
+          };
         }
       } else {
         const value = formData.get(field.id);
         if (value) {
-          customFieldData[field.label] = value;
+          customFieldData[field.label] = {
+            value: value,
+            type: field.fieldType
+          };
         }
       }
     });
