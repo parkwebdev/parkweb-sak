@@ -17,7 +17,7 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { useSatisfactionAnalytics } from '@/hooks/useSatisfactionAnalytics';
@@ -116,7 +116,7 @@ const generateChartData = (dailyCounts: number[]): { value: number }[] => {
 const Analytics: React.FC = () => {
   const { user } = useAuth();
   const { agentId } = useAgent();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState<AnalyticsSection>('dashboard');
 
   // Mock data mode
   const { enabled: mockMode, setEnabled: setMockMode, mockData, regenerate: regenerateMockData } = useMockAnalyticsData();
@@ -427,24 +427,23 @@ const Analytics: React.FC = () => {
   }, [analyticsData, reportConfig, startDate, endDate, user?.email]);
 
   return (
-    <main className="flex-1 bg-muted/30 h-screen overflow-auto">
-      <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        {/* Header with Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <main className="flex-1 bg-muted/30 h-screen overflow-hidden flex">
+      {/* Section Menu Sidebar */}
+      <AnalyticsSectionMenu 
+        activeSection={activeTab} 
+        onSectionChange={setActiveTab} 
+      />
+      
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-auto">
+        <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
+          {/* Header */}
           <div>
             <h1 className="text-2xl font-bold">Analytics</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Track performance and insights across your organization
             </p>
           </div>
-          <TabsList>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="traffic">Traffic</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          </TabsList>
-        </div>
 
       {/* Unified Toolbar */}
       <AnalyticsToolbar
@@ -464,166 +463,171 @@ const Analytics: React.FC = () => {
       onRefresh={refetch}
       />
 
-        {/* Dashboard Tab */}
-        <TabsContent value="dashboard" className="space-y-6 mt-6">
-          {comparisonMode ? (
-            <ComparisonView 
-              currentPeriod={{ start: startDate, end: endDate }}
-              previousPeriod={{ start: comparisonStartDate, end: comparisonEndDate }}
-              metrics={comparisonMetrics} 
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 lg:gap-6">
-              <MetricCardWithChart
-                title={totalConversations.toLocaleString()}
-                subtitle="Total Conversations"
-                description="Chat sessions started with Ari"
-                change={calculatePeriodChange(conversationTrend)}
-                changeType="percentage"
-                changeLabel="vs last period"
-                chartData={generateChartData(conversationTrend)}
-                animationDelay={0}
-              />
-              <MetricCardWithChart
-                title={totalLeads.toLocaleString()}
-                subtitle="Total Leads"
-                description="Visitors who shared contact info"
-                change={calculatePeriodChange(leadTrend)}
-                changeType="percentage"
-                changeLabel="vs last period"
-                chartData={generateChartData(leadTrend)}
-                animationDelay={0.05}
-              />
-              <MetricCardWithChart
-                title={`${conversionRate}%`}
-                subtitle="Conversion Rate"
-                description="Leads marked as won or converted"
-                change={calculatePointChange(conversionTrend)}
-                changeType="points"
-                changeLabel="vs last period"
-                chartData={generateChartData(conversionTrend)}
-                animationDelay={0.1}
-              />
-              <MetricCardWithChart
-                title={totalBookings.toLocaleString()}
-                subtitle="Total Bookings"
-                description="Appointments scheduled via Ari"
-                change={calculatePeriodChange(bookingTrend)}
-                changeType="percentage"
-                changeLabel="vs last period"
-                chartData={generateChartData(bookingTrend)}
-                animationDelay={0.15}
-              />
-              <MetricCardWithChart
-                title={avgSatisfaction.toFixed(1)}
-                subtitle="Avg Satisfaction"
-                description="User ratings out of 5 stars"
-                change={calculatePointChange(satisfactionTrend)}
-                changeType="points"
-                changeLabel="vs last period"
-                chartData={generateChartData(satisfactionTrend)}
-                animationDelay={0.2}
-              />
-              <MetricCardWithChart
-                title={`${containmentRate.toFixed(0)}%`}
-                subtitle="AI Containment"
-                description="Chats resolved without human help"
-                change={calculatePointChange(containmentTrend)}
-                changeType="points"
-                changeLabel="vs last period"
-                chartData={generateChartData(containmentTrend)}
-                animationDelay={0.25}
-              />
+          {/* Dashboard Section */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              {comparisonMode ? (
+                <ComparisonView 
+                  currentPeriod={{ start: startDate, end: endDate }}
+                  previousPeriod={{ start: comparisonStartDate, end: comparisonEndDate }}
+                  metrics={comparisonMetrics} 
+                />
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 lg:gap-6">
+                  <MetricCardWithChart
+                    title={totalConversations.toLocaleString()}
+                    subtitle="Total Conversations"
+                    description="Chat sessions started with Ari"
+                    change={calculatePeriodChange(conversationTrend)}
+                    changeType="percentage"
+                    changeLabel="vs last period"
+                    chartData={generateChartData(conversationTrend)}
+                    animationDelay={0}
+                  />
+                  <MetricCardWithChart
+                    title={totalLeads.toLocaleString()}
+                    subtitle="Total Leads"
+                    description="Visitors who shared contact info"
+                    change={calculatePeriodChange(leadTrend)}
+                    changeType="percentage"
+                    changeLabel="vs last period"
+                    chartData={generateChartData(leadTrend)}
+                    animationDelay={0.05}
+                  />
+                  <MetricCardWithChart
+                    title={`${conversionRate}%`}
+                    subtitle="Conversion Rate"
+                    description="Leads marked as won or converted"
+                    change={calculatePointChange(conversionTrend)}
+                    changeType="points"
+                    changeLabel="vs last period"
+                    chartData={generateChartData(conversionTrend)}
+                    animationDelay={0.1}
+                  />
+                  <MetricCardWithChart
+                    title={totalBookings.toLocaleString()}
+                    subtitle="Total Bookings"
+                    description="Appointments scheduled via Ari"
+                    change={calculatePeriodChange(bookingTrend)}
+                    changeType="percentage"
+                    changeLabel="vs last period"
+                    chartData={generateChartData(bookingTrend)}
+                    animationDelay={0.15}
+                  />
+                  <MetricCardWithChart
+                    title={avgSatisfaction.toFixed(1)}
+                    subtitle="Avg Satisfaction"
+                    description="User ratings out of 5 stars"
+                    change={calculatePointChange(satisfactionTrend)}
+                    changeType="points"
+                    changeLabel="vs last period"
+                    chartData={generateChartData(satisfactionTrend)}
+                    animationDelay={0.2}
+                  />
+                  <MetricCardWithChart
+                    title={`${containmentRate.toFixed(0)}%`}
+                    subtitle="AI Containment"
+                    description="Chats resolved without human help"
+                    change={calculatePointChange(containmentTrend)}
+                    changeType="points"
+                    changeLabel="vs last period"
+                    chartData={generateChartData(containmentTrend)}
+                    animationDelay={0.25}
+                  />
+                </div>
+              )}
+
+              {/* Charts Grid */}
+              {loading || bookingLoading || satisfactionLoading || aiPerformanceLoading ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  Loading analytics data...
+                </div>
+              ) : (
+                <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                  {/* Row 1: Conversations & Leads */}
+                  <AnimatedItem>
+                    <ConversationChart data={conversationStats} />
+                  </AnimatedItem>
+                  <AnimatedItem>
+                    <LeadConversionChart data={leadStats} />
+                  </AnimatedItem>
+                  
+                  {/* Row 2: Bookings & Satisfaction */}
+                  <AnimatedItem>
+                    <BookingsByLocationChart 
+                      data={bookingStats?.byLocation ?? []} 
+                      loading={bookingLoading}
+                    />
+                  </AnimatedItem>
+                  <AnimatedItem>
+                    <SatisfactionScoreCard 
+                      averageRating={satisfactionStats?.averageRating ?? 0}
+                      totalRatings={satisfactionStats?.totalRatings ?? 0}
+                      distribution={satisfactionStats?.distribution ?? []}
+                      loading={satisfactionLoading}
+                    />
+                  </AnimatedItem>
+                  
+                  {/* Row 3: AI Performance & Booking Status */}
+                  <AnimatedItem>
+                    <AIPerformanceCard 
+                      containmentRate={aiPerformanceStats?.containmentRate ?? 0}
+                      resolutionRate={aiPerformanceStats?.resolutionRate ?? 0}
+                      totalConversations={aiPerformanceStats?.totalConversations ?? 0}
+                      humanTakeover={aiPerformanceStats?.humanTakeover ?? 0}
+                      loading={aiPerformanceLoading}
+                    />
+                  </AnimatedItem>
+                  <AnimatedItem>
+                    <BookingStatusChart 
+                      data={bookingStats?.byStatus ?? []} 
+                      showRate={bookingStats?.showRate ?? 0}
+                      loading={bookingLoading}
+                    />
+                  </AnimatedItem>
+                  
+                  {/* Row 4: Tickets (Coming Soon) */}
+                  <AnimatedItem>
+                    <TicketsResolvedCard comingSoon={true} />
+                  </AnimatedItem>
+                </AnimatedList>
+              )}
             </div>
           )}
 
-          {/* Charts Grid */}
-          {loading || bookingLoading || satisfactionLoading || aiPerformanceLoading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Loading analytics data...
+          {/* Traffic Section */}
+          {activeTab === 'traffic' && (
+            <div className="space-y-6">
+              {/* Active Visitors */}
+              <ActiveVisitorsCard agentId={agentId} />
+              
+              {/* Traffic Charts */}
+              <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                <AnimatedItem>
+                  <TrafficSourceChart data={trafficSources} loading={trafficLoading} />
+                </AnimatedItem>
+                <AnimatedItem>
+                  <PageVisitHeatmap data={pageVisits} loading={trafficLoading} />
+                </AnimatedItem>
+              </AnimatedList>
+              
+              {/* Landing Pages Table - Full Width */}
+              <LandingPagesTable data={landingPages} loading={trafficLoading} />
             </div>
-          ) : (
-            <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-              {/* Row 1: Conversations & Leads */}
-              <AnimatedItem>
-                <ConversationChart data={conversationStats} />
-              </AnimatedItem>
-              <AnimatedItem>
-                <LeadConversionChart data={leadStats} />
-              </AnimatedItem>
-              
-              {/* Row 2: Bookings & Satisfaction */}
-              <AnimatedItem>
-                <BookingsByLocationChart 
-                  data={bookingStats?.byLocation ?? []} 
-                  loading={bookingLoading}
-                />
-              </AnimatedItem>
-              <AnimatedItem>
-                <SatisfactionScoreCard 
-                  averageRating={satisfactionStats?.averageRating ?? 0}
-                  totalRatings={satisfactionStats?.totalRatings ?? 0}
-                  distribution={satisfactionStats?.distribution ?? []}
-                  loading={satisfactionLoading}
-                />
-              </AnimatedItem>
-              
-              {/* Row 3: AI Performance & Booking Status */}
-              <AnimatedItem>
-                <AIPerformanceCard 
-                  containmentRate={aiPerformanceStats?.containmentRate ?? 0}
-                  resolutionRate={aiPerformanceStats?.resolutionRate ?? 0}
-                  totalConversations={aiPerformanceStats?.totalConversations ?? 0}
-                  humanTakeover={aiPerformanceStats?.humanTakeover ?? 0}
-                  loading={aiPerformanceLoading}
-                />
-              </AnimatedItem>
-              <AnimatedItem>
-                <BookingStatusChart 
-                  data={bookingStats?.byStatus ?? []} 
-                  showRate={bookingStats?.showRate ?? 0}
-                  loading={bookingLoading}
-                />
-              </AnimatedItem>
-              
-              {/* Row 4: Tickets (Coming Soon) */}
-              <AnimatedItem>
-                <TicketsResolvedCard comingSoon={true} />
-              </AnimatedItem>
-            </AnimatedList>
           )}
 
-        </TabsContent>
+          {/* Reports Section */}
+          {activeTab === 'reports' && (
+            <div className="space-y-6">
+              <ReportBuilder config={reportConfig} onConfigChange={setReportConfig} />
+            </div>
+          )}
 
-        {/* Traffic Tab */}
-        <TabsContent value="traffic" className="space-y-6 mt-6">
-          {/* Active Visitors */}
-          <ActiveVisitorsCard agentId={agentId} />
-          
-          {/* Traffic Charts */}
-          <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-            <AnimatedItem>
-              <TrafficSourceChart data={trafficSources} loading={trafficLoading} />
-            </AnimatedItem>
-            <AnimatedItem>
-              <PageVisitHeatmap data={pageVisits} loading={trafficLoading} />
-            </AnimatedItem>
-          </AnimatedList>
-          
-          {/* Landing Pages Table - Full Width */}
-          <LandingPagesTable data={landingPages} loading={trafficLoading} />
-        </TabsContent>
-
-        {/* Reports Tab */}
-        <TabsContent value="reports" className="space-y-6 mt-6">
-          <ReportBuilder config={reportConfig} onConfigChange={setReportConfig} />
-        </TabsContent>
-
-        {/* Schedule Tab */}
-        <TabsContent value="schedule" className="mt-6">
-          <ScheduledReportsManager />
-        </TabsContent>
-      </Tabs>
+          {/* Schedule Section */}
+          {activeTab === 'schedule' && (
+            <ScheduledReportsManager />
+          )}
+        </div>
       </div>
     </main>
   );
