@@ -107,7 +107,8 @@ interface ContainmentTrendPoint {
 export const useAnalytics = (
   startDate: Date,
   endDate: Date,
-  filters: AnalyticsFilters
+  filters: AnalyticsFilters,
+  enabled: boolean = true
 ) => {
   const [conversationStats, setConversationStats] = useState<ConversationStats[]>([]);
   const [leadStats, setLeadStats] = useState<LeadStageStats[]>([]);
@@ -593,6 +594,12 @@ export const useAnalytics = (
   };
 
   useEffect(() => {
+    // Skip all fetching when disabled (e.g., mock mode is on)
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
     fetchAllData();
 
     // Subscribe to real-time updates
@@ -665,7 +672,7 @@ export const useAnalytics = (
       supabase.removeChannel(ratingsChannel);
       supabase.removeChannel(eventsChannel);
     };
-  }, [user?.id, agentId, startDate, endDate, filters]);
+  }, [enabled, user?.id, agentId, startDate, endDate, filters]);
 
   // Transform trend data to SparklineDataPoint format for compatibility
   const bookingTrend: SparklineDataPoint[] = useMemo(() => 

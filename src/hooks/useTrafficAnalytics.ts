@@ -47,7 +47,8 @@ type PageVisit = VisitedPage & { duration_ms?: number };
 
 export const useTrafficAnalytics = (
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  enabled: boolean = true
 ) => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<TrafficStats>({
@@ -201,8 +202,13 @@ export const useTrafficAnalytics = (
   };
 
   useEffect(() => {
+    // Skip fetching when disabled (e.g., mock mode is on)
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     fetchData();
-  }, [user?.id, startDate.toISOString(), endDate.toISOString()]);
+  }, [enabled, user?.id, startDate.toISOString(), endDate.toISOString()]);
 
   return {
     ...stats,
