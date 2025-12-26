@@ -7,13 +7,12 @@
  * @module pages/Dashboard
  */
 
-import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Cube01 as Bot } from '@untitledui/icons';
 import { SkeletonDashboardPage } from '@/components/ui/page-skeleton';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
-export const Dashboard: React.FC = () => {
+export function Dashboard() {
   const { user, loading: authLoading } = useAuth();
 
   if (authLoading) {

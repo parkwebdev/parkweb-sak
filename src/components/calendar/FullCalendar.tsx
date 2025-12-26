@@ -54,7 +54,7 @@ interface FullCalendarProps {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export const FullCalendar: React.FC<FullCalendarProps> = ({
+export function FullCalendar({
   events = [],
   className,
   onDateClick,
@@ -64,7 +64,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   onEventResize,
   searchQuery = '',
   onSearchChange,
-}) => {
+}: FullCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>('month');
   const [activeDragEvent, setActiveDragEvent] = useState<CalendarEvent | null>(null);

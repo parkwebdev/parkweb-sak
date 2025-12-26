@@ -18,7 +18,7 @@ import { AnimatedItem } from '@/components/ui/animated-item';
 import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 
-export const GeneralSettings: React.FC = () => {
+export function GeneralSettings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [preferences, setPreferences] = useState({

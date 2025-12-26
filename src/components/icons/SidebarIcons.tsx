@@ -5,8 +5,6 @@
  * @module components/icons/SidebarIcons
  */
 
-import React from 'react';
-
 interface IconProps {
   size?: number;
   className?: string;
@@ -15,7 +13,8 @@ interface IconProps {
 /**
  * Dashboard filled icon (active state)
  */
-export const DashboardFilled: React.FC<IconProps> = ({ size = 24, className }) => (
+export function DashboardFilled({ size = 24, className }: IconProps) {
+  return (
   <svg 
     width={size} 
     height={size} 
@@ -48,12 +47,14 @@ export const DashboardFilled: React.FC<IconProps> = ({ size = 24, className }) =
       fill="currentColor"
     />
   </svg>
-);
+  );
+}
 
 /**
  * Inbox outline icon (default state)
  */
-export const InboxOutline: React.FC<IconProps> = ({ size = 24, className }) => (
+export function InboxOutline({ size = 24, className }: IconProps) {
+  return (
   <svg 
     width={size} 
     height={size} 
@@ -69,12 +70,14 @@ export const InboxOutline: React.FC<IconProps> = ({ size = 24, className }) => (
       strokeLinejoin="round"
     />
   </svg>
-);
+  );
+}
 
 /**
  * Inbox filled icon (active state)
  */
-export const InboxFilled: React.FC<IconProps> = ({ size = 24, className }) => (
+export function InboxFilled({ size = 24, className }: IconProps) {
+  return (
   <svg 
     width={size} 
     height={size} 
@@ -91,12 +94,14 @@ export const InboxFilled: React.FC<IconProps> = ({ size = 24, className }) => (
       fill="currentColor"
     />
   </svg>
-);
+  );
+}
 
 /**
  * Planner/Calendar filled icon (active state)
  */
-export const PlannerFilled: React.FC<IconProps> = ({ size = 24, className }) => (
+export function PlannerFilled({ size = 24, className }: IconProps) {
+  return (
   <svg 
     width={size} 
     height={size} 
@@ -111,12 +116,14 @@ export const PlannerFilled: React.FC<IconProps> = ({ size = 24, className }) => 
       fill="currentColor"
     />
   </svg>
-);
+  );
+}
 
 /**
  * Leads/User filled icon (active state)
  */
-export const LeadsFilled: React.FC<IconProps> = ({ size = 24, className }) => (
+export function LeadsFilled({ size = 24, className }: IconProps) {
+  return (
   <svg 
     width={size} 
     height={size} 
@@ -137,12 +144,14 @@ export const LeadsFilled: React.FC<IconProps> = ({ size = 24, className }) => (
       fill="currentColor"
     />
   </svg>
-);
+  );
+}
 
 /**
  * Analytics/PieChart filled icon (active state)
  */
-export const AnalyticsFilled: React.FC<IconProps> = ({ size = 24, className }) => (
+export function AnalyticsFilled({ size = 24, className }: IconProps) {
+  return (
   <svg 
     width={size} 
     height={size} 
@@ -159,12 +168,14 @@ export const AnalyticsFilled: React.FC<IconProps> = ({ size = 24, className }) =
       fill="currentColor"
     />
   </svg>
-);
+  );
+}
 
 /**
  * Settings filled icon (active state)
  */
-export const SettingsFilled: React.FC<IconProps> = ({ size = 24, className }) => (
+export function SettingsFilled({ size = 24, className }: IconProps) {
+  return (
   <svg 
     width={size} 
     height={size} 
@@ -181,4 +192,5 @@ export const SettingsFilled: React.FC<IconProps> = ({ size = 24, className }) =>
       fill="currentColor"
     />
   </svg>
-);
+  );
+}

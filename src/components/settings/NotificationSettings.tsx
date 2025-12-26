@@ -32,7 +32,7 @@ interface NotificationPreferences {
   updated_at: string;
 }
 
-export const NotificationSettings: React.FC = () => {
+export function NotificationSettings() {
   const { user } = useAuth();
   const { requestBrowserNotificationPermission } = useNotifications();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);

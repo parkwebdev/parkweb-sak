@@ -77,7 +77,7 @@ const formatTimeValue = (date: Date): string => {
   return `${hours}:${minutes}`;
 };
 
-export const EventDetailDialog: React.FC<EventDetailDialogProps> = ({
+export function EventDetailDialog({
   open,
   onOpenChange,
   event,
@@ -85,7 +85,7 @@ export const EventDetailDialog: React.FC<EventDetailDialogProps> = ({
   onDelete,
   onMarkComplete,
   existingEvents = [],
-}) => {
+}: EventDetailDialogProps) {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   
   // Edit form state

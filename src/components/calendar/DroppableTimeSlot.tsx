@@ -3,7 +3,6 @@
  * Provides 15-minute precision drop targets for event placement.
  */
 
-import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
 
@@ -17,23 +16,23 @@ interface DroppableTimeSlotProps {
 }
 
 // Get position class based on minute value
-const getPositionClass = (minute: 0 | 15 | 30 | 45): string => {
+function getPositionClass(minute: 0 | 15 | 30 | 45): string {
   switch (minute) {
     case 0: return 'top-0';
     case 15: return 'top-1/4';
     case 30: return 'top-1/2';
     case 45: return 'top-3/4';
   }
-};
+}
 
-export const DroppableTimeSlot: React.FC<DroppableTimeSlotProps> = ({
+export function DroppableTimeSlot({
   date,
   hour,
   minute,
   children,
   onClick,
   className,
-}) => {
+}: DroppableTimeSlotProps) {
   const slotId = `slot-${date.toISOString().split('T')[0]}-${hour}-${minute}`;
   
   const { setNodeRef, isOver } = useDroppable({

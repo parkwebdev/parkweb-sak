@@ -57,6 +57,14 @@ interface ContactFormProps {
  * @param props - Component props
  * @returns Form element with input fields and submit button
  */
+/**
+ * Lead capture contact form component.
+ * 
+ * NOTE: Hardcoded hex colors (#FFFFFF, #000000) are intentional.
+ * The widget renders in an isolated iframe without access to the parent
+ * document's CSS variables. Using hex ensures consistent button styling
+ * regardless of the host page's theme configuration.
+ */
 export const ContactForm = ({
   agentId,
   primaryColor,
@@ -70,7 +78,7 @@ export const ContactForm = ({
   const [checkboxValues, setCheckboxValues] = useState<Record<string, boolean>>({});
   const systemTheme = useSystemTheme();
 
-  // Theme-aware colors: white in dark mode, primaryColor in light mode
+  // Theme-aware colors (hex intentional for iframe isolation - see component JSDoc)
   const buttonBgColor = systemTheme === 'dark' ? '#FFFFFF' : primaryColor;
   const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

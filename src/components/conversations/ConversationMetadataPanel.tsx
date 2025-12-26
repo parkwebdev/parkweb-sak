@@ -90,7 +90,7 @@ type Conversation = Tables<'conversations'> & {
 };
 
 // Channel icon component
-const ChannelIcon: React.FC<{ channel: string; className?: string }> = ({ channel, className = "h-4 w-4" }) => {
+function ChannelIcon({ channel, className = "h-4 w-4" }: { channel: string; className?: string }) {
   switch (channel) {
     case 'facebook':
       return (
@@ -148,12 +148,12 @@ const PRESET_TAGS = [
   'Technical', 'Sales', 'Support', 'Urgent', 'Resolved'
 ];
 
-export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps> = ({
+export function ConversationMetadataPanel({
   conversation,
   onUpdateMetadata,
   isCollapsed = false,
   onToggleCollapse,
-}) => {
+}: ConversationMetadataPanelProps) {
   const metadata = (conversation.metadata || {}) as ConversationMetadata;
   const [newTag, setNewTag] = useState('');
   const [notes, setNotes] = useState(metadata.notes || '');

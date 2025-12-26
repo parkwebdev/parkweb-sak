@@ -33,7 +33,7 @@ interface SettingsProps {
   onMenuClick?: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
+function Settings({ onMenuClick }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [searchParams, setSearchParams] = useSearchParams();
 

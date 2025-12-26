@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, Download01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { isImageFile, formatFileSize } from '@/lib/file-validation';
@@ -12,12 +11,12 @@ interface FileAttachmentProps {
   primaryColor: string;
 }
 
-export const FileAttachment: React.FC<FileAttachmentProps> = ({
+export function FileAttachment({
   file,
   fileUrl,
   onRemove,
   primaryColor,
-}) => {
+}: FileAttachmentProps) {
   const isImage = isImageFile(file.type);
 
   return (
@@ -72,13 +71,13 @@ interface MessageFileAttachmentProps {
   primaryColor: string;
 }
 
-export const MessageFileAttachment: React.FC<MessageFileAttachmentProps> = ({
+export function MessageFileAttachment({
   fileName,
   fileUrl,
   fileType,
   fileSize,
   primaryColor,
-}) => {
+}: MessageFileAttachmentProps) {
   const isImage = isImageFile(fileType);
 
   if (isImage) {

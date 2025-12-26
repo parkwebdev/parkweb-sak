@@ -77,7 +77,7 @@ interface SidebarProps {
  * // Mobile with close button
  * <Sidebar onClose={() => setMobileMenuOpen(false)} />
  */
-const SidebarComponent: React.FC<SidebarProps> = ({ onClose }) => {
+function SidebarComponent({ onClose }: SidebarProps) {
   const location = useLocation();
   const { isCollapsed, setCollapsed } = useSidebar();
   const { conversations } = useConversations();
