@@ -429,12 +429,21 @@ const Analytics: React.FC = () => {
   return (
     <main className="flex-1 bg-muted/30 h-screen overflow-auto">
       <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Track performance and insights across your organization
-          </p>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        {/* Header with Tabs */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Analytics</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Track performance and insights across your organization
+            </p>
+          </div>
+          <TabsList>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="traffic">Traffic</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+          </TabsList>
         </div>
 
       {/* Unified Toolbar */}
@@ -453,18 +462,7 @@ const Analytics: React.FC = () => {
       onMockModeChange={setMockMode}
       onRegenerateMockData={regenerateMockData}
       onRefresh={refetch}
-        onExportCSV={handleExportCSV}
-        onExportPDF={handleExportPDF}
       />
-
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="traffic">Traffic</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="schedule">Schedule</TabsTrigger>
-        </TabsList>
 
         {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-6 mt-6">

@@ -13,11 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Calendar, FilterLines, Download01, RefreshCcw01, Beaker02 } from '@untitledui/icons';
+import { Calendar, FilterLines, RefreshCcw01, Beaker02 } from '@untitledui/icons';
 import { DateRangePicker } from './DateRangePicker';
 import { ComparisonPeriodSelector } from './ComparisonPeriodSelector';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PdfIcon, CsvIcon } from './ExportIcons';
 import { format } from 'date-fns';
 import { useLeadStages } from '@/hooks/useLeadStages';
 
@@ -39,8 +37,6 @@ interface AnalyticsToolbarProps {
   filters: AnalyticsFilters;
   onFiltersChange: (filters: AnalyticsFilters) => void;
   onRefresh: () => void;
-  onExportCSV: () => void;
-  onExportPDF: () => void;
   /** Mock data mode toggle (dev only) */
   mockMode?: boolean;
   onMockModeChange?: (enabled: boolean) => void;
@@ -59,8 +55,6 @@ export const AnalyticsToolbar = ({
   filters,
   onFiltersChange,
   onRefresh,
-  onExportCSV,
-  onExportPDF,
   mockMode,
   onMockModeChange,
   onRegenerateMockData,
@@ -233,25 +227,6 @@ export const AnalyticsToolbar = ({
         <Button variant="ghost" size="sm" onClick={onRefresh} aria-label="Refresh analytics">
           <RefreshCcw01 className="h-4 w-4" />
         </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Download01 className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onExportCSV}>
-              <CsvIcon className="h-4 w-4 mr-2" />
-              Export as CSV
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onExportPDF}>
-              <PdfIcon className="h-4 w-4 mr-2" />
-              Export as PDF
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </div>
   );
