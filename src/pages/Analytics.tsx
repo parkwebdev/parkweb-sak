@@ -38,6 +38,7 @@ import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
 import { PageVisitHeatmap } from '@/components/analytics/PageVisitHeatmap';
 import { ActiveVisitorsCard } from '@/components/analytics/ActiveVisitorsCard';
+import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
 import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
@@ -191,6 +192,7 @@ const Analytics: React.FC = () => {
     trafficSources: realTrafficSources,
     landingPages: realLandingPages,
     pageVisits: realPageVisits,
+    locationData: realLocationData,
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
 
@@ -212,6 +214,7 @@ const Analytics: React.FC = () => {
   const trafficSources = mockMode && mockData ? mockData.trafficSources : realTrafficSources;
   const landingPages = mockMode && mockData ? mockData.landingPages : realLandingPages;
   const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
+  const locationData = realLocationData; // Location data doesn't have mock version yet
 
 
   // Calculate KPIs
@@ -662,6 +665,12 @@ const Analytics: React.FC = () => {
                     <PageVisitHeatmap data={pageVisits} loading={trafficLoading} />
                   </AnimatedItem>
                 </AnimatedList>
+              </div>
+
+              {/* Geography Section */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Geography</h3>
+                <VisitorLocationMap data={locationData} loading={trafficLoading} />
               </div>
               
               {/* Top Pages Section */}
