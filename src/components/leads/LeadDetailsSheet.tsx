@@ -171,10 +171,11 @@ export const LeadDetailsSheet = ({
         (payload) => {
           // Update local cache with new metadata
           if (payload.new) {
-            queryClient.setQueryData(['conversation-for-lead', lead.conversation_id], (old: any) => ({
-              ...old,
-              ...payload.new,
-            }));
+            queryClient.setQueryData(
+              ['conversation-for-lead', lead.conversation_id],
+              (old: { id: string; metadata: ConversationMetadata; created_at: string; channel: string | null } | null) => 
+                old ? { ...old, ...payload.new } : null
+            );
           }
         }
       )

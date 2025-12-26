@@ -515,6 +515,32 @@ Records of human takeover events.
 
 ### Lead Management
 
+#### `lead_stages`
+Custom pipeline stages for lead management (kanban columns).
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `user_id` | uuid | No | - | Owner's user ID |
+| `name` | text | No | - | Stage display name |
+| `color` | text | No | `'#3b82f6'` | Hex color for badge |
+| `order_index` | integer | No | `0` | Display order (0-based) |
+| `is_default` | boolean | Yes | `false` | Default stage for new leads |
+| `created_at` | timestamptz | Yes | `now()` | Creation timestamp |
+| `updated_at` | timestamptz | Yes | `now()` | Last update timestamp |
+
+**Default Stages** (auto-seeded via `seed_default_lead_stages` RPC):
+1. New (blue, is_default=true)
+2. Contacted (yellow)
+3. Qualified (green)
+4. Converted (purple)
+
+**RLS Policies:**
+- Users can create their own lead stages (`auth.uid() = user_id`)
+- Users can view/update/delete accessible lead stages (`has_account_access(user_id)`)
+
+---
+
 #### `leads`
 Captured leads from widget contact forms.
 
@@ -523,14 +549,28 @@ Captured leads from widget contact forms.
 | `id` | uuid | No | `gen_random_uuid()` | Primary key |
 | `user_id` | uuid | No | - | Agent owner's user ID |
 | `conversation_id` | uuid | Yes | - | FK to conversations |
+| `stage_id` | uuid | Yes | - | FK to lead_stages |
 | `name` | text | Yes | - | Lead name |
 | `email` | text | Yes | - | Lead email |
 | `phone` | text | Yes | - | Lead phone |
 | `company` | text | Yes | - | Lead company |
-| `status` | lead_status | No | `'new'` | Pipeline status |
+| `status` | lead_status | No | `'new'` | Legacy pipeline status |
+| `kanban_order` | integer | Yes | - | Order within stage column |
 | `data` | jsonb | Yes | `'{}'` | Custom field data |
 | `created_at` | timestamptz | No | `now()` | Creation timestamp |
 | `updated_at` | timestamptz | No | `now()` | Last update timestamp |
+
+**Data Structure** (custom form fields stored in `data`):
+```typescript
+{
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  message?: string;
+  consent?: boolean;
+  // ... any custom fields from contact form
+}
+```
 
 **RLS Policies:**
 - Public can create leads via widget
