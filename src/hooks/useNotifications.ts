@@ -103,7 +103,7 @@ export const useNotifications = () => {
       }
 
       return { data: notification, error: null };
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in createNotification:', error);
       return { error };
     }

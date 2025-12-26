@@ -93,7 +93,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
 
       setTestResult(result);
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error testing WordPress homes endpoint', error);
       const result: TestResult = {
         success: false,
@@ -158,7 +158,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
         total: data.total,
         errors: data.errors,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error syncing WordPress homes', error);
       const message = error instanceof Error ? error.message : 'Failed to sync homes';
       toast.error('Sync failed', { description: message });

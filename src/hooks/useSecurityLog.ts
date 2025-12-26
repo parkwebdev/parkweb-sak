@@ -1,28 +1,67 @@
+/**
+ * useSecurityLog Hook
+ * 
+ * Provides methods for logging security-related events.
+ * Uses database RPC function to securely record actions.
+ * Provides type-specific logging helpers for common operations.
+ * 
+ * @module hooks/useSecurityLog
+ * 
+ * @example
+ * ```tsx
+ * const { logSecurityEvent, logAuthEvent, logDataAccess } = useSecurityLog();
+ * 
+ * // Log a custom event
+ * logSecurityEvent({
+ *   action: 'api_key_created',
+ *   resourceType: 'api_key',
+ *   resourceId: keyId,
+ *   success: true,
+ *   details: { keyName: 'Production Key' }
+ * });
+ * ```
+ */
+
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+
+/** Details for security event logging */
+export interface SecurityEventDetails {
+  /** Old role value (for role changes) */
+  oldRole?: string;
+  /** New role value (for role changes) */
+  newRole?: string;
+  /** IP address of the request */
+  ipAddress?: string;
+  /** User agent string */
+  userAgent?: string;
+  /** Additional context information */
+  context?: string;
+  /** Error message if operation failed */
+  error?: string;
+  /** Allow additional properties for flexibility */
+  [key: string]: string | number | boolean | undefined;
+}
 
 interface SecurityLogParams {
   action: string;
   resourceType: string;
   resourceId?: string;
   success?: boolean;
-  details?: Record<string, any>;
+  details?: SecurityEventDetails;
 }
 
 /**
  * Hook for logging security events.
  * Uses database RPC function to securely record actions.
- * Provides type-specific logging helpers for common operations.
  * 
  * @returns {Object} Security logging methods
  * @returns {Function} logSecurityEvent - Generic security event logger
- * @returns {Function} logAgentEvent - Log agent-related events
- * @returns {Function} logConversationEvent - Log conversation-related events
- * @returns {Function} logLeadEvent - Log lead-related events
- * @returns {Function} logTeamEvent - Log team-related events
- * @returns {Function} logSettingsEvent - Log settings-related events
+ * @returns {Function} logAuthEvent - Log authentication events
+ * @returns {Function} logDataAccess - Log data access events
+ * @returns {Function} logRoleChange - Log role change events
+ * @returns {Function} logSuspiciousActivity - Log suspicious activity
  */
 export const useSecurityLog = () => {
   const { user } = useAuth();
@@ -42,12 +81,16 @@ export const useSecurityLog = () => {
         logger.error('Failed to log security event:', error);
         // Don't show error to user as this is background logging
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Security logging error:', error);
     }
   };
 
-  const logAuthEvent = (action: 'login' | 'logout' | 'signup' | 'password_change', success: boolean, details?: Record<string, any>) => {
+  const logAuthEvent = (
+    action: 'login' | 'logout' | 'signup' | 'password_change',
+    success: boolean,
+    details?: SecurityEventDetails
+  ) => {
     logSecurityEvent({
       action,
       resourceType: 'auth',
@@ -56,7 +99,12 @@ export const useSecurityLog = () => {
     });
   };
 
-  const logDataAccess = (resourceType: string, resourceId: string, action: 'read' | 'create' | 'update' | 'delete', success: boolean = true) => {
+  const logDataAccess = (
+    resourceType: string,
+    resourceId: string,
+    action: 'read' | 'create' | 'update' | 'delete',
+    success: boolean = true
+  ) => {
     logSecurityEvent({
       action: `data_${action}`,
       resourceType,
@@ -65,7 +113,12 @@ export const useSecurityLog = () => {
     });
   };
 
-  const logRoleChange = (targetUserId: string, oldRole: string, newRole: string, success: boolean = true) => {
+  const logRoleChange = (
+    targetUserId: string,
+    oldRole: string,
+    newRole: string,
+    success: boolean = true
+  ) => {
     logSecurityEvent({
       action: 'role_change',
       resourceType: 'user_role',
@@ -75,7 +128,7 @@ export const useSecurityLog = () => {
     });
   };
 
-  const logSuspiciousActivity = (action: string, details: Record<string, any>) => {
+  const logSuspiciousActivity = (action: string, details: SecurityEventDetails) => {
     logSecurityEvent({
       action: `suspicious_${action}`,
       resourceType: 'security',

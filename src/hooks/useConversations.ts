@@ -7,7 +7,7 @@ import { logger } from '@/utils/logger';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, Json } from '@/integrations/supabase/types';
 import type { NotificationPreferencesData, ConversationMetadata } from '@/types/metadata';
 
 type Conversation = Tables<'conversations'> & {
@@ -152,7 +152,7 @@ export const useConversations = () => {
 
       if (error) throw error;
       return data || [];
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error fetching messages:', error);
       toast.error('Failed to load messages');
       return [];
@@ -175,7 +175,7 @@ export const useConversations = () => {
       
       // Invalidate cache to trigger refetch
       await queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error updating conversation:', error);
       toast.error('Failed to update conversation');
     }
@@ -183,7 +183,7 @@ export const useConversations = () => {
 
   const updateConversationMetadata = async (
     conversationId: string,
-    metadata: Record<string, any>,
+    metadata: Partial<ConversationMetadata> | Record<string, unknown>,
     options?: { silent?: boolean }
   ) => {
     const previousConversations = queryClient.getQueryData<Conversation[]>(queryKeys.conversations.lists());
@@ -202,7 +202,7 @@ export const useConversations = () => {
       const mergedMetadata = {
         ...currentMetadata,
         ...metadata,
-      };
+      } as Record<string, unknown>;
 
       // Optimistically update cache
       queryClient.setQueryData<Conversation[]>(queryKeys.conversations.lists(), (oldConversations) => {
@@ -216,7 +216,7 @@ export const useConversations = () => {
 
       const { error } = await supabase
         .from('conversations')
-        .update({ metadata: mergedMetadata })
+        .update({ metadata: mergedMetadata as Json })
         .eq('id', conversationId);
 
       if (error) throw error;
@@ -224,7 +224,7 @@ export const useConversations = () => {
       if (!options?.silent) {
         toast.success('Updated successfully');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       // Revert on error
       if (previousConversations) {
         queryClient.setQueryData(queryKeys.conversations.lists(), previousConversations);
@@ -270,7 +270,7 @@ export const useConversations = () => {
           read: false
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error taking over conversation:', error);
       toast.error('Failed to take over conversation');
     }
@@ -298,7 +298,7 @@ export const useConversations = () => {
       }
 
       await updateConversationStatus(conversationId, 'active');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error returning to AI:', error);
       toast.error('Failed to return to AI');
     }
@@ -308,7 +308,7 @@ export const useConversations = () => {
     try {
       await updateConversationStatus(conversationId, 'human_takeover');
       toast.success('Conversation re-opened - you can now respond');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error re-opening conversation:', error);
       toast.error('Failed to re-open conversation');
     }
@@ -366,7 +366,7 @@ export const useConversations = () => {
       }
 
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error sending human message:', error);
       toast.error('Failed to send message');
       return false;

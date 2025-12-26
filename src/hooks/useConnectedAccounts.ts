@@ -112,7 +112,7 @@ export const useConnectedAccounts = (locationId?: string, agentId?: string) => {
       toast.success('Calendar disconnected');
       await invalidateAccounts();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error disconnecting account', error);
       toast.error('Failed to disconnect calendar', {
         description: getErrorMessage(error),
@@ -143,7 +143,7 @@ export const useConnectedAccounts = (locationId?: string, agentId?: string) => {
       if (error) throw error;
       await invalidateAccounts();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error refreshing tokens', error);
       return false;
     }

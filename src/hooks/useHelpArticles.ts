@@ -190,7 +190,7 @@ export const useHelpArticles = (agentId: string) => {
       }));
 
       return newArticle.id;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error adding article', error);
       throw error;
     }
@@ -268,7 +268,7 @@ export const useHelpArticles = (agentId: string) => {
           a.id === id ? { ...a, ...updates } : a
         ),
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error updating article', error);
       throw error;
     }
@@ -314,7 +314,7 @@ export const useHelpArticles = (agentId: string) => {
         ...prev,
         articles: prev.articles.filter(a => a.id !== id),
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error deleting article', error);
       throw error;
     }
@@ -362,7 +362,7 @@ export const useHelpArticles = (agentId: string) => {
         ...prev,
         articles: reorderedArticles,
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error reordering articles', error);
       throw error;
     }
@@ -399,7 +399,7 @@ export const useHelpArticles = (agentId: string) => {
       }));
       
       return data.id;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error adding category', error);
       throw error;
     }
@@ -423,7 +423,7 @@ export const useHelpArticles = (agentId: string) => {
           a.category === oldName ? { ...a, category: newName } : a
         ),
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error updating category', error);
       throw error;
     }
@@ -482,7 +482,7 @@ export const useHelpArticles = (agentId: string) => {
         ...prev,
         categories: prev.categories.filter(c => c.name !== name),
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error removing category', error);
       throw error;
     }
@@ -506,7 +506,7 @@ export const useHelpArticles = (agentId: string) => {
           a.id === articleId ? { ...a, category: targetCategoryName } : a
         ),
       }));
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error moving article', error);
       throw error;
     }
@@ -618,7 +618,7 @@ export const useHelpArticles = (agentId: string) => {
       }
 
       return insertedArticles.length;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error bulk importing articles', error);
       throw error;
     }
