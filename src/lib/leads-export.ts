@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
+import { logger } from '@/utils/logger';
 
 type Lead = Tables<'leads'>;
 
@@ -240,7 +241,7 @@ export function exportLeads(
     
     return { count: leadsToExport.length, success: true };
   } catch (error) {
-    console.error('Export failed:', error);
+    logger.error('Export failed:', error);
     return { count: 0, success: false };
   }
 }

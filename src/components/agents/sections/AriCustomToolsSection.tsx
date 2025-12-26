@@ -72,7 +72,7 @@ export const AriCustomToolsSection: React.FC<AriCustomToolsSectionProps> = ({ ag
     fetchTools();
   }, [agentId]);
 
-  const addDebugLog = (level: DebugLog['level'], message: string, details?: any) => {
+  const addDebugLog = (level: DebugLog['level'], message: string, details?: unknown) => {
     if (!debugMode) return;
     setDebugLogs(prev => [...prev, {
       id: crypto.randomUUID(),

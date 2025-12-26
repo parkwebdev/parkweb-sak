@@ -1,21 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/lib/toast';
-import { logger } from '@/utils/logger';
-
 /**
  * Hook for managing agent-level API keys with rate limiting.
  * API keys are hashed before storage and validated server-side.
+ * Uses React Query for caching with real-time updates.
  * 
- * @param {string} agentId - Agent ID to scope API keys
- * @returns {Object} API key management methods and state
- * @returns {AgentApiKey[]} apiKeys - List of API keys (without secret)
- * @returns {boolean} loading - Loading state
- * @returns {Function} createApiKey - Create a new API key (returns secret once)
- * @returns {Function} updateApiKey - Update key settings (name, rate limits)
- * @returns {Function} revokeApiKey - Revoke an API key
- * @returns {Function} refetch - Manually refresh API keys list
+ * @module hooks/useAgentApiKeys
  */
+
+import { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
 
 interface AgentApiKey {
   id: string;
@@ -31,7 +28,9 @@ interface AgentApiKey {
   revoked_at: string | null;
 }
 
-// Generate a random API key with prefix
+/**
+ * Generate a random API key with prefix
+ */
 function generateApiKey(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let key = 'cpk_'; // ChatPad Key prefix
@@ -41,7 +40,9 @@ function generateApiKey(): string {
   return key;
 }
 
-// Hash API key using SubtleCrypto
+/**
+ * Hash API key using SubtleCrypto
+ */
 async function hashApiKey(key: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(key);
@@ -50,16 +51,26 @@ async function hashApiKey(key: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * Hook for managing agent-level API keys with rate limiting.
+ * 
+ * @param agentId - Agent ID to scope API keys
+ * @returns API key management methods and state
+ */
 export const useAgentApiKeys = (agentId: string) => {
-  const [apiKeys, setApiKeys] = useState<AgentApiKey[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
 
-  const fetchApiKeys = useCallback(async () => {
-    if (!agentId) return;
-    
-    setLoading(true);
-    try {
+  // Fetch API keys with React Query and real-time updates
+  const { 
+    data: apiKeys = [], 
+    isLoading: loading,
+    refetch 
+  } = useSupabaseQuery<AgentApiKey[]>({
+    queryKey: queryKeys.agentApiKeys.list(agentId),
+    queryFn: async () => {
+      if (!agentId) return [];
+      
       const { data, error } = await supabase
         .from('agent_api_keys')
         .select('*')
@@ -68,20 +79,21 @@ export const useAgentApiKeys = (agentId: string) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setApiKeys((data as AgentApiKey[]) || []);
-    } catch (error) {
-      logger.error('Error fetching API keys:', error);
-      toast.error('Failed to load API keys');
-    } finally {
-      setLoading(false);
-    }
-  }, [agentId]);
+      return (data as AgentApiKey[]) || [];
+    },
+    realtime: {
+      table: 'agent_api_keys',
+      filter: `agent_id=eq.${agentId}`,
+    },
+    enabled: !!agentId,
+    staleTime: 30000, // 30 seconds
+  });
 
-  useEffect(() => {
-    fetchApiKeys();
-  }, [fetchApiKeys]);
+  const invalidateKeys = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.agentApiKeys.list(agentId) });
+  }, [queryClient, agentId]);
 
-  const createApiKey = async (name: string = 'Default'): Promise<string | null> => {
+  const createApiKey = useCallback(async (name: string = 'Default'): Promise<string | null> => {
     setGenerating(true);
     try {
       // Generate a new API key
@@ -89,20 +101,18 @@ export const useAgentApiKeys = (agentId: string) => {
       const keyHash = await hashApiKey(rawKey);
       const keyPrefix = rawKey.substring(0, 12) + '...';
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('agent_api_keys')
         .insert({
           agent_id: agentId,
           key_hash: keyHash,
           key_prefix: keyPrefix,
           name,
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      setApiKeys(prev => [data as AgentApiKey, ...prev]);
+      invalidateKeys();
       toast.success('API key created. Copy it now - you won\'t see it again!');
       
       // Return the raw key (only time it's visible)
@@ -114,9 +124,9 @@ export const useAgentApiKeys = (agentId: string) => {
     } finally {
       setGenerating(false);
     }
-  };
+  }, [agentId, invalidateKeys]);
 
-  const revokeApiKey = async (keyId: string) => {
+  const revokeApiKey = useCallback(async (keyId: string) => {
     try {
       const { error } = await supabase
         .from('agent_api_keys')
@@ -125,15 +135,15 @@ export const useAgentApiKeys = (agentId: string) => {
 
       if (error) throw error;
 
-      setApiKeys(prev => prev.filter(k => k.id !== keyId));
+      invalidateKeys();
       toast.success('API key revoked');
     } catch (error) {
       logger.error('Error revoking API key:', error);
       toast.error('Failed to revoke API key');
     }
-  };
+  }, [invalidateKeys]);
 
-  const updateApiKey = async (keyId: string, updates: { 
+  const updateApiKey = useCallback(async (keyId: string, updates: { 
     name?: string;
     requests_per_minute?: number; 
     requests_per_day?: number;
@@ -146,13 +156,13 @@ export const useAgentApiKeys = (agentId: string) => {
 
       if (error) throw error;
 
-      setApiKeys(prev => prev.map(k => k.id === keyId ? { ...k, ...updates } : k));
+      invalidateKeys();
       toast.success('API key updated');
     } catch (error) {
       logger.error('Error updating API key:', error);
       toast.error('Failed to update API key');
     }
-  };
+  }, [invalidateKeys]);
 
   return {
     apiKeys,
@@ -161,6 +171,6 @@ export const useAgentApiKeys = (agentId: string) => {
     createApiKey,
     revokeApiKey,
     updateApiKey,
-    refetch: fetchApiKeys,
+    refetch,
   };
 };
