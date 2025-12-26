@@ -115,7 +115,7 @@ const generateChartData = (dailyCounts: number[]): { value: number }[] => {
 };
 
 
-const Analytics: React.FC = () => {
+function Analytics() {
   const { user } = useAuth();
   const { agentId } = useAgent();
   const [activeTab, setActiveTab] = useState<AnalyticsSection>('dashboard');

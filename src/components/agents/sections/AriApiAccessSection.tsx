@@ -17,7 +17,7 @@ interface AriApiAccessSectionProps {
   agentId: string;
 }
 
-export const AriApiAccessSection: React.FC<AriApiAccessSectionProps> = ({ agentId }) => {
+export function AriApiAccessSection({ agentId }: AriApiAccessSectionProps) {
   const [showUseCasesModal, setShowUseCasesModal] = useState(false);
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
 

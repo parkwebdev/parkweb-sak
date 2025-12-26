@@ -31,12 +31,12 @@ interface SetupChecklistProps {
   onStepAction: (step: OnboardingStep) => void;
 }
 
-export const SetupChecklist: React.FC<SetupChecklistProps> = ({
+export function SetupChecklist({
   steps,
   completedCount,
   totalCount,
   onStepAction,
-}) => {
+}: SetupChecklistProps) {
   const allComplete = completedCount === totalCount;
   const prefersReducedMotion = useReducedMotion();
   const { user } = useAuth();

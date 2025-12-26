@@ -27,7 +27,7 @@ const PROMPT_TIPS = [
   "Mention how to handle edge cases or when to escalate",
 ];
 
-export const AriSystemPromptSection: React.FC<AriSystemPromptSectionProps> = ({ agent, onUpdate }) => {
+export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSectionProps) {
   const [showSaved, setShowSaved] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState(agent.system_prompt);
   const [isHoveringTip, setIsHoveringTip] = useState(false);

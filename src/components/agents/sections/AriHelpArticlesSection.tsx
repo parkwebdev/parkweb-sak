@@ -12,7 +12,7 @@ interface AriHelpArticlesSectionProps {
   userId: string;
 }
 
-export const AriHelpArticlesSection: React.FC<AriHelpArticlesSectionProps> = ({ agentId, userId }) => {
+export function AriHelpArticlesSection({ agentId, userId }: AriHelpArticlesSectionProps) {
   return (
     <div className="min-w-0 w-full">
       <AriSectionHeader

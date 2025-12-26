@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { InviteMemberDialog } from '@/components/team/InviteMemberDialog';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-export const InviteTeamCard: React.FC = () => {
+export function InviteTeamCard() {
   const prefersReducedMotion = useReducedMotion();
 
   const handleInvite = async (email: string): Promise<boolean> => {

@@ -16,23 +16,25 @@ interface ShortcutProps {
   description: string;
 }
 
-const Shortcut: React.FC<ShortcutProps> = ({ keys, description }) => (
-  <div className="flex items-center justify-between gap-2">
-    <span className="text-xs text-muted-foreground">{description}</span>
-    <div className="flex items-center gap-1">
-      {keys.map((key, index) => (
-        <React.Fragment key={key}>
-          <kbd className="px-1.5 py-0.5 text-2xs font-medium bg-muted border border-border rounded text-muted-foreground">
-            {key}
-          </kbd>
-          {index < keys.length - 1 && <span className="text-2xs text-muted-foreground">+</span>}
-        </React.Fragment>
-      ))}
+function Shortcut({ keys, description }: ShortcutProps) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-xs text-muted-foreground">{description}</span>
+      <div className="flex items-center gap-1">
+        {keys.map((key, index) => (
+          <React.Fragment key={key}>
+            <kbd className="px-1.5 py-0.5 text-2xs font-medium bg-muted border border-border rounded text-muted-foreground">
+              {key}
+            </kbd>
+            {index < keys.length - 1 && <span className="text-2xs text-muted-foreground">+</span>}
+          </React.Fragment>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
-export const KeyboardShortcutsCard: React.FC = () => {
+export function KeyboardShortcutsCard() {
   const prefersReducedMotion = useReducedMotion();
 
   const shortcuts = [

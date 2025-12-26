@@ -13,10 +13,10 @@ interface InviteMemberDialogProps {
   trigger?: React.ReactNode;
 }
 
-export const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
+export function InviteMemberDialog({
   onInvite,
   trigger
-}) => {
+}: InviteMemberDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);

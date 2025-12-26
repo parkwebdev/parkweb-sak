@@ -25,7 +25,7 @@ interface StatCardProps {
   index: number;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ icon, count, label, onClick, index }) => {
+function StatCard({ icon, count, label, onClick, index }: StatCardProps) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
@@ -47,7 +47,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, count, label, onClick, index 
   );
 };
 
-export const QuickStatsSummary: React.FC = () => {
+export function QuickStatsSummary() {
   const navigate = useNavigate();
   const { agent } = useAgent();
   const { sources } = useKnowledgeSources();

@@ -421,7 +421,7 @@ const AnnouncementDialog = ({
   );
 };
 
-export const AriAnnouncementsSection: React.FC<AriAnnouncementsSectionProps> = ({ agentId, userId }) => {
+export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSectionProps) {
   const { announcements, loading, addAnnouncement, updateAnnouncement, deleteAnnouncement, reorderAnnouncements } = useAnnouncements(agentId);
   
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);

@@ -31,7 +31,7 @@ interface ProtectedRouteProps {
  *   <DashboardPage />
  * </ProtectedRoute>
  */
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
   const location = useLocation();
   const [loadingComplete, setLoadingComplete] = useState(false);

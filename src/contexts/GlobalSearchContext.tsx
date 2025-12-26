@@ -16,7 +16,7 @@ interface GlobalSearchContextType {
 
 const GlobalSearchContext = createContext<GlobalSearchContextType | undefined>(undefined);
 
-export const GlobalSearchProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function GlobalSearchProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   // Handle Cmd/Ctrl+K keyboard shortcut

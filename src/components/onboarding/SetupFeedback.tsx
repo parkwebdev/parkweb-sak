@@ -28,7 +28,7 @@ interface SetupFeedbackProps {
   hasRated?: boolean;
 }
 
-export const SetupFeedback: React.FC<SetupFeedbackProps> = ({ hasRated = false }) => {
+export function SetupFeedback({ hasRated = false }: SetupFeedbackProps) {
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);

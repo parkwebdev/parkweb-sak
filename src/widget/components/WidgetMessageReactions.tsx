@@ -35,14 +35,14 @@ interface WidgetMessageReactionsProps {
 // Component
 // ============================================================================
 
-export const WidgetMessageReactions: React.FC<WidgetMessageReactionsProps> = ({
+export function WidgetMessageReactions({
   reactions,
   onAddReaction,
   onRemoveReaction,
   primaryColor,
   compact = false,
   isUserMessage = false,
-}) => {
+}: WidgetMessageReactionsProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 

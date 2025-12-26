@@ -36,7 +36,7 @@ const QUICK_REASONS = [
   'Property not ready',
 ];
 
-export const TimeChangeReasonDialog: React.FC<TimeChangeReasonDialogProps> = ({
+export function TimeChangeReasonDialog({
   open,
   onOpenChange,
   event,
@@ -47,7 +47,7 @@ export const TimeChangeReasonDialog: React.FC<TimeChangeReasonDialogProps> = ({
   onConfirm,
   onSkip,
   existingEvents,
-}) => {
+}: TimeChangeReasonDialogProps) {
   const [reason, setReason] = useState('');
 
   const conflictingEvents = useMemo(() => {

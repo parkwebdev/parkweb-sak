@@ -14,12 +14,12 @@ interface AriSectionHeaderProps {
   extra?: React.ReactNode;
 }
 
-export const AriSectionHeader: React.FC<AriSectionHeaderProps> = ({
+export function AriSectionHeader({
   title,
   description,
   showSaved = false,
   extra,
-}) => {
+}: AriSectionHeaderProps) {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between">

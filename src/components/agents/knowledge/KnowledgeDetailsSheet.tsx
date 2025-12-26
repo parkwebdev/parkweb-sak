@@ -81,7 +81,7 @@ const statusIcons: Record<string, React.ComponentType<{ className?: string }>> =
   error: XCircle,
 };
 
-export const KnowledgeDetailsSheet: React.FC<KnowledgeDetailsSheetProps> = ({
+export function KnowledgeDetailsSheet({
   source,
   open,
   onOpenChange,
@@ -96,7 +96,7 @@ export const KnowledgeDetailsSheet: React.FC<KnowledgeDetailsSheetProps> = ({
   propertyCount,
   chunkCount,
   locationName,
-}) => {
+}: KnowledgeDetailsSheetProps) {
   // Defer content mounting until after sheet animation starts
   const [contentReady, setContentReady] = useState(false);
 

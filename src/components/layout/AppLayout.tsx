@@ -14,7 +14,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
   

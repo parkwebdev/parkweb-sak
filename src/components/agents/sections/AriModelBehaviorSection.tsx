@@ -363,7 +363,7 @@ const calculateEstimatedCost = (model: string, maxTokens: number) => {
   };
 };
 
-export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = ({ agent, onUpdate }) => {
+export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSectionProps) {
   const [showSaved, setShowSaved] = useState(false);
   const [activeSlider, setActiveSlider] = useState<string | null>(null);
   const saveTimerRef = useRef<NodeJS.Timeout>();

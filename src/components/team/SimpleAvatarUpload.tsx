@@ -15,13 +15,13 @@ interface SimpleAvatarUploadProps {
   onAvatarChange: (newUrl: string) => void;
 }
 
-export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
+export function SimpleAvatarUpload({
   currentAvatarUrl,
   displayName,
   email,
   memberId,
   onAvatarChange,
-}) => {
+}: SimpleAvatarUploadProps) {
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

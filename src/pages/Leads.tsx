@@ -47,7 +47,7 @@ interface LeadsProps {
   onMenuClick?: () => void;
 }
 
-const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
+function Leads({ onMenuClick }: LeadsProps) {
   const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const { stages } = useLeadStages();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);

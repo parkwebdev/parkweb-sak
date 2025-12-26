@@ -45,12 +45,12 @@ interface AddKnowledgeDialogProps {
   userId: string;
 }
 
-export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
+export function AddKnowledgeDialog({
   open,
   onOpenChange,
   agentId,
   userId,
-}) => {
+}: AddKnowledgeDialogProps) {
   const { uploadDocument, addUrlSource, addTextSource, addSitemapSource, addPropertyListingSource } = useKnowledgeSources(agentId);
   const { locations } = useLocations(agentId);
   const { canAddKnowledgeSource, showLimitWarning } = usePlanLimits();

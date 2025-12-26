@@ -47,10 +47,10 @@ interface BusinessHoursEditorProps {
   onChange: (hours: BusinessHours) => void;
 }
 
-export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
+export function BusinessHoursEditor({
   value,
   onChange,
-}) => {
+}: BusinessHoursEditorProps) {
   const getDay = (dayKey: string): DayHours => {
     return value[dayKey as keyof BusinessHours] || { isOpen: false };
   };
