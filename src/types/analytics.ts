@@ -133,14 +133,17 @@ export interface FeedbackItem {
   /** Feedback record UUID */
   id: string;
   /** Star rating (1-5) */
-  rating: number;
+  rating: RatingValue;
   /** Optional text feedback from user */
   feedback: string | null;
   /** Feedback submission timestamp */
   createdAt: string;
   /** Trigger type that prompted the rating */
-  triggerType: string;
+  triggerType: TriggerType;
 }
+
+/** Valid trigger types for conversation ratings */
+export type TriggerType = 'conversation_end' | 'manual' | 'inactivity' | 'escalation';
 
 /**
  * Complete satisfaction analytics stats.
