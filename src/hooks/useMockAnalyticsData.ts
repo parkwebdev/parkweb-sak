@@ -25,6 +25,7 @@ import {
   generatePageVisits,
   generateUsageMetrics,
   generateAgentPerformance,
+  generateLocationData,
   type MockConversationStat,
   type MockLeadStat,
   type MockTrafficSource,
@@ -32,6 +33,7 @@ import {
   type MockPageVisit,
   type MockUsageMetric,
   type MockAgentPerformance,
+  type MockLocationData,
 } from '@/lib/mock-analytics-data';
 import type {
   BookingStats,
@@ -67,6 +69,9 @@ export interface MockAnalyticsData {
   // Usage & performance
   usageMetrics: MockUsageMetric[];
   agentPerformance: MockAgentPerformance[];
+  
+  // Location data for geography map
+  locationData: MockLocationData[];
 }
 
 export interface UseMockAnalyticsDataReturn {
@@ -137,6 +142,9 @@ export const useMockAnalyticsData = (): UseMockAnalyticsDataReturn => {
       // Usage
       usageMetrics: generateUsageMetrics(),
       agentPerformance: generateAgentPerformance(),
+      
+      // Location
+      locationData: generateLocationData(),
     };
   }, [enabled, refreshKey]);
 

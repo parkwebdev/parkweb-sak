@@ -462,3 +462,29 @@ export const generateAgentPerformance = (): MockAgentPerformance[] => [
     conversationsHandled: randomBetween(800, 1500),
   },
 ];
+
+// =============================================================================
+// LOCATION DATA GENERATOR (for Geography Map)
+// =============================================================================
+
+export interface MockLocationData {
+  country: string;
+  city?: string;
+  lat: number;
+  lng: number;
+  count: number;
+}
+
+/** Generate mock visitor location data for geography map */
+export const generateLocationData = (): MockLocationData[] => [
+  { country: 'United States', city: 'New York', lat: 40.7128, lng: -74.0060, count: randomBetween(150, 350) },
+  { country: 'United Kingdom', city: 'London', lat: 51.5074, lng: -0.1278, count: randomBetween(80, 180) },
+  { country: 'Germany', city: 'Berlin', lat: 52.5200, lng: 13.4050, count: randomBetween(60, 140) },
+  { country: 'Canada', city: 'Toronto', lat: 43.6532, lng: -79.3832, count: randomBetween(50, 120) },
+  { country: 'Australia', city: 'Sydney', lat: -33.8688, lng: 151.2093, count: randomBetween(40, 100) },
+  { country: 'France', city: 'Paris', lat: 48.8566, lng: 2.3522, count: randomBetween(45, 110) },
+  { country: 'Japan', city: 'Tokyo', lat: 35.6762, lng: 139.6503, count: randomBetween(30, 80) },
+  { country: 'Brazil', city: 'São Paulo', lat: -23.5505, lng: -46.6333, count: randomBetween(25, 70) },
+  { country: 'India', city: 'Mumbai', lat: 19.0760, lng: 72.8777, count: randomBetween(35, 90) },
+  { country: 'Netherlands', city: 'Amsterdam', lat: 52.3676, lng: 4.9041, count: randomBetween(20, 60) },
+];
