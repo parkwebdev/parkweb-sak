@@ -163,11 +163,24 @@ Semantic tokens for status badges with light/dark mode support:
 
 | Token | Usage | Example |
 |-------|-------|---------|
-| `--status-active` | Active items, online status | `bg-status-active/10 text-status-active-foreground` |
+| `--status-active` | Active items, online status, success indicators | `bg-status-active/10 text-status-active-foreground` |
 | `--status-inactive` | Inactive items, offline status | `bg-status-inactive/10 text-status-inactive-foreground` |
 | `--status-published` | Published content | `bg-status-published/10 text-status-published-foreground` |
 | `--status-draft` | Draft content | `bg-status-draft/10 text-status-draft-foreground` |
 | `--status-paused` | Paused states | `bg-status-paused/10 text-status-paused-foreground` |
+
+### Accent Colors
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--accent-purple` | Light: `271 91% 65%` / Dark: `271 81% 70%` | AI/Agent-related icons, notifications |
+
+**Usage:**
+```tsx
+// ✅ AI-related icons
+<Zap className="text-accent-purple" />
+<Bot className="text-accent-purple" />
+```
 
 **Usage Pattern:**
 ```tsx

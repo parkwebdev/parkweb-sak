@@ -444,9 +444,9 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
                       <tr key={index} className={cn(!article.isValid && "bg-destructive/5")}>
                         <td className="p-2">
                           {article.isValid ? (
-                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <CheckCircle className="w-4 h-4 text-status-active" />
                           ) : (
-                            <AlertCircle className="w-4 h-4 text-amber-500" />
+                            <AlertCircle className="w-4 h-4 text-warning" />
                           )}
                         </td>
                         <td className="p-2">
