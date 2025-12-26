@@ -75,7 +75,6 @@ export const MetricCardWithChart = React.memo(function MetricCardWithChart({
       variants={prefersReducedMotion ? reducedVariants : cardVariants}
       initial="hidden"
       animate="visible"
-      whileHover={prefersReducedMotion ? undefined : { y: -2, transition: springs.micro }}
     >
       {/* Subtitle + Description in outer wrapper */}
       <div className="px-4 pt-3 pb-2 md:px-5">
