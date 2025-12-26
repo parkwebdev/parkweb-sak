@@ -520,7 +520,7 @@ export const useKnowledgeSources = (agentId?: string) => {
             
             if (error) throw error;
             completed++;
-          } catch (error) {
+          } catch (error: unknown) {
             logger.error(`Failed to retrain source ${source.id}`, error);
             failed++;
           }

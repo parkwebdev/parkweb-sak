@@ -123,7 +123,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
       
       return null;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to discover endpoints', error);
       return null;
     } finally {
@@ -155,7 +155,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       logger.info('WordPress URL saved');
       onSyncComplete?.();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to save WordPress URL', error);
       return false;
     }
@@ -202,7 +202,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
       
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       const result: TestResult = {
         success: false,
         message: getErrorMessage(error),
@@ -238,7 +238,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
 
       toast.success('WordPress configuration saved');
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to save configuration', {
         description: getErrorMessage(error),
       });
@@ -297,7 +297,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
 
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to import communities', {
         description: getErrorMessage(error),
       });
@@ -346,7 +346,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       
       onSyncComplete?.();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       // Revert on error
       if (type === 'community') {
         setLocalCommunityEndpoint(null);
@@ -399,7 +399,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       
       onSyncComplete?.();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       // Revert on error
       if (type === 'community') {
         setLocalCommunitySyncInterval(null);
@@ -440,7 +440,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       });
       onSyncComplete?.();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error('Failed to disconnect', {
         description: getErrorMessage(error),
       });

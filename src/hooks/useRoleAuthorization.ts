@@ -58,7 +58,7 @@ export const useRoleAuthorization = (): RoleAuthData => {
           setRole(data.role);
           setPermissions(data.permissions || []);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Error in fetchUserRole', error);
         setRole('member');
         setPermissions([]);

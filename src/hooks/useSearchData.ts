@@ -326,7 +326,7 @@ export const useSearchData = () => {
       results.push(...settingsItems);
 
       setSearchResults(results);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error fetching search data:', error);
     } finally {
       setLoading(false);
