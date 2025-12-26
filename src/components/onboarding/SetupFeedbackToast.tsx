@@ -56,7 +56,7 @@ export function SetupFeedbackToast({ hasRated = false }: SetupFeedbackToastProps
 
       // Show follow-up textarea instead of immediately dismissing
       setShowFollowUp(true);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to save rating:', error);
       setSelectedRating(null);
     } finally {
@@ -78,7 +78,7 @@ export function SetupFeedbackToast({ hasRated = false }: SetupFeedbackToastProps
       
       setIsSubmitted(true);
       setTimeout(() => setIsDismissed(true), 2000);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to save feedback:', error);
     } finally {
       setIsSubmitting(false);

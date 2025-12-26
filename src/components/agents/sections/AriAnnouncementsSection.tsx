@@ -246,7 +246,7 @@ const AnnouncementDialog = ({
       
       onSave({ ...formData, image_url: finalImageUrl });
       onClose();
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error saving announcement:', error);
       toast.error('Failed to save announcement');
     } finally {

@@ -137,7 +137,7 @@ export const RichTextEditor = ({
       try {
         const imageUrl = await uploadArticleImage(file, userId, agentId);
         editor.chain().focus().setImage({ src: imageUrl }).run();
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Failed to upload image:', error);
       } finally {
         setIsUploading(false);

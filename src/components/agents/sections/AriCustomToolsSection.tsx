@@ -93,7 +93,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
 
       if (error) throw error;
       setTools(data || []);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error fetching tools:', error);
       toast.error('Failed to load tools');
     } finally {
@@ -155,7 +155,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
       setTools(prev => [data, ...prev]);
       addDebugLog('success', 'Tool created successfully', data);
       toast.success('Tool created');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error creating tool:', error);
       addDebugLog('error', 'Failed to create tool', error);
       toast.error('Failed to create tool');
@@ -176,7 +176,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
       setTools(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
       addDebugLog('success', 'Tool updated successfully');
       toast.success('Tool updated');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error updating tool:', error);
       addDebugLog('error', 'Failed to update tool', error);
       toast.error('Failed to update tool');
@@ -240,7 +240,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
       
       setTestResult(data);
       addDebugLog(data.success ? 'success' : 'error', `Test ${data.success ? 'passed' : 'failed'}`, data);
-    } catch (error) {
+    } catch (error: unknown) {
       const result = {
         success: false,
         error: error instanceof Error ? error.message : 'Test failed'
