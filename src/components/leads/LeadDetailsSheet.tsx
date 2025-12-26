@@ -256,7 +256,13 @@ export const LeadDetailsSheet = ({
       'first_name', 'firstName', 'last_name', 'lastName', 'name', 'full_name', 'fullName',
       ...phoneKeys
     ];
-    return Object.entries(data).filter(([key]) => !excludedFields.includes(key));
+    return Object.entries(data).filter(([key]) => {
+      // Exclude known internal fields
+      if (excludedFields.includes(key)) return false;
+      // Exclude _content fields (internal rich text storage for checkboxes)
+      if (key.endsWith('_content')) return false;
+      return true;
+    });
   }, [lead]);
   
   const handleDelete = () => {
