@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Map, MapTileLayer, MapCircleMarker, MapTooltip, MapFitBounds } from '@/components/ui/map';
@@ -19,6 +19,12 @@ interface VisitorLocationMapProps {
 }
 
 export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Calculate total for percentages
   const total = useMemo(() => data.reduce((sum, loc) => sum + loc.count, 0), [data]);
   
@@ -37,7 +43,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
     return Math.max(6, Math.min(30, 6 + percentage * 50));
   };
   
-  if (loading) {
+  if (loading || !mounted) {
     return (
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">

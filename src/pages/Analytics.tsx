@@ -48,6 +48,7 @@ import { toast } from '@/lib/toast';
 import { subDays } from 'date-fns';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { logger } from '@/utils/logger';
 
 // Add visual variance to sparse data for interesting sparkline curves
@@ -670,7 +671,18 @@ const Analytics: React.FC = () => {
               {/* Geography Section */}
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Geography</h3>
-                <VisitorLocationMap data={locationData} loading={trafficLoading} />
+                <ErrorBoundary
+                  fallback={(error) => (
+                    <div className="rounded-lg border border-border bg-card p-4">
+                      <p className="text-sm font-medium text-foreground">Visitor map failed to load</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {error?.message || 'An unexpected error occurred while rendering the map.'}
+                      </p>
+                    </div>
+                  )}
+                >
+                  <VisitorLocationMap data={locationData} loading={trafficLoading} />
+                </ErrorBoundary>
               </div>
               
               {/* Top Pages Section */}
