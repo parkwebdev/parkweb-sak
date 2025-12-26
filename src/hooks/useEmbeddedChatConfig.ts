@@ -190,7 +190,12 @@ export const useEmbeddedChatConfig = (agentId: string) => {
 
       if (error) throw error;
 
-      const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
+      // Type the deployment config (stored as JSONB with embedded_chat key)
+      type StoredDeploymentConfig = {
+        embedded_chat?: Partial<EmbeddedChatConfig>;
+        widget?: Partial<EmbeddedChatConfig>; // Legacy naming
+      };
+      const deploymentConfig = agent.deployment_config as StoredDeploymentConfig | null;
       const defaultConfig = getDefaultConfig();
       
       if (deploymentConfig?.embedded_chat) {

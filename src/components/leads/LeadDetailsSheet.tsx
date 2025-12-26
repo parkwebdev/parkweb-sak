@@ -21,6 +21,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { SkeletonLeadDetails } from '@/components/ui/page-skeleton';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import type { Tables, Enums, Json } from '@/integrations/supabase/types';
+import type { ConversationMetadata } from '@/types/metadata';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -31,36 +32,6 @@ interface LeadDetailsSheetProps {
   onOpenChange: (open: boolean) => void;
   onUpdate: (id: string, updates: Partial<Tables<'leads'>>) => void;
   onDelete: (id: string) => void;
-}
-
-interface ConversationMetadata {
-  lead_name?: string;
-  lead_email?: string;
-  lead_phone?: string;
-  ip_address?: string;
-  country?: string;
-  city?: string;
-  country_code?: string;
-  region?: string;
-  device_type?: 'desktop' | 'mobile' | 'tablet';
-  device?: string;
-  browser?: string;
-  os?: string;
-  referrer_url?: string;
-  session_started_at?: string;
-  messages_count?: number;
-  visited_pages?: Array<{ url: string; entered_at: string; duration_ms: number }>;
-  referrer_journey?: {
-    referrer_url: string | null;
-    landing_page: string | null;
-    utm_source?: string | null;
-    utm_medium?: string | null;
-    utm_campaign?: string | null;
-  };
-  // Priority, Tags, Notes
-  priority?: 'low' | 'normal' | 'high' | 'urgent';
-  tags?: string[];
-  notes?: string;
 }
 
 // Priority options with semantic colors

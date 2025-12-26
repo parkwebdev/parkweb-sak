@@ -146,22 +146,49 @@ serve(async (req) => {
     // Get location from IP address via geo-IP lookup
     const { country, city } = await getLocationFromIP(ipAddress);
 
-    // Create conversation first
-    const conversationMetadata: any = {
+    // Create conversation first (typed metadata for consistency)
+    interface ConversationMetadata {
+      ip_address: string;
+      country: string;
+      city: string;
+      device_type: string;
+      browser: string;
+      os: string;
+      referrer_url: string | null;
+      session_started_at: string;
+      lead_name: string;
+      lead_email: string;
+      custom_fields: Record<string, unknown>;
+      tags: string[];
+      messages_count: number;
+      visited_pages: Array<{ url: string; entered_at: string; duration_ms: number }>;
+      referrer_journey?: {
+        referrer_url: string | null;
+        landing_page: string | null;
+        utm_source: string | null;
+        utm_medium: string | null;
+        utm_campaign: string | null;
+        utm_term: string | null;
+        utm_content: string | null;
+        entry_type: string;
+      };
+    }
+
+    const conversationMetadata: ConversationMetadata = {
       ip_address: ipAddress,
       country,
       city,
-      device,
+      device_type: device,
       browser,
       os,
-      referer_url: referer,
+      referrer_url: referer,
       session_started_at: new Date().toISOString(),
       lead_name: `${sanitizedFirstName} ${sanitizedLastName}`,
       lead_email: sanitizedEmail,
       custom_fields: customFields || {},
       tags: [],
       messages_count: 0,
-      visited_pages: [] as Array<{ url: string; entered_at: string; duration_ms: number }>,
+      visited_pages: [],
     };
 
     // Add referrer journey if provided

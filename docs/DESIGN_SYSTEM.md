@@ -883,6 +883,40 @@ Before shipping, verify:
 
 ---
 
+## Type Conventions (JSONB Metadata)
+
+All JSONB metadata types are centralized in `src/types/metadata.ts`. **Never create local interfaces** for metadata structures—import from the canonical source.
+
+### Canonical Types
+
+| Type | Description | Database Column |
+|------|-------------|-----------------|
+| `ConversationMetadata` | Visitor info, session data, priority, tags, notes | `conversations.metadata` |
+| `MessageMetadata` | Sender info, reactions, link previews, attachments | `messages.metadata` |
+| `KnowledgeSourceMetadata` | Processing state, sitemap hierarchy, file info | `knowledge_sources.metadata` |
+| `AgentDeploymentConfig` | Widget config, API settings, deployment toggles | `agents.deployment_config` |
+| `LeadData` | Custom form fields, source tracking | `leads.data` |
+| `PlanLimits` | Usage quotas per plan | `plans.limits` |
+| `PlanFeatures` | Feature flags per plan | `plans.features` |
+
+### Usage
+
+```typescript
+// ✅ CORRECT: Import from canonical source
+import type { ConversationMetadata, AgentDeploymentConfig } from '@/types/metadata';
+
+const metadata = conversation.metadata as ConversationMetadata;
+
+// ❌ WRONG: Don't create local interfaces
+interface ConversationMetadata { ... } // Duplicates lead to type drift!
+```
+
+### Edge Functions
+
+Edge functions can't import from `src/`, so they define **local interfaces** that mirror the canonical types. Keep these in sync when updating `src/types/metadata.ts`.
+
+---
+
 ## Related Documentation
 
 - [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md) - Component patterns and motion

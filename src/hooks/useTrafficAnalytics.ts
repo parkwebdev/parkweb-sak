@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import type { ConversationMetadata, ReferrerJourney, VisitedPage } from '@/types/metadata';
 
 /**
  * Hook for fetching website traffic analytics.
@@ -41,26 +42,8 @@ interface TrafficStats {
   pageVisits: PageVisitData[];
 }
 
-interface ReferrerJourney {
-  referrer_url?: string | null;
-  landing_page?: string | null;
-  utm_source?: string | null;
-  utm_medium?: string | null;
-  utm_campaign?: string | null;
-  entry_type?: string;
-}
-
-interface PageVisit {
-  url: string;
-  entered_at: string;
-  duration_ms: number;
-}
-
-interface ConversationMetadata {
-  referrer_journey?: ReferrerJourney;
-  visited_pages?: PageVisit[];
-  lead_id?: string;
-}
+// Use VisitedPage from metadata types, with local alias for duration_ms compatibility
+type PageVisit = VisitedPage & { duration_ms?: number };
 
 export const useTrafficAnalytics = (
   startDate: Date,
