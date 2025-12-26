@@ -26,6 +26,7 @@ import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useMockAnalyticsData } from '@/hooks/useMockAnalyticsData';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgent } from '@/hooks/useAgent';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { ComparisonView } from '@/components/analytics/ComparisonView';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
@@ -196,6 +197,9 @@ const Analytics: React.FC = () => {
     locationData: realLocationData,
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
+
+  // Fetch Mapbox token for map rendering
+  const { data: mapboxToken } = useMapboxToken();
 
   // Comparison data - only fetch when comparison mode is on AND not in mock mode
   const comparisonData = useAnalytics(
@@ -681,7 +685,7 @@ const Analytics: React.FC = () => {
                     </div>
                   )}
                 >
-                  <VisitorLocationMap data={locationData} loading={trafficLoading} />
+                  <VisitorLocationMap data={locationData} loading={trafficLoading} mapboxToken={mapboxToken} />
                 </ErrorBoundary>
               </div>
               
