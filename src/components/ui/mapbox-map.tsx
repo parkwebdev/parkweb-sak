@@ -9,7 +9,7 @@ import Map, {
   FullscreenControl,
   type MapRef,
   type MapMouseEvent,
-} from "react-map-gl/mapbox";
+} from "@vis.gl/react-mapbox";
 import type { CircleLayer, SymbolLayer } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
