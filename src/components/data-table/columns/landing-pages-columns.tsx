@@ -1,5 +1,6 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
+import type { DataTableColumnMeta } from '../types';
 
 export interface LandingPageData {
   url: string;
@@ -58,13 +59,14 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
     size: 80,
     minSize: 60,
     maxSize: 100,
+    meta: { align: 'right' } as DataTableColumnMeta,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Visits" className="justify-end" />
+      <DataTableColumnHeader column={column} title="Visits" />
     ),
     cell: ({ row }) => (
-      <div className="text-right tabular-nums">
+      <span className="tabular-nums">
         {row.original.visits.toLocaleString()}
-      </div>
+      </span>
     ),
   },
   {
@@ -72,13 +74,14 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
     size: 100,
     minSize: 80,
     maxSize: 120,
+    meta: { align: 'right' } as DataTableColumnMeta,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Avg. Time" className="justify-end" />
+      <DataTableColumnHeader column={column} title="Avg. Time" />
     ),
     cell: ({ row }) => (
-      <div className="text-right tabular-nums text-muted-foreground">
+      <span className="tabular-nums text-muted-foreground">
         {row.original.avgDuration > 0 ? formatDuration(row.original.avgDuration) : '—'}
-      </div>
+      </span>
     ),
   },
   {
@@ -86,13 +89,14 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
     size: 80,
     minSize: 60,
     maxSize: 100,
+    meta: { align: 'right' } as DataTableColumnMeta,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Leads" className="justify-end" />
+      <DataTableColumnHeader column={column} title="Leads" />
     ),
     cell: ({ row }) => (
-      <div className="text-right tabular-nums">
+      <span className="tabular-nums">
         {row.original.conversions.toLocaleString()}
-      </div>
+      </span>
     ),
   },
 ];
