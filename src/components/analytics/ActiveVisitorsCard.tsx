@@ -93,7 +93,7 @@ export const ActiveVisitorsCard: React.FC<ActiveVisitorsCardProps> = ({ agentId 
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Users01 className="h-4 w-4" />
               Active Visitors
             </CardTitle>

@@ -42,7 +42,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-base">Bookings by Location</CardTitle>
+          <CardTitle className="text-sm font-semibold">Bookings by Location</CardTitle>
           <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
         </CardHeader>
         <CardContent>
@@ -64,7 +64,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-base">Bookings by Location</CardTitle>
+          <CardTitle className="text-sm font-semibold">Bookings by Location</CardTitle>
           <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
         </CardHeader>
         <CardContent>
@@ -80,10 +80,10 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
 
   return (
     <Card className={cn(className)}>
-      <CardHeader>
-        <CardTitle className="text-base">Bookings by Location</CardTitle>
-        <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
-      </CardHeader>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">Bookings by Location</CardTitle>
+          <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
+        </CardHeader>
       <CardContent>
         <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
