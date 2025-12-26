@@ -62,7 +62,9 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
       <DataTableColumnHeader column={column} title="Visits" className="justify-end" />
     ),
     cell: ({ row }) => (
-      <span className="text-right block">{row.original.visits}</span>
+      <div className="text-right tabular-nums">
+        {row.original.visits.toLocaleString()}
+      </div>
     ),
   },
   {
@@ -74,9 +76,9 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
       <DataTableColumnHeader column={column} title="Avg. Time" className="justify-end" />
     ),
     cell: ({ row }) => (
-      <span className="text-right text-muted-foreground block">
-        {formatDuration(row.original.avgDuration)}
-      </span>
+      <div className="text-right tabular-nums text-muted-foreground">
+        {row.original.avgDuration > 0 ? formatDuration(row.original.avgDuration) : '—'}
+      </div>
     ),
   },
   {
@@ -88,7 +90,9 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
       <DataTableColumnHeader column={column} title="Leads" className="justify-end" />
     ),
     cell: ({ row }) => (
-      <span className="text-right block">{row.original.conversions}</span>
+      <div className="text-right tabular-nums">
+        {row.original.conversions.toLocaleString()}
+      </div>
     ),
   },
 ];
