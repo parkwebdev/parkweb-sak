@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Map, MapTileLayer, MapCircleMarker, MapTooltip, MapFitBounds } from '@/components/ui/map';
-import { Globe02 } from '@untitledui/icons/Globe02';
+import { Globe02 } from '@untitledui/icons';
 import L from 'leaflet';
 
 export interface LocationData {
@@ -48,7 +48,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <Globe02 className="h-4 w-4 text-muted-foreground" />
+            <Globe02 size={16} className="text-muted-foreground" />
             <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
           </div>
         </CardHeader>
@@ -64,13 +64,13 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <Globe02 className="h-4 w-4 text-muted-foreground" />
+            <Globe02 size={16} className="text-muted-foreground" />
             <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[350px]">
           <div className="text-center text-muted-foreground">
-            <Globe02 className="h-10 w-10 mx-auto mb-2 opacity-50" />
+            <Globe02 size={40} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm">No location data available</p>
             <p className="text-xs mt-1">Location data will appear as visitors interact with your widget</p>
           </div>
@@ -84,7 +84,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Globe02 className="h-4 w-4 text-muted-foreground" />
+            <Globe02 size={16} className="text-muted-foreground" />
             <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
           </div>
           <span className="text-xs text-muted-foreground">
