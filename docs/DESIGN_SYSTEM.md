@@ -19,6 +19,10 @@ Comprehensive design system documentation for consistent UI development.
 7. [Animations](#animations)
 8. [Icon System](#icon-system)
 9. [Usage Examples](#usage-examples)
+10. [Accessibility (ARIA)](#accessibility-aria)
+11. [WCAG 2.2 Compliance](#wcag-22-compliance)
+12. [Type Conventions](#type-conventions-jsonb-metadata)
+13. [Coding Standards](#coding-standards)
 
 ---
 
@@ -927,6 +931,85 @@ interface ConversationMetadata { ... } // Duplicates lead to type drift!
 ### Edge Functions
 
 Edge functions can't import from `src/`, so they define **local interfaces** that mirror the canonical types. Keep these in sync when updating `src/types/metadata.ts`.
+
+---
+
+## Coding Standards
+
+### Component Declaration Pattern
+
+**Do NOT use `React.FC` or `FC` for component declarations.** Use direct function declarations with explicit props typing instead.
+
+| Pattern | Status | Example |
+|---------|--------|---------|
+| Direct function | ✅ **Use this** | `function Button({ label }: ButtonProps) { ... }` |
+| Arrow function | ✅ Acceptable | `const Button = ({ label }: ButtonProps) => { ... }` |
+| `React.FC<Props>` | ❌ **Deprecated** | `const Button: React.FC<ButtonProps> = ({ label }) => { ... }` |
+| `FC<Props>` | ❌ **Deprecated** | `const Button: FC<ButtonProps> = ({ label }) => { ... }` |
+
+#### Why We Removed React.FC
+
+1. **Unnecessary**: TypeScript infers return types correctly without it
+2. **Implicit children**: `React.FC` implicitly includes a `children` prop, leading to confusing type errors
+3. **Simpler code**: Direct declarations are cleaner and more readable
+4. **Better inference**: TypeScript provides better type inference with direct declarations
+5. **Modern convention**: The React community and TypeScript team recommend against `React.FC`
+
+#### Correct Patterns
+
+```tsx
+// ✅ CORRECT - Direct function declaration (preferred)
+interface ButtonProps {
+  label: string;
+  onClick?: () => void;
+}
+
+function Button({ label, onClick }: ButtonProps) {
+  return <button onClick={onClick}>{label}</button>;
+}
+
+// ✅ CORRECT - Arrow function with explicit typing
+const Button = ({ label, onClick }: ButtonProps) => {
+  return <button onClick={onClick}>{label}</button>;
+};
+
+// ✅ CORRECT - Component with children (explicit)
+interface CardProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+function Card({ title, children }: CardProps) {
+  return (
+    <div>
+      <h2>{title}</h2>
+      {children}
+    </div>
+  );
+}
+```
+
+#### Incorrect Patterns
+
+```tsx
+// ❌ WRONG - Do not use React.FC
+import React, { FC } from 'react';
+
+const Button: React.FC<ButtonProps> = ({ label }) => {
+  return <button>{label}</button>;
+};
+
+// ❌ WRONG - Do not use FC
+const Card: FC<CardProps> = ({ title, children }) => {
+  return <div>{title}{children}</div>;
+};
+```
+
+#### Migration Notes
+
+- All 96+ components in the codebase have been migrated to direct function declarations
+- New components MUST follow this pattern
+- If you encounter legacy `React.FC` usage, refactor it during your changes
 
 ---
 
