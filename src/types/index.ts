@@ -45,3 +45,4 @@ export * from './report';
 export * from './locations';
 export * from './properties';
 export * from './calendar';
+export * from './analytics';
