@@ -149,7 +149,20 @@ export function MapboxMap({
   const { theme: currentTheme } = useTheme();
   const [popupInfo, setPopupInfo] = React.useState<PopupInfo | null>(null);
   const [mapStyle, setMapStyle] = React.useState(MAPBOX_STYLES.light);
+  const [mapError, setMapError] = React.useState<string | null>(null);
+  const [mapLoaded, setMapLoaded] = React.useState(false);
   const initialBoundsRef = React.useRef(fitBounds);
+
+  // Debug: Log token fingerprint on mount (safe - only first/last chars)
+  React.useEffect(() => {
+    if (accessToken) {
+      const fingerprint = `${accessToken.substring(0, 10)}...${accessToken.substring(accessToken.length - 6)}`;
+      console.log(`[MapboxMap] Token fingerprint: ${fingerprint}`);
+      console.log(`[MapboxMap] Current origin: ${window.location.origin}`);
+    } else {
+      console.warn("[MapboxMap] No access token provided");
+    }
+  }, [accessToken]);
 
   // Resolve theme to map style
   React.useEffect(() => {
@@ -203,6 +216,9 @@ export function MapboxMap({
 
   // Handle map load - fit bounds
   const onMapLoad = React.useCallback(() => {
+    console.log("[MapboxMap] Map loaded successfully - style tiles should be rendering");
+    setMapLoaded(true);
+    setMapError(null);
     if (fitBounds && mapRef.current) {
       mapRef.current.fitBounds(fitBounds, {
         padding: fitBoundsPadding,
@@ -210,6 +226,13 @@ export function MapboxMap({
       });
     }
   }, [fitBounds, fitBoundsPadding]);
+
+  // Handle map errors
+  const onMapError = React.useCallback((evt: { error?: { message?: string } }) => {
+    const errorMsg = evt?.error?.message || "Unknown map error";
+    console.error("[MapboxMap] Map error:", errorMsg, evt);
+    setMapError(errorMsg);
+  }, []);
 
   // Handle cluster click - zoom in
   const onClick = React.useCallback((event: MapMouseEvent) => {
@@ -307,6 +330,7 @@ export function MapboxMap({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         onLoad={onMapLoad}
+        onError={onMapError}
         cursor={popupInfo ? "pointer" : "grab"}
       >
         {showControls && (
