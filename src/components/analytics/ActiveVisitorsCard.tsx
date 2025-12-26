@@ -51,7 +51,7 @@ const formatTimeActive = (startedAt: string): string => {
   return `${hours}h ${diffMins % 60}m`;
 };
 
-export const ActiveVisitorsCard: React.FC<ActiveVisitorsCardProps> = ({ agentId }) => {
+export function ActiveVisitorsCard({ agentId }: ActiveVisitorsCardProps) {
   const [activeVisitors, setActiveVisitors] = useState<ActiveVisitor[]>([]);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 

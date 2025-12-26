@@ -30,7 +30,7 @@ interface SetupFeedbackToastProps {
   hasRated?: boolean;
 }
 
-export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated = false }) => {
+export function SetupFeedbackToast({ hasRated = false }: SetupFeedbackToastProps) {
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);

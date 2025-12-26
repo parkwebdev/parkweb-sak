@@ -49,7 +49,7 @@ type Conversation = Tables<'conversations'> & {
 type Message = Tables<'messages'>;
 
 // === MAIN COMPONENT ===
-const Conversations: React.FC = () => {
+function Conversations() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   

@@ -51,13 +51,13 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   };
 });
 
-export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
+export function CreateEventDialog({
   open,
   onOpenChange,
   initialDate,
   onCreateEvent,
   existingEvents = [],
-}) => {
+}: CreateEventDialogProps) {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState<Date | undefined>(initialDate || new Date());
   const [startTime, setStartTime] = useState('09:00');

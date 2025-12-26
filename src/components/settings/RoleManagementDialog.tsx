@@ -24,12 +24,12 @@ interface RoleManagementDialogProps {
 }
 
 
-export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
+export function RoleManagementDialog({
   member,
   isOpen,
   onClose,
   onUpdate,
-}) => {
+}: RoleManagementDialogProps) {
   const [role, setRole] = useState<string>('member');
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);

@@ -73,10 +73,10 @@ interface Message {
 // PREVIEW CHAT COMPONENT
 // ============================================
 
-export const PreviewChat: React.FC<PreviewChatProps> = ({
+export function PreviewChat({
   agentId,
   primaryColor = '#8B5CF6',
-}) => {
+}: PreviewChatProps) {
   // State (no conversationId - preview mode is ephemeral)
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');

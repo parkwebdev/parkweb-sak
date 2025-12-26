@@ -33,11 +33,11 @@ const WEEKDAYS = [
   { value: 6, label: 'S', fullLabel: 'Saturday' },
 ];
 
-export const RecurrenceSettings: React.FC<RecurrenceSettingsProps> = ({
+export function RecurrenceSettings({
   recurrence,
   onChange,
   baseDate,
-}) => {
+}: RecurrenceSettingsProps) {
   // Default recurrence rule
   const rule: RecurrenceRule = recurrence || {
     frequency: 'weekly',

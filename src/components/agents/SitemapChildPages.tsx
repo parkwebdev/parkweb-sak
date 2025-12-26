@@ -38,11 +38,11 @@ const statusColors = {
   pending: 'text-muted-foreground',
 };
 
-export const SitemapChildPages: React.FC<SitemapChildPagesProps> = ({
+export function SitemapChildPages({
   childSources,
   onRetryChild,
   onDeleteChild,
-}) => {
+}: SitemapChildPagesProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);

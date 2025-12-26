@@ -35,10 +35,10 @@ const CONFETTI_COLORS = [
   'hsl(330 81% 60%)', // pink
 ];
 
-export const CompletionCelebration: React.FC<CompletionCelebrationProps> = ({
+export function CompletionCelebration({
   show,
   onComplete,
-}) => {
+}: CompletionCelebrationProps) {
   const prefersReducedMotion = useReducedMotion();
   const [isVisible, setIsVisible] = useState(show);
 

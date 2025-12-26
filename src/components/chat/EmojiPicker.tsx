@@ -43,10 +43,10 @@ const EMOJI_CATEGORIES = {
   },
 };
 
-export const EmojiPicker: React.FC<EmojiPickerProps> = ({
+export function EmojiPicker({
   onEmojiSelect,
   primaryColor,
-}) => {
+}: EmojiPickerProps) {
   const [activeTab, setActiveTab] = useState('smileys');
 
   return (
@@ -96,9 +96,9 @@ interface QuickEmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
 }
 
-export const QuickEmojiPicker: React.FC<QuickEmojiPickerProps> = ({
+export function QuickEmojiPicker({
   onEmojiSelect,
-}) => {
+}: QuickEmojiPickerProps) {
   const quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
 
   return (

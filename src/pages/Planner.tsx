@@ -34,7 +34,7 @@ interface PendingTimeChange {
   newEnd: Date;
 }
 
-const Planner: React.FC = () => {
+function Planner() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   

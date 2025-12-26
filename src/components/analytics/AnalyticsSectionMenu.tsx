@@ -39,10 +39,10 @@ interface AnalyticsSectionMenuProps {
   onSectionChange: (section: AnalyticsSection) => void;
 }
 
-export const AnalyticsSectionMenu: React.FC<AnalyticsSectionMenuProps> = ({
+export function AnalyticsSectionMenu({
   activeSection,
   onSectionChange,
-}) => {
+}: AnalyticsSectionMenuProps) {
   const prefersReducedMotion = useReducedMotion();
 
   return (

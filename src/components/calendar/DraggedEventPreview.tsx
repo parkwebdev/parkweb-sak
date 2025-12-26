@@ -11,7 +11,7 @@ interface DraggedEventPreviewProps {
   event: CalendarEvent;
 }
 
-export const DraggedEventPreview: React.FC<DraggedEventPreviewProps> = ({ event }) => {
+export function DraggedEventPreview({ event }: DraggedEventPreviewProps) {
   return (
     <div
       className="px-3 py-2 rounded-lg shadow-xl text-sm pointer-events-none min-w-[140px] border border-border bg-card"

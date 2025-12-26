@@ -29,12 +29,12 @@ interface WidgetAudioPlayerProps {
   className?: string;
 }
 
-export const WidgetAudioPlayer: React.FC<WidgetAudioPlayerProps> = ({
+export function WidgetAudioPlayer({
   audioUrl,
   primaryColor,
   onError,
   className,
-}) => {
+}: WidgetAudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
