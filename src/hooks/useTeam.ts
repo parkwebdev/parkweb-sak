@@ -149,7 +149,7 @@ export const useTeam = () => {
       });
       
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Error", {
         description: "Failed to send invitation.",
       });
@@ -188,7 +188,7 @@ export const useTeam = () => {
 
       await invalidateTeamQueries();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Remove failed", {
         description: "An error occurred while removing the team member.",
       });
@@ -226,7 +226,7 @@ export const useTeam = () => {
       logger.success('Role update successful');
       await invalidateTeamQueries();
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Unexpected error updating role', error);
       toast.error("Update failed", {
         description: "An unexpected error occurred while updating the role.",

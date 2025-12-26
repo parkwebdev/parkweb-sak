@@ -134,7 +134,7 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
 
       toast.success('Booking cancelled');
       await invalidateEvents();
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error cancelling event:', error);
       toast.error('Failed to cancel booking');
     }
@@ -152,7 +152,7 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
 
       toast.success('Booking marked as complete');
       await invalidateEvents();
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error completing event:', error);
       toast.error('Failed to complete booking');
     }
@@ -179,7 +179,7 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
 
       toast.success('Booking rescheduled');
       await invalidateEvents();
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error rescheduling event:', error);
       toast.error('Failed to reschedule booking');
     }

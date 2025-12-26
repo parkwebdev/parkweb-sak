@@ -1305,6 +1305,50 @@ const AgentDashboard = () => {
 
 ### Error Handling
 
+All hooks use `catch (error: unknown)` with the `getErrorMessage()` utility for type-safe error handling.
+
+#### Standard Pattern
+
+```tsx
+import { getErrorMessage } from '@/types/errors';
+import { logger } from '@/utils/logger';
+import { toast } from '@/lib/toast';
+
+const myAsyncFunction = async () => {
+  try {
+    const { data, error } = await supabase.from('table').select('*');
+    if (error) throw error;
+    return data;
+  } catch (error: unknown) {
+    logger.error('Operation failed:', error);
+    toast.error('Failed to load data', {
+      description: getErrorMessage(error),
+    });
+    return null;
+  }
+};
+```
+
+#### Error Type Utilities (`src/types/errors.ts`)
+
+```tsx
+import { getErrorMessage, hasErrorMessage, hasErrorCode } from '@/types/errors';
+
+// Safe message extraction from unknown error
+const message = getErrorMessage(error);
+
+// Type guards for error inspection
+if (hasErrorMessage(error)) {
+  console.log(error.message); // TypeScript knows message exists
+}
+
+if (hasErrorCode(error)) {
+  console.log(error.code); // TypeScript knows code exists (Supabase errors)
+}
+```
+
+#### React Query Error Display
+
 ```tsx
 const { leads, isLoading, error } = useLeads();
 

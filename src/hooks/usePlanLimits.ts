@@ -137,7 +137,7 @@ export const usePlanLimits = () => {
         knowledge_sources: knowledgeCount || 0,
         team_members: teamCount || 0,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error fetching plan limits', error);
       toast.error('Failed to load plan limits');
     } finally {

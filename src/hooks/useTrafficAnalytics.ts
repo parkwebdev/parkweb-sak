@@ -193,7 +193,7 @@ export const useTrafficAnalytics = (
         landingPages,
         pageVisits,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in traffic analytics:', error);
     } finally {
       setLoading(false);
