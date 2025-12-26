@@ -24,6 +24,31 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // Ban React.FC and FC - use direct function declarations instead
+      "@typescript-eslint/ban-types": [
+        "error",
+        {
+          types: {
+            "React.FC": {
+              message: "Use direct function declarations instead. See docs/DESIGN_SYSTEM.md#coding-standards",
+              fixWith: "function ComponentName(props: Props) { ... }"
+            },
+            "React.FunctionComponent": {
+              message: "Use direct function declarations instead. See docs/DESIGN_SYSTEM.md#coding-standards",
+              fixWith: "function ComponentName(props: Props) { ... }"
+            },
+            "FC": {
+              message: "Use direct function declarations instead. See docs/DESIGN_SYSTEM.md#coding-standards",
+              fixWith: "function ComponentName(props: Props) { ... }"
+            },
+            "FunctionComponent": {
+              message: "Use direct function declarations instead. See docs/DESIGN_SYSTEM.md#coding-standards",
+              fixWith: "function ComponentName(props: Props) { ... }"
+            }
+          },
+          extendDefaults: true
+        }
+      ],
     },
   }
 );
