@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 import type { ConversationMetadata, ReferrerJourney, VisitedPage } from '@/types/metadata';
+import { getCountryCoordinates } from '@/lib/country-coordinates';
 
 /**
  * Hook for fetching website traffic analytics.
@@ -36,10 +37,19 @@ interface PageVisitData {
   totalDuration: number;
 }
 
+export interface LocationData {
+  country: string;
+  city?: string;
+  lat: number;
+  lng: number;
+  count: number;
+}
+
 interface TrafficStats {
   trafficSources: TrafficSourceData[];
   landingPages: LandingPageData[];
   pageVisits: PageVisitData[];
+  locationData: LocationData[];
 }
 
 // Use VisitedPage from metadata types, with local alias for duration_ms compatibility
@@ -55,6 +65,7 @@ export const useTrafficAnalytics = (
     trafficSources: [],
     landingPages: [],
     pageVisits: [],
+    locationData: [],
   });
   const [agentId, setAgentId] = useState<string | null>(null);
   const { user } = useAuth();
@@ -115,6 +126,9 @@ export const useTrafficAnalytics = (
         agentId?: string;
       }> = {};
 
+      // Aggregate locations by country
+      const locationMap: Record<string, { count: number; city?: string }> = {};
+
       (conversations || []).forEach(conv => {
         const metadata = conv.metadata as ConversationMetadata | null;
         if (!metadata) return;
@@ -165,6 +179,15 @@ export const useTrafficAnalytics = (
             }
           });
         }
+
+        // Location data
+        const country = metadata.country;
+        if (country) {
+          if (!locationMap[country]) {
+            locationMap[country] = { count: 0, city: metadata.city };
+          }
+          locationMap[country].count++;
+        }
       });
 
       // Convert to arrays
@@ -189,10 +212,27 @@ export const useTrafficAnalytics = (
         }))
         .sort((a, b) => b.totalVisits - a.totalVisits);
 
+      // Convert location map to array with coordinates
+      const locationData: LocationData[] = Object.entries(locationMap)
+        .map(([country, data]): LocationData | null => {
+          const coords = getCountryCoordinates(country);
+          if (!coords) return null;
+          return {
+            country,
+            city: data.city,
+            lat: coords.lat,
+            lng: coords.lng,
+            count: data.count,
+          };
+        })
+        .filter((loc): loc is LocationData => loc !== null)
+        .sort((a, b) => b.count - a.count);
+
       setStats({
         trafficSources,
         landingPages,
         pageVisits,
+        locationData,
       });
     } catch (error: unknown) {
       logger.error('Error in traffic analytics:', error);
