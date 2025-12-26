@@ -63,7 +63,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-base">Customer Satisfaction</CardTitle>
+          <CardTitle className="text-sm font-semibold">Customer Satisfaction</CardTitle>
           <p className="text-xs text-muted-foreground">Ratings submitted after conversations</p>
         </CardHeader>
         <CardContent>
@@ -95,7 +95,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-base">Customer Satisfaction</CardTitle>
+          <CardTitle className="text-sm font-semibold">Customer Satisfaction</CardTitle>
           <p className="text-xs text-muted-foreground">Ratings submitted after conversations</p>
         </CardHeader>
         <CardContent>
@@ -115,7 +115,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
   return (
     <Card className={cn(className)}>
       <CardHeader>
-        <CardTitle className="text-base">Customer Satisfaction</CardTitle>
+        <CardTitle className="text-sm font-semibold">Customer Satisfaction</CardTitle>
         <p className="text-xs text-muted-foreground">Ratings submitted after conversations</p>
       </CardHeader>
       <CardContent>

@@ -43,7 +43,7 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Popular Landing Pages</CardTitle>
+          <CardTitle className="text-sm font-semibold">Popular Landing Pages</CardTitle>
           <p className="text-xs text-muted-foreground">Pages where visitors start their journey</p>
         </CardHeader>
         <CardContent>
@@ -58,7 +58,7 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base">Popular Landing Pages</CardTitle>
+            <CardTitle className="text-sm font-semibold">Popular Landing Pages</CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">Pages where visitors start their journey</p>
           </div>
           <div className="w-64">

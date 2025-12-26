@@ -27,8 +27,8 @@ export const ConversationChart = React.memo(function ConversationChart({ data }:
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Conversation Volume</CardTitle>
-        <CardDescription>Daily breakdown of active, closed, and total chat sessions</CardDescription>
+        <CardTitle className="text-sm font-semibold">Conversation Volume</CardTitle>
+        <CardDescription className="text-xs">Daily breakdown of active, closed, and total chat sessions</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">

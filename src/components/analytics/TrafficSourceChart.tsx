@@ -43,7 +43,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Traffic Sources</CardTitle>
+          <CardTitle className="text-sm font-semibold">Traffic Sources</CardTitle>
           <p className="text-xs text-muted-foreground">Where your visitors come from</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
@@ -57,7 +57,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Traffic Sources</CardTitle>
+          <CardTitle className="text-sm font-semibold">Traffic Sources</CardTitle>
           <p className="text-xs text-muted-foreground">Where your visitors come from</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
@@ -69,10 +69,10 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Traffic Sources</CardTitle>
-        <p className="text-xs text-muted-foreground">Where your visitors come from</p>
-      </CardHeader>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">Traffic Sources</CardTitle>
+          <p className="text-xs text-muted-foreground">Where your visitors come from</p>
+        </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">

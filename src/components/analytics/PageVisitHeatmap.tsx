@@ -68,7 +68,7 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Page Visit Heatmap</CardTitle>
+          <CardTitle className="text-sm font-semibold">Page Visit Heatmap</CardTitle>
           <p className="text-xs text-muted-foreground">Most visited pages on your site</p>
         </CardHeader>
         <CardContent className="h-[300px]">
@@ -82,7 +82,7 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Page Visit Heatmap</CardTitle>
+          <CardTitle className="text-sm font-semibold">Page Visit Heatmap</CardTitle>
           <p className="text-xs text-muted-foreground">Most visited pages on your site</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
@@ -94,10 +94,10 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Page Visit Heatmap</CardTitle>
-        <p className="text-xs text-muted-foreground">Most visited pages on your site</p>
-      </CardHeader>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">Page Visit Heatmap</CardTitle>
+          <p className="text-xs text-muted-foreground">Most visited pages on your site</p>
+        </CardHeader>
       <CardContent>
         <div className="space-y-2">
           {sortedData.map((page, index) => {
