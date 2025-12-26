@@ -71,7 +71,7 @@ const buildQueryKey = (startDate: Date, endDate: Date, userId: string | null) =>
  * );
  * ```
  */
-export const useSatisfactionAnalytics = (startDate: Date, endDate: Date) => {
+export const useSatisfactionAnalytics = (startDate: Date, endDate: Date, enabled: boolean = true) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -95,7 +95,7 @@ export const useSatisfactionAnalytics = (startDate: Date, endDate: Date) => {
 
       return (data || []).map((c) => c.id);
     },
-    enabled: !!user?.id,
+    enabled: enabled && !!user?.id,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
@@ -126,11 +126,11 @@ export const useSatisfactionAnalytics = (startDate: Date, endDate: Date) => {
 
       return (data || []) as RawRating[];
     },
-    realtime: conversationIds.length > 0 ? {
+    realtime: enabled && conversationIds.length > 0 ? {
       table: 'conversation_ratings',
       // Realtime will update on any rating change
     } : undefined,
-    enabled: !!user?.id && conversationIds.length > 0,
+    enabled: enabled && !!user?.id && conversationIds.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 

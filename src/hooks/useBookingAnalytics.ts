@@ -74,7 +74,7 @@ const buildQueryKey = (startDate: Date, endDate: Date, agentId: string | null) =
  * );
  * ```
  */
-export const useBookingAnalytics = (startDate: Date, endDate: Date) => {
+export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boolean = true) => {
   const { user } = useAuth();
   const { agentId } = useAgent();
   const queryClient = useQueryClient();
@@ -98,7 +98,7 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date) => {
 
       return (data || []).map((account) => account.id);
     },
-    enabled: !!agentId && !!user?.id,
+    enabled: enabled && !!agentId && !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -137,11 +137,11 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date) => {
 
       return (data || []) as RawCalendarEvent[];
     },
-    realtime: connectedAccountIds.length > 0 ? {
+    realtime: enabled && connectedAccountIds.length > 0 ? {
       table: 'calendar_events',
       // Realtime will update on any calendar event change
     } : undefined,
-    enabled: !!agentId && !!user?.id && connectedAccountIds.length > 0,
+    enabled: enabled && !!agentId && !!user?.id && connectedAccountIds.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 

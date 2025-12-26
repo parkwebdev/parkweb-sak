@@ -150,6 +150,9 @@ const Analytics: React.FC = () => {
     includeTables: true,
   });
 
+  // Skip real data fetching when mock mode is enabled
+  const shouldFetchRealData = !mockMode;
+
   // Fetch core analytics data
   const {
     conversationStats: realConversationStats,
@@ -163,25 +166,25 @@ const Analytics: React.FC = () => {
     leads,
     loading,
     refetch,
-  } = useAnalytics(startDate, endDate, filters);
+  } = useAnalytics(startDate, endDate, filters, shouldFetchRealData);
 
   // Fetch booking analytics for detailed charts
   const {
     stats: realBookingStats,
     loading: bookingLoading,
-  } = useBookingAnalytics(startDate, endDate);
+  } = useBookingAnalytics(startDate, endDate, shouldFetchRealData);
 
   // Fetch satisfaction analytics for detailed charts
   const {
     stats: realSatisfactionStats,
     loading: satisfactionLoading,
-  } = useSatisfactionAnalytics(startDate, endDate);
+  } = useSatisfactionAnalytics(startDate, endDate, shouldFetchRealData);
 
   // Fetch AI performance analytics for detailed charts
   const {
     stats: realAIPerformanceStats,
     loading: aiPerformanceLoading,
-  } = useAIPerformanceAnalytics(startDate, endDate);
+  } = useAIPerformanceAnalytics(startDate, endDate, shouldFetchRealData);
 
   // Fetch traffic analytics
   const {
@@ -189,13 +192,14 @@ const Analytics: React.FC = () => {
     landingPages: realLandingPages,
     pageVisits: realPageVisits,
     loading: trafficLoading,
-  } = useTrafficAnalytics(startDate, endDate);
+  } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
 
-  // Comparison data
+  // Comparison data - only fetch when comparison mode is on AND not in mock mode
   const comparisonData = useAnalytics(
     comparisonStartDate,
     comparisonEndDate,
-    filters
+    filters,
+    comparisonMode && shouldFetchRealData
   );
 
   // Use mock data when enabled, otherwise use real data

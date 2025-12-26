@@ -72,7 +72,7 @@ const buildQueryKey = (startDate: Date, endDate: Date, userId: string | null) =>
  * );
  * ```
  */
-export const useAIPerformanceAnalytics = (startDate: Date, endDate: Date) => {
+export const useAIPerformanceAnalytics = (startDate: Date, endDate: Date, enabled: boolean = true) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -99,11 +99,11 @@ export const useAIPerformanceAnalytics = (startDate: Date, endDate: Date) => {
 
       return (data || []) as RawConversation[];
     },
-    realtime: {
+    realtime: enabled ? {
       table: 'conversations',
       filter: `user_id=eq.${user?.id}`,
-    },
-    enabled: !!user?.id,
+    } : undefined,
+    enabled: enabled && !!user?.id,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
@@ -133,7 +133,7 @@ export const useAIPerformanceAnalytics = (startDate: Date, endDate: Date) => {
       const uniqueConversations = new Set((data || []).map((t) => t.conversation_id));
       return uniqueConversations.size;
     },
-    enabled: conversationIds.length > 0,
+    enabled: enabled && conversationIds.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
