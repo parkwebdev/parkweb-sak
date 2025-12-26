@@ -11,6 +11,7 @@ import { Component, type ReactNode } from 'react';
 import { AlertTriangle } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { logger } from '@/utils/logger';
 
 interface SectionErrorBoundaryProps {
   /** Child components to render */
@@ -42,8 +43,8 @@ export class SectionErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log to console in development
-    console.error('[SectionErrorBoundary] Caught error:', error, errorInfo);
+    // Log error in development
+    logger.error('[SectionErrorBoundary] Caught error:', { error, errorInfo });
   }
 
   handleRetry = () => {

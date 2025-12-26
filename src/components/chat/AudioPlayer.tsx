@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlayCircle as Play, PauseCircle as Pause } from '@untitledui/icons';
 import { formatDuration } from '@/lib/audio-recording';
@@ -14,7 +14,7 @@ interface AudioPlayerProps {
   primaryColor: string;
 }
 
-export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor }) => {
+export function AudioPlayer({ audioUrl, primaryColor }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -173,12 +173,18 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
       const barWidth = width / waveformData.length;
       const progress = duration > 0 ? currentTime / duration : 0;
 
+      // Use CSS variable for muted waveform color (matches design system)
+      const mutedColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--muted')
+        .trim();
+      const waveformMutedColor = mutedColor ? `hsl(${mutedColor})` : 'hsl(220 14.3% 95.9%)';
+      
       waveformData.forEach((value, index) => {
         const barHeight = Math.max(2, value * height * 2);
         const x = index * barWidth;
         const isPast = index < waveformData.length * progress;
 
-        ctx.fillStyle = isPast ? primaryColor : '#e5e7eb';
+        ctx.fillStyle = isPast ? primaryColor : waveformMutedColor;
         ctx.fillRect(x, (height - barHeight) / 2, barWidth - 2, barHeight);
       });
     }

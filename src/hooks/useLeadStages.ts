@@ -10,6 +10,7 @@ import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 export interface LeadStage {
   id: string;
@@ -56,7 +57,7 @@ export function useLeadStages() {
         });
         
         if (error) {
-          console.error('Failed to seed default stages:', error);
+          logger.error('Failed to seed default stages:', error);
         } else {
           refetch();
         }

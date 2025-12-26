@@ -12,7 +12,7 @@
  * @module widget/components/WidgetFileDropZone
  */
 
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { validateFiles } from '@/lib/file-validation';
 import { WidgetButton } from '@/widget/ui/WidgetButton';
@@ -41,14 +41,14 @@ interface WidgetFileDropZoneProps {
  * File drop zone with drag-and-drop support.
  * Displays inline error messages instead of toast notifications.
  */
-export const WidgetFileDropZone: React.FC<WidgetFileDropZoneProps> = ({
+export function WidgetFileDropZone({
   onFilesSelected,
   onCancel,
   primaryColor,
   onError,
   maxFiles = 5,
   maxSizeBytes = 10 * 1024 * 1024,
-}) => {
+}: WidgetFileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileUrls, setFileUrls] = useState<string[]>([]);

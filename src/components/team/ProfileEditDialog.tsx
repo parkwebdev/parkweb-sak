@@ -22,12 +22,12 @@ interface ProfileEditDialogProps {
   onUpdate: () => void;
 }
 
-export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
+export function ProfileEditDialog({
   member,
   isOpen,
   onClose,
   onUpdate,
-}) => {
+}: ProfileEditDialogProps) {
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [loading, setLoading] = useState(false);

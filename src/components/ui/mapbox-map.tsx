@@ -54,15 +54,22 @@ function countryCodeToFlag(code: string): string {
     .join("");
 }
 
-// Color based on count
+/**
+ * Mapbox GL style specifications require raw hex color values.
+ * These cannot use CSS variables as Mapbox renders outside the DOM context.
+ * Colors are intentionally hardcoded to match the design system:
+ * - #22c55e = status-active (green/low density)
+ * - #f59e0b = status-scheduled (amber/medium density)
+ * - #ef4444 = destructive (red/high density)
+ */
 function getMarkerColor(count: number, maxCount: number): string {
   const ratio = count / maxCount;
-  if (ratio >= 0.6) return "#ef4444";
-  if (ratio >= 0.3) return "#f59e0b";
-  return "#22c55e";
+  if (ratio >= 0.6) return "#ef4444"; // destructive
+  if (ratio >= 0.3) return "#f59e0b"; // status-scheduled
+  return "#22c55e"; // status-active
 }
 
-// Cluster layer style
+// Cluster layer style (hex colors required by Mapbox GL)
 const clusterLayer: CircleLayer = {
   id: "clusters",
   type: "circle",

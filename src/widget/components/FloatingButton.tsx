@@ -30,6 +30,18 @@ interface FloatingButtonProps {
  * @param props - Component props
  * @returns Styled button element with ChatPad logo or X icon
  */
+/**
+ * Floating action button component for widget toggle.
+ * 
+ * NOTE: Hardcoded hex colors are intentional here.
+ * The widget renders in an isolated iframe without access to the parent
+ * document's CSS variables. Using hex ensures consistent appearance
+ * regardless of the host page's styling.
+ * 
+ * Colors used:
+ * - Light mode: #000000 button, #FFFFFF icon (black/white)
+ * - Dark mode: #FFFFFF button, #000000 icon (white/black)
+ */
 export const FloatingButton = ({
   onClick,
   isOpen = false,
@@ -41,8 +53,7 @@ export const FloatingButton = ({
     ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     : theme;
   
-  // Light mode: black button, white icon
-  // Dark mode: white button, black icon
+  // Intentionally hardcoded for iframe isolation (see component JSDoc)
   const buttonBg = effectiveTheme === 'dark' ? '#FFFFFF' : '#000000';
   const iconColor = effectiveTheme === 'dark' ? '#000000' : '#FFFFFF';
 

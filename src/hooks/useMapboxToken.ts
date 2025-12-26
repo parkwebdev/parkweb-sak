@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 export function useMapboxToken() {
   return useQuery({
@@ -8,7 +9,7 @@ export function useMapboxToken() {
       const { data, error } = await supabase.functions.invoke("get-mapbox-token");
       
       if (error) {
-        console.error("Failed to fetch Mapbox token:", error);
+        logger.error("Failed to fetch Mapbox token:", error);
         throw error;
       }
       

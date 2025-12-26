@@ -7,7 +7,6 @@
  * @module components/agents/AriPreviewColumn
  */
 
-import React from 'react';
 import { PreviewChat } from './PreviewChat';
 
 interface AriPreviewColumnProps {
@@ -15,10 +14,10 @@ interface AriPreviewColumnProps {
   primaryColor?: string;
 }
 
-export const AriPreviewColumn: React.FC<AriPreviewColumnProps> = ({
+export function AriPreviewColumn({
   agentId,
   primaryColor,
-}) => {
+}: AriPreviewColumnProps) {
   return (
     <div className="w-[375px] flex-shrink-0 border-l bg-card hidden xl:flex flex-col">
       <PreviewChat 

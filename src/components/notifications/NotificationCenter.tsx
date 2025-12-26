@@ -34,7 +34,7 @@ interface NotificationCenterProps {
   onNotificationClick?: (notification: Notification) => void;
 }
 
-export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotificationClick }) => {
+export function NotificationCenter({ onNotificationClick }: NotificationCenterProps) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
