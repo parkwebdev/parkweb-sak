@@ -22,7 +22,7 @@ interface ResizableEventProps {
   conflictingEvents?: string[];
 }
 
-export const ResizableEvent: React.FC<ResizableEventProps> = ({
+export function ResizableEvent({
   event,
   style,
   onClick,
@@ -32,7 +32,7 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
   variant = 'week',
   hasConflict = false,
   conflictingEvents = [],
-}) => {
+}: ResizableEventProps) {
   const [isResizing, setIsResizing] = useState(false);
   const isResizeIntent = useRef(false);
   const resizeStartY = useRef<number>(0);

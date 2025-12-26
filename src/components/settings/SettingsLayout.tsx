@@ -24,13 +24,13 @@ interface SettingsMenuItemProps {
   index: number;
 }
 
-const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({
+function SettingsMenuItem({
   id,
   label,
   active,
   onClick,
   index,
-}) => {
+}: SettingsMenuItemProps) {
   const prefersReducedMotion = useReducedMotion();
   
   return (
@@ -58,12 +58,12 @@ interface SettingsLayoutContentProps {
   onMenuClick?: () => void;
 }
 
-export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
+export function SettingsLayout({
   activeTab,
   onTabChange,
   children,
   onMenuClick,
-}) => {
+}: SettingsLayoutContentProps) {
   const menuItems = [
     { id: 'general' as SettingsTab, label: 'General' },
     { id: 'profile' as SettingsTab, label: 'Profile' },

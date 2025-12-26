@@ -14,7 +14,7 @@ interface AriWelcomeMessagesSectionProps {
   agentId: string;
 }
 
-export const AriWelcomeMessagesSection: React.FC<AriWelcomeMessagesSectionProps> = ({ agentId }) => {
+export function AriWelcomeMessagesSection({ agentId }: AriWelcomeMessagesSectionProps) {
   const { config, loading, saveConfig } = useEmbeddedChatConfig(agentId);
   const [localConfig, setLocalConfig] = useState(config);
   const [showSaved, setShowSaved] = useState(false);

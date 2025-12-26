@@ -47,7 +47,7 @@ const formatUrl = (url: string): string => {
   }
 };
 
-export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loading }) => {
+export function PageVisitHeatmap({ data, loading }: PageVisitHeatmapProps) {
   // Calculate intensity based on visits relative to max
   const { maxVisits, sortedData } = useMemo(() => {
     const max = Math.max(...data.map(d => d.totalVisits), 1);

@@ -32,12 +32,12 @@ interface WidgetFileAttachmentProps {
  * File attachment preview for file selection UI.
  * Shows image thumbnail or file icon with remove button.
  */
-export const WidgetFileAttachment: React.FC<WidgetFileAttachmentProps> = ({
+export function WidgetFileAttachment({
   file,
   fileUrl,
   onRemove,
   primaryColor,
-}) => {
+}: WidgetFileAttachmentProps) {
   const isImage = isImageFile(file.type);
 
   return (
@@ -118,13 +118,13 @@ interface WidgetMessageFileAttachmentProps {
  * File attachment display for chat messages.
  * Shows file with download button instead of remove.
  */
-export const WidgetMessageFileAttachment: React.FC<WidgetMessageFileAttachmentProps> = ({
+export function WidgetMessageFileAttachment({
   fileName,
   fileUrl,
   fileType,
   fileSize,
   primaryColor,
-}) => {
+}: WidgetMessageFileAttachmentProps) {
   const isImage = isImageFile(fileType);
 
   const handleDownload = () => {

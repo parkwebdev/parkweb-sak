@@ -84,10 +84,10 @@ interface AriSectionMenuProps {
   onSectionChange: (section: AriSection) => void;
 }
 
-export const AriSectionMenu: React.FC<AriSectionMenuProps> = ({
+export function AriSectionMenu({
   activeSection,
   onSectionChange,
-}) => {
+}: AriSectionMenuProps) {
   const prefersReducedMotion = useReducedMotion();
   
   // Group sections for visual organization

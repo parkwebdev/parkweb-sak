@@ -52,11 +52,11 @@ const FEATURE_CARDS: FeatureCard[] = [
   },
 ];
 
-const FeatureCardItem: React.FC<{ card: FeatureCard; index: number; prefersReducedMotion: boolean }> = ({
+function FeatureCardItem({
   card,
   index,
   prefersReducedMotion,
-}) => {
+}: { card: FeatureCard; index: number; prefersReducedMotion: boolean }) {
   const [isHovered, setIsHovered] = useState(false);
   const Icon = isHovered ? card.activeIcon : card.icon;
 
@@ -105,7 +105,7 @@ const FeatureCardItem: React.FC<{ card: FeatureCard; index: number; prefersReduc
   );
 };
 
-export const GoFurtherSection: React.FC = () => {
+export function GoFurtherSection() {
   const prefersReducedMotion = useReducedMotion();
 
   const containerVariants = {

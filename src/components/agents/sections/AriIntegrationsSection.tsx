@@ -147,7 +147,7 @@ const calendarIntegrations: Integration[] = [
   },
 ];
 
-export const AriIntegrationsSection: React.FC<AriIntegrationsSectionProps> = ({ agentId }) => {
+export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps) {
   const [activeTab, setActiveTab] = useState<IntegrationsTab>('social');
   const prefersReducedMotion = useReducedMotion();
 
