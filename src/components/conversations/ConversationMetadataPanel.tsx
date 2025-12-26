@@ -476,7 +476,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                                   isConsentField && consentContent ? (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <span className="inline-flex items-center gap-1 cursor-help">
+                                        <span className="inline-flex items-center gap-1 cursor-default">
                                           {value ? 'Yes' : 'No'}
                                           <AlertCircle className="h-3 w-3 text-muted-foreground" />
                                         </span>
