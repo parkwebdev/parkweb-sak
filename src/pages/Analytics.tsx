@@ -486,7 +486,7 @@ const Analytics: React.FC = () => {
                 <div className="space-y-6">
                   {/* Engagement Metrics */}
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                       Engagement
                     </h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
@@ -525,7 +525,7 @@ const Analytics: React.FC = () => {
 
                   {/* Outcomes Metrics */}
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                       Outcomes
                     </h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
@@ -573,7 +573,7 @@ const Analytics: React.FC = () => {
                 <div className="space-y-6">
                   {/* Trends Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Trends</h3>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Trends</h3>
                     <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
                       <AnimatedItem>
                         <ConversationChart data={conversationStats} />
@@ -586,7 +586,7 @@ const Analytics: React.FC = () => {
                   
                   {/* Performance Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Performance</h3>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Performance</h3>
                     <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
                       <AnimatedItem>
                         <BookingsByLocationChart 
@@ -607,7 +607,7 @@ const Analytics: React.FC = () => {
                   
                   {/* AI & Operations Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">AI & Operations</h3>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">AI & Operations</h3>
                     <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
                       <AnimatedItem>
                         <AIPerformanceCard 
@@ -630,7 +630,7 @@ const Analytics: React.FC = () => {
                   
                   {/* Support Section */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Support</h3>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Support</h3>
                     <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
                       <AnimatedItem>
                         <TicketsResolvedCard comingSoon={true} />
