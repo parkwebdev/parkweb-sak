@@ -377,6 +377,9 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 const otherFieldEntries: [string, unknown][] = [];
 
                 Object.entries(customFields).forEach(([key, value]) => {
+                  // Skip internal rich text content fields (used for consent tooltips)
+                  if (key.endsWith('_content')) return;
+                  
                   const lowerKey = key.toLowerCase();
                   const isPhoneField = lowerKey.includes('phone') || lowerKey.includes('mobile') || lowerKey.includes('cell') || lowerKey.includes('tel');
                   if (isPhoneField) {
@@ -459,12 +462,38 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                       <div className="mt-3 pt-3 border-t border-dashed space-y-2">
                         {otherFieldEntries.map(([key, value]) => {
                           const IconComponent = getCustomFieldIcon(key);
+                          const isBoolean = typeof value === 'boolean';
+                          const isConsentField = key.toLowerCase().includes('consent');
+                          const consentContentKey = `${key}_content`;
+                          const consentContent = customFields[consentContentKey] as string | undefined;
+                          
                           return (
                             <div key={key} className="flex items-start gap-2.5 text-sm">
                               <IconComponent className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                               <div className="min-w-0">
                                 <span className="text-muted-foreground">{key}:</span>{' '}
-                                <span className="break-words">{String(value)}</span>
+                                {isBoolean ? (
+                                  isConsentField && consentContent ? (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="inline-flex items-center gap-1 cursor-help">
+                                          {value ? 'Yes' : 'No'}
+                                          <AlertCircle className="h-3 w-3 text-muted-foreground" />
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="left" className="max-w-xs">
+                                        <div 
+                                          className="text-xs [&_a]:text-primary [&_a]:underline"
+                                          dangerouslySetInnerHTML={{ __html: consentContent }} 
+                                        />
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  ) : (
+                                    <span>{value ? 'Yes' : 'No'}</span>
+                                  )
+                                ) : (
+                                  <span className="break-words">{String(value)}</span>
+                                )}
                               </div>
                             </div>
                           );
