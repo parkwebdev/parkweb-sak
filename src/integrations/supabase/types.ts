@@ -2109,10 +2109,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      mark_token_used: {
-        Args: { p_email: string; p_token: string }
-        Returns: undefined
-      }
       search_conversation_memories:
         | {
             Args: {
@@ -2207,8 +2203,6 @@ export type Database = {
           valid: boolean
         }[]
       }
-      validate_onboarding_token: { Args: { p_token: string }; Returns: boolean }
-      validate_submission_token: { Args: { p_email: string }; Returns: boolean }
     }
     Enums: {
       agent_status: "draft" | "active" | "paused"

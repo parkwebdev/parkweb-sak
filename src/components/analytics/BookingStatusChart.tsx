@@ -5,7 +5,6 @@
  * with a center label displaying the show rate percentage.
  * 
  * @module components/analytics/BookingStatusChart
- * @see docs/ANALYTICS_REDESIGN_PLAN.md - Phase 5b
  */
 
 import React from 'react';

@@ -5,7 +5,6 @@
  * satisfaction metrics, AI performance, and article usefulness tracking.
  * 
  * @module types/analytics
- * @see docs/ANALYTICS_REDESIGN_PLAN.md
  */
 
 // =============================================================================

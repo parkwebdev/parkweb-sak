@@ -5,7 +5,6 @@
  * handled without human intervention) and resolution rate.
  * 
  * @module components/analytics/AIPerformanceCard
- * @see docs/ANALYTICS_REDESIGN_PLAN.md - Phase 5d
  */
 
 import React from 'react';
