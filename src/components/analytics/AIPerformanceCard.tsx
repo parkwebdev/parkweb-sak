@@ -78,8 +78,8 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">AI Performance</CardTitle>
-          <p className="text-xs text-muted-foreground">How well Ari handles conversations</p>
+          <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
+          <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-6" role="status" aria-label="Loading AI performance data">
@@ -107,8 +107,8 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
     return (
       <Card className={cn(className)}>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">AI Performance</CardTitle>
-          <p className="text-xs text-muted-foreground">How well Ari handles conversations</p>
+          <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
+          <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>
         </CardHeader>
         <CardContent>
           <EmptyState
@@ -127,8 +127,8 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
   return (
     <Card className={cn(className)}>
       <CardHeader>
-        <CardTitle className="text-sm font-semibold">AI Performance</CardTitle>
-        <p className="text-xs text-muted-foreground">How well Ari handles conversations</p>
+        <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
+        <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
