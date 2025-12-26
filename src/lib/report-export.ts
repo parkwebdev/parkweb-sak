@@ -80,7 +80,11 @@ export const generateCSVReport = (
     csvContent += 'LEAD STATISTICS\n';
     csvContent += 'Date,Total,New,Contacted,Qualified,Converted\n';
     data.leadStats.forEach((stat: LeadStat) => {
-      csvContent += `${stat.date},${stat.total},${stat.new},${stat.contacted},${stat.qualified},${stat.converted}\n`;
+      const newCount = (stat.new as number) || 0;
+      const contacted = (stat.contacted as number) || 0;
+      const qualified = (stat.qualified as number) || 0;
+      const converted = (stat.converted as number) || (stat.won as number) || 0;
+      csvContent += `${stat.date},${stat.total},${newCount},${contacted},${qualified},${converted}\n`;
     });
     csvContent += '\n';
   }

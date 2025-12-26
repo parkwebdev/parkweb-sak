@@ -2,7 +2,7 @@
  * AnalyticsToolbar Component
  * 
  * Toolbar with date range picker, filters, and export options.
- * Supports agent filtering, comparison mode, and CSV/PDF export.
+ * Uses dynamic lead stages from database for filtering.
  * @module components/analytics/AnalyticsToolbar
  */
 
@@ -18,6 +18,7 @@ import { ComparisonPeriodSelector } from './ComparisonPeriodSelector';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PdfIcon, CsvIcon } from './ExportIcons';
 import { format } from 'date-fns';
+import { useLeadStages } from '@/hooks/useLeadStages';
 
 /** Analytics filter configuration */
 export interface AnalyticsFilters {
@@ -56,6 +57,8 @@ export const AnalyticsToolbar = ({
   onExportCSV,
   onExportPDF,
 }: AnalyticsToolbarProps) => {
+  const { stages } = useLeadStages();
+
   const activeFilterCount = [
     filters.leadStatus !== 'all',
     filters.conversationStatus !== 'all',
@@ -107,7 +110,7 @@ export const AnalyticsToolbar = ({
 
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Lead Status</Label>
+                  <Label className="text-xs text-muted-foreground">Lead Stage</Label>
                   <Select
                     value={filters.leadStatus}
                     onValueChange={(value) => onFiltersChange({ ...filters, leadStatus: value })}
@@ -116,11 +119,18 @@ export const AnalyticsToolbar = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="contacted">Contacted</SelectItem>
-                      <SelectItem value="qualified">Qualified</SelectItem>
-                      <SelectItem value="converted">Converted</SelectItem>
+                      <SelectItem value="all">All Stages</SelectItem>
+                      {stages.map((stage) => (
+                        <SelectItem key={stage.id} value={stage.name.toLowerCase()}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-2 h-2 rounded-full" 
+                              style={{ backgroundColor: stage.color }}
+                            />
+                            {stage.name}
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

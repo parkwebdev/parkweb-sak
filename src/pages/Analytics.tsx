@@ -170,14 +170,22 @@ const Analytics: React.FC = () => {
   // Calculate KPIs
   const totalConversations = conversationStats.reduce((sum, stat) => sum + stat.total, 0);
   const totalLeads = leadStats.reduce((sum, stat) => sum + stat.total, 0);
-  const convertedLeads = leadStats.reduce((sum, stat) => sum + stat.converted, 0);
+  // Calculate converted leads from dynamic stages (look for 'converted' or 'won' stage)
+  const convertedLeads = leadStats.reduce((sum, stat) => {
+    const converted = (stat.converted as number) || (stat.won as number) || 0;
+    return sum + converted;
+  }, 0);
   const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : '0';
   const totalMessages = usageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
 
   const comparisonTotalConversations = comparisonData.conversationStats.reduce((sum, stat) => sum + stat.total, 0);
   const comparisonTotalLeads = comparisonData.leadStats.reduce((sum, stat) => sum + stat.total, 0);
-  const comparisonConvertedLeads = comparisonData.leadStats.reduce((sum, stat) => sum + stat.converted, 0);
+  const comparisonConvertedLeads = comparisonData.leadStats.reduce((sum, stat) => {
+    const converted = (stat.converted as number) || (stat.won as number) || 0;
+    return sum + converted;
+  }, 0);
   const comparisonConversionRate = comparisonTotalLeads > 0 ? ((comparisonConvertedLeads / comparisonTotalLeads) * 100).toFixed(1) : '0';
+  const comparisonTotalMessages = comparisonData.usageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
 
   // Generate trend data for sparkline charts from conversationStats
   const conversationTrend = useMemo(() => 
@@ -185,7 +193,10 @@ const Analytics: React.FC = () => {
   const leadTrend = useMemo(() => 
     leadStats.map(stat => stat.total), [leadStats]);
   const conversionTrend = useMemo(() => 
-    leadStats.map(stat => stat.total > 0 ? (stat.converted / stat.total) * 100 : 0), [leadStats]);
+    leadStats.map(stat => {
+      const converted = (stat.converted as number) || (stat.won as number) || 0;
+      return stat.total > 0 ? (converted / stat.total) * 100 : 0;
+    }), [leadStats]);
   const messageTrend = useMemo(() => 
     usageMetrics.map(metric => metric.messages), [usageMetrics]);
 
@@ -226,7 +237,9 @@ const Analytics: React.FC = () => {
     {
       title: 'Total Messages',
       value: totalMessages.toString(),
-      change: 0,
+      change: comparisonMode && comparisonTotalMessages > 0
+        ? ((totalMessages - comparisonTotalMessages) / comparisonTotalMessages * 100)
+        : 0,
       changeLabel: 'vs previous period',
     },
   ];
@@ -250,6 +263,12 @@ const Analytics: React.FC = () => {
       currentValue: parseFloat(conversionRate),
       previousValue: parseFloat(comparisonConversionRate),
       format: 'percentage' as const,
+    },
+    {
+      label: 'Messages',
+      currentValue: totalMessages,
+      previousValue: comparisonTotalMessages,
+      format: 'number' as const,
     },
   ];
 
