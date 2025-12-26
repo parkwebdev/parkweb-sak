@@ -144,7 +144,7 @@ export const EditWebhookDialog = ({ open, onOpenChange, webhook, onSave }: EditW
 
       toast.success('Webhook updated successfully');
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error updating webhook:', error);
       toast.error('Failed to update webhook');
     } finally {

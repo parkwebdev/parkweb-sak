@@ -44,7 +44,7 @@ export const CreateLeadDialog = ({ open, onOpenChange, onCreate }: CreateLeadDia
       });
       setFormData({ name: '', email: '', phone: '', company: '' });
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error creating lead:', error);
     } finally {
       setIsSubmitting(false);

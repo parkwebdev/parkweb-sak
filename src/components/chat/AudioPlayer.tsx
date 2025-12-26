@@ -83,7 +83,7 @@ export function AudioPlayer({ audioUrl, primaryColor }: AudioPlayerProps) {
       sourceNodeRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
       sourceNodeRef.current.connect(analyserRef.current);
       analyserRef.current.connect(audioContextRef.current.destination);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error setting up audio analyser:', error);
     }
   };
@@ -113,7 +113,7 @@ export function AudioPlayer({ audioUrl, primaryColor }: AudioPlayerProps) {
 
       setWaveformData(filteredData);
       tempContext.close();
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error generating waveform:', error);
     }
   };

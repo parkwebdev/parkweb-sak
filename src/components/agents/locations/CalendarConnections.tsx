@@ -85,7 +85,7 @@ export function CalendarConnections({
           setConnecting(null);
         }
       }, 500);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('OAuth initiation error:', error);
       toast.error('Failed to start calendar connection');
       setConnecting(null);

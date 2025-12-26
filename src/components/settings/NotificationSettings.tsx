@@ -68,7 +68,7 @@ export function NotificationSettings() {
       }
 
       setPreferences(data);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in fetchNotificationPreferences:', error);
     } finally {
       setLoading(false);
@@ -101,7 +101,7 @@ export function NotificationSettings() {
       }
 
       setPreferences(data);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error in createDefaultPreferences:', error);
     }
   };
@@ -143,7 +143,7 @@ export function NotificationSettings() {
             });
             return;
           }
-        } catch (error) {
+        } catch (error: unknown) {
           logger.error('Error requesting notification permission:', error);
           toast.error("Permission request failed", {
             description: "Unable to request notification permission. Please enable notifications manually in your browser settings.",
@@ -176,7 +176,7 @@ export function NotificationSettings() {
 
         // Show saved indicator
         setShowSaved(prev => ({ ...prev, [key]: true }));
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Error in updatePreference:', error);
           toast.error("Update failed", {
             description: "Failed to update notification preference.",
@@ -380,7 +380,7 @@ export function NotificationSettings() {
                       description: "Browser notifications were not enabled.",
                     });
                   }
-                } catch (error) {
+                } catch (error: unknown) {
                   logger.error('Notification permission error:', error);
                   toast.error("Error", {
                     description: "Failed to request notification permission.",

@@ -717,7 +717,7 @@ export function LeadsViewSettingsSheet({
       } else {
         toast.error('No leads to export with the selected filters');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Export failed:', error);
       toast.error('Failed to export leads');
     } finally {
