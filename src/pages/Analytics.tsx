@@ -453,23 +453,25 @@ const Analytics: React.FC = () => {
             </p>
           </div>
 
-      {/* Unified Toolbar */}
-      <AnalyticsToolbar
-        startDate={startDate}
-        endDate={endDate}
-        onDateChange={handleDateChange}
-        comparisonMode={comparisonMode}
-        onComparisonModeChange={setComparisonMode}
-        comparisonStartDate={comparisonStartDate}
-        comparisonEndDate={comparisonEndDate}
-        onComparisonDateChange={handleComparisonDateChange}
-        filters={filters}
-        onFiltersChange={setFilters}
-      mockMode={mockMode}
-      onMockModeChange={setMockMode}
-      onRegenerateMockData={regenerateMockData}
-      onRefresh={refetch}
-      />
+          {/* Unified Toolbar - only show for dashboard and traffic */}
+          {(activeTab === 'dashboard' || activeTab === 'traffic') && (
+            <AnalyticsToolbar
+              startDate={startDate}
+              endDate={endDate}
+              onDateChange={handleDateChange}
+              comparisonMode={comparisonMode}
+              onComparisonModeChange={setComparisonMode}
+              comparisonStartDate={comparisonStartDate}
+              comparisonEndDate={comparisonEndDate}
+              onComparisonDateChange={handleComparisonDateChange}
+              filters={filters}
+              onFiltersChange={setFilters}
+              mockMode={mockMode}
+              onMockModeChange={setMockMode}
+              onRegenerateMockData={regenerateMockData}
+              onRefresh={refetch}
+            />
+          )}
 
           {/* Dashboard Section */}
           {activeTab === 'dashboard' && (
