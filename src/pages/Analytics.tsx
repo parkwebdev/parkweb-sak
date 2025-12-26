@@ -23,6 +23,7 @@ import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { useSatisfactionAnalytics } from '@/hooks/useSatisfactionAnalytics';
 import { useAIPerformanceAnalytics } from '@/hooks/useAIPerformanceAnalytics';
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
+import { useMockAnalyticsData } from '@/hooks/useMockAnalyticsData';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgent } from '@/hooks/useAgent';
 import { ComparisonView } from '@/components/analytics/ComparisonView';
@@ -117,6 +118,9 @@ const Analytics: React.FC = () => {
   const { agentId } = useAgent();
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  // Mock data mode
+  const { enabled: mockMode, setEnabled: setMockMode, mockData, regenerate: regenerateMockData } = useMockAnalyticsData();
+
   // Date state
   const [startDate, setStartDate] = useState(subDays(new Date(), 30));
   const [endDate, setEndDate] = useState(new Date());
@@ -148,10 +152,10 @@ const Analytics: React.FC = () => {
 
   // Fetch core analytics data
   const {
-    conversationStats,
-    leadStats,
+    conversationStats: realConversationStats,
+    leadStats: realLeadStats,
     agentPerformance,
-    usageMetrics,
+    usageMetrics: realUsageMetrics,
     bookingTrend: bookingTrendRaw,
     satisfactionTrend: satisfactionTrendRaw,
     containmentTrend: containmentTrendRaw,
@@ -163,27 +167,27 @@ const Analytics: React.FC = () => {
 
   // Fetch booking analytics for detailed charts
   const {
-    stats: bookingStats,
+    stats: realBookingStats,
     loading: bookingLoading,
   } = useBookingAnalytics(startDate, endDate);
 
   // Fetch satisfaction analytics for detailed charts
   const {
-    stats: satisfactionStats,
+    stats: realSatisfactionStats,
     loading: satisfactionLoading,
   } = useSatisfactionAnalytics(startDate, endDate);
 
   // Fetch AI performance analytics for detailed charts
   const {
-    stats: aiPerformanceStats,
+    stats: realAIPerformanceStats,
     loading: aiPerformanceLoading,
   } = useAIPerformanceAnalytics(startDate, endDate);
 
   // Fetch traffic analytics
   const {
-    trafficSources,
-    landingPages,
-    pageVisits,
+    trafficSources: realTrafficSources,
+    landingPages: realLandingPages,
+    pageVisits: realPageVisits,
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate);
 
@@ -193,6 +197,17 @@ const Analytics: React.FC = () => {
     comparisonEndDate,
     filters
   );
+
+  // Use mock data when enabled, otherwise use real data
+  const conversationStats = mockMode && mockData ? mockData.conversationStats : realConversationStats;
+  const leadStats = mockMode && mockData ? mockData.leadStats : realLeadStats;
+  const usageMetrics = mockMode && mockData ? mockData.usageMetrics : realUsageMetrics;
+  const bookingStats = mockMode && mockData ? mockData.bookingStats : realBookingStats;
+  const satisfactionStats = mockMode && mockData ? mockData.satisfactionStats : realSatisfactionStats;
+  const aiPerformanceStats = mockMode && mockData ? mockData.aiPerformanceStats : realAIPerformanceStats;
+  const trafficSources = mockMode && mockData ? mockData.trafficSources : realTrafficSources;
+  const landingPages = mockMode && mockData ? mockData.landingPages : realLandingPages;
+  const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
 
 
   // Calculate KPIs
@@ -375,7 +390,10 @@ const Analytics: React.FC = () => {
         onComparisonDateChange={handleComparisonDateChange}
         filters={filters}
         onFiltersChange={setFilters}
-        onRefresh={refetch}
+      mockMode={mockMode}
+      onMockModeChange={setMockMode}
+      onRegenerateMockData={regenerateMockData}
+      onRefresh={refetch}
         onExportCSV={handleExportCSV}
         onExportPDF={handleExportPDF}
       />
