@@ -12,7 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, FilterLines, Download01, RefreshCcw01 } from '@untitledui/icons';
+import { Switch } from '@/components/ui/switch';
+import { Calendar, FilterLines, Download01, RefreshCcw01, Beaker02 } from '@untitledui/icons';
 import { DateRangePicker } from './DateRangePicker';
 import { ComparisonPeriodSelector } from './ComparisonPeriodSelector';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -40,6 +41,10 @@ interface AnalyticsToolbarProps {
   onRefresh: () => void;
   onExportCSV: () => void;
   onExportPDF: () => void;
+  /** Mock data mode toggle (dev only) */
+  mockMode?: boolean;
+  onMockModeChange?: (enabled: boolean) => void;
+  onRegenerateMockData?: () => void;
 }
 
 export const AnalyticsToolbar = ({
@@ -56,6 +61,9 @@ export const AnalyticsToolbar = ({
   onRefresh,
   onExportCSV,
   onExportPDF,
+  mockMode,
+  onMockModeChange,
+  onRegenerateMockData,
 }: AnalyticsToolbarProps) => {
   const { stages } = useLeadStages();
 
@@ -193,7 +201,35 @@ export const AnalyticsToolbar = ({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
+        {/* Mock Data Toggle - Dev Only */}
+        {onMockModeChange && (
+          <div className="flex items-center gap-2 px-2 py-1 bg-amber-500/10 border border-amber-500/30 rounded-md">
+            <Beaker02 className="h-4 w-4 text-amber-500" />
+            <Label htmlFor="mock-toggle" className="text-xs font-medium text-amber-600 dark:text-amber-400 cursor-pointer">
+              Mock Data
+            </Label>
+            <Switch
+              id="mock-toggle"
+              checked={mockMode}
+              onCheckedChange={onMockModeChange}
+              className="scale-75"
+              aria-label="Toggle mock data mode"
+            />
+            {mockMode && onRegenerateMockData && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                onClick={onRegenerateMockData}
+                aria-label="Regenerate mock data"
+              >
+                <RefreshCcw01 className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        )}
+
         <Button variant="ghost" size="sm" onClick={onRefresh} aria-label="Refresh analytics">
           <RefreshCcw01 className="h-4 w-4" />
         </Button>
