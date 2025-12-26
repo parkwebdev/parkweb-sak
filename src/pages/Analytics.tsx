@@ -234,38 +234,93 @@ const Analytics: React.FC = () => {
   const comparisonConversionRate = comparisonTotalLeads > 0 ? ((comparisonConvertedLeads / comparisonTotalLeads) * 100).toFixed(1) : '0';
   const comparisonTotalMessages = comparisonData.usageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
 
-  // Generate trend data for sparkline charts from conversationStats
-  const conversationTrend = useMemo(() => 
-    conversationStats.map(stat => stat.total), [conversationStats]);
-  const leadTrend = useMemo(() => 
-    leadStats.map(stat => stat.total), [leadStats]);
-  const conversionTrend = useMemo(() => 
-    leadStats.map(stat => {
+  // Generate trend data for sparkline charts
+  // In mock mode, use dedicated sparkline trends; otherwise derive from stats
+  const conversationTrend = useMemo(() => {
+    if (mockMode && mockData) {
+      return mockData.conversationTrend.map(d => d.value);
+    }
+    return realConversationStats.map(stat => stat.total);
+  }, [mockMode, mockData, realConversationStats]);
+
+  const leadTrend = useMemo(() => {
+    if (mockMode && mockData) {
+      return mockData.leadTrend.map(d => d.value);
+    }
+    return realLeadStats.map(stat => stat.total);
+  }, [mockMode, mockData, realLeadStats]);
+
+  const conversionTrend = useMemo(() => {
+    const stats = mockMode && mockData ? mockData.leadStats : realLeadStats;
+    return stats.map(stat => {
       const converted = (stat.converted as number) || (stat.won as number) || 0;
       return stat.total > 0 ? (converted / stat.total) * 100 : 0;
-    }), [leadStats]);
+    });
+  }, [mockMode, mockData, realLeadStats]);
 
-  // New business outcome trend data
-  const bookingTrend = useMemo(() => 
-    bookingTrendRaw.map(d => d.value), [bookingTrendRaw]);
-  const satisfactionTrend = useMemo(() => 
-    satisfactionTrendRaw.map(d => d.value), [satisfactionTrendRaw]);
-  const containmentTrend = useMemo(() => 
-    containmentTrendRaw.map(d => d.value), [containmentTrendRaw]);
+  // Business outcome trends - use dedicated mock sparkline data when available
+  const bookingTrend = useMemo(() => {
+    if (mockMode && mockData) {
+      return mockData.bookingTrend.map(d => d.value);
+    }
+    return bookingTrendRaw.map(d => d.value);
+  }, [mockMode, mockData, bookingTrendRaw]);
+
+  const satisfactionTrend = useMemo(() => {
+    if (mockMode && mockData) {
+      return mockData.satisfactionTrend.map(d => d.value);
+    }
+    return satisfactionTrendRaw.map(d => d.value);
+  }, [mockMode, mockData, satisfactionTrendRaw]);
+
+  const containmentTrend = useMemo(() => {
+    if (mockMode && mockData) {
+      return mockData.containmentTrend.map(d => d.value);
+    }
+    return containmentTrendRaw.map(d => d.value);
+  }, [mockMode, mockData, containmentTrendRaw]);
 
   // Calculate KPI values from new hooks
   const totalBookings = bookingStats?.totalBookings ?? 0;
   const avgSatisfaction = satisfactionStats?.averageRating ?? 0;
   const containmentRate = aiPerformanceStats?.containmentRate ?? 0;
 
-  // Calculate trend changes
-  const calculateChange = (trend: number[]): number => {
-    if (trend.length < 2) return 0;
-    const current = trend[trend.length - 1];
-    const previous = trend[trend.length - 2];
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  };
+  /**
+   * Calculate percentage change between two halves of a trend.
+   * Compares average of second half to average of first half.
+   * This gives a meaningful "vs last period" comparison.
+   */
+  const calculatePeriodChange = useCallback((trend: number[]): number => {
+    if (trend.length < 4) return 0;
+    
+    const midpoint = Math.floor(trend.length / 2);
+    const firstHalf = trend.slice(0, midpoint);
+    const secondHalf = trend.slice(midpoint);
+    
+    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+    
+    if (firstAvg === 0) return secondAvg > 0 ? 100 : 0;
+    return ((secondAvg - firstAvg) / firstAvg) * 100;
+  }, []);
+
+  /**
+   * Calculate point change for rate/percentage metrics.
+   * Returns absolute difference instead of percentage change.
+   * Used for Satisfaction (1-5 scale), Conversion Rate (%), Containment (%).
+   */
+  const calculatePointChange = useCallback((trend: number[]): number => {
+    if (trend.length < 4) return 0;
+    
+    const midpoint = Math.floor(trend.length / 2);
+    const firstHalf = trend.slice(0, midpoint);
+    const secondHalf = trend.slice(midpoint);
+    
+    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+    
+    return secondAvg - firstAvg;
+  }, []);
 
   const kpis = [
     {
@@ -424,7 +479,8 @@ const Analytics: React.FC = () => {
               <MetricCardWithChart
                 title={totalConversations.toLocaleString()}
                 subtitle="Total Conversations"
-                change={calculateChange(conversationTrend)}
+                change={calculatePeriodChange(conversationTrend)}
+                changeType="percentage"
                 changeLabel="vs last period"
                 chartData={generateChartData(conversationTrend)}
                 animationDelay={0}
@@ -432,7 +488,8 @@ const Analytics: React.FC = () => {
               <MetricCardWithChart
                 title={totalLeads.toLocaleString()}
                 subtitle="Total Leads"
-                change={calculateChange(leadTrend)}
+                change={calculatePeriodChange(leadTrend)}
+                changeType="percentage"
                 changeLabel="vs last period"
                 chartData={generateChartData(leadTrend)}
                 animationDelay={0.05}
@@ -440,7 +497,8 @@ const Analytics: React.FC = () => {
               <MetricCardWithChart
                 title={`${conversionRate}%`}
                 subtitle="Conversion Rate"
-                change={calculateChange(conversionTrend)}
+                change={calculatePointChange(conversionTrend)}
+                changeType="points"
                 changeLabel="vs last period"
                 chartData={generateChartData(conversionTrend)}
                 animationDelay={0.1}
@@ -448,7 +506,8 @@ const Analytics: React.FC = () => {
               <MetricCardWithChart
                 title={totalBookings.toLocaleString()}
                 subtitle="Total Bookings"
-                change={calculateChange(bookingTrend)}
+                change={calculatePeriodChange(bookingTrend)}
+                changeType="percentage"
                 changeLabel="vs last period"
                 chartData={generateChartData(bookingTrend)}
                 animationDelay={0.15}
@@ -456,7 +515,8 @@ const Analytics: React.FC = () => {
               <MetricCardWithChart
                 title={avgSatisfaction.toFixed(1)}
                 subtitle="Avg Satisfaction"
-                change={calculateChange(satisfactionTrend)}
+                change={calculatePointChange(satisfactionTrend)}
+                changeType="points"
                 changeLabel="vs last period"
                 chartData={generateChartData(satisfactionTrend)}
                 animationDelay={0.2}
@@ -464,7 +524,8 @@ const Analytics: React.FC = () => {
               <MetricCardWithChart
                 title={`${containmentRate.toFixed(0)}%`}
                 subtitle="AI Containment"
-                change={calculateChange(containmentTrend)}
+                change={calculatePointChange(containmentTrend)}
+                changeType="points"
                 changeLabel="vs last period"
                 chartData={generateChartData(containmentTrend)}
                 animationDelay={0.25}

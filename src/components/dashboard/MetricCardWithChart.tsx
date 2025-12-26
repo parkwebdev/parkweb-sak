@@ -16,6 +16,12 @@ interface MetricCardWithChartProps {
   subtitle: string;
   change?: number;
   changeLabel?: string;
+  /** 
+   * How to display the change value:
+   * - 'percentage': Show as percentage (e.g., "+12.5%") - default
+   * - 'points': Show as absolute points (e.g., "+0.3 pts") - for rates/percentages
+   */
+  changeType?: 'percentage' | 'points';
   chartData: { value: number }[];
   showMenu?: boolean;
   className?: string;
@@ -28,6 +34,7 @@ export const MetricCardWithChart = React.memo(function MetricCardWithChart({
   subtitle,
   change,
   changeLabel = "vs last month",
+  changeType = "percentage",
   chartData,
   showMenu = false,
   className,
@@ -94,7 +101,12 @@ export const MetricCardWithChart = React.memo(function MetricCardWithChart({
                   ) : (
                     <TrendDown01 className="h-4 w-4" />
                   )}
-                  <span className="text-sm font-medium">{Math.abs(change).toFixed(1)}%</span>
+                  <span className="text-sm font-medium">
+                    {changeType === 'points' 
+                      ? `${Math.abs(change).toFixed(1)} pts`
+                      : `${Math.abs(change).toFixed(1)}%`
+                    }
+                  </span>
                 </div>
                 <span className="text-xs text-muted-foreground">{changeLabel}</span>
               </motion.div>
