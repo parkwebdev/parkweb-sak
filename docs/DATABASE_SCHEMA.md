@@ -1236,6 +1236,46 @@ USING (is_admin(auth.uid()));
   - Supports images, documents, audio recordings
   - Voice messages stored as WebM/MP4 audio
 
+## Analytics Usage
+
+### Tables Used for Analytics
+
+The following tables provide data for the Analytics dashboard:
+
+#### Booking Analytics (`calendar_events`)
+- **Total Bookings**: `COUNT(*) WHERE start_time BETWEEN date_range`
+- **Show Rate**: `completed / (completed + cancelled + no_show) * 100`
+- **By Location**: Group by `location_id` with JOIN to `locations.name`
+- **By Status**: Group by `status` (confirmed, completed, cancelled, no_show)
+- **Trend Data**: Daily aggregation for sparkline charts
+
+**Access Pattern**: Filter via `connected_accounts.user_id` to ensure user owns the calendar connection.
+
+#### Satisfaction Analytics (`conversation_ratings`)
+- **Average Rating**: `AVG(rating)` where rating is 1-5 scale
+- **Distribution**: `COUNT(*) GROUP BY rating` for each star level (1-5)
+- **Recent Feedback**: Latest 10 ratings with non-null `feedback` text
+- **Trend Data**: Daily average rating for sparkline charts
+
+**Access Pattern**: JOIN with `conversations.user_id` to filter by account owner.
+
+#### AI Performance Analytics (`conversations` + `conversation_takeovers`)
+- **Total Conversations**: `COUNT(*) FROM conversations`
+- **Human Takeover Count**: `COUNT(*) FROM conversation_takeovers WHERE taken_over_at BETWEEN date_range`
+- **Containment Rate**: `(total - takeovers) / total * 100`
+- **Resolution Rate**: `closed / total * 100`
+- **Active vs Closed**: Group by `status` field
+
+**Access Pattern**: Filter `conversations.user_id` directly.
+
+#### Article Usefulness Analytics (`article_feedback`)
+- **Helpful Percentage**: `SUM(is_helpful::int) / COUNT(*) * 100`
+- **Total Feedback**: `COUNT(*)`
+
+**Access Pattern**: JOIN with `help_articles.user_id` via `article_id`.
+
+---
+
 ## React Hooks Reference
 
 All hooks are documented with JSDoc comments. Key data hooks:
@@ -1253,6 +1293,9 @@ All hooks are documented with JSDoc comments. Key data hooks:
 | `useAnnouncements` | Widget announcement banners |
 | `useNewsItems` | Widget news feed items |
 | `useAnalytics` | Analytics data fetching with filters |
+| `useBookingAnalytics` | Calendar booking analytics with show rates |
+| `useSatisfactionAnalytics` | Conversation rating analytics |
+| `useAIPerformanceAnalytics` | AI containment and resolution metrics |
 | `useScheduledReports` | Scheduled report management |
 | `useAgentApiKeys` | Agent API key management with rate limiting |
 | `usePlanLimits` | Subscription plan limit checking |
