@@ -195,74 +195,54 @@ export interface ArticleUsefulnessStats {
 
 ---
 
-### Phase 2: Booking Analytics Hook
+### Phase 2: Data Hooks ✅ COMPLETE
+
+#### useBookingAnalytics
 **File**: `src/hooks/useBookingAnalytics.ts`
 
-- [ ] Create hook with proper JSDoc header
-- [ ] Accept `startDate` and `endDate` parameters
-- [ ] Query `calendar_events` table with date filter
-- [ ] Join with `locations` table for location names
-- [ ] Filter by user's agent via `connected_accounts`
-- [ ] Calculate total bookings
-- [ ] Calculate show rate
-- [ ] Group by location
-- [ ] Group by status
-- [ ] Generate trend data (daily aggregation)
-- [ ] Return `BookingStats` interface
-- [ ] Add real-time subscription
-- [ ] Add proper loading/error states
+- [x] Create hook with proper JSDoc header
+- [x] Accept `startDate` and `endDate` parameters
+- [x] Query `calendar_events` table with date filter
+- [x] Join with `locations` table for location names
+- [x] Filter by user's agent via `connected_accounts`
+- [x] Calculate total bookings
+- [x] Calculate show rate
+- [x] Group by location
+- [x] Group by status
+- [x] Generate trend data (daily aggregation)
+- [x] Return `BookingStats` interface
+- [x] Add real-time subscription
+- [x] Add proper loading/error states
 
-**Query Pattern:**
-```typescript
-const { data: bookings } = await supabase
-  .from('calendar_events')
-  .select(`
-    id,
-    status,
-    start_time,
-    location_id,
-    locations!fk_events_location (
-      id,
-      name
-    )
-  `)
-  .gte('start_time', startDate.toISOString())
-  .lte('start_time', endDate.toISOString())
-  .in('connected_account_id', connectedAccountIds);
-```
-
----
-
-### Phase 3: Satisfaction Analytics Hook
+#### useSatisfactionAnalytics
 **File**: `src/hooks/useSatisfactionAnalytics.ts`
 
-- [ ] Create hook with proper JSDoc header
-- [ ] Accept `startDate` and `endDate` parameters
-- [ ] Query `conversation_ratings` table
-- [ ] Join with `conversations` for user_id filtering
-- [ ] Calculate average rating
-- [ ] Calculate distribution (count per 1-5 star)
-- [ ] Generate trend data (daily avg)
-- [ ] Fetch recent feedback with comments
-- [ ] Return `SatisfactionStats` interface
-- [ ] Add real-time subscription
-- [ ] Add proper loading/error states
+- [x] Create hook with proper JSDoc header
+- [x] Accept `startDate` and `endDate` parameters
+- [x] Query `conversation_ratings` table
+- [x] Join with `conversations` for user_id filtering
+- [x] Calculate average rating
+- [x] Calculate distribution (count per 1-5 star)
+- [x] Generate trend data (daily avg)
+- [x] Fetch recent feedback with comments
+- [x] Return `SatisfactionStats` interface
+- [x] Add real-time subscription
+- [x] Add proper loading/error states
 
----
-
-### Phase 4: AI Performance Analytics Hook
+#### useAIPerformanceAnalytics
 **File**: `src/hooks/useAIPerformanceAnalytics.ts`
 
-- [ ] Create hook with proper JSDoc header
-- [ ] Accept `startDate` and `endDate` parameters
-- [ ] Query `conversations` for total count
-- [ ] Query `conversations` grouped by status (active/closed)
-- [ ] Query `conversation_takeovers` for human intervention count
-- [ ] Calculate containment rate: `(total - takeovers) / total * 100`
-- [ ] Calculate resolution rate: `closed / total * 100`
-- [ ] Return `AIPerformanceStats` interface
-- [ ] Add real-time subscription
-- [ ] Add proper loading/error states
+- [x] Create hook with proper JSDoc header
+- [x] Accept `startDate` and `endDate` parameters
+- [x] Query `conversations` for total count
+- [x] Query `conversations` grouped by status (active/closed)
+- [x] Query `conversation_takeovers` for human intervention count
+- [x] Calculate containment rate: `(total - takeovers) / total * 100`
+- [x] Calculate resolution rate: `closed / total * 100`
+- [x] Return `AIPerformanceStats` interface
+- [x] Add real-time subscription (on conversations table)
+- [x] Add proper loading/error states
+- [x] Add trend data for sparklines (bonus)
 
 ---
 
@@ -493,12 +473,21 @@ grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6
 | CREATE | `src/components/analytics/BookingStatusChart.tsx` | ⬜ Pending |
 | CREATE | `src/components/analytics/SatisfactionScoreCard.tsx` | ⬜ Pending |
 | CREATE | `src/components/analytics/AIPerformanceCard.tsx` | ⬜ Pending |
+| CREATE | `src/types/analytics.ts` | ✅ Complete |
+| CREATE | `src/hooks/useBookingAnalytics.ts` | ✅ Complete |
+| CREATE | `src/hooks/useSatisfactionAnalytics.ts` | ✅ Complete |
+| CREATE | `src/hooks/useAIPerformanceAnalytics.ts` | ✅ Complete |
+| CREATE | `src/components/analytics/BookingsByLocationChart.tsx` | ⬜ Pending |
+| CREATE | `src/components/analytics/BookingStatusChart.tsx` | ⬜ Pending |
+| CREATE | `src/components/analytics/SatisfactionScoreCard.tsx` | ⬜ Pending |
+| CREATE | `src/components/analytics/AIPerformanceCard.tsx` | ⬜ Pending |
 | CREATE | `src/components/analytics/TicketsResolvedCard.tsx` | ⬜ Pending |
 | MODIFY | `src/hooks/useAnalytics.ts` | ⬜ Pending |
 | MODIFY | `src/pages/Analytics.tsx` | ⬜ Pending |
 | DELETE | `src/components/analytics/AgentPerformanceChart.tsx` | ⬜ Pending |
 | DELETE | `src/components/analytics/UsageMetricsChart.tsx` | ⬜ Pending |
-| UPDATE | `docs/HOOKS_REFERENCE.md` | ⬜ Pending |
+| UPDATE | `docs/HOOKS_REFERENCE.md` | ✅ Complete |
+| UPDATE | `src/lib/query-keys.ts` | ✅ Complete |
 | UPDATE | `docs/DATABASE_SCHEMA.md` | ⬜ Pending |
 
 ---

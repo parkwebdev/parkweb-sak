@@ -117,6 +117,12 @@ export const queryKeys = {
       [...queryKeys.analytics.all, 'traffic', params] as const,
     leads: (params: { startDate: string; endDate: string }) =>
       [...queryKeys.analytics.all, 'leads', params] as const,
+    bookings: (params: { startDate: string; endDate: string; agentId?: string }) =>
+      [...queryKeys.analytics.all, 'bookings', params] as const,
+    satisfaction: (params: { startDate: string; endDate: string; userId?: string }) =>
+      [...queryKeys.analytics.all, 'satisfaction', params] as const,
+    aiPerformance: (params: { startDate: string; endDate: string; userId?: string }) =>
+      [...queryKeys.analytics.all, 'ai-performance', params] as const,
   },
 
   // Team
