@@ -46,7 +46,7 @@ interface AriCustomToolsSectionProps {
   agentId: string;
 }
 
-export const AriCustomToolsSection: React.FC<AriCustomToolsSectionProps> = ({ agentId }) => {
+export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
   const [tools, setTools] = useState<AgentTool[]>([]);
   const [loading, setLoading] = useState(true);
   

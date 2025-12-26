@@ -22,10 +22,10 @@ interface PasswordStrengthIndicatorProps {
   className?: string;
 }
 
-export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({ 
+export function PasswordStrengthIndicator({ 
   password, 
   className 
-}) => {
+}: PasswordStrengthIndicatorProps) {
   const validation = validatePasswordStrength(password);
   
   if (!password) return null;
