@@ -49,8 +49,4 @@ export default defineConfig(({ mode }) => ({
   esbuild: {
     drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
-  // Prebundle Mapbox dependencies to avoid dynamic import resolution issues
-  optimizeDeps: {
-    include: ['@vis.gl/react-mapbox', 'mapbox-gl'],
-  },
 }));
