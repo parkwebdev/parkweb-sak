@@ -36,8 +36,8 @@ export const NextLevelVideoSection: React.FC = () => {
       >
         {/* Decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-1/2 -right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-1/2 -left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+          <div className="absolute -top-1/2 -right-1/4 w-96 h-96 bg-accent-purple/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-1/2 -left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         </div>
 
         {/* Play button */}
@@ -58,7 +58,7 @@ export const NextLevelVideoSection: React.FC = () => {
       {/* Content section */}
       <div className="p-4 bg-card">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-500">
+          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-accent-purple/10 flex items-center justify-center text-accent-purple">
             <Star01 size={16} />
           </div>
           <div>
