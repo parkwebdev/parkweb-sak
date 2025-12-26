@@ -256,12 +256,17 @@ export const LeadDetailsSheet = ({
     };
   }, [editedLead, editedCustomData, performAutoSave]);
 
-  // Check if phone exists in custom data
-  // Get phone value from custom data if it exists
+  // Keys to check in data JSONB for legacy phone values
   const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'Phone Number', 'Phone number', 'telephone', 'mobile'];
   
-  const customPhoneValue = useMemo(() => {
+  // Get phone value: prioritize dedicated column, fallback to data JSONB for legacy leads
+  const phoneValue = useMemo(() => {
     if (!lead) return '';
+    
+    // Primary: Use dedicated phone column (populated by edge function)
+    if (lead.phone) return lead.phone;
+    
+    // Fallback for legacy leads: Search data JSONB
     const data = (lead.data || {}) as Record<string, unknown>;
     for (const key of phoneKeys) {
       if (key in data && data[key]) {
@@ -580,7 +585,7 @@ export const LeadDetailsSheet = ({
                     <Label htmlFor="phone" className="text-muted-foreground">Phone</Label>
                     <Input
                       id="phone"
-                      value={customPhoneValue}
+                      value={phoneValue}
                       readOnly
                       className="bg-muted/50 border-transparent"
                     />
