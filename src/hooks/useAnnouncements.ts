@@ -75,7 +75,7 @@ export const useAnnouncements = (agentId: string) => {
       optimisticUpdate((prev) => [...prev, data]);
       toast.success('Announcement created');
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error adding announcement', error);
       toast.error('Failed to create announcement', {
         description: getErrorMessage(error),
@@ -98,7 +98,7 @@ export const useAnnouncements = (agentId: string) => {
       optimisticUpdate((prev) => prev.map(a => a.id === id ? data : a));
       toast.success('Announcement updated');
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error updating announcement', error);
       toast.error('Failed to update announcement', {
         description: getErrorMessage(error),
@@ -128,7 +128,7 @@ export const useAnnouncements = (agentId: string) => {
       }
       
       toast.success('Announcement deleted');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error deleting announcement', error);
       toast.error('Failed to delete announcement', {
         description: getErrorMessage(error),
@@ -158,7 +158,7 @@ export const useAnnouncements = (agentId: string) => {
         throw errors[0].error;
       }
       // Success - no toast needed (SavedIndicator shows feedback)
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error reordering announcements', error);
       toast.error('Failed to update order', {
         description: getErrorMessage(error),

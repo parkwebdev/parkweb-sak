@@ -647,7 +647,7 @@ export const useHelpArticles = (agentId: string) => {
           });
           completed++;
           onProgress?.(completed, total);
-        } catch (err) {
+        } catch (err: unknown) {
           logger.error('Failed to embed article', { articleId: article.id, error: err });
         }
       }));
