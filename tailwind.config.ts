@@ -117,6 +117,10 @@ const config: Config = {
         facebook: "hsl(var(--facebook))",
         instagram: "hsl(var(--instagram))",
         twitter: "hsl(var(--twitter))",
+        "accent-purple": {
+          DEFAULT: "hsl(var(--accent-purple))",
+          foreground: "hsl(var(--accent-purple-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

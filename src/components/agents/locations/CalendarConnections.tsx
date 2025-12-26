@@ -131,7 +131,7 @@ export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
                     Error
                   </Badge>
                 ) : account.is_active ? (
-                  <Badge variant="secondary" className="text-xs bg-emerald-500/10 text-emerald-600">
+                  <Badge variant="secondary" className="text-xs bg-status-active/10 text-status-active">
                     <Check size={12} className="mr-1" />
                     Connected
                   </Badge>

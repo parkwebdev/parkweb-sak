@@ -125,9 +125,9 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
                       </code>
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                      <span>Created {formatDistanceToNow(new Date(key.created_at))} ago</span>
+                      <span>Created {formatDistanceToNow(new Date(key.created_at), { addSuffix: true })}</span>
                       {key.last_used_at && (
-                        <span>Last used {formatDistanceToNow(new Date(key.last_used_at))} ago</span>
+                        <span>Last used {formatDistanceToNow(new Date(key.last_used_at), { addSuffix: true })}</span>
                       )}
                       <span>{key.requests_per_minute}/min • {key.requests_per_day}/day</span>
                     </div>

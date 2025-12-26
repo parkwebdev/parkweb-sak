@@ -52,6 +52,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 // Import types and utilities
 import type { Tables } from '@/integrations/supabase/types';
@@ -372,7 +373,7 @@ async function fetchConversationMetadata(
     .in('id', conversationIds);
 
   if (error) {
-    console.error('Failed to fetch conversation metadata:', error);
+    logger.error('Failed to fetch conversation metadata:', error);
     return new Map();
   }
 

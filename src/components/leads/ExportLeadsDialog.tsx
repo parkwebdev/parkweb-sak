@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
+import { logger } from '@/utils/logger';
 import {
   ExportColumn,
   ExportOptions,
@@ -68,7 +69,7 @@ async function fetchConversationMetadata(
     .in('id', conversationIds);
 
   if (error) {
-    console.error('Failed to fetch conversation metadata:', error);
+    logger.error('Failed to fetch conversation metadata:', error);
     return new Map();
   }
 
@@ -240,7 +241,7 @@ export function ExportLeadsDialog({
         toast.error('No leads to export with the selected filters');
       }
     } catch (error) {
-      console.error('Export failed:', error);
+      logger.error('Export failed:', error);
       toast.error('Failed to export leads');
     } finally {
       setIsExporting(false);
