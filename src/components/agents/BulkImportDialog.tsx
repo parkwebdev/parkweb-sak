@@ -413,7 +413,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
             <div className="space-y-4">
               <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <CheckCircle className="w-4 h-4 text-status-active" />
                   <span className="text-sm font-medium">{validCount} articles ready</span>
                 </div>
                 {invalidCount > 0 && (

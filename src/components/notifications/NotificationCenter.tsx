@@ -220,7 +220,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
       case 'lead':
         return <Users size={16} className="text-success" />;
       case 'agent':
-        return <Zap size={16} className="text-purple-500" />;
+        return <Zap size={16} className="text-accent-purple" />;
       case 'team':
         return <Team size={16} className="text-warning" />;
       case 'report':

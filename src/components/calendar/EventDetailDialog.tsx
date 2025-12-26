@@ -4,7 +4,7 @@
  * for full event modification including recurrence settings.
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -15,7 +15,6 @@ import {
   User01, 
   Home02, 
   Building07,
-  AlertTriangle
 } from '@untitledui/icons';
 import {
   Dialog,
@@ -47,6 +46,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { RecurrenceSettings } from './RecurrenceSettings';
+import { ConflictWarning } from './ConflictWarningBanner';
 import type { CalendarEvent, EventType, EventStatus, RecurrenceRule } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG, EVENT_STATUS_CONFIG } from '@/types/calendar';
 
@@ -75,58 +75,6 @@ const formatTimeValue = (date: Date): string => {
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes() < 30 ? '00' : '30';
   return `${hours}:${minutes}`;
-};
-
-// Conflict Warning Component
-const ConflictWarning: React.FC<{
-  date?: Date;
-  startTime: string;
-  endTime: string;
-  allDay: boolean;
-  existingEvents: CalendarEvent[];
-  excludeEventId?: string;
-}> = ({ date, startTime, endTime, allDay, existingEvents, excludeEventId }) => {
-  const conflictingEvents = useMemo(() => {
-    if (!date || allDay || !existingEvents.length) return [];
-
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const [endHour, endMinute] = endTime.split(':').map(Number);
-
-    const proposedStart = new Date(date);
-    proposedStart.setHours(startHour, startMinute, 0, 0);
-
-    const proposedEnd = new Date(date);
-    proposedEnd.setHours(endHour, endMinute, 0, 0);
-
-    return existingEvents.filter((e) => {
-      if (e.allDay) return false;
-      if (excludeEventId && e.id === excludeEventId) return false;
-
-      const eStart = new Date(e.start).getTime();
-      const eEnd = new Date(e.end).getTime();
-      const pStart = proposedStart.getTime();
-      const pEnd = proposedEnd.getTime();
-
-      // Check overlap: proposed starts before existing ends AND proposed ends after existing starts
-      return pStart < eEnd && pEnd > eStart;
-    });
-  }, [date, startTime, endTime, allDay, existingEvents, excludeEventId]);
-
-  if (conflictingEvents.length === 0) return null;
-
-  return (
-    <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-      <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
-      <div className="space-y-1">
-        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-          Schedule Conflict Detected
-        </p>
-        <p className="text-xs text-amber-700 dark:text-amber-300">
-          This time overlaps with: {conflictingEvents.map((e) => e.title).join(', ')}
-        </p>
-      </div>
-    </div>
-  );
 };
 
 export const EventDetailDialog: React.FC<EventDetailDialogProps> = ({

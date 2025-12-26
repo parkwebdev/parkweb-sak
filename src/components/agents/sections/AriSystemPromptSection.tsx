@@ -78,7 +78,7 @@ export const AriSystemPromptSection: React.FC<AriSystemPromptSectionProps> = ({ 
                     onMouseLeave={() => setIsHoveringTip(false)}
                   >
                     {isHoveringTip ? (
-                      <LightbulbIconFilled className="h-4 w-4 text-yellow-500" />
+                      <LightbulbIconFilled className="h-4 w-4 text-warning" />
                     ) : (
                       <LightbulbIcon className="h-4 w-4" />
                     )}

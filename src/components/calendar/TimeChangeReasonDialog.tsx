@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { format } from 'date-fns';
-import { AlertTriangle } from '@untitledui/icons';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { ConflictWarningBanner } from './ConflictWarningBanner';
 import type { CalendarEvent } from '@/types/calendar';
 
 interface TimeChangeReasonDialogProps {
@@ -110,19 +110,7 @@ export const TimeChangeReasonDialog: React.FC<TimeChangeReasonDialogProps> = ({
 
         <div className="space-y-4 py-4">
           {/* Conflict warning */}
-          {conflictingEvents.length > 0 && (
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  Schedule Conflict Detected
-                </p>
-                <p className="text-xs text-amber-700 dark:text-amber-300">
-                  This time overlaps with: {conflictingEvents.map(e => e.title).join(', ')}
-                </p>
-              </div>
-            </div>
-          )}
+          <ConflictWarningBanner conflictingEvents={conflictingEvents} />
 
           {/* Time change summary */}
           <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
