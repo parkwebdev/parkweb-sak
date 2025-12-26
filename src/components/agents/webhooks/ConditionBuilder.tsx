@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface Condition {
+  id: string;
   field: string;
   operator: string;
   value: string;
@@ -47,20 +48,21 @@ export const ConditionBuilder = ({ conditions, onChange, eventType }: ConditionB
   const addCondition = () => {
     onChange({
       ...conditions,
-      rules: [...conditions.rules, { field: fields[0].value, operator: 'equals', value: '' }],
+      rules: [...conditions.rules, { id: crypto.randomUUID(), field: fields[0].value, operator: 'equals', value: '' }],
     });
   };
 
-  const updateCondition = (index: number, updates: Partial<Condition>) => {
-    const newRules = [...conditions.rules];
-    newRules[index] = { ...newRules[index], ...updates };
+  const updateCondition = (id: string, updates: Partial<Omit<Condition, 'id'>>) => {
+    const newRules = conditions.rules.map((rule) =>
+      rule.id === id ? { ...rule, ...updates } : rule
+    );
     onChange({ ...conditions, rules: newRules });
   };
 
-  const removeCondition = (index: number) => {
+  const removeCondition = (id: string) => {
     onChange({
       ...conditions,
-      rules: conditions.rules.filter((_, i) => i !== index),
+      rules: conditions.rules.filter((rule) => rule.id !== id),
     });
   };
 
@@ -80,13 +82,13 @@ export const ConditionBuilder = ({ conditions, onChange, eventType }: ConditionB
       {conditions.rules.length > 0 && (
         <>
           <div className="space-y-3">
-            {conditions.rules.map((condition, index) => (
-              <div key={index} className="flex gap-2 items-end">
+            {conditions.rules.map((condition) => (
+              <div key={condition.id} className="flex gap-2 items-end">
                 <div className="flex-1">
                   <Label className="text-xs">Field</Label>
                   <Select
                     value={condition.field}
-                    onValueChange={(value) => updateCondition(index, { field: value })}
+                    onValueChange={(value) => updateCondition(condition.id, { field: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -105,7 +107,7 @@ export const ConditionBuilder = ({ conditions, onChange, eventType }: ConditionB
                   <Label className="text-xs">Operator</Label>
                   <Select
                     value={condition.operator}
-                    onValueChange={(value) => updateCondition(index, { operator: value })}
+                    onValueChange={(value) => updateCondition(condition.id, { operator: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -125,7 +127,7 @@ export const ConditionBuilder = ({ conditions, onChange, eventType }: ConditionB
                   <Input
                     placeholder="Enter value"
                     value={condition.value}
-                    onChange={(e) => updateCondition(index, { value: e.target.value })}
+                    onChange={(e) => updateCondition(condition.id, { value: e.target.value })}
                   />
                 </div>
 
@@ -133,7 +135,7 @@ export const ConditionBuilder = ({ conditions, onChange, eventType }: ConditionB
                   type="button"
                   variant="outline"
                   size="icon"
-                  onClick={() => removeCondition(index)}
+                  onClick={() => removeCondition(condition.id)}
                   aria-label="Remove condition"
                 >
                   <span aria-hidden="true">✕</span>

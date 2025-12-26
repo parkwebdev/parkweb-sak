@@ -97,7 +97,7 @@ export const MessageInputArea = memo(function MessageInputArea({
           <div className="flex flex-wrap gap-2">
             {pendingFiles.files.map((file, index) => (
               <div 
-                key={index}
+                key={`${file.name}-${file.lastModified}`}
                 className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-sm"
               >
                 {file.type.startsWith('image/') ? (

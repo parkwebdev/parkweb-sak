@@ -27,6 +27,7 @@ interface CreateWebhookDialogProps {
 
 /** Condition rule for webhook triggers */
 interface ConditionRule {
+  id: string;
   field: string;
   operator: string;
   value: string;
@@ -69,8 +70,8 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
   const [authType, setAuthType] = useState('none');
   const [authConfig, setAuthConfig] = useState<Record<string, string>>({});
-  const [customHeaders, setCustomHeaders] = useState<Array<{ key: string; value: string }>>([
-    { key: '', value: '' },
+  const [customHeaders, setCustomHeaders] = useState<Array<{ id: string; key: string; value: string }>>([
+    { id: crypto.randomUUID(), key: '', value: '' },
   ]);
   const [conditions, setConditions] = useState<ConditionsState>({
     rules: [],
@@ -116,7 +117,7 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
       setSelectedEvents([]);
       setAuthType('none');
       setAuthConfig({});
-      setCustomHeaders([{ key: '', value: '' }]);
+      setCustomHeaders([{ id: crypto.randomUUID(), key: '', value: '' }]);
       setConditions({ rules: [], logic: 'AND' });
       setResponseActions([]);
     } catch (error) {
@@ -136,17 +137,17 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
   };
 
   const addHeader = () => {
-    setCustomHeaders([...customHeaders, { key: '', value: '' }]);
+    setCustomHeaders([...customHeaders, { id: crypto.randomUUID(), key: '', value: '' }]);
   };
 
-  const updateHeader = (index: number, field: 'key' | 'value', value: string) => {
-    const newHeaders = [...customHeaders];
-    newHeaders[index][field] = value;
-    setCustomHeaders(newHeaders);
+  const updateHeader = (id: string, field: 'key' | 'value', value: string) => {
+    setCustomHeaders(customHeaders.map(h => 
+      h.id === id ? { ...h, [field]: value } : h
+    ));
   };
 
-  const removeHeader = (index: number) => {
-    setCustomHeaders(customHeaders.filter((_, i) => i !== index));
+  const removeHeader = (id: string) => {
+    setCustomHeaders(customHeaders.filter((h) => h.id !== id));
   };
 
   const getSamplePayload = () => {
@@ -267,23 +268,23 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
 
               <div className="space-y-2 border-t pt-4">
                 <Label>Custom Headers (Optional)</Label>
-                {customHeaders.map((header, index) => (
-                  <div key={index} className="flex gap-2">
+                {customHeaders.map((header) => (
+                  <div key={header.id} className="flex gap-2">
                     <Input
                       placeholder="Header name"
                       value={header.key}
-                      onChange={(e) => updateHeader(index, 'key', e.target.value)}
+                      onChange={(e) => updateHeader(header.id, 'key', e.target.value)}
                     />
                     <Input
                       placeholder="Header value"
                       value={header.value}
-                      onChange={(e) => updateHeader(index, 'value', e.target.value)}
+                      onChange={(e) => updateHeader(header.id, 'value', e.target.value)}
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => removeHeader(index)}
+                      onClick={() => removeHeader(header.id)}
                       disabled={customHeaders.length === 1}
                       aria-label="Remove header"
                     >
