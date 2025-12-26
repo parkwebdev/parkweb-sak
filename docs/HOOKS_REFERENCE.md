@@ -514,22 +514,142 @@ const {
 
 ### useAnalytics
 
-Fetches analytics data and metrics.
+Fetches general analytics data including conversations, leads, and usage metrics.
 
 ```tsx
 import { useAnalytics } from '@/hooks/useAnalytics';
 
 const {
-  metrics,           // AnalyticsMetrics - KPI data
-  conversationStats, // ConversationStats - Conversation analytics
-  agentPerformance,  // AgentPerformance[] - Per-agent stats
-  isLoading,        // boolean
-  dateRange,        // { from, to } - Selected range
-  setDateRange,     // (range) => void
-} = useAnalytics();
+  conversationStats, // ConversationStats[] - Daily conversation statistics
+  leadStats,         // LeadStageStats[] - Daily lead statistics by stage
+  stageInfo,         // StageInfo[] - Stage metadata for chart colors
+  agentPerformance,  // AgentPerformance[] - Ari performance metrics
+  usageMetrics,      // UsageMetrics[] - Daily usage metrics
+  conversations,     // any[] - Raw conversation data for tables
+  leads,             // any[] - Raw lead data for tables
+  loading,           // boolean - Loading state
+  refetch,           // () => void - Manually refresh all analytics
+} = useAnalytics(startDate: Date, endDate: Date, filters: AnalyticsFilters);
 ```
 
 **File**: `src/hooks/useAnalytics.ts`
+
+---
+
+### useBookingAnalytics
+
+Fetches booking/appointment analytics from calendar events. **Powered by React Query** with real-time updates.
+
+```tsx
+import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
+
+const {
+  stats,       // BookingStats | null - Computed booking statistics
+  rawEvents,   // RawCalendarEvent[] - Raw calendar events
+  loading,     // boolean - Loading state
+  refetch,     // () => void - Manually trigger refetch
+  invalidate,  // () => void - Invalidate cache
+} = useBookingAnalytics(startDate: Date, endDate: Date);
+```
+
+**BookingStats Interface:**
+```typescript
+interface BookingStats {
+  totalBookings: number;           // Total bookings in period
+  showRate: number;                // Percentage of completed bookings (0-100)
+  byLocation: LocationBookingData[]; // Bookings grouped by location
+  byStatus: BookingStatusData[];   // Bookings grouped by status
+  trend: BookingTrendData[];       // Daily booking trend
+}
+```
+
+**Key Features:**
+- Filters by user's connected calendar accounts
+- Groups bookings by location with completion stats
+- Calculates show rate: completed / (completed + cancelled + no_show)
+- Generates daily trend data for sparklines
+- Real-time updates via Supabase subscription
+
+**File**: `src/hooks/useBookingAnalytics.ts`
+
+---
+
+### useSatisfactionAnalytics
+
+Fetches customer satisfaction analytics from conversation ratings. **Powered by React Query** with real-time updates.
+
+```tsx
+import { useSatisfactionAnalytics } from '@/hooks/useSatisfactionAnalytics';
+
+const {
+  stats,       // SatisfactionStats | null - Computed satisfaction statistics
+  rawRatings,  // RawRating[] - Raw rating records
+  loading,     // boolean - Loading state
+  refetch,     // () => void - Manually trigger refetch
+  invalidate,  // () => void - Invalidate cache
+} = useSatisfactionAnalytics(startDate: Date, endDate: Date);
+```
+
+**SatisfactionStats Interface:**
+```typescript
+interface SatisfactionStats {
+  averageRating: number;           // Average rating (1-5 scale)
+  totalRatings: number;            // Total ratings submitted
+  distribution: RatingDistribution[]; // Count per 1-5 star
+  trend: SatisfactionTrendData[];  // Daily average rating trend
+  recentFeedback: FeedbackItem[];  // Recent ratings with comments
+}
+```
+
+**Key Features:**
+- Filters by user's conversations in date range
+- Calculates distribution across 1-5 star ratings
+- Generates daily average trend data
+- Extracts recent feedback with comments (limit 10)
+- Real-time updates via Supabase subscription
+
+**File**: `src/hooks/useSatisfactionAnalytics.ts`
+
+---
+
+### useAIPerformanceAnalytics
+
+Fetches AI performance metrics including containment and resolution rates. **Powered by React Query** with real-time updates.
+
+```tsx
+import { useAIPerformanceAnalytics } from '@/hooks/useAIPerformanceAnalytics';
+
+const {
+  stats,            // AIPerformanceStats | null - Performance metrics
+  trend,            // AIPerformanceTrendData[] - Daily trend data
+  rawConversations, // RawConversation[] - Raw conversation records
+  loading,          // boolean - Loading state
+  refetch,          // () => void - Manually trigger refetch
+  invalidate,       // () => void - Invalidate cache
+} = useAIPerformanceAnalytics(startDate: Date, endDate: Date);
+```
+
+**AIPerformanceStats Interface:**
+```typescript
+interface AIPerformanceStats {
+  containmentRate: number;    // % handled by AI without human (0-100)
+  resolutionRate: number;     // % of conversations closed (0-100)
+  totalConversations: number; // Total in period
+  aiHandled: number;          // Handled entirely by AI
+  humanTakeover: number;      // Required human intervention
+  closed: number;             // Closed conversations
+  active: number;             // Active conversations
+}
+```
+
+**Key Features:**
+- Containment Rate = (total - takeovers) / total * 100
+- Resolution Rate = closed / total * 100
+- Tracks both current status and historical takeovers
+- Generates daily trend data for sparklines
+- Real-time updates via Supabase subscription
+
+**File**: `src/hooks/useAIPerformanceAnalytics.ts`
 
 ---
 
