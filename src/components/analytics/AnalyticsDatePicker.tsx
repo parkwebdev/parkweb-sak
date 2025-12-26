@@ -131,6 +131,8 @@ export const AnalyticsDatePicker = ({
     return `${format(start, 'MMM d')} - ${format(end, 'MMM d')}`;
   };
 
+  const showCustomComparison = comparisonMode && comparisonType === 'custom';
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -150,103 +152,111 @@ export const AnalyticsDatePicker = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <div className="p-3 space-y-3">
-          {/* Primary Date Range Calendar */}
-          <div>
-            <Label className="text-xs font-medium text-muted-foreground mb-2 block">
-              Date Range
-            </Label>
-            <CalendarComponent
-              mode="range"
-              selected={{ from: startDate, to: endDate }}
-              onSelect={(range) => {
-                if (range?.from && range?.to) {
-                  onDateChange(range.from, range.to);
-                  if (comparisonMode && comparisonType !== 'custom') {
-                    updateComparisonDates(comparisonType, range.from, range.to);
-                  }
-                }
-              }}
-              numberOfMonths={2}
-              className={cn("pointer-events-auto")}
-            />
-          </div>
-
-          {/* Quick Select Presets */}
-          <div className="border-t pt-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Quick Select</p>
-            <div className="grid grid-cols-5 gap-1.5">
-              {presets.map((preset) => (
-                <button
-                  key={preset.label}
-                  className="text-xs px-2 py-1.5 rounded-md hover:bg-muted transition-colors text-center"
-                  onClick={() => handlePresetClick(preset.days)}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Compare Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="compare-toggle" className="text-sm font-medium cursor-pointer">
-                Compare to previous period
+        <div className={cn(
+          "flex",
+          showCustomComparison ? "flex-row divide-x" : "flex-col"
+        )}>
+          {/* Left/Main Section: Primary Date Range */}
+          <div className="p-3 space-y-3">
+            <div>
+              <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                Date Range
               </Label>
-              <Switch
-                id="compare-toggle"
-                checked={comparisonMode}
-                onCheckedChange={handleComparisonModeToggle}
-                aria-label="Toggle comparison mode"
+              <CalendarComponent
+                mode="range"
+                selected={{ from: startDate, to: endDate }}
+                onSelect={(range) => {
+                  if (range?.from && range?.to) {
+                    onDateChange(range.from, range.to);
+                    if (comparisonMode && comparisonType !== 'custom') {
+                      updateComparisonDates(comparisonType, range.from, range.to);
+                    }
+                  }
+                }}
+                numberOfMonths={2}
+                className={cn("pointer-events-auto")}
               />
             </div>
 
-            {comparisonMode && (
-              <div className="space-y-3 pl-0.5">
-                <Select
-                  value={comparisonType}
-                  onValueChange={(value) => handleComparisonTypeChange(value as ComparisonType)}
-                >
-                  <SelectTrigger size="sm" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="previous">Previous period</SelectItem>
-                    <SelectItem value="last-month">Same period last month</SelectItem>
-                    <SelectItem value="last-year">Same period last year</SelectItem>
-                    <SelectItem value="custom">Custom range</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Show comparison date range info or custom picker */}
-                {comparisonType === 'custom' ? (
-                  <div>
-                    <Label className="text-xs font-medium text-muted-foreground mb-2 block">
-                      Comparison Period
-                    </Label>
-                    <CalendarComponent
-                      mode="range"
-                      selected={{ from: comparisonStartDate, to: comparisonEndDate }}
-                      onSelect={(range) => {
-                        if (range?.from && range?.to) {
-                          onComparisonDateChange(range.from, range.to);
-                        }
-                      }}
-                      numberOfMonths={2}
-                      className={cn("pointer-events-auto")}
-                    />
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Comparing: {formatDateRange(comparisonStartDate, comparisonEndDate)}
-                  </p>
-                )}
+            {/* Quick Select Presets */}
+            <div className="border-t pt-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Quick Select</p>
+              <div className="grid grid-cols-5 gap-1.5">
+                {presets.map((preset) => (
+                  <button
+                    key={preset.label}
+                    className="text-xs px-2 py-1.5 rounded-md hover:bg-muted transition-colors text-center"
+                    onClick={() => handlePresetClick(preset.days)}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
+
+            <Separator />
+
+            {/* Compare Toggle & Type Selector */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="compare-toggle" className="text-sm font-medium cursor-pointer">
+                  Compare to previous period
+                </Label>
+                <Switch
+                  id="compare-toggle"
+                  checked={comparisonMode}
+                  onCheckedChange={handleComparisonModeToggle}
+                  aria-label="Toggle comparison mode"
+                />
+              </div>
+
+              {comparisonMode && (
+                <div className="space-y-2">
+                  <Select
+                    value={comparisonType}
+                    onValueChange={(value) => handleComparisonTypeChange(value as ComparisonType)}
+                  >
+                    <SelectTrigger size="sm" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="previous">Previous period</SelectItem>
+                      <SelectItem value="last-month">Same period last month</SelectItem>
+                      <SelectItem value="last-year">Same period last year</SelectItem>
+                      <SelectItem value="custom">Custom range</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Show comparison date range info for non-custom */}
+                  {comparisonType !== 'custom' && (
+                    <p className="text-xs text-muted-foreground">
+                      Comparing: {formatDateRange(comparisonStartDate, comparisonEndDate)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Right Section: Custom Comparison Calendar (side-by-side) */}
+          {showCustomComparison && (
+            <div className="p-3">
+              <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                Comparison Period
+              </Label>
+              <CalendarComponent
+                mode="range"
+                selected={{ from: comparisonStartDate, to: comparisonEndDate }}
+                onSelect={(range) => {
+                  if (range?.from && range?.to) {
+                    onComparisonDateChange(range.from, range.to);
+                  }
+                }}
+                numberOfMonths={2}
+                className={cn("pointer-events-auto")}
+              />
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>
