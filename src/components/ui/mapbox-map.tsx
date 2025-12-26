@@ -9,11 +9,12 @@ import Map, {
   FullscreenControl,
   type MapRef,
   type MapMouseEvent,
+  type MapEvent,
 } from "@vis.gl/react-mapbox";
-import type { CircleLayer, SymbolLayer } from "mapbox-gl";
+import type { CircleLayer, SymbolLayer, MapboxEvent } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
-import { RefreshCcw01 } from "@untitledui/icons";
+import { RefreshCcw01, AlertCircle } from "@untitledui/icons";
 
 // Mapbox vector styles
 const MAPBOX_STYLES = {
@@ -134,6 +135,14 @@ interface PopupInfo {
   pointCount?: number;
 }
 
+// Diagnostics state for DEV mode
+interface MapDiagnostics {
+  tokenPresent: boolean;
+  currentStyle: string;
+  lastError: string | null;
+  isLoaded: boolean;
+}
+
 export function MapboxMap({
   className,
   style,
@@ -150,6 +159,19 @@ export function MapboxMap({
   const [popupInfo, setPopupInfo] = React.useState<PopupInfo | null>(null);
   const [mapStyle, setMapStyle] = React.useState(MAPBOX_STYLES.light);
   const initialBoundsRef = React.useRef(fitBounds);
+  
+  // DEV diagnostics
+  const [diagnostics, setDiagnostics] = React.useState<MapDiagnostics>({
+    tokenPresent: Boolean(accessToken && accessToken.length > 0),
+    currentStyle: mapStyle,
+    lastError: null,
+    isLoaded: false,
+  });
+
+  // Update diagnostics when style changes
+  React.useEffect(() => {
+    setDiagnostics(prev => ({ ...prev, currentStyle: mapStyle }));
+  }, [mapStyle]);
 
   // Resolve theme to map style
   React.useEffect(() => {
@@ -203,6 +225,7 @@ export function MapboxMap({
 
   // Handle map load - fit bounds
   const onMapLoad = React.useCallback(() => {
+    setDiagnostics(prev => ({ ...prev, isLoaded: true, lastError: null }));
     if (fitBounds && mapRef.current) {
       mapRef.current.fitBounds(fitBounds, {
         padding: fitBoundsPadding,
@@ -210,6 +233,13 @@ export function MapboxMap({
       });
     }
   }, [fitBounds, fitBoundsPadding]);
+
+  // Handle map errors
+  const onMapError = React.useCallback((event: { error?: { message?: string } }) => {
+    const errorMessage = event?.error?.message || 'Unknown map error';
+    console.error('[MapboxMap] Error:', errorMessage, event);
+    setDiagnostics(prev => ({ ...prev, lastError: errorMessage }));
+  }, []);
 
   // Handle cluster click - zoom in
   const onClick = React.useCallback((event: MapMouseEvent) => {
@@ -307,6 +337,7 @@ export function MapboxMap({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         onLoad={onMapLoad}
+        onError={onMapError}
         cursor={popupInfo ? "pointer" : "grab"}
       >
         {showControls && (
@@ -392,6 +423,39 @@ export function MapboxMap({
               <span className="w-3 h-3 rounded-full bg-[#ef4444]" />
               <span>High</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEV-only diagnostics panel */}
+      {import.meta.env.DEV && (
+        <div className="absolute top-4 left-4 bg-background/95 backdrop-blur-sm border border-border rounded-lg p-3 text-xs z-20 max-w-[200px]">
+          <div className="font-medium mb-2 flex items-center gap-1.5">
+            <AlertCircle size={14} className={diagnostics.lastError ? "text-destructive" : "text-muted-foreground"} />
+            Map Diagnostics
+          </div>
+          <div className="space-y-1 text-muted-foreground">
+            <div className="flex justify-between">
+              <span>Token:</span>
+              <span className={diagnostics.tokenPresent ? "text-green-500" : "text-destructive"}>
+                {diagnostics.tokenPresent ? "Present" : "Missing"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Loaded:</span>
+              <span className={diagnostics.isLoaded ? "text-green-500" : "text-yellow-500"}>
+                {diagnostics.isLoaded ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className="truncate" title={diagnostics.currentStyle}>
+              <span>Style: </span>
+              <span className="text-foreground">{diagnostics.currentStyle.includes('dark') ? 'dark' : 'light'}</span>
+            </div>
+            {diagnostics.lastError && (
+              <div className="mt-2 p-2 bg-destructive/10 rounded text-destructive break-words">
+                <strong>Error:</strong> {diagnostics.lastError}
+              </div>
+            )}
           </div>
         </div>
       )}
