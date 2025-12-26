@@ -1,10 +1,24 @@
-import { useState, useEffect } from 'react';
+/**
+ * useAnalytics Hook
+ * 
+ * Core analytics hook for fetching conversation and lead statistics.
+ * Provides daily aggregated data for conversations, leads by stage,
+ * and now includes trend data for new KPI sparklines (bookings, satisfaction, containment).
+ * 
+ * @module hooks/useAnalytics
+ * @see docs/ANALYTICS_REDESIGN_PLAN.md
+ * @see src/types/analytics.ts
+ */
+
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
-import { format } from 'date-fns';
+import { useAgent } from '@/hooks/useAgent';
+import { format, eachDayOfInterval } from 'date-fns';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
+import type { SparklineDataPoint } from '@/types/analytics';
 
 interface ConversationStats {
   date: string;
@@ -50,6 +64,24 @@ interface AnalyticsFilters {
   conversationStatus: string;
 }
 
+/** Booking trend data for sparklines */
+interface BookingTrendPoint {
+  date: string;
+  value: number;
+}
+
+/** Satisfaction trend data for sparklines */
+interface SatisfactionTrendPoint {
+  date: string;
+  value: number;
+}
+
+/** Containment rate trend data for sparklines */
+interface ContainmentTrendPoint {
+  date: string;
+  value: number;
+}
+
 /**
  * Hook for fetching analytics data with date range and filters.
  * Provides conversation stats, lead stats by stage, agent performance, and usage metrics.
@@ -64,6 +96,9 @@ interface AnalyticsFilters {
  * @returns {StageInfo[]} stageInfo - Stage metadata for chart colors
  * @returns {AgentPerformance | null} agentPerformance - Ari performance metrics
  * @returns {UsageMetrics[]} usageMetrics - Daily usage metrics
+ * @returns {SparklineDataPoint[]} bookingTrend - Daily booking totals for sparkline
+ * @returns {SparklineDataPoint[]} satisfactionTrend - Daily avg satisfaction for sparkline
+ * @returns {SparklineDataPoint[]} containmentTrend - Daily containment rate for sparkline
  * @returns {any[]} conversations - Raw conversation data for tables
  * @returns {any[]} leads - Raw lead data for tables
  * @returns {boolean} loading - Loading state
@@ -79,10 +114,14 @@ export const useAnalytics = (
   const [stageInfo, setStageInfo] = useState<StageInfo[]>([]);
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
   const [usageMetrics, setUsageMetrics] = useState<UsageMetrics[]>([]);
+  const [bookingTrendData, setBookingTrendData] = useState<BookingTrendPoint[]>([]);
+  const [satisfactionTrendData, setSatisfactionTrendData] = useState<SatisfactionTrendPoint[]>([]);
+  const [containmentTrendData, setContainmentTrendData] = useState<ContainmentTrendPoint[]>([]);
   const [conversations, setConversations] = useState<unknown[]>([]);
   const [leads, setLeads] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { agentId } = useAgent();
 
   const fetchConversationStats = async () => {
     if (!user) return;
@@ -343,6 +382,195 @@ export const useAnalytics = (
     }
   };
 
+  /**
+   * Fetch booking trend data for sparkline KPI card.
+   * Groups calendar_events by date and counts totals.
+   */
+  const fetchBookingTrend = async () => {
+    if (!user || !agentId) {
+      setBookingTrendData([]);
+      return;
+    }
+
+    try {
+      // Get connected account IDs for the agent
+      const { data: accounts, error: accountsError } = await supabase
+        .from('connected_accounts')
+        .select('id')
+        .eq('agent_id', agentId)
+        .eq('is_active', true);
+
+      if (accountsError) throw accountsError;
+
+      if (!accounts || accounts.length === 0) {
+        setBookingTrendData([]);
+        return;
+      }
+
+      const accountIds = accounts.map((a) => a.id);
+
+      // Fetch calendar events
+      const { data: events, error: eventsError } = await supabase
+        .from('calendar_events')
+        .select('start_time')
+        .in('connected_account_id', accountIds)
+        .gte('start_time', startDate.toISOString())
+        .lte('start_time', endDate.toISOString());
+
+      if (eventsError) throw eventsError;
+
+      // Initialize all days in range
+      const trendMap = new Map<string, number>();
+      const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+      allDays.forEach((day) => {
+        trendMap.set(format(day, 'yyyy-MM-dd'), 0);
+      });
+
+      // Count bookings per day
+      (events || []).forEach((event) => {
+        const dateKey = format(new Date(event.start_time), 'yyyy-MM-dd');
+        trendMap.set(dateKey, (trendMap.get(dateKey) || 0) + 1);
+      });
+
+      const trend = Array.from(trendMap.entries())
+        .map(([date, value]) => ({ date, value }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      setBookingTrendData(trend);
+    } catch (error: unknown) {
+      logger.error('Error fetching booking trend:', error);
+      setBookingTrendData([]);
+    }
+  };
+
+  /**
+   * Fetch satisfaction trend data for sparkline KPI card.
+   * Groups conversation_ratings by date and calculates daily average.
+   */
+  const fetchSatisfactionTrend = async () => {
+    if (!user) {
+      setSatisfactionTrendData([]);
+      return;
+    }
+
+    try {
+      // Get conversation IDs for the user in date range
+      const { data: convos, error: convosError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (convosError) throw convosError;
+
+      if (!convos || convos.length === 0) {
+        setSatisfactionTrendData([]);
+        return;
+      }
+
+      const convoIds = convos.map((c) => c.id);
+
+      // Fetch ratings
+      const { data: ratings, error: ratingsError } = await supabase
+        .from('conversation_ratings')
+        .select('rating, created_at')
+        .in('conversation_id', convoIds)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (ratingsError) throw ratingsError;
+
+      // Initialize all days in range
+      const trendMap = new Map<string, { sum: number; count: number }>();
+      const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+      allDays.forEach((day) => {
+        trendMap.set(format(day, 'yyyy-MM-dd'), { sum: 0, count: 0 });
+      });
+
+      // Aggregate ratings per day
+      (ratings || []).forEach((r) => {
+        const dateKey = format(new Date(r.created_at), 'yyyy-MM-dd');
+        const dayData = trendMap.get(dateKey);
+        if (dayData) {
+          dayData.sum += r.rating;
+          dayData.count++;
+        }
+      });
+
+      const trend = Array.from(trendMap.entries())
+        .map(([date, { sum, count }]) => ({
+          date,
+          value: count > 0 ? Math.round((sum / count) * 10) / 10 : 0,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      setSatisfactionTrendData(trend);
+    } catch (error: unknown) {
+      logger.error('Error fetching satisfaction trend:', error);
+      setSatisfactionTrendData([]);
+    }
+  };
+
+  /**
+   * Fetch containment rate trend data for sparkline KPI card.
+   * Groups conversations by date and calculates daily containment rate.
+   */
+  const fetchContainmentTrend = async () => {
+    if (!user) {
+      setContainmentTrendData([]);
+      return;
+    }
+
+    try {
+      // Fetch conversations with status
+      const { data: convos, error: convosError } = await supabase
+        .from('conversations')
+        .select('id, status, created_at')
+        .eq('user_id', user.id)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (convosError) throw convosError;
+
+      if (!convos || convos.length === 0) {
+        setContainmentTrendData([]);
+        return;
+      }
+
+      // Initialize all days in range
+      const trendMap = new Map<string, { total: number; humanTakeover: number }>();
+      const allDays = eachDayOfInterval({ start: startDate, end: endDate });
+      allDays.forEach((day) => {
+        trendMap.set(format(day, 'yyyy-MM-dd'), { total: 0, humanTakeover: 0 });
+      });
+
+      // Count conversations per day
+      convos.forEach((c) => {
+        const dateKey = format(new Date(c.created_at), 'yyyy-MM-dd');
+        const dayData = trendMap.get(dateKey);
+        if (dayData) {
+          dayData.total++;
+          if (c.status === 'human_takeover') {
+            dayData.humanTakeover++;
+          }
+        }
+      });
+
+      const trend = Array.from(trendMap.entries())
+        .map(([date, { total, humanTakeover }]) => ({
+          date,
+          value: total > 0 ? Math.round(((total - humanTakeover) / total) * 100) : 0,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      setContainmentTrendData(trend);
+    } catch (error: unknown) {
+      logger.error('Error fetching containment trend:', error);
+      setContainmentTrendData([]);
+    }
+  };
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -351,6 +579,9 @@ export const useAnalytics = (
         fetchLeadStats(),
         fetchAgentPerformance(),
         fetchUsageMetrics(),
+        fetchBookingTrend(),
+        fetchSatisfactionTrend(),
+        fetchContainmentTrend(),
       ]);
     } catch (error: unknown) {
       toast.error('Error fetching analytics', {
@@ -377,6 +608,7 @@ export const useAnalytics = (
         },
         () => {
           fetchConversationStats();
+          fetchContainmentTrend();
         }
       )
       .subscribe();
@@ -397,13 +629,62 @@ export const useAnalytics = (
       )
       .subscribe();
 
+    const ratingsChannel = supabase
+      .channel('analytics-ratings')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversation_ratings',
+        },
+        () => {
+          fetchSatisfactionTrend();
+        }
+      )
+      .subscribe();
+
+    const eventsChannel = supabase
+      .channel('analytics-calendar-events')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'calendar_events',
+        },
+        () => {
+          fetchBookingTrend();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(conversationsChannel);
       supabase.removeChannel(leadsChannel);
+      supabase.removeChannel(ratingsChannel);
+      supabase.removeChannel(eventsChannel);
     };
-  }, [user?.id, startDate, endDate, filters]);
+  }, [user?.id, agentId, startDate, endDate, filters]);
+
+  // Transform trend data to SparklineDataPoint format for compatibility
+  const bookingTrend: SparklineDataPoint[] = useMemo(() => 
+    bookingTrendData.map((d) => ({ date: d.date, value: d.value })),
+    [bookingTrendData]
+  );
+
+  const satisfactionTrend: SparklineDataPoint[] = useMemo(() => 
+    satisfactionTrendData.map((d) => ({ date: d.date, value: d.value })),
+    [satisfactionTrendData]
+  );
+
+  const containmentTrend: SparklineDataPoint[] = useMemo(() => 
+    containmentTrendData.map((d) => ({ date: d.date, value: d.value })),
+    [containmentTrendData]
+  );
 
   return {
+    // Existing data
     conversationStats,
     leadStats,
     stageInfo,
@@ -413,5 +694,10 @@ export const useAnalytics = (
     leads,
     loading,
     refetch: fetchAllData,
+    
+    // New trend data for sparkline KPIs
+    bookingTrend,
+    satisfactionTrend,
+    containmentTrend,
   };
 };
