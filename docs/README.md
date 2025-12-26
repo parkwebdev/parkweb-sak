@@ -67,6 +67,7 @@ Welcome to the ChatPad documentation. This index provides quick access to all te
 | **Backend** | Supabase (PostgreSQL, Edge Functions, Auth, Realtime) |
 | **AI** | OpenRouter (Google Gemini default) |
 | **Fonts** | Geist, Geist Mono |
+| **Error Handling** | Type-safe with `getErrorMessage()` utility |
 
 ### Key File Locations
 
@@ -79,6 +80,7 @@ Welcome to the ChatPad documentation. This index provides quick access to all te
 | Edge functions | `supabase/functions/` |
 | Widget source | `src/widget/` |
 | Database types | `src/integrations/supabase/types.ts` (read-only) |
+| Error utilities | `src/types/errors.ts` |
 
 ### Common Commands
 

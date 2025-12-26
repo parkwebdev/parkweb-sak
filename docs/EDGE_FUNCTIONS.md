@@ -11,6 +11,7 @@ Documentation for all Supabase Edge Functions in the ChatPad platform.
 ## Table of Contents
 
 1. [Overview](#overview)
+   - [Error Handling](#error-handling)
 2. [Widget Functions](#widget-functions)
 3. [Chat Functions](#chat-functions)
 4. [Lead Functions](#lead-functions)
@@ -48,6 +49,26 @@ if (req.method === 'OPTIONS') {
   return new Response(null, { headers: corsHeaders });
 }
 ```
+
+### Error Handling
+
+All edge functions use type-safe error handling with `catch (error: unknown)`. Use the same pattern as client-side code:
+
+```typescript
+import { getErrorMessage } from '../_shared/errors.ts';
+
+try {
+  // Edge function logic
+} catch (error: unknown) {
+  console.error('Operation failed:', getErrorMessage(error));
+  return new Response(
+    JSON.stringify({ error: getErrorMessage(error) }),
+    { status: 500, headers: corsHeaders }
+  );
+}
+```
+
+**See**: [DESIGN_SYSTEM.md#error-handling-pattern](./DESIGN_SYSTEM.md#error-handling-pattern) for the complete pattern.
 
 ---
 
