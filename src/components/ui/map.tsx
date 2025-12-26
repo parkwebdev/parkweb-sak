@@ -10,7 +10,7 @@ import {
   CircleMarker,
   useMap,
 } from "react-leaflet";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -39,7 +39,11 @@ interface MapProps extends React.ComponentProps<typeof MapContainer> {
 
 const Map = React.forwardRef<L.Map, MapProps>(
   ({ children, className, ...props }, ref) => {
-    const { resolvedTheme } = useTheme();
+    const { theme: currentTheme } = useTheme();
+    // Resolve system theme to actual theme
+    const resolvedTheme = currentTheme === "system" 
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : currentTheme;
     const theme = (resolvedTheme === "dark" ? "dark" : "light") as "light" | "dark";
 
     return (
