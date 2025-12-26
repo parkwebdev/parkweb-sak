@@ -20,24 +20,21 @@ export interface ConversationStat {
   active: number;
   /** Closed conversations count */
   closed: number;
+  /** Human takeover conversations count */
+  human_takeover?: number;
 }
 
 /**
  * Daily lead statistics for reports.
+ * Supports dynamic stage names via index signature.
  */
 export interface LeadStat {
   /** Date string (e.g., "2024-01-15") */
   date: string;
   /** Total leads on this date */
   total: number;
-  /** New leads count */
-  new: number;
-  /** Contacted leads count */
-  contacted: number;
-  /** Qualified leads count */
-  qualified: number;
-  /** Converted leads count */
-  converted: number;
+  /** Dynamic stage counts - keys are lowercase stage names */
+  [stageName: string]: number | string;
 }
 
 /**
@@ -94,7 +91,7 @@ export interface ReportData {
   // Detailed statistics
   /** Daily conversation statistics */
   conversationStats?: ConversationStat[];
-  /** Daily lead statistics */
+  /** Daily lead statistics by stage */
   leadStats?: LeadStat[];
   /** Agent performance metrics */
   agentPerformance?: AgentPerformance[];
