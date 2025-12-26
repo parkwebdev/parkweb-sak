@@ -14,6 +14,8 @@ import { springs } from "@/lib/motion-variants";
 interface MetricCardWithChartProps {
   title: string;
   subtitle: string;
+  /** Brief explanation of what this metric measures */
+  description?: string;
   change?: number;
   changeLabel?: string;
   /** 
@@ -32,6 +34,7 @@ interface MetricCardWithChartProps {
 export const MetricCardWithChart = React.memo(function MetricCardWithChart({
   title,
   subtitle,
+  description,
   change,
   changeLabel = "vs last month",
   changeType = "percentage",
@@ -74,9 +77,12 @@ export const MetricCardWithChart = React.memo(function MetricCardWithChart({
       animate="visible"
       whileHover={prefersReducedMotion ? undefined : { y: -2, transition: springs.micro }}
     >
-      {/* Subtitle in outer wrapper */}
+      {/* Subtitle + Description in outer wrapper */}
       <div className="px-4 pt-3 pb-2 md:px-5">
         <h3 className="text-sm font-semibold text-foreground">{subtitle}</h3>
+        {description && (
+          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+        )}
       </div>
 
       {/* Inner card with metric, trend, chart */}
