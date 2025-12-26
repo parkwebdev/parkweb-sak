@@ -141,6 +141,13 @@ export const queryKeys = {
     logs: (webhookId?: string) => [...queryKeys.webhooks.all, 'logs', webhookId] as const,
   },
 
+  // Agent API keys
+  agentApiKeys: {
+    all: ['agent-api-keys'] as const,
+    lists: () => [...queryKeys.agentApiKeys.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.agentApiKeys.lists(), agentId] as const,
+  },
+
   // Calendar events
   calendarEvents: {
     all: ['calendar-events'] as const,

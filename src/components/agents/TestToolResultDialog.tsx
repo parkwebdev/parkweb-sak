@@ -22,7 +22,7 @@ interface TestResult {
   status?: number;
   statusText?: string;
   responseTime?: number;
-  body?: any;
+  body?: unknown;
   error?: string;
 }
 

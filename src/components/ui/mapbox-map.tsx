@@ -14,6 +14,7 @@ import type { CircleLayer, SymbolLayer } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
 import { RefreshCcw01 } from "@untitledui/icons";
+import { logger } from "@/utils/logger";
 
 // Mapbox vector styles
 const MAPBOX_STYLES = {
@@ -157,10 +158,10 @@ export function MapboxMap({
   React.useEffect(() => {
     if (accessToken) {
       const fingerprint = `${accessToken.substring(0, 10)}...${accessToken.substring(accessToken.length - 6)}`;
-      console.log(`[MapboxMap] Token fingerprint: ${fingerprint}`);
-      console.log(`[MapboxMap] Current origin: ${window.location.origin}`);
+      logger.debug(`[MapboxMap] Token fingerprint: ${fingerprint}`);
+      logger.debug(`[MapboxMap] Current origin: ${window.location.origin}`);
     } else {
-      console.warn("[MapboxMap] No access token provided");
+      logger.warn("[MapboxMap] No access token provided");
     }
   }, [accessToken]);
 
@@ -216,7 +217,7 @@ export function MapboxMap({
 
   // Handle map load - fit bounds
   const onMapLoad = React.useCallback(() => {
-    console.log("[MapboxMap] Map loaded successfully - style tiles should be rendering");
+    logger.debug("[MapboxMap] Map loaded successfully - style tiles should be rendering");
     setMapLoaded(true);
     setMapError(null);
     if (fitBounds && mapRef.current) {
@@ -230,7 +231,7 @@ export function MapboxMap({
   // Handle map errors
   const onMapError = React.useCallback((evt: { error?: { message?: string } }) => {
     const errorMsg = evt?.error?.message || "Unknown map error";
-    console.error("[MapboxMap] Map error:", errorMsg, evt);
+    logger.error("[MapboxMap] Map error:", { errorMsg, evt });
     setMapError(errorMsg);
   }, []);
 
@@ -367,7 +368,7 @@ export function MapboxMap({
               <div className="p-2 text-center font-sans">
                 <div className="text-lg font-bold">{popupInfo.pointCount}</div>
                 <div className="text-xs opacity-70">locations</div>
-                <div className="text-[11px] mt-1 opacity-50">Click to expand</div>
+                <div className="text-2xs mt-1 opacity-50">Click to expand</div>
               </div>
             ) : (
               <div className="p-2 font-sans">
@@ -405,15 +406,15 @@ export function MapboxMap({
           <div className="font-medium mb-2">Visitor density</div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#22c55e]" />
+              <span className="w-3 h-3 rounded-full bg-status-active" />
               <span>Low</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#f59e0b]" />
+              <span className="w-3 h-3 rounded-full bg-status-scheduled" />
               <span>Medium</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#ef4444]" />
+              <span className="w-3 h-3 rounded-full bg-destructive" />
               <span>High</span>
             </div>
           </div>

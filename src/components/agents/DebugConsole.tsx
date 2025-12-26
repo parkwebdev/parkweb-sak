@@ -171,7 +171,7 @@ export const DebugConsole = ({ logs, onClear, className }: DebugConsoleProps) =>
 export const useDebugLogs = () => {
   const [logs, setLogs] = useState<DebugLogEntry[]>([]);
 
-  const addLog = (level: LogLevel, message: string, details?: any) => {
+  const addLog = (level: LogLevel, message: string, details?: unknown) => {
     const entry: DebugLogEntry = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       timestamp: new Date(),
@@ -184,10 +184,10 @@ export const useDebugLogs = () => {
   };
 
   const log = {
-    info: (message: string, details?: any) => addLog('info', message, details),
-    success: (message: string, details?: any) => addLog('success', message, details),
-    error: (message: string, details?: any) => addLog('error', message, details),
-    warning: (message: string, details?: any) => addLog('warning', message, details),
+    info: (message: string, details?: unknown) => addLog('info', message, details),
+    success: (message: string, details?: unknown) => addLog('success', message, details),
+    error: (message: string, details?: unknown) => addLog('error', message, details),
+    warning: (message: string, details?: unknown) => addLog('warning', message, details),
   };
 
   const clear = () => setLogs([]);

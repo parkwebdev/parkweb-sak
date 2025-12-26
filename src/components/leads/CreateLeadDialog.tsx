@@ -1,6 +1,7 @@
 /**
  * @fileoverview Create lead dialog form component.
  * Provides form fields for name, email, phone, and company.
+ * Assigns new leads to the default stage from useLeadStages.
  */
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -10,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import type { Tables } from '@/integrations/supabase/types';
 import { logger } from '@/utils/logger';
+import { useLeadStages } from '@/hooks/useLeadStages';
 
 interface CreateLeadDialogProps {
   open: boolean;
@@ -18,6 +20,7 @@ interface CreateLeadDialogProps {
 }
 
 export const CreateLeadDialog = ({ open, onOpenChange, onCreate }: CreateLeadDialogProps) => {
+  const { stages } = useLeadStages();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,6 +28,9 @@ export const CreateLeadDialog = ({ open, onOpenChange, onCreate }: CreateLeadDia
     company: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Find the default stage or first stage
+  const defaultStage = stages.find(s => s.is_default) || stages[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +40,7 @@ export const CreateLeadDialog = ({ open, onOpenChange, onCreate }: CreateLeadDia
       await onCreate({
         ...formData,
         status: 'new',
+        stage_id: defaultStage?.id || null,
       });
       setFormData({ name: '', email: '', phone: '', company: '' });
       onOpenChange(false);

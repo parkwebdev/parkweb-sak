@@ -53,7 +53,7 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
   const [debugMode, setDebugMode] = useState(false);
   const [debugLogs, setDebugLogs] = useState<DebugLog[]>([]);
 
-  const addDebugLog = (level: DebugLog['level'], message: string, details?: any) => {
+  const addDebugLog = (level: DebugLog['level'], message: string, details?: unknown) => {
     if (!debugMode) return;
     setDebugLogs(prev => [...prev, {
       id: crypto.randomUUID(),
@@ -64,7 +64,7 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
     }]);
   };
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = async (data: Parameters<typeof createWebhook>[0]) => {
     addDebugLog('info', 'Creating webhook...', data);
     try {
       await createWebhook(data);
@@ -75,7 +75,7 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
     }
   };
 
-  const handleUpdate = async (id: string, data: any) => {
+  const handleUpdate = async (id: string, data: Record<string, unknown>) => {
     addDebugLog('info', 'Updating webhook...', { id, data });
     try {
       await updateWebhook(id, data);
@@ -244,7 +244,7 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
         open={!!editingWebhook}
         onOpenChange={(open) => !open && setEditingWebhook(null)}
         webhook={editingWebhook}
-        onSave={(data) => editingWebhook && handleUpdate(editingWebhook.id, data)}
+        onSave={(id, data) => handleUpdate(id, data)}
       />
 
       <WebhookLogsDialog

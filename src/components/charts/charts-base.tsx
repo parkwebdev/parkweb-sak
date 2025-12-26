@@ -75,8 +75,6 @@ interface ChartTooltipContentProps extends TooltipProps<ValueType, NameType> {
   isRadialChart?: boolean;
   isPieChart?: boolean;
   label?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: any;
 }
 
 export const ChartTooltipContent = ({ 
@@ -96,23 +94,23 @@ export const ChartTooltipContent = ({
 
   const isSingleDataPoint = payload.length === 1;
 
-  let title = isSingleDataPoint 
+  let title: React.ReactNode = isSingleDataPoint 
     ? (isRadialChart ? payload[0].value : isPieChart ? payload[0].value : payload[0].value) 
     : label;
-  let secondaryTitle = isSingleDataPoint 
+  let secondaryTitle: React.ReactNode = isSingleDataPoint 
     ? (isRadialChart ? payload[0].payload.name : isPieChart ? payload[0].name : label) 
     : payload;
 
   title = isSingleDataPoint && formatter
-    ? formatter(title, payload?.[0].name || label, payload[0], 0, payload)
+    ? formatter(payload[0].value, payload?.[0].name || label, payload[0], 0, payload)
     : labelFormatter
-      ? labelFormatter(title, payload)
+      ? labelFormatter(String(title), payload)
       : title;
-  secondaryTitle = isSingleDataPoint && labelFormatter ? labelFormatter(secondaryTitle, payload) : secondaryTitle;
+  secondaryTitle = isSingleDataPoint && labelFormatter ? labelFormatter(String(secondaryTitle), payload) : secondaryTitle;
 
   return (
     <div className="flex flex-col gap-0.5 rounded-lg bg-foreground px-3 py-2 shadow-lg">
-      <p className="text-xs font-semibold text-background">{title}</p>
+      <p className="text-xs font-semibold text-background">{String(title)}</p>
 
       {!secondaryTitle ? null : Array.isArray(secondaryTitle) ? (
         <div>
@@ -123,15 +121,14 @@ export const ChartTooltipContent = ({
           ))}
         </div>
       ) : (
-        <p className="text-xs text-muted">{secondaryTitle}</p>
+        <p className="text-xs text-muted">{String(secondaryTitle)}</p>
       )}
     </div>
   );
 };
 
 interface ChartActiveDotProps extends DotProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: any;
+  payload?: Record<string, unknown>;
 }
 
 export const ChartActiveDot = ({ cx = 0, cy = 0 }: ChartActiveDotProps) => {

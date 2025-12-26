@@ -42,7 +42,7 @@ interface PromiseOptions<T> {
   /** Message shown on success (or function receiving result) */
   success: string | ((data: T) => string);
   /** Message shown on error (or function receiving error) */
-  error: string | ((error: any) => string);
+  error: string | ((error: unknown) => string);
   /** Optional description */
   description?: string;
   /** Callback run after promise settles */
