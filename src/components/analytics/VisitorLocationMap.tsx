@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Map, MapTileLayer, MapCircleMarker, MapTooltip, MapFitBounds } from '@/components/ui/map';
+import { MapboxMap, computeBounds } from '@/components/ui/mapbox-map';
 import { Globe02 } from '@untitledui/icons';
-import L from 'leaflet';
 
 export interface LocationData {
   country: string;
@@ -16,24 +15,17 @@ export interface LocationData {
 interface VisitorLocationMapProps {
   data: LocationData[];
   loading?: boolean;
+  mapboxToken?: string;
 }
 
-export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+export function VisitorLocationMap({ data, loading, mapboxToken }: VisitorLocationMapProps) {
   // Calculate total for percentages
   const total = useMemo(() => data.reduce((sum, loc) => sum + loc.count, 0), [data]);
   
   // Calculate bounds to fit all markers
   const bounds = useMemo(() => {
     if (data.length === 0) return null;
-    
-    const latLngs = data.map(loc => [loc.lat, loc.lng] as [number, number]);
-    return L.latLngBounds(latLngs);
+    return computeBounds(data.map(loc => ({ lng: loc.lng, lat: loc.lat })));
   }, [data]);
   
   // Calculate circle radius based on visitor count (min 6, max 30)
@@ -42,8 +34,30 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
     const percentage = count / total;
     return Math.max(6, Math.min(30, 6 + percentage * 50));
   };
+
+  // Build markers array for Mapbox
+  const markers = useMemo(() => {
+    return data.map((location, index) => {
+      const percentage = total > 0 ? ((location.count / total) * 100).toFixed(1) : '0';
+      return {
+        id: `${location.country}-${location.city || index}`,
+        lng: location.lng,
+        lat: location.lat,
+        radius: getRadius(location.count),
+        color: 'hsl(var(--primary))',
+        label: `
+          <div style="font-size: 14px; font-weight: 500; color: hsl(var(--foreground));">${location.country}</div>
+          ${location.city ? `<div style="font-size: 12px; color: hsl(var(--muted-foreground));">${location.city}</div>` : ''}
+          <div style="font-size: 12px; margin-top: 4px;">
+            <span style="font-weight: 600;">${location.count}</span> visitor${location.count !== 1 ? 's' : ''}
+            <span style="color: hsl(var(--muted-foreground)); margin-left: 4px;">(${percentage}%)</span>
+          </div>
+        `,
+      };
+    });
+  }, [data, total]);
   
-  if (loading || !mounted) {
+  if (loading) {
     return (
       <Card className="overflow-hidden">
         <CardHeader className="pb-2">
@@ -78,6 +92,23 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
       </Card>
     );
   }
+
+  // Show loading state if no token yet
+  if (!mapboxToken) {
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <Globe02 size={16} className="text-muted-foreground" />
+            <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Skeleton className="h-[350px] w-full rounded-none" />
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className="overflow-hidden">
@@ -94,42 +125,16 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
       </CardHeader>
       <CardContent className="p-0">
         <div className="h-[350px] w-full">
-          <Map
-            center={[20, 0]}
-            zoom={2}
-            scrollWheelZoom={false}
-            className="h-full w-full z-0"
+          <MapboxMap
+            accessToken={mapboxToken}
+            center={[0, 20]}
+            zoom={1.5}
+            markers={markers}
+            fitBounds={bounds || undefined}
+            fitBoundsPadding={50}
+            className="h-full w-full"
             style={{ background: 'hsl(var(--muted))' }}
-          >
-            <MapTileLayer />
-            {bounds && <MapFitBounds bounds={bounds} options={{ maxZoom: 5 }} />}
-            {data.map((location, index) => (
-              <MapCircleMarker
-                key={`${location.country}-${location.city || index}`}
-                center={[location.lat, location.lng]}
-                radius={getRadius(location.count)}
-                pathOptions={{
-                  color: 'hsl(var(--primary))',
-                  fillColor: 'hsl(var(--primary))',
-                  fillOpacity: 0.6,
-                  weight: 2,
-                }}
-              >
-                <MapTooltip>
-                  <div className="text-sm font-medium">{location.country}</div>
-                  {location.city && (
-                    <div className="text-xs text-muted-foreground">{location.city}</div>
-                  )}
-                  <div className="text-xs mt-1">
-                    <span className="font-semibold">{location.count}</span> visitor{location.count !== 1 ? 's' : ''}
-                    <span className="text-muted-foreground ml-1">
-                      ({total > 0 ? ((location.count / total) * 100).toFixed(1) : 0}%)
-                    </span>
-                  </div>
-                </MapTooltip>
-              </MapCircleMarker>
-            ))}
-          </Map>
+          />
         </div>
       </CardContent>
     </Card>
