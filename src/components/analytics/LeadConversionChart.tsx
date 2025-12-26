@@ -23,25 +23,16 @@ interface LeadConversionChartProps {
   data: LeadStageStats[];
 }
 
-// Chart colors for stages (maps to CSS variables)
-const CHART_COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-];
-
 export const LeadConversionChart = React.memo(function LeadConversionChart({ data }: LeadConversionChartProps) {
   const isDesktop = useBreakpoint('lg');
   const { stages } = useLeadStages();
 
-  // Generate gradient definitions and areas based on actual stages
+  // Generate gradient definitions and areas based on actual stages with their custom colors
   const stageConfig = useMemo(() => {
-    return stages.map((stage, index) => ({
+    return stages.map((stage) => ({
       key: stage.name.toLowerCase(),
       name: stage.name,
-      color: CHART_COLORS[index % CHART_COLORS.length],
+      color: stage.color, // Use the user's chosen color from lead_stages
       gradientId: `fill${stage.name.replace(/\s+/g, '')}`,
     }));
   }, [stages]);
