@@ -115,7 +115,7 @@ export function ResizableEvent({
         className={cn(
           "flex items-center gap-1.5 px-2 py-1 text-xs rounded overflow-hidden touch-none select-none cursor-grab active:cursor-grabbing",
           isDragging && "opacity-50 shadow-lg ring-2 ring-primary",
-          hasConflict && "ring-1 ring-amber-500"
+          hasConflict && "ring-1 ring-warning"
         )}
         style={{
           backgroundColor: event.color ? `${event.color}15` : 'hsl(var(--primary) / 0.1)',
@@ -127,7 +127,7 @@ export function ResizableEvent({
         }}
       >
         {hasConflict && (
-          <AlertTriangle className="h-3 w-3 flex-shrink-0 text-amber-500" />
+          <AlertTriangle className="h-3 w-3 flex-shrink-0 text-warning" />
         )}
         <span 
           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -168,9 +168,9 @@ export function ResizableEvent({
       ref={setNodeRef}
       className={cn(
         "text-xs rounded overflow-hidden touch-none select-none group relative",
-        isDragging && "opacity-50 shadow-lg ring-2 ring-primary",
-        variant === 'day' && "flex flex-col text-sm",
-        hasConflict && "ring-1 ring-amber-500"
+          isDragging && "opacity-50 shadow-lg ring-2 ring-primary",
+          variant === 'day' && "flex flex-col text-sm",
+          hasConflict && "ring-1 ring-warning"
       )}
       style={{
         ...style,
@@ -184,7 +184,7 @@ export function ResizableEvent({
       {/* Conflict indicator */}
       {hasConflict && (
         <div className="absolute top-1 right-1 z-10">
-          <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+          <AlertTriangle className="h-3.5 w-3.5 text-warning" />
         </div>
       )}
       

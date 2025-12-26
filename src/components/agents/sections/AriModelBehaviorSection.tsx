@@ -164,7 +164,7 @@ const getModelIcon = (provider: string, size: number = 18) => {
   const src = iconMap[provider];
   if (!src) return null;
   const darkModeClass = provider === 'openai' ? 'dark:invert' : '';
-  return <img src={src} alt="" className={`shrink-0 ${darkModeClass}`} style={{ width: size, height: size }} />;
+  return <img src={src} alt={`${provider} logo`} className={`shrink-0 ${darkModeClass}`} style={{ width: size, height: size }} />;
 };
 
 // Full models array with descriptions and costs

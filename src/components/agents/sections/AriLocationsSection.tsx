@@ -616,8 +616,8 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
 
         {/* Validation Warning Banner - Properties View */}
         {viewMode === 'properties' && validationStats.missingLotNumber > 0 && (
-          <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-            <AlertTriangle size={16} className="text-amber-600 dark:text-amber-500 flex-shrink-0" />
+          <div className="flex items-center gap-3 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+            <AlertTriangle size={16} className="text-warning flex-shrink-0" />
             <span className="text-sm flex-1">
               <strong>{validationStats.missingLotNumber}</strong> propert{validationStats.missingLotNumber > 1 ? 'ies are' : 'y is'} missing lot numbers.{' '}
               <span className="text-muted-foreground">Update in WordPress for better identification.</span>
@@ -626,7 +626,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
               variant="ghost" 
               size="sm"
               onClick={() => setValidationFilter('missing_lot')}
-              className="text-amber-700 dark:text-amber-400 hover:text-amber-800"
+              className="text-warning hover:text-warning/80"
             >
               View
             </Button>

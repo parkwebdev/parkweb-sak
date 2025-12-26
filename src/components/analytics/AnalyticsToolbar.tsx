@@ -162,9 +162,9 @@ export const AnalyticsToolbar = ({
       <div className="flex gap-2 items-center">
         {/* Mock Data Toggle - Dev Only */}
         {onMockModeChange && (
-          <div className="flex items-center gap-2 px-2 py-1 bg-amber-500/10 border border-amber-500/30 rounded-md">
-            <Beaker02 className="h-4 w-4 text-amber-500" />
-            <Label htmlFor="mock-toggle" className="text-xs font-medium text-amber-600 dark:text-amber-400 cursor-pointer">
+          <div className="flex items-center gap-2 px-2 py-1 bg-warning/10 border border-warning/30 rounded-md">
+            <Beaker02 className="h-4 w-4 text-warning" />
+            <Label htmlFor="mock-toggle" className="text-xs font-medium text-warning cursor-pointer">
               Mock Data
             </Label>
             <Switch
@@ -178,7 +178,7 @@ export const AnalyticsToolbar = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                className="h-6 px-2 text-xs text-warning hover:bg-warning/20"
                 onClick={onRegenerateMockData}
                 aria-label="Regenerate mock data"
               >

@@ -30,9 +30,9 @@ export const SatisfactionRating = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const systemTheme = useSystemTheme();
 
-  // Theme-aware colors: white in dark mode, primaryColor in light mode
-  const accentColor = systemTheme === 'dark' ? '#FFFFFF' : primaryColor;
-  const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
+  // Theme-aware colors using CSS custom properties: white in dark mode, primaryColor in light mode
+  const accentColor = systemTheme === 'dark' ? 'hsl(0 0% 100%)' : primaryColor;
+  const buttonTextColor = systemTheme === 'dark' ? 'hsl(0 0% 0%)' : 'hsl(0 0% 100%)';
 
   const handleSubmit = async () => {
     if (rating === 0) return;
