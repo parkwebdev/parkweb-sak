@@ -22,10 +22,10 @@ const Shortcut: React.FC<ShortcutProps> = ({ keys, description }) => (
     <div className="flex items-center gap-1">
       {keys.map((key, index) => (
         <React.Fragment key={key}>
-          <kbd className="px-1.5 py-0.5 text-[10px] font-medium bg-muted border border-border rounded text-muted-foreground">
+          <kbd className="px-1.5 py-0.5 text-2xs font-medium bg-muted border border-border rounded text-muted-foreground">
             {key}
           </kbd>
-          {index < keys.length - 1 && <span className="text-[10px] text-muted-foreground">+</span>}
+          {index < keys.length - 1 && <span className="text-2xs text-muted-foreground">+</span>}
         </React.Fragment>
       ))}
     </div>
@@ -57,7 +57,7 @@ export const KeyboardShortcutsCard: React.FC = () => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-sm font-medium text-foreground">Keyboard shortcuts</h3>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+            <span className="text-2xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
               Power user
             </span>
           </div>

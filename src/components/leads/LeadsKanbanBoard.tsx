@@ -146,7 +146,7 @@ function PriorityBadge({ priority }: { priority: 'high' | 'medium' | 'low' }) {
   const { label, className } = config[priority];
   
   return (
-    <Badge variant="outline" className={`h-5 text-[10px] px-1.5 ${className}`}>
+    <Badge variant="outline" className={`h-5 text-2xs px-1.5 ${className}`}>
       <Flag01 size={10} className="mr-0.5" />
       {label}
     </Badge>
@@ -235,13 +235,13 @@ export const LeadCardContent = React.memo(function LeadCardContent({
                 <Badge 
                   key={tag} 
                   variant="secondary" 
-                  className="h-5 text-[10px] px-1.5"
+                  className="h-5 text-2xs px-1.5"
                 >
                   {tag}
                 </Badge>
               ))}
               {lead.tags.length > 3 && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   +{lead.tags.length - 3}
                 </span>
               )}
@@ -260,7 +260,7 @@ export const LeadCardContent = React.memo(function LeadCardContent({
 
       {/* Timestamps */}
       {(visibleFields.has('createdAt') || visibleFields.has('lastUpdated')) && (
-        <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+        <div className="flex flex-wrap gap-2 text-2xs text-muted-foreground">
           {visibleFields.has('createdAt') && (
             <div className="flex items-center gap-1">
               <Calendar size={10} />

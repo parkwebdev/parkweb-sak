@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import { logger } from '@/utils/logger';
+import { isValidEmail } from '@/utils/validation';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,9 +38,7 @@ export const CreateScheduledReportDialog = ({ open, onOpenChange }: CreateSchedu
   const handleAddRecipient = () => {
     const email = recipientInput.trim();
     if (email && !recipients.includes(email)) {
-      // Basic email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (emailRegex.test(email)) {
+      if (isValidEmail(email)) {
         setRecipients([...recipients, email]);
         setRecipientInput('');
       }

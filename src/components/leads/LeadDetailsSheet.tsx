@@ -15,6 +15,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Trash02, LinkExternal02, InfoCircle, Globe01, Monitor01, Clock, Browser, Link01, Plus, XClose } from '@untitledui/icons';
+import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFromLeadData } from '@/lib/field-keys';
+import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -227,38 +229,19 @@ export const LeadDetailsSheet = ({
     };
   }, [editedLead, editedCustomData, performAutoSave]);
 
-  // Keys to check in data JSONB for legacy phone values
-  const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'Phone Number', 'Phone number', 'telephone', 'mobile'];
-  
   // Get phone value: prioritize dedicated column, fallback to data JSONB for legacy leads
   const phoneValue = useMemo(() => {
     if (!lead) return '';
-    
-    // Primary: Use dedicated phone column (populated by edge function)
-    if (lead.phone) return lead.phone;
-    
-    // Fallback for legacy leads: Search data JSONB
-    const data = (lead.data || {}) as Record<string, unknown>;
-    for (const key of phoneKeys) {
-      if (key in data && data[key]) {
-        return String(data[key]);
-      }
-    }
-    return '';
+    return getPhoneFromLeadData(lead.phone, lead.data as Record<string, unknown>);
   }, [lead]);
 
   // Get custom fields from lead.data (excluding internal tracking fields, name fields, and phone fields)
   const customFields = useMemo(() => {
     if (!lead) return [];
     const data = (lead.data || {}) as Record<string, unknown>;
-    const excludedFields = [
-      'source', 'referrer', 'page_url', 'visitor_id',
-      'first_name', 'firstName', 'last_name', 'lastName', 'name', 'full_name', 'fullName',
-      ...phoneKeys
-    ];
     return Object.entries(data).filter(([key]) => {
       // Exclude known internal fields
-      if (excludedFields.includes(key)) return false;
+      if (EXCLUDED_LEAD_FIELDS.includes(key as typeof EXCLUDED_LEAD_FIELDS[number])) return false;
       // Exclude _content fields (internal rich text storage for checkboxes)
       if (key.endsWith('_content')) return false;
       return true;
@@ -356,11 +339,7 @@ export const LeadDetailsSheet = ({
     return messageKeys.includes(key);
   };
 
-  // Check if field is a consent field
-  const isConsentField = (key: string): boolean => {
-    const consentKeys = ['consent', 'Consent', 'i_consent', 'I Consent', 'I consent', 'agree', 'Agree', 'terms', 'Terms'];
-    return consentKeys.some(k => key.toLowerCase().includes(k.toLowerCase()));
-  };
+  // Check if field is a consent field - uses centralized helper
 
   // Get consent content from custom data (look for related content field)
   const getConsentContent = (key: string, data: Record<string, unknown>): string | null => {
@@ -411,9 +390,16 @@ export const LeadDetailsSheet = ({
     }
 
     // Consent fields show as read-only text with tooltip
-    if (isConsentField(key) || typeof value === 'boolean' || typeof currentValue === 'boolean') {
+    if (isConsentFieldKey(key) || typeof value === 'boolean' || typeof currentValue === 'boolean') {
       const consented = Boolean(currentValue);
       const consentContent = getConsentContent(key, currentCustomData);
+      // Sanitize consent content to prevent XSS
+      const sanitizedContent = consentContent 
+        ? DOMPurify.sanitize(consentContent, {
+            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'span'],
+            ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+          })
+        : '';
       
       return (
         <div className="space-y-2">
@@ -425,7 +411,14 @@ export const LeadDetailsSheet = ({
                   <InfoCircle className="h-4 w-4 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-sm">{consentContent || 'User agreed to the consent checkbox on the contact form.'}</p>
+                  {sanitizedContent ? (
+                    <div 
+                      className="text-sm [&_a]:text-primary [&_a]:underline"
+                      dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
+                    />
+                  ) : (
+                    <p className="text-sm">User agreed to the consent checkbox on the contact form.</p>
+                  )}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

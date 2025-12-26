@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { isValidEmail } from '@/utils/validation';
 
 export const InviteTeamInline: React.FC = () => {
   const { user } = useAuth();
@@ -27,9 +28,8 @@ export const InviteTeamInline: React.FC = () => {
     
     if (!email.trim() || !user) return;
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
+    // Email validation using centralized utility
+    if (!isValidEmail(email.trim())) {
       toast.error('Please enter a valid email address');
       return;
     }

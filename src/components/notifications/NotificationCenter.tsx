@@ -216,17 +216,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'conversation':
-        return <MessageChatSquare size={16} className="text-blue-500" />;
+        return <MessageChatSquare size={16} className="text-info" />;
       case 'lead':
-        return <Users size={16} className="text-green-500" />;
+        return <Users size={16} className="text-success" />;
       case 'agent':
         return <Zap size={16} className="text-purple-500" />;
       case 'team':
-        return <Team size={16} className="text-orange-500" />;
+        return <Team size={16} className="text-warning" />;
       case 'report':
-        return <BarChart size={16} className="text-cyan-500" />;
+        return <BarChart size={16} className="text-info" />;
       case 'system':
-        return <AlertCircle size={16} className="text-yellow-500" />;
+        return <AlertCircle size={16} className="text-warning" />;
       default:
         return <Bell size={16} className="text-muted-foreground" />;
     }
@@ -374,7 +374,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
                             </h4>
                             <div className="flex items-center gap-1">
                               {!notification.read && (
-                                <div className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0" />
+                                <div className="h-2 w-2 bg-info rounded-full flex-shrink-0" />
                               )}
                               <Button
                                 variant="ghost"
