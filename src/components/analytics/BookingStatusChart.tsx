@@ -61,7 +61,7 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
   // Loading state
   if (loading) {
     return (
-      <Card className={cn(className)}>
+      <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
           <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>
@@ -79,7 +79,7 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
   // Empty state
   if (chartData.length === 0 || total === 0) {
     return (
-      <Card className={cn(className)}>
+      <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
           <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>
@@ -96,7 +96,7 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
   }
 
   return (
-    <Card className={cn(className)}>
+    <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
           <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>

@@ -66,7 +66,7 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
 
   if (loading) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-base font-semibold">Page Visit Heatmap</CardTitle>
           <p className="text-sm text-muted-foreground">Most visited pages on your site</p>
@@ -80,7 +80,7 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
 
   if (sortedData.length === 0) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-base font-semibold">Page Visit Heatmap</CardTitle>
           <p className="text-sm text-muted-foreground">Most visited pages on your site</p>
@@ -93,8 +93,8 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
   }
 
   return (
-    <Card>
-        <CardHeader>
+    <Card className="h-full">
+      <CardHeader>
           <CardTitle className="text-base font-semibold">Page Visit Heatmap</CardTitle>
           <p className="text-sm text-muted-foreground">Most visited pages on your site</p>
         </CardHeader>

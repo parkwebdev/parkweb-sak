@@ -76,7 +76,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
   // Loading state
   if (loading) {
     return (
-      <Card className={cn(className)}>
+      <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
           <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>
@@ -105,7 +105,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
   // Empty state
   if (totalConversations === 0) {
     return (
-      <Card className={cn(className)}>
+      <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
           <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>
@@ -125,7 +125,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
   const aiHandled = totalConversations - humanTakeover;
 
   return (
-    <Card className={cn(className)}>
+    <Card className={cn("h-full", className)}>
       <CardHeader>
         <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
         <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>

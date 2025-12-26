@@ -61,7 +61,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
   // Loading state
   if (loading) {
     return (
-      <Card className={cn(className)}>
+      <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Customer Satisfaction</CardTitle>
           <p className="text-sm text-muted-foreground">Ratings submitted after conversations</p>
@@ -93,7 +93,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
   // Empty state
   if (totalRatings === 0) {
     return (
-      <Card className={cn(className)}>
+      <Card className={cn("h-full", className)}>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Customer Satisfaction</CardTitle>
           <p className="text-sm text-muted-foreground">Ratings submitted after conversations</p>
@@ -113,7 +113,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
   const sortedDistribution = [...distribution].sort((a, b) => b.rating - a.rating);
 
   return (
-    <Card className={cn(className)}>
+    <Card className={cn("h-full", className)}>
       <CardHeader>
         <CardTitle className="text-base font-semibold">Customer Satisfaction</CardTitle>
         <p className="text-sm text-muted-foreground">Ratings submitted after conversations</p>
