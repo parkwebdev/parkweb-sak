@@ -17,8 +17,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Calendar, ChevronDown } from '@untitledui/icons';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-
-type ComparisonType = 'previous' | 'last-month' | 'last-year' | 'custom';
+import { DATE_PRESETS, COMPARISON_OPTIONS, type ComparisonType } from './constants';
 
 interface AnalyticsDatePickerProps {
   startDate: Date;
@@ -30,14 +29,6 @@ interface AnalyticsDatePickerProps {
   comparisonEndDate: Date;
   onComparisonDateChange: (start: Date, end: Date) => void;
 }
-
-const presets = [
-  { label: 'Today', days: 0 },
-  { label: '7 days', days: 7 },
-  { label: '30 days', days: 30 },
-  { label: '60 days', days: 60 },
-  { label: '90 days', days: 90 },
-];
 
 export const AnalyticsDatePicker = ({
   startDate,
@@ -134,10 +125,8 @@ export const AnalyticsDatePicker = ({
   // Check if current date range matches a preset
   const getActivePreset = (): number | null => {
     const today = new Date();
-    const todayStart = new Date(today);
-    todayStart.setHours(0, 0, 0, 0);
     
-    for (const preset of presets) {
+    for (const preset of DATE_PRESETS) {
       const expectedEnd = new Date(today);
       const expectedStart = new Date(today);
       
@@ -149,9 +138,7 @@ export const AnalyticsDatePicker = ({
       }
       
       // Compare dates (ignoring time for non-today presets)
-      const startMatches = preset.days === 0 
-        ? startDate.toDateString() === expectedStart.toDateString()
-        : startDate.toDateString() === expectedStart.toDateString();
+      const startMatches = startDate.toDateString() === expectedStart.toDateString();
       const endMatches = endDate.toDateString() === expectedEnd.toDateString();
       
       if (startMatches && endMatches) {
@@ -213,7 +200,7 @@ export const AnalyticsDatePicker = ({
             <div className="border-t pt-3">
               <p className="text-xs font-medium text-muted-foreground mb-2">Quick Select</p>
               <div className="grid grid-cols-5 gap-1.5">
-                {presets.map((preset) => (
+                {DATE_PRESETS.map((preset) => (
                   <button
                     key={preset.label}
                     className={cn(
@@ -256,10 +243,11 @@ export const AnalyticsDatePicker = ({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="previous">Previous period</SelectItem>
-                      <SelectItem value="last-month">Same period last month</SelectItem>
-                      <SelectItem value="last-year">Same period last year</SelectItem>
-                      <SelectItem value="custom">Custom range</SelectItem>
+                      {COMPARISON_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
 

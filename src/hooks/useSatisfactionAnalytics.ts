@@ -23,6 +23,7 @@ import type {
   RatingDistribution,
   SatisfactionTrendData,
   FeedbackItem,
+  TriggerType,
 } from '@/types/analytics';
 
 /** Raw rating from database query */
@@ -204,10 +205,10 @@ export const useSatisfactionAnalytics = (startDate: Date, endDate: Date, enabled
       .slice(0, 10)
       .map((r) => ({
         id: r.id,
-        rating: r.rating,
+        rating: r.rating as RatingValue,
         feedback: r.feedback,
         createdAt: r.created_at,
-        triggerType: r.trigger_type,
+        triggerType: r.trigger_type as TriggerType,
       }));
 
     return {

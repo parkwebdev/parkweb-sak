@@ -28,10 +28,14 @@ interface ConversationStats {
   human_takeover: number;
 }
 
-/** Dynamic lead stats by stage - keys are stage names */
-interface LeadStageStats {
+/** 
+ * Dynamic lead stats by stage.
+ * Keys are lowercase stage names (e.g., 'new', 'contacted', 'qualified').
+ */
+export interface LeadStageStats {
   date: string;
   total: number;
+  /** Dynamic stage counts - keys are lowercase stage names */
   [stageName: string]: number | string;
 }
 
