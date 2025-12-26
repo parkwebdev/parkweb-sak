@@ -35,7 +35,7 @@ import {
   type SortOption,
 } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
-import { Settings01 } from '@untitledui/icons';
+import { Sliders02 } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -380,7 +380,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                     className="h-8 gap-2"
                     onClick={() => setIsSettingsSheetOpen(true)}
                   >
-                    <Settings01 size={16} />
+                    <Sliders02 size={16} />
                     <span className="hidden sm:inline">Customize</span>
                   </Button>
                 </div>

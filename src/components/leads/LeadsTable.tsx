@@ -19,7 +19,7 @@ import {
   ColumnOrderState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { Trash01, Settings01 } from '@untitledui/icons';
+import { Trash01, Sliders02 } from '@untitledui/icons';
 import {
   DataTable,
   DataTablePagination,
@@ -215,7 +215,7 @@ export const LeadsTable = React.memo(function LeadsTable({
               className="h-8 gap-2"
               onClick={onOpenSettings}
             >
-              <Settings01 size={16} />
+              <Sliders02 size={16} />
               <span className="hidden sm:inline">Customize</span>
             </Button>
           )
