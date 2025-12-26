@@ -417,7 +417,7 @@ function Analytics() {
     try {
       await generateCSVReport(analyticsData, reportConfig, startDate, endDate, user?.email || 'User');
       toast.success('CSV exported successfully');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Export error:', error);
       toast.error('Failed to export CSV');
     }
@@ -427,7 +427,7 @@ function Analytics() {
     try {
       await generatePDFReport(analyticsData, reportConfig, startDate, endDate, user?.email || 'User');
       toast.success('PDF exported successfully');
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Export error:', error);
       toast.error('Failed to export PDF');
     }

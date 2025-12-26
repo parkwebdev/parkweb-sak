@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import { useSupabaseQuery } from './useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import type { KnowledgeSourceMetadata } from '@/types/metadata';
 
 type KnowledgeSource = Tables<'knowledge_sources'>;
@@ -173,7 +173,7 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       const { data, error } = await supabase
         .from('knowledge_sources')
-        .insert(insertData as never)
+        .insert(insertData as TablesInsert<'knowledge_sources'>)
         .select()
         .single();
 
@@ -227,7 +227,7 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       const { data, error } = await supabase
         .from('knowledge_sources')
-        .insert(insertData as never)
+        .insert(insertData as TablesInsert<'knowledge_sources'>)
         .select()
         .single();
 

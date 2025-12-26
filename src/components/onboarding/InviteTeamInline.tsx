@@ -57,7 +57,7 @@ export function InviteTeamInline() {
         setEmail('');
         setIsSuccess(false);
       }, 3000);
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to send invitation:', error);
       toast.error('Failed to send invitation');
     } finally {

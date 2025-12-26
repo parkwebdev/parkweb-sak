@@ -94,7 +94,7 @@ const Auth = () => {
         logAuthEvent('login', false, { error: error.message, provider: 'google' });
         toast.error("Google sign in failed", { description: error.message });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
@@ -116,7 +116,7 @@ const Auth = () => {
         logAuthEvent('login', false, { error: error.message, provider: 'azure' });
         toast.error("Microsoft sign in failed", { description: error.message });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
@@ -148,7 +148,7 @@ const Auth = () => {
 
       logAuthEvent('login', true);
       navigate('/');
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
@@ -242,7 +242,7 @@ const Auth = () => {
 
       // Move to completion step
       setCurrentStep(3);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
@@ -280,7 +280,7 @@ const Auth = () => {
         description: "We've sent you a password reset link" 
       });
       setShowForgotPassword(false);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred" });
     } finally {
       setIsLoading(false);

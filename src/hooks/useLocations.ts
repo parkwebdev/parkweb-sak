@@ -17,7 +17,7 @@ import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import { useSupabaseQuery } from './useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert, Json } from '@/integrations/supabase/types';
 import type { LocationFormData, BusinessHours } from '@/types/locations';
 
 type Location = Tables<'locations'>;
@@ -73,7 +73,7 @@ export const useLocations = (agentId?: string) => {
     if (!agentId) return null;
 
     try {
-      const insertData = {
+      const insertData: TablesInsert<'locations'> = {
         agent_id: agentId,
         user_id: userId,
         name: formData.name,
@@ -85,13 +85,13 @@ export const useLocations = (agentId?: string) => {
         timezone: formData.timezone || 'America/New_York',
         phone: formData.phone || null,
         email: formData.email || null,
-        business_hours: (formData.business_hours || {}) as unknown,
+        business_hours: (formData.business_hours || {}) as Json,
         wordpress_slug: formData.wordpress_slug || null,
       };
 
       const { data, error } = await supabase
         .from('locations')
-        .insert(insertData as never)
+        .insert(insertData)
         .select()
         .single();
 
@@ -102,7 +102,7 @@ export const useLocations = (agentId?: string) => {
       });
 
       return data.id;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error creating location', error);
       toast.error('Failed to create location', {
         description: getErrorMessage(error),
@@ -134,7 +134,7 @@ export const useLocations = (agentId?: string) => {
 
       toast.success('Location updated');
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error updating location', error);
       toast.error('Failed to update location', {
         description: getErrorMessage(error),
@@ -163,7 +163,7 @@ export const useLocations = (agentId?: string) => {
 
       toast.success('Location deleted');
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error deleting location', error);
       toast.error('Failed to delete location', {
         description: getErrorMessage(error),

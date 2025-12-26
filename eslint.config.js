@@ -24,6 +24,8 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // Require explicit typing on catch clause variables
+      "@typescript-eslint/no-implicit-any-catch": "off", // Note: Rule removed in newer versions, use useUnknownInCatchVariables in tsconfig instead
       // Ban React.FC and FC - use direct function declarations instead
       "@typescript-eslint/ban-types": [
         "error",
