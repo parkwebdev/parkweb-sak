@@ -570,54 +570,74 @@ const Analytics: React.FC = () => {
                   Loading analytics data...
                 </div>
               ) : (
-                <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                  {/* Row 1: Conversations & Leads */}
-                  <AnimatedItem>
-                    <ConversationChart data={conversationStats} />
-                  </AnimatedItem>
-                  <AnimatedItem>
-                    <LeadConversionChart data={leadStats} />
-                  </AnimatedItem>
+                <div className="space-y-6">
+                  {/* Trends Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Trends</h3>
+                    <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                      <AnimatedItem>
+                        <ConversationChart data={conversationStats} />
+                      </AnimatedItem>
+                      <AnimatedItem>
+                        <LeadConversionChart data={leadStats} />
+                      </AnimatedItem>
+                    </AnimatedList>
+                  </div>
                   
-                  {/* Row 2: Bookings & Satisfaction */}
-                  <AnimatedItem>
-                    <BookingsByLocationChart 
-                      data={bookingStats?.byLocation ?? []} 
-                      loading={bookingLoading}
-                    />
-                  </AnimatedItem>
-                  <AnimatedItem>
-                    <SatisfactionScoreCard 
-                      averageRating={satisfactionStats?.averageRating ?? 0}
-                      totalRatings={satisfactionStats?.totalRatings ?? 0}
-                      distribution={satisfactionStats?.distribution ?? []}
-                      loading={satisfactionLoading}
-                    />
-                  </AnimatedItem>
+                  {/* Performance Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Performance</h3>
+                    <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                      <AnimatedItem>
+                        <BookingsByLocationChart 
+                          data={bookingStats?.byLocation ?? []} 
+                          loading={bookingLoading}
+                        />
+                      </AnimatedItem>
+                      <AnimatedItem>
+                        <SatisfactionScoreCard 
+                          averageRating={satisfactionStats?.averageRating ?? 0}
+                          totalRatings={satisfactionStats?.totalRatings ?? 0}
+                          distribution={satisfactionStats?.distribution ?? []}
+                          loading={satisfactionLoading}
+                        />
+                      </AnimatedItem>
+                    </AnimatedList>
+                  </div>
                   
-                  {/* Row 3: AI Performance & Booking Status */}
-                  <AnimatedItem>
-                    <AIPerformanceCard 
-                      containmentRate={aiPerformanceStats?.containmentRate ?? 0}
-                      resolutionRate={aiPerformanceStats?.resolutionRate ?? 0}
-                      totalConversations={aiPerformanceStats?.totalConversations ?? 0}
-                      humanTakeover={aiPerformanceStats?.humanTakeover ?? 0}
-                      loading={aiPerformanceLoading}
-                    />
-                  </AnimatedItem>
-                  <AnimatedItem>
-                    <BookingStatusChart 
-                      data={bookingStats?.byStatus ?? []} 
-                      showRate={bookingStats?.showRate ?? 0}
-                      loading={bookingLoading}
-                    />
-                  </AnimatedItem>
+                  {/* AI & Operations Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">AI & Operations</h3>
+                    <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                      <AnimatedItem>
+                        <AIPerformanceCard 
+                          containmentRate={aiPerformanceStats?.containmentRate ?? 0}
+                          resolutionRate={aiPerformanceStats?.resolutionRate ?? 0}
+                          totalConversations={aiPerformanceStats?.totalConversations ?? 0}
+                          humanTakeover={aiPerformanceStats?.humanTakeover ?? 0}
+                          loading={aiPerformanceLoading}
+                        />
+                      </AnimatedItem>
+                      <AnimatedItem>
+                        <BookingStatusChart 
+                          data={bookingStats?.byStatus ?? []} 
+                          showRate={bookingStats?.showRate ?? 0}
+                          loading={bookingLoading}
+                        />
+                      </AnimatedItem>
+                    </AnimatedList>
+                  </div>
                   
-                  {/* Row 4: Tickets (Coming Soon) */}
-                  <AnimatedItem>
-                    <TicketsResolvedCard comingSoon={true} />
-                  </AnimatedItem>
-                </AnimatedList>
+                  {/* Support Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Support</h3>
+                    <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                      <AnimatedItem>
+                        <TicketsResolvedCard comingSoon={true} />
+                      </AnimatedItem>
+                    </AnimatedList>
+                  </div>
+                </div>
               )}
             </div>
           )}
