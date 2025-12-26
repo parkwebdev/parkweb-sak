@@ -24,6 +24,8 @@ export function DataTableColumnHeader<TData, TValue>({
   title,
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
+  const isRightAligned = className?.includes('justify-end');
+
   if (!column.getCanSort()) {
     return <div className={cn(className)}>{title}</div>;
   }
@@ -34,7 +36,11 @@ export function DataTableColumnHeader<TData, TValue>({
     <Button
       variant="ghost"
       size="sm"
-      className={cn('-ml-3 h-8 data-[state=open]:bg-accent', className)}
+      className={cn(
+        'h-8 data-[state=open]:bg-accent',
+        isRightAligned ? 'ml-auto -mr-3' : '-ml-3',
+        className
+      )}
       onClick={() => column.toggleSorting(sorted === 'asc')}
       aria-label={`Sort by ${title}`}
     >
