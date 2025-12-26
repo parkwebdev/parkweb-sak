@@ -43,6 +43,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
       <Card className={cn(className)}>
         <CardHeader>
           <CardTitle className="text-base">Bookings by Location</CardTitle>
+          <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-3" role="status" aria-label="Loading bookings by location">
@@ -64,6 +65,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
       <Card className={cn(className)}>
         <CardHeader>
           <CardTitle className="text-base">Bookings by Location</CardTitle>
+          <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
         </CardHeader>
         <CardContent>
           <EmptyState
@@ -80,6 +82,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
     <Card className={cn(className)}>
       <CardHeader>
         <CardTitle className="text-base">Bookings by Location</CardTitle>
+        <p className="text-xs text-muted-foreground">Appointments scheduled per location</p>
       </CardHeader>
       <CardContent>
         <div className="h-[280px]">

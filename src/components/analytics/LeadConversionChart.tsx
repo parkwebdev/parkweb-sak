@@ -50,7 +50,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({ dat
     <Card>
       <CardHeader>
         <CardTitle>Lead Conversion Funnel</CardTitle>
-        <CardDescription>Track leads through the conversion pipeline</CardDescription>
+        <CardDescription>Leads moving through each stage over time</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">

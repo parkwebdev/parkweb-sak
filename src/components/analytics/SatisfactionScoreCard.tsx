@@ -64,6 +64,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
       <Card className={cn(className)}>
         <CardHeader>
           <CardTitle className="text-base">Customer Satisfaction</CardTitle>
+          <p className="text-xs text-muted-foreground">Ratings submitted after conversations</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-4" role="status" aria-label="Loading satisfaction data">
@@ -95,6 +96,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
       <Card className={cn(className)}>
         <CardHeader>
           <CardTitle className="text-base">Customer Satisfaction</CardTitle>
+          <p className="text-xs text-muted-foreground">Ratings submitted after conversations</p>
         </CardHeader>
         <CardContent>
           <EmptyState
@@ -114,6 +116,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
     <Card className={cn(className)}>
       <CardHeader>
         <CardTitle className="text-base">Customer Satisfaction</CardTitle>
+        <p className="text-xs text-muted-foreground">Ratings submitted after conversations</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">

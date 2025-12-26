@@ -44,6 +44,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Traffic Sources</CardTitle>
+          <p className="text-xs text-muted-foreground">Where your visitors come from</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
           <SkeletonPieChart />
@@ -57,6 +58,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Traffic Sources</CardTitle>
+          <p className="text-xs text-muted-foreground">Where your visitors come from</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
           <span className="text-muted-foreground text-sm">No traffic data available</span>
@@ -69,6 +71,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Traffic Sources</CardTitle>
+        <p className="text-xs text-muted-foreground">Where your visitors come from</p>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
