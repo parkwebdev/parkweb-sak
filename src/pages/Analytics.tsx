@@ -439,9 +439,17 @@ const Analytics: React.FC = () => {
         <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold">Analytics</h1>
+            <h1 className="text-2xl font-bold">
+              {activeTab === 'dashboard' && 'Analytics Dashboard'}
+              {activeTab === 'traffic' && 'Traffic Analytics'}
+              {activeTab === 'reports' && 'Generate Reporting'}
+              {activeTab === 'schedule' && 'Schedule Reports'}
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Track performance and insights across your organization
+              {activeTab === 'dashboard' && 'Track performance and insights across your organization'}
+              {activeTab === 'traffic' && 'Monitor visitor sources and page engagement'}
+              {activeTab === 'reports' && 'Build and export custom analytics reports'}
+              {activeTab === 'schedule' && 'Automate recurring report delivery'}
             </p>
           </div>
 
