@@ -436,7 +436,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                       />
                       <Label htmlFor="ai-extraction" className="text-xs text-muted-foreground cursor-pointer">
                         <span className="flex items-center gap-1">
-                          <Zap className="h-3 w-3 text-orange-500" />
+                          <Zap className="h-3 w-3 text-warning" />
                           Use AI extraction
                         </span>
                       </Label>
