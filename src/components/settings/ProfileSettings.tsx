@@ -416,7 +416,7 @@ export const ProfileSettings: React.FC = () => {
               <p className="text-xs text-destructive">Passwords don't match</p>
             )}
             {passwords.confirm && passwords.new === passwords.confirm && passwords.new && (
-              <p className="text-xs text-green-600 dark:text-green-500">Passwords match</p>
+              <p className="text-xs text-status-active">Passwords match</p>
             )}
           </div>
           <div className="flex justify-end">
