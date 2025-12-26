@@ -559,12 +559,19 @@ export const LeadDetailsSheet = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-muted-foreground">Phone</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="phone" className="text-muted-foreground">Phone</Label>
+                      <SavedIndicator show={savedField === 'phone'} />
+                    </div>
                     <Input
                       id="phone"
-                      value={phoneValue}
-                      readOnly
-                      className="bg-muted/50 border-transparent"
+                      type="tel"
+                      value={{ ...lead, ...editedLead }.phone || phoneValue}
+                      onChange={(e) => {
+                        lastEditedFieldRef.current = 'phone';
+                        setEditedLead({ ...editedLead, phone: e.target.value });
+                      }}
+                      className="bg-muted/50 border-transparent focus:border-input focus:bg-background"
                     />
                   </div>
                 </div>
