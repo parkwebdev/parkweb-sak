@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Map, MapTileLayer, MapCircleMarker, MapTooltip, MapFitBounds } from '@/components/ui/map';
-import Globe02 from '@untitledui/icons/Globe02';
+import { Globe02 } from '@untitledui/icons/Globe02';
 import L from 'leaflet';
 
 export interface LocationData {
