@@ -69,6 +69,7 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Page Visit Heatmap</CardTitle>
+          <p className="text-xs text-muted-foreground">Most visited pages on your site</p>
         </CardHeader>
         <CardContent className="h-[300px]">
           <SkeletonHeatmap />
@@ -82,6 +83,7 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Page Visit Heatmap</CardTitle>
+          <p className="text-xs text-muted-foreground">Most visited pages on your site</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
           <span className="text-muted-foreground text-sm">No page visit data available</span>
@@ -94,6 +96,7 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Page Visit Heatmap</CardTitle>
+        <p className="text-xs text-muted-foreground">Most visited pages on your site</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">

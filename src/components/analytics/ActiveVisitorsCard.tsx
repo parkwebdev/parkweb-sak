@@ -92,10 +92,13 @@ export const ActiveVisitorsCard: React.FC<ActiveVisitorsCardProps> = ({ agentId 
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Users01 className="h-4 w-4" />
-            Active Visitors
-          </CardTitle>
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Users01 className="h-4 w-4" />
+              Active Visitors
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">People currently chatting with Ari</p>
+          </div>
           <Badge 
             variant="secondary" 
             className={activeVisitors.length > 0 ? 'bg-success/10 text-success' : ''}
