@@ -113,11 +113,18 @@ export const ChartTooltipContent = ({
       <p className="text-xs font-semibold text-background">{String(title)}</p>
 
       {!secondaryTitle ? null : Array.isArray(secondaryTitle) ? (
-        <div>
+        <div className="flex flex-col gap-1">
           {secondaryTitle.map((entry, index) => (
-            <p key={index} className="text-xs text-muted">
-              {`${entry.name}: ${formatter ? formatter(entry.value, entry.name, entry, index, entry.payload) : entry.value}`}
-            </p>
+            <div key={index} className="flex items-center gap-2 text-xs text-muted">
+              <span
+                className="h-2 w-2 rounded-full shrink-0"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span>{entry.name}:</span>
+              <span className="font-medium ml-auto">
+                {formatter ? formatter(entry.value, entry.name, entry, index, entry.payload) : entry.value}
+              </span>
+            </div>
           ))}
         </div>
       ) : (
