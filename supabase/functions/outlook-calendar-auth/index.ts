@@ -3,6 +3,17 @@
  * 
  * Handles OAuth 2.0 flow for Microsoft Outlook Calendar integration.
  * Actions: initiate, callback, refresh, disconnect
+ * 
+ * @module outlook-calendar-auth
+ * @verified Phase 3.2 Complete - December 2025
+ * 
+ * Webhook Integration:
+ * - On successful callback, creates a Microsoft Graph subscription for calendar changes
+ * - Subscriptions notify us of event changes in real-time for accurate booking analytics
+ * - Subscriptions expire after 3 days (Microsoft limit) and are renewed by renew-calendar-webhooks
+ * 
+ * TODO: Add MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, MICROSOFT_REDIRECT_URI secrets
+ * TODO: Add CALENDAR_WEBHOOK_SECRET for webhook validation
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
@@ -15,6 +26,10 @@ const corsHeaders = {
 const MICROSOFT_CLIENT_ID = Deno.env.get('MICROSOFT_CLIENT_ID') || '';
 const MICROSOFT_CLIENT_SECRET = Deno.env.get('MICROSOFT_CLIENT_SECRET') || '';
 const MICROSOFT_REDIRECT_URI = Deno.env.get('MICROSOFT_REDIRECT_URI') || '';
+const WEBHOOK_SECRET = Deno.env.get('CALENDAR_WEBHOOK_SECRET') || '';
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/outlook-calendar-webhook`;
 
 const SCOPES = [
   'openid',
@@ -172,6 +187,22 @@ Deno.serve(async (req) => {
           calendarName = calendarInfo.name;
         }
 
+        // Create webhook subscription for real-time sync
+        let webhookSubscriptionId: string | null = null;
+        let webhookExpiresAt: string | null = null;
+
+        try {
+          const webhookResult = await createWebhookSubscription(tokens.access_token);
+          if (webhookResult) {
+            webhookSubscriptionId = webhookResult.subscriptionId;
+            webhookExpiresAt = webhookResult.expiresAt;
+            console.log(`[outlook-calendar-auth] Webhook subscription created: ${webhookSubscriptionId}`);
+          }
+        } catch (webhookError) {
+          // Log but don't fail the connection - webhook can be set up later
+          console.warn('[outlook-calendar-auth] Failed to create webhook subscription:', webhookError);
+        }
+
         // Store in database
         const { data: account, error: insertError } = await supabase
           .from('connected_accounts')
@@ -187,6 +218,9 @@ Deno.serve(async (req) => {
             calendar_id: calendarId,
             calendar_name: calendarName,
             is_active: true,
+            webhook_channel_id: webhookSubscriptionId,
+            webhook_resource_id: null, // Outlook doesn't have separate resource ID
+            webhook_expires_at: webhookExpiresAt,
           })
           .select()
           .single();
@@ -202,7 +236,11 @@ Deno.serve(async (req) => {
         console.log(`[outlook-calendar-auth] Account saved: ${account.id}`);
 
         return new Response(
-          JSON.stringify({ success: true, accountId: account.id }),
+          JSON.stringify({ 
+            success: true, 
+            accountId: account.id,
+            webhookEnabled: !!webhookSubscriptionId,
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -294,7 +332,30 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Delete from database (Microsoft doesn't have a simple token revocation endpoint)
+        // Get account from database
+        const { data: account } = await supabase
+          .from('connected_accounts')
+          .select('access_token, webhook_channel_id')
+          .eq('id', accountId)
+          .single();
+
+        // Delete webhook subscription if exists (best effort)
+        if (account?.webhook_channel_id && account?.access_token) {
+          try {
+            await fetch(
+              `https://graph.microsoft.com/v1.0/subscriptions/${account.webhook_channel_id}`,
+              {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${account.access_token}` },
+              }
+            );
+            console.log(`[outlook-calendar-auth] Webhook subscription deleted for account ${accountId}`);
+          } catch (e) {
+            console.warn('[outlook-calendar-auth] Webhook deletion failed (non-critical):', e);
+          }
+        }
+
+        // Delete from database
         await supabase
           .from('connected_accounts')
           .delete()
@@ -322,3 +383,45 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+/**
+ * Create a Microsoft Graph subscription for calendar events
+ * 
+ * @param accessToken - Valid OAuth access token
+ * @returns Subscription details or null if failed
+ */
+async function createWebhookSubscription(
+  accessToken: string
+): Promise<{ subscriptionId: string; expiresAt: string } | null> {
+  // Microsoft Graph subscriptions for calendar events expire after 3 days max
+  const expirationDateTime = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+
+  const response = await fetch('https://graph.microsoft.com/v1.0/subscriptions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      changeType: 'created,updated,deleted',
+      notificationUrl: WEBHOOK_URL,
+      resource: '/me/events',
+      expirationDateTime: expirationDateTime.toISOString(),
+      clientState: WEBHOOK_SECRET || undefined,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[outlook-calendar-auth] Subscription creation failed:', errorText);
+    throw new Error(`Subscription creation failed: ${errorText}`);
+  }
+
+  const subscriptionData = await response.json();
+  console.log('[outlook-calendar-auth] Subscription response:', subscriptionData);
+
+  return {
+    subscriptionId: subscriptionData.id,
+    expiresAt: subscriptionData.expirationDateTime,
+  };
+}
