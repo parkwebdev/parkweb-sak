@@ -12,6 +12,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { useLeadStages } from '@/hooks/useLeadStages';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { format, parseISO } from 'date-fns';
 import { ChartCardHeader } from './ChartCardHeader';
 
@@ -34,6 +35,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
 }: LeadConversionChartProps) {
   const isDesktop = useBreakpoint('lg');
   const { stages } = useLeadStages();
+  const prefersReducedMotion = useReducedMotion();
 
   // Generate gradient definitions and areas based on actual stages with their custom colors
   const stageConfig = useMemo(() => {
@@ -144,7 +146,9 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
               {stageConfig.map((stage) => (
                 <Area
                   key={stage.key}
-                  isAnimationActive={false}
+                  isAnimationActive={!prefersReducedMotion}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                   dataKey={stage.key}
                   name={stage.name}
                   stackId="1"

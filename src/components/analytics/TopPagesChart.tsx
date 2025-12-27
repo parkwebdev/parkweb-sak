@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SkeletonHeatmap } from '@/components/ui/page-skeleton';
 import { ChartCardHeader } from './ChartCardHeader';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface TopPageData {
   url: string;
@@ -73,6 +74,7 @@ const getBarColor = (index: number, total: number): string => {
 
 export function TopPagesChart({ data, loading }: TopPagesChartProps) {
   const [sortBy, setSortBy] = useState<SortOption>('visits');
+  const prefersReducedMotion = useReducedMotion();
 
   const { maxValue, sortedData, trendPercentage } = useMemo(() => {
     const sorted = [...data]
@@ -141,9 +143,14 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
             const primaryValue = sortBy === 'conversions' ? page.conversions : page.visits;
             const widthPercentage = (primaryValue / maxValue) * 100;
             const barColor = getBarColor(index, sortedData.length);
+            const animationDelay = prefersReducedMotion ? 0 : index * 50;
             
             return (
-              <div key={index} className="flex items-center gap-3 cursor-pointer group">
+              <div 
+                key={index} 
+                className="flex items-center gap-3 cursor-pointer group animate-fade-in"
+                style={{ animationDelay: `${animationDelay}ms` }}
+              >
                 {/* Label */}
                 <span className="text-sm text-muted-foreground w-24 text-right shrink-0 group-hover:text-foreground transition-colors">
                   {formatUrl(page.url)}
@@ -152,12 +159,13 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
                 {/* Bar container with tooltip */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex-1 h-8 relative">
+                    <div className="flex-1 h-8 relative overflow-hidden">
                       <div
                         className="h-full rounded-md transition-all duration-300 group-hover:opacity-90"
                         style={{ 
                           width: `${Math.max(widthPercentage, 8)}%`,
                           backgroundColor: barColor,
+                          animation: prefersReducedMotion ? 'none' : `growWidth 600ms ease-out ${animationDelay}ms both`,
                         }}
                       />
                     </div>

@@ -20,6 +20,7 @@ import { Calendar } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   Select,
   SelectContent,
@@ -65,6 +66,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
   className,
 }: BookingTrendChartProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('all-statuses');
+  const prefersReducedMotion = useReducedMotion();
 
   // Calculate totals for context summary
   const totalBookings = useMemo(() => {
@@ -218,7 +220,9 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
 
               {viewMode === 'total-only' ? (
                 <Area
-                  isAnimationActive={false}
+                  isAnimationActive={!prefersReducedMotion}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                   dataKey="total"
                   name="Total"
                   type="monotone"
@@ -235,7 +239,9 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
               ) : (
                 <>
                   <Area
-                    isAnimationActive={false}
+                    isAnimationActive={!prefersReducedMotion}
+                    animationDuration={800}
+                    animationEasing="ease-out"
                     dataKey="completed"
                     name="Completed"
                     stackId="1"
@@ -252,7 +258,9 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                   />
 
                   <Area
-                    isAnimationActive={false}
+                    isAnimationActive={!prefersReducedMotion}
+                    animationDuration={800}
+                    animationEasing="ease-out"
                     dataKey="confirmed"
                     name="Confirmed"
                     stackId="1"
@@ -269,7 +277,9 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                   />
 
                   <Area
-                    isAnimationActive={false}
+                    isAnimationActive={!prefersReducedMotion}
+                    animationDuration={800}
+                    animationEasing="ease-out"
                     dataKey="cancelled"
                     name="Cancelled"
                     stackId="1"
@@ -286,7 +296,9 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                   />
 
                   <Area
-                    isAnimationActive={false}
+                    isAnimationActive={!prefersReducedMotion}
+                    animationDuration={800}
+                    animationEasing="ease-out"
                     dataKey="noShow"
                     name="No-show"
                     stackId="1"
