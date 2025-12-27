@@ -133,7 +133,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
     <Card className={cn("h-full", className)}>
       <CardContent className="pt-6">
         <ChartCardHeader
-          title="Ari Performance"
+          title="Conversation Breakdown"
           trendValue={trendValue}
           trendPeriod={trendPeriod}
         />
