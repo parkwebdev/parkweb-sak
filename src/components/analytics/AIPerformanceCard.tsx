@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { User01 } from '@untitledui/icons';
+import { User03 } from '@untitledui/icons';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { cn } from '@/lib/utils';
@@ -167,7 +167,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
                 <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center">
-                  <User01 size={10} className="text-muted-foreground" />
+                  <User03 size={10} className="text-muted-foreground" />
                 </div>
                 <span className="text-muted-foreground">Human Takeover</span>
               </div>
