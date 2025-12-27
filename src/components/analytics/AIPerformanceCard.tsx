@@ -85,7 +85,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
             <Skeleton className="h-4 w-40 mb-1" />
             <Skeleton className="h-4 w-56" />
           </div>
-          <div className="space-y-6" role="status" aria-label="Loading AI performance data">
+          <div className="space-y-6" role="status" aria-label="Loading Ari performance data">
             {Array.from({ length: 2 }).map((_, i) => (
               <div key={i} className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -119,15 +119,12 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
           <EmptyState
             icon={<ZapSolidIcon size={20} className="text-muted-foreground" />}
             title="No conversation data"
-            description="AI performance metrics will appear once conversations are recorded."
+            description="Ari performance metrics will appear once conversations are recorded."
           />
         </CardContent>
       </Card>
     );
   }
-
-  // Calculate AI handled count
-  const aiHandled = totalConversations - humanTakeover;
 
   return (
     <Card className={cn("h-full", className)}>
@@ -155,13 +152,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
           />
 
           {/* Summary stats */}
-          <div className="pt-4 border-t border-border space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Ari Handled</span>
-              <span className="font-medium text-foreground tabular-nums">
-                {aiHandled.toLocaleString()} of {totalConversations.toLocaleString()}
-              </span>
-            </div>
+          <div className="pt-4 border-t border-border">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Human Takeover</span>
               <span className="font-medium text-foreground tabular-nums">
