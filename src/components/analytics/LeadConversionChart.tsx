@@ -69,7 +69,6 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
           title="Lead Conversion Funnel"
           trendValue={trendValue}
           trendPeriod={trendPeriod}
-          contextSummary={`Showing ${totalLeads.toLocaleString()} leads across ${stages.length} stages`}
         />
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -165,20 +164,25 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
         </div>
         
         {/* Custom legend as chips below chart */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
-          {stageConfig.map((stage) => (
-            <div
-              key={stage.key}
-              className="inline-flex items-center gap-1.5 rounded-full bg-background px-3 py-1 text-xs font-medium text-muted-foreground border border-border"
-            >
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: stage.color }}
-                aria-hidden="true"
-              />
-              {stage.name} ({stageCounts[stage.key]?.toLocaleString() ?? 0})
-            </div>
-          ))}
+        <div className="flex flex-col items-start gap-2 pt-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {stageConfig.map((stage) => (
+              <div
+                key={stage.key}
+                className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground border border-border"
+              >
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: stage.color }}
+                  aria-hidden="true"
+                />
+                {stage.name} ({stageCounts[stage.key]?.toLocaleString() ?? 0})
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Showing {totalLeads.toLocaleString()} leads across {stages.length} stages
+          </p>
         </div>
       </CardContent>
     </Card>
