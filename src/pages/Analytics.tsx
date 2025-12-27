@@ -557,7 +557,7 @@ function Analytics() {
     'leads': { title: 'Leads', description: 'Track lead generation and conversion metrics' },
     'bookings': { title: 'Bookings', description: 'Monitor appointment scheduling performance' },
     'satisfaction': { title: 'Satisfaction', description: 'Review customer feedback and ratings' },
-    'ai-performance': { title: 'AI Performance', description: 'Measure AI containment and resolution rates' },
+    'ai-performance': { title: 'Ari Performance', description: 'Measure Ari containment and resolution rates' },
     'sources': { title: 'Traffic Sources', description: 'Understand where your visitors come from' },
     'pages': { title: 'Top Pages', description: 'See which pages drive the most engagement' },
     'geography': { title: 'Geography', description: 'View visitor locations around the world' },
