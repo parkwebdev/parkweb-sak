@@ -650,7 +650,7 @@ function Analytics() {
           {/* Leads Section */}
           {activeTab === 'leads' && (
             <div className="space-y-6">
-              <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+              <AnimatedList staggerDelay={0.1}>
                 <AnimatedItem><LeadConversionChart data={leadStats} /></AnimatedItem>
               </AnimatedList>
             </div>
