@@ -126,6 +126,9 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
     );
   }
 
+  // Calculate Ari handled count
+  const ariHandled = totalConversations - humanTakeover;
+
   return (
     <Card className={cn("h-full", className)}>
       <CardContent className="pt-6">
@@ -152,7 +155,13 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
           />
 
           {/* Summary stats */}
-          <div className="pt-4 border-t border-border">
+          <div className="pt-4 border-t border-border space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Ari Handled</span>
+              <span className="font-medium text-foreground tabular-nums">
+                {ariHandled.toLocaleString()} of {totalConversations.toLocaleString()}
+              </span>
+            </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Human Takeover</span>
               <span className="font-medium text-foreground tabular-nums">
