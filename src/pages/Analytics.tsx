@@ -536,32 +536,42 @@ function Analytics() {
     }
   }, [analyticsData, reportConfig, user?.email, createExport]);
 
+  // Section title and description mapping
+  const sectionInfo: Record<AnalyticsSection, { title: string; description: string }> = {
+    'dashboard': { title: 'Analytics Dashboard', description: 'Track performance and insights across your organization' },
+    'conversations': { title: 'Conversations', description: 'Analyze chat sessions and engagement patterns' },
+    'leads': { title: 'Leads', description: 'Track lead generation and conversion metrics' },
+    'bookings': { title: 'Bookings', description: 'Monitor appointment scheduling performance' },
+    'satisfaction': { title: 'Satisfaction', description: 'Review customer feedback and ratings' },
+    'ai-performance': { title: 'AI Performance', description: 'Measure AI containment and resolution rates' },
+    'sources': { title: 'Traffic Sources', description: 'Understand where your visitors come from' },
+    'pages': { title: 'Top Pages', description: 'See which pages drive the most engagement' },
+    'geography': { title: 'Geography', description: 'View visitor locations around the world' },
+    'export-history': { title: 'Export History', description: 'View and download past reports' },
+    'scheduled': { title: 'Scheduled Reports', description: 'Manage automated report delivery' },
+  };
+
+  // Sections that show the toolbar
+  const showToolbar = ['dashboard', 'conversations', 'leads', 'bookings', 'satisfaction', 'ai-performance', 'sources', 'pages', 'geography'].includes(activeTab);
+  // Sections that show build report button
+  const showBuildReport = ['export-history', 'scheduled'].includes(activeTab);
+
   return (
     <main className="flex-1 bg-muted/30 h-screen overflow-hidden flex">
-      {/* Section Menu Sidebar */}
       <AnalyticsSectionMenu 
         activeSection={activeTab} 
         onSectionChange={setActiveTab} 
       />
       
-      {/* Main Content Area */}
       <div className="flex-1 overflow-auto">
         <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">
-                {activeTab === 'dashboard' && 'Analytics Dashboard'}
-                {activeTab === 'traffic' && 'Traffic Analytics'}
-                {activeTab === 'reports' && 'Reports'}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {activeTab === 'dashboard' && 'Track performance and insights across your organization'}
-                {activeTab === 'traffic' && 'Monitor visitor sources and page engagement'}
-                {activeTab === 'reports' && 'Generate, export, and schedule analytics reports'}
-              </p>
+              <h1 className="text-2xl font-bold">{sectionInfo[activeTab].title}</h1>
+              <p className="text-sm text-muted-foreground mt-1">{sectionInfo[activeTab].description}</p>
             </div>
-            {activeTab === 'reports' && (
+            {showBuildReport && (
               <Button size="sm" onClick={() => setExportSheetOpen(true)}>
                 <FileCheck02 className="h-4 w-4 mr-2" />
                 Build Report
@@ -569,8 +579,8 @@ function Analytics() {
             )}
           </div>
 
-          {/* Unified Toolbar - only show for dashboard and traffic */}
-          {(activeTab === 'dashboard' || activeTab === 'traffic') && (
+          {/* Toolbar */}
+          {showToolbar && (
             <AnalyticsToolbar
               startDate={startDate}
               endDate={endDate}
@@ -600,223 +610,124 @@ function Analytics() {
                 />
               ) : (
                 <div className="space-y-6">
-                  {/* Engagement Metrics */}
                   <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                      Engagement
-                    </h3>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement</h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-                      <MetricCardWithChart
-                        title={totalConversations.toLocaleString()}
-                        subtitle="Total Conversations"
-                        description="Chat sessions started with Ari"
-                        change={calculatePeriodChange(conversationTrend)}
-                        changeType="percentage"
-                        changeLabel="vs last period"
-                        chartData={generateChartData(conversationTrend)}
-                        animationDelay={0}
-                      />
-                      <MetricCardWithChart
-                        title={totalLeads.toLocaleString()}
-                        subtitle="Total Leads"
-                        description="Visitors who shared contact info"
-                        change={calculatePeriodChange(leadTrend)}
-                        changeType="percentage"
-                        changeLabel="vs last period"
-                        chartData={generateChartData(leadTrend)}
-                        animationDelay={0.05}
-                      />
-                      <MetricCardWithChart
-                        title={`${conversionRate}%`}
-                        subtitle="Conversion Rate"
-                        description="Leads marked as won or converted"
-                        change={calculatePointChange(conversionTrend)}
-                        changeType="points"
-                        changeLabel="vs last period"
-                        chartData={generateChartData(conversionTrend)}
-                        animationDelay={0.1}
-                      />
+                      <MetricCardWithChart title={totalConversations.toLocaleString()} subtitle="Total Conversations" description="Chat sessions started with Ari" change={calculatePeriodChange(conversationTrend)} changeType="percentage" changeLabel="vs last period" chartData={generateChartData(conversationTrend)} animationDelay={0} />
+                      <MetricCardWithChart title={totalLeads.toLocaleString()} subtitle="Total Leads" description="Visitors who shared contact info" change={calculatePeriodChange(leadTrend)} changeType="percentage" changeLabel="vs last period" chartData={generateChartData(leadTrend)} animationDelay={0.05} />
+                      <MetricCardWithChart title={`${conversionRate}%`} subtitle="Conversion Rate" description="Leads marked as won or converted" change={calculatePointChange(conversionTrend)} changeType="points" changeLabel="vs last period" chartData={generateChartData(conversionTrend)} animationDelay={0.1} />
                     </div>
                   </div>
-
-                  {/* Outcomes Metrics */}
                   <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                      Outcomes
-                    </h3>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Outcomes</h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-                      <MetricCardWithChart
-                        title={totalBookings.toLocaleString()}
-                        subtitle="Total Bookings"
-                        description="Appointments scheduled via Ari"
-                        change={calculatePeriodChange(bookingTrend)}
-                        changeType="percentage"
-                        changeLabel="vs last period"
-                        chartData={generateChartData(bookingTrend)}
-                        animationDelay={0.15}
-                      />
-                      <MetricCardWithChart
-                        title={avgSatisfaction.toFixed(1)}
-                        subtitle="Avg Satisfaction"
-                        description="User ratings out of 5 stars"
-                        change={calculatePointChange(satisfactionTrend)}
-                        changeType="points"
-                        changeLabel="vs last period"
-                        chartData={generateChartData(satisfactionTrend)}
-                        animationDelay={0.2}
-                      />
-                      <MetricCardWithChart
-                        title={`${containmentRate.toFixed(0)}%`}
-                        subtitle="AI Containment"
-                        description="Chats resolved without human help"
-                        change={calculatePointChange(containmentTrend)}
-                        changeType="points"
-                        changeLabel="vs last period"
-                        chartData={generateChartData(containmentTrend)}
-                        animationDelay={0.25}
-                      />
+                      <MetricCardWithChart title={totalBookings.toLocaleString()} subtitle="Total Bookings" description="Appointments scheduled via Ari" change={calculatePeriodChange(bookingTrend)} changeType="percentage" changeLabel="vs last period" chartData={generateChartData(bookingTrend)} animationDelay={0.15} />
+                      <MetricCardWithChart title={avgSatisfaction.toFixed(1)} subtitle="Avg Satisfaction" description="User ratings out of 5 stars" change={calculatePointChange(satisfactionTrend)} changeType="points" changeLabel="vs last period" chartData={generateChartData(satisfactionTrend)} animationDelay={0.2} />
+                      <MetricCardWithChart title={`${containmentRate.toFixed(0)}%`} subtitle="AI Containment" description="Chats resolved without human help" change={calculatePointChange(containmentTrend)} changeType="points" changeLabel="vs last period" chartData={generateChartData(containmentTrend)} animationDelay={0.25} />
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Charts Grid */}
-              {loading || bookingLoading || satisfactionLoading || aiPerformanceLoading ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  Loading analytics data...
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Trends Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Trends</h3>
-                    <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                      <AnimatedItem>
-                        <ConversationChart data={conversationStats} />
-                      </AnimatedItem>
-                      <AnimatedItem>
-                        <LeadConversionChart data={leadStats} />
-                      </AnimatedItem>
-                    </AnimatedList>
-                  </div>
-                  
-                  {/* Performance Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Performance</h3>
-                    <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                      <AnimatedItem>
-                        <BookingsByLocationChart 
-                          data={bookingStats?.byLocation ?? []} 
-                          loading={bookingLoading}
-                        />
-                      </AnimatedItem>
-                      <AnimatedItem>
-                        <SatisfactionScoreCard 
-                          averageRating={satisfactionStats?.averageRating ?? 0}
-                          totalRatings={satisfactionStats?.totalRatings ?? 0}
-                          distribution={satisfactionStats?.distribution ?? []}
-                          loading={satisfactionLoading}
-                        />
-                      </AnimatedItem>
-                    </AnimatedList>
-                  </div>
-                  
-                  {/* AI & Operations Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">AI & Operations</h3>
-                    <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                      <AnimatedItem>
-                        <AIPerformanceCard 
-                          containmentRate={aiPerformanceStats?.containmentRate ?? 0}
-                          resolutionRate={aiPerformanceStats?.resolutionRate ?? 0}
-                          totalConversations={aiPerformanceStats?.totalConversations ?? 0}
-                          humanTakeover={aiPerformanceStats?.humanTakeover ?? 0}
-                          loading={aiPerformanceLoading}
-                        />
-                      </AnimatedItem>
-                      <AnimatedItem>
-                        <BookingStatusChart 
-                          data={bookingStats?.byStatus ?? []} 
-                          showRate={bookingStats?.showRate ?? 0}
-                          loading={bookingLoading}
-                        />
-                      </AnimatedItem>
-                    </AnimatedList>
-                  </div>
-                  
-                  {/* Support Section */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Support</h3>
-                    <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                      <AnimatedItem>
-                        <TicketsResolvedCard comingSoon={true} />
-                      </AnimatedItem>
-                    </AnimatedList>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Traffic Section */}
-          {activeTab === 'traffic' && (
+          {/* Conversations Section */}
+          {activeTab === 'conversations' && (
             <div className="space-y-6">
-              {/* Sources & Behavior Section */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sources & Behavior</h3>
-                <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                  <AnimatedItem>
-                    <TrafficSourceChart data={trafficSources} loading={trafficLoading} />
-                  </AnimatedItem>
-                  <AnimatedItem>
-                    <TopPagesChart data={landingPages} loading={trafficLoading} />
-                  </AnimatedItem>
-                </AnimatedList>
-              </div>
-
-              {/* Geography Section */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Geography</h3>
-                <ErrorBoundary
-                  fallback={(error) => (
-                    <div className="rounded-lg border border-border bg-card p-4">
-                      <p className="text-sm font-medium text-foreground">Visitor map failed to load</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {error?.message || 'An unexpected error occurred while rendering the map.'}
-                      </p>
-                    </div>
-                  )}
-                >
-                  <VisitorLocationMap data={locationData} loading={trafficLoading} mapboxToken={mapboxToken} />
-                </ErrorBoundary>
-              </div>
+              <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                <AnimatedItem><ConversationChart data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.resolved }))} /></AnimatedItem>
+              </AnimatedList>
             </div>
           )}
 
-          {/* Reports Section - Simplified Layout */}
-          {activeTab === 'reports' && (
-            <div className="space-y-8">
-              {/* Export History */}
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  Export History
-                </h3>
-                <ExportHistoryTable />
-              </div>
+          {/* Leads Section */}
+          {activeTab === 'leads' && (
+            <div className="space-y-6">
+              <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                <AnimatedItem><LeadConversionChart data={leadStats} /></AnimatedItem>
+              </AnimatedList>
+            </div>
+          )}
 
-              {/* Scheduled Reports */}
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  Scheduled Reports
-                </h3>
-                <ScheduledReportsManager />
-              </div>
+          {/* Bookings Section */}
+          {activeTab === 'bookings' && (
+            <div className="space-y-6">
+              <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                <AnimatedItem><BookingsByLocationChart data={bookingStats?.byLocation ?? []} loading={bookingLoading} /></AnimatedItem>
+                <AnimatedItem><BookingStatusChart data={bookingStats?.byStatus ?? []} showRate={bookingStats?.showRate ?? 0} loading={bookingLoading} /></AnimatedItem>
+              </AnimatedList>
+            </div>
+          )}
+
+          {/* Satisfaction Section */}
+          {activeTab === 'satisfaction' && (
+            <div className="space-y-6">
+              <AnimatedList staggerDelay={0.1}>
+                <AnimatedItem><SatisfactionScoreCard averageRating={satisfactionStats?.averageRating ?? 0} totalRatings={satisfactionStats?.totalRatings ?? 0} distribution={satisfactionStats?.distribution ?? []} loading={satisfactionLoading} /></AnimatedItem>
+              </AnimatedList>
+            </div>
+          )}
+
+          {/* AI Performance Section */}
+          {activeTab === 'ai-performance' && (
+            <div className="space-y-6">
+              <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+                <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} /></AnimatedItem>
+                <AnimatedItem><TicketsResolvedCard comingSoon={true} /></AnimatedItem>
+              </AnimatedList>
+            </div>
+          )}
+
+          {/* Traffic Sources Section */}
+          {activeTab === 'sources' && (
+            <div className="space-y-6">
+              <AnimatedList staggerDelay={0.1}>
+                <AnimatedItem><TrafficSourceChart data={trafficSources} loading={trafficLoading} /></AnimatedItem>
+              </AnimatedList>
+            </div>
+          )}
+
+          {/* Pages Section */}
+          {activeTab === 'pages' && (
+            <div className="space-y-6">
+              <AnimatedList staggerDelay={0.1}>
+                <AnimatedItem><TopPagesChart data={landingPages.map(p => ({ url: p.url, visits: p.visits, avgDuration: 0, conversions: p.conversions }))} loading={trafficLoading} /></AnimatedItem>
+              </AnimatedList>
+            </div>
+          )}
+
+          {/* Geography Section */}
+          {activeTab === 'geography' && (
+            <div className="space-y-6">
+              <ErrorBoundary
+                fallback={(error) => (
+                  <div className="rounded-lg border border-border bg-card p-4">
+                    <p className="text-sm font-medium text-foreground">Visitor map failed to load</p>
+                    <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
+                  </div>
+                )}
+              >
+                <VisitorLocationMap data={locationData} loading={trafficLoading} mapboxToken={mapboxToken} />
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {/* Export History Section */}
+          {activeTab === 'export-history' && (
+            <div className="space-y-6">
+              <ExportHistoryTable />
+            </div>
+          )}
+
+          {/* Scheduled Reports Section */}
+          {activeTab === 'scheduled' && (
+            <div className="space-y-6">
+              <ScheduledReportsManager />
             </div>
           )}
         </div>
       </div>
       
-      {/* Build Report Sheet */}
       <BuildReportSheet
         open={exportSheetOpen}
         onOpenChange={setExportSheetOpen}
