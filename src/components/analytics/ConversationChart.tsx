@@ -8,9 +8,9 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
-import { useBreakpoint } from '@/hooks/use-breakpoint';
+import { format, parseISO } from 'date-fns';
 
 interface ConversationChartProps {
   data: Array<{
@@ -22,8 +22,6 @@ interface ConversationChartProps {
 }
 
 export const ConversationChart = React.memo(function ConversationChart({ data }: ConversationChartProps) {
-  const isDesktop = useBreakpoint('lg');
-
   return (
     <Card className="h-full">
       <CardHeader>
@@ -31,37 +29,28 @@ export const ConversationChart = React.memo(function ConversationChart({ data }:
         <CardDescription className="text-sm">Daily breakdown of active, closed, and total chat sessions</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] w-full">
+        <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
               className="text-muted-foreground [&_.recharts-text]:text-xs"
               margin={{
-                top: isDesktop ? 12 : 6,
-                bottom: isDesktop ? 16 : 0,
-                left: 0,
-                right: 0,
+                top: 10,
+                bottom: 10,
+                left: -10,
+                right: 10,
               }}
             >
               <defs>
-                <linearGradient id="gradientTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                <linearGradient id="gradientActive" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(220, 90%, 56%)" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="hsl(220, 90%, 56%)" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="gradientClosed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(210, 100%, 80%)" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="hsl(210, 100%, 80%)" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-
-              <CartesianGrid 
-                vertical={false} 
-                stroke="hsl(var(--border))" 
-                strokeOpacity={0.5}
-              />
-
-              <Legend
-                align="right"
-                verticalAlign="top"
-                layout={isDesktop ? "vertical" : "horizontal"}
-                content={<ChartLegendContent className="-translate-y-2" />}
-              />
 
               <XAxis
                 dataKey="date"
@@ -70,6 +59,14 @@ export const ConversationChart = React.memo(function ConversationChart({ data }:
                 interval="preserveStartEnd"
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                 padding={{ left: 10, right: 10 }}
+                tickFormatter={(value) => {
+                  try {
+                    const date = parseISO(value);
+                    return format(date, 'MMM d');
+                  } catch {
+                    return value;
+                  }
+                }}
               />
 
               <YAxis
@@ -78,31 +75,24 @@ export const ConversationChart = React.memo(function ConversationChart({ data }:
                 interval="preserveStartEnd"
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                 tickFormatter={(value) => Number(value).toLocaleString()}
+                width={40}
               />
 
               <Tooltip
                 content={<ChartTooltipContent />}
                 formatter={(value) => Number(value).toLocaleString()}
+                labelFormatter={(label) => {
+                  try {
+                    const date = parseISO(String(label));
+                    return format(date, 'MMM d, yyyy');
+                  } catch {
+                    return String(label);
+                  }
+                }}
                 cursor={{
                   stroke: 'hsl(var(--primary))',
-                  strokeWidth: 2,
+                  strokeWidth: 1,
                   strokeDasharray: '4 4',
-                }}
-              />
-
-              <Area
-                isAnimationActive={false}
-                dataKey="total"
-                name="Total"
-                type="monotone"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                fill="url(#gradientTotal)"
-                activeDot={{
-                  r: 6,
-                  fill: 'hsl(var(--background))',
-                  stroke: 'hsl(var(--primary))',
-                  strokeWidth: 2,
                 }}
               />
 
@@ -110,14 +100,15 @@ export const ConversationChart = React.memo(function ConversationChart({ data }:
                 isAnimationActive={false}
                 dataKey="active"
                 name="Active"
+                stackId="1"
                 type="monotone"
-                stroke="hsl(var(--chart-2))"
+                stroke="hsl(220, 90%, 56%)"
                 strokeWidth={2}
-                fill="none"
+                fill="url(#gradientActive)"
                 activeDot={{
-                  r: 6,
+                  r: 5,
                   fill: 'hsl(var(--background))',
-                  stroke: 'hsl(var(--chart-2))',
+                  stroke: 'hsl(220, 90%, 56%)',
                   strokeWidth: 2,
                 }}
               />
@@ -126,16 +117,24 @@ export const ConversationChart = React.memo(function ConversationChart({ data }:
                 isAnimationActive={false}
                 dataKey="closed"
                 name="Closed"
+                stackId="1"
                 type="monotone"
-                stroke="hsl(var(--chart-3))"
+                stroke="hsl(210, 100%, 80%)"
                 strokeWidth={2}
-                fill="none"
+                fill="url(#gradientClosed)"
                 activeDot={{
-                  r: 6,
+                  r: 5,
                   fill: 'hsl(var(--background))',
-                  stroke: 'hsl(var(--chart-3))',
+                  stroke: 'hsl(210, 100%, 80%)',
                   strokeWidth: 2,
                 }}
+              />
+
+              <Legend
+                align="center"
+                verticalAlign="bottom"
+                layout="horizontal"
+                content={<ChartLegendContent className="pt-4 justify-center" />}
               />
             </AreaChart>
           </ResponsiveContainer>
