@@ -16,6 +16,7 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
@@ -118,6 +119,7 @@ function Analytics() {
   const { user } = useAuth();
   const { agentId } = useAgent();
   const [activeTab, setActiveTab] = useState<AnalyticsSection>('dashboard');
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
 
   // Mock data mode
   const { enabled: mockMode, setEnabled: setMockMode, mockData, regenerate: regenerateMockData } = useMockAnalyticsData();
@@ -444,19 +446,26 @@ function Analytics() {
       <div className="flex-1 overflow-auto">
         <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
           {/* Header */}
-          <div>
-            <h1 className="text-2xl font-bold">
-              {activeTab === 'dashboard' && 'Analytics Dashboard'}
-              {activeTab === 'traffic' && 'Traffic Analytics'}
-              {activeTab === 'reports' && 'Generate Reporting'}
-              {activeTab === 'schedule' && 'Schedule Reports'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {activeTab === 'dashboard' && 'Track performance and insights across your organization'}
-              {activeTab === 'traffic' && 'Monitor visitor sources and page engagement'}
-              {activeTab === 'reports' && 'Build and export custom analytics reports'}
-              {activeTab === 'schedule' && 'Automate recurring report delivery'}
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">
+                {activeTab === 'dashboard' && 'Analytics Dashboard'}
+                {activeTab === 'traffic' && 'Traffic Analytics'}
+                {activeTab === 'reports' && 'Generate Reporting'}
+                {activeTab === 'schedule' && 'Schedule Reports'}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {activeTab === 'dashboard' && 'Track performance and insights across your organization'}
+                {activeTab === 'traffic' && 'Monitor visitor sources and page engagement'}
+                {activeTab === 'reports' && 'Build and export custom analytics reports'}
+                {activeTab === 'schedule' && 'Automate recurring report delivery'}
+              </p>
+            </div>
+            {activeTab === 'schedule' && (
+              <Button size="sm" onClick={() => setScheduleDialogOpen(true)}>
+                Schedule Report
+              </Button>
+            )}
           </div>
 
           {/* Unified Toolbar - only show for dashboard and traffic */}
@@ -692,7 +701,10 @@ function Analytics() {
 
           {/* Schedule Section */}
           {activeTab === 'schedule' && (
-            <ScheduledReportsManager />
+            <ScheduledReportsManager 
+              isCreateOpen={scheduleDialogOpen}
+              onCreateOpenChange={setScheduleDialogOpen}
+            />
           )}
         </div>
       </div>

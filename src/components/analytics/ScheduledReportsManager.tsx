@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -28,9 +28,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-export const ScheduledReportsManager = () => {
+interface ScheduledReportsManagerProps {
+  isCreateOpen: boolean;
+  onCreateOpenChange: (open: boolean) => void;
+}
+
+export const ScheduledReportsManager = ({ isCreateOpen, onCreateOpenChange }: ScheduledReportsManagerProps) => {
   const { reports, loading, toggleReportStatus, deleteReport } = useScheduledReports();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [savedReportIds, setSavedReportIds] = useState<Set<string>>(new Set());
 
@@ -73,12 +77,7 @@ export const ScheduledReportsManager = () => {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-end py-4">
-          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-            Schedule Report
-          </Button>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading scheduled reports...
@@ -152,7 +151,7 @@ export const ScheduledReportsManager = () => {
 
       <CreateScheduledReportDialog
         open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
+        onOpenChange={onCreateOpenChange}
       />
 
       <SimpleDeleteDialog
