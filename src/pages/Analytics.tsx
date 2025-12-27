@@ -35,8 +35,7 @@ import { SatisfactionScoreCard } from '@/components/analytics/SatisfactionScoreC
 import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
 import { TicketsResolvedCard } from '@/components/analytics/TicketsResolvedCard';
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
-import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
-import { PageVisitHeatmap } from '@/components/analytics/PageVisitHeatmap';
+import { TopPagesChart } from '@/components/analytics/TopPagesChart';
 
 import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
 import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
@@ -660,7 +659,7 @@ function Analytics() {
                     <TrafficSourceChart data={trafficSources} loading={trafficLoading} />
                   </AnimatedItem>
                   <AnimatedItem>
-                    <PageVisitHeatmap data={pageVisits} loading={trafficLoading} />
+                    <TopPagesChart data={landingPages} loading={trafficLoading} />
                   </AnimatedItem>
                 </AnimatedList>
               </div>
@@ -680,12 +679,6 @@ function Analytics() {
                 >
                   <VisitorLocationMap data={locationData} loading={trafficLoading} mapboxToken={mapboxToken} />
                 </ErrorBoundary>
-              </div>
-              
-              {/* Top Pages Section */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Top Pages</h3>
-                <LandingPagesTable data={landingPages} loading={trafficLoading} />
               </div>
             </div>
           )}
