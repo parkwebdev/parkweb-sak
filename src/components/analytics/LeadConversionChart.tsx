@@ -123,20 +123,8 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
               />
 
               <Tooltip
-                content={
-                  <ChartTooltipContent 
-                    formatter={(value, name) => (
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="h-2 w-2 rounded-full shrink-0"
-                          style={{ backgroundColor: stageConfig.find(s => s.name === name)?.color }}
-                        />
-                        <span>{name}</span>
-                        <span className="font-medium ml-auto">{Number(value).toLocaleString()}</span>
-                      </div>
-                    )}
-                  />
-                }
+                content={<ChartTooltipContent />}
+                formatter={(value) => Number(value).toLocaleString()}
                 labelFormatter={(label) => {
                   try {
                     const date = parseISO(String(label));
