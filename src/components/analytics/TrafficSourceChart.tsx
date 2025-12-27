@@ -21,6 +21,8 @@ interface TrafficSourceData {
 interface TrafficSourceChartProps {
   data: TrafficSourceData[];
   loading?: boolean;
+  /** Comparison period data for calculating trend percentage */
+  comparisonData?: TrafficSourceData[];
 }
 
 // Color palette from light to dark (matching TopPagesChart)
@@ -39,7 +41,11 @@ const getBarColor = (index: number, total: number): string => {
   return BAR_COLORS[colorIndex];
 };
 
-export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data, loading }: TrafficSourceChartProps) {
+export const TrafficSourceChart = React.memo(function TrafficSourceChart({ 
+  data, 
+  loading,
+  comparisonData,
+}: TrafficSourceChartProps) {
   const { total, sortedData, maxValue } = useMemo(() => {
     const sorted = [...data].sort((a, b) => b.value - a.value);
     const sum = sorted.reduce((acc, item) => acc + item.value, 0);
@@ -47,9 +53,21 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
     return { total: sum, sortedData: sorted, maxValue: max };
   }, [data]);
 
-  // TODO: Calculate real trend from previous period comparison
-  const trendPercentage = 0;
+  // Calculate trend percentage from comparison data
+  const { trendPercentage, previousTotal } = useMemo(() => {
+    if (!comparisonData || comparisonData.length === 0) {
+      return { trendPercentage: 0, previousTotal: 0 };
+    }
+    const prevTotal = comparisonData.reduce((acc, item) => acc + item.value, 0);
+    if (prevTotal === 0) {
+      return { trendPercentage: total > 0 ? 100 : 0, previousTotal: 0 };
+    }
+    const change = ((total - prevTotal) / prevTotal) * 100;
+    return { trendPercentage: change, previousTotal: prevTotal };
+  }, [total, comparisonData]);
+
   const isPositiveTrend = trendPercentage >= 0;
+  const hasTrendData = comparisonData && comparisonData.length > 0;
 
   if (loading) {
     return (
@@ -79,16 +97,14 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
           <div className="mb-6">
             <div className="flex items-center gap-1.5">
               <span className="text-base font-semibold text-foreground">
-                Trending {isPositiveTrend ? 'up' : 'down'} by {Math.abs(trendPercentage)}% this month
+                No traffic data available
               </span>
-              {isPositiveTrend ? (
-                <TrendUp01 size={16} className="text-emerald-500" />
-              ) : (
-                <TrendDown01 size={16} className="text-destructive" />
-              )}
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              No traffic data available
+              {hasTrendData && previousTotal > 0 
+                ? `Previous period had ${previousTotal.toLocaleString()} conversations`
+                : 'Traffic sources will appear here once conversations are recorded'
+              }
             </p>
           </div>
         </CardContent>
@@ -103,16 +119,24 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
         <div className="mb-6">
           <div className="flex items-center gap-1.5">
             <span className="text-base font-semibold text-foreground">
-              Trending {isPositiveTrend ? 'up' : 'down'} by {Math.abs(trendPercentage)}% this month
+              {hasTrendData 
+                ? `Trending ${isPositiveTrend ? 'up' : 'down'} by ${Math.abs(trendPercentage).toFixed(1)}% this period`
+                : `${total.toLocaleString()} total conversations`
+              }
             </span>
-            {isPositiveTrend ? (
-              <TrendUp01 size={16} className="text-emerald-500" />
-            ) : (
-              <TrendDown01 size={16} className="text-destructive" />
+            {hasTrendData && (
+              isPositiveTrend ? (
+                <TrendUp01 size={16} className="text-emerald-500" />
+              ) : (
+                <TrendDown01 size={16} className="text-destructive" />
+              )
             )}
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Showing {total.toLocaleString()} total conversations across {sortedData.length} sources
+            {hasTrendData 
+              ? `${total.toLocaleString()} conversations vs ${previousTotal.toLocaleString()} last period`
+              : `Across ${sortedData.length} traffic sources`
+            }
           </p>
         </div>
 

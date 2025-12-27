@@ -218,6 +218,12 @@ function Analytics() {
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
 
+  // Fetch comparison traffic analytics for trend calculation
+  const {
+    trafficSources: comparisonTrafficSources,
+    loading: comparisonTrafficLoading,
+  } = useTrafficAnalytics(comparisonStartDate, comparisonEndDate, comparisonMode && shouldFetchRealData);
+
   // Fetch Mapbox token for map rendering
   const { data: mapboxToken } = useMapboxToken();
 
@@ -683,7 +689,13 @@ function Analytics() {
           {activeTab === 'sources' && (
             <div className="space-y-6">
               <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><TrafficSourceChart data={trafficSources} loading={trafficLoading} /></AnimatedItem>
+                <AnimatedItem>
+                  <TrafficSourceChart 
+                    data={trafficSources} 
+                    loading={trafficLoading || (comparisonMode && comparisonTrafficLoading)}
+                    comparisonData={comparisonMode ? comparisonTrafficSources : undefined}
+                  />
+                </AnimatedItem>
               </AnimatedList>
             </div>
           )}
