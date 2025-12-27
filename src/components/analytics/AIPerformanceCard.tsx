@@ -12,8 +12,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { MessageChatCircle, Users01 } from '@untitledui/icons';
+import { User01 } from '@untitledui/icons';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { cn } from '@/lib/utils';
 import type { AIPerformanceCardProps } from '@/types/analytics';
 import { ChartCardHeader } from './ChartCardHeader';
@@ -155,13 +156,21 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
           {/* Summary stats */}
           <div className="pt-4 border-t border-border space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Ari Handled</span>
+              <div className="flex items-center gap-2">
+                <AriAgentsIcon size={16} className="text-muted-foreground" />
+                <span className="text-muted-foreground">Ari Handled</span>
+              </div>
               <span className="font-medium text-foreground tabular-nums">
                 {ariHandled.toLocaleString()} of {totalConversations.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Human Takeover</span>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center">
+                  <User01 size={10} className="text-muted-foreground" />
+                </div>
+                <span className="text-muted-foreground">Human Takeover</span>
+              </div>
               <span className="font-medium text-foreground tabular-nums">
                 {humanTakeover.toLocaleString()}
               </span>
