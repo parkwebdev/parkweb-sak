@@ -121,7 +121,7 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
           title="Top Landing Pages"
           trendValue={trendPercentage}
           trendLabel="Visits"
-          trendPeriod="last month"
+          trendPeriod="this month"
           contextSummary={`Showing ${totalVisits.toLocaleString()} total visitors across top ${sortedData.length} pages`}
           rightSlot={
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
