@@ -12,9 +12,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { User03 } from '@untitledui/icons';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { cn } from '@/lib/utils';
 import type { AIPerformanceCardProps } from '@/types/analytics';
 import { ChartCardHeader } from './ChartCardHeader';
@@ -29,6 +31,7 @@ interface MetricRowProps {
   showProgress?: boolean;
   progressVariant?: 'default' | 'success' | 'warning' | 'destructive' | 'info';
   icon?: React.ReactNode;
+  tooltip?: string;
 }
 
 function MetricRow({ 
@@ -38,6 +41,7 @@ function MetricRow({
   showProgress = true,
   progressVariant = 'default',
   icon,
+  tooltip,
 }: MetricRowProps) {
   return (
     <div className="space-y-2">
@@ -45,6 +49,19 @@ function MetricRow({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           {icon}
           <span>{label}</span>
+          {tooltip && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="group cursor-default">
+                  <InfoCircleIcon className="h-4 w-4 text-muted-foreground/60" />
+                  <InfoCircleIconFilled className="h-4 w-4 text-muted-foreground" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[200px]">
+                <p className="text-xs">{tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
         <span className="text-lg font-semibold text-foreground tabular-nums">
           {value.toFixed(1)}{suffix}
@@ -145,6 +162,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
             label="Containment Rate"
             value={containmentRate}
             progressVariant="info"
+            tooltip="Percentage of conversations handled entirely by Ari without human intervention."
           />
 
           {/* Resolution Rate */}
@@ -152,6 +170,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
             label="Resolution Rate"
             value={resolutionRate}
             progressVariant="success"
+            tooltip="Percentage of conversations successfully resolved and closed."
           />
 
           {/* Summary stats */}
