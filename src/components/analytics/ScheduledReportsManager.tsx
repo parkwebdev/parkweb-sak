@@ -73,18 +73,10 @@ export const ScheduledReportsManager = () => {
   return (
     <>
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Scheduled Reports</CardTitle>
-              <CardDescription>
-                Automatically send analytics reports to your team
-              </CardDescription>
-            </div>
-            <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-              Schedule Report
-            </Button>
-          </div>
+        <CardHeader className="flex flex-row items-center justify-end py-4">
+          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+            Schedule Report
+          </Button>
         </CardHeader>
         <CardContent>
           {loading ? (
