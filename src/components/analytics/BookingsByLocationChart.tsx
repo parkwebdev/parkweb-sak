@@ -150,7 +150,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
                 {chartData.map((_, index) => (
                   <Cell 
                     key={`cell-${index}`} 
-                    fill="hsl(var(--primary))" 
+                    fill="hsl(220, 90%, 56%)" 
                   />
                 ))}
               </Bar>
