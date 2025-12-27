@@ -12,6 +12,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { useLeadStages } from '@/hooks/useLeadStages';
+import { format, parseISO } from 'date-fns';
 
 interface LeadStageStats {
   date: string;
@@ -85,6 +86,14 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({ dat
                 interval="preserveStartEnd"
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                 padding={{ left: 10, right: 10 }}
+                tickFormatter={(value) => {
+                  try {
+                    const date = parseISO(value);
+                    return format(date, 'MMM d'); // e.g., "Jan 15"
+                  } catch {
+                    return value;
+                  }
+                }}
               />
 
               <YAxis
