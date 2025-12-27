@@ -32,12 +32,16 @@ export function TrafficPagesSection({
     ? ((totalConversions / totalVisits) * 100).toFixed(1) 
     : '0';
 
-  const chartData = landingPages.map(page => ({
-    url: page.url,
-    visits: page.visits,
-    avgDuration: page.avgDuration || 0,
-    conversions: page.conversions,
-  }));
+  const chartData = React.useMemo(
+    () =>
+      landingPages.map((page) => ({
+        url: page.url,
+        visits: page.visits,
+        avgDuration: page.avgDuration || 0,
+        conversions: page.conversions,
+      })),
+    [landingPages]
+  );
 
   if (loading) {
     return (

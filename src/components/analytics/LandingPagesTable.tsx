@@ -29,8 +29,10 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
     { id: 'visits', desc: true },
   ]);
 
+  const limitedData = React.useMemo(() => data.slice(0, 20), [data]);
+
   const table = useReactTable({
-    data: data.slice(0, 20), // Limit to 20 rows
+    data: limitedData, // Limit to 20 rows
     columns: landingPagesColumns,
     state: { sorting },
     onSortingChange: setSorting,
