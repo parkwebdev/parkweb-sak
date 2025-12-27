@@ -7,11 +7,11 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SkeletonHeatmap } from '@/components/ui/page-skeleton';
-import { TrendUp01, TrendDown01 } from '@untitledui/icons';
+import { ChartCardHeader } from './ChartCardHeader';
 
 interface TopPageData {
   url: string;
@@ -112,39 +112,28 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
     );
   }
 
-  const isPositiveTrend = trendPercentage >= 0;
   const totalVisits = sortedData.reduce((sum, p) => sum + p.visits, 0);
 
   return (
     <Card className="h-full">
       <CardContent className="pt-6">
-        {/* Trend header with sort dropdown */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base font-semibold text-foreground">
-                Trending {isPositiveTrend ? 'up' : 'down'} by {Math.abs(trendPercentage)}% this month
-              </span>
-              {isPositiveTrend ? (
-                <TrendUp01 size={16} className="text-emerald-500" />
-              ) : (
-                <TrendDown01 size={16} className="text-destructive" />
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Showing {totalVisits.toLocaleString()} total visitors across top {sortedData.length} pages
-            </p>
-          </div>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-            <SelectTrigger className="w-[100px] h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="visits">Visits</SelectItem>
-              <SelectItem value="conversions">Leads</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <ChartCardHeader
+          title="Top Landing Pages"
+          trendValue={trendPercentage}
+          trendPeriod="this month"
+          contextSummary={`Showing ${totalVisits.toLocaleString()} total visitors across top ${sortedData.length} pages`}
+          rightSlot={
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="w-[100px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="visits">Visits</SelectItem>
+                <SelectItem value="conversions">Leads</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        />
 
         <div className="space-y-3">
           {sortedData.map((page, index) => {

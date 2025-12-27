@@ -8,13 +8,14 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { CalendarCheck01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import type { BookingStatusChartProps, BookingStatus } from '@/types/analytics';
+import { ChartCardHeader } from './ChartCardHeader';
 
 /**
  * Status-specific colors using design system tokens.
@@ -43,9 +44,11 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
 export const BookingStatusChart = React.memo(function BookingStatusChart({
   data,
   showRate,
+  trendValue = 0,
+  trendPeriod = 'this month',
   loading = false,
   className,
-}: BookingStatusChartProps) {
+}: BookingStatusChartProps & { trendValue?: number; trendPeriod?: string }) {
   // Transform data for chart with colors
   const chartData = data.map(item => ({
     name: STATUS_LABELS[item.status],
@@ -61,14 +64,17 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
   if (loading) {
     return (
       <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
-          <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>
-        </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
-          <div className="relative" role="status" aria-label="Loading booking status">
-            <Skeleton className="h-[200px] w-[200px] rounded-full" />
-            <Skeleton className="absolute inset-[30%] rounded-full bg-card" />
+        <CardContent className="pt-6">
+          <div className="mb-6">
+            <Skeleton className="h-5 w-32 mb-2" />
+            <Skeleton className="h-4 w-40 mb-1" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <div className="h-[300px] flex items-center justify-center" role="status" aria-label="Loading booking status">
+            <div className="relative">
+              <Skeleton className="h-[200px] w-[200px] rounded-full" />
+              <Skeleton className="absolute inset-[30%] rounded-full bg-card" />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -79,11 +85,13 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
   if (chartData.length === 0 || total === 0) {
     return (
       <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
-          <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
+          <ChartCardHeader
+            title="Booking Status"
+            trendValue={0}
+            trendPeriod={trendPeriod}
+            contextSummary="No bookings recorded yet"
+          />
           <EmptyState
             icon={<CalendarCheck01 size={20} className="text-muted-foreground" />}
             title="No booking status data"
@@ -96,11 +104,13 @@ export const BookingStatusChart = React.memo(function BookingStatusChart({
 
   return (
     <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Booking Status</CardTitle>
-          <p className="text-sm text-muted-foreground">Appointment outcomes and show rate</p>
-        </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
+        <ChartCardHeader
+          title="Booking Status"
+          trendValue={trendValue}
+          trendPeriod={trendPeriod}
+          contextSummary={`Showing ${total.toLocaleString()} bookings across ${chartData.length} statuses`}
+        />
         <div className="h-[300px] relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

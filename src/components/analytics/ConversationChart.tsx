@@ -6,11 +6,12 @@
  * @module components/analytics/ConversationChart
  */
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
 import { format, parseISO } from 'date-fns';
+import { ChartCardHeader } from './ChartCardHeader';
 
 interface ConversationChartProps {
   data: Array<{
@@ -19,16 +20,29 @@ interface ConversationChartProps {
     active: number;
     closed: number;
   }>;
+  trendValue?: number;
+  trendPeriod?: string;
 }
 
-export const ConversationChart = React.memo(function ConversationChart({ data }: ConversationChartProps) {
+export const ConversationChart = React.memo(function ConversationChart({ 
+  data,
+  trendValue = 0,
+  trendPeriod = 'this month',
+}: ConversationChartProps) {
+  // Calculate totals for context summary
+  const totalConversations = useMemo(() => {
+    return data.reduce((sum, d) => sum + d.total, 0);
+  }, [data]);
+
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">Conversation Volume</CardTitle>
-        <CardDescription className="text-sm">Daily breakdown of active, closed, and total chat sessions</CardDescription>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
+        <ChartCardHeader
+          title="Conversation Volume"
+          trendValue={trendValue}
+          trendPeriod={trendPeriod}
+          contextSummary={`Showing ${totalConversations.toLocaleString()} conversations over ${data.length} days`}
+        />
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart

@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -16,6 +16,7 @@ import { MessageChatCircle, Users01 } from '@untitledui/icons';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
 import { cn } from '@/lib/utils';
 import type { AIPerformanceCardProps } from '@/types/analytics';
+import { ChartCardHeader } from './ChartCardHeader';
 
 /**
  * Individual metric row with label, value, and optional progress bar.
@@ -69,18 +70,21 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
   resolutionRate,
   totalConversations,
   humanTakeover,
+  trendValue = 0,
+  trendPeriod = 'this month',
   loading = false,
   className,
-}: AIPerformanceCardProps) {
+}: AIPerformanceCardProps & { trendValue?: number; trendPeriod?: string }) {
   // Loading state
   if (loading) {
     return (
       <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
-          <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
+          <div className="mb-6">
+            <Skeleton className="h-5 w-32 mb-2" />
+            <Skeleton className="h-4 w-40 mb-1" />
+            <Skeleton className="h-4 w-56" />
+          </div>
           <div className="space-y-6" role="status" aria-label="Loading AI performance data">
             {Array.from({ length: 2 }).map((_, i) => (
               <div key={i} className="space-y-2">
@@ -105,11 +109,13 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
   if (totalConversations === 0) {
     return (
       <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
-          <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
+          <ChartCardHeader
+            title="AI Performance"
+            trendValue={0}
+            trendPeriod={trendPeriod}
+            contextSummary="No conversations recorded yet"
+          />
           <EmptyState
             icon={<ZapSolidIcon size={20} className="text-muted-foreground" />}
             title="No conversation data"
@@ -125,11 +131,13 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
 
   return (
     <Card className={cn("h-full", className)}>
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">AI Performance</CardTitle>
-        <p className="text-sm text-muted-foreground">How well Ari handles conversations</p>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
+        <ChartCardHeader
+          title="AI Performance"
+          trendValue={trendValue}
+          trendPeriod={trendPeriod}
+          contextSummary={`Ari handled ${aiHandled.toLocaleString()} of ${totalConversations.toLocaleString()} conversations`}
+        />
         <div className="space-y-6">
           {/* Containment Rate */}
           <MetricRow

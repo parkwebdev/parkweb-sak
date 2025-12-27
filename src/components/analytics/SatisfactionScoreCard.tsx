@@ -8,13 +8,14 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Star01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import type { SatisfactionScoreCardProps, RatingValue } from '@/types/analytics';
+import { ChartCardHeader } from './ChartCardHeader';
 
 /**
  * Star rating display component.
@@ -54,18 +55,21 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
   averageRating,
   totalRatings,
   distribution,
+  trendValue = 0,
+  trendPeriod = 'this month',
   loading = false,
   className,
-}: SatisfactionScoreCardProps) {
+}: SatisfactionScoreCardProps & { trendValue?: number; trendPeriod?: string }) {
   // Loading state
   if (loading) {
     return (
       <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Customer Satisfaction</CardTitle>
-          <p className="text-sm text-muted-foreground">Ratings submitted after conversations</p>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
+          <div className="mb-6">
+            <Skeleton className="h-5 w-40 mb-2" />
+            <Skeleton className="h-4 w-32 mb-1" />
+            <Skeleton className="h-4 w-48" />
+          </div>
           <div className="space-y-4" role="status" aria-label="Loading satisfaction data">
             <div className="flex items-center gap-4">
               <Skeleton className="h-12 w-16" />
@@ -93,11 +97,13 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
   if (totalRatings === 0) {
     return (
       <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Customer Satisfaction</CardTitle>
-          <p className="text-sm text-muted-foreground">Ratings submitted after conversations</p>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
+          <ChartCardHeader
+            title="Customer Satisfaction"
+            trendValue={0}
+            trendPeriod={trendPeriod}
+            contextSummary="No ratings submitted yet"
+          />
           <EmptyState
             icon={<Star01 size={20} className="text-muted-foreground" />}
             title="No ratings yet"
@@ -113,11 +119,13 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
 
   return (
     <Card className={cn("h-full", className)}>
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">Customer Satisfaction</CardTitle>
-        <p className="text-sm text-muted-foreground">Ratings submitted after conversations</p>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
+        <ChartCardHeader
+          title="Customer Satisfaction"
+          trendValue={trendValue}
+          trendPeriod={trendPeriod}
+          contextSummary={`Based on ${totalRatings.toLocaleString()} customer ratings`}
+        />
         <div className="space-y-6">
           {/* Average rating display */}
           <div className="flex items-center gap-4">
