@@ -438,7 +438,7 @@ export const BuildReportSheet = ({
                             checked={config.includeAIPerformance}
                             onCheckedChange={(checked) => updateConfig('includeAIPerformance', !!checked)}
                           />
-                          <Label htmlFor="aiPerformance" className="text-sm font-normal cursor-pointer">AI Performance</Label>
+                          <Label htmlFor="aiPerformance" className="text-sm font-normal cursor-pointer">Ari Performance</Label>
                         </div>
                       </div>
                     </AccordionContent>

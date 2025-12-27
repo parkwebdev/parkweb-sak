@@ -120,10 +120,10 @@ export const generateCSVReport = (
 
   // AI Performance Metrics
   if (config.includeAIPerformance && data.aiPerformanceStats) {
-    csvContent += 'AI PERFORMANCE\n';
+    csvContent += 'ARI PERFORMANCE\n';
     csvContent += `Containment Rate,${data.aiPerformanceStats.containment_rate}%\n`;
     csvContent += `Resolution Rate,${data.aiPerformanceStats.resolution_rate}%\n`;
-    csvContent += `AI Handled,${data.aiPerformanceStats.ai_handled}\n`;
+    csvContent += `Ari Handled,${data.aiPerformanceStats.ai_handled}\n`;
     csvContent += `Human Takeover,${data.aiPerformanceStats.human_takeover}\n`;
     csvContent += `Total Conversations,${data.aiPerformanceStats.total_conversations}\n\n`;
   }
@@ -340,7 +340,7 @@ export const generatePDFReport = async (
     yPosition = checkPageBreak(pdf, yPosition);
 
     pdf.setFontSize(14);
-    pdf.text('AI Performance', 20, yPosition);
+    pdf.text('Ari Performance', 20, yPosition);
     yPosition += 10;
 
     autoTable(pdf, {
