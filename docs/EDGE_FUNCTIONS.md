@@ -2,6 +2,7 @@
 
 > **Last Updated**: December 2025  
 > **Status**: Active  
+> **Calendar Webhook Integration**: ✅ Phases 1-6 Complete (December 2025)
 > **Related**: [Database Schema](./DATABASE_SCHEMA.md), [Security](./SECURITY.md), [AI Architecture](./AI_ARCHITECTURE.md)
 
 Documentation for all Supabase Edge Functions in the ChatPad platform.
@@ -665,6 +666,8 @@ try {
 - `callback`: Exchanges code for tokens, creates webhook subscription
 - `refresh`: Refreshes expired access token
 - `disconnect`: Revokes tokens and stops webhook subscription
+- `sync`: Manual sync of calendar events (Phase 6)
+- `refresh-webhook`: Renews webhook subscription manually (Phase 6)
 
 **Request Body (callback):**
 ```typescript
