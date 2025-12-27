@@ -7,9 +7,10 @@
  */
 
 import React, { useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TrendUp01, TrendDown01 } from '@untitledui/icons';
 
 interface TrafficSourceData {
   name: string;
@@ -46,20 +47,26 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
     return { total: sum, sortedData: sorted, maxValue: max };
   }, [data]);
 
+  // TODO: Calculate real trend from previous period comparison
+  const trendPercentage = 0;
+  const isPositiveTrend = trendPercentage >= 0;
+
   if (loading) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Traffic Sources</CardTitle>
-          <p className="text-sm text-muted-foreground">Where your visitors come from</p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-8 flex-1" />
-            </div>
-          ))}
+        <CardContent className="pt-6">
+          <div className="mb-6">
+            <Skeleton className="h-5 w-48 mb-1" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-8 flex-1" />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     );
@@ -68,12 +75,22 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
   if (data.length === 0 || total === 0) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Traffic Sources</CardTitle>
-          <p className="text-sm text-muted-foreground">Where your visitors come from</p>
-        </CardHeader>
-        <CardContent className="h-[200px] flex items-center justify-center">
-          <span className="text-muted-foreground text-sm">No traffic data available</span>
+        <CardContent className="pt-6">
+          <div className="mb-6">
+            <div className="flex items-center gap-1.5">
+              <span className="text-base font-semibold text-foreground">
+                Trending {isPositiveTrend ? 'up' : 'down'} by {Math.abs(trendPercentage)}% this month
+              </span>
+              {isPositiveTrend ? (
+                <TrendUp01 size={16} className="text-emerald-500" />
+              ) : (
+                <TrendDown01 size={16} className="text-destructive" />
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              No traffic data available
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -81,13 +98,24 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">Traffic Sources</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {total.toLocaleString()} total conversations from {sortedData.length} sources
-        </p>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
+        {/* Trend header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-1.5">
+            <span className="text-base font-semibold text-foreground">
+              Trending {isPositiveTrend ? 'up' : 'down'} by {Math.abs(trendPercentage)}% this month
+            </span>
+            {isPositiveTrend ? (
+              <TrendUp01 size={16} className="text-emerald-500" />
+            ) : (
+              <TrendDown01 size={16} className="text-destructive" />
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Showing {total.toLocaleString()} total conversations across {sortedData.length} sources
+          </p>
+        </div>
+
         <div className="space-y-3">
           {sortedData.map((source, index) => {
             const widthPercentage = (source.value / maxValue) * 100;
