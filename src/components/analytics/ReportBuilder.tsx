@@ -35,13 +35,8 @@ export const ReportBuilder = ({ config, onConfigChange }: ReportBuilderProps) =>
   };
 
   return (
-    <div className="space-y-6 pb-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Report Configuration</CardTitle>
-          <CardDescription>Customize your report settings and export preferences</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <Card className="h-full">
+      <CardContent className="pt-6 space-y-6">
           {/* Report Type */}
           <div className="space-y-3">
             <Label className="text-base">Report Type</Label>
@@ -136,8 +131,7 @@ export const ReportBuilder = ({ config, onConfigChange }: ReportBuilderProps) =>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

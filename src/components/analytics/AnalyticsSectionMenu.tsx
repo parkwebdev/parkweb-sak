@@ -16,10 +16,9 @@ import {
   LayoutGrid01,
   LineChartUp01,
   FileSearch01,
-  Calendar,
 } from '@untitledui/icons';
 
-export type AnalyticsSection = 'dashboard' | 'traffic' | 'reports' | 'schedule';
+export type AnalyticsSection = 'dashboard' | 'traffic' | 'reports';
 
 interface SectionItem {
   id: AnalyticsSection;
@@ -31,7 +30,6 @@ const SECTIONS: SectionItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid01 },
   { id: 'traffic', label: 'Traffic', icon: LineChartUp01 },
   { id: 'reports', label: 'Reports', icon: FileSearch01 },
-  { id: 'schedule', label: 'Schedule', icon: Calendar },
 ];
 
 interface AnalyticsSectionMenuProps {

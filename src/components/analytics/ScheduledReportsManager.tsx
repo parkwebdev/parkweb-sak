@@ -17,16 +17,7 @@ import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { CreateScheduledReportDialog } from './CreateScheduledReportDialog';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
-import { format } from 'date-fns';
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 
 interface ScheduledReportsManagerProps {
   isCreateOpen: boolean;
@@ -76,7 +67,7 @@ export const ScheduledReportsManager = ({ isCreateOpen, onCreateOpenChange }: Sc
 
   return (
     <>
-      <Card>
+      <Card className="h-full">
         <CardContent className="pt-6">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -86,65 +77,38 @@ export const ScheduledReportsManager = ({ isCreateOpen, onCreateOpenChange }: Sc
             <EmptyState
               icon={<Clock className="h-5 w-5 text-muted-foreground/50" />}
               title="No scheduled reports yet"
+              description="Schedule automated report delivery to your team"
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Recipients</TableHead>
-                  <TableHead>Last Sent</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell className="font-medium">{report.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {getFrequencyDisplay(report)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-muted-foreground">
-                        {Array.isArray(report.recipients) ? report.recipients.length : 0} recipient(s)
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {report.last_sent_at ? (
-                        <span className="text-sm">
-                          {format(new Date(report.last_sent_at), 'MMM d, yyyy HH:mm')}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Never sent</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={report.active}
-                          onCheckedChange={(checked) => handleToggle(report.id, checked)}
-                        />
-                        <SavedIndicator show={savedReportIds.has(report.id)} />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteId(report.id)}
-                        aria-label="Delete scheduled report"
-                      >
-                        <Trash01 className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-3">
+              {reports.map((report) => (
+                <div key={report.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{report.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {getFrequencyDisplay(report)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 ml-4">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={report.active}
+                        onCheckedChange={(checked) => handleToggle(report.id, checked)}
+                      />
+                      <SavedIndicator show={savedReportIds.has(report.id)} />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteId(report.id)}
+                      aria-label="Delete scheduled report"
+                    >
+                      <Trash01 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
