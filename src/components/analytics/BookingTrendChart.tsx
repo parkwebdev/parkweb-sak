@@ -3,11 +3,12 @@
  * 
  * Stacked area chart showing daily booking trends by status.
  * Displays total, completed, cancelled, and no-show bookings over time.
+ * Supports switching between stacked (all statuses) and total only views.
  * 
  * @module components/analytics/BookingTrendChart
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartTooltipContent } from '@/components/charts/charts-base';
@@ -19,6 +20,13 @@ import { Calendar } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { BookingTrendData } from '@/types/analytics';
 
 interface BookingTrendChartProps {
@@ -34,12 +42,15 @@ interface BookingTrendChartProps {
   className?: string;
 }
 
+type ViewMode = 'all-statuses' | 'total-only';
+
 /** Color configuration matching ConversationChart blue palette */
 const TREND_COLORS = {
   completed: 'hsl(220, 90%, 56%)',      // Primary blue (same as Active in ConversationChart)
   confirmed: 'hsl(210, 100%, 80%)',     // Light blue (same as Closed in ConversationChart)
   cancelled: 'hsl(220, 70%, 70%)',      // Medium blue
   noShow: 'hsl(210, 60%, 88%)',         // Pale blue
+  total: 'hsl(220, 90%, 56%)',          // Primary blue for total view
 };
 
 /**
@@ -53,6 +64,8 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
   trendPeriod = 'this month',
   className,
 }: BookingTrendChartProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('all-statuses');
+
   // Calculate totals for context summary
   const totalBookings = useMemo(() => {
     return data.reduce((sum, d) => sum + d.total, 0);
@@ -111,6 +124,17 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
           title="Booking Trends"
           trendValue={trendValue}
           trendPeriod={trendPeriod}
+          rightSlot={
+            <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+              <SelectTrigger className="w-[130px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-statuses">All Statuses</SelectItem>
+                <SelectItem value="total-only">Total Only</SelectItem>
+              </SelectContent>
+            </Select>
+          }
         />
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -140,6 +164,10 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                 <linearGradient id="gradientNoShow" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={TREND_COLORS.noShow} stopOpacity={0.3} />
                   <stop offset="95%" stopColor={TREND_COLORS.noShow} stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="gradientTotal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={TREND_COLORS.total} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={TREND_COLORS.total} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
 
@@ -187,73 +215,93 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                 }}
               />
 
-              <Area
-                isAnimationActive={false}
-                dataKey="completed"
-                name="Completed"
-                stackId="1"
-                type="monotone"
-                stroke={TREND_COLORS.completed}
-                strokeWidth={2}
-                fill="url(#gradientCompleted)"
-                activeDot={{
-                  r: 5,
-                  fill: 'hsl(var(--background))',
-                  stroke: TREND_COLORS.completed,
-                  strokeWidth: 2,
-                }}
-              />
+              {viewMode === 'total-only' ? (
+                <Area
+                  isAnimationActive={false}
+                  dataKey="total"
+                  name="Total"
+                  type="monotone"
+                  stroke={TREND_COLORS.total}
+                  strokeWidth={2}
+                  fill="url(#gradientTotal)"
+                  activeDot={{
+                    r: 5,
+                    fill: 'hsl(var(--background))',
+                    stroke: TREND_COLORS.total,
+                    strokeWidth: 2,
+                  }}
+                />
+              ) : (
+                <>
+                  <Area
+                    isAnimationActive={false}
+                    dataKey="completed"
+                    name="Completed"
+                    stackId="1"
+                    type="monotone"
+                    stroke={TREND_COLORS.completed}
+                    strokeWidth={2}
+                    fill="url(#gradientCompleted)"
+                    activeDot={{
+                      r: 5,
+                      fill: 'hsl(var(--background))',
+                      stroke: TREND_COLORS.completed,
+                      strokeWidth: 2,
+                    }}
+                  />
 
-              <Area
-                isAnimationActive={false}
-                dataKey="confirmed"
-                name="Confirmed"
-                stackId="1"
-                type="monotone"
-                stroke={TREND_COLORS.confirmed}
-                strokeWidth={2}
-                fill="url(#gradientConfirmed)"
-                activeDot={{
-                  r: 5,
-                  fill: 'hsl(var(--background))',
-                  stroke: TREND_COLORS.confirmed,
-                  strokeWidth: 2,
-                }}
-              />
+                  <Area
+                    isAnimationActive={false}
+                    dataKey="confirmed"
+                    name="Confirmed"
+                    stackId="1"
+                    type="monotone"
+                    stroke={TREND_COLORS.confirmed}
+                    strokeWidth={2}
+                    fill="url(#gradientConfirmed)"
+                    activeDot={{
+                      r: 5,
+                      fill: 'hsl(var(--background))',
+                      stroke: TREND_COLORS.confirmed,
+                      strokeWidth: 2,
+                    }}
+                  />
 
-              <Area
-                isAnimationActive={false}
-                dataKey="cancelled"
-                name="Cancelled"
-                stackId="1"
-                type="monotone"
-                stroke={TREND_COLORS.cancelled}
-                strokeWidth={2}
-                fill="url(#gradientCancelled)"
-                activeDot={{
-                  r: 5,
-                  fill: 'hsl(var(--background))',
-                  stroke: TREND_COLORS.cancelled,
-                  strokeWidth: 2,
-                }}
-              />
+                  <Area
+                    isAnimationActive={false}
+                    dataKey="cancelled"
+                    name="Cancelled"
+                    stackId="1"
+                    type="monotone"
+                    stroke={TREND_COLORS.cancelled}
+                    strokeWidth={2}
+                    fill="url(#gradientCancelled)"
+                    activeDot={{
+                      r: 5,
+                      fill: 'hsl(var(--background))',
+                      stroke: TREND_COLORS.cancelled,
+                      strokeWidth: 2,
+                    }}
+                  />
 
-              <Area
-                isAnimationActive={false}
-                dataKey="noShow"
-                name="No-show"
-                stackId="1"
-                type="monotone"
-                stroke={TREND_COLORS.noShow}
-                strokeWidth={2}
-                fill="url(#gradientNoShow)"
-                activeDot={{
-                  r: 5,
-                  fill: 'hsl(var(--background))',
-                  stroke: TREND_COLORS.noShow,
-                  strokeWidth: 2,
-                }}
-              />
+                  <Area
+                    isAnimationActive={false}
+                    dataKey="noShow"
+                    name="No-show"
+                    stackId="1"
+                    type="monotone"
+                    stroke={TREND_COLORS.noShow}
+                    strokeWidth={2}
+                    fill="url(#gradientNoShow)"
+                    activeDot={{
+                      r: 5,
+                      fill: 'hsl(var(--background))',
+                      stroke: TREND_COLORS.noShow,
+                      strokeWidth: 2,
+                    }}
+                  />
+                </>
+              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -264,34 +312,46 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
             Showing {totalBookings.toLocaleString()} bookings over {data.length} days
           </p>
           <div className="flex flex-wrap gap-2 justify-start">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-              <span 
-                className="h-2 w-2 rounded-full shrink-0" 
-                style={{ backgroundColor: TREND_COLORS.completed }}
-              />
-              <span className="text-xs text-muted-foreground">Completed</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-              <span 
-                className="h-2 w-2 rounded-full shrink-0" 
-                style={{ backgroundColor: TREND_COLORS.confirmed }}
-              />
-              <span className="text-xs text-muted-foreground">Confirmed</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-              <span 
-                className="h-2 w-2 rounded-full shrink-0" 
-                style={{ backgroundColor: TREND_COLORS.cancelled }}
-              />
-              <span className="text-xs text-muted-foreground">Cancelled</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-              <span 
-                className="h-2 w-2 rounded-full shrink-0" 
-                style={{ backgroundColor: TREND_COLORS.noShow }}
-              />
-              <span className="text-xs text-muted-foreground">No-show</span>
-            </div>
+            {viewMode === 'total-only' ? (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+                <span 
+                  className="h-2 w-2 rounded-full shrink-0" 
+                  style={{ backgroundColor: TREND_COLORS.total }}
+                />
+                <span className="text-xs text-muted-foreground">Total Bookings</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+                  <span 
+                    className="h-2 w-2 rounded-full shrink-0" 
+                    style={{ backgroundColor: TREND_COLORS.completed }}
+                  />
+                  <span className="text-xs text-muted-foreground">Completed</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+                  <span 
+                    className="h-2 w-2 rounded-full shrink-0" 
+                    style={{ backgroundColor: TREND_COLORS.confirmed }}
+                  />
+                  <span className="text-xs text-muted-foreground">Confirmed</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+                  <span 
+                    className="h-2 w-2 rounded-full shrink-0" 
+                    style={{ backgroundColor: TREND_COLORS.cancelled }}
+                  />
+                  <span className="text-xs text-muted-foreground">Cancelled</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+                  <span 
+                    className="h-2 w-2 rounded-full shrink-0" 
+                    style={{ backgroundColor: TREND_COLORS.noShow }}
+                  />
+                  <span className="text-xs text-muted-foreground">No-show</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </CardContent>
