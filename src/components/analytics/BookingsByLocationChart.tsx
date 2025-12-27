@@ -8,12 +8,15 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { MarkerPin01 } from '@untitledui/icons';
+import { MarkerPin01, Calendar } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import { ChartCardHeader } from './ChartCardHeader';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import type { BookingsByLocationChartProps } from '@/types/analytics';
 
 /**
@@ -24,6 +27,8 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   data,
   loading = false,
   className,
+  trendValue = 0,
+  trendPeriod = 'this month',
 }: BookingsByLocationChartProps) {
   // Transform data for chart
   const chartData = data.map(item => ({
@@ -36,16 +41,19 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
 
   const total = chartData.reduce((sum, item) => sum + item.bookings, 0);
 
+  // Context summary
+  const locationCount = chartData.length;
+
   // Loading state
   if (loading) {
     return (
       <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
-          <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3" role="status" aria-label="Loading bookings by location">
+        <CardContent className="pt-6">
+          <div className="space-y-4" role="status" aria-label="Loading bookings by location">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-56" />
+            </div>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3">
                 <Skeleton className="h-4 w-24" />
@@ -62,15 +70,20 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   if (chartData.length === 0 || total === 0) {
     return (
       <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
-          <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
+          <h3 className="text-base font-semibold text-foreground mb-6">Bookings by Location</h3>
           <EmptyState
             icon={<MarkerPin01 size={20} className="text-muted-foreground" />}
-            title="No booking data available"
-            description="Bookings will appear here once appointments are scheduled."
+            title="No booking locations connected"
+            description="Connect a calendar to track bookings by location."
+            action={
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/ari?tab=locations">
+                  <Calendar size={16} className="mr-2" />
+                  Connect Calendar
+                </Link>
+              </Button>
+            }
           />
         </CardContent>
       </Card>
@@ -79,11 +92,13 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
 
   return (
     <Card className={cn("h-full", className)}>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Bookings by Location</CardTitle>
-          <p className="text-sm text-muted-foreground">Appointments scheduled per location</p>
-        </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
+        <ChartCardHeader
+          title="Bookings by Location"
+          trendValue={trendValue}
+          trendPeriod={trendPeriod}
+          contextSummary={`Showing ${total.toLocaleString()} bookings across ${locationCount} location${locationCount !== 1 ? 's' : ''}`}
+        />
         <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart

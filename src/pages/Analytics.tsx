@@ -32,6 +32,8 @@ import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
 import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocationChart';
 import { BookingStatusChart } from '@/components/analytics/BookingStatusChart';
+import { BookingTrendChart } from '@/components/analytics/BookingTrendChart';
+import { RecentBookingsTable } from '@/components/analytics/RecentBookingsTable';
 import { SatisfactionScoreCard } from '@/components/analytics/SatisfactionScoreCard';
 import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
 
@@ -194,7 +196,9 @@ function Analytics() {
   // Fetch booking analytics for detailed charts
   const {
     stats: realBookingStats,
+    rawEvents: realRawEvents,
     loading: bookingLoading,
+    updateEventStatus,
   } = useBookingAnalytics(startDate, endDate, shouldFetchRealData);
 
   // Fetch satisfaction analytics for detailed charts
@@ -666,9 +670,56 @@ function Analytics() {
           {/* Bookings Section */}
           {activeTab === 'bookings' && (
             <div className="space-y-6">
+              {/* Trend chart - full width */}
+              <AnimatedList staggerDelay={0.1}>
+                <AnimatedItem>
+                  <BookingTrendChart 
+                    data={bookingStats?.trend ?? []} 
+                    loading={bookingLoading}
+                    trendValue={bookingTrendValue}
+                    trendPeriod="this month"
+                  />
+                </AnimatedItem>
+              </AnimatedList>
+              
+              {/* Side by side charts */}
               <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                <AnimatedItem><BookingsByLocationChart data={bookingStats?.byLocation ?? []} loading={bookingLoading} /></AnimatedItem>
-                <AnimatedItem><BookingStatusChart data={bookingStats?.byStatus ?? []} showRate={bookingStats?.showRate ?? 0} loading={bookingLoading} trendValue={bookingTrendValue} trendPeriod="this month" /></AnimatedItem>
+                <AnimatedItem>
+                  <BookingsByLocationChart 
+                    data={bookingStats?.byLocation ?? []} 
+                    loading={bookingLoading}
+                    trendValue={bookingTrendValue}
+                    trendPeriod="this month"
+                  />
+                </AnimatedItem>
+                <AnimatedItem>
+                  <BookingStatusChart 
+                    data={bookingStats?.byStatus ?? []} 
+                    showRate={bookingStats?.showRate ?? 0} 
+                    loading={bookingLoading} 
+                    trendValue={bookingTrendValue} 
+                    trendPeriod="this month" 
+                  />
+                </AnimatedItem>
+              </AnimatedList>
+              
+              {/* Recent bookings table - full width */}
+              <AnimatedList staggerDelay={0.1}>
+                <AnimatedItem>
+                  <RecentBookingsTable 
+                    events={(realRawEvents ?? []).slice(0, 10).map(e => ({
+                      id: e.id,
+                      title: e.title,
+                      start_time: e.start_time,
+                      status: e.status,
+                      visitor_name: e.visitor_name,
+                      visitor_email: e.visitor_email,
+                      locations: e.locations,
+                    }))}
+                    loading={bookingLoading}
+                    onUpdateStatus={updateEventStatus}
+                  />
+                </AnimatedItem>
               </AnimatedList>
             </div>
           )}
