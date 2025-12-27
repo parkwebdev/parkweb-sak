@@ -34,7 +34,7 @@ import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocati
 import { BookingStatusChart } from '@/components/analytics/BookingStatusChart';
 import { SatisfactionScoreCard } from '@/components/analytics/SatisfactionScoreCard';
 import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
-import { TicketsResolvedCard } from '@/components/analytics/TicketsResolvedCard';
+
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { TopPagesChart } from '@/components/analytics/TopPagesChart';
 import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
@@ -678,9 +678,8 @@ function Analytics() {
           {/* AI Performance Section */}
           {activeTab === 'ai-performance' && (
             <div className="space-y-6">
-              <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+              <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} /></AnimatedItem>
-                <AnimatedItem><TicketsResolvedCard comingSoon={true} /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
