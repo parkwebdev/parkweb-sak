@@ -119,3 +119,13 @@ verify_jwt = true
 
 [functions.get-mapbox-token]
 verify_jwt = true
+
+# Phase 2: Google Calendar Webhook Functions
+# Added December 2025 - Real-time calendar sync for accurate booking analytics
+
+[functions.google-calendar-webhook]
+verify_jwt = false
+
+[functions.renew-calendar-webhooks]
+verify_jwt = false
+schedule = "0 2 * * *"

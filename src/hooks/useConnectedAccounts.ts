@@ -28,6 +28,10 @@ export interface ConnectedAccount {
   is_active: boolean;
   last_synced_at: string | null;
   sync_error: string | null;
+  // Webhook subscription fields (Phase 2 - December 2025)
+  webhook_channel_id: string | null;
+  webhook_resource_id: string | null;
+  webhook_expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -57,7 +61,7 @@ export const useConnectedAccounts = (locationId?: string, agentId?: string) => {
 
       let query = supabase
         .from('connected_accounts')
-        .select('id, location_id, agent_id, user_id, provider, account_email, calendar_id, calendar_name, is_active, last_synced_at, sync_error, created_at, updated_at')
+        .select('id, location_id, agent_id, user_id, provider, account_email, calendar_id, calendar_name, is_active, last_synced_at, sync_error, webhook_channel_id, webhook_resource_id, webhook_expires_at, created_at, updated_at')
         .eq('agent_id', agentId);
 
       if (locationId) {
