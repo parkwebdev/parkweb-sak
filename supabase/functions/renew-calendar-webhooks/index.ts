@@ -522,39 +522,3 @@ async function createOutlookSubscription(
     return { success: false, error: message };
   }
 }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[renew-calendar-webhooks] Watch request failed:', errorText);
-      
-      await supabase
-        .from('connected_accounts')
-        .update({ sync_error: `Webhook renewal failed: ${errorText}` })
-        .eq('id', account.id);
-
-      return { success: false, error: errorText };
-    }
-
-    const watchData = await response.json();
-    console.log('[renew-calendar-webhooks] Watch response:', watchData);
-
-    // Update account with new webhook details
-    await supabase
-      .from('connected_accounts')
-      .update({
-        webhook_channel_id: channelId,
-        webhook_resource_id: watchData.resourceId,
-        webhook_expires_at: new Date(parseInt(watchData.expiration)).toISOString(),
-        sync_error: null,
-      })
-      .eq('id', account.id);
-
-    return { success: true };
-
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[renew-calendar-webhooks] Error creating subscription:', error);
-    return { success: false, error: message };
-  }
-}
