@@ -384,6 +384,212 @@ Deno.serve(async (req) => {
         );
       }
 
+      case 'sync': {
+        // Manual sync action - Phase 6: Testing & Error Handling
+        if (!accountId) {
+          return new Response(
+            JSON.stringify({ error: 'accountId is required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Get account from database
+        const { data: account, error: fetchError } = await supabase
+          .from('connected_accounts')
+          .select('*')
+          .eq('id', accountId)
+          .single();
+
+        if (fetchError || !account) {
+          return new Response(
+            JSON.stringify({ error: 'Account not found' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Check if token needs refresh
+        let accessToken = account.access_token;
+        if (account.token_expires_at && new Date(account.token_expires_at) < new Date()) {
+          if (!account.refresh_token) {
+            return new Response(
+              JSON.stringify({ error: 'Token expired and no refresh token available' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id: GOOGLE_CLIENT_ID,
+              client_secret: GOOGLE_CLIENT_SECRET,
+              refresh_token: account.refresh_token,
+              grant_type: 'refresh_token',
+            }),
+          });
+
+          if (!refreshResponse.ok) {
+            return new Response(
+              JSON.stringify({ error: 'Token refresh failed' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          const newTokens = await refreshResponse.json();
+          accessToken = newTokens.access_token;
+
+          await supabase
+            .from('connected_accounts')
+            .update({
+              access_token: newTokens.access_token,
+              token_expires_at: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
+            })
+            .eq('id', accountId);
+        }
+
+        // Sync recent events (last 30 days + next 30 days)
+        const calendarId = account.calendar_id || 'primary';
+        const timeMin = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const timeMax = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const eventsResponse = await fetch(
+          `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+
+        if (!eventsResponse.ok) {
+          const errorText = await eventsResponse.text();
+          console.error('[google-calendar-auth] Events sync failed:', errorText);
+          return new Response(
+            JSON.stringify({ error: 'Failed to fetch calendar events' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const eventsData = await eventsResponse.json();
+        let eventsUpdated = 0;
+
+        // Process each event
+        for (const event of eventsData.items || []) {
+          if (!event.id) continue;
+
+          const eventStatus = event.status === 'cancelled' ? 'cancelled' : 
+            (event.end?.dateTime && new Date(event.end.dateTime) < new Date() ? 'completed' : 'confirmed');
+
+          const { error: upsertError } = await supabase
+            .from('calendar_events')
+            .upsert({
+              connected_account_id: accountId,
+              external_event_id: event.id,
+              title: event.summary || 'Untitled Event',
+              start_time: event.start?.dateTime || event.start?.date,
+              end_time: event.end?.dateTime || event.end?.date,
+              status: eventStatus,
+              description: event.description || null,
+              location_id: account.location_id,
+              all_day: !!event.start?.date,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'connected_account_id,external_event_id',
+            });
+
+          if (!upsertError) eventsUpdated++;
+        }
+
+        // Update last_synced_at and clear any sync errors
+        await supabase
+          .from('connected_accounts')
+          .update({
+            last_synced_at: new Date().toISOString(),
+            sync_error: null,
+          })
+          .eq('id', accountId);
+
+        console.log(`[google-calendar-auth] Manual sync completed: ${eventsUpdated} events processed`);
+
+        return new Response(
+          JSON.stringify({ success: true, eventsUpdated }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      case 'refresh-webhook': {
+        // Refresh webhook subscription - Phase 6: Testing & Error Handling
+        if (!accountId) {
+          return new Response(
+            JSON.stringify({ error: 'accountId is required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Get account from database
+        const { data: account, error: fetchError } = await supabase
+          .from('connected_accounts')
+          .select('*')
+          .eq('id', accountId)
+          .single();
+
+        if (fetchError || !account) {
+          return new Response(
+            JSON.stringify({ error: 'Account not found' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Stop existing webhook if present
+        if (account.webhook_channel_id && account.webhook_resource_id) {
+          try {
+            await fetch('https://www.googleapis.com/calendar/v3/channels/stop', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${account.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                id: account.webhook_channel_id,
+                resourceId: account.webhook_resource_id,
+              }),
+            });
+          } catch (e) {
+            console.warn('[google-calendar-auth] Existing webhook stop failed:', e);
+          }
+        }
+
+        // Create new webhook
+        try {
+          const calendarId = account.calendar_id || 'primary';
+          const webhookData = await createWebhookSubscription(calendarId, account.access_token);
+
+          if (webhookData) {
+            await supabase
+              .from('connected_accounts')
+              .update({
+                webhook_channel_id: webhookData.channelId,
+                webhook_resource_id: webhookData.resourceId,
+                webhook_expires_at: webhookData.expiresAt,
+                sync_error: null,
+              })
+              .eq('id', accountId);
+
+            console.log(`[google-calendar-auth] Webhook refreshed for account ${accountId}`);
+
+            return new Response(
+              JSON.stringify({ success: true, expiresAt: webhookData.expiresAt }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        } catch (e) {
+          console.error('[google-calendar-auth] Webhook refresh failed:', e);
+        }
+
+        return new Response(
+          JSON.stringify({ error: 'Failed to refresh webhook' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action' }),
