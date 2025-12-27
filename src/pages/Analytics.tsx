@@ -143,10 +143,21 @@ function Analytics() {
   // Report config
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     type: 'summary',
+    // Core Metrics
     includeConversations: true,
     includeLeads: true,
-    includeAgentPerformance: true,
     includeUsageMetrics: true,
+    // Business Outcomes
+    includeBookings: true,
+    includeSatisfaction: true,
+    includeAIPerformance: true,
+    // Traffic Analytics
+    includeTrafficSources: true,
+    includeTopPages: true,
+    includeVisitorLocations: true,
+    // Agent Data
+    includeAgentPerformance: true,
+    // Options
     grouping: 'day',
     includeKPIs: true,
     includeCharts: true,
@@ -393,12 +404,80 @@ function Analytics() {
     },
   ];
 
-  // Analytics data for export
+  // Analytics data for export - includes all analytics categories
   const analyticsData = {
+    // KPI metrics
+    totalConversations,
+    conversationsChange: comparisonMode && comparisonTotalConversations > 0 
+      ? parseFloat(((totalConversations - comparisonTotalConversations) / comparisonTotalConversations * 100).toFixed(1))
+      : 0,
+    totalLeads,
+    leadsChange: comparisonMode && comparisonTotalLeads > 0
+      ? parseFloat(((totalLeads - comparisonTotalLeads) / comparisonTotalLeads * 100).toFixed(1))
+      : 0,
+    conversionRate: parseFloat(conversionRate),
+    conversionChange: comparisonMode && parseFloat(comparisonConversionRate) > 0
+      ? parseFloat((parseFloat(conversionRate) - parseFloat(comparisonConversionRate)).toFixed(1))
+      : 0,
+    totalMessages,
+    messagesChange: comparisonMode && comparisonTotalMessages > 0
+      ? parseFloat(((totalMessages - comparisonTotalMessages) / comparisonTotalMessages * 100).toFixed(1))
+      : 0,
+    // Core statistics
     conversationStats,
     leadStats,
     agentPerformance,
     usageMetrics,
+    // Business outcomes - transform to export format
+    bookingStats: bookingStats?.byLocation?.map(loc => ({
+      location: loc.locationName,
+      total: loc.bookings,
+      confirmed: loc.bookings - loc.cancelled - loc.completed - loc.noShow, // Approximate confirmed
+      cancelled: loc.cancelled,
+      completed: loc.completed,
+      no_show: loc.noShow,
+      show_rate: loc.bookings > 0 ? Math.round((loc.completed / loc.bookings) * 100) : 0,
+    })) || [],
+    satisfactionStats: satisfactionStats ? {
+      average_rating: satisfactionStats.averageRating,
+      total_ratings: satisfactionStats.totalRatings,
+      distribution: satisfactionStats.distribution.map(d => ({
+        rating: d.rating,
+        count: d.count,
+        percentage: d.percentage,
+      })),
+    } : undefined,
+    aiPerformanceStats: aiPerformanceStats ? {
+      containment_rate: aiPerformanceStats.containmentRate,
+      resolution_rate: aiPerformanceStats.resolutionRate,
+      ai_handled: aiPerformanceStats.aiHandled,
+      human_takeover: aiPerformanceStats.humanTakeover,
+      total_conversations: aiPerformanceStats.totalConversations,
+    } : undefined,
+    // Traffic analytics - transform to export format
+    trafficSources: (() => {
+      const totalValue = trafficSources?.reduce((sum, s) => sum + s.value, 0) || 0;
+      return trafficSources?.map(source => ({
+        source: source.name,
+        visitors: source.value,
+        percentage: totalValue > 0 ? Math.round((source.value / totalValue) * 100) : 0,
+      })) || [];
+    })(),
+    topPages: landingPages?.map(page => ({
+      page: page.url,
+      visits: page.visits,
+      bounce_rate: 0, // Not available in current data structure
+      conversations: page.conversions,
+    })) || [],
+    visitorLocations: locationData?.map(loc => {
+      const totalVisitors = locationData.reduce((sum, l) => sum + l.count, 0);
+      return {
+        country: loc.country,
+        visitors: loc.count,
+        percentage: totalVisitors > 0 ? Math.round((loc.count / totalVisitors) * 100) : 0,
+      };
+    }) || [],
+    // Original data for other uses
     conversations: analyticsConversations,
     leads,
     kpis,

@@ -66,6 +66,96 @@ export interface UsageMetric {
 }
 
 /**
+ * Booking statistics for reports.
+ */
+export interface BookingStat {
+  /** Location name */
+  location: string;
+  /** Total bookings */
+  total: number;
+  /** Confirmed bookings */
+  confirmed: number;
+  /** Cancelled bookings */
+  cancelled: number;
+  /** Completed bookings */
+  completed: number;
+  /** No-show bookings */
+  no_show: number;
+  /** Show rate percentage */
+  show_rate: number;
+}
+
+/**
+ * Satisfaction metrics for reports.
+ */
+export interface SatisfactionStat {
+  /** Average rating (1-5) */
+  average_rating: number;
+  /** Total ratings count */
+  total_ratings: number;
+  /** Distribution by rating value */
+  distribution: {
+    rating: number;
+    count: number;
+    percentage: number;
+  }[];
+}
+
+/**
+ * AI Performance metrics for reports.
+ */
+export interface AIPerformanceStat {
+  /** Containment rate percentage */
+  containment_rate: number;
+  /** Resolution rate percentage */
+  resolution_rate: number;
+  /** Total conversations handled by AI */
+  ai_handled: number;
+  /** Conversations requiring human takeover */
+  human_takeover: number;
+  /** Total conversations */
+  total_conversations: number;
+}
+
+/**
+ * Traffic source data for reports.
+ */
+export interface TrafficSourceStat {
+  /** Source name (e.g., "Direct", "Google", "Facebook") */
+  source: string;
+  /** Number of visitors from this source */
+  visitors: number;
+  /** Percentage of total traffic */
+  percentage: number;
+}
+
+/**
+ * Top page data for reports.
+ */
+export interface TopPageStat {
+  /** Page URL or path */
+  page: string;
+  /** Number of visits */
+  visits: number;
+  /** Bounce rate percentage */
+  bounce_rate: number;
+  /** Conversations started from this page */
+  conversations: number;
+}
+
+/**
+ * Visitor location data for reports.
+ */
+export interface LocationStat {
+  /** Country name */
+  country: string;
+  /** Number of visitors */
+  visitors: number;
+  /** Percentage of total visitors */
+  percentage: number;
+}
+
+/**
  * Complete analytics report data structure.
  * Used for generating CSV and PDF reports.
  */
@@ -88,7 +178,7 @@ export interface ReportData {
   /** Percent change from previous period */
   messagesChange?: number;
 
-  // Detailed statistics
+  // Core statistics
   /** Daily conversation statistics */
   conversationStats?: ConversationStat[];
   /** Daily lead statistics by stage */
@@ -97,6 +187,22 @@ export interface ReportData {
   agentPerformance?: AgentPerformance[];
   /** Daily usage metrics */
   usageMetrics?: UsageMetric[];
+
+  // Business outcomes
+  /** Booking statistics by location */
+  bookingStats?: BookingStat[];
+  /** Overall satisfaction metrics */
+  satisfactionStats?: SatisfactionStat;
+  /** AI performance metrics */
+  aiPerformanceStats?: AIPerformanceStat;
+
+  // Traffic analytics
+  /** Traffic source breakdown */
+  trafficSources?: TrafficSourceStat[];
+  /** Top pages by visits */
+  topPages?: TopPageStat[];
+  /** Visitor locations */
+  visitorLocations?: LocationStat[];
 }
 
 /**

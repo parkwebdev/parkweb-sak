@@ -3,7 +3,8 @@
  * 
  * Generates analytics reports in CSV and PDF formats for download.
  * Supports configurable sections including KPIs, conversation stats,
- * lead stats, agent performance, and usage metrics.
+ * lead stats, agent performance, usage metrics, bookings, satisfaction,
+ * AI performance, traffic sources, top pages, and visitor locations.
  * 
  * @module lib/report-export
  */
@@ -17,32 +18,15 @@ import type {
   ConversationStat, 
   LeadStat, 
   AgentPerformance, 
-  UsageMetric 
+  UsageMetric,
+  BookingStat,
+  TrafficSourceStat,
+  TopPageStat,
+  LocationStat 
 } from '@/types/report';
 
 /**
  * Generates a CSV report from analytics data and triggers download.
- * 
- * @param data - Analytics data object containing metrics and statistics
- * @param config - Report configuration specifying which sections to include
- * @param startDate - Start of the reporting period
- * @param endDate - End of the reporting period
- * @param orgName - Organization name for the report header
- * 
- * @example
- * generateCSVReport(
- *   analyticsData,
- *   { includeKPIs: true, includeConversations: true, includeTables: true },
- *   new Date('2024-01-01'),
- *   new Date('2024-01-31'),
- *   'Acme Corp'
- * );
- * // Downloads: analytics_report_2024-01-31.csv
- * 
- * @remarks
- * - Automatically triggers browser download
- * - Sections are included based on config flags
- * - Data is formatted as comma-separated values with proper escaping
  */
 export const generateCSVReport = (
   data: ReportData,
@@ -106,6 +90,71 @@ export const generateCSVReport = (
     data.usageMetrics.forEach((metric: UsageMetric) => {
       csvContent += `${metric.date},${metric.conversations},${metric.messages},${metric.api_calls}\n`;
     });
+    csvContent += '\n';
+  }
+
+  // Booking Statistics
+  if (config.includeBookings && config.includeTables && data.bookingStats) {
+    csvContent += 'BOOKING STATISTICS\n';
+    csvContent += 'Location,Total,Confirmed,Cancelled,Completed,No-Show,Show Rate\n';
+    data.bookingStats.forEach((stat: BookingStat) => {
+      csvContent += `${stat.location},${stat.total},${stat.confirmed},${stat.cancelled},${stat.completed},${stat.no_show},${stat.show_rate}%\n`;
+    });
+    csvContent += '\n';
+  }
+
+  // Satisfaction Metrics
+  if (config.includeSatisfaction && data.satisfactionStats) {
+    csvContent += 'SATISFACTION METRICS\n';
+    csvContent += `Average Rating,${data.satisfactionStats.average_rating.toFixed(1)}\n`;
+    csvContent += `Total Ratings,${data.satisfactionStats.total_ratings}\n`;
+    if (config.includeTables && data.satisfactionStats.distribution) {
+      csvContent += '\nRating Distribution\n';
+      csvContent += 'Rating,Count,Percentage\n';
+      data.satisfactionStats.distribution.forEach((d) => {
+        csvContent += `${d.rating} Stars,${d.count},${d.percentage}%\n`;
+      });
+    }
+    csvContent += '\n';
+  }
+
+  // AI Performance Metrics
+  if (config.includeAIPerformance && data.aiPerformanceStats) {
+    csvContent += 'AI PERFORMANCE\n';
+    csvContent += `Containment Rate,${data.aiPerformanceStats.containment_rate}%\n`;
+    csvContent += `Resolution Rate,${data.aiPerformanceStats.resolution_rate}%\n`;
+    csvContent += `AI Handled,${data.aiPerformanceStats.ai_handled}\n`;
+    csvContent += `Human Takeover,${data.aiPerformanceStats.human_takeover}\n`;
+    csvContent += `Total Conversations,${data.aiPerformanceStats.total_conversations}\n\n`;
+  }
+
+  // Traffic Sources
+  if (config.includeTrafficSources && config.includeTables && data.trafficSources) {
+    csvContent += 'TRAFFIC SOURCES\n';
+    csvContent += 'Source,Visitors,Percentage\n';
+    data.trafficSources.forEach((source: TrafficSourceStat) => {
+      csvContent += `${source.source},${source.visitors},${source.percentage}%\n`;
+    });
+    csvContent += '\n';
+  }
+
+  // Top Pages
+  if (config.includeTopPages && config.includeTables && data.topPages) {
+    csvContent += 'TOP PAGES\n';
+    csvContent += 'Page,Visits,Bounce Rate,Conversations\n';
+    data.topPages.forEach((page: TopPageStat) => {
+      csvContent += `"${page.page}",${page.visits},${page.bounce_rate}%,${page.conversations}\n`;
+    });
+    csvContent += '\n';
+  }
+
+  // Visitor Locations
+  if (config.includeVisitorLocations && config.includeTables && data.visitorLocations) {
+    csvContent += 'VISITOR LOCATIONS\n';
+    csvContent += 'Country,Visitors,Percentage\n';
+    data.visitorLocations.forEach((loc: LocationStat) => {
+      csvContent += `${loc.country},${loc.visitors},${loc.percentage}%\n`;
+    });
   }
 
   // Create and download
@@ -120,30 +169,23 @@ export const generateCSVReport = (
   document.body.removeChild(link);
 };
 
+/** Helper to get Y position from autoTable */
+const getTableEndY = (pdf: jsPDF): number => {
+  const pdfWithAutoTable = pdf as jsPDF & { lastAutoTable?: { finalY: number } };
+  return pdfWithAutoTable.lastAutoTable?.finalY || 20;
+};
+
+/** Helper to add page break if needed */
+const checkPageBreak = (pdf: jsPDF, yPosition: number, threshold = 250): number => {
+  if (yPosition > threshold) {
+    pdf.addPage();
+    return 20;
+  }
+  return yPosition;
+};
+
 /**
  * Generates a PDF report from analytics data and triggers download.
- * Uses jsPDF with autoTable plugin for formatted tables.
- * 
- * @param data - Analytics data object containing metrics and statistics
- * @param config - Report configuration specifying which sections to include
- * @param startDate - Start of the reporting period
- * @param endDate - End of the reporting period
- * @param orgName - Organization name for the report header
- * 
- * @example
- * await generatePDFReport(
- *   analyticsData,
- *   { includeKPIs: true, includeAgentPerformance: true, includeTables: true },
- *   new Date('2024-01-01'),
- *   new Date('2024-01-31'),
- *   'Acme Corp'
- * );
- * // Downloads: analytics_report_2024-01-31.pdf
- * 
- * @remarks
- * - Automatically handles page breaks for long reports
- * - Tables limited to 20 rows to prevent overflow
- * - Uses grid theme for table styling
  */
 export const generatePDFReport = async (
   data: ReportData,
@@ -185,17 +227,12 @@ export const generatePDFReport = async (
       styles: { fontSize: 10 },
     });
 
-    // Get the final Y position from the last auto table
-    const pdfWithAutoTable = pdf as jsPDF & { lastAutoTable?: { finalY: number } };
-    yPosition = (pdfWithAutoTable.lastAutoTable?.finalY || yPosition) + 15;
+    yPosition = getTableEndY(pdf) + 15;
   }
 
   // Conversations Table
-  if (config.includeConversations && config.includeTables && data.conversationStats?.length > 0) {
-    if (yPosition > 250) {
-      pdf.addPage();
-      yPosition = 20;
-    }
+  if (config.includeConversations && config.includeTables && data.conversationStats?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
 
     pdf.setFontSize(14);
     pdf.text('Conversation Statistics', 20, yPosition);
@@ -214,17 +251,12 @@ export const generatePDFReport = async (
       styles: { fontSize: 9 },
     });
 
-    // Get the final Y position from the last auto table
-    const pdfWithAutoTable = pdf as jsPDF & { lastAutoTable?: { finalY: number } };
-    yPosition = (pdfWithAutoTable.lastAutoTable?.finalY || yPosition) + 15;
+    yPosition = getTableEndY(pdf) + 15;
   }
 
   // Agent Performance Table
-  if (config.includeAgentPerformance && config.includeTables && data.agentPerformance?.length > 0) {
-    if (yPosition > 250) {
-      pdf.addPage();
-      yPosition = 20;
-    }
+  if (config.includeAgentPerformance && config.includeTables && data.agentPerformance?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
 
     pdf.setFontSize(14);
     pdf.text('Agent Performance', 20, yPosition);
@@ -238,6 +270,165 @@ export const generatePDFReport = async (
         agent.total_conversations,
         `${agent.avg_response_time}s`,
         agent.satisfaction_score?.toFixed(1) || '-',
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Booking Statistics Table
+  if (config.includeBookings && config.includeTables && data.bookingStats?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Booking Statistics', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Location', 'Total', 'Confirmed', 'Completed', 'No-Show', 'Show Rate']],
+      body: data.bookingStats.map((stat: BookingStat) => [
+        stat.location,
+        stat.total,
+        stat.confirmed,
+        stat.completed,
+        stat.no_show,
+        `${stat.show_rate}%`,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Satisfaction Metrics
+  if (config.includeSatisfaction && data.satisfactionStats) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Satisfaction Metrics', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Average Rating', `${data.satisfactionStats.average_rating.toFixed(1)} / 5`],
+        ['Total Ratings', `${data.satisfactionStats.total_ratings}`],
+      ],
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    yPosition = getTableEndY(pdf) + 10;
+
+    if (config.includeTables && data.satisfactionStats.distribution?.length) {
+      autoTable(pdf, {
+        startY: yPosition,
+        head: [['Rating', 'Count', 'Percentage']],
+        body: data.satisfactionStats.distribution.map((d) => [
+          `${d.rating} Stars`,
+          d.count,
+          `${d.percentage}%`,
+        ]),
+        theme: 'grid',
+        styles: { fontSize: 9 },
+      });
+
+      yPosition = getTableEndY(pdf) + 15;
+    }
+  }
+
+  // AI Performance Metrics
+  if (config.includeAIPerformance && data.aiPerformanceStats) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('AI Performance', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Containment Rate', `${data.aiPerformanceStats.containment_rate}%`],
+        ['Resolution Rate', `${data.aiPerformanceStats.resolution_rate}%`],
+        ['AI Handled', `${data.aiPerformanceStats.ai_handled}`],
+        ['Human Takeover', `${data.aiPerformanceStats.human_takeover}`],
+        ['Total Conversations', `${data.aiPerformanceStats.total_conversations}`],
+      ],
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Traffic Sources Table
+  if (config.includeTrafficSources && config.includeTables && data.trafficSources?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Traffic Sources', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Source', 'Visitors', 'Percentage']],
+      body: data.trafficSources.slice(0, 15).map((source: TrafficSourceStat) => [
+        source.source,
+        source.visitors,
+        `${source.percentage}%`,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Top Pages Table
+  if (config.includeTopPages && config.includeTables && data.topPages?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Top Pages', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Page', 'Visits', 'Bounce Rate', 'Conversations']],
+      body: data.topPages.slice(0, 15).map((page: TopPageStat) => [
+        page.page.length > 40 ? page.page.substring(0, 40) + '...' : page.page,
+        page.visits,
+        `${page.bounce_rate}%`,
+        page.conversations,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Visitor Locations Table
+  if (config.includeVisitorLocations && config.includeTables && data.visitorLocations?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Visitor Locations', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Country', 'Visitors', 'Percentage']],
+      body: data.visitorLocations.slice(0, 15).map((loc: LocationStat) => [
+        loc.country,
+        loc.visitors,
+        `${loc.percentage}%`,
       ]),
       theme: 'grid',
       styles: { fontSize: 9 },
