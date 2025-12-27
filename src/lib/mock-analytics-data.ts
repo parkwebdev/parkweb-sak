@@ -297,12 +297,14 @@ export const generateRecentFeedback = (): FeedbackItem[] => {
     'The AI handled my complex query well.',
   ];
 
-  return Array.from({ length: 8 }, (_, i) => ({
+  const triggerTypes: TriggerType[] = ['conversation_end', 'manual', 'escalation'];
+  
+  return Array.from({ length: 25 }, (_, i) => ({
     id: `feedback-${i + 1}`,
-    rating: randomBetween(3, 5) as RatingValue,
-    feedback: i < 5 ? feedbackTexts[i] : null,
-    createdAt: subDays(new Date(), randomBetween(0, 14)).toISOString(),
-    triggerType: (i % 2 === 0 ? 'conversation_end' : 'manual') as TriggerType,
+    rating: randomBetween(1, 5) as RatingValue,
+    feedback: i < feedbackTexts.length ? feedbackTexts[i % feedbackTexts.length] : null,
+    createdAt: subDays(new Date(), randomBetween(0, 30)).toISOString(),
+    triggerType: triggerTypes[i % triggerTypes.length],
     conversationId: `conv-${i + 1}`,
   }));
 };
