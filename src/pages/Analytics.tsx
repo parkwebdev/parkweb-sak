@@ -39,9 +39,8 @@ import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { TopPagesChart } from '@/components/analytics/TopPagesChart';
 
 import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
-import { ExportReportSheet, ReportConfig } from '@/components/analytics/ExportReportSheet';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Download01, Clock } from '@untitledui/icons';
+import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildReportSheet';
+import { FileCheck02 } from '@untitledui/icons';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 import { ExportHistoryTable } from '@/components/analytics/ExportHistoryTable';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
@@ -124,9 +123,7 @@ function Analytics() {
   const { user } = useAuth();
   const { agentId } = useAgent();
   const [activeTab, setActiveTab] = useState<AnalyticsSection>('dashboard');
-  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [exportSheetOpen, setExportSheetOpen] = useState(false);
-  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
 
   // Report exports hook
   const { createExport, isCreating } = useReportExports();
@@ -152,6 +149,7 @@ function Analytics() {
 
   // Report config
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
+    format: 'csv',
     type: 'summary',
     // Core Metrics
     includeConversations: true,
@@ -505,6 +503,7 @@ function Analytics() {
 
   const handleExport = useCallback(async (exportStartDate: Date, exportEndDate: Date) => {
     try {
+      const exportFormat = reportConfig.format;
       const reportName = `${reportConfig.type === 'summary' ? 'Summary' : reportConfig.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(exportStartDate, 'MMM d')} to ${format(exportEndDate, 'MMM d, yyyy')}`;
       
       let blob: Blob;
@@ -533,14 +532,9 @@ function Analytics() {
       toast.success(`${exportFormat.toUpperCase()} exported and saved`);
     } catch (error: unknown) {
       logger.error('Export error:', error);
-      toast.error(`Failed to export ${exportFormat.toUpperCase()}`);
+      toast.error(`Failed to export ${reportConfig.format.toUpperCase()}`);
     }
-  }, [analyticsData, reportConfig, exportFormat, user?.email, createExport]);
-
-  const openExportSheet = (format: 'csv' | 'pdf') => {
-    setExportFormat(format);
-    setExportSheetOpen(true);
-  };
+  }, [analyticsData, reportConfig, user?.email, createExport]);
 
   return (
     <main className="flex-1 bg-muted/30 h-screen overflow-hidden flex">
@@ -568,28 +562,10 @@ function Analytics() {
               </p>
             </div>
             {activeTab === 'reports' && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm">
-                    <Download01 className="h-4 w-4 mr-2" />
-                    Export
-                    <ChevronDown className="h-4 w-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => openExportSheet('csv')}>
-                    Export as CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => openExportSheet('pdf')}>
-                    Export as PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setScheduleDialogOpen(true)}>
-                    <Clock className="h-4 w-4 mr-2" />
-                    Schedule Report
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button size="sm" onClick={() => setExportSheetOpen(true)}>
+                <FileCheck02 className="h-4 w-4 mr-2" />
+                Build Report
+              </Button>
             )}
           </div>
 
@@ -833,24 +809,21 @@ function Analytics() {
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   Scheduled Reports
                 </h3>
-                <ScheduledReportsManager 
-                  isCreateOpen={scheduleDialogOpen}
-                  onCreateOpenChange={setScheduleDialogOpen}
-                />
+                <ScheduledReportsManager />
               </div>
             </div>
           )}
         </div>
       </div>
       
-      {/* Export Report Sheet */}
-      <ExportReportSheet
+      {/* Build Report Sheet */}
+      <BuildReportSheet
         open={exportSheetOpen}
         onOpenChange={setExportSheetOpen}
-        exportFormat={exportFormat}
         config={reportConfig}
         onConfigChange={setReportConfig}
         onExport={handleExport}
+        isExporting={isCreating}
       />
     </main>
   );
