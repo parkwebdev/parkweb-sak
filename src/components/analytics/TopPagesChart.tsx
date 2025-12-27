@@ -134,7 +134,7 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-base font-semibold text-foreground">
                 Trending {isPositiveTrend ? 'up' : 'down'} by {Math.abs(trendPercentage)}% this month
               </span>
               {isPositiveTrend ? (
@@ -143,7 +143,7 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
                 <TrendDown01 size={16} className="text-destructive" />
               )}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Showing {totalVisits.toLocaleString()} total visitors across top {sortedData.length} pages
             </p>
           </div>
