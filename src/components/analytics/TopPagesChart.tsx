@@ -86,9 +86,8 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
     
     const max = Math.max(...sorted.map(d => sortBy === 'conversions' ? d.conversions : d.visits), 1);
     
-    // Calculate a mock trend (in real app, compare with previous period)
-    const totalVisits = sorted.reduce((sum, p) => sum + p.visits, 0);
-    const trend = totalVisits > 0 ? ((Math.random() * 10) - 2).toFixed(1) : '0';
+    // TODO: Calculate real trend from previous period comparison
+    const trend = '0';
     
     return { maxValue: max, sortedData: sorted, trendPercentage: parseFloat(trend) };
   }, [data, sortBy]);
