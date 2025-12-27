@@ -126,26 +126,24 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
 
   return (
     <Card className="h-full">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-base font-semibold">Top Pages</CardTitle>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {sortBy === 'visits' ? 'By visitor count' : 'By lead conversions'}
-            </p>
+      <CardContent className="pt-6">
+        {/* Trend header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-medium text-foreground">
+              Trending {isPositiveTrend ? 'up' : 'down'} by {Math.abs(trendPercentage)}% this month
+            </span>
+            {isPositiveTrend ? (
+              <TrendUp01 size={16} className="text-emerald-500" />
+            ) : (
+              <TrendDown01 size={16} className="text-destructive" />
+            )}
           </div>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-            <SelectTrigger className="w-[120px] h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="visits">Visits</SelectItem>
-              <SelectItem value="conversions">Leads</SelectItem>
-            </SelectContent>
-          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Showing {totalVisits.toLocaleString()} total visitors across top {sortedData.length} pages
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="pt-4">
+
         <div className="space-y-3">
           {sortedData.map((page, index) => {
             const primaryValue = sortBy === 'conversions' ? page.conversions : page.visits;
@@ -196,23 +194,6 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
               </Tooltip>
             );
           })}
-        </div>
-
-        {/* Trend footer */}
-        <div className="mt-6 pt-4 border-t border-border">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium text-foreground">
-              Trending {isPositiveTrend ? 'up' : 'down'} by {Math.abs(trendPercentage)}% this month
-            </span>
-            {isPositiveTrend ? (
-              <TrendUp01 size={16} className="text-emerald-500" />
-            ) : (
-              <TrendDown01 size={16} className="text-destructive" />
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Showing {totalVisits.toLocaleString()} total visitors across top {sortedData.length} pages
-          </p>
         </div>
       </CardContent>
     </Card>
