@@ -105,7 +105,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
             description="Connect a calendar to start tracking booking trends."
             action={
               <Button variant="outline" size="sm" asChild>
-                <Link to="/ari?tab=locations">
+                <Link to="/ari?section=locations">
                   <Calendar size={16} className="mr-2" />
                   Connect Calendar
                 </Link>
