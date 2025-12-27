@@ -88,7 +88,7 @@ export function AIPerformanceSection({
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Performance Details
         </h3>
-        <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+        <AnimatedList className="space-y-6" staggerDelay={0.1}>
           <AnimatedItem>
             <AIPerformanceCard 
               containmentRate={aiPerformanceStats?.containmentRate ?? 0}
