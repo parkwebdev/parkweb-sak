@@ -635,7 +635,7 @@ function Analytics() {
           {activeTab === 'conversations' && (
             <div className="space-y-6">
               <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
-                <AnimatedItem><ConversationChart data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.resolved }))} /></AnimatedItem>
+                <AnimatedItem><ConversationChart data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} /></AnimatedItem>
               </AnimatedList>
             </div>
           )}

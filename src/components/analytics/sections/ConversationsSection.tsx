@@ -14,7 +14,7 @@ interface ConversationStat {
   date: string;
   total: number;
   active: number;
-  resolved: number;
+  closed: number;
 }
 
 interface ConversationsSectionProps {
@@ -36,17 +36,17 @@ export function ConversationsSection({
   
   // Calculate additional metrics
   const totalActive = conversationStats.reduce((sum, stat) => sum + stat.active, 0);
-  const totalResolved = conversationStats.reduce((sum, stat) => sum + stat.resolved, 0);
+  const totalClosed = conversationStats.reduce((sum, stat) => sum + stat.closed, 0);
   const resolutionRate = totalConversations > 0 
-    ? ((totalResolved / totalConversations) * 100).toFixed(1) 
+    ? ((totalClosed / totalConversations) * 100).toFixed(1) 
     : '0';
 
-  // Transform data for ConversationChart (expects 'closed' not 'resolved')
+  // Transform data for ConversationChart
   const chartData = conversationStats.map(stat => ({
     date: stat.date,
     total: stat.total,
     active: stat.active,
-    closed: stat.resolved,
+    closed: stat.closed,
   }));
 
   if (loading) {
