@@ -12,7 +12,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
-import { ReportConfig } from '@/components/analytics/ReportBuilder';
+import { ReportConfig } from '@/components/analytics/ExportReportSheet';
 import type { 
   ReportData, 
   ConversationStat, 
