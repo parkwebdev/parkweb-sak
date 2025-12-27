@@ -1598,6 +1598,59 @@ export type Database = {
           },
         ]
       }
+      report_exports: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          created_by: string
+          date_range_end: string
+          date_range_start: string
+          file_path: string
+          file_size: number | null
+          format: string
+          id: string
+          name: string
+          report_config: Json | null
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          created_by: string
+          date_range_end: string
+          date_range_start: string
+          file_path: string
+          file_size?: number | null
+          format: string
+          id?: string
+          name: string
+          report_config?: Json | null
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          created_by?: string
+          date_range_end?: string
+          date_range_start?: string
+          file_path?: string
+          file_size?: number | null
+          format?: string
+          id?: string
+          name?: string
+          report_config?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_exports_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       response_cache: {
         Row: {
           agent_id: string

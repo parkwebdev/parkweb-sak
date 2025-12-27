@@ -188,6 +188,13 @@ export const queryKeys = {
     list: (userId: string) => [...queryKeys.scheduledReports.lists(), userId] as const,
   },
 
+  // Report exports (export history)
+  reportExports: {
+    all: ['report-exports'] as const,
+    lists: () => [...queryKeys.reportExports.all, 'list'] as const,
+    list: (userId: string) => [...queryKeys.reportExports.lists(), userId] as const,
+  },
+
   // Traffic analytics
   trafficAnalytics: {
     all: ['traffic-analytics'] as const,

@@ -35,7 +35,7 @@ interface DataTableProps<TData, TValue> {
   table: TanStackTable<TData>;
   columns: ColumnDef<TData, TValue>[];
   onRowClick?: (row: TData) => void;
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   isLoading?: boolean;
 }
 

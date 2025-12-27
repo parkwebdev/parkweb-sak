@@ -26,7 +26,7 @@ import type {
 } from '@/types/report';
 
 /**
- * Generates a CSV report from analytics data and triggers download.
+ * Generates a CSV report from analytics data and returns a Blob.
  */
 export const generateCSVReport = (
   data: ReportData,
@@ -34,7 +34,7 @@ export const generateCSVReport = (
   startDate: Date,
   endDate: Date,
   orgName: string
-): void => {
+): Blob => {
   let csvContent = `${orgName} Analytics Report\n`;
   csvContent += `Period: ${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}\n`;
   csvContent += `Generated: ${format(new Date(), 'MMM d, yyyy HH:mm')}\n\n`;
@@ -157,16 +157,9 @@ export const generateCSVReport = (
     });
   }
 
-  // Create and download
+  // Create and return blob
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', `analytics_report_${format(new Date(), 'yyyy-MM-dd')}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  return blob;
 };
 
 /** Helper to get Y position from autoTable */
@@ -185,7 +178,7 @@ const checkPageBreak = (pdf: jsPDF, yPosition: number, threshold = 250): number 
 };
 
 /**
- * Generates a PDF report from analytics data and triggers download.
+ * Generates a PDF report from analytics data and returns a Blob.
  */
 export const generatePDFReport = async (
   data: ReportData,
@@ -193,7 +186,7 @@ export const generatePDFReport = async (
   startDate: Date,
   endDate: Date,
   orgName: string
-): Promise<void> => {
+): Promise<Blob> => {
   const pdf = new jsPDF();
   let yPosition = 20;
 
@@ -435,6 +428,6 @@ export const generatePDFReport = async (
     });
   }
 
-  // Save PDF
-  pdf.save(`analytics_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  // Return PDF as blob
+  return pdf.output('blob');
 };
