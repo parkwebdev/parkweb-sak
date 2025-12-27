@@ -359,12 +359,3 @@ export interface AIPerformanceCardProps extends BaseChartProps {
   humanTakeover: number;
 }
 
-/**
- * Props for TicketsResolvedCard placeholder component.
- */
-export interface TicketsResolvedCardProps extends BaseChartProps {
-  /** Placeholder - tickets resolved count */
-  ticketsResolved?: number;
-  /** Whether to show "Coming Soon" overlay */
-  comingSoon?: boolean;
-}
