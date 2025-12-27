@@ -7,19 +7,49 @@ import Map, {
   Popup,
   NavigationControl,
   FullscreenControl,
+  Marker,
   type MapRef,
   type MapMouseEvent,
 } from "react-map-gl/mapbox";
 import type { CircleLayer, SymbolLayer } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
-import { RefreshCcw01 } from "@untitledui/icons";
+import { RefreshCcw01, MarkerPin01, ChevronDown } from "@untitledui/icons";
 import { logger } from "@/utils/logger";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-// Mapbox vector styles - Navigation Day/Night for clean professional look
-const MAPBOX_STYLES = {
-  light: "mapbox://styles/mapbox/navigation-day-v1",
-  dark: "mapbox://styles/mapbox/navigation-night-v1",
+// Map style options
+type MapStyleKey = "navigation" | "streets" | "satellite";
+
+interface MapStyleOption {
+  label: string;
+  light: string;
+  dark: string;
+}
+
+const MAP_STYLE_OPTIONS: Record<MapStyleKey, MapStyleOption> = {
+  navigation: {
+    label: "Navigation",
+    light: "mapbox://styles/mapbox/navigation-day-v1",
+    dark: "mapbox://styles/mapbox/navigation-night-v1",
+  },
+  streets: {
+    label: "Streets",
+    light: "mapbox://styles/mapbox/streets-v12",
+    dark: "mapbox://styles/mapbox/dark-v11",
+  },
+  satellite: {
+    label: "Satellite",
+    light: "mapbox://styles/mapbox/satellite-streets-v12",
+    dark: "mapbox://styles/mapbox/satellite-streets-v12",
+  },
 };
 
 export interface MapMarker {
@@ -55,18 +85,23 @@ function countryCodeToFlag(code: string): string {
 }
 
 /**
- * Mapbox GL style specifications require raw hex color values.
- * These cannot use CSS variables as Mapbox renders outside the DOM context.
- * Colors are intentionally hardcoded to match the design system:
- * - #22c55e = status-active (green/low density)
- * - #f59e0b = status-scheduled (amber/medium density)
- * - #ef4444 = destructive (red/high density)
+ * Get marker size based on visitor count
  */
-function getMarkerColor(count: number, maxCount: number): string {
+function getMarkerSize(count: number, maxCount: number): number {
   const ratio = count / maxCount;
-  if (ratio >= 0.6) return "#ef4444"; // destructive
-  if (ratio >= 0.3) return "#f59e0b"; // status-scheduled
-  return "#22c55e"; // status-active
+  if (ratio >= 0.6) return 32;
+  if (ratio >= 0.3) return 26;
+  return 20;
+}
+
+/**
+ * Get marker color class based on visitor count density
+ */
+function getMarkerColorClass(count: number, maxCount: number): string {
+  const ratio = count / maxCount;
+  if (ratio >= 0.6) return "text-destructive";
+  if (ratio >= 0.3) return "text-status-scheduled";
+  return "text-status-active";
 }
 
 // Cluster layer style (hex colors required by Mapbox GL)
@@ -77,10 +112,10 @@ const clusterLayer: CircleLayer = {
   filter: ["has", "point_count"],
   paint: {
     "circle-color": ["step", ["get", "point_count"], "#22c55e", 5, "#f59e0b", 15, "#ef4444"],
-    "circle-radius": ["step", ["get", "point_count"], 18, 5, 24, 15, 32],
+    "circle-radius": ["step", ["get", "point_count"], 22, 5, 28, 15, 36],
     "circle-stroke-width": 3,
-    "circle-stroke-color": "rgba(255, 255, 255, 0.8)",
-    "circle-opacity": 0.9,
+    "circle-stroke-color": "rgba(255, 255, 255, 0.9)",
+    "circle-opacity": 0.95,
   },
 };
 
@@ -94,37 +129,6 @@ const clusterCountLayer: SymbolLayer = {
     "text-field": ["get", "point_count_abbreviated"],
     "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
     "text-size": 14,
-  },
-  paint: {
-    "text-color": "#ffffff",
-  },
-};
-
-// Individual point layer
-const unclusteredPointLayer: CircleLayer = {
-  id: "unclustered-point",
-  type: "circle",
-  source: "visitors",
-  filter: ["!", ["has", "point_count"]],
-  paint: {
-    "circle-color": ["get", "color"],
-    "circle-radius": ["interpolate", ["linear"], ["get", "count"], 1, 10, 50, 22, 200, 30],
-    "circle-stroke-width": 3,
-    "circle-stroke-color": "rgba(255, 255, 255, 0.9)",
-    "circle-opacity": 0.85,
-  },
-};
-
-// Point count label
-const unclusteredCountLayer: SymbolLayer = {
-  id: "unclustered-count",
-  type: "symbol",
-  source: "visitors",
-  filter: ["!", ["has", "point_count"]],
-  layout: {
-    "text-field": ["get", "count"],
-    "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
-    "text-size": 12,
   },
   paint: {
     "text-color": "#ffffff",
@@ -156,7 +160,8 @@ export function MapboxMap({
   const mapRef = React.useRef<MapRef>(null);
   const { theme: currentTheme } = useTheme();
   const [popupInfo, setPopupInfo] = React.useState<PopupInfo | null>(null);
-  const [mapStyle, setMapStyle] = React.useState(MAPBOX_STYLES.light);
+  const [selectedStyleKey, setSelectedStyleKey] = React.useState<MapStyleKey>("navigation");
+  const [mapStyle, setMapStyle] = React.useState(MAP_STYLE_OPTIONS.navigation.light);
   const [mapError, setMapError] = React.useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = React.useState(false);
   const initialBoundsRef = React.useRef(fitBounds);
@@ -174,23 +179,24 @@ export function MapboxMap({
 
   // Resolve theme to map style
   React.useEffect(() => {
+    const styleOption = MAP_STYLE_OPTIONS[selectedStyleKey];
     const resolveStyle = () => {
       if (currentTheme === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? MAPBOX_STYLES.dark
-          : MAPBOX_STYLES.light;
+          ? styleOption.dark
+          : styleOption.light;
       }
-      return currentTheme === "dark" ? MAPBOX_STYLES.dark : MAPBOX_STYLES.light;
+      return currentTheme === "dark" ? styleOption.dark : styleOption.light;
     };
     setMapStyle(resolveStyle());
 
     if (currentTheme === "system") {
       const mql = window.matchMedia("(prefers-color-scheme: dark)");
-      const handler = () => setMapStyle(mql.matches ? MAPBOX_STYLES.dark : MAPBOX_STYLES.light);
+      const handler = () => setMapStyle(mql.matches ? styleOption.dark : styleOption.light);
       mql.addEventListener("change", handler);
       return () => mql.removeEventListener("change", handler);
     }
-  }, [currentTheme]);
+  }, [currentTheme, selectedStyleKey]);
 
   // Store initial bounds
   React.useEffect(() => {
@@ -199,9 +205,11 @@ export function MapboxMap({
     }
   }, [fitBounds]);
 
-  // Convert markers to GeoJSON
+  // Compute max count for sizing
+  const maxCount = React.useMemo(() => Math.max(...markers.map((m) => m.count), 1), [markers]);
+
+  // Convert markers to GeoJSON for clustering
   const geojsonData = React.useMemo(() => {
-    const maxCount = Math.max(...markers.map((m) => m.count), 1);
     return {
       type: "FeatureCollection" as const,
       features: markers.map((marker) => ({
@@ -212,7 +220,6 @@ export function MapboxMap({
           country: marker.country,
           city: marker.city || "",
           countryCode: marker.countryCode || "",
-          color: getMarkerColor(marker.count, maxCount),
         },
         geometry: {
           type: "Point" as const,
@@ -269,7 +276,7 @@ export function MapboxMap({
     }
   }, []);
 
-  // Handle mouse enter on points
+  // Handle mouse enter on cluster points
   const onMouseEnter = React.useCallback((event: MapMouseEvent) => {
     const feature = event.features?.[0];
     if (!feature) return;
@@ -289,17 +296,6 @@ export function MapboxMap({
         count: 0,
         isCluster: true,
         pointCount: props.point_count || 0,
-      });
-    } else {
-      // Single point popup
-      setPopupInfo({
-        lng,
-        lat,
-        country: props?.country || "Unknown",
-        city: props?.city || undefined,
-        count: props?.count || 0,
-        countryCode: props?.countryCode || undefined,
-        isCluster: false,
       });
     }
   }, []);
@@ -321,6 +317,23 @@ export function MapboxMap({
     }
   }, [center, zoom, fitBoundsPadding]);
 
+  // Handle marker hover
+  const handleMarkerEnter = React.useCallback((marker: MapMarker) => {
+    setPopupInfo({
+      lng: marker.lng,
+      lat: marker.lat,
+      country: marker.country,
+      city: marker.city,
+      count: marker.count,
+      countryCode: marker.countryCode,
+      isCluster: false,
+    });
+  }, []);
+
+  const handleMarkerLeave = React.useCallback(() => {
+    setPopupInfo(null);
+  }, []);
+
   return (
     <div className={`relative ${className || ""}`} style={style}>
       <Map
@@ -333,7 +346,7 @@ export function MapboxMap({
         }}
         mapStyle={mapStyle}
         style={{ width: "100%", height: "100%" }}
-        interactiveLayerIds={["clusters", "unclustered-point"]}
+        interactiveLayerIds={["clusters"]}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
@@ -348,6 +361,7 @@ export function MapboxMap({
           </>
         )}
 
+        {/* GeoJSON source for clustering */}
         <Source
           id="visitors"
           type="geojson"
@@ -358,9 +372,35 @@ export function MapboxMap({
         >
           <Layer {...clusterLayer} />
           <Layer {...clusterCountLayer} />
-          <Layer {...unclusteredPointLayer} />
-          <Layer {...unclusteredCountLayer} />
         </Source>
+
+        {/* Custom pin markers for individual points */}
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            longitude={marker.lng}
+            latitude={marker.lat}
+            anchor="bottom"
+          >
+            <div
+              className="relative cursor-pointer transition-transform hover:scale-110"
+              onMouseEnter={() => handleMarkerEnter(marker)}
+              onMouseLeave={handleMarkerLeave}
+            >
+              <MarkerPin01
+                size={getMarkerSize(marker.count, maxCount)}
+                className={cn(
+                  "drop-shadow-lg",
+                  getMarkerColorClass(marker.count, maxCount)
+                )}
+                strokeWidth={2.5}
+              />
+              <span className="absolute inset-0 flex items-center justify-center text-white text-2xs font-bold -mt-1">
+                {marker.count > 99 ? "99+" : marker.count}
+              </span>
+            </div>
+          </Marker>
+        ))}
 
         {popupInfo && (
           <Popup
@@ -368,7 +408,7 @@ export function MapboxMap({
             latitude={popupInfo.lat}
             closeButton={false}
             closeOnClick={false}
-            offset={15}
+            offset={25}
             className="visitor-map-popup"
           >
             {popupInfo.isCluster ? (
@@ -396,6 +436,37 @@ export function MapboxMap({
         )}
       </Map>
 
+      {/* Style selector dropdown */}
+      {showControls && (
+        <div className="absolute top-4 left-4 z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-background/90 backdrop-blur-sm border-border shadow-md gap-1"
+              >
+                {MAP_STYLE_OPTIONS[selectedStyleKey].label}
+                <ChevronDown size={14} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {(Object.keys(MAP_STYLE_OPTIONS) as MapStyleKey[]).map((key) => (
+                <DropdownMenuItem
+                  key={key}
+                  onClick={() => setSelectedStyleKey(key)}
+                  className={cn(
+                    selectedStyleKey === key && "bg-accent"
+                  )}
+                >
+                  {MAP_STYLE_OPTIONS[key].label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       {/* Reset view button */}
       {showControls && (
         <button
@@ -413,15 +484,15 @@ export function MapboxMap({
           <div className="font-medium mb-2">Visitor density</div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-status-active" />
+              <MarkerPin01 size={14} className="text-status-active" />
               <span>Low</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-status-scheduled" />
+              <MarkerPin01 size={14} className="text-status-scheduled" />
               <span>Medium</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-destructive" />
+              <MarkerPin01 size={14} className="text-destructive" />
               <span>High</span>
             </div>
           </div>
