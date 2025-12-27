@@ -34,12 +34,12 @@ interface BookingTrendChartProps {
   className?: string;
 }
 
-/** Color configuration matching design system */
+/** Color configuration matching ConversationChart blue palette */
 const TREND_COLORS = {
-  total: 'hsl(var(--primary))',
-  completed: 'hsl(var(--success))',
-  cancelled: 'hsl(var(--destructive))',
-  noShow: 'hsl(var(--muted-foreground))',
+  completed: 'hsl(220, 90%, 56%)',      // Primary blue (same as Active in ConversationChart)
+  confirmed: 'hsl(210, 100%, 80%)',     // Light blue (same as Closed in ConversationChart)
+  cancelled: 'hsl(220, 70%, 70%)',      // Medium blue
+  noShow: 'hsl(210, 60%, 88%)',         // Pale blue
 };
 
 /**
@@ -125,9 +125,9 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
               }}
             >
               <defs>
-                <linearGradient id="gradientTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={TREND_COLORS.total} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={TREND_COLORS.total} stopOpacity={0.05} />
+                <linearGradient id="gradientConfirmed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={TREND_COLORS.confirmed} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={TREND_COLORS.confirmed} stopOpacity={0.05} />
                 </linearGradient>
                 <linearGradient id="gradientCompleted" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={TREND_COLORS.completed} stopOpacity={0.4} />
@@ -210,13 +210,13 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                 name="Confirmed"
                 stackId="1"
                 type="monotone"
-                stroke={TREND_COLORS.total}
+                stroke={TREND_COLORS.confirmed}
                 strokeWidth={2}
-                fill="url(#gradientTotal)"
+                fill="url(#gradientConfirmed)"
                 activeDot={{
                   r: 5,
                   fill: 'hsl(var(--background))',
-                  stroke: TREND_COLORS.total,
+                  stroke: TREND_COLORS.confirmed,
                   strokeWidth: 2,
                 }}
               />
@@ -274,7 +274,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
               <span 
                 className="h-2 w-2 rounded-full shrink-0" 
-                style={{ backgroundColor: TREND_COLORS.total }}
+                style={{ backgroundColor: TREND_COLORS.confirmed }}
               />
               <span className="text-xs text-muted-foreground">Confirmed</span>
             </div>
