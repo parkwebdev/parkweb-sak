@@ -768,17 +768,88 @@ X-Goog-Channel-Token: our webhook secret
 
 ### `outlook-calendar-auth`
 
-**Purpose:** Handles Outlook/Microsoft Calendar OAuth flow.
+**Purpose:** Handles Outlook/Microsoft Calendar OAuth flow with webhook subscription.
 
 **Auth:** Authenticated
 
-**Method:** `GET` (initiate) / `POST` (callback)
+**Method:** `POST`
+
+**Actions:**
+- `initiate`: Generates OAuth URL for Microsoft authorization
+- `callback`: Exchanges code for tokens, creates Graph subscription
+- `refresh`: Refreshes expired access token
+- `disconnect`: Deletes subscription and removes account
+
+**Response (callback):**
+```typescript
+{
+  success: true;
+  accountId: string;
+  webhookEnabled: boolean;
+}
+```
+
+**Webhook Integration (Phase 3 - December 2025):**
+- On successful OAuth callback, creates a Microsoft Graph subscription
+- Subscriptions expire after 3 days max (Microsoft limit)
+- Notifications sent to `outlook-calendar-webhook` for real-time sync
+
+**Required Secrets:**
+- `MICROSOFT_CLIENT_ID`
+- `MICROSOFT_CLIENT_SECRET`
+- `MICROSOFT_REDIRECT_URI`
+- `CALENDAR_WEBHOOK_SECRET`
+
+---
+
+### `outlook-calendar-webhook`
+
+**Purpose:** Receives change notifications from Microsoft Graph when calendar events change.
+
+**Auth:** Public (validated via clientState)
+
+**Method:** `GET` (validation) / `POST` (notifications)
+
+**Validation Flow:**
+Microsoft sends GET with `?validationToken=...` - must echo back as plain text.
+
+**Notification Body:**
+```typescript
+{
+  value: [{
+    subscriptionId: string;
+    clientState: string;
+    changeType: 'created' | 'updated' | 'deleted';
+    resource: string;
+    resourceData: { id: string };
+  }]
+}
+```
 
 **Details:**
-- Initiates OAuth2 flow with Microsoft Graph scopes
-- Handles callback with authorization code
-- Stores access and refresh tokens in `connected_accounts`
-- Fetches default calendar
+- Validates clientState if `CALENDAR_WEBHOOK_SECRET` is configured
+- Fetches event details from Graph API for updates
+- Updates `calendar_events` status based on changes
+- Returns 202 Accepted (Microsoft requirement)
+
+---
+
+## Shared Calendar Sync (Phase 4)
+
+### `_shared/calendar-sync.ts`
+
+**Purpose:** Shared utilities for calendar event synchronization.
+
+**Functions:**
+- `shouldAutoComplete(endTime, currentStatus)` - Determines if past event should auto-complete
+- `mapExternalStatus(status, provider)` - Maps provider status to internal status
+- `syncEventStatus(supabase, eventId, ...)` - Updates event with external data
+- `findEventByExternalId(supabase, accountId, externalId)` - Finds event by external ID
+- `autoCompletePastEvents(supabase, cutoffTime, limit)` - Batch auto-complete past events
+
+**Auto-Complete Logic:**
+- Events with `end_time` in the past and status `confirmed` → `completed`
+- Skips events already in terminal states (`cancelled`, `no_show`, `completed`)
 
 ---
 
