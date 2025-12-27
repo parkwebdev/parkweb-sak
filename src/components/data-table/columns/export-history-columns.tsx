@@ -10,7 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { IconButton } from '@/components/ui/icon-button';
-import { Download01, Trash01, File06, FileCode02 } from '@untitledui/icons';
+import { Download01, Trash01 } from '@untitledui/icons';
+import { PdfIcon, CsvIcon } from '@/components/analytics/ExportIcons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { format, formatDistanceToNow } from 'date-fns';
 import type { ReportExport } from '@/hooks/useReportExports';
@@ -105,14 +106,14 @@ export const createExportHistoryColumns = ({
     ),
     cell: ({ row }) => {
       const exportItem = row.original;
-      const Icon = exportItem.format === 'pdf' ? File06 : FileCode02;
+      const Icon = exportItem.format === 'pdf' ? PdfIcon : CsvIcon;
       
       return (
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`p-1.5 rounded-md shrink-0 ${exportItem.format === 'pdf' ? 'bg-destructive/10' : 'bg-primary/10'}`}>
-            <Icon className={`h-4 w-4 ${exportItem.format === 'pdf' ? 'text-destructive' : 'text-primary'}`} />
+          <div className="shrink-0">
+            <Icon className="h-8 w-8" />
           </div>
-          <span className="font-medium truncate block max-w-[200px]" title={exportItem.name}>
+          <span className="font-medium truncate block max-w-[180px]" title={exportItem.name}>
             {exportItem.name}
           </span>
         </div>
