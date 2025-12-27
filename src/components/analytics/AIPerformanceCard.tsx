@@ -143,7 +143,6 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
             label="Containment Rate"
             value={containmentRate}
             progressVariant={containmentRate >= 80 ? 'success' : containmentRate >= 60 ? 'warning' : 'destructive'}
-            icon={<ZapSolidIcon size={16} className="text-primary" aria-hidden="true" />}
           />
 
           {/* Resolution Rate */}
@@ -151,7 +150,6 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
             label="Resolution Rate"
             value={resolutionRate}
             progressVariant={resolutionRate >= 70 ? 'success' : resolutionRate >= 50 ? 'warning' : 'destructive'}
-            icon={<Users01 size={16} className="text-success" aria-hidden="true" />}
           />
 
           {/* Summary stats */}
