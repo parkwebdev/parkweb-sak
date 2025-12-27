@@ -564,13 +564,13 @@ function Analytics() {
   const showBuildReport = ['export-history', 'scheduled'].includes(activeTab);
 
   return (
-    <main className="flex-1 bg-muted/30 h-screen min-h-0 overflow-hidden flex">
+    <div className="flex-1 h-full bg-muted/30 flex min-h-0">
       <AnalyticsSectionMenu 
         activeSection={activeTab} 
         onSectionChange={setActiveTab} 
       />
       
-      <div className="flex-1 min-h-0 overflow-auto">
+      <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
         <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -740,7 +740,7 @@ function Analytics() {
             </div>
           )}
         </div>
-      </div>
+      </main>
       
       <BuildReportSheet
         open={exportSheetOpen}
@@ -750,7 +750,7 @@ function Analytics() {
         onExport={handleExport}
         isExporting={isCreating}
       />
-    </main>
+    </div>
   );
 };
 
