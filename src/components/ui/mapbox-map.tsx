@@ -74,6 +74,8 @@ interface MapboxMapProps {
   fitBounds?: [[number, number], [number, number]];
   fitBoundsPadding?: number;
   showControls?: boolean;
+  /** Callback when a marker is clicked - receives the marker data */
+  onMarkerClick?: (marker: MapMarker) => void;
 }
 
 // Country code to flag emoji
@@ -263,6 +265,7 @@ export function MapboxMap({
   fitBounds,
   fitBoundsPadding = 50,
   showControls = true,
+  onMarkerClick,
 }: MapboxMapProps) {
   const mapRef = React.useRef<MapRef>(null);
   const { theme: currentTheme } = useTheme();
@@ -502,13 +505,15 @@ export function MapboxMap({
           >
             <div
               className={cn(
-                "relative cursor-pointer",
+                "relative",
+                onMarkerClick ? "cursor-pointer" : "cursor-default",
                 "transition-all duration-300 ease-out",
-                "hover:scale-110 hover:-translate-y-1",
+                onMarkerClick && "hover:scale-110 hover:-translate-y-1",
                 "animate-fade-in"
               )}
               onMouseEnter={() => handleMarkerEnter(marker)}
               onMouseLeave={handleMarkerLeave}
+              onClick={() => onMarkerClick?.(marker)}
               style={{ animationDelay: `${Math.random() * 200}ms` }}
             >
               <FilledMapPin

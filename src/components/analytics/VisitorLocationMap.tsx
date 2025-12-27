@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapboxMap, MapMarker, computeBounds } from '@/components/ui/mapbox-map';
@@ -20,6 +21,8 @@ interface VisitorLocationMapProps {
 }
 
 export function VisitorLocationMap({ data, loading, mapboxToken }: VisitorLocationMapProps) {
+  const navigate = useNavigate();
+
   // Calculate bounds to fit all markers
   const bounds = useMemo(() => {
     if (data.length === 0) return null;
@@ -38,6 +41,19 @@ export function VisitorLocationMap({ data, loading, mapboxToken }: VisitorLocati
       countryCode: location.countryCode,
     }));
   }, [data]);
+
+  // Handle marker click - navigate to analytics filtered by location
+  const handleMarkerClick = useCallback((marker: MapMarker) => {
+    const params = new URLSearchParams();
+    params.set('country', marker.country);
+    if (marker.city) {
+      params.set('city', marker.city);
+    }
+    if (marker.countryCode) {
+      params.set('countryCode', marker.countryCode);
+    }
+    navigate(`/analytics?${params.toString()}`);
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -120,7 +136,13 @@ export function VisitorLocationMap({ data, loading, mapboxToken }: VisitorLocati
             fitBoundsPadding={60}
             className="h-full w-full"
             showControls
+            onMarkerClick={handleMarkerClick}
           />
+        </div>
+        <div className="px-4 py-2 border-t border-border bg-muted/30">
+          <p className="text-2xs text-muted-foreground text-center">
+            Click on a location marker to view detailed analytics for that region
+          </p>
         </div>
       </CardContent>
     </Card>
