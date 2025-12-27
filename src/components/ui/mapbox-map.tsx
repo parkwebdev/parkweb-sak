@@ -11,10 +11,10 @@ import Map, {
   type MapRef,
   type MapMouseEvent,
 } from "react-map-gl/mapbox";
-import type { CircleLayer, SymbolLayer } from "mapbox-gl";
+import type { CircleLayer, SymbolLayer, HeatmapLayer } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
-import { RefreshCcw01, MarkerPin01, ChevronDown } from "@untitledui/icons";
+import { RefreshCcw01, MarkerPin01, ChevronDown, LayersThree01 } from "@untitledui/icons";
 import { logger } from "@/utils/logger";
 import {
   DropdownMenu,
@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Map style options
 type MapStyleKey = "navigation" | "streets" | "satellite";
@@ -95,16 +97,16 @@ function getMarkerSize(count: number, maxCount: number): number {
 }
 
 /**
- * Get marker color class based on visitor count density
+ * Get marker fill color (hex) based on visitor count density
  */
-function getMarkerColorClass(count: number, maxCount: number): string {
+function getMarkerFillColor(count: number, maxCount: number): string {
   const ratio = count / maxCount;
-  if (ratio >= 0.6) return "text-destructive";
-  if (ratio >= 0.3) return "text-status-scheduled";
-  return "text-status-active";
+  if (ratio >= 0.6) return "#ef4444"; // destructive
+  if (ratio >= 0.3) return "#f59e0b"; // status-scheduled
+  return "#22c55e"; // status-active
 }
 
-// Cluster layer style (hex colors required by Mapbox GL)
+// Cluster layer style with smooth transitions (hex colors required by Mapbox GL)
 const clusterLayer: CircleLayer = {
   id: "clusters",
   type: "circle",
@@ -112,10 +114,20 @@ const clusterLayer: CircleLayer = {
   filter: ["has", "point_count"],
   paint: {
     "circle-color": ["step", ["get", "point_count"], "#22c55e", 5, "#f59e0b", 15, "#ef4444"],
-    "circle-radius": ["step", ["get", "point_count"], 22, 5, 28, 15, 36],
+    "circle-radius": [
+      "interpolate",
+      ["linear"],
+      ["get", "point_count"],
+      2, 20,
+      10, 28,
+      50, 40,
+    ],
     "circle-stroke-width": 3,
     "circle-stroke-color": "rgba(255, 255, 255, 0.9)",
     "circle-opacity": 0.95,
+    // Smooth transitions
+    "circle-radius-transition": { duration: 300, delay: 0 },
+    "circle-opacity-transition": { duration: 300, delay: 0 },
   },
 };
 
@@ -129,9 +141,65 @@ const clusterCountLayer: SymbolLayer = {
     "text-field": ["get", "point_count_abbreviated"],
     "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
     "text-size": 14,
+    "text-allow-overlap": true,
   },
   paint: {
     "text-color": "#ffffff",
+    "text-opacity-transition": { duration: 300, delay: 0 },
+  },
+};
+
+// Heatmap layer for density visualization
+const heatmapLayer: HeatmapLayer = {
+  id: "heatmap",
+  type: "heatmap",
+  source: "visitors",
+  paint: {
+    // Increase weight based on visitor count
+    "heatmap-weight": [
+      "interpolate",
+      ["linear"],
+      ["get", "count"],
+      0, 0,
+      10, 0.5,
+      50, 1,
+    ],
+    // Increase intensity as zoom level increases
+    "heatmap-intensity": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      0, 0.5,
+      9, 2,
+    ],
+    // Color gradient from transparent to red
+    "heatmap-color": [
+      "interpolate",
+      ["linear"],
+      ["heatmap-density"],
+      0, "rgba(33, 102, 172, 0)",
+      0.2, "rgba(103, 169, 207, 0.6)",
+      0.4, "rgba(209, 229, 240, 0.7)",
+      0.6, "rgba(253, 219, 199, 0.8)",
+      0.8, "rgba(239, 138, 98, 0.9)",
+      1, "rgba(178, 24, 43, 1)",
+    ],
+    // Adjust radius based on zoom
+    "heatmap-radius": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      0, 15,
+      9, 30,
+    ],
+    // Fade out heatmap at higher zoom levels
+    "heatmap-opacity": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      7, 0.8,
+      9, 0.4,
+    ],
   },
 };
 
@@ -144,6 +212,45 @@ interface PopupInfo {
   countryCode?: string;
   isCluster?: boolean;
   pointCount?: number;
+}
+
+// Filled map pin component
+function FilledMapPin({ 
+  size = 24, 
+  fillColor, 
+  className 
+}: { 
+  size?: number; 
+  fillColor: string; 
+  className?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z"
+        fill="white"
+      />
+      <path
+        d="M12 22C12 22 20 16 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 16 12 22 12 22Z"
+        fill={fillColor}
+        stroke={fillColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z"
+        fill="white"
+      />
+    </svg>
+  );
 }
 
 export function MapboxMap({
@@ -164,6 +271,7 @@ export function MapboxMap({
   const [mapStyle, setMapStyle] = React.useState(MAP_STYLE_OPTIONS.navigation.light);
   const [mapError, setMapError] = React.useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = React.useState(false);
+  const [showHeatmap, setShowHeatmap] = React.useState(false);
   const initialBoundsRef = React.useRef(fitBounds);
 
   // Debug: Log token fingerprint on mount (safe - only first/last chars)
@@ -208,7 +316,7 @@ export function MapboxMap({
   // Compute max count for sizing
   const maxCount = React.useMemo(() => Math.max(...markers.map((m) => m.count), 1), [markers]);
 
-  // Convert markers to GeoJSON for clustering
+  // Convert markers to GeoJSON for clustering and heatmap
   const geojsonData = React.useMemo(() => {
     return {
       type: "FeatureCollection" as const,
@@ -249,7 +357,7 @@ export function MapboxMap({
     setMapError(errorMsg);
   }, []);
 
-  // Handle cluster click - zoom in
+  // Handle cluster click - zoom in with smooth animation
   const onClick = React.useCallback((event: MapMouseEvent) => {
     const feature = event.features?.[0];
     if (!feature || !mapRef.current) return;
@@ -259,7 +367,7 @@ export function MapboxMap({
 
     const clusterId = feature.properties?.cluster_id;
     if (clusterId !== undefined) {
-      // It's a cluster - zoom to expand
+      // It's a cluster - zoom to expand with smooth animation
       const mapboxSource = mapRef.current.getSource("visitors");
       if (mapboxSource && "getClusterExpansionZoom" in mapboxSource) {
         const source = mapboxSource as unknown as {
@@ -270,6 +378,7 @@ export function MapboxMap({
           mapRef.current?.easeTo({
             center: geometry.coordinates as [number, number],
             zoom: zoomLevel,
+            duration: 500, // Smooth 500ms animation
           });
         });
       }
@@ -304,13 +413,14 @@ export function MapboxMap({
     setPopupInfo(null);
   }, []);
 
-  // Reset view
+  // Reset view with smooth animation
   const resetView = React.useCallback(() => {
     if (!mapRef.current) return;
     if (initialBoundsRef.current) {
       mapRef.current.fitBounds(initialBoundsRef.current, {
         padding: fitBoundsPadding,
         maxZoom: 6,
+        duration: 500,
       });
     } else {
       mapRef.current.easeTo({ center, zoom, duration: 500 });
@@ -361,21 +471,29 @@ export function MapboxMap({
           </>
         )}
 
-        {/* GeoJSON source for clustering */}
+        {/* GeoJSON source for clustering and heatmap */}
         <Source
           id="visitors"
           type="geojson"
           data={geojsonData}
-          cluster={true}
+          cluster={!showHeatmap}
           clusterMaxZoom={14}
           clusterRadius={50}
         >
-          <Layer {...clusterLayer} />
-          <Layer {...clusterCountLayer} />
+          {/* Heatmap layer (shown when enabled) */}
+          {showHeatmap && <Layer {...heatmapLayer} />}
+          
+          {/* Cluster layers (hidden when heatmap is shown) */}
+          {!showHeatmap && (
+            <>
+              <Layer {...clusterLayer} />
+              <Layer {...clusterCountLayer} />
+            </>
+          )}
         </Source>
 
-        {/* Custom pin markers for individual points */}
-        {markers.map((marker) => (
+        {/* Custom filled pin markers for individual points (hidden when heatmap is shown) */}
+        {!showHeatmap && markers.map((marker) => (
           <Marker
             key={marker.id}
             longitude={marker.lng}
@@ -383,19 +501,22 @@ export function MapboxMap({
             anchor="bottom"
           >
             <div
-              className="relative cursor-pointer transition-transform hover:scale-110"
+              className={cn(
+                "relative cursor-pointer",
+                "transition-all duration-300 ease-out",
+                "hover:scale-110 hover:-translate-y-1",
+                "animate-fade-in"
+              )}
               onMouseEnter={() => handleMarkerEnter(marker)}
               onMouseLeave={handleMarkerLeave}
+              style={{ animationDelay: `${Math.random() * 200}ms` }}
             >
-              <MarkerPin01
+              <FilledMapPin
                 size={getMarkerSize(marker.count, maxCount)}
-                className={cn(
-                  "drop-shadow-lg",
-                  getMarkerColorClass(marker.count, maxCount)
-                )}
-                strokeWidth={2.5}
+                fillColor={getMarkerFillColor(marker.count, maxCount)}
+                className="drop-shadow-lg"
               />
-              <span className="absolute inset-0 flex items-center justify-center text-white text-2xs font-bold -mt-1">
+              <span className="absolute inset-0 flex items-center justify-center text-white text-2xs font-bold -mt-1.5 pointer-events-none">
                 {marker.count > 99 ? "99+" : marker.count}
               </span>
             </div>
@@ -436,9 +557,10 @@ export function MapboxMap({
         )}
       </Map>
 
-      {/* Style selector dropdown */}
+      {/* Top controls row */}
       {showControls && (
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+          {/* Style selector dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -464,6 +586,20 @@ export function MapboxMap({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Heatmap toggle */}
+          <div className="flex items-center gap-2 bg-background/90 backdrop-blur-sm border border-border rounded-md px-3 py-1.5 shadow-md">
+            <LayersThree01 size={14} className={cn(showHeatmap && "text-orange-500")} />
+            <Label htmlFor="heatmap-toggle" className="text-xs font-medium cursor-pointer">
+              Heatmap
+            </Label>
+            <Switch
+              id="heatmap-toggle"
+              checked={showHeatmap}
+              onCheckedChange={setShowHeatmap}
+              className="scale-75"
+            />
+          </div>
         </div>
       )}
 
@@ -481,21 +617,30 @@ export function MapboxMap({
       {/* Legend */}
       {showControls && markers.length > 0 && (
         <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-3 text-xs z-10">
-          <div className="font-medium mb-2">Visitor density</div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <MarkerPin01 size={14} className="text-status-active" />
-              <span>Low</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MarkerPin01 size={14} className="text-status-scheduled" />
-              <span>Medium</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MarkerPin01 size={14} className="text-destructive" />
-              <span>High</span>
-            </div>
+          <div className="font-medium mb-2">
+            {showHeatmap ? "Density intensity" : "Visitor density"}
           </div>
+          {showHeatmap ? (
+            <div className="flex items-center gap-1">
+              <div className="w-24 h-3 rounded-sm bg-gradient-to-r from-blue-400 via-yellow-200 to-red-600" />
+              <span className="text-2xs ml-1">Low → High</span>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <FilledMapPin size={14} fillColor="#22c55e" />
+                <span>Low</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FilledMapPin size={14} fillColor="#f59e0b" />
+                <span>Medium</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FilledMapPin size={14} fillColor="#ef4444" />
+                <span>High</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
