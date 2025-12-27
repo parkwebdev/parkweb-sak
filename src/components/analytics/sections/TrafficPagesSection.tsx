@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { TopPagesChart } from '@/components/analytics/TopPagesChart';
+import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 
@@ -13,6 +14,7 @@ interface LandingPageData {
   url: string;
   visits: number;
   conversions: number;
+  avgDuration?: number;
 }
 
 interface TrafficPagesSectionProps {
@@ -33,7 +35,7 @@ export function TrafficPagesSection({
   const chartData = landingPages.map(page => ({
     url: page.url,
     visits: page.visits,
-    avgDuration: 0,
+    avgDuration: page.avgDuration || 0,
     conversions: page.conversions,
   }));
 
@@ -69,6 +71,9 @@ export function TrafficPagesSection({
         <AnimatedList staggerDelay={0.1}>
           <AnimatedItem>
             <TopPagesChart data={chartData} loading={loading} />
+          </AnimatedItem>
+          <AnimatedItem>
+            <LandingPagesTable data={chartData} loading={loading} />
           </AnimatedItem>
         </AnimatedList>
       </div>
