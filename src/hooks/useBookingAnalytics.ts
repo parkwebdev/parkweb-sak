@@ -261,37 +261,14 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boo
     };
   }, [rawEvents, startDate, endDate]);
 
-  /**
-   * Update the status of a calendar event.
-   * Invalidates the cache to refresh UI after update.
-   */
-  const updateEventStatus = async (eventId: string, newStatus: BookingStatus): Promise<void> => {
-    const { error } = await supabase
-      .from('calendar_events')
-      .update({ status: newStatus })
-      .eq('id', eventId);
-
-    if (error) {
-      logger.error('Error updating event status:', error);
-      throw error;
-    }
-
-    // Invalidate cache to refresh data
-    queryClient.invalidateQueries({ queryKey: BOOKING_ANALYTICS_KEY });
-  };
-
   return {
     /** Computed booking statistics */
     stats,
-    /** Raw calendar events for advanced usage */
-    rawEvents,
     /** Whether data is currently loading */
     loading: isLoading,
     /** Manually trigger a refetch */
     refetch,
     /** Invalidate the cache (useful after mutations) */
     invalidate: () => queryClient.invalidateQueries({ queryKey: BOOKING_ANALYTICS_KEY }),
-    /** Update event status */
-    updateEventStatus,
   };
 };
