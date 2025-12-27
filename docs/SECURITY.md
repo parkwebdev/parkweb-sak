@@ -310,25 +310,100 @@ return {
 
 ### Rate Limiting
 
-Implemented at edge function level:
+All public endpoints implement IP-based rate limiting using in-memory Maps:
 
 ```typescript
-// Check rate limit
-const { data: recentRequests } = await supabase
-  .from('rate_limits')
-  .select('count')
-  .eq('ip_address', clientIp)
-  .eq('endpoint', endpoint)
-  .gte('window_start', windowStart)
-  .single();
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_REQUESTS = 20;
 
-if (recentRequests?.count >= MAX_REQUESTS_PER_WINDOW) {
-  return new Response(JSON.stringify({ error: 'Rate limited' }), {
+function isRateLimited(clientIp: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(clientIp);
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  if (record.count >= MAX_REQUESTS) return true;
+  record.count++;
+  return false;
+}
+```
+
+**Rate Limit Response:**
+```typescript
+if (isRateLimited(clientIp)) {
+  return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
     status: 429,
     headers: corsHeaders
   });
 }
 ```
+
+#### Rate Limits by Endpoint
+
+| Endpoint | Limit | Window | Notes |
+|----------|-------|--------|-------|
+| `widget-chat` | 30/min | IP-based | Main chat endpoint |
+| `create-widget-lead` | 5/min | IP-based | Lead form submission |
+| `submit-article-feedback` | 10/min | IP-based | Help article feedback |
+| `update-message-reaction` | 20/min | IP-based | Emoji reactions |
+| `send-notification-email` | 10/min | IP-based | Email notifications |
+| `fetch-link-preview` | 10/min | IP-based | URL metadata fetching |
+| `proxy-image` | 30/min | IP-based | Image proxying |
+| `submit-rating` | 10/min | IP-based | Conversation ratings |
+| `check-calendar-availability` | 20/min | IP-based | Calendar queries |
+| `book-appointment` | 5/min | IP-based | Booking creation (stricter) |
+| `get-takeover-agent` | 20/min | IP-based | Takeover info |
+| `get-widget-config` | 20/min | IP-based | Widget configuration |
+| `serve-widget` | 30/min | IP-based | Widget loader script |
+| `mark-messages-read` | 30/min | IP-based | Read receipts |
+| `update-page-visits` | 30/min | IP-based | Analytics tracking |
+
+---
+
+### SSRF Protection
+
+Server-Side Request Forgery (SSRF) protection is implemented on all endpoints that fetch external URLs:
+
+```typescript
+const BLOCKED_URL_PATTERNS = [
+  /^https?:\/\/localhost/i,
+  /^https?:\/\/127\./,
+  /^https?:\/\/0\./,
+  /^https?:\/\/10\./,
+  /^https?:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\./,
+  /^https?:\/\/192\.168\./,
+  /^https?:\/\/169\.254\./,
+  /^https?:\/\/\[::1\]/,
+  /^https?:\/\/\[fe80:/i,
+  /^https?:\/\/\[fc00:/i,
+  /^https?:\/\/\[fd00:/i,
+  /^https?:\/\/metadata\./i,
+  /^https?:\/\/169\.254\.169\.254/,
+  /\.internal/i,
+  /\.local/i,
+];
+
+function isBlockedUrl(url: string): boolean {
+  return BLOCKED_URL_PATTERNS.some(pattern => pattern.test(url));
+}
+```
+
+**Protected Endpoints:**
+- `widget-chat` - For tool endpoint URLs
+- `test-tool-endpoint` - For testing tool URLs
+- `trigger-webhook` - For webhook delivery URLs
+- `fetch-link-preview` - For Open Graph URL fetching
+- `proxy-image` - For image URL proxying
+
+**Blocked Targets:**
+- Localhost and loopback addresses (127.x.x.x, ::1)
+- Private IP ranges (10.x, 172.16-31.x, 192.168.x)
+- Link-local addresses (169.254.x.x)
+- IPv6 reserved ranges (fe80::, fc00::, fd00::)
+- Cloud metadata endpoints (169.254.169.254)
+- Internal/local domain suffixes
 
 ---
 

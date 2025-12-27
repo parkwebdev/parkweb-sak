@@ -80,6 +80,8 @@ try {
 
 **Auth:** Public (no JWT required)
 
+**Rate Limit:** 30 requests/minute per IP
+
 **Method:** `GET`
 
 **Response:** JavaScript file with CORS headers
@@ -106,6 +108,8 @@ try {
 **Purpose:** Fetches complete widget configuration for an agent.
 
 **Auth:** Public (no JWT required)
+
+**Rate Limit:** 20 requests/minute per IP
 
 **Method:** `POST`
 
@@ -232,6 +236,8 @@ try {
 
 **Auth:** Public (used by widget)
 
+**Rate Limit:** 20 requests/minute per IP
+
 **Method:** `POST`
 
 **Request Body:**
@@ -297,6 +303,8 @@ try {
 
 **Auth:** Authenticated (admin) or Public (widget user)
 
+**Rate Limit:** 30 requests/minute per IP
+
 **Method:** `POST`
 
 **Request Body:**
@@ -328,6 +336,10 @@ try {
 
 **Auth:** Public
 
+**Rate Limit:** 10 requests/minute per IP
+
+**SSRF Protection:** Blocks localhost, private IPs, cloud metadata endpoints
+
 **Method:** `POST`
 
 **Request Body:**
@@ -348,10 +360,42 @@ try {
 ```
 
 **Details:**
+- Validates URL against SSRF blocklist before fetching
 - Fetches HTML from URL
 - Parses Open Graph and Twitter Card meta tags
 - Caches results for performance
 - Used for rich link previews in chat messages
+
+---
+
+### `proxy-image`
+
+**Purpose:** Proxies external images through the server for security and CORS handling.
+
+**Auth:** Public
+
+**Rate Limit:** 30 requests/minute per IP
+
+**SSRF Protection:** Blocks localhost, private IPs, cloud metadata endpoints
+
+**Method:** `GET`
+
+**Query Parameters:**
+```typescript
+{
+  url: string;  // The image URL to proxy
+}
+```
+
+**Response:** Binary image data with appropriate Content-Type header
+
+**Details:**
+- Validates URL against SSRF blocklist before fetching
+- Fetches image from external URL
+- Streams image data to client
+- Sets appropriate Content-Type based on response
+- Used for displaying external images in chat (link previews)
+- Prevents mixed content warnings on HTTPS pages
 
 ---
 
@@ -531,6 +575,8 @@ try {
 
 **Auth:** Public (widget) or API key
 
+**Rate Limit:** 5 requests/minute per IP (stricter limit for booking creation)
+
 **Method:** `POST`
 
 **Request Body:**
@@ -571,6 +617,8 @@ try {
 **Purpose:** Checks available time slots for booking.
 
 **Auth:** Public (widget)
+
+**Rate Limit:** 20 requests/minute per IP
 
 **Method:** `POST`
 
@@ -811,6 +859,8 @@ try {
 
 **Auth:** Public (widget)
 
+**Rate Limit:** 10 requests/minute per IP
+
 **Method:** `POST`
 
 **Request Body:**
@@ -845,6 +895,8 @@ try {
 
 **Auth:** Public (widget)
 
+**Rate Limit:** 30 requests/minute per IP
+
 **Method:** `POST`
 
 **Request Body:**
@@ -867,6 +919,7 @@ try {
 
 **Details:**
 - Validates conversation ownership
+- Validates visitorId matches conversation
 - Filters out internal widget URLs (widget.html, widget-entry)
 - Updates conversation metadata with visited pages array
 - Tracks landing page for first visit
