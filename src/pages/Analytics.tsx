@@ -356,6 +356,13 @@ function Analytics() {
     return secondAvg - firstAvg;
   }, []);
 
+  // Calculate trend values for chart headers
+  const conversationTrendValue = useMemo(() => calculatePeriodChange(conversationTrend), [conversationTrend, calculatePeriodChange]);
+  const leadTrendValue = useMemo(() => calculatePeriodChange(leadTrend), [leadTrend, calculatePeriodChange]);
+  const bookingTrendValue = useMemo(() => calculatePeriodChange(bookingTrend), [bookingTrend, calculatePeriodChange]);
+  const satisfactionTrendValue = useMemo(() => calculatePointChange(satisfactionTrend), [satisfactionTrend, calculatePointChange]);
+  const aiContainmentTrendValue = useMemo(() => calculatePointChange(containmentTrend), [containmentTrend, calculatePointChange]);
+
   const kpis = [
     {
       title: 'Total Conversations',
@@ -642,7 +649,7 @@ function Analytics() {
           {activeTab === 'conversations' && (
             <div className="space-y-6">
               <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><ConversationChart data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} /></AnimatedItem>
+                <AnimatedItem><ConversationChart data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} trendValue={conversationTrendValue} trendPeriod="this month" /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
@@ -651,7 +658,7 @@ function Analytics() {
           {activeTab === 'leads' && (
             <div className="space-y-6">
               <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><LeadConversionChart data={leadStats} /></AnimatedItem>
+                <AnimatedItem><LeadConversionChart data={leadStats} trendValue={leadTrendValue} trendPeriod="this month" /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
@@ -661,7 +668,7 @@ function Analytics() {
             <div className="space-y-6">
               <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
                 <AnimatedItem><BookingsByLocationChart data={bookingStats?.byLocation ?? []} loading={bookingLoading} /></AnimatedItem>
-                <AnimatedItem><BookingStatusChart data={bookingStats?.byStatus ?? []} showRate={bookingStats?.showRate ?? 0} loading={bookingLoading} /></AnimatedItem>
+                <AnimatedItem><BookingStatusChart data={bookingStats?.byStatus ?? []} showRate={bookingStats?.showRate ?? 0} loading={bookingLoading} trendValue={bookingTrendValue} trendPeriod="this month" /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
@@ -670,7 +677,7 @@ function Analytics() {
           {activeTab === 'satisfaction' && (
             <div className="space-y-6">
               <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><SatisfactionScoreCard averageRating={satisfactionStats?.averageRating ?? 0} totalRatings={satisfactionStats?.totalRatings ?? 0} distribution={satisfactionStats?.distribution ?? []} loading={satisfactionLoading} /></AnimatedItem>
+                <AnimatedItem><SatisfactionScoreCard averageRating={satisfactionStats?.averageRating ?? 0} totalRatings={satisfactionStats?.totalRatings ?? 0} distribution={satisfactionStats?.distribution ?? []} loading={satisfactionLoading} trendValue={satisfactionTrendValue} trendPeriod="this month" /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
@@ -679,7 +686,7 @@ function Analytics() {
           {activeTab === 'ai-performance' && (
             <div className="space-y-6">
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
-                <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} /></AnimatedItem>
+                <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} trendValue={aiContainmentTrendValue} trendPeriod="this month" /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
