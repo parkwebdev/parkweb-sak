@@ -366,16 +366,6 @@ export interface MockTrafficSource {
   color: string;
 }
 
-export interface MockTrafficSourceTimeSeries {
-  date: Date;
-  direct: number;
-  organic: number;
-  paid: number;
-  social: number;
-  email: number;
-  referral: number;
-}
-
 export interface MockLandingPage {
   url: string;
   visits: number;
@@ -400,27 +390,13 @@ const TRAFFIC_COLORS = [
 
 /** Generate traffic source data */
 export const generateTrafficSources = (): MockTrafficSource[] => [
-  { name: 'direct', value: randomBetween(500, 900), color: TRAFFIC_COLORS[0] },
-  { name: 'organic', value: randomBetween(800, 1400), color: TRAFFIC_COLORS[1] },
-  { name: 'paid', value: randomBetween(150, 350), color: TRAFFIC_COLORS[2] },
-  { name: 'social', value: randomBetween(300, 600), color: TRAFFIC_COLORS[3] },
-  { name: 'email', value: randomBetween(100, 300), color: TRAFFIC_COLORS[4] },
-  { name: 'referral', value: randomBetween(200, 450), color: TRAFFIC_COLORS[5] },
+  { name: 'Organic Search', value: randomBetween(800, 1400), color: TRAFFIC_COLORS[0] },
+  { name: 'Direct', value: randomBetween(500, 900), color: TRAFFIC_COLORS[1] },
+  { name: 'Social Media', value: randomBetween(300, 600), color: TRAFFIC_COLORS[2] },
+  { name: 'Referral', value: randomBetween(200, 450), color: TRAFFIC_COLORS[3] },
+  { name: 'Email', value: randomBetween(100, 300), color: TRAFFIC_COLORS[4] },
+  { name: 'Paid Search', value: randomBetween(150, 350), color: TRAFFIC_COLORS[5] },
 ];
-
-/** Generate traffic source time series data */
-export const generateTrafficSourceTimeSeries = (days: number = 30): MockTrafficSourceTimeSeries[] => {
-  const dates = generateDateRange(days);
-  return dates.map((dateStr) => ({
-    date: new Date(dateStr),
-    direct: randomBetween(15, 35),
-    organic: randomBetween(25, 50),
-    paid: randomBetween(5, 15),
-    social: randomBetween(10, 25),
-    email: randomBetween(3, 12),
-    referral: randomBetween(8, 20),
-  }));
-};
 
 /** Generate landing page data */
 export const generateLandingPages = (): MockLandingPage[] => [

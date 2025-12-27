@@ -8,17 +8,20 @@ import React from 'react';
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
-import type { TrafficSourceData, TrafficSourceTimeSeriesData } from '@/hooks/useTrafficAnalytics';
+
+interface TrafficSourceData {
+  name: string;
+  value: number;
+  color?: string;
+}
 
 interface TrafficSourcesSectionProps {
   trafficSources: TrafficSourceData[];
-  trafficSourceTimeSeries: TrafficSourceTimeSeriesData[];
   loading?: boolean;
 }
 
 export function TrafficSourcesSection({
   trafficSources,
-  trafficSourceTimeSeries,
   loading = false,
 }: TrafficSourcesSectionProps) {
   const totalVisitors = trafficSources.reduce((sum, s) => sum + s.value, 0);
@@ -53,12 +56,12 @@ export function TrafficSourcesSection({
 
       <div className="space-y-3">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Source Distribution Over Time
+          Source Distribution
         </h3>
         <AnimatedList staggerDelay={0.1}>
           <AnimatedItem>
             <TrafficSourceChart 
-              data={trafficSourceTimeSeries} 
+              data={trafficSources.map(s => ({ name: s.name, value: s.value, color: s.color || '' }))} 
               loading={loading} 
             />
           </AnimatedItem>
