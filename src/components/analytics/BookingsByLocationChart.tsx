@@ -96,6 +96,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
         <ChartCardHeader
           title="Bookings by Location"
           trendValue={trendValue}
+          trendLabel="Bookings"
           trendPeriod={trendPeriod}
           contextSummary={`Showing ${total.toLocaleString()} bookings across ${locationCount} location${locationCount !== 1 ? 's' : ''}`}
         />

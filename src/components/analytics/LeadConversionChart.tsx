@@ -68,6 +68,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
         <ChartCardHeader
           title="Lead Conversion Funnel"
           trendValue={trendValue}
+          trendLabel="Leads"
           trendPeriod={trendPeriod}
         />
         <div className="h-[300px] w-full">

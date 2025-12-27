@@ -120,7 +120,8 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
         <ChartCardHeader
           title="Top Landing Pages"
           trendValue={trendPercentage}
-          trendPeriod="this month"
+          trendLabel="Visits"
+          trendPeriod="last month"
           contextSummary={`Showing ${totalVisits.toLocaleString()} total visitors across top ${sortedData.length} pages`}
           rightSlot={
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>

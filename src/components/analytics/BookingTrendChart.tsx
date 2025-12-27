@@ -123,6 +123,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
         <ChartCardHeader
           title="Booking Trends"
           trendValue={trendValue}
+          trendLabel="Bookings"
           trendPeriod={trendPeriod}
           rightSlot={
             <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>

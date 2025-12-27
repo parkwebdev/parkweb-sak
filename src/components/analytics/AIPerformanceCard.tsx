@@ -136,6 +136,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
         <ChartCardHeader
           title="Conversation Breakdown"
           trendValue={trendValue}
+          trendLabel="Containment"
           trendPeriod={trendPeriod}
         />
         <div className="space-y-6">
