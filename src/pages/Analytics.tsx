@@ -451,20 +451,26 @@ function Analytics() {
               <h1 className="text-2xl font-bold">
                 {activeTab === 'dashboard' && 'Analytics Dashboard'}
                 {activeTab === 'traffic' && 'Traffic Analytics'}
-                {activeTab === 'reports' && 'Generate Reporting'}
-                {activeTab === 'schedule' && 'Schedule Reports'}
+                {activeTab === 'reports' && 'Reports'}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {activeTab === 'dashboard' && 'Track performance and insights across your organization'}
                 {activeTab === 'traffic' && 'Monitor visitor sources and page engagement'}
-                {activeTab === 'reports' && 'Build and export custom analytics reports'}
-                {activeTab === 'schedule' && 'Automate recurring report delivery'}
+                {activeTab === 'reports' && 'Generate, export, and schedule analytics reports'}
               </p>
             </div>
-            {activeTab === 'schedule' && (
-              <Button size="sm" onClick={() => setScheduleDialogOpen(true)}>
-                Schedule Report
-              </Button>
+            {activeTab === 'reports' && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleExportCSV}>
+                  Export CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                  Export PDF
+                </Button>
+                <Button size="sm" onClick={() => setScheduleDialogOpen(true)}>
+                  Schedule Report
+                </Button>
+              </div>
             )}
           </div>
 
@@ -692,19 +698,25 @@ function Analytics() {
             </div>
           )}
 
-          {/* Reports Section */}
+          {/* Reports Section - 2 Column Layout */}
           {activeTab === 'reports' && (
-            <div className="space-y-6">
-              <ReportBuilder config={reportConfig} onConfigChange={setReportConfig} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Report Configuration
+                </h3>
+                <ReportBuilder config={reportConfig} onConfigChange={setReportConfig} />
+              </div>
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Scheduled Reports
+                </h3>
+                <ScheduledReportsManager 
+                  isCreateOpen={scheduleDialogOpen}
+                  onCreateOpenChange={setScheduleDialogOpen}
+                />
+              </div>
             </div>
-          )}
-
-          {/* Schedule Section */}
-          {activeTab === 'schedule' && (
-            <ScheduledReportsManager 
-              isCreateOpen={scheduleDialogOpen}
-              onCreateOpenChange={setScheduleDialogOpen}
-            />
           )}
         </div>
       </div>
