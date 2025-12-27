@@ -120,7 +120,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
           <div className="flex items-center gap-1.5">
             <span className="text-base font-semibold text-foreground">
               {hasTrendData 
-                ? `Traffic ${isPositiveTrend ? 'up' : 'down'} ${Math.abs(trendPercentage).toFixed(1)}% vs. last period`
+                ? `Traffic ${isPositiveTrend ? 'up' : 'down'} ${Math.abs(trendPercentage).toFixed(1)}% from last period`
                 : `${total.toLocaleString()} total conversations`
               }
             </span>
@@ -134,7 +134,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">
             {hasTrendData 
-              ? `${total.toLocaleString()} conversations vs. ${previousTotal.toLocaleString()} last period`
+              ? `${total.toLocaleString()} conversations from ${previousTotal.toLocaleString()} last period`
               : `Across ${sortedData.length} traffic sources`
             }
           </p>

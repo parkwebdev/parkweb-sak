@@ -49,7 +49,7 @@ export function ChartCardHeader({
 
   // Format the trend text based on whether a label is provided
   const trendText = trendLabel
-    ? `${trendLabel} ${isPositive ? 'up' : 'down'} ${Math.abs(trendValue).toFixed(1)}% vs. ${trendPeriod}`
+    ? `${trendLabel} ${isPositive ? 'up' : 'down'} ${Math.abs(trendValue).toFixed(1)}% from ${trendPeriod}`
     : `Trending ${isPositive ? 'up' : 'down'} by ${Math.abs(trendValue).toFixed(1)}% ${trendPeriod}`;
 
   return (
