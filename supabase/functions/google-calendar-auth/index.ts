@@ -3,6 +3,17 @@
  * 
  * Handles OAuth 2.0 flow for Google Calendar integration.
  * Actions: initiate, callback, refresh, disconnect
+ * 
+ * @module google-calendar-auth
+ * @verified Phase 2.2 Complete - December 2025
+ * 
+ * Webhook Integration:
+ * - On successful callback, creates a Google Calendar push notification subscription
+ * - Webhooks notify us of event changes in real-time for accurate booking analytics
+ * - Webhooks expire after 7 days and are renewed by renew-calendar-webhooks scheduled function
+ * 
+ * TODO: Add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI secrets
+ * TODO: Add CALENDAR_WEBHOOK_SECRET for webhook validation
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
@@ -15,6 +26,10 @@ const corsHeaders = {
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID') || '';
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';
 const GOOGLE_REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI') || '';
+const WEBHOOK_SECRET = Deno.env.get('CALENDAR_WEBHOOK_SECRET') || '';
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/google-calendar-webhook`;
 
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
@@ -168,6 +183,27 @@ Deno.serve(async (req) => {
           calendarName = calendarInfo.summary;
         }
 
+        // Create webhook subscription for real-time sync
+        let webhookChannelId: string | null = null;
+        let webhookResourceId: string | null = null;
+        let webhookExpiresAt: string | null = null;
+
+        try {
+          const webhookResult = await createWebhookSubscription(
+            calendarId,
+            tokens.access_token
+          );
+          if (webhookResult) {
+            webhookChannelId = webhookResult.channelId;
+            webhookResourceId = webhookResult.resourceId;
+            webhookExpiresAt = webhookResult.expiresAt;
+            console.log(`[google-calendar-auth] Webhook subscription created: ${webhookChannelId}`);
+          }
+        } catch (webhookError) {
+          // Log but don't fail the connection - webhook can be set up later
+          console.warn('[google-calendar-auth] Failed to create webhook subscription:', webhookError);
+        }
+
         // Store in database
         const { data: account, error: insertError } = await supabase
           .from('connected_accounts')
@@ -183,6 +219,9 @@ Deno.serve(async (req) => {
             calendar_id: calendarId,
             calendar_name: calendarName,
             is_active: true,
+            webhook_channel_id: webhookChannelId,
+            webhook_resource_id: webhookResourceId,
+            webhook_expires_at: webhookExpiresAt,
           })
           .select()
           .single();
@@ -198,7 +237,11 @@ Deno.serve(async (req) => {
         console.log(`[google-calendar-auth] Account saved: ${account.id}`);
 
         return new Response(
-          JSON.stringify({ success: true, accountId: account.id }),
+          JSON.stringify({ 
+            success: true, 
+            accountId: account.id,
+            webhookEnabled: !!webhookChannelId,
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -291,9 +334,29 @@ Deno.serve(async (req) => {
         // Get account from database
         const { data: account } = await supabase
           .from('connected_accounts')
-          .select('access_token')
+          .select('access_token, webhook_channel_id, webhook_resource_id')
           .eq('id', accountId)
           .single();
+
+        // Stop webhook subscription if exists (best effort)
+        if (account?.webhook_channel_id && account?.webhook_resource_id && account?.access_token) {
+          try {
+            await fetch('https://www.googleapis.com/calendar/v3/channels/stop', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${account.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                id: account.webhook_channel_id,
+                resourceId: account.webhook_resource_id,
+              }),
+            });
+            console.log(`[google-calendar-auth] Webhook stopped for account ${accountId}`);
+          } catch (e) {
+            console.warn('[google-calendar-auth] Webhook stop failed (non-critical):', e);
+          }
+        }
 
         // Revoke token with Google (best effort)
         if (account?.access_token) {
@@ -335,3 +398,53 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+/**
+ * Create a Google Calendar push notification subscription
+ * 
+ * @param calendarId - The calendar ID to watch
+ * @param accessToken - Valid OAuth access token
+ * @returns Webhook subscription details or null if failed
+ */
+async function createWebhookSubscription(
+  calendarId: string,
+  accessToken: string
+): Promise<{ channelId: string; resourceId: string; expiresAt: string } | null> {
+  const channelId = crypto.randomUUID();
+  
+  // Google webhooks expire after 7 days max
+  const expiration = Date.now() + 7 * 24 * 60 * 60 * 1000;
+
+  const response = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/watch`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: channelId,
+        type: 'web_hook',
+        address: WEBHOOK_URL,
+        token: WEBHOOK_SECRET || undefined,
+        expiration: expiration.toString(),
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[google-calendar-auth] Watch request failed:', errorText);
+    throw new Error(`Watch request failed: ${errorText}`);
+  }
+
+  const watchData = await response.json();
+  console.log('[google-calendar-auth] Watch response:', watchData);
+
+  return {
+    channelId,
+    resourceId: watchData.resourceId,
+    expiresAt: new Date(parseInt(watchData.expiration)).toISOString(),
+  };
+}

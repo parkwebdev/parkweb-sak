@@ -210,7 +210,7 @@ Business locations for multi-location deployments.
 ### Calendar System
 
 #### `connected_accounts`
-OAuth connected calendar accounts.
+OAuth connected calendar accounts with webhook subscription tracking.
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
@@ -228,9 +228,20 @@ OAuth connected calendar accounts.
 | `is_active` | boolean | Yes | `true` | Connection active |
 | `last_synced_at` | timestamptz | Yes | - | Last sync timestamp |
 | `sync_error` | text | Yes | - | Last sync error |
+| `webhook_channel_id` | text | Yes | - | Google push notification channel ID or Outlook subscription ID |
+| `webhook_resource_id` | text | Yes | - | Google resource ID for webhook |
+| `webhook_expires_at` | timestamptz | Yes | - | When webhook subscription expires (max 7 days for Google) |
 | `metadata` | jsonb | Yes | `'{}'` | Additional data |
 | `created_at` | timestamptz | No | `now()` | Creation timestamp |
 | `updated_at` | timestamptz | No | `now()` | Last update timestamp |
+
+**Webhook Columns (Added December 2025):**
+- `webhook_channel_id`: Unique identifier for our webhook subscription with the calendar provider
+- `webhook_resource_id`: Google's resource identifier returned when creating the watch subscription
+- `webhook_expires_at`: Expiration timestamp - renewal is handled by `renew-calendar-webhooks` scheduled function
+
+**Indexes:**
+- `idx_connected_accounts_webhook_expires`: Partial index on `webhook_expires_at` for efficient renewal queries
 
 **RLS Policies:**
 - Users can manage accounts for accessible agents

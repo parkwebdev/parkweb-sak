@@ -654,17 +654,115 @@ try {
 
 ### `google-calendar-auth`
 
-**Purpose:** Handles Google Calendar OAuth flow.
+**Purpose:** Handles Google Calendar OAuth flow with webhook subscription.
 
 **Auth:** Authenticated
 
-**Method:** `GET` (initiate) / `POST` (callback)
+**Method:** `POST`
+
+**Actions:**
+- `initiate`: Generates OAuth URL for user authorization
+- `callback`: Exchanges code for tokens, creates webhook subscription
+- `refresh`: Refreshes expired access token
+- `disconnect`: Revokes tokens and stops webhook subscription
+
+**Request Body (callback):**
+```typescript
+{
+  action: 'callback';
+  code: string;    // OAuth authorization code
+  state: string;   // Base64-encoded state with agentId, locationId, userId
+}
+```
+
+**Response (callback):**
+```typescript
+{
+  success: true;
+  accountId: string;
+  webhookEnabled: boolean;  // Whether push notifications were set up
+}
+```
+
+**Webhook Integration (December 2025):**
+- On successful OAuth callback, creates a Google Calendar push notification subscription
+- Webhooks notify `google-calendar-webhook` of event changes in real-time
+- Enables accurate booking analytics (show rate, cancellations, reschedules)
+- Webhooks expire after 7 days and are renewed by `renew-calendar-webhooks`
+
+**Required Secrets:**
+- `GOOGLE_CLIENT_ID` - OAuth client ID
+- `GOOGLE_CLIENT_SECRET` - OAuth client secret
+- `GOOGLE_REDIRECT_URI` - OAuth callback URL
+- `CALENDAR_WEBHOOK_SECRET` - Token for webhook validation (optional but recommended)
+
+---
+
+### `google-calendar-webhook`
+
+**Purpose:** Receives push notifications from Google Calendar when events change.
+
+**Auth:** Public (validated via channel token)
+
+**Method:** `POST` (called by Google)
+
+**Google Notification Headers:**
+```
+X-Goog-Channel-ID: our channel UUID
+X-Goog-Resource-ID: Google's resource identifier
+X-Goog-Resource-State: 'sync' | 'exists' | 'not_exists'
+X-Goog-Message-Number: incremental number
+X-Goog-Channel-Token: our webhook secret
+```
 
 **Details:**
-- Initiates OAuth2 flow with Google Calendar scopes
-- Handles callback with authorization code
-- Stores access and refresh tokens in `connected_accounts`
-- Fetches primary calendar ID
+- Validates webhook token if `CALENDAR_WEBHOOK_SECRET` is configured
+- Handles `sync` notifications (subscription confirmation)
+- On `exists`/`not_exists` notifications, syncs recent calendar changes
+- Updates `calendar_events` status based on external changes:
+  - Google event cancelled → status = `cancelled`
+  - Past events still confirmed → status = `completed`
+  - Time changes → updates `start_time`/`end_time`
+- Updates `last_synced_at` on connected account
+- Always returns 200 to prevent Google retries on errors
+
+**Required Secrets:**
+- `GOOGLE_CLIENT_ID` - For token refresh
+- `GOOGLE_CLIENT_SECRET` - For token refresh
+- `CALENDAR_WEBHOOK_SECRET` - For request validation
+
+---
+
+### `renew-calendar-webhooks`
+
+**Purpose:** Scheduled function to renew expiring webhook subscriptions.
+
+**Auth:** Service Role (scheduled function)
+
+**Schedule:** Daily at 2:00 AM UTC
+
+**Details:**
+- Finds connected accounts with webhooks expiring within 2 days
+- Stops existing webhook subscription
+- Refreshes OAuth token if expired
+- Creates new webhook subscription with 7-day expiration
+- Updates account with new webhook details
+
+**Response:**
+```typescript
+{
+  success: true;
+  total: number;      // Accounts processed
+  renewed: number;    // Successfully renewed
+  failed: number;     // Failed to renew
+  errors: string[];   // Error messages
+}
+```
+
+**Required Secrets:**
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `CALENDAR_WEBHOOK_SECRET`
 
 ---
 
