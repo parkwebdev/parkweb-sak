@@ -11,12 +11,14 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   SortingState,
+  RowSelectionState,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { createExportHistoryColumns } from '@/components/data-table/columns/export-history-columns';
 import { useReportExports, type ReportExport } from '@/hooks/useReportExports';
 import { downloadFile } from '@/lib/file-download';
 import { toast } from '@/lib/toast';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,8 +36,10 @@ export function ExportHistoryTable() {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [isDownloading, setIsDownloading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ReportExport | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   // Handle download
   const handleDownload = useCallback(async (exportItem: ReportExport) => {
@@ -63,6 +67,19 @@ export function ExportHistoryTable() {
     }
   }, [deleteTarget, deleteExport]);
 
+  // Handle bulk delete
+  const handleBulkDelete = useCallback(() => {
+    const selectedIds = Object.keys(rowSelection);
+    selectedIds.forEach((index) => {
+      const exportItem = exports[parseInt(index)];
+      if (exportItem) {
+        deleteExport(exportItem.id);
+      }
+    });
+    setRowSelection({});
+    setIsBulkDeleteOpen(false);
+  }, [rowSelection, exports, deleteExport]);
+
   // Memoize columns
   const columns = useMemo(() => createExportHistoryColumns({
     onDownload: handleDownload,
@@ -76,11 +93,17 @@ export function ExportHistoryTable() {
     columns,
     state: {
       sorting,
+      rowSelection,
     },
     onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    enableRowSelection: true,
   });
+
+  // Selected count
+  const selectedCount = Object.keys(rowSelection).length;
 
   // Empty state message
   const emptyMessage = exports.length === 0 && !loading ? (
@@ -97,6 +120,25 @@ export function ExportHistoryTable() {
 
   return (
     <>
+      {/* Bulk actions bar */}
+      {selectedCount > 0 && (
+        <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md mb-2">
+          <span className="text-sm text-muted-foreground">
+            {selectedCount} selected
+          </span>
+          <Button size="sm" variant="ghost" onClick={() => setRowSelection({})}>
+            Clear
+          </Button>
+          <Button 
+            size="sm" 
+            variant="destructive" 
+            onClick={() => setIsBulkDeleteOpen(true)}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
       <DataTable
         table={table}
         columns={columns}
@@ -120,6 +162,27 @@ export function ExportHistoryTable() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete confirmation dialog */}
+      <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedCount} Exports</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedCount} export{selectedCount > 1 ? 's' : ''}? This will permanently remove the files and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete {selectedCount} Export{selectedCount > 1 ? 's' : ''}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

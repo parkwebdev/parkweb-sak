@@ -2,13 +2,14 @@
  * Export History Table Columns
  * 
  * Column definitions for the report exports data table.
- * Follows the same patterns as other column files for consistency.
+ * Follows the same patterns as locations-columns.tsx for consistency.
  */
 
 import { ColumnDef } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { IconButton } from '@/components/ui/icon-button';
 import { Download01, Trash01, File06, FileCode02 } from '@untitledui/icons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -66,13 +67,39 @@ export const createExportHistoryColumns = ({
   onDownload,
   onDelete,
 }: ExportHistoryColumnsProps): ColumnDef<ReportExport>[] => [
+  // Selection column
+  {
+    id: 'select',
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <div onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label={`Select ${row.original.name}`}
+        />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  
   // Report name with format icon
   {
     id: 'name',
     accessorKey: 'name',
-    size: 280,
+    size: 240,
     minSize: 180,
-    maxSize: 400,
+    maxSize: 320,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Report" />
     ),
@@ -85,7 +112,7 @@ export const createExportHistoryColumns = ({
           <div className={`p-1.5 rounded-md shrink-0 ${exportItem.format === 'pdf' ? 'bg-destructive/10' : 'bg-primary/10'}`}>
             <Icon className={`h-4 w-4 ${exportItem.format === 'pdf' ? 'text-destructive' : 'text-primary'}`} />
           </div>
-          <span className="font-medium truncate" title={exportItem.name}>
+          <span className="font-medium truncate block max-w-[200px]" title={exportItem.name}>
             {exportItem.name}
           </span>
         </div>
@@ -96,14 +123,14 @@ export const createExportHistoryColumns = ({
   // Date range
   {
     id: 'dateRange',
-    size: 180,
-    minSize: 140,
-    maxSize: 220,
+    size: 160,
+    minSize: 120,
+    maxSize: 200,
     header: () => <span>Date Range</span>,
     cell: ({ row }) => {
       const exportItem = row.original;
       return (
-        <span className="text-sm text-muted-foreground whitespace-nowrap">
+        <span className="text-muted-foreground whitespace-nowrap">
           {formatDateRange(exportItem.date_range_start, exportItem.date_range_end)}
         </span>
       );
@@ -124,7 +151,7 @@ export const createExportHistoryColumns = ({
       return (
         <Badge 
           variant={format === 'pdf' ? 'destructive' : 'default'}
-          className="text-xs uppercase"
+          className="uppercase"
         >
           {format}
         </Badge>
@@ -143,7 +170,7 @@ export const createExportHistoryColumns = ({
     header: () => <span>Size</span>,
     cell: ({ row }) => {
       return (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground">
           {formatFileSize(row.original.file_size)}
         </span>
       );
@@ -155,9 +182,9 @@ export const createExportHistoryColumns = ({
   {
     id: 'createdAt',
     accessorKey: 'created_at',
-    size: 120,
-    minSize: 100,
-    maxSize: 160,
+    size: 110,
+    minSize: 90,
+    maxSize: 140,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Created" />
     ),
@@ -166,7 +193,7 @@ export const createExportHistoryColumns = ({
       return (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="text-sm text-muted-foreground whitespace-nowrap cursor-default">
+            <span className="text-muted-foreground whitespace-nowrap cursor-default">
               {formatDistanceToNow(new Date(date), { addSuffix: true })}
             </span>
           </TooltipTrigger>
@@ -181,9 +208,9 @@ export const createExportHistoryColumns = ({
   // Actions column
   {
     id: 'actions',
-    size: 90,
-    minSize: 70,
-    maxSize: 100,
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: () => <span>Actions</span>,
     cell: ({ row }) => {
       const exportItem = row.original;
@@ -192,34 +219,30 @@ export const createExportHistoryColumns = ({
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
+              <IconButton
                 variant="ghost"
                 size="sm"
+                label="Download report"
                 onClick={() => onDownload(exportItem)}
-                className="h-8 w-8 p-0"
               >
-                <Download01 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-              </Button>
+                <Download01 className="h-4 w-4 text-muted-foreground" />
+              </IconButton>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Download</p>
-            </TooltipContent>
+            <TooltipContent>Download</TooltipContent>
           </Tooltip>
           
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
+              <IconButton
                 variant="ghost"
                 size="sm"
+                label="Delete report"
                 onClick={() => onDelete(exportItem)}
-                className="h-8 w-8 p-0"
               >
                 <Trash01 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-              </Button>
+              </IconButton>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Delete</p>
-            </TooltipContent>
+            <TooltipContent>Delete</TooltipContent>
           </Tooltip>
         </div>
       );
