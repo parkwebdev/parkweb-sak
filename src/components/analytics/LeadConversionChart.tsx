@@ -169,12 +169,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
           {stageConfig.map((stage) => (
             <div
               key={stage.key}
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
-              style={{ 
-                backgroundColor: `${stage.color}15`,
-                color: stage.color,
-                border: `1px solid ${stage.color}30`,
-              }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground border border-border"
             >
               <span
                 className="h-2 w-2 rounded-full"
