@@ -692,8 +692,8 @@ function Analytics() {
           {activeTab === 'pages' && (
             <div className="space-y-6">
               <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><TopPagesChart data={landingPages.map(p => ({ url: p.url, visits: p.visits, avgDuration: 0, conversions: p.conversions }))} loading={trafficLoading} /></AnimatedItem>
-                <AnimatedItem><LandingPagesTable data={landingPages.map(p => ({ url: p.url, visits: p.visits, avgDuration: 0, conversions: p.conversions }))} loading={trafficLoading} /></AnimatedItem>
+                <AnimatedItem><TopPagesChart data={landingPages} loading={trafficLoading} /></AnimatedItem>
+                <AnimatedItem><LandingPagesTable data={landingPages} loading={trafficLoading} /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
