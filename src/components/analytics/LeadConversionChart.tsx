@@ -107,6 +107,14 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({ dat
               <Tooltip
                 content={<ChartTooltipContent />}
                 formatter={(value) => Number(value).toLocaleString()}
+                labelFormatter={(label) => {
+                  try {
+                    const date = parseISO(String(label));
+                    return format(date, 'MMM d, yyyy'); // e.g., "Jan 15, 2025"
+                  } catch {
+                    return String(label);
+                  }
+                }}
                 cursor={{
                   stroke: 'hsl(var(--primary))',
                   strokeWidth: 2,
