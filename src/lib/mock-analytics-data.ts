@@ -303,6 +303,7 @@ export const generateRecentFeedback = (): FeedbackItem[] => {
     feedback: i < 5 ? feedbackTexts[i] : null,
     createdAt: subDays(new Date(), randomBetween(0, 14)).toISOString(),
     triggerType: (i % 2 === 0 ? 'conversation_end' : 'manual') as TriggerType,
+    conversationId: `conv-${i + 1}`,
   }));
 };
 
