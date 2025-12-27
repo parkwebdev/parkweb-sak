@@ -20,6 +20,7 @@ import {
   generateSatisfactionStats,
   generateAIPerformanceStats,
   generateTrafficSources,
+  generateTrafficSourceTimeSeries,
   generateLandingPages,
   generatePageVisits,
   generateUsageMetrics,
@@ -28,6 +29,7 @@ import {
   type MockConversationStat,
   type MockLeadStat,
   type MockTrafficSource,
+  type MockTrafficSourceTimeSeries,
   type MockLandingPage,
   type MockPageVisit,
   type MockUsageMetric,
@@ -62,6 +64,7 @@ export interface MockAnalyticsData {
   
   // Traffic data
   trafficSources: MockTrafficSource[];
+  trafficSourceTimeSeries: MockTrafficSourceTimeSeries[];
   landingPages: MockLandingPage[];
   pageVisits: MockPageVisit[];
   
@@ -135,6 +138,7 @@ export const useMockAnalyticsData = (): UseMockAnalyticsDataReturn => {
       
       // Traffic
       trafficSources: generateTrafficSources(),
+      trafficSourceTimeSeries: generateTrafficSourceTimeSeries(),
       landingPages: generateLandingPages(),
       pageVisits: generatePageVisits(),
       

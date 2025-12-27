@@ -212,6 +212,7 @@ function Analytics() {
   // Fetch traffic analytics
   const {
     trafficSources: realTrafficSources,
+    trafficSourceTimeSeries: realTrafficSourceTimeSeries,
     landingPages: realLandingPages,
     pageVisits: realPageVisits,
     locationData: realLocationData,
@@ -237,6 +238,7 @@ function Analytics() {
   const satisfactionStats = mockMode && mockData ? mockData.satisfactionStats : realSatisfactionStats;
   const aiPerformanceStats = mockMode && mockData ? mockData.aiPerformanceStats : realAIPerformanceStats;
   const trafficSources = mockMode && mockData ? mockData.trafficSources : realTrafficSources;
+  const trafficSourceTimeSeries = mockMode && mockData ? mockData.trafficSourceTimeSeries : realTrafficSourceTimeSeries;
   const landingPages = mockMode && mockData ? mockData.landingPages : realLandingPages;
   const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
   const locationData = mockMode && mockData ? mockData.locationData : realLocationData;
@@ -683,7 +685,7 @@ function Analytics() {
           {activeTab === 'sources' && (
             <div className="space-y-6">
               <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><TrafficSourceChart data={trafficSources} loading={trafficLoading} /></AnimatedItem>
+                <AnimatedItem><TrafficSourceChart data={trafficSourceTimeSeries} loading={trafficLoading} /></AnimatedItem>
               </AnimatedList>
             </div>
           )}

@@ -30,6 +30,17 @@ export interface TrafficSourceData {
   color: string;
 }
 
+/** Time-series data for traffic sources stacked area chart */
+export interface TrafficSourceTimeSeriesData {
+  date: Date;
+  direct: number;
+  organic: number;
+  paid: number;
+  social: number;
+  email: number;
+  referral: number;
+}
+
 /** Landing page performance data */
 export interface LandingPageData {
   url: string;
@@ -57,6 +68,7 @@ export interface LocationData {
 /** Complete traffic analytics stats */
 interface TrafficStats {
   trafficSources: TrafficSourceData[];
+  trafficSourceTimeSeries: TrafficSourceTimeSeriesData[];
   landingPages: LandingPageData[];
   pageVisits: PageVisitData[];
   locationData: LocationData[];
@@ -65,6 +77,7 @@ interface TrafficStats {
 /** Default empty stats */
 const DEFAULT_STATS: TrafficStats = {
   trafficSources: [],
+  trafficSourceTimeSeries: [],
   landingPages: [],
   pageVisits: [],
   locationData: [],
@@ -78,7 +91,7 @@ const DEFAULT_STATS: TrafficStats = {
  * Process raw conversation data into traffic analytics.
  */
 function processConversations(
-  conversations: Array<{ id: string; metadata: unknown }> | null
+  conversations: Array<{ id: string; created_at: string; metadata: unknown }> | null
 ): TrafficStats {
   if (!conversations || conversations.length === 0) {
     return DEFAULT_STATS;
@@ -93,6 +106,9 @@ function processConversations(
     email: 0,
     referral: 0,
   };
+
+  // Time-series aggregation by date
+  const timeSeriesMap: Record<string, Record<string, number>> = {};
 
   // Aggregate landing pages
   const landingPageMap: Record<string, { 
@@ -114,16 +130,32 @@ function processConversations(
     const metadata = conv.metadata as ConversationMetadata | null;
     if (!metadata) return;
 
+    // Get date key for time series (YYYY-MM-DD)
+    const dateKey = conv.created_at.split('T')[0];
+
+    // Initialize time series entry for this date
+    if (!timeSeriesMap[dateKey]) {
+      timeSeriesMap[dateKey] = {
+        direct: 0,
+        organic: 0,
+        paid: 0,
+        social: 0,
+        email: 0,
+        referral: 0,
+      };
+    }
+
     // Traffic sources
     const journey = metadata.referrer_journey;
+    let entryType = 'direct';
     if (journey?.entry_type) {
-      const entryType = journey.entry_type.toLowerCase();
-      if (Object.prototype.hasOwnProperty.call(sourceCounts, entryType)) {
-        sourceCounts[entryType]++;
+      entryType = journey.entry_type.toLowerCase();
+      if (!Object.prototype.hasOwnProperty.call(sourceCounts, entryType)) {
+        entryType = 'direct';
       }
-    } else {
-      sourceCounts.direct++;
     }
+    sourceCounts[entryType]++;
+    timeSeriesMap[dateKey][entryType]++;
 
     // Landing pages
     const landingPage = journey?.landing_page;
@@ -176,6 +208,19 @@ function processConversations(
     .filter(([, value]) => value > 0)
     .map(([name, value]) => ({ name, value, color: '' }));
 
+  // Convert time series map to sorted array
+  const trafficSourceTimeSeries: TrafficSourceTimeSeriesData[] = Object.entries(timeSeriesMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([dateStr, counts]) => ({
+      date: new Date(dateStr),
+      direct: counts.direct,
+      organic: counts.organic,
+      paid: counts.paid,
+      social: counts.social,
+      email: counts.email,
+      referral: counts.referral,
+    }));
+
   const landingPages: LandingPageData[] = Object.entries(landingPageMap)
     .map(([url, data]) => ({
       url,
@@ -211,6 +256,7 @@ function processConversations(
 
   return {
     trafficSources,
+    trafficSourceTimeSeries,
     landingPages,
     pageVisits,
     locationData,
@@ -257,10 +303,11 @@ export const useTrafficAnalytics = (
 
       const { data, error } = await supabase
         .from('conversations')
-        .select('id, metadata')
+        .select('id, created_at, metadata')
         .eq('user_id', user.id)
         .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString());
+        .lte('created_at', endDate.toISOString())
+        .order('created_at', { ascending: true });
 
       if (error) {
         logger.error('Error fetching conversations for traffic analytics:', error);
