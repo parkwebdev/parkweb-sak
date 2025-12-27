@@ -193,6 +193,10 @@ const config: Config = {
           "0%": { backgroundPosition: "200% 0" },
           "100%": { backgroundPosition: "-200% 0" },
         },
+        "growWidth": {
+          "0%": { width: "0%", opacity: "0" },
+          "100%": { opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -205,6 +209,7 @@ const config: Config = {
         "slide-in-left": "slide-in-left 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.2s ease-out",
         "progress-shimmer": "progress-shimmer 2s ease-in-out infinite",
+        "grow-width": "growWidth 0.6s ease-out forwards",
       },
     },
   },

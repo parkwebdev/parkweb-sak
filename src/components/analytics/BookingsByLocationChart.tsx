@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { ChartCardHeader } from './ChartCardHeader';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { BookingsByLocationChartProps } from '@/types/analytics';
 
 /**
@@ -30,6 +31,8 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   trendValue = 0,
   trendPeriod = 'this month',
 }: BookingsByLocationChartProps) {
+  const prefersReducedMotion = useReducedMotion();
+  
   // Transform data for chart
   const chartData = data.map(item => ({
     name: item.locationName,
@@ -147,6 +150,9 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
                 dataKey="bookings" 
                 radius={[0, 4, 4, 0]}
                 maxBarSize={32}
+                isAnimationActive={!prefersReducedMotion}
+                animationDuration={600}
+                animationEasing="ease-out"
               >
                 {chartData.map((_, index) => (
                   <Cell 
