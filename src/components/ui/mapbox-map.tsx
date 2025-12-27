@@ -16,10 +16,10 @@ import { useTheme } from "@/components/ThemeProvider";
 import { RefreshCcw01 } from "@untitledui/icons";
 import { logger } from "@/utils/logger";
 
-// Mapbox vector styles
+// Mapbox vector styles - Navigation Day/Night for clean professional look
 const MAPBOX_STYLES = {
-  light: "mapbox://styles/mapbox/light-v11",
-  dark: "mapbox://styles/mapbox/dark-v11",
+  light: "mapbox://styles/mapbox/navigation-day-v1",
+  dark: "mapbox://styles/mapbox/navigation-night-v1",
 };
 
 export interface MapMarker {
