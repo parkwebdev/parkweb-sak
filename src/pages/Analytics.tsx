@@ -556,8 +556,7 @@ function Analytics() {
     'conversations': { title: 'Conversations', description: 'Analyze chat sessions and engagement patterns' },
     'leads': { title: 'Leads', description: 'Track lead generation and conversion metrics' },
     'bookings': { title: 'Bookings', description: 'Monitor appointment scheduling performance' },
-    'satisfaction': { title: 'Satisfaction', description: 'Review customer feedback and ratings' },
-    'ai-performance': { title: 'Ari Performance', description: 'Measure Ari containment and resolution rates' },
+    'ai-performance': { title: 'Ari Performance', description: 'Measure Ari containment, resolution, and satisfaction' },
     'sources': { title: 'Traffic Sources', description: 'Understand where your visitors come from' },
     'pages': { title: 'Top Pages', description: 'See which pages drive the most engagement' },
     'geography': { title: 'Geography', description: 'View visitor locations around the world' },
@@ -566,7 +565,7 @@ function Analytics() {
   };
 
   // Sections that show the toolbar
-  const showToolbar = ['dashboard', 'conversations', 'leads', 'bookings', 'satisfaction', 'ai-performance', 'sources', 'pages', 'geography'].includes(activeTab);
+  const showToolbar = ['dashboard', 'conversations', 'leads', 'bookings', 'ai-performance', 'sources', 'pages', 'geography'].includes(activeTab);
   // Sections that show build report button
   const showBuildReport = ['export-history', 'scheduled'].includes(activeTab);
 
@@ -692,20 +691,12 @@ function Analytics() {
             </div>
           )}
 
-          {/* Satisfaction Section */}
-          {activeTab === 'satisfaction' && (
-            <div className="space-y-6">
-              <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><SatisfactionScoreCard averageRating={satisfactionStats?.averageRating ?? 0} totalRatings={satisfactionStats?.totalRatings ?? 0} distribution={satisfactionStats?.distribution ?? []} loading={satisfactionLoading} trendValue={satisfactionTrendValue} trendPeriod="this month" /></AnimatedItem>
-              </AnimatedList>
-            </div>
-          )}
-
           {/* AI Performance Section */}
           {activeTab === 'ai-performance' && (
             <div className="space-y-6">
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} trendValue={aiContainmentTrendValue} trendPeriod="this month" /></AnimatedItem>
+                <AnimatedItem><SatisfactionScoreCard averageRating={satisfactionStats?.averageRating ?? 0} totalRatings={satisfactionStats?.totalRatings ?? 0} distribution={satisfactionStats?.distribution ?? []} loading={satisfactionLoading} trendValue={satisfactionTrendValue} trendPeriod="this month" /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
