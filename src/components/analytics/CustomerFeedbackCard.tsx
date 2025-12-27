@@ -8,8 +8,7 @@ import {
 } from "@tanstack/react-table";
 import { useState } from "react";
 import { MessageTextSquare01 } from "@untitledui/icons";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ChartCardHeader } from "@/components/analytics/ChartCardHeader";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table/DataTable";
 import { DataTablePagination } from "@/components/data-table/DataTablePagination";
 import { customerFeedbackColumns, CustomerFeedbackData } from "@/components/data-table/columns/customer-feedback-columns";
@@ -55,13 +54,11 @@ export const CustomerFeedbackCard = ({ data, loading }: CustomerFeedbackCardProp
 
   return (
     <Card>
-      <CardHeader className="pb-0">
-        <ChartCardHeader
-          title="Customer Feedback"
-          contextSummary="Recent feedback from customer ratings"
-        />
+      <CardHeader className="pb-4">
+        <CardTitle className="text-base font-semibold">Customer Feedback</CardTitle>
+        <CardDescription>Recent feedback from customer ratings</CardDescription>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent>
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
