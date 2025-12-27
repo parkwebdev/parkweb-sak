@@ -41,7 +41,6 @@ export const ConversationChart = React.memo(function ConversationChart({
           title="Conversation Volume"
           trendValue={trendValue}
           trendPeriod={trendPeriod}
-          contextSummary={`Showing ${totalConversations.toLocaleString()} conversations over ${data.length} days`}
         />
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -144,14 +143,31 @@ export const ConversationChart = React.memo(function ConversationChart({
                 }}
               />
 
-              <Legend
-                align="center"
-                verticalAlign="bottom"
-                layout="horizontal"
-                content={<ChartLegendContent className="pt-4 justify-center" />}
-              />
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* Legend section with context summary above chips */}
+        <div className="mt-4 flex flex-col gap-2">
+          <p className="text-xs text-muted-foreground">
+            Showing {totalConversations.toLocaleString()} conversations over {data.length} days
+          </p>
+          <div className="flex flex-wrap gap-2 justify-start">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: 'hsl(220, 90%, 56%)' }}
+              />
+              <span className="text-xs text-muted-foreground">Active</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: 'hsl(210, 100%, 80%)' }}
+              />
+              <span className="text-xs text-muted-foreground">Closed</span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
