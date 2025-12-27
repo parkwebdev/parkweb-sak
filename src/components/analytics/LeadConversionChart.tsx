@@ -7,12 +7,13 @@
  */
 
 import React, { useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { format, parseISO } from 'date-fns';
+import { ChartCardHeader } from './ChartCardHeader';
 
 interface LeadStageStats {
   date: string;
@@ -22,9 +23,15 @@ interface LeadStageStats {
 
 interface LeadConversionChartProps {
   data: LeadStageStats[];
+  trendValue?: number;
+  trendPeriod?: string;
 }
 
-export const LeadConversionChart = React.memo(function LeadConversionChart({ data }: LeadConversionChartProps) {
+export const LeadConversionChart = React.memo(function LeadConversionChart({ 
+  data,
+  trendValue = 0,
+  trendPeriod = 'this month',
+}: LeadConversionChartProps) {
   const isDesktop = useBreakpoint('lg');
   const { stages } = useLeadStages();
 
@@ -33,18 +40,27 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({ dat
     return stages.map((stage) => ({
       key: stage.name.toLowerCase(),
       name: stage.name,
-      color: stage.color, // Use the user's chosen color from lead_stages
+      color: stage.color,
       gradientId: `fill${stage.name.replace(/\s+/g, '')}`,
     }));
   }, [stages]);
 
+  // Calculate totals for context summary
+  const totalLeads = useMemo(() => {
+    if (data.length === 0) return 0;
+    const lastDay = data[data.length - 1];
+    return lastDay?.total ?? 0;
+  }, [data]);
+
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">Lead Conversion Funnel</CardTitle>
-        <CardDescription className="text-sm">Leads moving through each stage over time</CardDescription>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
+        <ChartCardHeader
+          title="Lead Conversion Funnel"
+          trendValue={trendValue}
+          trendPeriod={trendPeriod}
+          contextSummary={`Showing ${totalLeads.toLocaleString()} leads across ${stages.length} stages`}
+        />
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
