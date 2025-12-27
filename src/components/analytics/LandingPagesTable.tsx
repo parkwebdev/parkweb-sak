@@ -12,10 +12,11 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   SortingState,
 } from '@tanstack/react-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DataTable, DataTableToolbar } from '@/components/data-table';
+import { DataTable, DataTableToolbar, DataTablePagination } from '@/components/data-table';
 import { landingPagesColumns, type LandingPageData } from '@/components/data-table/columns/landing-pages-columns';
 import { SkeletonTableSection } from '@/components/ui/skeleton';
 
@@ -29,23 +30,25 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
     { id: 'visits', desc: true },
   ]);
 
-  const limitedData = React.useMemo(() => data.slice(0, 20), [data]);
-
   const table = useReactTable({
-    data: limitedData, // Limit to 20 rows
+    data,
     columns: landingPagesColumns,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: { pageSize: 10 },
+    },
   });
 
   if (loading) {
     return (
       <Card className="h-full">
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Popular Landing Pages</CardTitle>
+          <CardTitle className="text-base font-semibold">Top Landing Pages</CardTitle>
           <p className="text-sm text-muted-foreground">Pages where visitors start their journey</p>
         </CardHeader>
         <CardContent>
@@ -60,7 +63,7 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base font-semibold">Popular Landing Pages</CardTitle>
+            <CardTitle className="text-base font-semibold">Top Landing Pages</CardTitle>
             <p className="text-sm text-muted-foreground mt-0.5">Pages where visitors start their journey</p>
           </div>
           <div className="w-64">
@@ -78,13 +81,18 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
             <span className="text-muted-foreground text-sm">No landing page data available</span>
           </div>
         ) : (
-          <div className="max-h-[400px] overflow-auto">
+          <>
             <DataTable
               table={table}
               columns={landingPagesColumns}
               emptyMessage="No landing page data available"
             />
-          </div>
+            <DataTablePagination 
+              table={table} 
+              pageSizeOptions={[10, 25, 50]}
+              showRowsPerPage={true}
+            />
+          </>
         )}
       </CardContent>
     </Card>
