@@ -123,6 +123,7 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
         <ChartCardHeader
           title="Customer Satisfaction"
           trendValue={trendValue}
+          trendLabel="Rating"
           trendPeriod={trendPeriod}
         />
         <div className="space-y-6">

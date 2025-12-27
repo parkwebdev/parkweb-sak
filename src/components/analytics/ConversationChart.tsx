@@ -40,6 +40,7 @@ export const ConversationChart = React.memo(function ConversationChart({
         <ChartCardHeader
           title="Conversation Volume"
           trendValue={trendValue}
+          trendLabel="Conversations"
           trendPeriod={trendPeriod}
         />
         <div className="h-[350px] w-full">

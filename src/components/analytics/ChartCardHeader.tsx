@@ -18,7 +18,9 @@ export interface ChartCardHeaderProps {
   title: string;
   /** Trend percentage value (positive = up, negative = down) */
   trendValue?: number;
-  /** Period for trend comparison (e.g., "this month", "this week") */
+  /** Label for what is trending (e.g., "Conversations", "Bookings") */
+  trendLabel?: string;
+  /** Period for trend comparison (e.g., "last month", "last week") */
   trendPeriod?: string;
   /** Context summary describing what's shown (e.g., "Showing 4,371 visitors across 6 pages") */
   contextSummary?: string;
@@ -35,7 +37,8 @@ export interface ChartCardHeaderProps {
 export function ChartCardHeader({
   title,
   trendValue = 0,
-  trendPeriod = 'this month',
+  trendLabel,
+  trendPeriod = 'last month',
   contextSummary,
   rightSlot,
   className,
@@ -44,14 +47,17 @@ export function ChartCardHeader({
   const TrendIcon = isPositive ? TrendUp01 : TrendDown01;
   const trendColor = isPositive ? 'text-success' : 'text-destructive';
 
+  // Format the trend text based on whether a label is provided
+  const trendText = trendLabel
+    ? `${trendLabel} ${isPositive ? 'up' : 'down'} ${Math.abs(trendValue).toFixed(1)}% vs. ${trendPeriod}`
+    : `Trending ${isPositive ? 'up' : 'down'} by ${Math.abs(trendValue).toFixed(1)}% ${trendPeriod}`;
+
   return (
     <div className={cn('flex items-start justify-between mb-6', className)}>
       <div className="space-y-1">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
         <div className="flex items-center gap-1.5">
-          <span className="text-sm text-muted-foreground">
-            Trending {isPositive ? 'up' : 'down'} by {Math.abs(trendValue).toFixed(1)}% {trendPeriod}
-          </span>
+          <span className="text-sm text-muted-foreground">{trendText}</span>
           <TrendIcon size={14} className={trendColor} />
         </div>
         {contextSummary && (
