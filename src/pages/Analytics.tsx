@@ -691,7 +691,7 @@ function Analytics() {
           {/* Pages Section */}
           {activeTab === 'pages' && (
             <div className="space-y-6">
-              <AnimatedList staggerDelay={0.1}>
+              <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem><TopPagesChart data={landingPages} loading={trafficLoading} /></AnimatedItem>
                 <AnimatedItem><LandingPagesTable data={landingPages} loading={trafficLoading} /></AnimatedItem>
               </AnimatedList>
