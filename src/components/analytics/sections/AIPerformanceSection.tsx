@@ -6,7 +6,6 @@
 
 import React from 'react';
 import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
-import { TicketsResolvedCard } from '@/components/analytics/TicketsResolvedCard';
 import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -97,9 +96,6 @@ export function AIPerformanceSection({
               humanTakeover={aiPerformanceStats?.humanTakeover ?? 0}
               loading={loading}
             />
-          </AnimatedItem>
-          <AnimatedItem>
-            <TicketsResolvedCard comingSoon={true} />
           </AnimatedItem>
         </AnimatedList>
       </div>
