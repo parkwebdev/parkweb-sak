@@ -27,7 +27,7 @@ interface MetricRowProps {
   value: number;
   suffix?: string;
   showProgress?: boolean;
-  progressVariant?: 'default' | 'success' | 'warning' | 'destructive';
+  progressVariant?: 'default' | 'success' | 'warning' | 'destructive' | 'info';
   icon?: React.ReactNode;
 }
 
@@ -143,14 +143,14 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
           <MetricRow
             label="Containment Rate"
             value={containmentRate}
-            progressVariant={containmentRate >= 80 ? 'success' : containmentRate >= 60 ? 'warning' : 'destructive'}
+            progressVariant="info"
           />
 
           {/* Resolution Rate */}
           <MetricRow
             label="Resolution Rate"
             value={resolutionRate}
-            progressVariant={resolutionRate >= 70 ? 'success' : resolutionRate >= 50 ? 'warning' : 'destructive'}
+            progressVariant="success"
           />
 
           {/* Summary stats */}
