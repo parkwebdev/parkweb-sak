@@ -37,6 +37,7 @@ import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
 import { TicketsResolvedCard } from '@/components/analytics/TicketsResolvedCard';
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { TopPagesChart } from '@/components/analytics/TopPagesChart';
+import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
 
 import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
 import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildReportSheet';
@@ -692,6 +693,7 @@ function Analytics() {
             <div className="space-y-6">
               <AnimatedList staggerDelay={0.1}>
                 <AnimatedItem><TopPagesChart data={landingPages.map(p => ({ url: p.url, visits: p.visits, avgDuration: 0, conversions: p.conversions }))} loading={trafficLoading} /></AnimatedItem>
+                <AnimatedItem><LandingPagesTable data={landingPages.map(p => ({ url: p.url, visits: p.visits, avgDuration: 0, conversions: p.conversions }))} loading={trafficLoading} /></AnimatedItem>
               </AnimatedList>
             </div>
           )}
