@@ -45,12 +45,22 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
     }));
   }, [stages]);
 
-  // Calculate totals for context summary
-  const totalLeads = useMemo(() => {
-    if (data.length === 0) return 0;
+  // Calculate totals for context summary and per-stage counts
+  const { totalLeads, stageCounts } = useMemo(() => {
+    if (data.length === 0) return { totalLeads: 0, stageCounts: {} as Record<string, number> };
     const lastDay = data[data.length - 1];
-    return lastDay?.total ?? 0;
-  }, [data]);
+    const counts: Record<string, number> = {};
+    
+    stageConfig.forEach((stage) => {
+      const value = lastDay?.[stage.key];
+      counts[stage.key] = typeof value === 'number' ? value : 0;
+    });
+    
+    return { 
+      totalLeads: lastDay?.total ?? 0,
+      stageCounts: counts,
+    };
+  }, [data, stageConfig]);
 
   return (
     <Card className="h-full">
@@ -88,13 +98,6 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
                 strokeOpacity={0.5}
               />
 
-              <Legend
-                align="right"
-                verticalAlign="top"
-                layout={isDesktop ? "vertical" : "horizontal"}
-                content={<ChartLegendContent className="-translate-y-2" reversed />}
-              />
-
               <XAxis
                 dataKey="date"
                 axisLine={false}
@@ -105,7 +108,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
                 tickFormatter={(value) => {
                   try {
                     const date = parseISO(value);
-                    return format(date, 'MMM d'); // e.g., "Jan 15"
+                    return format(date, 'MMM d');
                   } catch {
                     return value;
                   }
@@ -126,7 +129,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
                 labelFormatter={(label) => {
                   try {
                     const date = parseISO(String(label));
-                    return format(date, 'MMM d, yyyy'); // e.g., "Jan 15, 2025"
+                    return format(date, 'MMM d, yyyy');
                   } catch {
                     return String(label);
                   }
@@ -159,6 +162,28 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
               ))}
             </AreaChart>
           </ResponsiveContainer>
+        </div>
+        
+        {/* Custom legend as chips below chart */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
+          {stageConfig.map((stage) => (
+            <div
+              key={stage.key}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
+              style={{ 
+                backgroundColor: `${stage.color}15`,
+                color: stage.color,
+                border: `1px solid ${stage.color}30`,
+              }}
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: stage.color }}
+                aria-hidden="true"
+              />
+              {stage.name} ({stageCounts[stage.key]?.toLocaleString() ?? 0})
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>
