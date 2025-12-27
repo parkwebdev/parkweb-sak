@@ -125,7 +125,11 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
 
   return (
     <Card className="h-full">
-      <CardContent className="pt-6">
+      <CardHeader>
+        <CardTitle className="text-base font-semibold">Top Pages</CardTitle>
+        <p className="text-sm text-muted-foreground mt-0.5">Most visited pages</p>
+      </CardHeader>
+      <CardContent>
         {/* Trend header with sort dropdown */}
         <div className="flex items-start justify-between mb-6">
           <div>

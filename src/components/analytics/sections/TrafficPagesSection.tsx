@@ -72,7 +72,7 @@ export function TrafficPagesSection({
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Top Pages
         </h3>
-        <AnimatedList staggerDelay={0.1}>
+        <AnimatedList staggerDelay={0.1} className="space-y-6">
           <AnimatedItem>
             <TopPagesChart data={chartData} loading={loading} />
           </AnimatedItem>
