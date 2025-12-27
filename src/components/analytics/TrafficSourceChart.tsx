@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface TrafficSourceData {
@@ -60,26 +60,55 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
         <p className="text-sm text-muted-foreground">Where your visitors come from</p>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
+        <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
-              <PolarGrid stroke="hsl(var(--border))" />
+            <RadarChart cx="50%" cy="45%" outerRadius="60%" data={data}>
+              <PolarGrid 
+                stroke="hsl(var(--border))" 
+                gridType="polygon"
+                strokeOpacity={0.6}
+              />
               <PolarAngleAxis
                 dataKey="name"
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                className="capitalize"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 500 }}
+                tickLine={false}
+              />
+              <PolarRadiusAxis 
+                angle={30} 
+                domain={[0, 'auto']} 
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                axisLine={false}
+                tickCount={4}
               />
               <Radar
                 name="Visitors"
                 dataKey="value"
-                stroke="hsl(var(--primary))"
-                fill="hsl(var(--primary))"
-                fillOpacity={0.4}
+                stroke="hsl(var(--chart-1))"
+                fill="hsl(var(--chart-1))"
+                fillOpacity={0.25}
+                strokeWidth={2}
                 dot={{
-                  r: 4,
-                  fill: 'hsl(var(--primary))',
+                  r: 5,
+                  fill: 'hsl(var(--chart-1))',
                   fillOpacity: 1,
+                  strokeWidth: 2,
+                  stroke: 'hsl(var(--background))',
                 }}
+                isAnimationActive={true}
+                animationDuration={800}
+                animationEasing="ease-out"
+                label={({ x, y, value }: { x: number; y: number; value: number }) => (
+                  <text 
+                    x={x} 
+                    y={y - 12} 
+                    textAnchor="middle" 
+                    fill="hsl(var(--muted-foreground))"
+                    fontSize={10}
+                    fontWeight={500}
+                  >
+                    {value.toLocaleString()}
+                  </text>
+                )}
               />
               <Tooltip
                 content={({ active, payload }) => {
@@ -97,6 +126,14 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
                   }
                   return null;
                 }}
+              />
+              <Legend
+                verticalAlign="bottom"
+                align="center"
+                wrapperStyle={{ paddingTop: 12 }}
+                formatter={(value: string) => (
+                  <span className="text-sm text-muted-foreground">{value}</span>
+                )}
               />
             </RadarChart>
           </ResponsiveContainer>
