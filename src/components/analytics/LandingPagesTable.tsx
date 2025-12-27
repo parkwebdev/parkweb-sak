@@ -77,7 +77,7 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <div className="py-12 flex items-center justify-center">
+          <div className="h-[300px] flex items-center justify-center">
             <span className="text-muted-foreground text-sm">No landing page data available</span>
           </div>
         ) : (
