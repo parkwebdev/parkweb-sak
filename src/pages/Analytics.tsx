@@ -43,15 +43,18 @@ import { ExportReportSheet, ReportConfig } from '@/components/analytics/ExportRe
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Download01, Clock } from '@untitledui/icons';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
+import { ExportHistoryTable } from '@/components/analytics/ExportHistoryTable';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
+import { useReportExports } from '@/hooks/useReportExports';
 import { toast } from '@/lib/toast';
-import { subDays } from 'date-fns';
+import { subDays, format } from 'date-fns';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { logger } from '@/utils/logger';
+import { downloadFile } from '@/lib/file-download';
 
 // Add visual variance to sparse data for interesting sparkline curves
 // Ensures a minimum of 7 data points for smooth rendering
@@ -124,6 +127,9 @@ function Analytics() {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [exportSheetOpen, setExportSheetOpen] = useState(false);
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
+
+  // Report exports hook
+  const { createExport, isCreating } = useReportExports();
 
   // Mock data mode
   const { enabled: mockMode, setEnabled: setMockMode, mockData, regenerate: regenerateMockData } = useMockAnalyticsData();
@@ -499,18 +505,37 @@ function Analytics() {
 
   const handleExport = useCallback(async (exportStartDate: Date, exportEndDate: Date) => {
     try {
+      const reportName = `${reportConfig.type === 'summary' ? 'Summary' : reportConfig.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(exportStartDate, 'MMM d')} to ${format(exportEndDate, 'MMM d, yyyy')}`;
+      
+      let blob: Blob;
       if (exportFormat === 'csv') {
-        await generateCSVReport(analyticsData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
-        toast.success('CSV exported successfully');
+        blob = generateCSVReport(analyticsData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
       } else {
-        await generatePDFReport(analyticsData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
-        toast.success('PDF exported successfully');
+        blob = await generatePDFReport(analyticsData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
       }
+      
+      // Save to storage and DB
+      await createExport({
+        name: reportName,
+        format: exportFormat,
+        file: blob,
+        dateRangeStart: exportStartDate,
+        dateRangeEnd: exportEndDate,
+        reportConfig,
+      });
+      
+      // Also trigger immediate download
+      const url = URL.createObjectURL(blob);
+      const fileName = `${reportName.replace(/[^a-zA-Z0-9-_]/g, '_')}.${exportFormat}`;
+      await downloadFile(url, fileName);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`${exportFormat.toUpperCase()} exported and saved`);
     } catch (error: unknown) {
       logger.error('Export error:', error);
       toast.error(`Failed to export ${exportFormat.toUpperCase()}`);
     }
-  }, [analyticsData, reportConfig, exportFormat, user?.email]);
+  }, [analyticsData, reportConfig, exportFormat, user?.email, createExport]);
 
   const openExportSheet = (format: 'csv' | 'pdf') => {
     setExportFormat(format);
@@ -794,7 +819,16 @@ function Analytics() {
 
           {/* Reports Section - Simplified Layout */}
           {activeTab === 'reports' && (
-            <div className="space-y-6">
+            <div className="space-y-8">
+              {/* Export History */}
+              <div>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Export History
+                </h3>
+                <ExportHistoryTable />
+              </div>
+
+              {/* Scheduled Reports */}
               <div>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   Scheduled Reports

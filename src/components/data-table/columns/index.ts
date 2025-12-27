@@ -14,3 +14,6 @@ export { createKnowledgeColumns, type KnowledgeSourceWithMeta, type KnowledgeCol
 
 // Help articles table columns
 export { createHelpArticlesColumns, type HelpArticleWithMeta, type HelpArticlesColumnsProps } from './help-articles-columns';
+
+// Export history table columns
+export { createExportHistoryColumns, type ExportHistoryColumnsProps } from './export-history-columns';
