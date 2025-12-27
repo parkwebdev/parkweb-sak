@@ -26,11 +26,14 @@ import type {
 } from '@/types/analytics';
 
 /** Raw calendar event from database query */
-interface RawCalendarEvent {
+export interface RawCalendarEvent {
   id: string;
+  title: string;
   status: BookingStatus | null;
   start_time: string;
   location_id: string | null;
+  visitor_name: string | null;
+  visitor_email: string | null;
   locations: {
     id: string;
     name: string;
@@ -117,9 +120,12 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boo
         .from('calendar_events')
         .select(`
           id,
+          title,
           status,
           start_time,
           location_id,
+          visitor_name,
+          visitor_email,
           locations!fk_events_location (
             id,
             name
@@ -255,6 +261,25 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boo
     };
   }, [rawEvents, startDate, endDate]);
 
+  /**
+   * Update the status of a calendar event.
+   * Invalidates the cache to refresh UI after update.
+   */
+  const updateEventStatus = async (eventId: string, newStatus: BookingStatus): Promise<void> => {
+    const { error } = await supabase
+      .from('calendar_events')
+      .update({ status: newStatus })
+      .eq('id', eventId);
+
+    if (error) {
+      logger.error('Error updating event status:', error);
+      throw error;
+    }
+
+    // Invalidate cache to refresh data
+    queryClient.invalidateQueries({ queryKey: BOOKING_ANALYTICS_KEY });
+  };
+
   return {
     /** Computed booking statistics */
     stats,
@@ -266,5 +291,7 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boo
     refetch,
     /** Invalidate the cache (useful after mutations) */
     invalidate: () => queryClient.invalidateQueries({ queryKey: BOOKING_ANALYTICS_KEY }),
+    /** Update event status */
+    updateEventStatus,
   };
 };

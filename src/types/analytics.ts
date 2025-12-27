@@ -321,6 +321,10 @@ export interface BaseChartProps {
 export interface BookingsByLocationChartProps extends BaseChartProps {
   /** Location booking data array */
   data: LocationBookingData[];
+  /** Trend percentage value */
+  trendValue?: number;
+  /** Period for trend comparison */
+  trendPeriod?: string;
 }
 
 /**
