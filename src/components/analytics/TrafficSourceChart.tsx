@@ -1,29 +1,40 @@
 /**
  * TrafficSourceChart Component
  * 
- * Radar chart showing traffic distribution by referrer source.
- * Displays organic, direct, social, and referral traffic.
+ * Stacked area chart showing traffic distribution by referrer source over time.
+ * Displays organic, direct, social, paid, email, and referral traffic.
  * @module components/analytics/TrafficSourceChart
  */
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface TrafficSourceData {
-  name: string;
-  value: number;
-  color?: string;
-}
+import type { TrafficSourceTimeSeriesData } from '@/hooks/useTrafficAnalytics';
 
 interface TrafficSourceChartProps {
-  data: TrafficSourceData[];
+  data: TrafficSourceTimeSeriesData[];
   loading?: boolean;
 }
 
-export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data, loading }: TrafficSourceChartProps) {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+// Traffic source configuration with colors and labels
+const TRAFFIC_SOURCES = [
+  { key: 'direct', label: 'Direct', color: 'hsl(var(--chart-1))' },
+  { key: 'organic', label: 'Organic', color: 'hsl(var(--chart-2))' },
+  { key: 'paid', label: 'Paid', color: 'hsl(var(--chart-3))' },
+  { key: 'social', label: 'Social', color: 'hsl(var(--chart-4))' },
+  { key: 'email', label: 'Email', color: 'hsl(var(--chart-5))' },
+  { key: 'referral', label: 'Referral', color: 'hsl(var(--primary))' },
+] as const;
+
+export const TrafficSourceChart = React.memo(function TrafficSourceChart({ 
+  data, 
+  loading 
+}: TrafficSourceChartProps) {
+  const hasData = data.length > 0 && data.some(d => 
+    d.direct > 0 || d.organic > 0 || d.paid > 0 || d.social > 0 || d.email > 0 || d.referral > 0
+  );
 
   if (loading) {
     return (
@@ -33,13 +44,13 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
           <p className="text-sm text-muted-foreground">Where your visitors come from</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <Skeleton className="h-[200px] w-[200px] rounded-full" />
+          <Skeleton className="h-[250px] w-full rounded-lg" />
         </CardContent>
       </Card>
     );
   }
 
-  if (data.length === 0 || total === 0) {
+  if (!hasData) {
     return (
       <Card className="h-full">
         <CardHeader>
@@ -62,80 +73,76 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
       <CardContent>
         <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart cx="50%" cy="45%" outerRadius="60%" data={data}>
-              <PolarGrid 
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                {TRAFFIC_SOURCES.map(source => (
+                  <linearGradient key={source.key} id={`gradient-${source.key}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={source.color} stopOpacity={0.4} />
+                    <stop offset="100%" stopColor={source.color} stopOpacity={0.05} />
+                  </linearGradient>
+                ))}
+              </defs>
+
+              <CartesianGrid 
+                strokeDasharray="3 3" 
                 stroke="hsl(var(--border))" 
-                gridType="polygon"
-                strokeOpacity={0.6}
+                strokeOpacity={0.5}
+                vertical={false}
               />
-              <PolarAngleAxis
-                dataKey="name"
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 500 }}
+
+              <XAxis
+                dataKey="date"
+                tickFormatter={(value: Date) => value.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
                 tickLine={false}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
+                padding={{ left: 10, right: 10 }}
               />
-              <PolarRadiusAxis 
-                angle={30} 
-                domain={[0, 'auto']} 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+
+              <YAxis
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                tickLine={false}
                 axisLine={false}
-                tickCount={4}
+                tickFormatter={(value: number) => value.toLocaleString()}
+                width={40}
               />
-              <Radar
-                name="Visitors"
-                dataKey="value"
-                stroke="hsl(var(--chart-1))"
-                fill="hsl(var(--chart-1))"
-                fillOpacity={0.25}
-                strokeWidth={2}
-                dot={{
-                  r: 5,
-                  fill: 'hsl(var(--chart-1))',
-                  fillOpacity: 1,
-                  strokeWidth: 2,
-                  stroke: 'hsl(var(--background))',
-                }}
-                isAnimationActive={true}
-                animationDuration={800}
-                animationEasing="ease-out"
-                label={({ x, y, value }: { x: number; y: number; value: number }) => (
-                  <text 
-                    x={x} 
-                    y={y - 12} 
-                    textAnchor="middle" 
-                    fill="hsl(var(--muted-foreground))"
-                    fontSize={10}
-                    fontWeight={500}
-                  >
-                    {value.toLocaleString()}
-                  </text>
-                )}
-              />
+
               <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const item = payload[0].payload;
-                    const percentage = ((item.value / total) * 100).toFixed(1);
-                    return (
-                      <div className="bg-popover text-popover-foreground border rounded-lg p-3 shadow-lg">
-                        <p className="font-medium capitalize">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {item.value} conversations ({percentage}%)
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
+                content={<ChartTooltipContent />}
+                formatter={(value: number) => value.toLocaleString()}
+                labelFormatter={(value: Date) => value.toLocaleDateString(undefined, { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+                cursor={{
+                  stroke: 'hsl(var(--muted-foreground))',
+                  strokeWidth: 1,
+                  strokeDasharray: '4 4',
                 }}
               />
+
               <Legend
+                content={<ChartLegendContent align="center" />}
                 verticalAlign="bottom"
-                align="center"
-                wrapperStyle={{ paddingTop: 12 }}
-                formatter={(value: string) => (
-                  <span className="text-sm text-muted-foreground">{value}</span>
-                )}
+                wrapperStyle={{ paddingTop: 16 }}
               />
-            </RadarChart>
+
+              {TRAFFIC_SOURCES.map(source => (
+                <Area
+                  key={source.key}
+                  type="monotone"
+                  dataKey={source.key}
+                  name={source.label}
+                  stackId="traffic"
+                  stroke={source.color}
+                  strokeWidth={2}
+                  fill={`url(#gradient-${source.key})`}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                />
+              ))}
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
