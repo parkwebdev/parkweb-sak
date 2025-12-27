@@ -37,7 +37,7 @@ import { TicketsResolvedCard } from '@/components/analytics/TicketsResolvedCard'
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
 import { PageVisitHeatmap } from '@/components/analytics/PageVisitHeatmap';
-import { ActiveVisitorsCard } from '@/components/analytics/ActiveVisitorsCard';
+
 import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
 import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
@@ -652,12 +652,6 @@ function Analytics() {
           {/* Traffic Section */}
           {activeTab === 'traffic' && (
             <div className="space-y-6">
-              {/* Real-Time Section */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Real-Time</h3>
-                <ActiveVisitorsCard agentId={agentId} />
-              </div>
-              
               {/* Sources & Behavior Section */}
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sources & Behavior</h3>
