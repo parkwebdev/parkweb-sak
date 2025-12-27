@@ -95,11 +95,7 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
   if (loading) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Top Pages</CardTitle>
-          <p className="text-sm text-muted-foreground">Most visited pages</p>
-        </CardHeader>
-        <CardContent className="h-[400px]">
+        <CardContent className="h-[400px] pt-6">
           <SkeletonHeatmap />
         </CardContent>
       </Card>
@@ -109,11 +105,7 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
   if (sortedData.length === 0) {
     return (
       <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold">Top Pages</CardTitle>
-          <p className="text-sm text-muted-foreground">Most visited pages</p>
-        </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-[300px] pt-6 flex items-center justify-center">
           <span className="text-muted-foreground text-sm">No page data available</span>
         </CardContent>
       </Card>
@@ -125,11 +117,7 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">Top Pages</CardTitle>
-        <p className="text-sm text-muted-foreground mt-0.5">Most visited pages</p>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         {/* Trend header with sort dropdown */}
         <div className="flex items-start justify-between mb-6">
           <div>
