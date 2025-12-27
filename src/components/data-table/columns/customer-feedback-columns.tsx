@@ -1,27 +1,52 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Star01 } from "@untitledui/icons";
+import { Star01, ArrowNarrowRight } from "@untitledui/icons";
 import { format, formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { IconButton } from "@/components/ui/icon-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DataTableColumnHeader } from "../DataTableColumnHeader";
+import { cn } from "@/lib/utils";
+
 export interface CustomerFeedbackData {
   id: string;
   rating: 1 | 2 | 3 | 4 | 5;
   feedback: string | null;
   createdAt: string;
   triggerType: string;
+  conversationId: string;
 }
 
-const StarRating = ({ rating }: { rating: number }) => (
-  <div className="flex gap-0.5">
-    {[1, 2, 3, 4, 5].map((star) => (
-      <Star01
-        key={star}
-        size={14}
-        className={star <= rating ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground/30"}
-      />
-    ))}
-  </div>
-);
+/**
+ * Get sentiment color classes based on rating
+ * 4-5: Positive (green), 3: Neutral (yellow), 1-2: Negative (red)
+ */
+const getSentimentClasses = (rating: number) => {
+  if (rating >= 4) {
+    return "text-status-active"; // Green for positive
+  }
+  if (rating === 3) {
+    return "text-yellow-500"; // Yellow for neutral
+  }
+  return "text-destructive"; // Red for negative
+};
+
+const StarRating = ({ rating }: { rating: number }) => {
+  const sentimentClass = getSentimentClasses(rating);
+  
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star01
+          key={star}
+          size={14}
+          className={cn(
+            star <= rating ? `${sentimentClass} fill-current` : "text-muted-foreground/30"
+          )}
+        />
+      ))}
+    </div>
+  );
+};
 
 const getTriggerLabel = (triggerType: string): string => {
   switch (triggerType) {
@@ -31,16 +56,20 @@ const getTriggerLabel = (triggerType: string): string => {
       return "Manual";
     case "inactivity":
       return "Inactivity";
+    case "escalation":
+      return "Escalation";
     default:
-      return triggerType;
+      return triggerType || "Unknown";
   }
 };
 
 export const customerFeedbackColumns: ColumnDef<CustomerFeedbackData>[] = [
   {
     accessorKey: "rating",
-    header: "Rating",
     size: 100,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Rating" />
+    ),
     cell: ({ row }) => <StarRating rating={row.original.rating} />,
   },
   {
@@ -71,8 +100,10 @@ export const customerFeedbackColumns: ColumnDef<CustomerFeedbackData>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Date",
     size: 120,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date" />
+    ),
     cell: ({ row }) => {
       const date = new Date(row.original.createdAt);
       return (
@@ -91,12 +122,30 @@ export const customerFeedbackColumns: ColumnDef<CustomerFeedbackData>[] = [
   },
   {
     accessorKey: "triggerType",
-    header: "Trigger",
     size: 100,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Trigger" />
+    ),
     cell: ({ row }) => (
       <Badge variant="secondary" className="text-2xs font-normal">
         {getTriggerLabel(row.original.triggerType)}
       </Badge>
+    ),
+  },
+  {
+    id: "actions",
+    size: 60,
+    cell: ({ row }) => (
+      <IconButton
+        variant="ghost"
+        size="sm"
+        label="View conversation"
+        onClick={() => {
+          window.location.href = `/conversations?id=${row.original.conversationId}`;
+        }}
+      >
+        <ArrowNarrowRight size={16} />
+      </IconButton>
     ),
   },
 ];

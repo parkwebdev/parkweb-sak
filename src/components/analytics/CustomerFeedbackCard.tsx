@@ -24,17 +24,16 @@ export const CustomerFeedbackCard = ({ data, loading }: CustomerFeedbackCardProp
     { id: "createdAt", desc: true },
   ]);
 
-  // Transform the data and filter for items with feedback
+  // Transform all feedback data (no filter - show all ratings)
   const tableData = useMemo<CustomerFeedbackData[]>(() => {
-    return data
-      .filter((item) => item.feedback && item.feedback.trim().length > 0)
-      .map((item) => ({
-        id: item.id,
-        rating: item.rating,
-        feedback: item.feedback,
-        createdAt: item.createdAt,
-        triggerType: item.triggerType,
-      }));
+    return data.map((item) => ({
+      id: item.id,
+      rating: item.rating,
+      feedback: item.feedback,
+      createdAt: item.createdAt,
+      triggerType: item.triggerType,
+      conversationId: item.conversationId,
+    }));
   }, [data]);
 
   const table = useReactTable({

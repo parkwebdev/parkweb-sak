@@ -198,16 +198,15 @@ export const useSatisfactionAnalytics = (startDate: Date, endDate: Date, enabled
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // Get recent feedback (ratings with comments, limit 10)
+    // Get all feedback items (no limit - pagination handled in component)
     const recentFeedback: FeedbackItem[] = rawRatings
-      .filter((r) => r.feedback && r.feedback.trim().length > 0)
-      .slice(0, 10)
       .map((r) => ({
         id: r.id,
         rating: r.rating as RatingValue,
         feedback: r.feedback,
         createdAt: r.created_at,
         triggerType: r.trigger_type as TriggerType,
+        conversationId: r.conversation_id,
       }));
 
     return {

@@ -139,6 +139,8 @@ export interface FeedbackItem {
   createdAt: string;
   /** Trigger type that prompted the rating */
   triggerType: TriggerType;
+  /** Associated conversation ID for linking */
+  conversationId: string;
 }
 
 /** Valid trigger types for conversation ratings */
