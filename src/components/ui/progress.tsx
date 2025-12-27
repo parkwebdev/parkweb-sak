@@ -23,7 +23,7 @@ interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPr
   showLabel?: boolean;
   labelPosition?: "left" | "right";
   formatLabel?: (value: number) => string;
-  variant?: "default" | "success" | "warning" | "destructive";
+  variant?: "default" | "success" | "warning" | "destructive" | "info";
   animated?: boolean;
 }
 
@@ -32,6 +32,7 @@ const indicatorVariants = {
   success: "bg-success",
   warning: "bg-warning",
   destructive: "bg-destructive",
+  info: "bg-info",
 };
 
 const Progress = React.forwardRef<
