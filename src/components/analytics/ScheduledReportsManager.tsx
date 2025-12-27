@@ -81,7 +81,7 @@ export const ScheduledReportsManager = () => {
                 Automatically send analytics reports to your team
               </CardDescription>
             </div>
-            <Button onClick={() => setIsCreateOpen(true)}>
+            <Button size="sm" onClick={() => setIsCreateOpen(true)}>
               Schedule Report
             </Button>
           </div>
@@ -95,7 +95,6 @@ export const ScheduledReportsManager = () => {
             <EmptyState
               icon={<Clock className="h-5 w-5 text-muted-foreground/50" />}
               title="No scheduled reports yet"
-              description="Create your first scheduled report to automate analytics delivery"
             />
           ) : (
             <Table>
