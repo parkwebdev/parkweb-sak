@@ -1,20 +1,20 @@
 /**
  * TrafficSourceChart Component
  * 
- * Pie chart showing traffic distribution by referrer source.
+ * Radar chart showing traffic distribution by referrer source.
  * Displays organic, direct, social, and referral traffic.
  * @module components/analytics/TrafficSourceChart
  */
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { SkeletonPieChart } from '@/components/ui/page-skeleton';
+import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface TrafficSourceData {
   name: string;
   value: number;
-  color: string;
+  color?: string;
 }
 
 interface TrafficSourceChartProps {
@@ -22,22 +22,8 @@ interface TrafficSourceChartProps {
   loading?: boolean;
 }
 
-const TRAFFIC_COLORS: Record<string, string> = {
-  direct: 'hsl(var(--muted-foreground))',
-  organic: 'hsl(var(--success))',
-  paid: 'hsl(var(--warning))',
-  social: 'hsl(var(--info))',
-  email: 'hsl(var(--primary))',
-  referral: 'hsl(var(--accent-foreground))',
-};
-
 export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data, loading }: TrafficSourceChartProps) {
-  const chartData = data.map(item => ({
-    ...item,
-    color: TRAFFIC_COLORS[item.name.toLowerCase()] || 'hsl(var(--muted-foreground))',
-  }));
-
-  const total = chartData.reduce((sum, item) => sum + item.value, 0);
+  const total = data.reduce((sum, item) => sum + item.value, 0);
 
   if (loading) {
     return (
@@ -47,13 +33,13 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
           <p className="text-sm text-muted-foreground">Where your visitors come from</p>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <SkeletonPieChart />
+          <Skeleton className="h-[200px] w-[200px] rounded-full" />
         </CardContent>
       </Card>
     );
   }
 
-  if (chartData.length === 0 || total === 0) {
+  if (data.length === 0 || total === 0) {
     return (
       <Card className="h-full">
         <CardHeader>
@@ -70,29 +56,31 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
   return (
     <Card className="h-full">
       <CardHeader>
-          <CardTitle className="text-base font-semibold">Traffic Sources</CardTitle>
-          <p className="text-sm text-muted-foreground">Where your visitors come from</p>
-        </CardHeader>
+        <CardTitle className="text-base font-semibold">Traffic Sources</CardTitle>
+        <p className="text-sm text-muted-foreground">Where your visitors come from</p>
+      </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={2}
+            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+              <PolarGrid stroke="hsl(var(--border))" />
+              <PolarAngleAxis
+                dataKey="name"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                className="capitalize"
+              />
+              <Radar
+                name="Visitors"
                 dataKey="value"
-                nameKey="name"
-                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                labelLine={false}
-              >
-                {chartData.map((entry) => (
-                  <Cell key={`cell-${entry.name}`} fill={entry.color} />
-                ))}
-              </Pie>
+                stroke="hsl(var(--primary))"
+                fill="hsl(var(--primary))"
+                fillOpacity={0.4}
+                dot={{
+                  r: 4,
+                  fill: 'hsl(var(--primary))',
+                  fillOpacity: 1,
+                }}
+              />
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
@@ -110,14 +98,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
                   return null;
                 }}
               />
-              <Legend
-                verticalAlign="bottom"
-                height={36}
-                formatter={(value: string) => (
-                  <span className="text-sm capitalize">{value}</span>
-                )}
-              />
-            </PieChart>
+            </RadarChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
