@@ -124,7 +124,6 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
           title="Customer Satisfaction"
           trendValue={trendValue}
           trendPeriod={trendPeriod}
-          contextSummary={`Based on ${totalRatings.toLocaleString()} customer ratings`}
         />
         <div className="space-y-6">
           {/* Average rating display */}
@@ -163,6 +162,11 @@ export const SatisfactionScoreCard = React.memo(function SatisfactionScoreCard({
               </div>
             ))}
           </div>
+
+          {/* Context summary */}
+          <p className="text-xs text-muted-foreground">
+            Based on {totalRatings.toLocaleString()} customer ratings
+          </p>
         </div>
       </CardContent>
     </Card>
