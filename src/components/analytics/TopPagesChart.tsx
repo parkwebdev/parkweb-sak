@@ -162,15 +162,15 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
             const barColor = getBarColor(index, sortedData.length);
             
             return (
-              <Tooltip key={index}>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-3 cursor-pointer group">
-                    {/* Label */}
-                    <span className="text-sm text-muted-foreground w-24 text-right shrink-0 group-hover:text-foreground transition-colors">
-                      {formatUrl(page.url)}
-                    </span>
-                    
-                    {/* Bar container */}
+              <div key={index} className="flex items-center gap-3 cursor-pointer group">
+                {/* Label */}
+                <span className="text-sm text-muted-foreground w-24 text-right shrink-0 group-hover:text-foreground transition-colors">
+                  {formatUrl(page.url)}
+                </span>
+                
+                {/* Bar container with tooltip */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <div className="flex-1 h-8 relative">
                       <div
                         className="h-full rounded-md transition-all duration-300 group-hover:opacity-90"
@@ -180,29 +180,29 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
                         }}
                       />
                     </div>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs">
-                  <div className="space-y-1.5">
-                    <p className="font-medium text-xs break-all">{page.url}</p>
-                    <div className="border-t border-border pt-1.5 space-y-0.5">
-                      <p className="text-xs text-muted-foreground">
-                        <span className="text-foreground font-medium">{page.visits.toLocaleString()}</span> visits
-                      </p>
-                      {page.avgDuration > 0 && (
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="start" className="max-w-xs">
+                    <div className="space-y-1.5">
+                      <p className="font-medium text-xs break-all">{page.url}</p>
+                      <div className="border-t border-border pt-1.5 space-y-0.5">
                         <p className="text-xs text-muted-foreground">
-                          <span className="text-foreground font-medium">{formatDuration(page.avgDuration)}</span> avg. time
+                          <span className="text-foreground font-medium">{page.visits.toLocaleString()}</span> visits
                         </p>
-                      )}
-                      {page.conversions > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          <span className="text-primary font-medium">{page.conversions}</span> leads
-                        </p>
-                      )}
+                        {page.avgDuration > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            <span className="text-foreground font-medium">{formatDuration(page.avgDuration)}</span> avg. time
+                          </p>
+                        )}
+                        {page.conversions > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            <span className="text-primary font-medium">{page.conversions}</span> leads
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             );
           })}
         </div>
