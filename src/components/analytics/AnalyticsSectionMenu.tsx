@@ -57,7 +57,7 @@ const SECTIONS: SectionItem[] = [
   // Performance
   { id: 'bookings', label: 'Bookings', icon: Calendar, group: 'Performance' },
   { id: 'satisfaction', label: 'Satisfaction', icon: Star01, group: 'Performance' },
-  { id: 'ai-performance', label: 'AI Performance', icon: Zap, group: 'Performance' },
+  { id: 'ai-performance', label: 'Ari Performance', icon: Zap, group: 'Performance' },
   
   // Traffic
   { id: 'sources', label: 'Sources', icon: Share07, group: 'Traffic' },

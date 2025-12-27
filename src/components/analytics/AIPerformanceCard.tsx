@@ -111,7 +111,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
       <Card className={cn("h-full", className)}>
         <CardContent className="pt-6">
           <ChartCardHeader
-            title="AI Performance"
+            title="Ari Performance"
             trendValue={0}
             trendPeriod={trendPeriod}
             contextSummary="No conversations recorded yet"
@@ -133,10 +133,9 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
     <Card className={cn("h-full", className)}>
       <CardContent className="pt-6">
         <ChartCardHeader
-          title="AI Performance"
+          title="Ari Performance"
           trendValue={trendValue}
           trendPeriod={trendPeriod}
-          contextSummary={`Ari handled ${aiHandled.toLocaleString()} of ${totalConversations.toLocaleString()} conversations`}
         />
         <div className="space-y-6">
           {/* Containment Rate */}
@@ -158,7 +157,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
           {/* Summary stats */}
           <div className="pt-4 border-t border-border space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">AI Handled</span>
+              <span className="text-muted-foreground">Ari Handled</span>
               <span className="font-medium text-foreground tabular-nums">
                 {aiHandled.toLocaleString()} of {totalConversations.toLocaleString()}
               </span>
