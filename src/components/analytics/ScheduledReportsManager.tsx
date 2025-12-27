@@ -9,22 +9,14 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Trash01, Clock } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
-import { CreateScheduledReportDialog } from './CreateScheduledReportDialog';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 
-
-interface ScheduledReportsManagerProps {
-  isCreateOpen: boolean;
-  onCreateOpenChange: (open: boolean) => void;
-}
-
-export const ScheduledReportsManager = ({ isCreateOpen, onCreateOpenChange }: ScheduledReportsManagerProps) => {
+export const ScheduledReportsManager = () => {
   const { reports, loading, toggleReportStatus, deleteReport } = useScheduledReports();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [savedReportIds, setSavedReportIds] = useState<Set<string>>(new Set());
@@ -77,7 +69,7 @@ export const ScheduledReportsManager = ({ isCreateOpen, onCreateOpenChange }: Sc
             <EmptyState
               icon={<Clock className="h-5 w-5 text-muted-foreground/50" />}
               title="No scheduled reports yet"
-              description="Schedule automated report delivery to your team"
+              description="Use the Build Report button to schedule automated report delivery"
             />
           ) : (
             <div className="space-y-3">
@@ -112,11 +104,6 @@ export const ScheduledReportsManager = ({ isCreateOpen, onCreateOpenChange }: Sc
           )}
         </CardContent>
       </Card>
-
-      <CreateScheduledReportDialog
-        open={isCreateOpen}
-        onOpenChange={onCreateOpenChange}
-      />
 
       <SimpleDeleteDialog
         open={!!deleteId}
