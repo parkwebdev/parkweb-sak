@@ -32,7 +32,7 @@ import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
 import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocationChart';
 import { BookingTrendChart } from '@/components/analytics/BookingTrendChart';
-import { SatisfactionScoreCard } from '@/components/analytics/SatisfactionScoreCard';
+
 import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
 import { ConversationKPICard } from '@/components/analytics/ConversationKPICard';
 import { PeakActivityChart } from '@/components/analytics/PeakActivityChart';
@@ -741,7 +741,7 @@ function Analytics() {
               
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} trendValue={aiContainmentTrendValue} trendPeriod="this month" /></AnimatedItem>
-                <AnimatedItem><SatisfactionScoreCard averageRating={satisfactionStats?.averageRating ?? 0} totalRatings={satisfactionStats?.totalRatings ?? 0} distribution={satisfactionStats?.distribution ?? []} loading={satisfactionLoading} trendValue={satisfactionTrendValue} trendPeriod="this month" /></AnimatedItem>
+                
                 <AnimatedItem><CustomerFeedbackCard data={satisfactionStats?.recentFeedback ?? []} loading={satisfactionLoading} /></AnimatedItem>
               </AnimatedList>
             </div>
