@@ -274,8 +274,6 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                       strokeWidth: 2,
                     }}
                   />
-                </>
-              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -286,46 +284,34 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
             Showing {totalBookings.toLocaleString()} bookings over {data.length} days
           </p>
           <div className="flex flex-wrap gap-2 justify-start">
-            {viewMode === 'total-only' ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                <span 
-                  className="h-2 w-2 rounded-full shrink-0" 
-                  style={{ backgroundColor: TREND_COLORS.total }}
-                />
-                <span className="text-xs text-muted-foreground">Total Bookings</span>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.completed }}
-                  />
-                  <span className="text-xs text-muted-foreground">Completed</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.confirmed }}
-                  />
-                  <span className="text-xs text-muted-foreground">Confirmed</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.cancelled }}
-                  />
-                  <span className="text-xs text-muted-foreground">Cancelled</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.noShow }}
-                  />
-                  <span className="text-xs text-muted-foreground">No-show</span>
-                </div>
-              </>
-            )}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: TREND_COLORS.completed }}
+              />
+              <span className="text-xs text-muted-foreground">Completed</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: TREND_COLORS.confirmed }}
+              />
+              <span className="text-xs text-muted-foreground">Confirmed</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: TREND_COLORS.cancelled }}
+              />
+              <span className="text-xs text-muted-foreground">Cancelled</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: TREND_COLORS.noShow }}
+              />
+              <span className="text-xs text-muted-foreground">No-show</span>
+            </div>
           </div>
         </div>
       </CardContent>
