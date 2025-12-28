@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import {
-  LayoutGrid01,
   MessageChatCircle,
   Users01,
   Calendar,
@@ -24,7 +23,6 @@ import {
 } from '@untitledui/icons';
 
 export type AnalyticsSection = 
-  | 'dashboard'
   | 'conversations'
   | 'leads'
   | 'bookings'
@@ -42,9 +40,6 @@ interface SectionItem {
 }
 
 const SECTIONS: SectionItem[] = [
-  // Overview
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid01, group: 'Overview' },
-  
   // Engagement
   { id: 'conversations', label: 'Conversations', icon: MessageChatCircle, group: 'Engagement' },
   { id: 'leads', label: 'Leads', icon: Users01, group: 'Engagement' },

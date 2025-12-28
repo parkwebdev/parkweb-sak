@@ -48,7 +48,7 @@ import { FileCheck02 } from '@untitledui/icons';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 import { ExportHistoryTable } from '@/components/analytics/ExportHistoryTable';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
-import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
+import { MetricCardWithChart } from '@/components/analytics/MetricCardWithChart';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { useReportExports } from '@/hooks/useReportExports';
 import { toast } from '@/lib/toast';
@@ -126,7 +126,7 @@ const generateChartData = (dailyCounts: number[]): { value: number }[] => {
 function Analytics() {
   const { user } = useAuth();
   const { agentId } = useAgent();
-  const [activeTab, setActiveTab] = useState<AnalyticsSection>('dashboard');
+  const [activeTab, setActiveTab] = useState<AnalyticsSection>('conversations');
   const [exportSheetOpen, setExportSheetOpen] = useState(false);
 
   // Report exports hook
@@ -554,7 +554,6 @@ function Analytics() {
 
   // Section title and description mapping
   const sectionInfo: Record<AnalyticsSection, { title: string; description: string }> = {
-    'dashboard': { title: 'Analytics Dashboard', description: 'Track performance and insights across your organization' },
     'conversations': { title: 'Conversations', description: 'Analyze chat sessions and engagement patterns' },
     'leads': { title: 'Leads', description: 'Track lead generation and conversion metrics' },
     'bookings': { title: 'Bookings', description: 'Monitor appointment scheduling performance' },
@@ -566,7 +565,7 @@ function Analytics() {
   };
 
   // Sections that show the toolbar
-  const showToolbar = ['dashboard', 'conversations', 'leads', 'bookings', 'ai-performance', 'sources', 'pages', 'geography'].includes(activeTab);
+  const showToolbar = ['conversations', 'leads', 'bookings', 'ai-performance', 'sources', 'pages', 'geography'].includes(activeTab);
   // Sections that show build report button
   const showBuildReport = activeTab === 'reports';
 
@@ -612,38 +611,6 @@ function Analytics() {
             />
           )}
 
-          {/* Dashboard Section */}
-          {activeTab === 'dashboard' && (
-            <div className="space-y-6">
-              {comparisonMode ? (
-                <ComparisonView 
-                  currentPeriod={{ start: startDate, end: endDate }}
-                  previousPeriod={{ start: comparisonStartDate, end: comparisonEndDate }}
-                  metrics={comparisonMetrics} 
-                />
-              ) : (
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement</h3>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-                      <MetricCardWithChart title={totalConversations.toLocaleString()} subtitle="Total Conversations" description="Chat sessions started with Ari" change={calculatePeriodChange(conversationTrend)} changeType="percentage" changeLabel="vs last period" chartData={generateChartData(conversationTrend)} animationDelay={0} />
-                      <MetricCardWithChart title={totalLeads.toLocaleString()} subtitle="Total Leads" description="Visitors who shared contact info" change={calculatePeriodChange(leadTrend)} changeType="percentage" changeLabel="vs last period" chartData={generateChartData(leadTrend)} animationDelay={0.05} />
-                      <MetricCardWithChart title={`${conversionRate}%`} subtitle="Conversion Rate" description="Leads marked as won or converted" change={calculatePointChange(conversionTrend)} changeType="points" changeLabel="vs last period" chartData={generateChartData(conversionTrend)} animationDelay={0.1} />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Outcomes</h3>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-                      <MetricCardWithChart title={totalBookings.toLocaleString()} subtitle="Total Bookings" description="Appointments scheduled via Ari" change={calculatePeriodChange(bookingTrend)} changeType="percentage" changeLabel="vs last period" chartData={generateChartData(bookingTrend)} animationDelay={0.15} />
-                      <MetricCardWithChart title={avgSatisfaction.toFixed(1)} subtitle="Avg Satisfaction" description="User ratings out of 5 stars" change={calculatePointChange(satisfactionTrend)} changeType="points" changeLabel="vs last period" chartData={generateChartData(satisfactionTrend)} animationDelay={0.2} />
-                      <MetricCardWithChart title={`${containmentRate.toFixed(0)}%`} subtitle="AI Containment" description="Chats resolved without human help" change={calculatePointChange(containmentTrend)} changeType="points" changeLabel="vs last period" chartData={generateChartData(containmentTrend)} animationDelay={0.25} />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Conversations Section */}
           {activeTab === 'conversations' && (
             <div className="space-y-6">
@@ -679,6 +646,30 @@ function Analytics() {
           {/* Leads Section */}
           {activeTab === 'leads' && (
             <div className="space-y-6">
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+                <MetricCardWithChart 
+                  title={totalLeads.toLocaleString()} 
+                  subtitle="Total Leads" 
+                  description="Visitors who shared contact info" 
+                  change={calculatePeriodChange(leadTrend)} 
+                  changeType="percentage" 
+                  changeLabel="vs last period" 
+                  chartData={generateChartData(leadTrend)} 
+                  animationDelay={0} 
+                />
+                <MetricCardWithChart 
+                  title={`${conversionRate}%`} 
+                  subtitle="Conversion Rate" 
+                  description="Leads marked as won or converted" 
+                  change={calculatePointChange(conversionTrend)} 
+                  changeType="points" 
+                  changeLabel="vs last period" 
+                  chartData={generateChartData(conversionTrend)} 
+                  animationDelay={0.05} 
+                />
+              </div>
+              
               <AnimatedList staggerDelay={0.1}>
                 <AnimatedItem><LeadConversionChart data={leadStats} trendValue={leadTrendValue} trendPeriod="this month" /></AnimatedItem>
               </AnimatedList>
@@ -688,6 +679,19 @@ function Analytics() {
           {/* Bookings Section */}
           {activeTab === 'bookings' && (
             <div className="space-y-6">
+              {/* KPI Card */}
+              <MetricCardWithChart 
+                title={totalBookings.toLocaleString()} 
+                subtitle="Total Bookings" 
+                description="Appointments scheduled via Ari" 
+                change={calculatePeriodChange(bookingTrend)} 
+                changeType="percentage" 
+                changeLabel="vs last period" 
+                chartData={generateChartData(bookingTrend)} 
+                animationDelay={0} 
+                className="max-w-md"
+              />
+              
               {/* Trend chart - full width */}
               <AnimatedList staggerDelay={0.1}>
                 <AnimatedItem>
@@ -717,6 +721,30 @@ function Analytics() {
           {/* AI Performance Section */}
           {activeTab === 'ai-performance' && (
             <div className="space-y-6">
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+                <MetricCardWithChart 
+                  title={avgSatisfaction.toFixed(1)} 
+                  subtitle="Avg Satisfaction" 
+                  description="User ratings out of 5 stars" 
+                  change={calculatePointChange(satisfactionTrend)} 
+                  changeType="points" 
+                  changeLabel="vs last period" 
+                  chartData={generateChartData(satisfactionTrend)} 
+                  animationDelay={0} 
+                />
+                <MetricCardWithChart 
+                  title={`${containmentRate.toFixed(0)}%`} 
+                  subtitle="AI Containment" 
+                  description="Chats resolved without human help" 
+                  change={calculatePointChange(containmentTrend)} 
+                  changeType="points" 
+                  changeLabel="vs last period" 
+                  chartData={generateChartData(containmentTrend)} 
+                  animationDelay={0.05} 
+                />
+              </div>
+              
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} trendValue={aiContainmentTrendValue} trendPeriod="this month" /></AnimatedItem>
                 <AnimatedItem><SatisfactionScoreCard averageRating={satisfactionStats?.averageRating ?? 0} totalRatings={satisfactionStats?.totalRatings ?? 0} distribution={satisfactionStats?.distribution ?? []} loading={satisfactionLoading} trendValue={satisfactionTrendValue} trendPeriod="this month" /></AnimatedItem>
