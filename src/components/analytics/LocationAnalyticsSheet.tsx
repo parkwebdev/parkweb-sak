@@ -7,17 +7,14 @@
  * @module components/analytics/LocationAnalyticsSheet
  */
 
-import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { MapMarker } from '@/components/ui/maplibre-map';
-import { ArrowRight, Users01, PieChart01, MarkerPin01 } from '@untitledui/icons';
+import { Users01, PieChart01, MarkerPin01 } from '@untitledui/icons';
 
 interface LocationAnalyticsSheetProps {
   open: boolean;
@@ -28,7 +25,7 @@ interface LocationAnalyticsSheetProps {
 
 // Country code to flag emoji helper
 function getFlagEmoji(countryCode?: string): string {
-  if (!countryCode || countryCode.length !== 2) return '🌍';
+  if (!countryCode || countryCode.length !== 2) return '';
   const codePoints = countryCode
     .toUpperCase()
     .split('')
@@ -42,27 +39,9 @@ export function LocationAnalyticsSheet({
   marker,
   totalVisitors,
 }: LocationAnalyticsSheetProps) {
-  const navigate = useNavigate();
-
   const percentage = marker && totalVisitors > 0
     ? ((marker.count / totalVisitors) * 100).toFixed(1)
     : '0';
-
-  const handleViewFullAnalytics = useCallback(() => {
-    if (!marker) return;
-    
-    const params = new URLSearchParams();
-    params.set('country', marker.country);
-    if (marker.city) {
-      params.set('city', marker.city);
-    }
-    if (marker.countryCode) {
-      params.set('countryCode', marker.countryCode);
-    }
-    
-    onOpenChange(false);
-    navigate(`/analytics?${params.toString()}`);
-  }, [marker, navigate, onOpenChange]);
 
   if (!marker) return null;
 
@@ -124,16 +103,6 @@ export function LocationAnalyticsSheet({
               out of <span className="font-medium text-foreground">{totalVisitors.toLocaleString()}</span> total.
             </p>
           </div>
-
-          {/* Action Button */}
-          <Button
-            onClick={handleViewFullAnalytics}
-            className="w-full"
-            size="lg"
-          >
-            View Full Analytics
-            <ArrowRight size={16} className="ml-2" />
-          </Button>
         </div>
       </SheetContent>
     </Sheet>
