@@ -21,8 +21,6 @@ import {
   Share07,
   File02,
   Globe01,
-  Download01,
-  ClockRefresh,
 } from '@untitledui/icons';
 
 export type AnalyticsSection = 
@@ -34,8 +32,7 @@ export type AnalyticsSection =
   | 'sources'
   | 'pages'
   | 'geography'
-  | 'export-history'
-  | 'scheduled';
+  | 'reports';
 
 interface SectionItem {
   id: AnalyticsSection;
@@ -62,8 +59,7 @@ const SECTIONS: SectionItem[] = [
   { id: 'geography', label: 'Geography', icon: Globe01, group: 'Traffic' },
   
   // Reporting
-  { id: 'export-history', label: 'Export History', icon: Download01, group: 'Reporting' },
-  { id: 'scheduled', label: 'Scheduled', icon: ClockRefresh, group: 'Reporting' },
+  { id: 'reports', label: 'Reports', icon: File02, group: 'Reporting' },
 ];
 
 interface AnalyticsSectionMenuProps {
