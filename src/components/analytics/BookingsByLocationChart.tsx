@@ -1,14 +1,14 @@
 /**
  * BookingsByLocationChart Component
  * 
- * Compact card displaying booking counts grouped by location.
- * Matches the MetricCardWithChart design with outer muted wrapper.
+ * Compact card displaying booking counts grouped by location using a Treemap.
+ * Scales well for 20+ locations. Matches MetricCardWithChart styling.
  * 
  * @module components/analytics/BookingsByLocationChart
  */
 
 import React, { useId } from 'react';
-import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
+import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MarkerPin01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
@@ -18,17 +18,74 @@ import { springs } from '@/lib/motion-variants';
 import type { BookingsByLocationChartProps } from '@/types/analytics';
 
 // Blue gradient colors from darkest to lightest
-const BAR_COLORS = [
+const COLORS = [
   'hsl(230, 80%, 45%)',
-  'hsl(225, 85%, 55%)',
-  'hsl(220, 90%, 65%)',
-  'hsl(215, 95%, 72%)',
-  'hsl(210, 100%, 80%)',
+  'hsl(225, 85%, 52%)',
+  'hsl(220, 90%, 58%)',
+  'hsl(215, 92%, 64%)',
+  'hsl(210, 95%, 70%)',
+  'hsl(205, 97%, 75%)',
+  'hsl(200, 100%, 80%)',
 ];
 
+// Custom content renderer for Treemap cells
+const TreemapCell = (props: any) => {
+  const { x, y, width, height, name, bookings, index, colors } = props;
+  
+  // Skip rendering tiny cells
+  if (width < 4 || height < 4) return null;
+  
+  const colorIndex = Math.min(index, colors.length - 1);
+  const fill = colors[colorIndex];
+  
+  // Only show text if cell is large enough
+  const showName = width > 40 && height > 20;
+  const showCount = width > 30 && height > 30;
+  
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={fill}
+        rx={4}
+        ry={4}
+        stroke="hsl(var(--card))"
+        strokeWidth={2}
+      />
+      {showName && (
+        <text
+          x={x + width / 2}
+          y={y + height / 2 - (showCount ? 6 : 0)}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="fill-white text-[10px] font-medium"
+          style={{ pointerEvents: 'none' }}
+        >
+          {name.length > Math.floor(width / 7) ? name.substring(0, Math.floor(width / 7)) + '…' : name}
+        </text>
+      )}
+      {showCount && (
+        <text
+          x={x + width / 2}
+          y={y + height / 2 + 10}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="fill-white/80 text-[9px]"
+          style={{ pointerEvents: 'none' }}
+        >
+          {bookings}
+        </text>
+      )}
+    </g>
+  );
+};
+
 /**
- * Renders a compact horizontal bar chart of bookings grouped by location.
- * Matches MetricCardWithChart styling.
+ * Renders a treemap of bookings grouped by location.
+ * Scales well for many locations.
  */
 export const BookingsByLocationChart = React.memo(function BookingsByLocationChart({
   data,
@@ -39,19 +96,18 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   const id = useId();
   const prefersReducedMotion = useReducedMotion();
   
-  // Transform data for chart (top 5 locations)
-  const chartData = data
-    .slice(0, 5)
-    .map(item => ({
-      name: item.locationName.length > 12 
-        ? item.locationName.substring(0, 12) + '…' 
-        : item.locationName,
-      fullName: item.locationName,
-      bookings: item.bookings,
-      completed: item.completed,
-      cancelled: item.cancelled,
-      noShow: item.noShow,
-    }));
+  // Sort by bookings descending and transform for treemap
+  const sortedData = [...data].sort((a, b) => b.bookings - a.bookings);
+  const treemapData = sortedData.map((item, index) => ({
+    name: item.locationName,
+    size: item.bookings,
+    bookings: item.bookings,
+    completed: item.completed,
+    cancelled: item.cancelled,
+    noShow: item.noShow,
+    index,
+    colors: COLORS,
+  }));
 
   const total = data.reduce((sum, item) => sum + item.bookings, 0);
   const locationCount = data.length;
@@ -92,7 +148,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
   }
 
   // Empty state
-  if (chartData.length === 0 || total === 0) {
+  if (treemapData.length === 0 || total === 0) {
     return (
       <motion.div 
         className={cn(
@@ -133,28 +189,26 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
         </p>
       </div>
 
-      {/* Inner card with chart */}
+      {/* Inner card with treemap */}
       <div className="relative flex flex-col gap-2 rounded-t-xl bg-card px-4 py-4 shadow-sm border-t border-border md:px-5">
-        {/* Bar Chart */}
         <div className="h-[120px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 0, right: 8, left: 0, bottom: 0 }}
+            <Treemap
+              data={treemapData}
+              dataKey="size"
+              aspectRatio={4 / 3}
+              stroke="hsl(var(--card))"
+              content={<TreemapCell />}
+              isAnimationActive={!prefersReducedMotion}
+              animationDuration={600}
             >
-              <XAxis 
-                type="number" 
-                hide
-              />
               <Tooltip
-                cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     const item = payload[0].payload;
                     return (
                       <div className="bg-popover text-popover-foreground border rounded-lg p-2 shadow-lg">
-                        <p className="font-medium text-xs">{item.fullName}</p>
+                        <p className="font-medium text-xs">{item.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {item.bookings} booking{item.bookings !== 1 ? 's' : ''}
                         </p>
@@ -164,44 +218,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
                   return null;
                 }}
               />
-              <Bar 
-                dataKey="bookings" 
-                radius={[0, 4, 4, 0]}
-                maxBarSize={16}
-                isAnimationActive={!prefersReducedMotion}
-                animationDuration={600}
-                animationEasing="ease-out"
-                label={({ x, y, width, height, name, value }) => (
-                  <g>
-                    <text 
-                      x={x - 4} 
-                      y={y + height / 2} 
-                      textAnchor="end" 
-                      dominantBaseline="middle"
-                      className="fill-foreground text-[10px]"
-                    >
-                      {name}
-                    </text>
-                    <text 
-                      x={x + width + 4} 
-                      y={y + height / 2} 
-                      textAnchor="start" 
-                      dominantBaseline="middle"
-                      className="fill-muted-foreground text-[10px]"
-                    >
-                      {value}
-                    </text>
-                  </g>
-                )}
-              >
-                {chartData.map((_, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={BAR_COLORS[index % BAR_COLORS.length]} 
-                  />
-                ))}
-              </Bar>
-            </BarChart>
+            </Treemap>
           </ResponsiveContainer>
         </div>
       </div>
