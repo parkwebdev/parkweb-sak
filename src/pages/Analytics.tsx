@@ -34,6 +34,7 @@ import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocati
 import { BookingTrendChart } from '@/components/analytics/BookingTrendChart';
 import { SatisfactionScoreCard } from '@/components/analytics/SatisfactionScoreCard';
 import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
+import { ConversationStatsCard } from '@/components/analytics/ConversationStatsCard';
 import { CustomerFeedbackCard } from '@/components/analytics/CustomerFeedbackCard';
 
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
@@ -646,7 +647,21 @@ function Analytics() {
           {activeTab === 'conversations' && (
             <div className="space-y-6">
               <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><ConversationChart data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} trendValue={conversationTrendValue} trendPeriod="this month" /></AnimatedItem>
+                <AnimatedItem>
+                  <ConversationStatsCard 
+                    conversationStats={conversationStats} 
+                    loading={loading}
+                    trendValue={conversationTrendValue}
+                    trendPeriod="this month"
+                  />
+                </AnimatedItem>
+                <AnimatedItem>
+                  <ConversationChart 
+                    data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} 
+                    trendValue={conversationTrendValue} 
+                    trendPeriod="this month" 
+                  />
+                </AnimatedItem>
               </AnimatedList>
             </div>
           )}
