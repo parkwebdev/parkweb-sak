@@ -32,15 +32,19 @@ const COLORS = [
 const TreemapCell = (props: any) => {
   const { x, y, width, height, name, bookings, index, colors } = props;
   
-  // Skip rendering tiny cells
-  if (width < 4 || height < 4) return null;
+  // Skip rendering if missing required props or tiny cells
+  if (!name || !colors || width < 4 || height < 4) return null;
   
-  const colorIndex = Math.min(index, colors.length - 1);
+  const colorIndex = Math.min(index ?? 0, colors.length - 1);
   const fill = colors[colorIndex];
   
   // Only show text if cell is large enough
   const showName = width > 40 && height > 20;
   const showCount = width > 30 && height > 30;
+  
+  // Truncate name if needed
+  const maxChars = Math.floor(width / 7);
+  const displayName = name.length > maxChars ? name.substring(0, maxChars) + '…' : name;
   
   return (
     <g>
@@ -64,7 +68,7 @@ const TreemapCell = (props: any) => {
           className="fill-white text-[10px] font-medium"
           style={{ pointerEvents: 'none' }}
         >
-          {name.length > Math.floor(width / 7) ? name.substring(0, Math.floor(width / 7)) + '…' : name}
+          {displayName}
         </text>
       )}
       {showCount && (
