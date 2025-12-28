@@ -226,7 +226,7 @@ function Analytics() {
 
   // Fetch conversation funnel data
   const {
-    stages: funnelStages,
+    stages: realFunnelStages,
     loading: funnelLoading,
   } = useConversationFunnel(startDate, endDate, shouldFetchRealData);
 
@@ -257,6 +257,7 @@ function Analytics() {
   const landingPages = mockMode && mockData ? mockData.landingPages : realLandingPages;
   const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
   const locationData = mockMode && mockData ? mockData.locationData : realLocationData;
+  const funnelStages = mockMode && mockData ? mockData.funnelStages : realFunnelStages;
 
 
   // Calculate KPIs
@@ -630,7 +631,7 @@ function Analytics() {
               />
               
               {/* Full-width conversation volume chart */}
-              <AnimatedList staggerDelay={0.1}>
+              <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem>
                   <ConversationChart 
                     data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} 
