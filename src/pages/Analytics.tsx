@@ -34,6 +34,9 @@ import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocati
 import { BookingTrendChart } from '@/components/analytics/BookingTrendChart';
 
 import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
+import { CSATDistributionCard } from '@/components/analytics/CSATDistributionCard';
+import { ConversationFunnelCard } from '@/components/analytics/ConversationFunnelCard';
+import { useConversationFunnel } from '@/hooks/useConversationFunnel';
 
 import { PeakActivityChart } from '@/components/analytics/PeakActivityChart';
 import { CustomerFeedbackCard } from '@/components/analytics/CustomerFeedbackCard';
@@ -220,6 +223,12 @@ function Analytics() {
     locationData: realLocationData,
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
+
+  // Fetch conversation funnel data
+  const {
+    stages: funnelStages,
+    loading: funnelLoading,
+  } = useConversationFunnel(startDate, endDate, shouldFetchRealData);
 
   // Fetch comparison traffic analytics for trend calculation
   const {
@@ -629,6 +638,12 @@ function Analytics() {
                     trendPeriod="this month" 
                   />
                 </AnimatedItem>
+                <AnimatedItem>
+                  <ConversationFunnelCard 
+                    stages={funnelStages} 
+                    loading={funnelLoading} 
+                  />
+                </AnimatedItem>
               </AnimatedList>
             </div>
           )}
@@ -731,6 +746,15 @@ function Analytics() {
               
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} trendValue={aiContainmentTrendValue} trendPeriod="this month" /></AnimatedItem>
+                
+                <AnimatedItem>
+                  <CSATDistributionCard 
+                    distribution={satisfactionStats?.distribution ?? []} 
+                    averageRating={satisfactionStats?.averageRating ?? 0} 
+                    totalRatings={satisfactionStats?.totalRatings ?? 0} 
+                    loading={satisfactionLoading} 
+                  />
+                </AnimatedItem>
                 
                 <AnimatedItem><CustomerFeedbackCard data={satisfactionStats?.recentFeedback ?? []} loading={satisfactionLoading} /></AnimatedItem>
               </AnimatedList>
