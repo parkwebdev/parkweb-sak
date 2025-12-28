@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapboxMap, MapMarker, computeBounds } from '@/components/ui/mapbox-map';
+import { MapLibreMap, MapMarker, computeBounds } from '@/components/ui/maplibre-map';
 import { Globe02 } from '@untitledui/icons';
 
 export interface LocationData {
@@ -17,10 +17,9 @@ export interface LocationData {
 interface VisitorLocationMapProps {
   data: LocationData[];
   loading?: boolean;
-  mapboxToken?: string;
 }
 
-export function VisitorLocationMap({ data, loading, mapboxToken }: VisitorLocationMapProps) {
+export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
   const navigate = useNavigate();
 
   // Calculate bounds to fit all markers
@@ -91,22 +90,6 @@ export function VisitorLocationMap({ data, loading, mapboxToken }: VisitorLocati
     );
   }
 
-  if (!mapboxToken) {
-    return (
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <Globe02 size={16} className="text-muted-foreground" />
-            <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Skeleton className="h-[400px] w-full rounded-none" />
-        </CardContent>
-      </Card>
-    );
-  }
-
   // Calculate total visitors for header
   const totalVisitors = data.reduce((sum, loc) => sum + loc.count, 0);
 
@@ -127,8 +110,7 @@ export function VisitorLocationMap({ data, loading, mapboxToken }: VisitorLocati
       </CardHeader>
       <CardContent className="p-0">
         <div className="h-[400px] w-full">
-          <MapboxMap
-            accessToken={mapboxToken}
+          <MapLibreMap
             center={[0, 20]}
             zoom={1.5}
             markers={markers}
