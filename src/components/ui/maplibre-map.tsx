@@ -804,7 +804,7 @@ export function MapLibreMap({
             id="heatmap-toggle"
             checked={showHeatmap}
             onCheckedChange={setShowHeatmap}
-            className="scale-75 origin-left"
+            className="scale-[0.65] origin-left"
           />
         </div>
       )}
