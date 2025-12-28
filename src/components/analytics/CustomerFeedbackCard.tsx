@@ -45,7 +45,7 @@ export const CustomerFeedbackCard = ({ data, loading }: CustomerFeedbackCardProp
     onSortingChange: setSorting,
     state: { sorting },
     initialState: {
-      pagination: { pageSize: 5 },
+      pagination: { pageSize: 10 },
     },
   });
 
@@ -76,7 +76,7 @@ export const CustomerFeedbackCard = ({ data, loading }: CustomerFeedbackCardProp
               isLoading={loading}
               emptyMessage="No feedback found"
             />
-            {tableData.length > 5 && <DataTablePagination table={table} />}
+            {tableData.length > 10 && <DataTablePagination table={table} />}
           </div>
         )}
       </CardContent>
