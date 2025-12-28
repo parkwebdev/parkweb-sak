@@ -71,11 +71,11 @@ function getMarkerFillColor(count: number, maxCount: number): string {
   return "#22c55e";
 }
 
-function createPinSVG(fillColor: string, size: number): string {
-  // Solid pin without inner circle for clearer text overlay
+function createCircleSVG(fillColor: string, size: number): string {
+  // Simple circle marker with subtle shadow
   return `
   <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 22C12 22 20 16 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 16 12 22 12 22Z" fill="${fillColor}" stroke="${fillColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="12" cy="12" r="10" fill="${fillColor}" stroke="white" stroke-width="2"/>
   </svg>`;
 }
 
@@ -220,6 +220,7 @@ export function MapLibreMap({
   const [showHeatmap, setShowHeatmap] = React.useState(false);
   const [currentZoom, setCurrentZoom] = React.useState(zoom);
   const initializedStyleRef = React.useRef<string | null>(null);
+  const [selectedMarkerIndex, setSelectedMarkerIndex] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     if (fitBounds) initialBoundsRef.current = fitBounds;
@@ -677,7 +678,7 @@ export function MapLibreMap({
 
     if (showHeatmap) return;
 
-    markersRef.current = markers.map((m) => {
+    markersRef.current = markers.map((m, index) => {
       const size = getMarkerSize(m.count, maxCount, currentZoom);
       const fillColor = getMarkerFillColor(m.count, maxCount);
 
@@ -686,26 +687,27 @@ export function MapLibreMap({
         "relative",
         onMarkerClick ? "cursor-pointer" : "cursor-default",
         "transition-all duration-300 ease-out",
-        onMarkerClick ? "hover:scale-110 hover:-translate-y-1" : "",
-        "animate-fade-in"
+        onMarkerClick ? "hover:scale-110" : "",
       );
 
-      el.style.transition = "opacity 0.3s ease-out";
+      // Staggered bounce-in animation
+      el.style.opacity = "0";
+      el.style.animation = `marker-bounce-in 0.5s ease-out ${index * 0.05}s both`;
       
-      const fontSize = Math.max(9, size * 0.35);
+      const fontSize = Math.max(9, size * 0.4);
       el.innerHTML = `
-        <div class="marker-inner" style="width:${size}px;height:${size}px;transition:width 0.2s ease-out, height 0.2s ease-out;position:relative;">
+        <div class="marker-inner" style="width:${size}px;height:${size}px;transition:width 0.2s ease-out, height 0.2s ease-out;position:relative;border-radius:50%;">
           <!-- Pulse ring (hidden by default, shown on hover) -->
           <div class="pulse-ring" style="
             position: absolute;
             inset: -4px;
-            border-radius: 50% 50% 50% 50% / 45% 45% 40% 40%;
+            border-radius: 50%;
             border: 2px solid ${fillColor};
             opacity: 0;
             pointer-events: none;
           "></div>
-          ${createPinSVG(fillColor, size)}
-          <span style="position:absolute;top:0;left:0;right:0;height:65%;display:flex;align-items:center;justify-content:center;pointer-events:none;color:white;font-size:${fontSize}px;font-weight:700;transition:font-size 0.2s ease-out;">
+          ${createCircleSVG(fillColor, size)}
+          <span style="position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;color:white;font-size:${fontSize}px;font-weight:700;transition:font-size 0.2s ease-out;">
             ${m.count > 99 ? "99+" : m.count}
           </span>
         </div>
@@ -767,7 +769,7 @@ export function MapLibreMap({
         if (onMarkerClick) onMarkerClick(m);
       });
 
-      return new maplibregl.Marker({ element: el, anchor: "bottom" })
+      return new maplibregl.Marker({ element: el, anchor: "center" })
         .setLngLat([m.lng, m.lat])
         .addTo(map);
     });
@@ -790,8 +792,79 @@ export function MapLibreMap({
     updateClusterLabels();
   }, [showHeatmap, updateClusterLabels]);
 
+  // Keyboard navigation for markers
+  React.useEffect(() => {
+    const container = containerRef.current;
+    const map = mapRef.current;
+    if (!container || !map || !markers.length) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowRight":
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedMarkerIndex((prev) =>
+            prev === null ? 0 : (prev + 1) % markers.length
+          );
+          break;
+        case "ArrowLeft":
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedMarkerIndex((prev) =>
+            prev === null ? markers.length - 1 : (prev - 1 + markers.length) % markers.length
+          );
+          break;
+        case "Enter":
+          if (selectedMarkerIndex !== null && markers[selectedMarkerIndex]) {
+            const m = markers[selectedMarkerIndex];
+            map.flyTo({ center: [m.lng, m.lat], zoom: 8, duration: 800 });
+            onMarkerClick?.(m);
+          }
+          break;
+        case "Escape":
+          setSelectedMarkerIndex(null);
+          break;
+      }
+    };
+
+    container.addEventListener("keydown", handleKeyDown);
+    return () => container.removeEventListener("keydown", handleKeyDown);
+  }, [markers, selectedMarkerIndex, onMarkerClick]);
+
+  // Visual focus ring for selected marker via keyboard
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    markersRef.current.forEach((marker, index) => {
+      const el = marker.getElement();
+      const innerDiv = el.querySelector(".marker-inner") as HTMLElement;
+      if (!innerDiv) return;
+
+      if (index === selectedMarkerIndex) {
+        innerDiv.style.outline = "2px solid white";
+        innerDiv.style.outlineOffset = "2px";
+        innerDiv.style.boxShadow = "0 0 0 4px rgba(59, 130, 246, 0.5)";
+
+        // Pan map to selected marker
+        const m = markers[index];
+        if (m) map.panTo([m.lng, m.lat], { duration: 300 });
+      } else {
+        innerDiv.style.outline = "none";
+        innerDiv.style.outlineOffset = "0";
+        innerDiv.style.boxShadow = "none";
+      }
+    });
+  }, [selectedMarkerIndex, markers]);
+
   return (
-    <div className={cn("relative overflow-hidden", className)} style={style}>
+    <div
+      className={cn("relative overflow-hidden focus:outline-none", className)}
+      style={style}
+      tabIndex={0}
+      role="application"
+      aria-label="Interactive map with markers. Use arrow keys to navigate markers, Enter to select."
+    >
       <div ref={containerRef} className="h-full w-full" />
 
       {showControls && (
@@ -844,15 +917,15 @@ export function MapLibreMap({
           ) : (
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createPinSVG("#22c55e", 14) }} />
+                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#22c55e", 14) }} />
                 <span>Low</span>
               </div>
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createPinSVG("#f59e0b", 14) }} />
+                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#f59e0b", 14) }} />
                 <span>Medium</span>
               </div>
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createPinSVG("#ef4444", 14) }} />
+                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#ef4444", 14) }} />
                 <span>High</span>
               </div>
             </div>
