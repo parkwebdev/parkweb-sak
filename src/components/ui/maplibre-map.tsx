@@ -208,6 +208,7 @@ export function MapLibreMap({
   const { theme: currentTheme } = useTheme();
   const [mapStyle, setMapStyle] = React.useState(POSITRON_STYLE);
   const [showHeatmap, setShowHeatmap] = React.useState(false);
+  const initializedStyleRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     if (fitBounds) initialBoundsRef.current = fitBounds;
@@ -489,6 +490,16 @@ export function MapLibreMap({
     const map = mapRef.current;
     if (!map) return;
 
+    // Skip setStyle on first render - map was created with this style
+    if (initializedStyleRef.current === null) {
+      initializedStyleRef.current = mapStyle;
+      return;
+    }
+
+    // Only call setStyle if style actually changed
+    if (initializedStyleRef.current === mapStyle) return;
+    initializedStyleRef.current = mapStyle;
+
     // Preserve current view when switching styles
     const current = map.getCenter();
     const currentZoom = map.getZoom();
@@ -713,7 +724,14 @@ export function MapLibreMap({
           <div className="font-medium mb-2">{showHeatmap ? "Density intensity" : "Visitor density"}</div>
           {showHeatmap ? (
             <div className="flex items-center gap-1">
-              <div className="w-24 h-3 rounded-sm bg-gradient-to-r from-blue-400 via-yellow-200 to-red-600" />
+              <div 
+                className="w-24 h-3 rounded-sm" 
+                style={{
+                  background: mapStyle.includes("dark-matter")
+                    ? "linear-gradient(to right, rgb(0, 255, 255), rgb(0, 255, 128), rgb(255, 255, 0), rgb(255, 165, 0), rgb(255, 69, 0), rgb(255, 0, 64))"
+                    : "linear-gradient(to right, rgb(65, 182, 196), rgb(127, 205, 187), rgb(199, 233, 180), rgb(254, 178, 76), rgb(240, 59, 32), rgb(189, 0, 38))"
+                }}
+              />
               <span className="text-2xs ml-1">Low → High</span>
             </div>
           ) : (
