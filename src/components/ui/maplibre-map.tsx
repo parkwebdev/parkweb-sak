@@ -466,9 +466,25 @@ export function MapLibreMap({
     map.on("move", updateClusterLabels);
     map.on("zoom", updateClusterLabels);
     
-    // Track zoom level changes for marker sizing
-    map.on("zoomend", () => {
-      setCurrentZoom(Math.floor(map.getZoom()));
+    // Track zoom level changes with smooth marker size updates
+    map.on("zoom", () => {
+      const newZoom = Math.round(map.getZoom() * 10) / 10;
+      setCurrentZoom(newZoom);
+      
+      // Update marker sizes in-place for smooth transitions
+      markersRef.current.forEach((marker, index) => {
+        const m = markers[index];
+        if (!m) return;
+        
+        const size = getMarkerSize(m.count, maxCount, newZoom);
+        const el = marker.getElement();
+        const innerDiv = el.querySelector('.marker-inner') as HTMLElement;
+        
+        if (innerDiv) {
+          innerDiv.style.width = `${size}px`;
+          innerDiv.style.height = `${size}px`;
+        }
+      });
     });
 
     return () => {
@@ -642,7 +658,7 @@ export function MapLibreMap({
       );
 
       el.innerHTML = `
-        <div class="relative" style="width:${size}px;height:${size}px">
+        <div class="marker-inner" style="width:${size}px;height:${size}px;transition:width 0.2s ease-out, height 0.2s ease-out;position:relative;">
           ${createPinSVG(fillColor, size)}
           <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;margin-top:-6px;pointer-events:none;color:white;font-size:10px;font-weight:700;">
             ${m.count > 99 ? "99+" : m.count}
@@ -696,7 +712,7 @@ export function MapLibreMap({
         .setLngLat([m.lng, m.lat])
         .addTo(map);
     });
-  }, [markers, maxCount, onMarkerClick, showHeatmap, currentZoom]);
+  }, [markers, maxCount, onMarkerClick, showHeatmap]);
 
   // Toggle layer visibility when heatmap changes
   React.useEffect(() => {
@@ -735,13 +751,20 @@ export function MapLibreMap({
       )}
 
       {showControls && (
-        <button
-          onClick={resetView}
-          className="absolute bottom-4 right-4 p-2 bg-background/90 backdrop-blur-sm border border-border rounded-lg shadow-md hover:bg-muted transition-colors z-10"
-          title="Reset view"
-        >
-          <RefreshCcw01 size={16} />
-        </button>
+        <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+          <div className="bg-background/90 backdrop-blur-sm border border-border rounded-md px-2 py-1 shadow-md">
+            <span className="text-2xs font-medium text-muted-foreground">
+              {currentZoom.toFixed(1)}×
+            </span>
+          </div>
+          <button
+            onClick={resetView}
+            className="p-2 bg-background/90 backdrop-blur-sm border border-border rounded-lg shadow-md hover:bg-muted transition-colors"
+            title="Reset view"
+          >
+            <RefreshCcw01 size={16} />
+          </button>
+        </div>
       )}
 
       {showControls && markers.length > 0 && (
