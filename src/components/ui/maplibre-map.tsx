@@ -590,20 +590,27 @@ export function MapLibreMap({
       const fillColor = getMarkerFillColor(m.count, maxCount);
 
       const el = document.createElement("div");
+      // Keep root element simple - NO transforms or animations here
+      // MapLibre controls this element's transform for positioning
       el.className = cn(
         "relative",
         onMarkerClick ? "cursor-pointer" : "cursor-default",
-        "transition-all duration-300 ease-out",
-        onMarkerClick ? "hover:scale-110" : "",
       );
-
-      // Staggered bounce-in animation
-      el.style.opacity = "0";
-      el.style.animation = `marker-bounce-in 0.5s ease-out ${index * 0.05}s both`;
       
       const fontSize = Math.max(9, size * 0.4);
+      const animationDelay = index * 0.05;
+      
+      // All animations and transforms go on .marker-inner, NOT the root el
       el.innerHTML = `
-        <div class="marker-inner" style="width:${size}px;height:${size}px;transition:width 0.2s ease-out, height 0.2s ease-out;position:relative;border-radius:50%;">
+        <div class="marker-inner" style="
+          width:${size}px;
+          height:${size}px;
+          position:relative;
+          border-radius:50%;
+          opacity:0;
+          animation: marker-bounce-in 0.5s ease-out ${animationDelay}s both;
+          transition: transform 0.2s ease-out, width 0.2s ease-out, height 0.2s ease-out;
+        ">
           <!-- Pulse ring (hidden by default, shown on hover) -->
           <div class="pulse-ring" style="
             position: absolute;
@@ -621,6 +628,12 @@ export function MapLibreMap({
       `;
 
       el.addEventListener("mouseenter", () => {
+        // Scale up inner element (NOT root el - that would break MapLibre positioning)
+        const inner = el.querySelector('.marker-inner') as HTMLElement;
+        if (inner && onMarkerClick) {
+          inner.style.transform = "scale(1.1)";
+        }
+        
         // Trigger pulse animation
         const pulseRing = el.querySelector('.pulse-ring') as HTMLElement;
         if (pulseRing) {
@@ -653,6 +666,12 @@ export function MapLibreMap({
       });
 
       el.addEventListener("mouseleave", () => {
+        // Reset scale on inner element
+        const inner = el.querySelector('.marker-inner') as HTMLElement;
+        if (inner) {
+          inner.style.transform = "scale(1)";
+        }
+        
         // Stop pulse animation
         const pulseRing = el.querySelector('.pulse-ring') as HTMLElement;
         if (pulseRing) {
