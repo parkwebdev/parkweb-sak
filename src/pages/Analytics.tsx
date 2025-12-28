@@ -560,14 +560,13 @@ function Analytics() {
     'sources': { title: 'Traffic Sources', description: 'Understand where your visitors come from' },
     'pages': { title: 'Top Pages', description: 'See which pages drive the most engagement' },
     'geography': { title: 'Geography', description: 'View visitor locations around the world' },
-    'export-history': { title: 'Export History', description: 'View and download past reports' },
-    'scheduled': { title: 'Scheduled Reports', description: 'Manage automated report delivery' },
+    'reports': { title: 'Reports', description: 'View export history and manage scheduled reports' },
   };
 
   // Sections that show the toolbar
   const showToolbar = ['dashboard', 'conversations', 'leads', 'bookings', 'ai-performance', 'sources', 'pages', 'geography'].includes(activeTab);
   // Sections that show build report button
-  const showBuildReport = ['export-history', 'scheduled'].includes(activeTab);
+  const showBuildReport = activeTab === 'reports';
 
   return (
     <div className="flex-1 h-full bg-muted/30 flex min-h-0">
@@ -743,16 +742,10 @@ function Analytics() {
             </div>
           )}
 
-          {/* Export History Section */}
-          {activeTab === 'export-history' && (
+          {/* Reports Section */}
+          {activeTab === 'reports' && (
             <div className="space-y-6">
               <ExportHistoryTable />
-            </div>
-          )}
-
-          {/* Scheduled Reports Section */}
-          {activeTab === 'scheduled' && (
-            <div className="space-y-6">
               <ScheduledReportsManager />
             </div>
           )}
