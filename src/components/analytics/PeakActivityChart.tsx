@@ -33,15 +33,13 @@ export interface PeakActivityChartProps {
 // Day order for sorting
 const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-// Gradient colors from light to dark (like TrafficSourceChart)
+// Blue gradient colors from darkest to lightest
 const BAR_COLORS = [
-  'hsl(var(--primary))',
-  'hsl(var(--primary) / 0.85)',
-  'hsl(var(--primary) / 0.70)',
-  'hsl(var(--primary) / 0.55)',
-  'hsl(var(--primary) / 0.40)',
-  'hsl(var(--primary) / 0.30)',
-  'hsl(var(--primary) / 0.20)',
+  'hsl(230, 80%, 45%)',   // Darkest blue - top item
+  'hsl(225, 85%, 55%)',
+  'hsl(220, 90%, 65%)',
+  'hsl(215, 95%, 72%)',
+  'hsl(210, 100%, 80%)',  // Lightest blue
 ];
 
 /**
