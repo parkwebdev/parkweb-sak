@@ -8,7 +8,7 @@
  * @module components/analytics/BookingTrendChart
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartTooltipContent } from '@/components/charts/charts-base';
@@ -21,13 +21,6 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import type { BookingTrendData } from '@/types/analytics';
 
 interface BookingTrendChartProps {
@@ -43,7 +36,7 @@ interface BookingTrendChartProps {
   className?: string;
 }
 
-type ViewMode = 'all-statuses' | 'total-only';
+
 
 /** Color configuration matching ConversationChart blue palette */
 const TREND_COLORS = {
@@ -65,7 +58,6 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
   trendPeriod = 'this month',
   className,
 }: BookingTrendChartProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('all-statuses');
   const prefersReducedMotion = useReducedMotion();
 
   // Calculate totals for context summary
@@ -127,17 +119,6 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
           trendValue={trendValue}
           trendLabel="Bookings"
           trendPeriod={trendPeriod}
-          rightSlot={
-            <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <SelectTrigger className="w-[130px] h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all-statuses">All Statuses</SelectItem>
-                <SelectItem value="total-only">Total Only</SelectItem>
-              </SelectContent>
-            </Select>
-          }
         />
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -218,27 +199,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                 }}
               />
 
-              {viewMode === 'total-only' ? (
-                <Area
-                  isAnimationActive={!prefersReducedMotion}
-                  animationDuration={800}
-                  animationEasing="ease-out"
-                  dataKey="total"
-                  name="Total"
-                  type="monotone"
-                  stroke={TREND_COLORS.total}
-                  strokeWidth={2}
-                  fill="url(#gradientTotal)"
-                  activeDot={{
-                    r: 5,
-                    fill: 'hsl(var(--background))',
-                    stroke: TREND_COLORS.total,
-                    strokeWidth: 2,
-                  }}
-                />
-              ) : (
-                <>
-                  <Area
+              <Area
                     isAnimationActive={!prefersReducedMotion}
                     animationDuration={800}
                     animationEasing="ease-out"
@@ -313,8 +274,6 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                       strokeWidth: 2,
                     }}
                   />
-                </>
-              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -325,46 +284,34 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
             Showing {totalBookings.toLocaleString()} bookings over {data.length} days
           </p>
           <div className="flex flex-wrap gap-2 justify-start">
-            {viewMode === 'total-only' ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                <span 
-                  className="h-2 w-2 rounded-full shrink-0" 
-                  style={{ backgroundColor: TREND_COLORS.total }}
-                />
-                <span className="text-xs text-muted-foreground">Total Bookings</span>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.completed }}
-                  />
-                  <span className="text-xs text-muted-foreground">Completed</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.confirmed }}
-                  />
-                  <span className="text-xs text-muted-foreground">Confirmed</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.cancelled }}
-                  />
-                  <span className="text-xs text-muted-foreground">Cancelled</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.noShow }}
-                  />
-                  <span className="text-xs text-muted-foreground">No-show</span>
-                </div>
-              </>
-            )}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: TREND_COLORS.completed }}
+              />
+              <span className="text-xs text-muted-foreground">Completed</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: TREND_COLORS.confirmed }}
+              />
+              <span className="text-xs text-muted-foreground">Confirmed</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: TREND_COLORS.cancelled }}
+              />
+              <span className="text-xs text-muted-foreground">Cancelled</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: TREND_COLORS.noShow }}
+              />
+              <span className="text-xs text-muted-foreground">No-show</span>
+            </div>
           </div>
         </div>
       </CardContent>
