@@ -679,36 +679,30 @@ function Analytics() {
           {/* Bookings Section */}
           {activeTab === 'bookings' && (
             <div className="space-y-6">
-              {/* KPI Card */}
-              <MetricCardWithChart 
-                title={totalBookings.toLocaleString()} 
-                subtitle="Total Bookings" 
-                description="Appointments scheduled via Ari" 
-                change={calculatePeriodChange(bookingTrend)} 
-                changeType="percentage" 
-                changeLabel="vs last period" 
-                chartData={generateChartData(bookingTrend)} 
-                animationDelay={0} 
-                className="max-w-md"
-              />
+              {/* KPI Cards - 2 column grid */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+                <MetricCardWithChart 
+                  title={totalBookings.toLocaleString()} 
+                  subtitle="Total Bookings" 
+                  description="Appointments scheduled via Ari" 
+                  change={calculatePeriodChange(bookingTrend)} 
+                  changeType="percentage" 
+                  changeLabel="vs last period" 
+                  chartData={generateChartData(bookingTrend)} 
+                  animationDelay={0} 
+                />
+                <BookingsByLocationChart 
+                  data={bookingStats?.byLocation ?? []} 
+                  loading={bookingLoading}
+                  animationDelay={0.05}
+                />
+              </div>
               
               {/* Trend chart - full width */}
               <AnimatedList staggerDelay={0.1}>
                 <AnimatedItem>
                   <BookingTrendChart 
                     data={bookingStats?.trend ?? []} 
-                    loading={bookingLoading}
-                    trendValue={bookingTrendValue}
-                    trendPeriod="this month"
-                  />
-                </AnimatedItem>
-              </AnimatedList>
-              
-              {/* Bookings by location - full width */}
-              <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem>
-                  <BookingsByLocationChart 
-                    data={bookingStats?.byLocation ?? []} 
                     loading={bookingLoading}
                     trendValue={bookingTrendValue}
                     trendPeriod="this month"
