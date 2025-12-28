@@ -1,8 +1,8 @@
-import { useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useCallback, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapLibreMap, MapMarker, computeBounds } from '@/components/ui/maplibre-map';
+import { LocationAnalyticsSheet } from './LocationAnalyticsSheet';
 import { Globe02 } from '@untitledui/icons';
 
 export interface LocationData {
@@ -20,7 +20,7 @@ interface VisitorLocationMapProps {
 }
 
 export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
-  const navigate = useNavigate();
+  const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
 
   // Calculate bounds to fit all markers
   const bounds = useMemo(() => {
@@ -41,18 +41,15 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
     }));
   }, [data]);
 
-  // Handle marker click - navigate to analytics filtered by location
+  // Handle marker click - open sheet with location details
   const handleMarkerClick = useCallback((marker: MapMarker) => {
-    const params = new URLSearchParams();
-    params.set('country', marker.country);
-    if (marker.city) {
-      params.set('city', marker.city);
-    }
-    if (marker.countryCode) {
-      params.set('countryCode', marker.countryCode);
-    }
-    navigate(`/analytics?${params.toString()}`);
-  }, [navigate]);
+    setSelectedMarker(marker);
+  }, []);
+
+  // Calculate total visitors
+  const totalVisitors = useMemo(() => {
+    return data.reduce((sum, loc) => sum + loc.count, 0);
+  }, [data]);
 
   if (loading) {
     return (
@@ -90,43 +87,49 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
     );
   }
 
-  // Calculate total visitors for header
-  const totalVisitors = data.reduce((sum, loc) => sum + loc.count, 0);
-
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Globe02 size={16} className="text-muted-foreground" />
-            <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
+    <>
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Globe02 size={16} className="text-muted-foreground" />
+              <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span>{totalVisitors.toLocaleString()} visitors</span>
+              <span>•</span>
+              <span>{data.length} {data.length === 1 ? 'location' : 'locations'}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span>{totalVisitors.toLocaleString()} visitors</span>
-            <span>•</span>
-            <span>{data.length} {data.length === 1 ? 'location' : 'locations'}</span>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="h-[400px] w-full">
+            <MapLibreMap
+              center={[0, 20]}
+              zoom={1.5}
+              markers={markers}
+              fitBounds={bounds || undefined}
+              fitBoundsPadding={60}
+              className="h-full w-full"
+              showControls
+              onMarkerClick={handleMarkerClick}
+            />
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="h-[400px] w-full">
-          <MapLibreMap
-            center={[0, 20]}
-            zoom={1.5}
-            markers={markers}
-            fitBounds={bounds || undefined}
-            fitBoundsPadding={60}
-            className="h-full w-full"
-            showControls
-            onMarkerClick={handleMarkerClick}
-          />
-        </div>
-        <div className="px-4 py-2 border-t border-border bg-muted/30">
-          <p className="text-2xs text-muted-foreground text-center">
-            Click on a location marker to view detailed analytics for that region
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="px-4 py-2 border-t border-border bg-muted/30">
+            <p className="text-2xs text-muted-foreground text-center">
+              Click on a location marker to view detailed analytics for that region
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <LocationAnalyticsSheet
+        open={!!selectedMarker}
+        onOpenChange={(open) => !open && setSelectedMarker(null)}
+        marker={selectedMarker}
+        totalVisitors={totalVisitors}
+      />
+    </>
   );
 }
