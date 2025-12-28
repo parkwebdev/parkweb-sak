@@ -477,13 +477,38 @@ export function MapLibreMap({
         if (!m) return;
         
         const size = getMarkerSize(m.count, maxCount, newZoom);
+        const fontSize = Math.max(9, size * 0.35);
         const el = marker.getElement();
         const innerDiv = el.querySelector('.marker-inner') as HTMLElement;
+        const svg = innerDiv?.querySelector('svg');
+        const textSpan = innerDiv?.querySelector('span') as HTMLElement;
         
         if (innerDiv) {
           innerDiv.style.width = `${size}px`;
           innerDiv.style.height = `${size}px`;
         }
+        if (svg) {
+          svg.setAttribute('width', `${size}`);
+          svg.setAttribute('height', `${size}`);
+        }
+        if (textSpan) {
+          textSpan.style.fontSize = `${fontSize}px`;
+        }
+      });
+    });
+    
+    // Add dissolve effect during zoom transitions
+    map.on("zoomstart", () => {
+      markersRef.current.forEach((marker) => {
+        const el = marker.getElement();
+        el.style.opacity = "0.7";
+      });
+    });
+    
+    map.on("zoomend", () => {
+      markersRef.current.forEach((marker) => {
+        const el = marker.getElement();
+        el.style.opacity = "1";
       });
     });
 
@@ -657,10 +682,13 @@ export function MapLibreMap({
         "animate-fade-in"
       );
 
+      el.style.transition = "opacity 0.3s ease-out";
+      
+      const fontSize = Math.max(9, size * 0.35);
       el.innerHTML = `
         <div class="marker-inner" style="width:${size}px;height:${size}px;transition:width 0.2s ease-out, height 0.2s ease-out;position:relative;">
           ${createPinSVG(fillColor, size)}
-          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;margin-top:-6px;pointer-events:none;color:white;font-size:10px;font-weight:700;">
+          <span style="position:absolute;top:0;left:0;right:0;height:65%;display:flex;align-items:center;justify-content:center;pointer-events:none;color:white;font-size:${fontSize}px;font-weight:700;transition:font-size 0.2s ease-out;">
             ${m.count > 99 ? "99+" : m.count}
           </span>
         </div>
