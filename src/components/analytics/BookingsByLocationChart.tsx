@@ -101,7 +101,6 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
           trendValue={trendValue}
           trendLabel="Bookings"
           trendPeriod={trendPeriod}
-          contextSummary={`Showing ${total.toLocaleString()} bookings across ${locationCount} location${locationCount !== 1 ? 's' : ''}`}
         />
         <div className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -164,6 +163,9 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
             </BarChart>
           </ResponsiveContainer>
         </div>
+        <p className="text-xs text-muted-foreground mt-4">
+          Showing {total.toLocaleString()} bookings across {locationCount} location{locationCount !== 1 ? 's' : ''}
+        </p>
       </CardContent>
     </Card>
   );
