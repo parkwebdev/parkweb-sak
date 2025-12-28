@@ -6,45 +6,15 @@ import maplibregl, { Map as MapLibreInstance, MapMouseEvent, GeoJSONSource } fro
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { useTheme } from "@/components/ThemeProvider";
-import { RefreshCcw01, ChevronDown, LayersThree01 } from "@untitledui/icons";
+import { RefreshCcw01, LayersThree01 } from "@untitledui/icons";
 import { logger } from "@/utils/logger";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// Map style options using CARTO basemaps (free, no API key required)
-type MapStyleKey = "voyager" | "positron" | "darkMatter";
-
-interface MapStyleOption {
-  label: string;
-  light: string;
-  dark: string;
-}
-
-const MAP_STYLE_OPTIONS: Record<MapStyleKey, MapStyleOption> = {
-  voyager: {
-    label: "Voyager",
-    light: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
-    dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  },
-  positron: {
-    label: "Positron",
-    light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-    dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  },
-  darkMatter: {
-    label: "Dark Matter",
-    light: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-    dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  },
-};
+// CARTO basemap URLs - Positron for light, Dark Matter for dark
+const POSITRON_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+const DARK_MATTER_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
 export interface MapMarker {
   id: string;
@@ -236,34 +206,33 @@ export function MapLibreMap({
   const initialBoundsRef = React.useRef(fitBounds);
 
   const { theme: currentTheme } = useTheme();
-  const [selectedStyleKey, setSelectedStyleKey] = React.useState<MapStyleKey>("voyager");
-  const [mapStyle, setMapStyle] = React.useState(MAP_STYLE_OPTIONS.voyager.light);
+  const [mapStyle, setMapStyle] = React.useState(POSITRON_STYLE);
   const [showHeatmap, setShowHeatmap] = React.useState(false);
 
   React.useEffect(() => {
     if (fitBounds) initialBoundsRef.current = fitBounds;
   }, [fitBounds]);
 
+  // Auto-switch map style based on theme: Positron for light, Dark Matter for dark
   React.useEffect(() => {
-    const styleOption = MAP_STYLE_OPTIONS[selectedStyleKey];
     const resolveStyle = () => {
       if (currentTheme === "system") {
         return window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? styleOption.dark
-          : styleOption.light;
+          ? DARK_MATTER_STYLE
+          : POSITRON_STYLE;
       }
-      return currentTheme === "dark" ? styleOption.dark : styleOption.light;
+      return currentTheme === "dark" ? DARK_MATTER_STYLE : POSITRON_STYLE;
     };
 
     setMapStyle(resolveStyle());
 
     if (currentTheme === "system") {
       const mql = window.matchMedia("(prefers-color-scheme: dark)");
-      const handler = () => setMapStyle(mql.matches ? styleOption.dark : styleOption.light);
+      const handler = () => setMapStyle(mql.matches ? DARK_MATTER_STYLE : POSITRON_STYLE);
       mql.addEventListener("change", handler);
       return () => mql.removeEventListener("change", handler);
     }
-  }, [currentTheme, selectedStyleKey]);
+  }, [currentTheme]);
 
   const maxCount = React.useMemo(
     () => Math.max(...markers.map((m) => m.count), 1),
@@ -410,6 +379,17 @@ export function MapLibreMap({
       } as any);
 
       // No cluster-count symbol layer - we use HTML labels instead
+
+      // Ensure correct layer visibility after initial load
+      map.once("idle", () => {
+        if (map.getLayer("heatmap")) {
+          map.setLayoutProperty("heatmap", "visibility", showHeatmap ? "visible" : "none");
+        }
+        if (map.getLayer("clusters")) {
+          map.setLayoutProperty("clusters", "visibility", showHeatmap ? "none" : "visible");
+        }
+        updateClusterLabels();
+      });
 
       // Cluster interactions
       map.on("click", "clusters", (e: MapMouseEvent) => {
@@ -704,43 +684,17 @@ export function MapLibreMap({
       <div ref={containerRef} className="h-full w-full" />
 
       {showControls && (
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-background/90 backdrop-blur-sm border-border shadow-md gap-1"
-              >
-                {MAP_STYLE_OPTIONS[selectedStyleKey].label}
-                <ChevronDown size={14} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {(Object.keys(MAP_STYLE_OPTIONS) as MapStyleKey[]).map((key) => (
-                <DropdownMenuItem
-                  key={key}
-                  onClick={() => setSelectedStyleKey(key)}
-                  className={cn(selectedStyleKey === key && "bg-accent")}
-                >
-                  {MAP_STYLE_OPTIONS[key].label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="flex items-center gap-2 bg-background/90 backdrop-blur-sm border border-border rounded-md px-3 py-1.5 shadow-md">
-            <LayersThree01 size={14} className={cn(showHeatmap && "text-orange-500")} />
-            <Label htmlFor="heatmap-toggle" className="text-xs font-medium cursor-pointer">
-              Heatmap
-            </Label>
-            <Switch
-              id="heatmap-toggle"
-              checked={showHeatmap}
-              onCheckedChange={setShowHeatmap}
-              className="scale-75"
-            />
-          </div>
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-background/90 backdrop-blur-sm border border-border rounded-md px-3 py-1.5 shadow-md">
+          <LayersThree01 size={14} className={cn(showHeatmap && "text-orange-500")} />
+          <Label htmlFor="heatmap-toggle" className="text-xs font-medium cursor-pointer">
+            Heatmap
+          </Label>
+          <Switch
+            id="heatmap-toggle"
+            checked={showHeatmap}
+            onCheckedChange={setShowHeatmap}
+            className="scale-75"
+          />
         </div>
       )}
 
