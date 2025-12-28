@@ -65,7 +65,10 @@ const TreemapCell = (props: any) => {
           y={y + height / 2 - (showCount ? 6 : 0)}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="fill-white text-[10px] font-medium"
+          fill="white"
+          stroke="none"
+          fontSize={10}
+          fontWeight={500}
           style={{ pointerEvents: 'none' }}
         >
           {displayName}
@@ -77,7 +80,9 @@ const TreemapCell = (props: any) => {
           y={y + height / 2 + 10}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="fill-white/80 text-[9px]"
+          fill="rgba(255,255,255,0.8)"
+          stroke="none"
+          fontSize={9}
           style={{ pointerEvents: 'none' }}
         >
           {bookings}
