@@ -207,6 +207,24 @@
   }
 }
 
+/* Marker bounce-in animation for new markers */
+@keyframes marker-bounce-in {
+  0% {
+    transform: scale(0) translateY(-20px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) translateY(0);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
