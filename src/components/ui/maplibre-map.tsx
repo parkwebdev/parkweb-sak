@@ -416,7 +416,15 @@ export function MapLibreMap({
         source.getClusterExpansionZoom(clusterId).then((zoomLevel) => {
           const coords = (feature.geometry as any)?.coordinates as [number, number] | undefined;
           if (!coords) return;
-          map.easeTo({ center: coords, zoom: zoomLevel, duration: 500 });
+          // Use flyTo for smoother animation with arc trajectory
+          map.flyTo({
+            center: coords,
+            zoom: zoomLevel,
+            duration: 800,
+            essential: true,
+            curve: 1.42,
+            speed: 1.2,
+          });
         }).catch(() => {
           // ignore
         });
@@ -687,6 +695,15 @@ export function MapLibreMap({
       const fontSize = Math.max(9, size * 0.35);
       el.innerHTML = `
         <div class="marker-inner" style="width:${size}px;height:${size}px;transition:width 0.2s ease-out, height 0.2s ease-out;position:relative;">
+          <!-- Pulse ring (hidden by default, shown on hover) -->
+          <div class="pulse-ring" style="
+            position: absolute;
+            inset: -4px;
+            border-radius: 50% 50% 50% 50% / 45% 45% 40% 40%;
+            border: 2px solid ${fillColor};
+            opacity: 0;
+            pointer-events: none;
+          "></div>
           ${createPinSVG(fillColor, size)}
           <span style="position:absolute;top:0;left:0;right:0;height:65%;display:flex;align-items:center;justify-content:center;pointer-events:none;color:white;font-size:${fontSize}px;font-weight:700;transition:font-size 0.2s ease-out;">
             ${m.count > 99 ? "99+" : m.count}
@@ -695,6 +712,13 @@ export function MapLibreMap({
       `;
 
       el.addEventListener("mouseenter", () => {
+        // Trigger pulse animation
+        const pulseRing = el.querySelector('.pulse-ring') as HTMLElement;
+        if (pulseRing) {
+          pulseRing.style.animation = "marker-pulse 1s ease-out infinite";
+          pulseRing.style.opacity = "0.8";
+        }
+        
         if (!hoverPopupRef.current) {
           hoverPopupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 25 });
         }
@@ -720,6 +744,13 @@ export function MapLibreMap({
       });
 
       el.addEventListener("mouseleave", () => {
+        // Stop pulse animation
+        const pulseRing = el.querySelector('.pulse-ring') as HTMLElement;
+        if (pulseRing) {
+          pulseRing.style.animation = "none";
+          pulseRing.style.opacity = "0";
+        }
+        
         hoverPopupRef.current?.remove();
       });
 
