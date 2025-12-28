@@ -69,7 +69,7 @@ interface MapLibreMapProps {
 }
 
 function countryCodeToFlag(code: string): string {
-  if (!code || code.length !== 2) return "🌍";
+  if (!code || code.length !== 2) return "";
   return code
     .toUpperCase()
     .split("")
@@ -92,12 +92,10 @@ function getMarkerFillColor(count: number, maxCount: number): string {
 }
 
 function createPinSVG(fillColor: string, size: number): string {
-  // Same pin shape as before, but as an inline string for maplibre-gl Marker
+  // Solid pin without inner circle for clearer text overlay
   return `
   <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" fill="white" />
     <path d="M12 22C12 22 20 16 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 16 12 22 12 22Z" fill="${fillColor}" stroke="${fillColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" fill="white" />
   </svg>`;
 }
 
@@ -121,8 +119,8 @@ function buildGeoJson(markers: MapMarker[]) {
   };
 }
 
-// Boosted heatmap paint properties for better visibility
-const HEATMAP_PAINT = {
+// Heatmap paint properties for light backgrounds
+const HEATMAP_PAINT_LIGHT = {
   "heatmap-weight": [
     "interpolate",
     ["linear"],
@@ -166,6 +164,58 @@ const HEATMAP_PAINT = {
     12, 0.8,
   ],
 };
+
+// Heatmap paint properties for dark backgrounds (brighter, more saturated)
+const HEATMAP_PAINT_DARK = {
+  "heatmap-weight": [
+    "interpolate",
+    ["linear"],
+    ["get", "count"],
+    0, 0,
+    5, 0.5,
+    20, 1,
+  ],
+  "heatmap-intensity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 2,
+    9, 5,
+  ],
+  "heatmap-color": [
+    "interpolate",
+    ["linear"],
+    ["heatmap-density"],
+    0, "rgba(0, 0, 255, 0)",
+    0.1, "rgba(0, 255, 255, 0.5)",
+    0.3, "rgba(0, 255, 128, 0.65)",
+    0.5, "rgba(255, 255, 0, 0.75)",
+    0.7, "rgba(255, 165, 0, 0.85)",
+    0.9, "rgba(255, 69, 0, 0.92)",
+    1, "rgba(255, 0, 64, 1)",
+  ],
+  "heatmap-radius": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 35,
+    9, 55,
+  ],
+  "heatmap-opacity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 1,
+    7, 0.95,
+    12, 0.85,
+  ],
+};
+
+// Helper to get appropriate heatmap paint based on style
+function getHeatmapPaint(styleUrl: string) {
+  const isDark = styleUrl.includes("dark-matter");
+  return isDark ? HEATMAP_PAINT_DARK : HEATMAP_PAINT_LIGHT;
+}
 
 export function MapLibreMap({
   className,
@@ -324,7 +374,7 @@ export function MapLibreMap({
         type: "heatmap",
         source: "visitors",
         layout: { visibility: "none" },
-        paint: HEATMAP_PAINT,
+        paint: getHeatmapPaint(mapStyle),
       } as any);
 
       map.addLayer({
@@ -490,7 +540,7 @@ export function MapLibreMap({
           type: "heatmap",
           source: "visitors",
           layout: { visibility: showHeatmap ? "visible" : "none" },
-          paint: HEATMAP_PAINT,
+          paint: getHeatmapPaint(mapStyle),
         } as any
       );
 
@@ -598,12 +648,13 @@ export function MapLibreMap({
           hoverPopupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 25 });
         }
 
+        const flag = m.countryCode && m.countryCode.length === 2 ? countryCodeToFlag(m.countryCode) : "";
         hoverPopupRef.current
           .setLngLat([m.lng, m.lat])
           .setHTML(
             `<div class="p-2 font-sans">
               <div class="flex items-center gap-2 mb-1">
-                <span class="text-xl">${countryCodeToFlag(m.countryCode || "")}</span>
+                ${flag ? `<span class="text-xl">${flag}</span>` : ""}
                 <div>
                   <div class="font-semibold text-sm">${m.country}</div>
                   ${m.city ? `<div class="text-xs opacity-70">${m.city}</div>` : ""}
