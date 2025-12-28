@@ -24,16 +24,6 @@ interface LocationAnalyticsSheetProps {
   totalVisitors: number;
 }
 
-// Country code to flag emoji helper
-function getFlagEmoji(countryCode?: string): string {
-  if (!countryCode || countryCode.length !== 2) return '';
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map((char) => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
-}
-
 // Generate pseudo-random but consistent activity data based on location
 function generateActivityData(country: string, city?: string): number[] {
   const seed = (country + (city || '')).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -78,17 +68,7 @@ export function LocationAnalyticsSheet({
       <SheetContent side="right" className="w-[340px] sm:w-[400px]">
         <SheetHeader className="pb-4 px-0">
           <SheetTitle className="text-xl leading-tight">
-            <span className="relative inline-block">
-              {getFlagEmoji(marker.countryCode) && (
-                <span
-                  className="absolute right-full top-0 pr-2 text-2xl leading-none"
-                  aria-hidden="true"
-                >
-                  {getFlagEmoji(marker.countryCode)}
-                </span>
-              )}
-              <span>{marker.country}</span>
-            </span>
+            <span>{marker.country}</span>
             {marker.city && (
               <p className="text-sm font-normal text-muted-foreground">{marker.city}</p>
             )}
