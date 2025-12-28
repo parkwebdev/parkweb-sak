@@ -11,7 +11,8 @@
 import React, { useState, useCallback } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs } from '@/components/ui/tabs';
+import { AnimatedTabsList } from '@/components/ui/animated-tabs-list';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown } from '@untitledui/icons';
 import { GoogleCalendarLogo, MicrosoftOutlookLogo } from '@/components/icons/CalendarLogos';
@@ -239,13 +240,17 @@ function Planner() {
         {/* Tabs & Color Legend */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="all">All Bookings</TabsTrigger>
-              <TabsTrigger value="showing">Showings</TabsTrigger>
-              <TabsTrigger value="move_in">Move-ins</TabsTrigger>
-              <TabsTrigger value="inspection">Inspections</TabsTrigger>
-              <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-            </TabsList>
+            <AnimatedTabsList
+              tabs={[
+                { value: 'all', label: 'All Bookings' },
+                { value: 'showing', label: 'Showings' },
+                { value: 'move_in', label: 'Move-ins' },
+                { value: 'inspection', label: 'Inspections' },
+                { value: 'maintenance', label: 'Maintenance' },
+              ]}
+              activeValue={activeTab}
+              onValueChange={setActiveTab}
+            />
           </Tabs>
 
           {/* Color Legend */}
