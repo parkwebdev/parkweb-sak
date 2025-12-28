@@ -7,7 +7,7 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
+
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { IconButton } from '@/components/ui/icon-button';
 import { Download01, Trash01 } from '@untitledui/icons';
@@ -139,27 +139,6 @@ export const createExportHistoryColumns = ({
     enableSorting: false,
   },
   
-  // Format badge
-  {
-    id: 'format',
-    accessorKey: 'format',
-    size: 80,
-    minSize: 60,
-    maxSize: 100,
-    header: () => <span>Format</span>,
-    cell: ({ row }) => {
-      const format = row.original.format;
-      return (
-        <Badge 
-          variant={format === 'pdf' ? 'destructive' : 'default'}
-          className="uppercase"
-        >
-          {format}
-        </Badge>
-      );
-    },
-    enableSorting: false,
-  },
   
   // File size
   {
