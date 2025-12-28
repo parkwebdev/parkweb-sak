@@ -9,8 +9,8 @@
       script-src 'self' 'unsafe-inline';
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
-      img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://flagcdn.com https://i.ytimg.com https://img.youtube.com https://i.vimeocdn.com https://tiles.openfreemap.org;
-      connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co https://tiles.openfreemap.org;
+      img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://flagcdn.com https://i.ytimg.com https://img.youtube.com https://i.vimeocdn.com https://*.basemaps.cartocdn.com;
+      connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com;
       worker-src 'self' blob:;
       media-src 'self';
       frame-src 'self' https://www.youtube.com https://youtube.com https://player.vimeo.com https://www.loom.com https://fast.wistia.net;

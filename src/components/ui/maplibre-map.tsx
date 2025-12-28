@@ -1,4 +1,4 @@
-/* MapLibre GL Map Component - Free unlimited maps with OpenFreeMap tiles */
+/* MapLibre GL Map Component - Free unlimited maps with CARTO basemaps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as React from "react";
@@ -19,8 +19,8 @@ import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// Map style options using OpenFreeMap (free, no API key required)
-type MapStyleKey = "liberty" | "bright" | "positron";
+// Map style options using CARTO basemaps (free, no API key required)
+type MapStyleKey = "voyager" | "positron" | "darkMatter";
 
 interface MapStyleOption {
   label: string;
@@ -29,20 +29,20 @@ interface MapStyleOption {
 }
 
 const MAP_STYLE_OPTIONS: Record<MapStyleKey, MapStyleOption> = {
-  liberty: {
-    label: "Liberty",
-    light: "https://tiles.openfreemap.org/styles/liberty",
-    dark: "https://tiles.openfreemap.org/styles/liberty",
-  },
-  bright: {
-    label: "Bright",
-    light: "https://tiles.openfreemap.org/styles/bright",
-    dark: "https://tiles.openfreemap.org/styles/bright",
+  voyager: {
+    label: "Voyager",
+    light: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+    dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
   },
   positron: {
     label: "Positron",
-    light: "https://tiles.openfreemap.org/styles/positron",
-    dark: "https://tiles.openfreemap.org/styles/positron",
+    light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+  },
+  darkMatter: {
+    label: "Dark Matter",
+    light: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+    dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
   },
 };
 
@@ -139,8 +139,8 @@ export function MapLibreMap({
   const initialBoundsRef = React.useRef(fitBounds);
 
   const { theme: currentTheme } = useTheme();
-  const [selectedStyleKey, setSelectedStyleKey] = React.useState<MapStyleKey>("liberty");
-  const [mapStyle, setMapStyle] = React.useState(MAP_STYLE_OPTIONS.liberty.light);
+  const [selectedStyleKey, setSelectedStyleKey] = React.useState<MapStyleKey>("voyager");
+  const [mapStyle, setMapStyle] = React.useState(MAP_STYLE_OPTIONS.voyager.light);
   const [showHeatmap, setShowHeatmap] = React.useState(false);
 
   React.useEffect(() => {
