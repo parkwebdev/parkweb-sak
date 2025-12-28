@@ -34,7 +34,7 @@ import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocati
 import { BookingTrendChart } from '@/components/analytics/BookingTrendChart';
 
 import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
-import { ConversationKPICard } from '@/components/analytics/ConversationKPICard';
+
 import { PeakActivityChart } from '@/components/analytics/PeakActivityChart';
 import { CustomerFeedbackCard } from '@/components/analytics/CustomerFeedbackCard';
 
@@ -614,21 +614,11 @@ function Analytics() {
           {/* Conversations Section */}
           {activeTab === 'conversations' && (
             <div className="space-y-6">
-              {/* 2-column KPI grid */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
-                <ConversationKPICard
-                  total={totalConversations}
-                  avgPerDay={conversationStats.length > 0 ? totalConversations / conversationStats.length : 0}
-                  trendValue={conversationTrendValue}
-                  trendPeriod="vs last period"
-                  chartData={conversationStats.map(s => ({ date: s.date, value: s.total }))}
-                  loading={loading}
-                />
-                <PeakActivityChart
-                  conversationStats={conversationStats.map(s => ({ date: s.date, total: s.total }))}
-                  loading={loading}
-                />
-              </div>
+              {/* Peak Activity Heatmap - full width */}
+              <PeakActivityChart
+                conversationStats={conversationStats.map(s => ({ date: s.date, total: s.total }))}
+                loading={loading}
+              />
               
               {/* Full-width conversation volume chart */}
               <AnimatedList staggerDelay={0.1}>
