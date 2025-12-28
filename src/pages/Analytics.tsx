@@ -33,7 +33,6 @@ import { LeadConversionChart } from '@/components/analytics/LeadConversionChart'
 import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocationChart';
 import { BookingTrendChart } from '@/components/analytics/BookingTrendChart';
 import { ConversationKPICard } from '@/components/analytics/ConversationKPICard';
-import { ConversationKPICard } from '@/components/analytics/ConversationKPICard';
 import { PeakActivityChart } from '@/components/analytics/PeakActivityChart';
 import { CustomerFeedbackCard } from '@/components/analytics/CustomerFeedbackCard';
 
