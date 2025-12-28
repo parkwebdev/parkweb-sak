@@ -1,3 +1,5 @@
+/* MapLibre GL Map Component - Free unlimited maps with OpenFreeMap tiles */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as React from "react";
@@ -8,10 +10,7 @@ import Map, {
   NavigationControl,
   FullscreenControl,
   Marker,
-  type MapRef,
-  type MapMouseEvent,
 } from "react-map-gl/maplibre";
-import type { CircleLayerSpecification, SymbolLayerSpecification, HeatmapLayerSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
 import { RefreshCcw01, ChevronDown, LayersThree01 } from "@untitledui/icons";
@@ -73,11 +72,9 @@ interface MapLibreMapProps {
   fitBounds?: [[number, number], [number, number]];
   fitBoundsPadding?: number;
   showControls?: boolean;
-  /** Callback when a marker is clicked - receives the marker data */
   onMarkerClick?: (marker: MapMarker) => void;
 }
 
-// Country code to flag emoji
 function countryCodeToFlag(code: string): string {
   if (!code || code.length !== 2) return "🌍";
   return code
@@ -87,9 +84,6 @@ function countryCodeToFlag(code: string): string {
     .join("");
 }
 
-/**
- * Get marker size based on visitor count
- */
 function getMarkerSize(count: number, maxCount: number): number {
   const ratio = count / maxCount;
   if (ratio >= 0.6) return 32;
@@ -97,40 +91,29 @@ function getMarkerSize(count: number, maxCount: number): number {
   return 20;
 }
 
-/**
- * Get marker fill color (hex) based on visitor count density
- */
 function getMarkerFillColor(count: number, maxCount: number): string {
   const ratio = count / maxCount;
-  if (ratio >= 0.6) return "#ef4444"; // destructive
-  if (ratio >= 0.3) return "#f59e0b"; // status-scheduled
-  return "#22c55e"; // status-active
+  if (ratio >= 0.6) return "#ef4444";
+  if (ratio >= 0.3) return "#f59e0b";
+  return "#22c55e";
 }
 
-// Cluster layer style with smooth transitions
-const clusterLayer: CircleLayerSpecification = {
+// Layer configurations (using any to avoid complex type resolution)
+const clusterLayer: any = {
   id: "clusters",
   type: "circle",
   source: "visitors",
   filter: ["has", "point_count"],
   paint: {
     "circle-color": ["step", ["get", "point_count"], "#22c55e", 5, "#f59e0b", 15, "#ef4444"],
-    "circle-radius": [
-      "interpolate",
-      ["linear"],
-      ["get", "point_count"],
-      2, 20,
-      10, 28,
-      50, 40,
-    ],
+    "circle-radius": ["interpolate", ["linear"], ["get", "point_count"], 2, 20, 10, 28, 50, 40],
     "circle-stroke-width": 3,
     "circle-stroke-color": "rgba(255, 255, 255, 0.9)",
     "circle-opacity": 0.95,
   },
 };
 
-// Cluster count label
-const clusterCountLayer: SymbolLayerSpecification = {
+const clusterCountLayer: any = {
   id: "cluster-count",
   type: "symbol",
   source: "visitors",
@@ -141,39 +124,18 @@ const clusterCountLayer: SymbolLayerSpecification = {
     "text-size": 14,
     "text-allow-overlap": true,
   },
-  paint: {
-    "text-color": "#ffffff",
-  },
+  paint: { "text-color": "#ffffff" },
 };
 
-// Heatmap layer for density visualization
-const heatmapLayer: HeatmapLayerSpecification = {
+const heatmapLayer: any = {
   id: "heatmap",
   type: "heatmap",
   source: "visitors",
   paint: {
-    // Increase weight based on visitor count
-    "heatmap-weight": [
-      "interpolate",
-      ["linear"],
-      ["get", "count"],
-      0, 0,
-      10, 0.5,
-      50, 1,
-    ],
-    // Increase intensity as zoom level increases
-    "heatmap-intensity": [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      0, 0.5,
-      9, 2,
-    ],
-    // Color gradient from transparent to red
+    "heatmap-weight": ["interpolate", ["linear"], ["get", "count"], 0, 0, 10, 0.5, 50, 1],
+    "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.5, 9, 2],
     "heatmap-color": [
-      "interpolate",
-      ["linear"],
-      ["heatmap-density"],
+      "interpolate", ["linear"], ["heatmap-density"],
       0, "rgba(33, 102, 172, 0)",
       0.2, "rgba(103, 169, 207, 0.6)",
       0.4, "rgba(209, 229, 240, 0.7)",
@@ -181,22 +143,8 @@ const heatmapLayer: HeatmapLayerSpecification = {
       0.8, "rgba(239, 138, 98, 0.9)",
       1, "rgba(178, 24, 43, 1)",
     ],
-    // Adjust radius based on zoom
-    "heatmap-radius": [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      0, 15,
-      9, 30,
-    ],
-    // Fade out heatmap at higher zoom levels
-    "heatmap-opacity": [
-      "interpolate",
-      ["linear"],
-      ["zoom"],
-      7, 0.8,
-      9, 0.4,
-    ],
+    "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 15, 9, 30],
+    "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.8, 9, 0.4],
   },
 };
 
@@ -211,41 +159,12 @@ interface PopupInfo {
   pointCount?: number;
 }
 
-// Filled map pin component
-function FilledMapPin({ 
-  size = 24, 
-  fillColor, 
-  className 
-}: { 
-  size?: number; 
-  fillColor: string; 
-  className?: string;
-}) {
+function FilledMapPin({ size = 24, fillColor, className }: { size?: number; fillColor: string; className?: string }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      <path
-        d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z"
-        fill="white"
-      />
-      <path
-        d="M12 22C12 22 20 16 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 16 12 22 12 22Z"
-        fill={fillColor}
-        stroke={fillColor}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z"
-        fill="white"
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" fill="white" />
+      <path d="M12 22C12 22 20 16 20 10C20 5.58172 16.4183 2 12 2C7.58172 2 4 5.58172 4 10C4 16 12 22 12 22Z" fill={fillColor} stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" fill="white" />
     </svg>
   );
 }
@@ -261,24 +180,19 @@ export function MapLibreMap({
   showControls = true,
   onMarkerClick,
 }: MapLibreMapProps) {
-  const mapRef = React.useRef<MapRef>(null);
+  const mapRef = React.useRef<any>(null);
   const { theme: currentTheme } = useTheme();
   const [popupInfo, setPopupInfo] = React.useState<PopupInfo | null>(null);
   const [selectedStyleKey, setSelectedStyleKey] = React.useState<MapStyleKey>("liberty");
   const [mapStyle, setMapStyle] = React.useState(MAP_STYLE_OPTIONS.liberty.light);
-  const [mapError, setMapError] = React.useState<string | null>(null);
-  const [mapLoaded, setMapLoaded] = React.useState(false);
   const [showHeatmap, setShowHeatmap] = React.useState(false);
   const initialBoundsRef = React.useRef(fitBounds);
 
-  // Resolve theme to map style
   React.useEffect(() => {
     const styleOption = MAP_STYLE_OPTIONS[selectedStyleKey];
     const resolveStyle = () => {
       if (currentTheme === "system") {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? styleOption.dark
-          : styleOption.light;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? styleOption.dark : styleOption.light;
       }
       return currentTheme === "dark" ? styleOption.dark : styleOption.light;
     };
@@ -292,150 +206,79 @@ export function MapLibreMap({
     }
   }, [currentTheme, selectedStyleKey]);
 
-  // Store initial bounds
   React.useEffect(() => {
-    if (fitBounds) {
-      initialBoundsRef.current = fitBounds;
-    }
+    if (fitBounds) initialBoundsRef.current = fitBounds;
   }, [fitBounds]);
 
-  // Compute max count for sizing
   const maxCount = React.useMemo(() => Math.max(...markers.map((m) => m.count), 1), [markers]);
 
-  // Convert markers to GeoJSON for clustering and heatmap
-  const geojsonData = React.useMemo(() => {
-    return {
-      type: "FeatureCollection" as const,
-      features: markers.map((marker) => ({
-        type: "Feature" as const,
-        properties: {
-          id: marker.id,
-          count: marker.count,
-          country: marker.country,
-          city: marker.city || "",
-          countryCode: marker.countryCode || "",
-        },
-        geometry: {
-          type: "Point" as const,
-          coordinates: [marker.lng, marker.lat],
-        },
-      })),
-    };
-  }, [markers]);
+  const geojsonData = React.useMemo(() => ({
+    type: "FeatureCollection" as const,
+    features: markers.map((marker) => ({
+      type: "Feature" as const,
+      properties: { id: marker.id, count: marker.count, country: marker.country, city: marker.city || "", countryCode: marker.countryCode || "" },
+      geometry: { type: "Point" as const, coordinates: [marker.lng, marker.lat] },
+    })),
+  }), [markers]);
 
-  // Handle map load - fit bounds
   const onMapLoad = React.useCallback(() => {
     logger.debug("[MapLibreMap] Map loaded successfully");
-    setMapLoaded(true);
-    setMapError(null);
     if (fitBounds && mapRef.current) {
-      mapRef.current.fitBounds(fitBounds, {
-        padding: fitBoundsPadding,
-        maxZoom: 6,
-      });
+      mapRef.current.fitBounds(fitBounds, { padding: fitBoundsPadding, maxZoom: 6 });
     }
   }, [fitBounds, fitBoundsPadding]);
 
-  // Handle map errors
-  const onMapError = React.useCallback((evt: { error?: { message?: string } }) => {
-    const errorMsg = evt?.error?.message || "Unknown map error";
-    logger.error("[MapLibreMap] Map error:", { errorMsg, evt });
-    setMapError(errorMsg);
-  }, []);
-
-  // Handle cluster click - zoom in with smooth animation
-  const onClick = React.useCallback((event: MapMouseEvent) => {
+  const onClick = React.useCallback((event: any) => {
     const feature = event.features?.[0];
     if (!feature || !mapRef.current) return;
-
     const geometry = feature.geometry;
     if (geometry.type !== "Point") return;
-
     const clusterId = feature.properties?.cluster_id;
     if (clusterId !== undefined) {
-      // It's a cluster - zoom to expand with smooth animation
       const source = mapRef.current.getSource("visitors");
       if (source && "getClusterExpansionZoom" in source) {
-        (source as any).getClusterExpansionZoom(clusterId, (err: Error | null, zoomLevel: number) => {
+        (source as any).getClusterExpansionZoom(clusterId, (err: any, zoomLevel: number) => {
           if (err) return;
-          mapRef.current?.easeTo({
-            center: geometry.coordinates as [number, number],
-            zoom: zoomLevel,
-            duration: 500,
-          });
+          mapRef.current?.easeTo({ center: geometry.coordinates, zoom: zoomLevel, duration: 500 });
         });
       }
     }
   }, []);
 
-  // Handle mouse enter on cluster points
-  const onMouseEnter = React.useCallback((event: MapMouseEvent) => {
+  const onMouseEnter = React.useCallback((event: any) => {
     const feature = event.features?.[0];
     if (!feature) return;
-
     const geometry = feature.geometry;
     if (geometry.type !== "Point") return;
-
     const props = feature.properties;
     const [lng, lat] = geometry.coordinates;
-
     if (props?.cluster_id !== undefined) {
-      // Cluster popup
-      setPopupInfo({
-        lng,
-        lat,
-        country: "",
-        count: 0,
-        isCluster: true,
-        pointCount: props.point_count || 0,
-      });
+      setPopupInfo({ lng, lat, country: "", count: 0, isCluster: true, pointCount: props.point_count || 0 });
     }
   }, []);
 
-  const onMouseLeave = React.useCallback(() => {
-    setPopupInfo(null);
-  }, []);
+  const onMouseLeave = React.useCallback(() => setPopupInfo(null), []);
 
-  // Reset view with smooth animation
   const resetView = React.useCallback(() => {
     if (!mapRef.current) return;
     if (initialBoundsRef.current) {
-      mapRef.current.fitBounds(initialBoundsRef.current, {
-        padding: fitBoundsPadding,
-        maxZoom: 6,
-        duration: 500,
-      });
+      mapRef.current.fitBounds(initialBoundsRef.current, { padding: fitBoundsPadding, maxZoom: 6, duration: 500 });
     } else {
       mapRef.current.easeTo({ center, zoom, duration: 500 });
     }
   }, [center, zoom, fitBoundsPadding]);
 
-  // Handle marker hover
   const handleMarkerEnter = React.useCallback((marker: MapMarker) => {
-    setPopupInfo({
-      lng: marker.lng,
-      lat: marker.lat,
-      country: marker.country,
-      city: marker.city,
-      count: marker.count,
-      countryCode: marker.countryCode,
-      isCluster: false,
-    });
+    setPopupInfo({ lng: marker.lng, lat: marker.lat, country: marker.country, city: marker.city, count: marker.count, countryCode: marker.countryCode, isCluster: false });
   }, []);
 
-  const handleMarkerLeave = React.useCallback(() => {
-    setPopupInfo(null);
-  }, []);
+  const handleMarkerLeave = React.useCallback(() => setPopupInfo(null), []);
 
   return (
     <div className={`relative ${className || ""}`} style={style}>
       <Map
         ref={mapRef}
-        initialViewState={{
-          longitude: center[0],
-          latitude: center[1],
-          zoom: zoom,
-        }}
+        initialViewState={{ longitude: center[0], latitude: center[1], zoom }}
         mapStyle={mapStyle}
         style={{ width: "100%", height: "100%" }}
         interactiveLayerIds={["clusters"]}
@@ -443,7 +286,6 @@ export function MapLibreMap({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         onLoad={onMapLoad}
-        onError={onMapError}
         cursor={popupInfo ? "pointer" : "grab"}
       >
         {showControls && (
@@ -453,19 +295,8 @@ export function MapLibreMap({
           </>
         )}
 
-        {/* GeoJSON source for clustering and heatmap */}
-        <Source
-          id="visitors"
-          type="geojson"
-          data={geojsonData}
-          cluster={!showHeatmap}
-          clusterMaxZoom={14}
-          clusterRadius={50}
-        >
-          {/* Heatmap layer (shown when enabled) */}
+        <Source id="visitors" type="geojson" data={geojsonData} cluster={!showHeatmap} clusterMaxZoom={14} clusterRadius={50}>
           {showHeatmap && <Layer {...heatmapLayer} />}
-          
-          {/* Cluster layers (hidden when heatmap is shown) */}
           {!showHeatmap && (
             <>
               <Layer {...clusterLayer} />
@@ -474,32 +305,15 @@ export function MapLibreMap({
           )}
         </Source>
 
-        {/* Custom filled pin markers for individual points (hidden when heatmap is shown) */}
         {!showHeatmap && markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            longitude={marker.lng}
-            latitude={marker.lat}
-            anchor="bottom"
-          >
+          <Marker key={marker.id} longitude={marker.lng} latitude={marker.lat} anchor="bottom">
             <div
-              className={cn(
-                "relative",
-                onMarkerClick ? "cursor-pointer" : "cursor-default",
-                "transition-all duration-300 ease-out",
-                onMarkerClick && "hover:scale-110 hover:-translate-y-1",
-                "animate-fade-in"
-              )}
+              className={cn("relative", onMarkerClick ? "cursor-pointer" : "cursor-default", "transition-all duration-300 ease-out", onMarkerClick && "hover:scale-110 hover:-translate-y-1", "animate-fade-in")}
               onMouseEnter={() => handleMarkerEnter(marker)}
               onMouseLeave={handleMarkerLeave}
               onClick={() => onMarkerClick?.(marker)}
-              style={{ animationDelay: `${Math.random() * 200}ms` }}
             >
-              <FilledMapPin
-                size={getMarkerSize(marker.count, maxCount)}
-                fillColor={getMarkerFillColor(marker.count, maxCount)}
-                className="drop-shadow-lg"
-              />
+              <FilledMapPin size={getMarkerSize(marker.count, maxCount)} fillColor={getMarkerFillColor(marker.count, maxCount)} className="drop-shadow-lg" />
               <span className="absolute inset-0 flex items-center justify-center text-white text-2xs font-bold -mt-1.5 pointer-events-none">
                 {marker.count > 99 ? "99+" : marker.count}
               </span>
@@ -508,14 +322,7 @@ export function MapLibreMap({
         ))}
 
         {popupInfo && (
-          <Popup
-            longitude={popupInfo.lng}
-            latitude={popupInfo.lat}
-            closeButton={false}
-            closeOnClick={false}
-            offset={25}
-            className="visitor-map-popup"
-          >
+          <Popup longitude={popupInfo.lng} latitude={popupInfo.lat} closeButton={false} closeOnClick={false} offset={25} className="visitor-map-popup">
             {popupInfo.isCluster ? (
               <div className="p-2 text-center font-sans">
                 <div className="text-lg font-bold">{popupInfo.pointCount}</div>
@@ -532,8 +339,7 @@ export function MapLibreMap({
                   </div>
                 </div>
                 <div className="text-sm font-medium">
-                  <span className="text-lg font-bold">{popupInfo.count}</span> visitor
-                  {popupInfo.count !== 1 ? "s" : ""}
+                  <span className="text-lg font-bold">{popupInfo.count}</span> visitor{popupInfo.count !== 1 ? "s" : ""}
                 </div>
               </div>
             )}
@@ -541,69 +347,41 @@ export function MapLibreMap({
         )}
       </Map>
 
-      {/* Top controls row */}
       {showControls && (
         <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-          {/* Style selector dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-background/90 backdrop-blur-sm border-border shadow-md gap-1"
-              >
+              <Button variant="outline" size="sm" className="bg-background/90 backdrop-blur-sm border-border shadow-md gap-1">
                 {MAP_STYLE_OPTIONS[selectedStyleKey].label}
                 <ChevronDown size={14} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {(Object.keys(MAP_STYLE_OPTIONS) as MapStyleKey[]).map((key) => (
-                <DropdownMenuItem
-                  key={key}
-                  onClick={() => setSelectedStyleKey(key)}
-                  className={cn(
-                    selectedStyleKey === key && "bg-accent"
-                  )}
-                >
+                <DropdownMenuItem key={key} onClick={() => setSelectedStyleKey(key)} className={cn(selectedStyleKey === key && "bg-accent")}>
                   {MAP_STYLE_OPTIONS[key].label}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Heatmap toggle */}
           <div className="flex items-center gap-2 bg-background/90 backdrop-blur-sm border border-border rounded-md px-3 py-1.5 shadow-md">
             <LayersThree01 size={14} className={cn(showHeatmap && "text-orange-500")} />
-            <Label htmlFor="heatmap-toggle" className="text-xs font-medium cursor-pointer">
-              Heatmap
-            </Label>
-            <Switch
-              id="heatmap-toggle"
-              checked={showHeatmap}
-              onCheckedChange={setShowHeatmap}
-              className="scale-75"
-            />
+            <Label htmlFor="heatmap-toggle" className="text-xs font-medium cursor-pointer">Heatmap</Label>
+            <Switch id="heatmap-toggle" checked={showHeatmap} onCheckedChange={setShowHeatmap} className="scale-75" />
           </div>
         </div>
       )}
 
-      {/* Reset view button */}
       {showControls && (
-        <button
-          onClick={resetView}
-          className="absolute bottom-4 right-4 p-2 bg-background/90 backdrop-blur-sm border border-border rounded-lg shadow-md hover:bg-muted transition-colors z-10"
-          title="Reset view"
-        >
+        <button onClick={resetView} className="absolute bottom-4 right-4 p-2 bg-background/90 backdrop-blur-sm border border-border rounded-lg shadow-md hover:bg-muted transition-colors z-10" title="Reset view">
           <RefreshCcw01 size={16} />
         </button>
       )}
 
-      {/* Legend */}
       {showControls && markers.length > 0 && (
         <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-3 text-xs z-10">
-          <div className="font-medium mb-2">
-            {showHeatmap ? "Density intensity" : "Visitor density"}
-          </div>
+          <div className="font-medium mb-2">{showHeatmap ? "Density intensity" : "Visitor density"}</div>
           {showHeatmap ? (
             <div className="flex items-center gap-1">
               <div className="w-24 h-3 rounded-sm bg-gradient-to-r from-blue-400 via-yellow-200 to-red-600" />
@@ -611,18 +389,9 @@ export function MapLibreMap({
             </div>
           ) : (
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <FilledMapPin size={14} fillColor="#22c55e" />
-                <span>Low</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FilledMapPin size={14} fillColor="#f59e0b" />
-                <span>Medium</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <FilledMapPin size={14} fillColor="#ef4444" />
-                <span>High</span>
-              </div>
+              <div className="flex items-center gap-2"><FilledMapPin size={14} fillColor="#22c55e" /><span>Low</span></div>
+              <div className="flex items-center gap-2"><FilledMapPin size={14} fillColor="#f59e0b" /><span>Medium</span></div>
+              <div className="flex items-center gap-2"><FilledMapPin size={14} fillColor="#ef4444" /><span>High</span></div>
             </div>
           )}
         </div>
@@ -631,34 +400,17 @@ export function MapLibreMap({
   );
 }
 
-// Compute bounds from coordinates
-export function computeBounds(
-  coordinates: Array<{ lng: number; lat: number }>
-): [[number, number], [number, number]] | null {
+export function computeBounds(coordinates: Array<{ lng: number; lat: number }>): [[number, number], [number, number]] | null {
   if (coordinates.length === 0) return null;
-
-  let minLng = Infinity;
-  let maxLng = -Infinity;
-  let minLat = Infinity;
-  let maxLat = -Infinity;
-
+  let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
   for (const coord of coordinates) {
     minLng = Math.min(minLng, coord.lng);
     maxLng = Math.max(maxLng, coord.lng);
     minLat = Math.min(minLat, coord.lat);
     maxLat = Math.max(maxLat, coord.lat);
   }
-
-  // Add padding for single points
   if (minLng === maxLng && minLat === maxLat) {
-    return [
-      [minLng - 10, minLat - 10],
-      [maxLng + 10, maxLat + 10],
-    ];
+    return [[minLng - 10, minLat - 10], [maxLng + 10, maxLat + 10]];
   }
-
-  return [
-    [minLng, minLat],
-    [maxLng, maxLat],
-  ];
+  return [[minLng, minLat], [maxLng, maxLat]];
 }
