@@ -77,22 +77,18 @@ export function LocationAnalyticsSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[340px] sm:w-[400px]">
         <SheetHeader className="pb-4">
-          <SheetTitle className="flex items-center gap-2 text-lg">
+          <SheetTitle className="flex items-center gap-2 text-xl">
             <span className="text-2xl">{getFlagEmoji(marker.countryCode)}</span>
-            Location Details
+            <div>
+              <span>{marker.country}</span>
+              {marker.city && (
+                <p className="text-sm font-normal text-muted-foreground">{marker.city}</p>
+              )}
+            </div>
           </SheetTitle>
         </SheetHeader>
 
         <div className="space-y-6">
-          {/* Location Name */}
-          <div className="space-y-1">
-            <h3 className="text-xl font-semibold text-foreground">
-              {marker.country}
-            </h3>
-            {marker.city && (
-              <p className="text-sm text-muted-foreground">{marker.city}</p>
-            )}
-          </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
