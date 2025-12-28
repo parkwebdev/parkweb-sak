@@ -76,8 +76,8 @@ export function LocationAnalyticsSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[340px] sm:w-[400px]">
-        <SheetHeader className="pb-4 px-0">
-          <SheetTitle className="flex items-center gap-2 text-xl -ml-0.5">
+        <SheetHeader className="pb-4 px-0 text-left">
+          <SheetTitle className="flex items-center gap-2 text-xl">
             <span className="text-2xl leading-none">{getFlagEmoji(marker.countryCode)}</span>
             <div>
               <span>{marker.country}</span>
