@@ -49,6 +49,7 @@ import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { MetricCardWithChart } from '@/components/analytics/MetricCardWithChart';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { useReportExports } from '@/hooks/useReportExports';
+import { StackedMetricCard } from '@/components/analytics/StackedMetricCard';
 import { toast } from '@/lib/toast';
 import { subDays, format } from 'date-fns';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -186,6 +187,7 @@ function Analytics() {
     bookingTrend: bookingTrendRaw,
     satisfactionTrend: satisfactionTrendRaw,
     containmentTrend: containmentTrendRaw,
+    containmentStackedTrend: containmentStackedTrendRaw,
     conversations: analyticsConversations,
     leads,
     loading,
@@ -313,6 +315,21 @@ function Analytics() {
     }
     return containmentTrendRaw.map(d => d.value);
   }, [mockMode, mockData, containmentTrendRaw]);
+
+  // Stacked containment trend for AI vs Human visualization
+  const containmentStackedTrend = useMemo(() => {
+    if (mockMode && mockData) {
+      // Generate mock stacked data from containment trend
+      return mockData.containmentTrend.map(d => ({
+        primary: Math.round(d.value * 0.85), // AI handled ~85% of total
+        secondary: Math.round(d.value * 0.15), // Human ~15%
+      }));
+    }
+    return containmentStackedTrendRaw.map(d => ({
+      primary: d.aiHandled,
+      secondary: d.humanTakeover,
+    }));
+  }, [mockMode, mockData, containmentStackedTrendRaw]);
 
   // Calculate KPI values from new hooks
   const totalBookings = bookingStats?.totalBookings ?? 0;
@@ -725,14 +742,16 @@ function Analytics() {
                   chartData={generateChartData(satisfactionTrend)} 
                   animationDelay={0} 
                 />
-                <MetricCardWithChart 
+                <StackedMetricCard 
                   title={`${containmentRate.toFixed(0)}%`} 
                   subtitle="AI Containment" 
                   description="Chats resolved without human help" 
                   change={calculatePointChange(containmentTrend)} 
                   changeType="points" 
                   changeLabel="vs last period" 
-                  chartData={generateChartData(containmentTrend)} 
+                  chartData={containmentStackedTrend}
+                  primaryLabel="Ari Handled"
+                  secondaryLabel="Human"
                   animationDelay={0.05} 
                 />
               </div>
