@@ -111,7 +111,7 @@ export const createExportHistoryColumns = ({
       return (
         <div className="flex items-center gap-3 min-w-0">
           <div className="shrink-0">
-            <Icon className="h-8 w-8" />
+            <Icon className="h-6 w-6" />
           </div>
           <span className="font-medium truncate block max-w-[180px]" title={exportItem.name}>
             {exportItem.name}
@@ -191,7 +191,7 @@ export const createExportHistoryColumns = ({
     size: 100,
     minSize: 80,
     maxSize: 120,
-    header: () => <span>Actions</span>,
+    header: () => <span className="text-right block">Actions</span>,
     cell: ({ row }) => {
       const exportItem = row.original;
       
