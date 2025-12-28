@@ -2,7 +2,7 @@
  * TopPagesChart Component
  * 
  * Clean horizontal bar chart for top landing pages.
- * Features gradient color scheme from light to dark based on ranking.
+ * Features gradient color scheme, conversion rate display, and sorting options.
  * @module components/analytics/TopPagesChart
  */
 
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SkeletonHeatmap } from '@/components/ui/page-skeleton';
 import { ChartCardHeader } from './ChartCardHeader';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { cn } from '@/lib/utils';
 
 interface TopPageData {
   url: string;
@@ -26,7 +27,7 @@ interface TopPagesChartProps {
   loading?: boolean;
 }
 
-type SortOption = 'visits' | 'conversions';
+type SortOption = 'visits' | 'conversions' | 'conversion_rate';
 
 const formatDuration = (ms: number): string => {
   const seconds = Math.floor(ms / 1000);
@@ -76,23 +77,41 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
   const [sortBy, setSortBy] = useState<SortOption>('visits');
   const prefersReducedMotion = useReducedMotion();
 
+  // Add conversion rate calculation to data
+  const dataWithRates = useMemo(() => {
+    return data.map(page => ({
+      ...page,
+      conversionRate: page.visits > 0 ? (page.conversions / page.visits) * 100 : 0,
+    }));
+  }, [data]);
+
   const { maxValue, sortedData, trendPercentage } = useMemo(() => {
-    const sorted = [...data]
+    const sorted = [...dataWithRates]
       .sort((a, b) => {
         if (sortBy === 'conversions') {
           return b.conversions - a.conversions || b.visits - a.visits;
+        }
+        if (sortBy === 'conversion_rate') {
+          return b.conversionRate - a.conversionRate || b.visits - a.visits;
         }
         return b.visits - a.visits;
       })
       .slice(0, 8); // Show top 8 for cleaner layout
     
-    const max = Math.max(...sorted.map(d => sortBy === 'conversions' ? d.conversions : d.visits), 1);
+    let max: number;
+    if (sortBy === 'conversion_rate') {
+      max = Math.max(...sorted.map(d => d.conversionRate), 1);
+    } else if (sortBy === 'conversions') {
+      max = Math.max(...sorted.map(d => d.conversions), 1);
+    } else {
+      max = Math.max(...sorted.map(d => d.visits), 1);
+    }
     
     // TODO: Calculate real trend from previous period comparison
     const trend = '0';
     
     return { maxValue: max, sortedData: sorted, trendPercentage: parseFloat(trend) };
-  }, [data, sortBy]);
+  }, [dataWithRates, sortBy]);
 
   if (loading) {
     return (
@@ -127,12 +146,13 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
           contextSummary={`Showing ${totalVisits.toLocaleString()} total visitors across top ${sortedData.length} pages`}
           rightSlot={
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-              <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectTrigger className="w-[120px] h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="visits">Visits</SelectItem>
                 <SelectItem value="conversions">Leads</SelectItem>
+                <SelectItem value="conversion_rate">CVR %</SelectItem>
               </SelectContent>
             </Select>
           }
@@ -140,7 +160,15 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
 
         <div className="space-y-3">
           {sortedData.map((page, index) => {
-            const primaryValue = sortBy === 'conversions' ? page.conversions : page.visits;
+            let primaryValue: number;
+            if (sortBy === 'conversion_rate') {
+              primaryValue = page.conversionRate;
+            } else if (sortBy === 'conversions') {
+              primaryValue = page.conversions;
+            } else {
+              primaryValue = page.visits;
+            }
+            
             const widthPercentage = (primaryValue / maxValue) * 100;
             const barColor = getBarColor(index, sortedData.length);
             const animationDelay = prefersReducedMotion ? 0 : index * 50;
@@ -163,7 +191,7 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
                       <div
                         className="h-full rounded-md transition-all duration-300 group-hover:opacity-90"
                         style={{ 
-                          width: `${Math.max(widthPercentage, 8)}%`,
+                          width: `${Math.max(widthPercentage, primaryValue > 0 ? 8 : 0)}%`,
                           backgroundColor: barColor,
                           animation: prefersReducedMotion ? 'none' : `growWidth 600ms ease-out ${animationDelay}ms both`,
                         }}
@@ -182,15 +210,30 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
                             <span className="text-foreground font-medium">{formatDuration(page.avgDuration)}</span> avg. time
                           </p>
                         )}
-                        {page.conversions > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            <span className="text-primary font-medium">{page.conversions}</span> leads
-                          </p>
-                        )}
+                        <p className="text-xs text-muted-foreground">
+                          <span className="text-primary font-medium">{page.conversions}</span> leads
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          <span className="text-foreground font-medium">{page.conversionRate.toFixed(1)}%</span> conversion rate
+                        </p>
                       </div>
                     </div>
                   </TooltipContent>
                 </Tooltip>
+
+                {/* Conversion rate badge */}
+                <div className="flex items-center gap-2 w-20 shrink-0">
+                  <span className={cn(
+                    "text-xs px-1.5 py-0.5 rounded-md tabular-nums",
+                    page.conversionRate > 3 
+                      ? "bg-success/10 text-success" 
+                      : page.conversionRate > 1 
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
+                  )}>
+                    {page.conversionRate.toFixed(1)}%
+                  </span>
+                </div>
               </div>
             );
           })}
