@@ -585,7 +585,6 @@ function Analytics() {
             </div>
             {showBuildReport && (
               <Button size="sm" onClick={() => setExportSheetOpen(true)}>
-                <FileCheck02 className="h-4 w-4 mr-2" />
                 Build Report
               </Button>
             )}
