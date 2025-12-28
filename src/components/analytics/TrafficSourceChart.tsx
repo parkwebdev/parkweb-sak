@@ -2,7 +2,7 @@
  * TrafficSourceChart Component
  * 
  * Horizontal bar chart showing traffic distribution by referrer source.
- * Displays organic, direct, social, and referral traffic.
+ * Displays organic, direct, social, and referral traffic with per-source trends.
  * @module components/analytics/TrafficSourceChart
  */
 
@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrendUp01, TrendDown01 } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { cn } from '@/lib/utils';
 
 interface TrafficSourceData {
   name: string;
@@ -56,7 +57,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
     return { total: sum, sortedData: sorted, maxValue: max };
   }, [data]);
 
-  // Calculate trend percentage from comparison data
+  // Calculate total trend percentage from comparison data
   const { trendPercentage, previousTotal } = useMemo(() => {
     if (!comparisonData || comparisonData.length === 0) {
       return { trendPercentage: 0, previousTotal: 0 };
@@ -68,6 +69,28 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
     const change = ((total - prevTotal) / prevTotal) * 100;
     return { trendPercentage: change, previousTotal: prevTotal };
   }, [total, comparisonData]);
+
+  // Calculate per-source trend percentages
+  const sourceTrends = useMemo(() => {
+    if (!comparisonData || comparisonData.length === 0) {
+      return new Map<string, number>();
+    }
+    
+    const trends = new Map<string, number>();
+    sortedData.forEach(source => {
+      const previousSource = comparisonData.find(d => d.name.toLowerCase() === source.name.toLowerCase());
+      const prevValue = previousSource?.value ?? 0;
+      
+      if (prevValue === 0) {
+        trends.set(source.name, source.value > 0 ? 100 : 0);
+      } else {
+        const change = ((source.value - prevValue) / prevValue) * 100;
+        trends.set(source.name, change);
+      }
+    });
+    
+    return trends;
+  }, [sortedData, comparisonData]);
 
   const isPositiveTrend = trendPercentage >= 0;
   const hasTrendData = comparisonData && comparisonData.length > 0;
@@ -149,6 +172,11 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
             const barColor = getBarColor(index, sortedData.length);
             const percentage = ((source.value / total) * 100).toFixed(1);
             const animationDelay = prefersReducedMotion ? 0 : index * 50;
+            
+            // Per-source trend
+            const sourceTrend = sourceTrends.get(source.name) ?? 0;
+            const hasSourceTrend = hasTrendData && Math.abs(sourceTrend) > 0.1;
+            const isSourcePositive = sourceTrend >= 0;
 
             return (
               <div 
@@ -181,9 +209,31 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
                       <p className="text-xs text-muted-foreground">
                         <span className="text-foreground font-medium">{source.value.toLocaleString()}</span> conversations ({percentage}%)
                       </p>
+                      {hasSourceTrend && (
+                        <p className={cn("text-xs", isSourcePositive ? "text-success" : "text-destructive")}>
+                          {isSourcePositive ? '+' : ''}{sourceTrend.toFixed(1)}% vs last period
+                        </p>
+                      )}
                     </div>
                   </TooltipContent>
                 </Tooltip>
+
+                {/* Per-source trend indicator */}
+                {hasSourceTrend && (
+                  <div className={cn(
+                    "flex items-center gap-0.5 w-14 shrink-0",
+                    isSourcePositive ? "text-success" : "text-destructive"
+                  )}>
+                    {isSourcePositive ? (
+                      <TrendUp01 size={12} />
+                    ) : (
+                      <TrendDown01 size={12} />
+                    )}
+                    <span className="text-xs tabular-nums">
+                      {isSourcePositive ? '+' : ''}{sourceTrend.toFixed(0)}%
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })}
