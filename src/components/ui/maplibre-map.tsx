@@ -47,11 +47,21 @@ function countryCodeToFlag(code: string): string {
     .join("");
 }
 
-function getMarkerSize(count: number, maxCount: number): number {
+function getMarkerSize(count: number, maxCount: number, zoom: number = 2): number {
   const ratio = count / maxCount;
-  if (ratio >= 0.6) return 32;
-  if (ratio >= 0.3) return 26;
-  return 20;
+  
+  // Base size from visitor count
+  let baseSize = 20;
+  if (ratio >= 0.6) baseSize = 32;
+  else if (ratio >= 0.3) baseSize = 26;
+  
+  // Scale up based on zoom (zoom 1-22)
+  // At zoom < 4: use base size
+  // At zoom 4-8: gradual increase
+  // At zoom 8+: larger pins
+  const zoomScale = zoom < 4 ? 1 : zoom < 8 ? 1 + (zoom - 4) * 0.15 : 1.6 + (zoom - 8) * 0.1;
+  
+  return Math.round(baseSize * Math.min(zoomScale, 2.5)); // Cap at 2.5x
 }
 
 function getMarkerFillColor(count: number, maxCount: number): string {
@@ -208,6 +218,7 @@ export function MapLibreMap({
   const { theme: currentTheme } = useTheme();
   const [mapStyle, setMapStyle] = React.useState(POSITRON_STYLE);
   const [showHeatmap, setShowHeatmap] = React.useState(false);
+  const [currentZoom, setCurrentZoom] = React.useState(zoom);
   const initializedStyleRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
@@ -431,10 +442,10 @@ export function MapLibreMap({
         hoverPopupRef.current
           .setLngLat(coords)
           .setHTML(
-            `<div class="p-2 text-center font-sans">
-              <div class="text-lg font-bold">${pointCount}</div>
-              <div class="text-xs opacity-70">locations</div>
-              <div class="text-2xs mt-1 opacity-50">Click to expand</div>
+            `<div style="padding: 8px; text-align: center; font-family: system-ui, sans-serif; color: #1f2937; background: white; border-radius: 6px;">
+              <div style="font-size: 18px; font-weight: 700; color: #1f2937;">${pointCount}</div>
+              <div style="font-size: 12px; color: #6b7280;">locations</div>
+              <div style="font-size: 10px; margin-top: 4px; color: #9ca3af;">Click to expand</div>
             </div>`
           )
           .addTo(map);
@@ -454,6 +465,11 @@ export function MapLibreMap({
     // Update cluster labels on map movement
     map.on("move", updateClusterLabels);
     map.on("zoom", updateClusterLabels);
+    
+    // Track zoom level changes for marker sizing
+    map.on("zoomend", () => {
+      setCurrentZoom(Math.floor(map.getZoom()));
+    });
 
     return () => {
       try {
@@ -613,7 +629,7 @@ export function MapLibreMap({
     if (showHeatmap) return;
 
     markersRef.current = markers.map((m) => {
-      const size = getMarkerSize(m.count, maxCount);
+      const size = getMarkerSize(m.count, maxCount, currentZoom);
       const fillColor = getMarkerFillColor(m.count, maxCount);
 
       const el = document.createElement("div");
@@ -643,16 +659,16 @@ export function MapLibreMap({
         hoverPopupRef.current
           .setLngLat([m.lng, m.lat])
           .setHTML(
-            `<div class="p-2 font-sans">
-              <div class="flex items-center gap-2 mb-1">
-                ${flag ? `<span class="text-xl">${flag}</span>` : ""}
+            `<div style="padding: 8px; font-family: system-ui, sans-serif; color: #1f2937; background: white; border-radius: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                ${flag ? `<span style="font-size: 20px;">${flag}</span>` : ""}
                 <div>
-                  <div class="font-semibold text-sm">${m.country}</div>
-                  ${m.city ? `<div class="text-xs opacity-70">${m.city}</div>` : ""}
+                  <div style="font-weight: 600; font-size: 14px; color: #1f2937;">${m.country}</div>
+                  ${m.city ? `<div style="font-size: 12px; color: #6b7280;">${m.city}</div>` : ""}
                 </div>
               </div>
-              <div class="text-sm font-medium">
-                <span class="text-lg font-bold">${m.count}</span> visitor${m.count !== 1 ? "s" : ""}
+              <div style="font-size: 14px; font-weight: 500; color: #374151;">
+                <span style="font-size: 18px; font-weight: 700;">${m.count}</span> visitor${m.count !== 1 ? "s" : ""}
               </div>
             </div>`
           )
@@ -663,15 +679,24 @@ export function MapLibreMap({
         hoverPopupRef.current?.remove();
       });
 
-      if (onMarkerClick) {
-        el.addEventListener("click", () => onMarkerClick(m));
-      }
+      // Click to zoom + trigger callback
+      el.addEventListener("click", () => {
+        // Zoom to the marker location
+        map.flyTo({
+          center: [m.lng, m.lat],
+          zoom: Math.max(map.getZoom(), 8), // Zoom to at least level 8
+          duration: 800,
+        });
+        
+        // Also call the external handler if provided
+        if (onMarkerClick) onMarkerClick(m);
+      });
 
       return new maplibregl.Marker({ element: el, anchor: "bottom" })
         .setLngLat([m.lng, m.lat])
         .addTo(map);
     });
-  }, [markers, maxCount, onMarkerClick, showHeatmap]);
+  }, [markers, maxCount, onMarkerClick, showHeatmap, currentZoom]);
 
   // Toggle layer visibility when heatmap changes
   React.useEffect(() => {
@@ -695,16 +720,16 @@ export function MapLibreMap({
       <div ref={containerRef} className="h-full w-full" />
 
       {showControls && (
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-background/90 backdrop-blur-sm border border-border rounded-md px-3 py-1.5 shadow-md">
-          <LayersThree01 size={14} className={cn(showHeatmap && "text-orange-500")} />
-          <Label htmlFor="heatmap-toggle" className="text-xs font-medium cursor-pointer">
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 bg-background/90 backdrop-blur-sm border border-border rounded-md px-2 py-1 shadow-md">
+          <LayersThree01 size={12} className={cn(showHeatmap && "text-orange-500")} />
+          <Label htmlFor="heatmap-toggle" className="text-2xs font-medium cursor-pointer">
             Heatmap
           </Label>
           <Switch
             id="heatmap-toggle"
             checked={showHeatmap}
             onCheckedChange={setShowHeatmap}
-            className="scale-75"
+            className="scale-[0.6] origin-left"
           />
         </div>
       )}

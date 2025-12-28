@@ -518,3 +518,16 @@ html::view-transition {
   @apply max-w-full h-auto my-3;
   border-radius: 0.75rem;
 }
+
+/* MapLibre popup overrides for consistent styling */
+.maplibregl-popup-content {
+  padding: 0 !important;
+  background: white !important;
+  color: #1f2937 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: white !important;
+}
