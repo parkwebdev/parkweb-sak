@@ -204,6 +204,10 @@ export function MapLibreMap({
 
     mapRef.current = map;
 
+    map.on("error", (e) => {
+      logger.warn("[MapLibreMap] Map error:", e.error?.message || e);
+    });
+
     map.on("load", () => {
       logger.debug("[MapLibreMap] Map loaded successfully");
 
@@ -308,7 +312,7 @@ export function MapLibreMap({
         filter: ["has", "point_count"],
         layout: {
           "text-field": ["get", "point_count_abbreviated"],
-          "text-font": ["Noto Sans Regular"],
+          "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
           "text-size": 14,
           "text-allow-overlap": true,
         },
@@ -516,7 +520,7 @@ export function MapLibreMap({
           layout: {
             visibility: showHeatmap ? "none" : "visible",
             "text-field": ["get", "point_count_abbreviated"],
-            "text-font": ["Noto Sans Regular"],
+            "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
             "text-size": 14,
             "text-allow-overlap": true,
           },
