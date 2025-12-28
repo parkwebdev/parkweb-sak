@@ -597,16 +597,22 @@ export function MapLibreMap({
         onMarkerClick ? "cursor-pointer" : "cursor-default",
       );
       
-      const fontSize = Math.max(9, size * 0.4);
+      const fontSize = Math.max(8, size * 0.35);
       const animationDelay = index * 0.05;
       
       // All animations and transforms go on .marker-inner, NOT the root el
+      // Glassmorphism: transparent background + backdrop blur + thin border
       el.innerHTML = `
         <div class="marker-inner" style="
           width:${size}px;
           height:${size}px;
           position:relative;
           border-radius:50%;
+          background: ${fillColor}cc;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(255,255,255,0.35);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.2);
           opacity:0;
           animation: marker-bounce-in 0.5s ease-out ${animationDelay}s both;
           transition: transform 0.2s ease-out, width 0.2s ease-out, height 0.2s ease-out;
@@ -616,12 +622,11 @@ export function MapLibreMap({
             position: absolute;
             inset: -4px;
             border-radius: 50%;
-            border: 2px solid ${fillColor};
+            border: 1.5px solid ${fillColor};
             opacity: 0;
             pointer-events: none;
           "></div>
-          ${createCircleSVG(fillColor, size)}
-          <span style="position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;color:white;font-size:${fontSize}px;font-weight:700;transition:font-size 0.2s ease-out;">
+          <span style="position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;color:white;font-size:${fontSize}px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,0.4);transition:font-size 0.2s ease-out;">
             ${m.count > 99 ? "99+" : m.count}
           </span>
         </div>
