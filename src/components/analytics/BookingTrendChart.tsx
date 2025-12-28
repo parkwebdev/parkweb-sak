@@ -8,7 +8,7 @@
  * @module components/analytics/BookingTrendChart
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartTooltipContent } from '@/components/charts/charts-base';
@@ -21,13 +21,6 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import type { BookingTrendData } from '@/types/analytics';
 
 interface BookingTrendChartProps {
@@ -43,7 +36,7 @@ interface BookingTrendChartProps {
   className?: string;
 }
 
-type ViewMode = 'all-statuses' | 'total-only';
+
 
 /** Color configuration matching ConversationChart blue palette */
 const TREND_COLORS = {
@@ -65,7 +58,6 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
   trendPeriod = 'this month',
   className,
 }: BookingTrendChartProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('all-statuses');
   const prefersReducedMotion = useReducedMotion();
 
   // Calculate totals for context summary
@@ -127,17 +119,6 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
           trendValue={trendValue}
           trendLabel="Bookings"
           trendPeriod={trendPeriod}
-          rightSlot={
-            <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <SelectTrigger className="w-[130px] h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all-statuses">All Statuses</SelectItem>
-                <SelectItem value="total-only">Total Only</SelectItem>
-              </SelectContent>
-            </Select>
-          }
         />
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -218,27 +199,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                 }}
               />
 
-              {viewMode === 'total-only' ? (
-                <Area
-                  isAnimationActive={!prefersReducedMotion}
-                  animationDuration={800}
-                  animationEasing="ease-out"
-                  dataKey="total"
-                  name="Total"
-                  type="monotone"
-                  stroke={TREND_COLORS.total}
-                  strokeWidth={2}
-                  fill="url(#gradientTotal)"
-                  activeDot={{
-                    r: 5,
-                    fill: 'hsl(var(--background))',
-                    stroke: TREND_COLORS.total,
-                    strokeWidth: 2,
-                  }}
-                />
-              ) : (
-                <>
-                  <Area
+              <Area
                     isAnimationActive={!prefersReducedMotion}
                     animationDuration={800}
                     animationEasing="ease-out"
