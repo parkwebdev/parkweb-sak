@@ -10,11 +10,11 @@ import Map, {
   Marker,
   type MapRef,
   type MapMouseEvent,
-} from "react-map-gl/mapbox";
-import type { CircleLayer, SymbolLayer, HeatmapLayer } from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+} from "react-map-gl/maplibre";
+import type { CircleLayerSpecification, SymbolLayerSpecification, HeatmapLayerSpecification } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "@/components/ThemeProvider";
-import { RefreshCcw01, MarkerPin01, ChevronDown, LayersThree01 } from "@untitledui/icons";
+import { RefreshCcw01, ChevronDown, LayersThree01 } from "@untitledui/icons";
 import { logger } from "@/utils/logger";
 import {
   DropdownMenu,
@@ -27,8 +27,8 @@ import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// Map style options
-type MapStyleKey = "navigation" | "streets" | "satellite";
+// Map style options using OpenFreeMap (free, no API key required)
+type MapStyleKey = "liberty" | "bright" | "positron";
 
 interface MapStyleOption {
   label: string;
@@ -37,20 +37,20 @@ interface MapStyleOption {
 }
 
 const MAP_STYLE_OPTIONS: Record<MapStyleKey, MapStyleOption> = {
-  navigation: {
-    label: "Navigation",
-    light: "mapbox://styles/mapbox/navigation-day-v1",
-    dark: "mapbox://styles/mapbox/navigation-night-v1",
+  liberty: {
+    label: "Liberty",
+    light: "https://tiles.openfreemap.org/styles/liberty",
+    dark: "https://tiles.openfreemap.org/styles/liberty",
   },
-  streets: {
-    label: "Streets",
-    light: "mapbox://styles/mapbox/streets-v12",
-    dark: "mapbox://styles/mapbox/dark-v11",
+  bright: {
+    label: "Bright",
+    light: "https://tiles.openfreemap.org/styles/bright",
+    dark: "https://tiles.openfreemap.org/styles/bright",
   },
-  satellite: {
-    label: "Satellite",
-    light: "mapbox://styles/mapbox/satellite-streets-v12",
-    dark: "mapbox://styles/mapbox/satellite-streets-v12",
+  positron: {
+    label: "Positron",
+    light: "https://tiles.openfreemap.org/styles/positron",
+    dark: "https://tiles.openfreemap.org/styles/positron",
   },
 };
 
@@ -64,10 +64,9 @@ export interface MapMarker {
   countryCode?: string;
 }
 
-interface MapboxMapProps {
+interface MapLibreMapProps {
   className?: string;
   style?: React.CSSProperties;
-  accessToken: string;
   center?: [number, number];
   zoom?: number;
   markers?: MapMarker[];
@@ -108,8 +107,8 @@ function getMarkerFillColor(count: number, maxCount: number): string {
   return "#22c55e"; // status-active
 }
 
-// Cluster layer style with smooth transitions (hex colors required by Mapbox GL)
-const clusterLayer: CircleLayer = {
+// Cluster layer style with smooth transitions
+const clusterLayer: CircleLayerSpecification = {
   id: "clusters",
   type: "circle",
   source: "visitors",
@@ -127,32 +126,28 @@ const clusterLayer: CircleLayer = {
     "circle-stroke-width": 3,
     "circle-stroke-color": "rgba(255, 255, 255, 0.9)",
     "circle-opacity": 0.95,
-    // Smooth transitions
-    "circle-radius-transition": { duration: 300, delay: 0 },
-    "circle-opacity-transition": { duration: 300, delay: 0 },
   },
 };
 
 // Cluster count label
-const clusterCountLayer: SymbolLayer = {
+const clusterCountLayer: SymbolLayerSpecification = {
   id: "cluster-count",
   type: "symbol",
   source: "visitors",
   filter: ["has", "point_count"],
   layout: {
     "text-field": ["get", "point_count_abbreviated"],
-    "text-font": ["DIN Pro Medium", "Arial Unicode MS Bold"],
+    "text-font": ["Noto Sans Regular"],
     "text-size": 14,
     "text-allow-overlap": true,
   },
   paint: {
     "text-color": "#ffffff",
-    "text-opacity-transition": { duration: 300, delay: 0 },
   },
 };
 
 // Heatmap layer for density visualization
-const heatmapLayer: HeatmapLayer = {
+const heatmapLayer: HeatmapLayerSpecification = {
   id: "heatmap",
   type: "heatmap",
   source: "visitors",
@@ -255,10 +250,9 @@ function FilledMapPin({
   );
 }
 
-export function MapboxMap({
+export function MapLibreMap({
   className,
   style,
-  accessToken,
   center = [0, 20],
   zoom = 1.5,
   markers = [],
@@ -266,27 +260,16 @@ export function MapboxMap({
   fitBoundsPadding = 50,
   showControls = true,
   onMarkerClick,
-}: MapboxMapProps) {
+}: MapLibreMapProps) {
   const mapRef = React.useRef<MapRef>(null);
   const { theme: currentTheme } = useTheme();
   const [popupInfo, setPopupInfo] = React.useState<PopupInfo | null>(null);
-  const [selectedStyleKey, setSelectedStyleKey] = React.useState<MapStyleKey>("navigation");
-  const [mapStyle, setMapStyle] = React.useState(MAP_STYLE_OPTIONS.navigation.light);
+  const [selectedStyleKey, setSelectedStyleKey] = React.useState<MapStyleKey>("liberty");
+  const [mapStyle, setMapStyle] = React.useState(MAP_STYLE_OPTIONS.liberty.light);
   const [mapError, setMapError] = React.useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = React.useState(false);
   const [showHeatmap, setShowHeatmap] = React.useState(false);
   const initialBoundsRef = React.useRef(fitBounds);
-
-  // Debug: Log token fingerprint on mount (safe - only first/last chars)
-  React.useEffect(() => {
-    if (accessToken) {
-      const fingerprint = `${accessToken.substring(0, 10)}...${accessToken.substring(accessToken.length - 6)}`;
-      logger.debug(`[MapboxMap] Token fingerprint: ${fingerprint}`);
-      logger.debug(`[MapboxMap] Current origin: ${window.location.origin}`);
-    } else {
-      logger.warn("[MapboxMap] No access token provided");
-    }
-  }, [accessToken]);
 
   // Resolve theme to map style
   React.useEffect(() => {
@@ -342,7 +325,7 @@ export function MapboxMap({
 
   // Handle map load - fit bounds
   const onMapLoad = React.useCallback(() => {
-    logger.debug("[MapboxMap] Map loaded successfully - style tiles should be rendering");
+    logger.debug("[MapLibreMap] Map loaded successfully");
     setMapLoaded(true);
     setMapError(null);
     if (fitBounds && mapRef.current) {
@@ -356,7 +339,7 @@ export function MapboxMap({
   // Handle map errors
   const onMapError = React.useCallback((evt: { error?: { message?: string } }) => {
     const errorMsg = evt?.error?.message || "Unknown map error";
-    logger.error("[MapboxMap] Map error:", { errorMsg, evt });
+    logger.error("[MapLibreMap] Map error:", { errorMsg, evt });
     setMapError(errorMsg);
   }, []);
 
@@ -371,17 +354,14 @@ export function MapboxMap({
     const clusterId = feature.properties?.cluster_id;
     if (clusterId !== undefined) {
       // It's a cluster - zoom to expand with smooth animation
-      const mapboxSource = mapRef.current.getSource("visitors");
-      if (mapboxSource && "getClusterExpansionZoom" in mapboxSource) {
-        const source = mapboxSource as unknown as {
-          getClusterExpansionZoom: (id: number, cb: (err: Error | null, zoom: number) => void) => void;
-        };
-        source.getClusterExpansionZoom(clusterId, (err, zoomLevel) => {
+      const source = mapRef.current.getSource("visitors");
+      if (source && "getClusterExpansionZoom" in source) {
+        (source as any).getClusterExpansionZoom(clusterId, (err: Error | null, zoomLevel: number) => {
           if (err) return;
           mapRef.current?.easeTo({
             center: geometry.coordinates as [number, number],
             zoom: zoomLevel,
-            duration: 500, // Smooth 500ms animation
+            duration: 500,
           });
         });
       }
@@ -451,7 +431,6 @@ export function MapboxMap({
     <div className={`relative ${className || ""}`} style={style}>
       <Map
         ref={mapRef}
-        mapboxAccessToken={accessToken}
         initialViewState={{
           longitude: center[0],
           latitude: center[1],

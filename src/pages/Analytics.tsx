@@ -26,7 +26,7 @@ import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useMockAnalyticsData } from '@/hooks/useMockAnalyticsData';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgent } from '@/hooks/useAgent';
-import { useMapboxToken } from '@/hooks/useMapboxToken';
+// MapLibre with OpenFreeMap - no token needed!
 import { ComparisonView } from '@/components/analytics/ComparisonView';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
@@ -225,8 +225,7 @@ function Analytics() {
     loading: comparisonTrafficLoading,
   } = useTrafficAnalytics(comparisonStartDate, comparisonEndDate, comparisonMode && shouldFetchRealData);
 
-  // Fetch Mapbox token for map rendering
-  const { data: mapboxToken } = useMapboxToken();
+  // MapLibre with OpenFreeMap - no API token needed!
 
   // Comparison data - only fetch when comparison mode is on AND not in mock mode
   const comparisonData = useAnalytics(
@@ -739,7 +738,7 @@ function Analytics() {
                   </div>
                 )}
               >
-                <VisitorLocationMap data={locationData} loading={trafficLoading} mapboxToken={mapboxToken} />
+                <VisitorLocationMap data={locationData} loading={trafficLoading} />
               </ErrorBoundary>
             </div>
           )}
