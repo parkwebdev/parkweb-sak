@@ -800,7 +800,7 @@ export function MapLibreMap({
           <Label htmlFor="heatmap-toggle" className="text-xs font-medium cursor-pointer">
             Heatmap
           </Label>
-          <div className="scale-[0.65] origin-left">
+          <div className="scale-[0.65] origin-left -mr-4">
             <Switch
               id="heatmap-toggle"
               checked={showHeatmap}
