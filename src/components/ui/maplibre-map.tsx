@@ -121,6 +121,52 @@ function buildGeoJson(markers: MapMarker[]) {
   };
 }
 
+// Boosted heatmap paint properties for better visibility
+const HEATMAP_PAINT = {
+  "heatmap-weight": [
+    "interpolate",
+    ["linear"],
+    ["get", "count"],
+    0, 0,
+    5, 0.5,
+    20, 1,
+  ],
+  "heatmap-intensity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 1.5,
+    9, 4,
+  ],
+  "heatmap-color": [
+    "interpolate",
+    ["linear"],
+    ["heatmap-density"],
+    0, "rgba(0, 0, 255, 0)",
+    0.1, "rgba(65, 182, 196, 0.6)",
+    0.3, "rgba(127, 205, 187, 0.75)",
+    0.5, "rgba(199, 233, 180, 0.85)",
+    0.7, "rgba(254, 178, 76, 0.9)",
+    0.9, "rgba(240, 59, 32, 0.95)",
+    1, "rgba(189, 0, 38, 1)",
+  ],
+  "heatmap-radius": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 30,
+    9, 50,
+  ],
+  "heatmap-opacity": [
+    "interpolate",
+    ["linear"],
+    ["zoom"],
+    0, 1,
+    7, 0.95,
+    12, 0.8,
+  ],
+};
+
 export function MapLibreMap({
   className,
   style,
@@ -135,6 +181,7 @@ export function MapLibreMap({
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const mapRef = React.useRef<MapLibreInstance | null>(null);
   const markersRef = React.useRef<maplibregl.Marker[]>([]);
+  const clusterLabelsRef = React.useRef<HTMLDivElement[]>([]);
   const hoverPopupRef = React.useRef<maplibregl.Popup | null>(null);
   const initialBoundsRef = React.useRef(fitBounds);
 
@@ -189,6 +236,45 @@ export function MapLibreMap({
     map.easeTo({ center, zoom, duration: 500 });
   }, [center, zoom, fitBoundsPadding]);
 
+  // Render HTML cluster labels using Geist font
+  const updateClusterLabels = React.useCallback(() => {
+    const map = mapRef.current;
+    if (!map || showHeatmap) {
+      // Clear labels if heatmap is on
+      clusterLabelsRef.current.forEach((el) => el.remove());
+      clusterLabelsRef.current = [];
+      return;
+    }
+
+    // Clear existing labels
+    clusterLabelsRef.current.forEach((el) => el.remove());
+    clusterLabelsRef.current = [];
+
+    // Query cluster features from the map
+    if (!map.getSource("visitors") || !map.getLayer("clusters")) return;
+
+    const features = map.queryRenderedFeatures({ layers: ["clusters"] });
+
+    features.forEach((feature) => {
+      const props = feature.properties as any;
+      if (!props?.point_count) return;
+
+      const coords = (feature.geometry as any).coordinates as [number, number];
+      const point = map.project(coords);
+
+      const el = document.createElement("div");
+      el.className = "absolute pointer-events-none font-sans text-sm font-bold text-white";
+      el.style.transform = "translate(-50%, -50%)";
+      el.style.left = `${point.x}px`;
+      el.style.top = `${point.y}px`;
+      el.style.zIndex = "5";
+      el.textContent = props.point_count_abbreviated || props.point_count.toString();
+
+      containerRef.current?.appendChild(el);
+      clusterLabelsRef.current.push(el);
+    });
+  }, [showHeatmap]);
+
   // Create map instance once
   React.useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -238,39 +324,7 @@ export function MapLibreMap({
         type: "heatmap",
         source: "visitors",
         layout: { visibility: "none" },
-        paint: {
-          "heatmap-weight": [
-            "interpolate",
-            ["linear"],
-            ["get", "count"],
-            0,
-            0,
-            10,
-            0.5,
-            50,
-            1,
-          ],
-          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.5, 9, 2],
-          "heatmap-color": [
-            "interpolate",
-            ["linear"],
-            ["heatmap-density"],
-            0,
-            "rgba(33, 102, 172, 0)",
-            0.2,
-            "rgba(103, 169, 207, 0.6)",
-            0.4,
-            "rgba(209, 229, 240, 0.7)",
-            0.6,
-            "rgba(253, 219, 199, 0.8)",
-            0.8,
-            "rgba(239, 138, 98, 0.9)",
-            1,
-            "rgba(178, 24, 43, 1)",
-          ],
-          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 15, 9, 30],
-          "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.8, 9, 0.4],
-        },
+        paint: HEATMAP_PAINT,
       } as any);
 
       map.addLayer({
@@ -305,21 +359,7 @@ export function MapLibreMap({
         },
       } as any);
 
-      map.addLayer({
-        id: "cluster-count",
-        type: "symbol",
-        source: "visitors",
-        filter: ["has", "point_count"],
-        layout: {
-          "text-field": ["get", "point_count_abbreviated"],
-          "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
-          "text-size": 14,
-          "text-allow-overlap": true,
-        },
-        paint: {
-          "text-color": "#ffffff",
-        },
-      } as any);
+      // No cluster-count symbol layer - we use HTML labels instead
 
       // Cluster interactions
       map.on("click", "clusters", (e: MapMouseEvent) => {
@@ -373,7 +413,16 @@ export function MapLibreMap({
         map.getCanvas().style.cursor = "grab";
         hoverPopupRef.current?.remove();
       });
+
+      // Update cluster labels after initial render
+      map.once("idle", () => {
+        updateClusterLabels();
+      });
     });
+
+    // Update cluster labels on map movement
+    map.on("move", updateClusterLabels);
+    map.on("zoom", updateClusterLabels);
 
     return () => {
       try {
@@ -382,6 +431,9 @@ export function MapLibreMap({
       } catch {
         // no-op
       }
+
+      clusterLabelsRef.current.forEach((el) => el.remove());
+      clusterLabelsRef.current = [];
 
       markersRef.current.forEach((m) => {
         try {
@@ -438,39 +490,7 @@ export function MapLibreMap({
           type: "heatmap",
           source: "visitors",
           layout: { visibility: showHeatmap ? "visible" : "none" },
-          paint: {
-            "heatmap-weight": [
-              "interpolate",
-              ["linear"],
-              ["get", "count"],
-              0,
-              0,
-              10,
-              0.5,
-              50,
-              1,
-            ],
-            "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.5, 9, 2],
-            "heatmap-color": [
-              "interpolate",
-              ["linear"],
-              ["heatmap-density"],
-              0,
-              "rgba(33, 102, 172, 0)",
-              0.2,
-              "rgba(103, 169, 207, 0.6)",
-              0.4,
-              "rgba(209, 229, 240, 0.7)",
-              0.6,
-              "rgba(253, 219, 199, 0.8)",
-              0.8,
-              "rgba(239, 138, 98, 0.9)",
-              1,
-              "rgba(178, 24, 43, 1)",
-            ],
-            "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 15, 9, 30],
-            "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.8, 9, 0.4],
-          },
+          paint: HEATMAP_PAINT,
         } as any
       );
 
@@ -510,31 +530,18 @@ export function MapLibreMap({
         } as any
       );
 
-      ensureLayer(
-        "cluster-count",
-        {
-          id: "cluster-count",
-          type: "symbol",
-          source: "visitors",
-          filter: ["has", "point_count"],
-          layout: {
-            visibility: showHeatmap ? "none" : "visible",
-            "text-field": ["get", "point_count_abbreviated"],
-            "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
-            "text-size": 14,
-            "text-allow-overlap": true,
-          },
-          paint: { "text-color": "#ffffff" },
-        } as any
-      );
+      // No cluster-count symbol layer - we use HTML labels instead
 
       map.jumpTo({ center: [current.lng, current.lat], zoom: currentZoom });
 
       // Cluster handlers need to be re-bound after style switch (layer objects replaced)
       const hasClick = (map as any)._listeners?.click?.some((l: any) => l?.layerId === "clusters");
       void hasClick; // best-effort; maplibre doesn't expose clean layer-listeners API
+
+      // Update HTML cluster labels after style switch
+      map.once("idle", updateClusterLabels);
     });
-  }, [mapStyle, markers, showHeatmap]);
+  }, [mapStyle, markers, showHeatmap, updateClusterLabels]);
 
   // Update source data when markers change
   React.useEffect(() => {
@@ -636,11 +643,13 @@ export function MapLibreMap({
 
     setVis("heatmap", showHeatmap);
     setVis("clusters", !showHeatmap);
-    setVis("cluster-count", !showHeatmap);
-  }, [showHeatmap]);
+
+    // Update cluster labels when heatmap toggle changes
+    updateClusterLabels();
+  }, [showHeatmap, updateClusterLabels]);
 
   return (
-    <div className={cn("relative", className)} style={style}>
+    <div className={cn("relative overflow-hidden", className)} style={style}>
       <div ref={containerRef} className="h-full w-full" />
 
       {showControls && (
