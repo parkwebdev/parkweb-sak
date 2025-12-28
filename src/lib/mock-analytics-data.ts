@@ -485,9 +485,78 @@ export const generateLocationData = (): MockLocationData[] => [
   { country: 'Germany', city: 'Berlin', lat: 52.5200, lng: 13.4050, count: randomBetween(60, 140) },
   { country: 'Canada', city: 'Toronto', lat: 43.6532, lng: -79.3832, count: randomBetween(50, 120) },
   { country: 'Australia', city: 'Sydney', lat: -33.8688, lng: 151.2093, count: randomBetween(40, 100) },
-  { country: 'France', city: 'Paris', lat: 48.8566, lng: 2.3522, count: randomBetween(45, 110) },
+  { country: 'France', city: 'Paris', lat: 48.8566, lng: 2.3522, count: randomBetween(35, 90) },
   { country: 'Japan', city: 'Tokyo', lat: 35.6762, lng: 139.6503, count: randomBetween(30, 80) },
   { country: 'Brazil', city: 'São Paulo', lat: -23.5505, lng: -46.6333, count: randomBetween(25, 70) },
-  { country: 'India', city: 'Mumbai', lat: 19.0760, lng: 72.8777, count: randomBetween(35, 90) },
-  { country: 'Netherlands', city: 'Amsterdam', lat: 52.3676, lng: 4.9041, count: randomBetween(20, 60) },
 ];
+
+// =============================================================================
+// CONVERSATION FUNNEL GENERATOR
+// =============================================================================
+
+export interface MockFunnelStage {
+  name: string;
+  count: number;
+  percentage: number;
+  dropOffPercent: number;
+  color: string;
+}
+
+const FUNNEL_COLORS = {
+  started: 'hsl(220, 90%, 56%)',
+  engaged: 'hsl(200, 85%, 50%)',
+  leadCaptured: 'hsl(160, 80%, 45%)',
+  booked: 'hsl(142, 76%, 36%)',
+  resolved: 'hsl(84, 60%, 45%)',
+};
+
+/** Generate conversation funnel stages with realistic drop-off */
+export const generateConversationFunnel = (): MockFunnelStage[] => {
+  const started = randomBetween(800, 1500);
+  const engagedPercent = randomFloat(0.75, 0.92);
+  const engaged = Math.floor(started * engagedPercent);
+  const leadCapturedPercent = randomFloat(0.35, 0.55);
+  const leadCaptured = Math.floor(started * leadCapturedPercent);
+  const bookedPercent = randomFloat(0.15, 0.30);
+  const booked = Math.floor(started * bookedPercent);
+  const resolvedPercent = randomFloat(0.55, 0.75);
+  const resolved = Math.floor(started * resolvedPercent);
+
+  return [
+    { 
+      name: 'Started', 
+      count: started, 
+      percentage: 100, 
+      dropOffPercent: 0, 
+      color: FUNNEL_COLORS.started 
+    },
+    { 
+      name: 'Engaged', 
+      count: engaged, 
+      percentage: Math.round((engaged / started) * 100), 
+      dropOffPercent: Math.round(((started - engaged) / started) * 100), 
+      color: FUNNEL_COLORS.engaged 
+    },
+    { 
+      name: 'Lead Captured', 
+      count: leadCaptured, 
+      percentage: Math.round((leadCaptured / started) * 100), 
+      dropOffPercent: engaged > 0 ? Math.round(((engaged - leadCaptured) / engaged) * 100) : 0, 
+      color: FUNNEL_COLORS.leadCaptured 
+    },
+    { 
+      name: 'Booked', 
+      count: booked, 
+      percentage: Math.round((booked / started) * 100), 
+      dropOffPercent: leadCaptured > 0 ? Math.round(((leadCaptured - booked) / leadCaptured) * 100) : 0, 
+      color: FUNNEL_COLORS.booked 
+    },
+    { 
+      name: 'Resolved', 
+      count: resolved, 
+      percentage: Math.round((resolved / started) * 100), 
+      dropOffPercent: 0, 
+      color: FUNNEL_COLORS.resolved 
+    },
+  ];
+};

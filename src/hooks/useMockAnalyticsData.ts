@@ -25,6 +25,7 @@ import {
   generateUsageMetrics,
   generateAgentPerformance,
   generateLocationData,
+  generateConversationFunnel,
   type MockConversationStat,
   type MockLeadStat,
   type MockTrafficSource,
@@ -33,6 +34,7 @@ import {
   type MockUsageMetric,
   type MockAgentPerformance,
   type MockLocationData,
+  type MockFunnelStage,
 } from '@/lib/mock-analytics-data';
 import type {
   BookingStats,
@@ -71,6 +73,9 @@ export interface MockAnalyticsData {
   
   // Location data for geography map
   locationData: MockLocationData[];
+  
+  // Conversation funnel
+  funnelStages: MockFunnelStage[];
 }
 
 export interface UseMockAnalyticsDataReturn {
@@ -144,6 +149,9 @@ export const useMockAnalyticsData = (): UseMockAnalyticsDataReturn => {
       
       // Location
       locationData: generateLocationData(),
+      
+      // Funnel
+      funnelStages: generateConversationFunnel(),
     };
   }, [enabled, refreshKey]);
 
