@@ -211,7 +211,6 @@ export function MapLibreMap({
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const mapRef = React.useRef<MapLibreInstance | null>(null);
   const markersRef = React.useRef<maplibregl.Marker[]>([]);
-  const clusterLabelsRef = React.useRef<HTMLDivElement[]>([]);
   const hoverPopupRef = React.useRef<maplibregl.Popup | null>(null);
   const initialBoundsRef = React.useRef(fitBounds);
 
@@ -268,44 +267,7 @@ export function MapLibreMap({
     map.easeTo({ center, zoom, duration: 500 });
   }, [center, zoom, fitBoundsPadding]);
 
-  // Render HTML cluster labels using Geist font
-  const updateClusterLabels = React.useCallback(() => {
-    const map = mapRef.current;
-    if (!map || showHeatmap) {
-      // Clear labels if heatmap is on
-      clusterLabelsRef.current.forEach((el) => el.remove());
-      clusterLabelsRef.current = [];
-      return;
-    }
-
-    // Clear existing labels
-    clusterLabelsRef.current.forEach((el) => el.remove());
-    clusterLabelsRef.current = [];
-
-    // Query cluster features from the map
-    if (!map.getSource("visitors") || !map.getLayer("clusters")) return;
-
-    const features = map.queryRenderedFeatures({ layers: ["clusters"] });
-
-    features.forEach((feature) => {
-      const props = feature.properties as any;
-      if (!props?.point_count) return;
-
-      const coords = (feature.geometry as any).coordinates as [number, number];
-      const point = map.project(coords);
-
-      const el = document.createElement("div");
-      el.className = "absolute pointer-events-none font-sans text-sm font-bold text-white";
-      el.style.transform = "translate(-50%, -50%)";
-      el.style.left = `${point.x}px`;
-      el.style.top = `${point.y}px`;
-      el.style.zIndex = "5";
-      el.textContent = props.point_count_abbreviated || props.point_count.toString();
-
-      containerRef.current?.appendChild(el);
-      clusterLabelsRef.current.push(el);
-    });
-  }, [showHeatmap]);
+  // No cluster labels - we only use HTML markers
 
   // Create map instance once
   React.useEffect(() => {
@@ -359,35 +321,16 @@ export function MapLibreMap({
         paint: getHeatmapPaint(mapStyle),
       } as any);
 
+      // Native clusters layer - hidden, we use HTML markers only
       map.addLayer({
         id: "clusters",
         type: "circle",
         source: "visitors",
         filter: ["has", "point_count"],
+        layout: { visibility: "none" }, // Hidden - HTML markers handle rendering
         paint: {
-          "circle-color": [
-            "step",
-            ["get", "point_count"],
-            "#22c55e",
-            5,
-            "#f59e0b",
-            15,
-            "#ef4444",
-          ],
-          "circle-radius": [
-            "interpolate",
-            ["linear"],
-            ["get", "point_count"],
-            2,
-            20,
-            10,
-            28,
-            50,
-            40,
-          ],
-          "circle-stroke-width": 3,
-          "circle-stroke-color": "rgba(255, 255, 255, 0.9)",
-          "circle-opacity": 0.95,
+          "circle-radius": 0,
+          "circle-opacity": 0,
         },
       } as any);
 
@@ -398,10 +341,6 @@ export function MapLibreMap({
         if (map.getLayer("heatmap")) {
           map.setLayoutProperty("heatmap", "visibility", showHeatmap ? "visible" : "none");
         }
-        if (map.getLayer("clusters")) {
-          map.setLayoutProperty("clusters", "visibility", showHeatmap ? "none" : "visible");
-        }
-        updateClusterLabels();
       });
 
       // Cluster interactions
@@ -465,15 +404,7 @@ export function MapLibreMap({
         hoverPopupRef.current?.remove();
       });
 
-      // Update cluster labels after initial render
-      map.once("idle", () => {
-        updateClusterLabels();
-      });
     });
-
-    // Update cluster labels on map movement
-    map.on("move", updateClusterLabels);
-    map.on("zoom", updateClusterLabels);
     
     // Track zoom level changes with smooth marker size updates
     map.on("zoom", () => {
@@ -529,8 +460,6 @@ export function MapLibreMap({
         // no-op
       }
 
-      clusterLabelsRef.current.forEach((el) => el.remove());
-      clusterLabelsRef.current = [];
 
       markersRef.current.forEach((m) => {
         try {
@@ -601,6 +530,7 @@ export function MapLibreMap({
         } as any
       );
 
+      // Native clusters layer - hidden, we use HTML markers only
       ensureLayer(
         "clusters",
         {
@@ -608,31 +538,10 @@ export function MapLibreMap({
           type: "circle",
           source: "visitors",
           filter: ["has", "point_count"],
-          layout: { visibility: showHeatmap ? "none" : "visible" },
+          layout: { visibility: "none" }, // Hidden - HTML markers handle rendering
           paint: {
-            "circle-color": [
-              "step",
-              ["get", "point_count"],
-              "#22c55e",
-              5,
-              "#f59e0b",
-              15,
-              "#ef4444",
-            ],
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["get", "point_count"],
-              2,
-              20,
-              10,
-              28,
-              50,
-              40,
-            ],
-            "circle-stroke-width": 3,
-            "circle-stroke-color": "rgba(255, 255, 255, 0.9)",
-            "circle-opacity": 0.95,
+            "circle-radius": 0,
+            "circle-opacity": 0,
           },
         } as any
       );
@@ -645,10 +554,8 @@ export function MapLibreMap({
       const hasClick = (map as any)._listeners?.click?.some((l: any) => l?.layerId === "clusters");
       void hasClick; // best-effort; maplibre doesn't expose clean layer-listeners API
 
-      // Update HTML cluster labels after style switch
-      map.once("idle", updateClusterLabels);
     });
-  }, [mapStyle, markers, showHeatmap, updateClusterLabels]);
+  }, [mapStyle, markers, showHeatmap]);
 
   // Update source data when markers change
   React.useEffect(() => {
@@ -786,11 +693,7 @@ export function MapLibreMap({
     };
 
     setVis("heatmap", showHeatmap);
-    setVis("clusters", !showHeatmap);
-
-    // Update cluster labels when heatmap toggle changes
-    updateClusterLabels();
-  }, [showHeatmap, updateClusterLabels]);
+  }, [showHeatmap]);
 
   // Keyboard navigation for markers
   React.useEffect(() => {
