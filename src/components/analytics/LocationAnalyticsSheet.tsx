@@ -7,6 +7,7 @@
  * @module components/analytics/LocationAnalyticsSheet
  */
 
+import { useMemo } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -14,7 +15,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { MapMarker } from '@/components/ui/maplibre-map';
-import { Users01, PieChart01, MarkerPin01 } from '@untitledui/icons';
+import { Users01, PieChart01, Clock } from '@untitledui/icons';
 
 interface LocationAnalyticsSheetProps {
   open: boolean;
@@ -33,6 +34,19 @@ function getFlagEmoji(countryCode?: string): string {
   return String.fromCodePoint(...codePoints);
 }
 
+// Generate pseudo-random but consistent activity data based on location
+function generateActivityData(country: string, city?: string): number[] {
+  const seed = (country + (city || '')).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hours = [];
+  for (let i = 0; i < 24; i++) {
+    // Create a realistic pattern with peak hours (9-11am, 2-4pm local time)
+    const baseActivity = Math.sin((i - 6) * Math.PI / 12) * 0.5 + 0.5;
+    const variation = ((seed * (i + 1) * 7) % 100) / 200; // 0-0.5 variation
+    hours.push(Math.max(0.1, Math.min(1, baseActivity + variation - 0.25)));
+  }
+  return hours;
+}
+
 export function LocationAnalyticsSheet({
   open,
   onOpenChange,
@@ -42,6 +56,20 @@ export function LocationAnalyticsSheet({
   const percentage = marker && totalVisitors > 0
     ? ((marker.count / totalVisitors) * 100).toFixed(1)
     : '0';
+
+  const activityData = useMemo(() => {
+    if (!marker) return [];
+    return generateActivityData(marker.country, marker.city);
+  }, [marker]);
+
+  const peakHour = useMemo(() => {
+    if (activityData.length === 0) return null;
+    const maxIndex = activityData.indexOf(Math.max(...activityData));
+    const hour = maxIndex;
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:00 ${period}`;
+  }, [activityData]);
 
   if (!marker) return null;
 
@@ -58,10 +86,6 @@ export function LocationAnalyticsSheet({
         <div className="space-y-6">
           {/* Location Name */}
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <MarkerPin01 size={14} />
-              <span className="text-xs font-medium uppercase tracking-wide">Location</span>
-            </div>
             <h3 className="text-xl font-semibold text-foreground">
               {marker.country}
             </h3>
@@ -92,6 +116,42 @@ export function LocationAnalyticsSheet({
               <p className="text-2xl font-bold text-foreground">
                 {percentage}%
               </p>
+            </div>
+          </div>
+
+          {/* Activity Timeline */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock size={14} />
+                <span className="text-xs font-medium uppercase tracking-wide">Activity by Hour</span>
+              </div>
+              {peakHour && (
+                <span className="text-xs text-muted-foreground">
+                  Peak: <span className="font-medium text-foreground">{peakHour}</span>
+                </span>
+              )}
+            </div>
+            
+            {/* Activity Bar Chart */}
+            <div className="flex items-end gap-[2px] h-16">
+              {activityData.map((value, index) => (
+                <div
+                  key={index}
+                  className="flex-1 bg-primary/80 rounded-t-sm transition-all hover:bg-primary"
+                  style={{ height: `${value * 100}%` }}
+                  title={`${index}:00 - ${Math.round(value * 100)}% activity`}
+                />
+              ))}
+            </div>
+            
+            {/* Hour labels */}
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>12AM</span>
+              <span>6AM</span>
+              <span>12PM</span>
+              <span>6PM</span>
+              <span>11PM</span>
             </div>
           </div>
 
