@@ -83,8 +83,6 @@ interface SatisfactionTrendPoint {
 interface ContainmentTrendPoint {
   date: string;
   value: number;
-  aiHandled: number;
-  humanTakeover: number;
 }
 
 /**
@@ -567,8 +565,6 @@ export const useAnalytics = (
         .map(([date, { total, humanTakeover }]) => ({
           date,
           value: total > 0 ? Math.round(((total - humanTakeover) / total) * 100) : 0,
-          aiHandled: total - humanTakeover,
-          humanTakeover,
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -697,15 +693,6 @@ export const useAnalytics = (
     [containmentTrendData]
   );
 
-  const containmentStackedTrend = useMemo(() => 
-    containmentTrendData.map((d) => ({ 
-      date: d.date, 
-      aiHandled: d.aiHandled, 
-      humanTakeover: d.humanTakeover 
-    })),
-    [containmentTrendData]
-  );
-
   return {
     // Existing data
     conversationStats,
@@ -722,6 +709,5 @@ export const useAnalytics = (
     bookingTrend,
     satisfactionTrend,
     containmentTrend,
-    containmentStackedTrend,
   };
 };

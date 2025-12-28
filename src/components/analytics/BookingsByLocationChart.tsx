@@ -194,7 +194,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
       <div className="px-4 pt-3 pb-2 md:px-5">
         <h3 className="text-sm font-semibold text-foreground">By Location</h3>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {locationCount} location{locationCount !== 1 ? 's' : ''}
+          {locationCount} location{locationCount !== 1 ? 's' : ''} • {total.toLocaleString()} total
         </p>
       </div>
 
