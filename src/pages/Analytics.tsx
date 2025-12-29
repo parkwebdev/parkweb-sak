@@ -42,9 +42,11 @@ import { PeakActivityChart } from '@/components/analytics/PeakActivityChart';
 import { CustomerFeedbackCard } from '@/components/analytics/CustomerFeedbackCard';
 
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
+import { TrafficSourceTrendChart } from '@/components/analytics/TrafficSourceTrendChart';
 import { TopPagesChart } from '@/components/analytics/TopPagesChart';
 import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
 import { PageEngagementCard } from '@/components/analytics/PageEngagementCard';
+import { PageDepthChart } from '@/components/analytics/PageDepthChart';
 
 import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
 import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildReportSheet';
@@ -223,6 +225,8 @@ function Analytics() {
     pageVisits: realPageVisits,
     locationData: realLocationData,
     engagement: realEngagement,
+    sourcesByDate: realSourcesByDate,
+    pageDepthDistribution: realPageDepthDistribution,
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
 
@@ -258,6 +262,8 @@ function Analytics() {
   const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
   const locationData = mockMode && mockData ? mockData.locationData : realLocationData;
   const engagement = realEngagement; // No mock data for engagement yet
+  const sourcesByDate = realSourcesByDate; // No mock data for time-series yet
+  const pageDepthDistribution = realPageDepthDistribution; // No mock data for depth yet
   const funnelStages = mockMode && mockData ? mockData.funnelStages : realFunnelStages;
 
 
@@ -743,13 +749,19 @@ function Analytics() {
           {/* Traffic Sources Section */}
           {activeTab === 'sources' && (
             <div className="space-y-6">
-              <AnimatedList staggerDelay={0.1}>
+              <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem>
                   <TrafficSourceChart 
                     data={trafficSources} 
                     loading={trafficLoading || (comparisonMode && comparisonTrafficLoading)}
                     comparisonData={comparisonMode ? comparisonTrafficSources : undefined}
                     engagement={engagement}
+                  />
+                </AnimatedItem>
+                <AnimatedItem>
+                  <TrafficSourceTrendChart 
+                    data={sourcesByDate} 
+                    loading={trafficLoading}
                   />
                 </AnimatedItem>
               </AnimatedList>
@@ -761,7 +773,12 @@ function Analytics() {
             <div className="space-y-6">
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem><PageEngagementCard engagement={engagement} loading={trafficLoading} /></AnimatedItem>
-                <AnimatedItem><TopPagesChart data={landingPages} loading={trafficLoading} /></AnimatedItem>
+                <AnimatedItem>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <TopPagesChart data={landingPages} loading={trafficLoading} />
+                    <PageDepthChart data={pageDepthDistribution} loading={trafficLoading} />
+                  </div>
+                </AnimatedItem>
                 <AnimatedItem><LandingPagesTable data={landingPages} loading={trafficLoading} /></AnimatedItem>
               </AnimatedList>
             </div>
