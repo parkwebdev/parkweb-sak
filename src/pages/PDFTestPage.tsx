@@ -27,7 +27,7 @@ import { subDays, format } from 'date-fns';
 const BUILD_STAMP = `Build: ${new Date().toISOString().slice(0, 19)}`;
 
 // Render modes for PDF preview
-type RenderMode = 'object' | 'iframe' | 'none';
+type RenderMode = 'object' | 'iframe' | 'embed' | 'none';
 
 // CSP Diagnostics interface
 interface CSPDiagnostics {
@@ -258,6 +258,7 @@ export default function PDFTestPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [renderMode, setRenderMode] = useState<RenderMode>('object');
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(true);
+  const [embedBlocked, setEmbedBlocked] = useState(false);
   
   // Blob preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -699,6 +700,10 @@ export default function PDFTestPage() {
                 <Label htmlFor="mode-iframe" className="text-xs cursor-pointer">iframe</Label>
               </div>
               <div className="flex items-center gap-1">
+                <RadioGroupItem value="embed" id="mode-embed" className="h-3 w-3" />
+                <Label htmlFor="mode-embed" className="text-xs cursor-pointer">embed</Label>
+              </div>
+              <div className="flex items-center gap-1">
                 <RadioGroupItem value="none" id="mode-none" className="h-3 w-3" />
                 <Label htmlFor="mode-none" className="text-xs cursor-pointer">no-embed</Label>
               </div>
@@ -749,16 +754,45 @@ export default function PDFTestPage() {
             data={previewUrl}
             type="application/pdf"
             className="flex-1 w-full"
+            onError={() => setEmbedBlocked(true)}
           >
-            <div className="flex-1 flex items-center justify-center p-8">
-              <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  PDF preview blocked by browser (object tag).
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Try switching to iframe mode or use "Open in new tab".
-                </p>
-              </div>
+            {/* Enhanced fallback UI when object embed is blocked */}
+            <div className="flex-1 flex items-center justify-center p-8 h-full">
+              <Card className="max-w-md">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-500" />
+                    PDF Embed Blocked
+                  </CardTitle>
+                  <CardDescription>
+                    Your browser or an extension is blocking embedded PDFs. Use the buttons below to view the generated report.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <a
+                      href={previewUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      Open PDF in New Tab
+                    </a>
+                    <Button onClick={handleDownload} variant="outline" className="w-full">
+                      <Download02 className="h-4 w-4 mr-2" />
+                      Download PDF
+                    </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Troubleshooting:</strong></p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      <li>Try a different render mode (iframe, embed)</li>
+                      <li>Disable browser extensions (ad blockers, PDF viewers)</li>
+                      <li>Hard refresh: Cmd+Shift+R (Mac) or Ctrl+Shift+R (Win)</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </object>
         )}
@@ -771,27 +805,40 @@ export default function PDFTestPage() {
           />
         )}
         
+        {previewUrl && !isGeneratingPreview && !previewError && renderMode === 'embed' && (
+          <embed
+            src={previewUrl}
+            type="application/pdf"
+            className="flex-1 w-full"
+          />
+        )}
+        
         {previewUrl && !isGeneratingPreview && !previewError && renderMode === 'none' && (
           <div className="flex-1 flex items-center justify-center p-8">
-            <div className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Embedding disabled. Use the actions above to view the PDF.
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <a
-                  href={previewUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
-                >
-                  Open PDF in new tab
-                </a>
-                <Button onClick={handleDownload} variant="outline">
-                  <Download02 className="h-4 w-4 mr-2" />
-                  Download PDF
-                </Button>
-              </div>
-            </div>
+            <Card className="max-w-md">
+              <CardHeader>
+                <CardTitle className="text-base">PDF Preview Disabled</CardTitle>
+                <CardDescription>
+                  Embedding is disabled. Use the buttons below to view or download the PDF.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={previewUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Open PDF in New Tab
+                  </a>
+                  <Button onClick={handleDownload} variant="outline" className="w-full">
+                    <Download02 className="h-4 w-4 mr-2" />
+                    Download PDF
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
