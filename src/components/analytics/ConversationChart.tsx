@@ -37,6 +37,7 @@ export const ConversationChart = React.memo(function ConversationChart({
   trendPeriod = 'this month',
 }: ConversationChartProps) {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
+  const [animationId, setAnimationId] = useState(0);
   const prefersReducedMotion = useReducedMotion();
   
   // Calculate totals for context summary
@@ -54,6 +55,7 @@ export const ConversationChart = React.memo(function ConversationChart({
       }
       return next;
     });
+    setAnimationId(v => v + 1);
   };
 
   // Format data for chart
@@ -150,7 +152,7 @@ export const ConversationChart = React.memo(function ConversationChart({
 
               {SERIES_CONFIG.map(({ key, label, color }) => (
                 <Area
-                  key={key}
+                  key={`${key}-${animationId}`}
                   dataKey={key}
                   name={label}
                   stackId="1"
