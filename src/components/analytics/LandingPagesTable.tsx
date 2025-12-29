@@ -98,7 +98,7 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
               showRowsPerPage={true}
             />
             {/* Footer context summary */}
-            <p className="text-xs text-muted-foreground">
+            <p className="mt-4 text-xs text-muted-foreground">
               {contextSummary || "Pages where visitors start their journey"}
             </p>
           </>
