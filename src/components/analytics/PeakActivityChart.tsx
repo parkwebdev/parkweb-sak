@@ -169,7 +169,7 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
                 {TIME_BLOCKS.map((block) => (
                   <div 
                     key={block.label} 
-                    className="text-[10px] text-muted-foreground text-center font-medium"
+                    className="text-2xs text-muted-foreground text-center font-medium"
                   >
                     {block.label}
                   </div>
@@ -226,14 +226,14 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
 
             {/* Legend */}
             <div className="flex items-center justify-end gap-1.5 mt-4 pt-4 border-t border-border">
-              <span className="text-[10px] text-muted-foreground mr-1">Less</span>
+              <span className="text-2xs text-muted-foreground mr-1">Less</span>
               <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: 'hsl(var(--muted))' }} />
               <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: 'hsl(210, 100%, 95%)' }} />
               <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: 'hsl(215, 95%, 85%)' }} />
               <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: 'hsl(220, 90%, 72%)' }} />
               <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: 'hsl(225, 85%, 58%)' }} />
               <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: 'hsl(230, 80%, 45%)' }} />
-              <span className="text-[10px] text-muted-foreground ml-1">More</span>
+              <span className="text-2xs text-muted-foreground ml-1">More</span>
             </div>
           </TooltipProvider>
         )}

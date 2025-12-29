@@ -20,6 +20,7 @@ import {
   Share07,
   File02,
   Globe01,
+  FileCheck02,
 } from '@untitledui/icons';
 
 export type AnalyticsSection = 
@@ -54,7 +55,7 @@ const SECTIONS: SectionItem[] = [
   { id: 'geography', label: 'Geography', icon: Globe01, group: 'Traffic' },
   
   // Reporting
-  { id: 'reports', label: 'Reports', icon: File02, group: 'Reporting' },
+  { id: 'reports', label: 'Reports', icon: FileCheck02, group: 'Reporting' },
 ];
 
 interface AnalyticsSectionMenuProps {

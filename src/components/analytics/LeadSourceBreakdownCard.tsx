@@ -13,13 +13,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 import { ChartCardHeader } from './ChartCardHeader';
-import type { LeadSourceData } from '@/hooks/useTrafficAnalytics';
-import type { MockLeadSourceData } from '@/lib/mock-analytics-data';
+import type { LeadSourceData } from '@/types/analytics';
 
 interface LeadSourceBreakdownCardProps {
-  data: LeadSourceData[] | MockLeadSourceData[];
+  data: LeadSourceData[];
   loading?: boolean;
-  comparisonData?: LeadSourceData[] | MockLeadSourceData[];
+  comparisonData?: LeadSourceData[];
 }
 
 // Color palette from light to dark (matching TrafficSourceChart)
@@ -180,11 +179,15 @@ export const LeadSourceBreakdownCard = React.memo(function LeadSourceBreakdownCa
                   </TooltipContent>
                 </Tooltip>
 
-                {/* CVR Badge */}
+                {/* CVR Badge - performance-based coloring */}
                 <div 
                   className={cn(
                     "shrink-0 px-2 py-0.5 rounded text-xs tabular-nums font-medium",
-                    "bg-muted text-muted-foreground"
+                    source.cvr >= 15 
+                      ? "bg-success/10 text-success" 
+                      : source.cvr >= 10 
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
                   )}
                 >
                   {source.cvr.toFixed(1)}%

@@ -22,6 +22,7 @@ import type {
   SparklineDataPoint,
   RatingValue,
   TriggerType,
+  LeadSourceData,
 } from '@/types/analytics';
 
 // =============================================================================
@@ -600,15 +601,11 @@ export const generatePageDepthDistribution = (): MockPageDepthData[] => {
 // LEAD SOURCE BREAKDOWN GENERATOR
 // =============================================================================
 
-export interface MockLeadSourceData {
-  source: string;
-  leads: number;
-  sessions: number;
-  cvr: number;
-}
+// Re-export LeadSourceData for backwards compatibility
+export type { LeadSourceData };
 
 /** Generate leads by traffic source for LeadSourceBreakdownCard */
-export const generateLeadsBySource = (): MockLeadSourceData[] => {
+export const generateLeadsBySource = (): LeadSourceData[] => {
   const sources = [
     { source: 'organic', sessions: randomBetween(400, 800) },
     { source: 'direct', sessions: randomBetween(300, 600) },

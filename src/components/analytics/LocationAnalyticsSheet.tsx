@@ -129,7 +129,7 @@ export function LocationAnalyticsSheet({
             </div>
             
             {/* Hour labels */}
-            <div className="flex justify-between text-[10px] text-muted-foreground">
+            <div className="flex justify-between text-2xs text-muted-foreground">
               <span>12AM</span>
               <span>6AM</span>
               <span>12PM</span>
