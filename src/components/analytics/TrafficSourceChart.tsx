@@ -165,7 +165,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
                 style={{ animationDelay: `${animationDelay}ms` }}
               >
                 {/* Label */}
-                <span className="text-sm text-muted-foreground min-w-16 shrink-0 group-hover:text-foreground transition-colors capitalize">
+                <span className="text-sm text-muted-foreground w-20 shrink-0 group-hover:text-foreground transition-colors capitalize truncate">
                   {source.name}
                 </span>
 
