@@ -333,7 +333,7 @@ Track performance with:
 **Component Architecture** (Refactored Dec 2024):
 
 ```
-Analytics.tsx (Composition Layer - 271 lines)
+Analytics.tsx (Composition Layer - 402 lines)
 ├── Hooks
 │   └── useAnalyticsData           # Consolidated data hook (621 lines)
 │       ├── useAnalytics           # Conversation/lead stats
@@ -366,7 +366,7 @@ Analytics.tsx (Composition Layer - 271 lines)
 ```
 ┌─────────────────┐     ┌────────────────────┐
 │  Analytics.tsx  │────▶│ useAnalyticsData   │ (consolidated hook)
-│  (271 lines)    │     │ (621 lines)        │
+│  (402 lines)    │     │ (621 lines)        │
 └────────┬────────┘     └────────┬───────────┘
          │                       │
          │              ┌────────┴────────────────────┐

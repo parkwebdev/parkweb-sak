@@ -1804,6 +1804,350 @@ interface ScheduledReport {
 
 ---
 
+### useAnalyticsData
+
+Consolidated data hook for the Analytics page. Combines all analytics data fetching, mock mode switching, KPI calculations, and trend values.
+
+```tsx
+import { useAnalyticsData } from '@/hooks/useAnalyticsData';
+
+const {
+  // Raw Data
+  conversationStats,        // ConversationStatItem[] - Daily conversation counts
+  leadStats,                // Array - Daily lead counts by status
+  bookingStats,             // BookingStats | null - Booking summary
+  satisfactionStats,        // SatisfactionStats | null - CSAT summary
+  aiPerformanceStats,       // AIPerformanceStats | null - AI performance
+  trafficSources,           // MockTrafficSource[] - Traffic source breakdown
+  funnelStages,             // MockFunnelStage[] - Conversation funnel
+  
+  // Calculated KPIs
+  totalConversations,       // number
+  totalLeads,               // number
+  conversionRate,           // string (e.g., "12.5")
+  totalBookings,            // number
+  avgSatisfaction,          // number (1-5 scale)
+  containmentRate,          // number (percentage)
+  
+  // Trend Values
+  conversationTrendValue,   // number - Period-over-period change
+  leadTrendValue,           // number
+  bookingTrendValue,        // number
+  
+  // Chart Data
+  conversationChartData,    // { value: number }[] - For sparklines
+  leadChartData,            // { value: number }[]
+  
+  // Loading States
+  loading,                  // boolean - Core analytics loading
+  bookingLoading,           // boolean
+  satisfactionLoading,      // boolean
+  
+  // Mock Mode
+  mockMode,                 // boolean - Whether using mock data
+  setMockMode,              // (enabled: boolean) => void
+  regenerateMockData,       // () => void
+  
+  // Actions
+  refetch,                  // () => void
+} = useAnalyticsData({
+  startDate: Date,
+  endDate: Date,
+  comparisonStartDate: Date,
+  comparisonEndDate: Date,
+  comparisonMode: boolean,
+  filters: { leadStatus: string, conversationStatus: string },
+});
+```
+
+**Key Features**:
+- Combines 6 data hooks into single interface
+- Automatic mock/real data switching
+- Pre-calculated KPIs and trends
+- Chart data transformations
+
+**File**: `src/hooks/useAnalyticsData.ts`
+
+---
+
+### useOnboardingProgress
+
+Tracks completion status of onboarding steps for an AI agent.
+
+```tsx
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
+
+const {
+  steps,              // OnboardingStep[] - All onboarding steps with completion status
+  completedCount,     // number - Steps completed
+  totalCount,         // number - Total steps
+  percentComplete,    // number - Completion percentage (0-100)
+  allComplete,        // boolean - Whether all steps are done
+  currentStep,        // OnboardingStep | null - First incomplete step
+  loading,            // boolean
+  agentId,            // string | null
+} = useOnboardingProgress();
+```
+
+**OnboardingStep Interface**:
+```typescript
+interface OnboardingStep {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: React.ComponentType;
+  isComplete: boolean;
+  action: { label: string; href: string };
+}
+```
+
+**Key Features**:
+- Aggregates data from multiple hooks (agent, knowledge sources, conversations, etc.)
+- Tracks 7 onboarding steps (customize appearance, knowledge, help center, etc.)
+- Memoized calculations for performance
+
+**File**: `src/hooks/useOnboardingProgress.ts`
+
+---
+
+### useSearchData
+
+Fetches and aggregates data from various tables for unified search results.
+
+```tsx
+import { useSearchData } from '@/hooks/useSearchData';
+
+const {
+  searchResults,    // SearchResult[] - All searchable items
+  loading,          // boolean
+  refetch,          // () => void
+} = useSearchData();
+```
+
+**SearchResult Interface**:
+```typescript
+interface SearchResult {
+  id: string;
+  title: string;
+  description?: string;
+  category: string;
+  iconName?: string;
+  url?: string;
+  action?: () => void;
+  shortcut?: string;
+}
+```
+
+**Categories**:
+- Navigation links, Conversations, Leads, Help Articles
+- News Items, Webhooks, Tools, Knowledge Sources
+- Team Members, Settings sections
+
+**File**: `src/hooks/useSearchData.ts`
+
+---
+
+### usePlanLimits
+
+Checks subscription plan limits and current usage.
+
+```tsx
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+
+const {
+  limits,               // PlanLimits | null - Maximum resource counts
+  usage,                // CurrentUsage | null - Current consumption
+  loading,              // boolean
+  planName,             // string - Current plan name
+  checkLimit,           // (resourceType, additionalCount?) => LimitCheck
+  canAddKnowledgeSource, // () => LimitCheck
+  canAddTeamMember,     // () => LimitCheck
+  showLimitWarning,     // (resourceType, check, action?) => boolean
+  refetch,              // () => void
+} = usePlanLimits();
+```
+
+**LimitCheck Interface**:
+```typescript
+interface LimitCheck {
+  allowed: boolean;
+  current: number;
+  limit: number;
+  nearLimit: boolean;   // Within 80% of limit
+}
+```
+
+**Key Features**:
+- Fetches plan limits from subscriptions table
+- Calculates current usage from various tables
+- Shows toast warnings when approaching/at limits
+
+**File**: `src/hooks/usePlanLimits.ts`
+
+---
+
+### useGlobalSearch
+
+Manages global search dialog state with keyboard shortcut support.
+
+```tsx
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+
+const {
+  open,       // boolean - Whether search dialog is open
+  setOpen,    // (open: boolean) => void - Toggle search dialog
+} = useGlobalSearch();
+```
+
+**Keyboard Shortcuts**:
+- `Cmd/Ctrl+K` - Toggle search dialog
+- `Escape` - Close search dialog
+
+**Note**: This hook re-exports from `GlobalSearchContext`. Must be used within `GlobalSearchProvider`.
+
+**File**: `src/hooks/useGlobalSearch.ts`, `src/contexts/GlobalSearchContext.tsx`
+
+---
+
+### useEmbeddedChatConfig
+
+Manages embedded chat widget configuration.
+
+```tsx
+import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
+
+const {
+  config,           // EmbeddedChatConfig - Current configuration
+  loading,          // boolean
+  saveConfig,       // (newConfig: Partial<EmbeddedChatConfig>) => Promise<void>
+  generateEmbedCode, // () => string - Generate HTML embed snippet
+} = useEmbeddedChatConfig(agentId: string);
+```
+
+**EmbeddedChatConfig Interface** (partial):
+```typescript
+interface EmbeddedChatConfig {
+  // Appearance
+  position: 'bottom-right' | 'bottom-left';
+  primaryColor: string;
+  gradientStartColor: string;
+  gradientEndColor: string;
+  
+  // Content
+  welcomeMessage: string;
+  placeholderText: string;
+  
+  // Features
+  enableVoice: boolean;
+  enableAttachments: boolean;
+  showHelpCenter: boolean;
+  
+  // Lead capture
+  customFields: CustomField[];
+  quickActions: QuickAction[];
+}
+```
+
+**Key Features**:
+- Fetches config from agent deployment settings
+- Generates complete HTML embed code snippet
+- Saves config changes to Supabase
+
+**File**: `src/hooks/useEmbeddedChatConfig.ts`
+
+---
+
+### useCalendarKeyboardShortcuts
+
+Calendar-specific keyboard shortcuts for navigation and view switching.
+
+```tsx
+import { useCalendarKeyboardShortcuts } from '@/hooks/useCalendarKeyboardShortcuts';
+
+useCalendarKeyboardShortcuts({
+  onPrevious: () => void,    // Called on ArrowLeft
+  onNext: () => void,        // Called on ArrowRight
+  onToday: () => void,       // Called on T key
+  onViewChange: (view: CalendarView) => void, // M/W/D keys
+});
+```
+
+**Shortcuts**:
+| Key | Action |
+|-----|--------|
+| `←` | Go to previous period |
+| `→` | Go to next period |
+| `T` | Go to today |
+| `M` | Switch to month view |
+| `W` | Switch to week view |
+| `D` | Switch to day view |
+
+**Note**: Shortcuts are disabled when focus is in an input/textarea.
+
+**File**: `src/hooks/useCalendarKeyboardShortcuts.ts`
+
+---
+
+### useAutoResizeTextarea
+
+Automatically resizes a textarea based on content.
+
+```tsx
+import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
+
+const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+useAutoResizeTextarea(textareaRef, value, {
+  minRows: 1,       // Minimum number of rows (default: 1)
+  maxRows: 5,       // Maximum number of rows (default: 5)
+  lineHeight: 20,   // Line height in pixels (default: 20)
+});
+
+return <textarea ref={textareaRef} value={value} onChange={...} />;
+```
+
+**Key Features**:
+- Adjusts height between min and max rows
+- Adds scrollbar when exceeding max height
+- Triggers on value change
+
+**File**: `src/hooks/useAutoResizeTextarea.ts`
+
+---
+
+### useWordPressHomes
+
+Manages WordPress home/property data synchronization.
+
+```tsx
+import { useWordPressHomes } from '@/hooks/useWordPressHomes';
+
+const {
+  siteUrl,              // string | null - WordPress site URL
+  homeEndpoint,         // string | null - Homes API endpoint
+  isConnected,          // boolean - Whether WordPress is configured
+  isTesting,            // boolean - Testing connection
+  isSyncing,            // boolean - Syncing homes
+  testResult,           // TestResult | null - Last test result
+  testHomesEndpoint,    // (url, endpoint?) => Promise<TestResult>
+  syncHomes,            // (url?, useAiExtraction?, endpoint?) => Promise<SyncResult>
+  clearTestResult,      // () => void
+} = useWordPressHomes({
+  agent: Agent,
+  onSyncComplete?: () => void,
+});
+```
+
+**Key Features**:
+- Tests WordPress homes endpoint connectivity
+- Syncs property data via Supabase edge function
+- Supports AI-powered data extraction
+
+**File**: `src/hooks/useWordPressHomes.ts`
+
+---
+
 ## Related Documentation
 
 - [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md) - Data fetching patterns
