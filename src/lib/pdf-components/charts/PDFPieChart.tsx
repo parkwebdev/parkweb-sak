@@ -4,11 +4,12 @@
  * Native @react-pdf/renderer pie/donut chart component.
  */
 
-import { View, Svg, G, Path, Text as SvgText, StyleSheet } from '@react-pdf/renderer';
+import { View, Svg, G, Path, Text as SvgText, StyleSheet, Text } from '@react-pdf/renderer';
 import { 
   buildArcPath,
   CHART_COLOR_ARRAY,
 } from './pdf-chart-utils';
+import { colors } from '../styles';
 
 const chartStyles = StyleSheet.create({
   legendLabel: { fontSize: 7 },
@@ -93,7 +94,7 @@ export function PDFPieChart({
           <G>
             <Path
               d={`M ${cx} ${cy} m ${-innerRadius} 0 a ${innerRadius} ${innerRadius} 0 1 0 ${innerRadius * 2} 0 a ${innerRadius} ${innerRadius} 0 1 0 ${-innerRadius * 2} 0`}
-              fill="#ffffff"
+              fill={colors.white}
             />
           </G>
         )}
@@ -115,7 +116,7 @@ export function PDFPieChart({
                   <SvgText
                     x={legendX + 14}
                     y={legendY + 8}
-                    fill="#475569"
+                    fill={colors.secondary}
                     style={chartStyles.legendLabel}
                   >
                     {displayLabel}
@@ -123,7 +124,7 @@ export function PDFPieChart({
                   <SvgText
                     x={legendX + 14}
                     y={legendY + 16}
-                    fill="#94a3b8"
+                    fill={colors.muted}
                     style={chartStyles.legendPercent}
                   >
                     {seg.percentage.toFixed(1)}%
@@ -140,7 +141,7 @@ export function PDFPieChart({
             <SvgText
               x={cx}
               y={cy - 4}
-              fill="#0f172a"
+              fill={colors.primary}
               style={chartStyles.centerValue}
               textAnchor="middle"
             >
@@ -149,7 +150,7 @@ export function PDFPieChart({
             <SvgText
               x={cx}
               y={cy + 10}
-              fill="#64748b"
+              fill={colors.secondary}
               style={chartStyles.centerLabel}
               textAnchor="middle"
             >
@@ -162,14 +163,18 @@ export function PDFPieChart({
   );
 }
 
-function PDFPieChartEmpty({ width, height }: { width: number; height: number }) {
+function PDFPieChartEmpty({ width }: { width: number; height: number }) {
   return (
     <View style={{ 
       width, 
       height: 60, 
-      backgroundColor: '#f8fafc', 
+      backgroundColor: colors.bg, 
       borderRadius: 4,
-    }} />
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <Text style={{ fontSize: 9, color: colors.muted }}>No data available</Text>
+    </View>
   );
 }
 
