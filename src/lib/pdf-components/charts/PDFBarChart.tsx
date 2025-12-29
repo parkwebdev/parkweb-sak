@@ -5,7 +5,7 @@
  * Supports vertical bars with optional grouping.
  */
 
-import { View, Svg, G, Rect, Line, Text as SvgText, StyleSheet } from '@react-pdf/renderer';
+import { View, Svg, G, Rect, Line, Text as SvgText, StyleSheet, Text } from '@react-pdf/renderer';
 import { 
   scaleLinear, 
   scaleBand,
@@ -14,6 +14,7 @@ import {
   CHART_COLORS,
   CHART_DIMS,
 } from './pdf-chart-utils';
+import { colors } from '../styles';
 
 const chartStyles = StyleSheet.create({
   axisLabel: { fontSize: 8 },
@@ -65,7 +66,7 @@ export function PDFBarChart({
   return (
     <View style={{ width, height, marginBottom: 8 }}>
       <Svg width={width} height={height}>
-        <Rect x={0} y={0} width={width} height={height} fill="#ffffff" />
+        <Rect x={0} y={0} width={width} height={height} fill={colors.white} />
 
         {/* Y-axis grid lines */}
         <G>
@@ -78,13 +79,13 @@ export function PDFBarChart({
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke="#e2e8f0"
+                  stroke={colors.bgAlt}
                   strokeWidth={1}
                 />
                 <SvgText
                   x={padding.left - 8}
                   y={y + 3}
-                  fill="#64748b"
+                  fill={colors.secondary}
                   style={chartStyles.axisLabel}
                   textAnchor="end"
                 >
@@ -129,7 +130,7 @@ export function PDFBarChart({
                 key={`x-${i}`}
                 x={x}
                 y={height - 8}
-                fill="#64748b"
+                fill={colors.secondary}
                 style={chartStyles.axisLabelSmall}
                 textAnchor="middle"
               >
@@ -188,7 +189,7 @@ export function PDFGroupedBarChart({
   return (
     <View style={{ width, height, marginBottom: 8 }}>
       <Svg width={width} height={height}>
-        <Rect x={0} y={0} width={width} height={height} fill="#ffffff" />
+        <Rect x={0} y={0} width={width} height={height} fill={colors.white} />
 
         {/* Y-axis grid */}
         <G>
@@ -201,13 +202,13 @@ export function PDFGroupedBarChart({
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke="#e2e8f0"
+                  stroke={colors.bgAlt}
                   strokeWidth={1}
                 />
                 <SvgText
                   x={padding.left - 8}
                   y={y + 3}
-                  fill="#64748b"
+                  fill={colors.secondary}
                   style={chartStyles.axisLabel}
                   textAnchor="end"
                 >
@@ -260,7 +261,7 @@ export function PDFGroupedBarChart({
                 key={`x-${i}`}
                 x={x}
                 y={height - 8}
-                fill="#64748b"
+                fill={colors.secondary}
                 style={chartStyles.axisLabelSmall}
                 textAnchor="middle"
               >
@@ -285,7 +286,7 @@ export function PDFGroupedBarChart({
               <SvgText
                 x={padding.left + i * 70 + 14}
                 y={12}
-                fill="#475569"
+                fill={colors.secondary}
                 style={chartStyles.legendLabel}
               >
                 {s.label || s.key}
@@ -298,14 +299,18 @@ export function PDFGroupedBarChart({
   );
 }
 
-function PDFBarChartEmpty({ width, height }: { width: number; height: number }) {
+function PDFBarChartEmpty({ width }: { width: number; height: number }) {
   return (
     <View style={{ 
       width, 
       height: 60, 
-      backgroundColor: '#f8fafc', 
+      backgroundColor: colors.bg, 
       borderRadius: 4,
-    }} />
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <Text style={{ fontSize: 9, color: colors.muted }}>No data available</Text>
+    </View>
   );
 }
 
@@ -337,7 +342,7 @@ export function PDFHorizontalBarChart({
   return (
     <View style={{ width, height: chartHeight, marginBottom: 8 }}>
       <Svg width={width} height={chartHeight}>
-        <Rect x={0} y={0} width={width} height={chartHeight} fill="#ffffff" />
+        <Rect x={0} y={0} width={width} height={chartHeight} fill={colors.white} />
 
         {/* Bars with labels */}
         <G>
@@ -354,7 +359,7 @@ export function PDFHorizontalBarChart({
                 <SvgText
                   x={padding.left - 8}
                   y={y + bandwidth / 2 + 3}
-                  fill="#475569"
+                  fill={colors.secondary}
                   style={chartStyles.axisLabel}
                   textAnchor="end"
                 >
@@ -375,7 +380,7 @@ export function PDFHorizontalBarChart({
                 <SvgText
                   x={padding.left + barWidth + 6}
                   y={y + bandwidth / 2 + 3}
-                  fill="#64748b"
+                  fill={colors.secondary}
                   style={chartStyles.axisLabel}
                 >
                   {formatAxisValue(value)}

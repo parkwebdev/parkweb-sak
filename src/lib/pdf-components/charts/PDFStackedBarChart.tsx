@@ -4,7 +4,7 @@
  * Native @react-pdf/renderer stacked bar chart for trends.
  */
 
-import { View, Svg, G, Rect, Line, Text as SvgText, StyleSheet } from '@react-pdf/renderer';
+import { View, Svg, G, Rect, Line, Text as SvgText, StyleSheet, Text } from '@react-pdf/renderer';
 import { 
   scaleLinear, 
   scaleBand,
@@ -14,6 +14,7 @@ import {
   downsampleData,
   CHART_DIMS,
 } from './pdf-chart-utils';
+import { colors } from '../styles';
 
 const chartStyles = StyleSheet.create({
   axisLabel: { fontSize: 8 },
@@ -86,7 +87,7 @@ export function PDFStackedBarChart({
   return (
     <View style={{ width, height, marginBottom: 8 }}>
       <Svg width={width} height={height}>
-        <Rect x={0} y={0} width={width} height={height} fill="#ffffff" />
+        <Rect x={0} y={0} width={width} height={height} fill={colors.white} />
 
         {/* Y-axis grid */}
         <G>
@@ -99,13 +100,13 @@ export function PDFStackedBarChart({
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke="#e2e8f0"
+                  stroke={colors.bgAlt}
                   strokeWidth={1}
                 />
                 <SvgText
                   x={padding.left - 8}
                   y={y + 3}
-                  fill="#64748b"
+                  fill={colors.secondary}
                   style={chartStyles.axisLabel}
                   textAnchor="end"
                 >
@@ -153,7 +154,7 @@ export function PDFStackedBarChart({
               key={`x-${i}`}
               x={item.x}
               y={height - 8}
-              fill="#64748b"
+              fill={colors.secondary}
               style={chartStyles.axisLabelSmall}
               textAnchor="middle"
             >
@@ -177,7 +178,7 @@ export function PDFStackedBarChart({
               <SvgText
                 x={padding.left + i * 70 + 14}
                 y={12}
-                fill="#475569"
+                fill={colors.secondary}
                 style={chartStyles.legendLabel}
               >
                 {s.label || s.key}
@@ -190,14 +191,18 @@ export function PDFStackedBarChart({
   );
 }
 
-function PDFStackedBarChartEmpty({ width, height }: { width: number; height: number }) {
+function PDFStackedBarChartEmpty({ width }: { width: number; height: number }) {
   return (
     <View style={{ 
       width, 
       height: 60, 
-      backgroundColor: '#f8fafc', 
+      backgroundColor: colors.bg, 
       borderRadius: 4,
-    }} />
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <Text style={{ fontSize: 9, color: colors.muted }}>No data available</Text>
+    </View>
   );
 }
 

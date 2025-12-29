@@ -40,7 +40,21 @@ export function registerFonts(): void {
     
     fontsRegistered = true;
   } catch (error) {
-    console.error('[PDF Fonts] Failed to register fonts:', error);
+    console.error('[PDF Fonts] Failed to register Inter fonts, falling back to Helvetica:', error);
+    
+    // Fallback to system font if CDN fails
+    try {
+      Font.register({
+        family: 'Inter',
+        fonts: [
+          { src: 'Helvetica', fontWeight: 400 },
+          { src: 'Helvetica-Bold', fontWeight: 700 },
+        ],
+      });
+      fontsRegistered = true;
+    } catch (fallbackError) {
+      console.error('[PDF Fonts] Fallback font registration also failed:', fallbackError);
+    }
   }
 }
 

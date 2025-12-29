@@ -5,9 +5,9 @@
  * Uses PDF-native chart components for reliable vector rendering.
  */
 
-import { Document, Page, View } from '@react-pdf/renderer';
+import { Document, Page, View, Text } from '@react-pdf/renderer';
 import { format } from 'date-fns';
-import { styles } from './styles';
+import { styles, colors } from './styles';
 import { PDFHeader } from './PDFHeader';
 import { PDFFooter } from './PDFFooter';
 import { PDFKPICards } from './PDFKPICards';
@@ -110,9 +110,25 @@ export function AnalyticsReportPDF({
     },
   ];
 
+  // Safe chart render wrapper - catches rendering issues
+  const renderChartSafe = (
+    chartElement: React.ReactNode,
+    fallbackMessage = 'Chart unavailable'
+  ): React.ReactNode => {
+    try {
+      return chartElement;
+    } catch {
+      return (
+        <View style={{ padding: 12, backgroundColor: colors.bg, borderRadius: 4 }}>
+          <Text style={{ fontSize: 9, color: colors.muted }}>{fallbackMessage}</Text>
+        </View>
+      );
+    }
+  };
+
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={styles.page} wrap>
         <PDFHeader 
           orgName={orgName} 
           startDate={startDate} 
@@ -120,7 +136,7 @@ export function AnalyticsReportPDF({
           reportType={config.type}
         />
         
-        <View style={styles.content}>
+        <View style={styles.content} wrap>
           {/* KPIs */}
           {config.includeKPIs && (
             <PDFKPICards kpis={kpis} />
@@ -129,7 +145,7 @@ export function AnalyticsReportPDF({
           {/* Conversations */}
           {config.includeConversations && data.conversationStats?.length && (
             <PDFSection title="Conversations">
-              {config.includeCharts && (
+              {config.includeCharts && renderChartSafe(
                 <PDFLineChart
                   data={data.conversationStats}
                   series={[
