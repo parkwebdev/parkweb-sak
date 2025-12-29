@@ -328,15 +328,15 @@ export default function PDFTestPage() {
   ];
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex-1 h-screen bg-muted/30 flex min-h-0">
       {/* Controls Sidebar */}
-      <div className="w-80 flex-shrink-0 border-r border-border flex flex-col overflow-hidden">
+      <aside className="w-80 flex-shrink-0 border-r border-border bg-background flex flex-col min-h-0">
         <div className="p-4 border-b border-border flex-shrink-0">
           <h1 className="text-lg font-semibold text-foreground">PDF Test Page</h1>
           <p className="text-sm text-muted-foreground">Preview and configure PDF reports</p>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <ScrollArea className="flex-1">
           <div className="p-4 space-y-6">
             {/* Header Settings */}
             <Card>
@@ -426,10 +426,10 @@ export default function PDFTestPage() {
             {isDownloading ? 'Generating...' : 'Download PDF'}
           </Button>
         </div>
-      </div>
+      </aside>
 
       {/* PDF Preview */}
-      <div className="flex-1 min-w-0 flex flex-col overflow-hidden bg-muted/50">
+      <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
         {isGenerating && (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-muted-foreground">
@@ -454,7 +454,7 @@ export default function PDFTestPage() {
         {pdfArrayBuffer && !isGenerating && !error && (
           <PdfJsViewer data={pdfArrayBuffer} initialScale={1.2} mode="all" />
         )}
-      </div>
+      </main>
     </div>
   );
 }
