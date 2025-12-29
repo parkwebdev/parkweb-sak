@@ -15,24 +15,16 @@
  * @page
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
-import { useAnalytics } from '@/hooks/useAnalytics';
-import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
-import { useSatisfactionAnalytics } from '@/hooks/useSatisfactionAnalytics';
-import { useAIPerformanceAnalytics } from '@/hooks/useAIPerformanceAnalytics';
-import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
-import { useMockAnalyticsData } from '@/hooks/useMockAnalyticsData';
+import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { useAuth } from '@/hooks/useAuth';
-import { useAgent } from '@/hooks/useAgent';
-import { useConversationFunnel } from '@/hooks/useConversationFunnel';
+import { useReportExports } from '@/hooks/useReportExports';
 
 import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildReportSheet';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
-import { generateChartData } from '@/lib/analytics-utils';
-import { useReportExports } from '@/hooks/useReportExports';
 import { toast } from '@/lib/toast';
 import { subDays, format } from 'date-fns';
 import { logger } from '@/utils/logger';
@@ -51,18 +43,13 @@ import {
 } from '@/components/analytics/sections';
 
 
-
 function Analytics() {
   const { user } = useAuth();
-  const { agentId } = useAgent();
   const [activeTab, setActiveTab] = useState<AnalyticsSection>('conversations');
   const [exportSheetOpen, setExportSheetOpen] = useState(false);
 
   // Report exports hook
   const { createExport, isCreating } = useReportExports();
-
-  // Mock data mode
-  const { enabled: mockMode, setEnabled: setMockMode, mockData, regenerate: regenerateMockData } = useMockAnalyticsData();
 
   // Date state
   const [startDate, setStartDate] = useState(subDays(new Date(), 30));
@@ -78,7 +65,6 @@ function Analytics() {
     leadStatus: 'all',
     conversationStatus: 'all',
   });
-
 
   // Report config
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
@@ -105,208 +91,83 @@ function Analytics() {
     includeTables: true,
   });
 
-  // Skip real data fetching when mock mode is enabled
-  const shouldFetchRealData = !mockMode;
-
-  // Fetch core analytics data
-  const {
-    conversationStats: realConversationStats,
-    leadStats: realLeadStats,
-    agentPerformance,
-    usageMetrics: realUsageMetrics,
-    bookingTrend: bookingTrendRaw,
-    satisfactionTrend: satisfactionTrendRaw,
-    containmentTrend: containmentTrendRaw,
-    conversations: analyticsConversations,
-    leads,
-    loading,
-    refetch,
-  } = useAnalytics(startDate, endDate, filters, shouldFetchRealData);
-
-  // Fetch booking analytics for detailed charts
-  const {
-    stats: realBookingStats,
-    loading: bookingLoading,
-  } = useBookingAnalytics(startDate, endDate, shouldFetchRealData);
-
-  // Fetch satisfaction analytics for detailed charts
-  const {
-    stats: realSatisfactionStats,
-    loading: satisfactionLoading,
-  } = useSatisfactionAnalytics(startDate, endDate, shouldFetchRealData);
-
-  // Fetch AI performance analytics for detailed charts
-  const {
-    stats: realAIPerformanceStats,
-    loading: aiPerformanceLoading,
-  } = useAIPerformanceAnalytics(startDate, endDate, shouldFetchRealData);
-
-  // Fetch traffic analytics
-  const {
-    trafficSources: realTrafficSources,
-    landingPages: realLandingPages,
-    pageVisits: realPageVisits,
-    locationData: realLocationData,
-    engagement: realEngagement,
-    sourcesByDate: realSourcesByDate,
-    pageDepthDistribution: realPageDepthDistribution,
-    leadsBySource: realLeadsBySource,
-    loading: trafficLoading,
-  } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
-
-  // Fetch conversation funnel data
-  const {
-    stages: realFunnelStages,
-    loading: funnelLoading,
-  } = useConversationFunnel(startDate, endDate, shouldFetchRealData);
-
-  // Fetch comparison traffic analytics for trend calculation
-  const {
-    trafficSources: comparisonTrafficSources,
-    loading: comparisonTrafficLoading,
-  } = useTrafficAnalytics(comparisonStartDate, comparisonEndDate, comparisonMode && shouldFetchRealData);
-
-  // Comparison data - only fetch when comparison mode is on AND not in mock mode
-  const comparisonData = useAnalytics(
+  // === Consolidated Analytics Data Hook ===
+  const data = useAnalyticsData({
+    startDate,
+    endDate,
     comparisonStartDate,
     comparisonEndDate,
+    comparisonMode,
     filters,
-    comparisonMode && shouldFetchRealData
-  );
+  });
 
-  // Use mock data when enabled, otherwise use real data
-  const conversationStats = mockMode && mockData ? mockData.conversationStats : realConversationStats;
-  const leadStats = mockMode && mockData ? mockData.leadStats : realLeadStats;
-  const usageMetrics = mockMode && mockData ? mockData.usageMetrics : realUsageMetrics;
-  const bookingStats = mockMode && mockData ? mockData.bookingStats : realBookingStats;
-  const satisfactionStats = mockMode && mockData ? mockData.satisfactionStats : realSatisfactionStats;
-  const aiPerformanceStats = mockMode && mockData ? mockData.aiPerformanceStats : realAIPerformanceStats;
-  const trafficSources = mockMode && mockData ? mockData.trafficSources : realTrafficSources;
-  const landingPages = mockMode && mockData ? mockData.landingPages : realLandingPages;
-  const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
-  const locationData = mockMode && mockData ? mockData.locationData : realLocationData;
-  const engagement = mockMode && mockData?.engagement ? mockData.engagement : realEngagement;
-  const sourcesByDate = mockMode && mockData?.sourcesByDate ? mockData.sourcesByDate : realSourcesByDate;
-  const pageDepthDistribution = mockMode && mockData?.pageDepthDistribution ? mockData.pageDepthDistribution : realPageDepthDistribution;
-  const leadsBySource = mockMode && mockData?.leadsBySource ? mockData.leadsBySource : realLeadsBySource;
-  const funnelStages = mockMode && mockData ? mockData.funnelStages : realFunnelStages;
+  // Destructure commonly used values
+  const {
+    // Stats
+    conversationStats,
+    leadStats,
+    agentPerformance,
+    usageMetrics,
+    bookingStats,
+    satisfactionStats,
+    aiPerformanceStats,
+    // Traffic
+    trafficSources,
+    landingPages,
+    locationData,
+    engagement,
+    sourcesByDate,
+    pageDepthDistribution,
+    leadsBySource,
+    // Funnel
+    funnelStages,
+    // Comparison
+    comparisonTrafficSources,
+    // KPIs
+    totalConversations,
+    totalLeads,
+    conversionRate,
+    totalMessages,
+    totalBookings,
+    comparisonTotalConversations,
+    comparisonTotalLeads,
+    comparisonConversionRate,
+    comparisonTotalMessages,
+    // Trends
+    leadTrend,
+    conversionTrend,
+    bookingTrend,
+    conversationTrendValue,
+    leadTrendValue,
+    bookingTrendValue,
+    aiContainmentTrendValue,
+    // Chart Data
+    leadChartData,
+    conversionChartData,
+    bookingChartData,
+    // Loading
+    loading,
+    bookingLoading,
+    satisfactionLoading,
+    aiPerformanceLoading,
+    trafficLoading,
+    funnelLoading,
+    comparisonTrafficLoading,
+    // Actions
+    refetch,
+    // Mock Mode
+    mockMode,
+    setMockMode,
+    regenerateMockData,
+    // Utilities
+    calculatePeriodChange,
+    calculatePointChange,
+    // Original data for exports
+    analyticsConversations,
+    leads,
+  } = data;
 
-
-  // Calculate KPIs
-  const totalConversations = conversationStats.reduce((sum, stat) => sum + stat.total, 0);
-  const totalLeads = leadStats.reduce((sum, stat) => sum + stat.total, 0);
-  // Calculate converted leads from dynamic stages (look for 'converted' or 'won' stage)
-  const convertedLeads = leadStats.reduce((sum, stat) => {
-    const converted = (stat.converted as number) || (stat.won as number) || 0;
-    return sum + converted;
-  }, 0);
-  const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : '0';
-  const totalMessages = usageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
-
-  const comparisonTotalConversations = comparisonData.conversationStats.reduce((sum, stat) => sum + stat.total, 0);
-  const comparisonTotalLeads = comparisonData.leadStats.reduce((sum, stat) => sum + stat.total, 0);
-  const comparisonConvertedLeads = comparisonData.leadStats.reduce((sum, stat) => {
-    const converted = (stat.converted as number) || (stat.won as number) || 0;
-    return sum + converted;
-  }, 0);
-  const comparisonConversionRate = comparisonTotalLeads > 0 ? ((comparisonConvertedLeads / comparisonTotalLeads) * 100).toFixed(1) : '0';
-  const comparisonTotalMessages = comparisonData.usageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
-
-  // Generate trend data for sparkline charts
-  // In mock mode, use dedicated sparkline trends; otherwise derive from stats
-  const conversationTrend = useMemo(() => {
-    if (mockMode && mockData) {
-      return mockData.conversationTrend.map(d => d.value);
-    }
-    return realConversationStats.map(stat => stat.total);
-  }, [mockMode, mockData, realConversationStats]);
-
-  const leadTrend = useMemo(() => {
-    if (mockMode && mockData) {
-      return mockData.leadTrend.map(d => d.value);
-    }
-    return realLeadStats.map(stat => stat.total);
-  }, [mockMode, mockData, realLeadStats]);
-
-  const conversionTrend = useMemo(() => {
-    const stats = mockMode && mockData ? mockData.leadStats : realLeadStats;
-    return stats.map(stat => {
-      const converted = (stat.converted as number) || (stat.won as number) || 0;
-      return stat.total > 0 ? (converted / stat.total) * 100 : 0;
-    });
-  }, [mockMode, mockData, realLeadStats]);
-
-  // Business outcome trends - use dedicated mock sparkline data when available
-  const bookingTrend = useMemo(() => {
-    if (mockMode && mockData) {
-      return mockData.bookingTrend.map(d => d.value);
-    }
-    return bookingTrendRaw.map(d => d.value);
-  }, [mockMode, mockData, bookingTrendRaw]);
-
-  const satisfactionTrend = useMemo(() => {
-    if (mockMode && mockData) {
-      return mockData.satisfactionTrend.map(d => d.value);
-    }
-    return satisfactionTrendRaw.map(d => d.value);
-  }, [mockMode, mockData, satisfactionTrendRaw]);
-
-  const containmentTrend = useMemo(() => {
-    if (mockMode && mockData) {
-      return mockData.containmentTrend.map(d => d.value);
-    }
-    return containmentTrendRaw.map(d => d.value);
-  }, [mockMode, mockData, containmentTrendRaw]);
-
-  // Calculate KPI values from new hooks
-  const totalBookings = bookingStats?.totalBookings ?? 0;
-  const avgSatisfaction = satisfactionStats?.averageRating ?? 0;
-  const containmentRate = aiPerformanceStats?.containmentRate ?? 0;
-
-  /**
-   * Calculate percentage change between two halves of a trend.
-   * Compares average of second half to average of first half.
-   * This gives a meaningful "vs last period" comparison.
-   */
-  const calculatePeriodChange = useCallback((trend: number[]): number => {
-    if (trend.length < 4) return 0;
-    
-    const midpoint = Math.floor(trend.length / 2);
-    const firstHalf = trend.slice(0, midpoint);
-    const secondHalf = trend.slice(midpoint);
-    
-    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-    
-    if (firstAvg === 0) return secondAvg > 0 ? 100 : 0;
-    return ((secondAvg - firstAvg) / firstAvg) * 100;
-  }, []);
-
-  /**
-   * Calculate point change for rate/percentage metrics.
-   * Returns absolute difference instead of percentage change.
-   * Used for Satisfaction (1-5 scale), Conversion Rate (%), Containment (%).
-   */
-  const calculatePointChange = useCallback((trend: number[]): number => {
-    if (trend.length < 4) return 0;
-    
-    const midpoint = Math.floor(trend.length / 2);
-    const firstHalf = trend.slice(0, midpoint);
-    const secondHalf = trend.slice(midpoint);
-    
-    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-    
-    return secondAvg - firstAvg;
-  }, []);
-
-  // Calculate trend values for chart headers
-  const conversationTrendValue = useMemo(() => calculatePeriodChange(conversationTrend), [conversationTrend, calculatePeriodChange]);
-  const leadTrendValue = useMemo(() => calculatePeriodChange(leadTrend), [leadTrend, calculatePeriodChange]);
-  const bookingTrendValue = useMemo(() => calculatePeriodChange(bookingTrend), [bookingTrend, calculatePeriodChange]);
-  const satisfactionTrendValue = useMemo(() => calculatePointChange(satisfactionTrend), [satisfactionTrend, calculatePointChange]);
-  const aiContainmentTrendValue = useMemo(() => calculatePointChange(containmentTrend), [containmentTrend, calculatePointChange]);
-
+  // KPIs array for reports
   const kpis = [
     {
       title: 'Total Conversations',
@@ -342,36 +203,8 @@ function Analytics() {
     },
   ];
 
-  // Comparison metrics
-  const comparisonMetrics = [
-    {
-      label: 'Conversations',
-      currentValue: totalConversations,
-      previousValue: comparisonTotalConversations,
-      format: 'number' as const,
-    },
-    {
-      label: 'Leads',
-      currentValue: totalLeads,
-      previousValue: comparisonTotalLeads,
-      format: 'number' as const,
-    },
-    {
-      label: 'Conversion Rate',
-      currentValue: parseFloat(conversionRate),
-      previousValue: parseFloat(comparisonConversionRate),
-      format: 'percentage' as const,
-    },
-    {
-      label: 'Messages',
-      currentValue: totalMessages,
-      previousValue: comparisonTotalMessages,
-      format: 'number' as const,
-    },
-  ];
-
   // Analytics data for export - includes all analytics categories
-  const analyticsData = {
+  const analyticsExportData = {
     // KPI metrics
     totalConversations,
     conversationsChange: comparisonMode && comparisonTotalConversations > 0 
@@ -398,7 +231,7 @@ function Analytics() {
     bookingStats: bookingStats?.byLocation?.map(loc => ({
       location: loc.locationName,
       total: loc.bookings,
-      confirmed: loc.bookings - loc.cancelled - loc.completed - loc.noShow, // Approximate confirmed
+      confirmed: loc.bookings - loc.cancelled - loc.completed - loc.noShow,
       cancelled: loc.cancelled,
       completed: loc.completed,
       no_show: loc.noShow,
@@ -432,7 +265,7 @@ function Analytics() {
     topPages: landingPages?.map(page => ({
       page: page.url,
       visits: page.visits,
-      bounce_rate: 0, // Not available in current data structure
+      bounce_rate: 0,
       conversations: page.conversions,
     })) || [],
     visitorLocations: locationData?.map(loc => {
@@ -466,9 +299,9 @@ function Analytics() {
       
       let blob: Blob;
       if (exportFormat === 'csv') {
-        blob = generateCSVReport(analyticsData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
+        blob = generateCSVReport(analyticsExportData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
       } else {
-        blob = await generatePDFReport(analyticsData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
+        blob = await generatePDFReport(analyticsExportData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
       }
       
       // Save to storage and DB
@@ -492,7 +325,7 @@ function Analytics() {
       logger.error('Export error:', error);
       toast.error(`Failed to export ${reportConfig.format.toUpperCase()}`);
     }
-  }, [analyticsData, reportConfig, user?.email, createExport]);
+  }, [analyticsExportData, reportConfig, user?.email, createExport]);
 
   // Section title and description mapping
   const sectionInfo: Record<AnalyticsSection, { title: string; description: string }> = {
@@ -556,12 +389,7 @@ function Analytics() {
           {/* Conversations Section */}
           {activeTab === 'conversations' && (
             <ConversationsSection
-              conversationStats={conversationStats.map(s => ({ 
-                date: s.date, 
-                total: s.total, 
-                active: s.active, 
-                closed: s.closed 
-              }))}
+              conversationStats={conversationStats}
               funnelStages={funnelStages}
               conversationTrendValue={conversationTrendValue}
               loading={loading}
@@ -574,8 +402,8 @@ function Analytics() {
             <LeadsSection
               totalLeads={totalLeads}
               conversionRate={conversionRate}
-              leadChartData={generateChartData(leadTrend)}
-              conversionChartData={generateChartData(conversionTrend)}
+              leadChartData={leadChartData}
+              conversionChartData={conversionChartData}
               leadStats={leadStats}
               leadChange={calculatePeriodChange(leadTrend)}
               conversionChange={calculatePointChange(conversionTrend)}
@@ -588,7 +416,7 @@ function Analytics() {
           {activeTab === 'bookings' && (
             <BookingsSection
               totalBookings={totalBookings}
-              bookingChartData={generateChartData(bookingTrend)}
+              bookingChartData={bookingChartData}
               bookingChange={calculatePeriodChange(bookingTrend)}
               bookingsByLocation={bookingStats?.byLocation ?? []}
               bookingTrendData={bookingStats?.trend ?? []}
