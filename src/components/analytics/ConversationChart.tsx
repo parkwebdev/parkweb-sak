@@ -1,18 +1,19 @@
 /**
  * ConversationChart Component
  * 
- * Area chart showing conversation trends over time.
- * Displays total, active, and closed conversation counts.
+ * Stacked area chart showing conversation trends over time.
+ * Displays active and closed conversation counts.
  * @module components/analytics/ConversationChart
  */
 
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { ChartTooltipContent } from '@/components/charts/charts-base';
 import { format, parseISO } from 'date-fns';
 import { ChartCardHeader } from './ChartCardHeader';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 interface ConversationChartProps {
   data: Array<{
@@ -25,12 +26,18 @@ interface ConversationChartProps {
   trendPeriod?: string;
 }
 
+const SERIES_CONFIG = [
+  { key: 'active', label: 'Active', color: 'hsl(220, 90%, 56%)' },
+  { key: 'closed', label: 'Closed', color: 'hsl(210, 100%, 80%)' },
+];
+
 export const ConversationChart = React.memo(function ConversationChart({ 
   data,
   trendValue = 0,
   trendPeriod = 'this month',
 }: ConversationChartProps) {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
+  const prefersReducedMotion = useReducedMotion();
   
   // Calculate totals for context summary
   const totalConversations = useMemo(() => {
@@ -49,10 +56,17 @@ export const ConversationChart = React.memo(function ConversationChart({
     });
   };
 
-  const seriesConfig = [
-    { key: 'active', label: 'Active', color: 'hsl(220, 90%, 56%)' },
-    { key: 'closed', label: 'Closed', color: 'hsl(210, 100%, 80%)' },
-  ];
+  // Format data for chart
+  const chartData = data.map(d => ({
+    ...d,
+    formattedDate: (() => {
+      try {
+        return format(parseISO(d.date), 'MMM d');
+      } catch {
+        return d.date;
+      }
+    })(),
+  }));
 
   return (
     <Card className="h-full">
@@ -65,13 +79,14 @@ export const ConversationChart = React.memo(function ConversationChart({
         />
 
         {/* Clickable legend chips above chart */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {seriesConfig.map(({ key, label, color }) => (
+        <div className="flex flex-wrap gap-2 mt-2 mb-4">
+          {SERIES_CONFIG.map(({ key, label, color }) => (
             <button
               key={key}
               onClick={() => toggleSeries(key)}
               className={cn(
                 "flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-all",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 hiddenSeries.has(key)
                   ? "opacity-40 bg-muted"
                   : "bg-muted/50 hover:bg-muted"
@@ -85,42 +100,32 @@ export const ConversationChart = React.memo(function ConversationChart({
             </button>
           ))}
         </div>
+
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={data}
+              data={chartData}
               className="text-muted-foreground [&_.recharts-text]:text-xs"
-              margin={{
-                top: 10,
-                bottom: 10,
-                left: -10,
-                right: 10,
-              }}
+              margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
             >
               <defs>
-                {seriesConfig.map(({ key, color }) => (
-                  <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
+                {SERIES_CONFIG.map(({ key, color }) => (
+                  <linearGradient key={key} id={`gradient-conv-${key}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={color} stopOpacity={0.4} />
                     <stop offset="95%" stopColor={color} stopOpacity={0.05} />
                   </linearGradient>
                 ))}
               </defs>
 
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+
               <XAxis
-                dataKey="date"
+                dataKey="formattedDate"
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                 padding={{ left: 10, right: 10 }}
-                tickFormatter={(value) => {
-                  try {
-                    const date = parseISO(value);
-                    return format(date, 'MMM d');
-                  } catch {
-                    return value;
-                  }
-                }}
               />
 
               <YAxis
@@ -135,14 +140,7 @@ export const ConversationChart = React.memo(function ConversationChart({
               <Tooltip
                 content={<ChartTooltipContent />}
                 formatter={(value) => Number(value).toLocaleString()}
-                labelFormatter={(label) => {
-                  try {
-                    const date = parseISO(String(label));
-                    return format(date, 'MMM d, yyyy');
-                  } catch {
-                    return String(label);
-                  }
-                }}
+                labelFormatter={(label) => String(label)}
                 cursor={{
                   stroke: 'hsl(var(--primary))',
                   strokeWidth: 1,
@@ -150,7 +148,7 @@ export const ConversationChart = React.memo(function ConversationChart({
                 }}
               />
 
-              {seriesConfig.map(({ key, label, color }) => (
+              {SERIES_CONFIG.map(({ key, label, color }) => (
                 <Area
                   key={key}
                   dataKey={key}
@@ -159,8 +157,11 @@ export const ConversationChart = React.memo(function ConversationChart({
                   type="monotone"
                   stroke={color}
                   strokeWidth={2}
-                  fill={`url(#gradient-${key})`}
+                  fill={`url(#gradient-conv-${key})`}
                   hide={hiddenSeries.has(key)}
+                  isAnimationActive={!prefersReducedMotion}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                   activeDot={{
                     r: 5,
                     fill: 'hsl(var(--background))',
@@ -169,7 +170,6 @@ export const ConversationChart = React.memo(function ConversationChart({
                   }}
                 />
               ))}
-
             </AreaChart>
           </ResponsiveContainer>
         </div>
