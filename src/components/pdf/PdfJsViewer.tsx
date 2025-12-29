@@ -13,8 +13,17 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from '@untitledui/icons';
 
-// Set up the worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// Import the worker directly - Vite will bundle it locally
+import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+// Set up the worker with local bundle (no CDN dependency)
+try {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
+} catch (e) {
+  // Fallback: disable worker (runs on main thread - slower but works)
+  console.warn('PDF.js worker failed to load, falling back to main thread:', e);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+}
 
 interface PdfJsViewerProps {
   /** PDF data as ArrayBuffer or Uint8Array */
