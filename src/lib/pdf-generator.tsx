@@ -1,15 +1,15 @@
 /**
  * PDF Generator using @react-pdf/renderer
  * 
- * Generates PDFs using React components instead of imperative jsPDF calls.
- * Uses SVG chart extraction for vector graphics in PDFs.
+ * Generates PDFs using React components with native vector charts.
+ * No DOM scraping or SVG extraction required.
  */
 
 import React from 'react';
 import { pdf } from '@react-pdf/renderer';
-import { AnalyticsReportPDF, type PDFData, type PDFConfig, type ChartImageData } from './pdf-components';
+import { AnalyticsReportPDF, type PDFData, type PDFConfig } from './pdf-components';
 
-export type { PDFData, PDFConfig, ChartImageData };
+export type { PDFData, PDFConfig };
 
 interface GenerateOptions {
   data: PDFData;
@@ -17,30 +17,25 @@ interface GenerateOptions {
   startDate: Date;
   endDate: Date;
   orgName: string;
-  charts?: Map<string, ChartImageData>;
 }
 
 /**
- * Generate a PDF report using @react-pdf/renderer.
+ * Generate a PDF report using @react-pdf/renderer with native charts.
  * 
- * @param opts - Generation options including data, config, and chart images
+ * @param opts - Generation options including data and config
  * @returns Promise resolving to a Blob of the generated PDF
  * @throws Error with descriptive message if PDF generation fails
  */
 export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob> {
-  const { data, config, startDate, endDate, orgName, charts } = opts;
+  const { data, config, startDate, endDate, orgName } = opts;
 
-  // Convert Map to the expected format if needed
-  const chartMap = charts instanceof Map ? charts : new Map();
-
-  // Create the PDF document
+  // Create the PDF document with native chart components
   const doc = React.createElement(AnalyticsReportPDF, {
     data,
     config,
     startDate,
     endDate,
     orgName,
-    charts: chartMap,
   });
 
   try {
