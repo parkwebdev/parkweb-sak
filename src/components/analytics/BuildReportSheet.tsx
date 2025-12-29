@@ -71,6 +71,12 @@ export interface ReportConfig {
 type DatePreset = 'today' | 'last7' | 'last30' | 'thisMonth' | 'lastMonth' | 'custom';
 type Step = 'configure' | 'schedule';
 
+interface CaptureProgress {
+  current: number;
+  total: number;
+  chartId: string;
+}
+
 interface BuildReportSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -78,6 +84,8 @@ interface BuildReportSheetProps {
   onConfigChange: (config: ReportConfig) => void;
   onExport: (startDate: Date, endDate: Date) => void;
   isExporting?: boolean;
+  /** Progress info when capturing charts for PDF */
+  captureProgress?: CaptureProgress | null;
 }
 
 const DATE_PRESETS: { value: DatePreset; label: string }[] = [
@@ -117,6 +125,7 @@ export const BuildReportSheet = ({
   onConfigChange,
   onExport,
   isExporting = false,
+  captureProgress,
 }: BuildReportSheetProps) => {
   const { createReport } = useScheduledReports();
   
@@ -686,15 +695,36 @@ export const BuildReportSheet = ({
               </div>
             </div>
 
+            {/* Progress indicator for chart capture */}
+            {captureProgress && (
+              <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                <p className="text-sm font-medium">Capturing charts for PDF...</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-primary h-full transition-all duration-300 ease-out"
+                      style={{ width: `${(captureProgress.current / captureProgress.total) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {captureProgress.current} / {captureProgress.total}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Capturing: {captureProgress.chartId.replace(/-/g, ' ')}
+                </p>
+              </div>
+            )}
+
             <SheetFooter className="flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={() => handleOpenChange(false)} className="sm:flex-1">
+              <Button variant="outline" onClick={() => handleOpenChange(false)} className="sm:flex-1" disabled={isExporting}>
                 Cancel
               </Button>
-              <Button variant="outline" onClick={() => setStep('schedule')} className="sm:flex-1">
+              <Button variant="outline" onClick={() => setStep('schedule')} className="sm:flex-1" disabled={isExporting}>
                 Schedule Report
               </Button>
               <Button onClick={handleExport} loading={isExporting} className="sm:flex-1">
-                Export Now
+                {captureProgress ? 'Generating PDF...' : 'Export Now'}
               </Button>
             </SheetFooter>
           </>

@@ -15,7 +15,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useReportExports } from '@/hooks/useReportExports';
 import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildReportSheet';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
-import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
+import { ReportChartRenderer } from '@/components/analytics/ReportChartRenderer';
+import { generateCSVReport } from '@/lib/report-export';
+import { generateBeautifulPDF } from '@/lib/report-pdf-generator';
 import { buildAnalyticsExportData } from '@/lib/analytics-export-data';
 import { calculatePeakActivityData } from '@/lib/peak-activity-utils';
 import { SECTION_INFO, TOOLBAR_SECTIONS, DEFAULT_REPORT_CONFIG } from '@/lib/analytics-constants';
@@ -23,6 +25,7 @@ import { toast } from '@/lib/toast';
 import { subDays, format } from 'date-fns';
 import { logger } from '@/utils/logger';
 import { downloadFile } from '@/lib/file-download';
+import type { ChartImage, CaptureProgress } from '@/lib/pdf-chart-capture';
 
 import {
   ConversationsSection,
@@ -43,6 +46,11 @@ function Analytics() {
   const [activeTab, setActiveTab] = useState<AnalyticsSection>('conversations');
   const [exportSheetOpen, setExportSheetOpen] = useState(false);
   const [reportConfig, setReportConfig] = useState<ReportConfig>(DEFAULT_REPORT_CONFIG);
+  
+  // === Chart Capture State (for PDF generation) ===
+  const [isCapturingCharts, setIsCapturingCharts] = useState(false);
+  const [captureProgress, setCaptureProgress] = useState<CaptureProgress | null>(null);
+  const [pendingExport, setPendingExport] = useState<{ startDate: Date; endDate: Date } | null>(null);
 
   // === Date State ===
   const [startDate, setStartDate] = useState(() => subDays(new Date(), 30));
@@ -121,13 +129,28 @@ function Analytics() {
   }, []);
 
   const handleExport = useCallback(async (exportStartDate: Date, exportEndDate: Date) => {
+    const exportFormat = reportConfig.format;
+    
+    // For PDF, we need to capture charts first
+    if (exportFormat === 'pdf' && reportConfig.includeCharts) {
+      setPendingExport({ startDate: exportStartDate, endDate: exportEndDate });
+      setIsCapturingCharts(true);
+      return;
+    }
+    
+    // For CSV or PDF without charts, export directly
     try {
-      const exportFormat = reportConfig.format;
       const reportName = `${reportConfig.type === 'summary' ? 'Summary' : reportConfig.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(exportStartDate, 'MMM d')} to ${format(exportEndDate, 'MMM d, yyyy')}`;
       
       const blob = exportFormat === 'csv'
         ? generateCSVReport(analyticsExportData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User')
-        : await generatePDFReport(analyticsExportData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User');
+        : await generateBeautifulPDF({
+            data: buildPDFData(),
+            config: reportConfig,
+            startDate: exportStartDate,
+            endDate: exportEndDate,
+            orgName: user?.email || 'User',
+          });
       
       await createExport({
         name: reportName,
@@ -148,6 +171,204 @@ function Analytics() {
       toast.error(`Failed to export ${reportConfig.format.toUpperCase()}`);
     }
   }, [analyticsExportData, reportConfig, user?.email, createExport]);
+
+  // Build PDF data from analytics data
+  const buildPDFData = useCallback(() => ({
+    totalConversations: data.totalConversations,
+    conversationsChange: data.conversationTrendValue,
+    totalLeads: data.totalLeads,
+    leadsChange: data.leadTrendValue,
+    conversionRate: data.conversionRate ? parseFloat(data.conversionRate) : 0,
+    conversationStats: data.conversationStats,
+    conversationFunnel: data.funnelStages?.map(s => ({
+      name: s.name,
+      count: s.count,
+      percentage: s.percentage,
+      dropOffPercent: s.dropOffPercent,
+    })),
+    peakActivity: peakActivityData ? {
+      peakDay: peakActivityData.peakDay,
+      peakTime: peakActivityData.peakTime,
+      peakValue: peakActivityData.peakValue,
+    } : undefined,
+    leadStats: data.leadStats ? [{ date: format(new Date(), 'yyyy-MM-dd'), total: data.totalLeads }] : undefined,
+    leadSourceBreakdown: data.leadsBySource?.map(s => ({
+      source: s.source,
+      leads: s.leads,
+      sessions: s.sessions,
+      cvr: s.cvr,
+    })),
+    bookingStats: data.bookingStats?.byLocation?.map(l => ({
+      location: l.locationName,
+      total: l.bookings,
+      confirmed: l.bookings - l.completed - l.cancelled - l.noShow,
+      completed: l.completed,
+      no_show: l.noShow,
+      show_rate: Math.round((l.completed / Math.max(l.bookings, 1)) * 100),
+    })),
+    bookingTrend: data.bookingStats?.trend?.map(t => ({
+      date: t.date,
+      confirmed: t.confirmed,
+      completed: t.completed,
+      cancelled: t.cancelled,
+      noShow: t.noShow,
+    })),
+    satisfactionStats: data.satisfactionStats ? {
+      average_rating: data.satisfactionStats.averageRating,
+      total_ratings: data.satisfactionStats.totalRatings,
+    } : undefined,
+    recentFeedback: data.satisfactionStats?.recentFeedback?.map(f => ({
+      rating: f.rating,
+      feedback: f.feedback,
+      createdAt: f.createdAt,
+      triggerType: f.triggerType,
+    })),
+    aiPerformanceStats: data.aiPerformanceStats ? {
+      containment_rate: data.aiPerformanceStats.containmentRate,
+      resolution_rate: data.aiPerformanceStats.resolutionRate,
+      ai_handled: data.aiPerformanceStats.totalConversations - data.aiPerformanceStats.humanTakeover,
+      human_takeover: data.aiPerformanceStats.humanTakeover,
+      total_conversations: data.aiPerformanceStats.totalConversations,
+    } : undefined,
+    trafficSources: data.trafficSources?.map(s => ({
+      source: s.name,
+      visitors: s.value,
+      percentage: 0, // Calculate if needed
+    })),
+    topPages: data.landingPages?.map(p => ({
+      page: p.url,
+      visits: p.visits,
+      bounce_rate: 0, // Not available in mock data
+      conversations: p.conversions,
+    })),
+    pageEngagement: data.engagement ? {
+      bounceRate: data.engagement.bounceRate,
+      avgPagesPerSession: data.engagement.avgPagesPerSession,
+      totalSessions: data.engagement.totalSessions,
+      overallCVR: data.engagement.overallCVR,
+    } : undefined,
+    pageDepthDistribution: data.pageDepthDistribution?.map(d => ({
+      depth: d.depth,
+      count: d.count,
+      percentage: d.percentage,
+    })),
+    visitorLocations: data.locationData?.map(l => ({
+      country: l.country,
+      visitors: l.count,
+      percentage: 0, // Calculate if needed
+    })),
+  }), [data, peakActivityData]);
+
+  // Build chart data for ReportChartRenderer
+  const chartData = useMemo(() => ({
+    conversationStats: data.conversationStats,
+    conversationFunnel: data.funnelStages?.map(s => ({
+      name: s.name,
+      count: s.count,
+      percentage: s.percentage,
+      dropOffPercent: s.dropOffPercent,
+      color: s.color,
+    })),
+    bookingTrend: data.bookingStats?.trend?.map(t => ({
+      date: t.date,
+      confirmed: t.confirmed,
+      completed: t.completed,
+      cancelled: t.cancelled,
+      noShow: t.noShow,
+      total: t.confirmed + t.completed + t.cancelled + t.noShow,
+    })),
+    bookingStats: data.bookingStats?.byLocation?.map(l => ({
+      location: l.locationName,
+      total: l.bookings,
+      confirmed: l.bookings - l.completed - l.cancelled - l.noShow,
+      completed: l.completed,
+      cancelled: l.cancelled,
+      no_show: l.noShow,
+    })),
+    trafficSources: data.trafficSources?.map(s => ({
+      source: s.name,
+      visitors: s.value,
+      percentage: 0,
+    })),
+    trafficSourceTrend: data.sourcesByDate?.map(s => ({
+      date: s.date,
+      direct: s.direct,
+      organic: s.organic,
+      paid: s.paid,
+      social: s.social,
+      email: s.email,
+      referral: s.referral,
+      total: s.total,
+    })),
+    topPages: data.landingPages?.map(p => ({
+      page: p.url,
+      visits: p.visits,
+      bounce_rate: 0,
+      conversations: p.conversions,
+    })),
+    pageDepthDistribution: data.pageDepthDistribution,
+    leadSourceBreakdown: data.leadsBySource,
+    satisfactionStats: data.satisfactionStats ? {
+      average_rating: data.satisfactionStats.averageRating,
+      total_ratings: data.satisfactionStats.totalRatings,
+      distribution: data.satisfactionStats.distribution,
+    } : undefined,
+    leadConversionTrend: data.leadStats ? [{ date: format(new Date(), 'yyyy-MM-dd'), total: data.totalLeads }] : undefined,
+  }), [data]);
+
+  // Handle chart capture completion
+  const handleChartCapture = useCallback(async (charts: Map<string, ChartImage>) => {
+    if (!pendingExport) return;
+    
+    setIsCapturingCharts(false);
+    setCaptureProgress(null);
+    
+    try {
+      const { startDate: exportStartDate, endDate: exportEndDate } = pendingExport;
+      const reportName = `${reportConfig.type === 'summary' ? 'Summary' : reportConfig.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(exportStartDate, 'MMM d')} to ${format(exportEndDate, 'MMM d, yyyy')}`;
+      
+      const blob = await generateBeautifulPDF({
+        data: buildPDFData(),
+        config: reportConfig,
+        startDate: exportStartDate,
+        endDate: exportEndDate,
+        orgName: user?.email || 'User',
+        charts,
+      });
+      
+      await createExport({
+        name: reportName,
+        format: 'pdf',
+        file: blob,
+        dateRangeStart: exportStartDate,
+        dateRangeEnd: exportEndDate,
+        reportConfig,
+      });
+      
+      const url = URL.createObjectURL(blob);
+      await downloadFile(url, `${reportName.replace(/[^a-zA-Z0-9-_]/g, '_')}.pdf`);
+      URL.revokeObjectURL(url);
+      
+      toast.success('PDF exported with charts');
+    } catch (error: unknown) {
+      logger.error('PDF export error:', error);
+      toast.error('Failed to export PDF');
+    } finally {
+      setPendingExport(null);
+    }
+  }, [pendingExport, reportConfig, user?.email, createExport, buildPDFData]);
+
+  const handleCaptureProgress = useCallback((p: CaptureProgress) => {
+    setCaptureProgress(p);
+  }, []);
+
+  const handleCaptureError = useCallback((err: Error) => {
+    logger.error('Chart capture error:', err);
+    setIsCapturingCharts(false);
+    setCaptureProgress(null);
+    setPendingExport(null);
+    toast.error('Failed to capture charts for PDF');
+  }, []);
 
   // === Derived State ===
   const showToolbar = TOOLBAR_SECTIONS.includes(activeTab);
@@ -282,8 +503,20 @@ function Analytics() {
         config={reportConfig}
         onConfigChange={setReportConfig}
         onExport={handleExport}
-        isExporting={isCreating}
+        isExporting={isCreating || isCapturingCharts}
+        captureProgress={captureProgress}
       />
+      
+      {/* Offscreen chart renderer for PDF capture */}
+      {isCapturingCharts && (
+        <ReportChartRenderer
+          data={chartData}
+          config={reportConfig}
+          onCapture={handleChartCapture}
+          onProgress={handleCaptureProgress}
+          onError={handleCaptureError}
+        />
+      )}
     </div>
   );
 }
