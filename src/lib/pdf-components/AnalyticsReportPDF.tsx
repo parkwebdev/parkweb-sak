@@ -20,6 +20,7 @@ import './fonts';
 
 /** Chart image data for embedding */
 export interface ChartImageData {
+  id?: string;
   dataUrl: string;
   width: number;
   height: number;
