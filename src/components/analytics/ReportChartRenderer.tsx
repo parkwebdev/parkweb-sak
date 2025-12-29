@@ -75,6 +75,20 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
   const containerRef = useRef<HTMLDivElement>(null);
   const [portal, setPortal] = useState<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
+  
+  // Guard to prevent multiple captures
+  const hasCaptured = useRef(false);
+  
+  // Stabilize callbacks with refs to prevent re-renders
+  const onCaptureRef = useRef(onCapture);
+  const onProgressRef = useRef(onProgress);
+  const onErrorRef = useRef(onError);
+  
+  useEffect(() => {
+    onCaptureRef.current = onCapture;
+    onProgressRef.current = onProgress;
+    onErrorRef.current = onError;
+  });
 
   // Pre-load html2canvas on mount
   useEffect(() => {
@@ -91,25 +105,29 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
     return () => { document.body.removeChild(el); };
   }, []);
 
-  // Capture after render
-  const runCapture = useCallback(async () => {
-    if (!containerRef.current) return;
-    try {
-      await waitForRender(300); // Reduced from 800ms
-      const charts = await captureChartsFromContainer(containerRef.current, onProgress);
-      onCapture(charts);
-    } catch (err) {
-      onError?.(err instanceof Error ? err : new Error('Capture failed'));
-    }
-  }, [onCapture, onProgress, onError]);
-
+  // Capture after render - runs only once
   useEffect(() => {
-    if (ready && portal) runCapture();
-  }, [ready, portal, runCapture]);
+    if (!ready || !portal || hasCaptured.current) return;
+    
+    const runCapture = async () => {
+      if (!containerRef.current || hasCaptured.current) return;
+      hasCaptured.current = true; // Prevent re-entry
+      
+      try {
+        await waitForRender(300);
+        const charts = await captureChartsFromContainer(containerRef.current, onProgressRef.current);
+        onCaptureRef.current(charts);
+      } catch (err) {
+        onErrorRef.current?.(err instanceof Error ? err : new Error('Capture failed'));
+      }
+    };
+    
+    runCapture();
+  }, [ready, portal]);
 
   useEffect(() => {
     if (portal) {
-      const t = setTimeout(() => setReady(true), 50); // Reduced from 100ms
+      const t = setTimeout(() => setReady(true), 50);
       return () => clearTimeout(t);
     }
   }, [portal]);
