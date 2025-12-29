@@ -231,9 +231,11 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
         </div>
 
         {/* Footer context summary */}
-        <p className="mt-4 text-xs text-muted-foreground">
-          Showing {totalVisits.toLocaleString()} visitors across {sortedData.length} pages
-        </p>
+        <div className="mt-4 px-3 py-2 bg-muted/50 rounded-md">
+          <p className="text-xs text-muted-foreground">
+            Showing {totalVisits.toLocaleString()} visitors across {sortedData.length} pages
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

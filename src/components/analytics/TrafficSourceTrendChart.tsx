@@ -131,9 +131,11 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
         />
 
         {/* Context summary footer */}
-        <p className="mt-4 text-xs text-muted-foreground">
-          Showing {totalSessions.toLocaleString()} sessions across {activeSources.length} sources
-        </p>
+        <div className="mt-4 px-3 py-2 bg-muted/50 rounded-md">
+          <p className="text-xs text-muted-foreground">
+            Showing {totalSessions.toLocaleString()} sessions across {activeSources.length} sources
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

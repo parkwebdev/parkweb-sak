@@ -69,9 +69,11 @@ export const ConversationChart = React.memo(function ConversationChart({
         />
 
         {/* Context summary footer */}
-        <p className="mt-4 text-xs text-muted-foreground">
-          Showing {totalConversations.toLocaleString()} conversations over {data.length} days
-        </p>
+        <div className="mt-4 px-3 py-2 bg-muted/50 rounded-md">
+          <p className="text-xs text-muted-foreground">
+            Showing {totalConversations.toLocaleString()} conversations over {data.length} days
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

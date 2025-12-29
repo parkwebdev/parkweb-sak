@@ -151,13 +151,13 @@ export const PageDepthChart = React.memo(function PageDepthChart({
         </div>
 
         {/* Insight footer */}
-        <div className="mt-4 text-xs text-muted-foreground">
+        <div className="mt-4 px-3 py-2 bg-muted/50 rounded-md text-xs">
           {data.find(d => d.depth === '1 page')?.percentage || 0 > 50 ? (
             <span className="text-warning">High bounce rate — consider improving page engagement</span>
           ) : data.find(d => d.depth === '5+ pages')?.percentage || 0 > 20 ? (
             <span className="text-success">Strong engagement — visitors exploring multiple pages</span>
           ) : (
-            <span>Healthy distribution of session depths</span>
+            <span className="text-muted-foreground">Healthy distribution of session depths</span>
           )}
         </div>
       </CardContent>
