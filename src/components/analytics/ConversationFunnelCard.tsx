@@ -60,7 +60,7 @@ export const ConversationFunnelCard = React.memo(function ConversationFunnelCard
         <CardContent className="pt-6">
           <ChartCardHeader
             title="Conversation Funnel"
-            trendValue={0}
+            contextSummary="Funnel analysis will appear once conversations are recorded"
           />
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <MessageChatCircle size={24} className="text-muted-foreground mb-2" />
@@ -81,7 +81,7 @@ export const ConversationFunnelCard = React.memo(function ConversationFunnelCard
       <CardContent className="pt-6">
         <ChartCardHeader
           title="Conversation Funnel"
-          trendValue={0}
+          contextSummary={`${totalStarted.toLocaleString()} conversations analyzed`}
         />
 
         <div className="space-y-3">
@@ -155,10 +155,6 @@ export const ConversationFunnelCard = React.memo(function ConversationFunnelCard
           })}
         </div>
 
-        {/* Footer context summary */}
-        <p className="mt-4 text-xs text-muted-foreground">
-          {totalStarted.toLocaleString()} conversations analyzed
-        </p>
       </CardContent>
     </Card>
   );

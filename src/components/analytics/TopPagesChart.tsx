@@ -80,7 +80,7 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
     }));
   }, [data]);
 
-  const { maxValue, sortedData, trendPercentage } = useMemo(() => {
+  const { maxValue, sortedData } = useMemo(() => {
     const sorted = [...dataWithRates]
       .sort((a, b) => {
         if (sortBy === 'conversions') {
@@ -102,10 +102,7 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
       max = Math.max(...sorted.map(d => d.visits), 1);
     }
     
-    // TODO: Calculate real trend from previous period comparison
-    const trend = '0';
-    
-    return { maxValue: max, sortedData: sorted, trendPercentage: parseFloat(trend) };
+    return { maxValue: max, sortedData: sorted };
   }, [dataWithRates, sortBy]);
 
   if (loading) {
@@ -135,9 +132,7 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
       <CardContent className="pt-6">
         <ChartCardHeader
           title="Top Landing Pages"
-          trendValue={trendPercentage}
-          trendLabel="Visits"
-          trendPeriod="this month"
+          contextSummary="Pages where visitors start their journey"
           rightSlot={
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
               <SelectTrigger className="w-[120px] h-8 text-xs">

@@ -167,8 +167,6 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
         <CardContent className="pt-6">
           <ChartCardHeader
             title="Conversation Breakdown"
-            trendValue={0}
-            trendPeriod={trendPeriod}
             contextSummary="No conversations recorded yet"
           />
           <EmptyState

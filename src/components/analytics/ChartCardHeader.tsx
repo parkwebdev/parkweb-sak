@@ -36,30 +36,34 @@ export interface ChartCardHeaderProps {
  */
 export function ChartCardHeader({
   title,
-  trendValue = 0,
+  trendValue,
   trendLabel,
   trendPeriod = 'this month',
   contextSummary,
   rightSlot,
   className,
 }: ChartCardHeaderProps) {
-  const isPositive = trendValue >= 0;
+  // Only show trend when explicitly provided
+  const showTrend = trendValue !== undefined;
+  const isPositive = (trendValue ?? 0) >= 0;
   const TrendIcon = isPositive ? TrendUp01 : TrendDown01;
   const trendColor = isPositive ? 'text-success' : 'text-destructive';
 
   // Format the trend text based on whether a label is provided
   const trendText = trendLabel
-    ? `${trendLabel} ${isPositive ? 'up' : 'down'} ${Math.abs(trendValue).toFixed(1)}% ${trendPeriod}`
-    : `Trending ${isPositive ? 'up' : 'down'} by ${Math.abs(trendValue).toFixed(1)}% ${trendPeriod}`;
+    ? `${trendLabel} ${isPositive ? 'up' : 'down'} ${Math.abs(trendValue ?? 0).toFixed(1)}% ${trendPeriod}`
+    : `Trending ${isPositive ? 'up' : 'down'} by ${Math.abs(trendValue ?? 0).toFixed(1)}% ${trendPeriod}`;
 
   return (
     <div className={cn('flex items-start justify-between mb-6', className)}>
       <div className="space-y-1">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm text-muted-foreground">{trendText}</span>
-          <TrendIcon size={14} className={trendColor} />
-        </div>
+        {showTrend && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm text-muted-foreground">{trendText}</span>
+            <TrendIcon size={14} className={trendColor} />
+          </div>
+        )}
         {contextSummary && (
           <p className="text-sm text-muted-foreground">{contextSummary}</p>
         )}
