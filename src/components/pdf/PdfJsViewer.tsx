@@ -16,15 +16,6 @@ import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from '@untitled
 // Import the worker directly - Vite will bundle it locally
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Set up the worker with local bundle (no CDN dependency)
-try {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
-} catch (e) {
-  // Fallback: disable worker (runs on main thread - slower but works)
-  console.warn('PDF.js worker failed to load, falling back to main thread:', e);
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-}
-
 interface PdfJsViewerProps {
   /** PDF data as ArrayBuffer or Uint8Array */
   data: ArrayBuffer | Uint8Array;
@@ -32,6 +23,8 @@ interface PdfJsViewerProps {
   initialScale?: number;
   /** Show all pages or single page mode */
   mode?: 'all' | 'single';
+  /** Show diagnostics panel */
+  showDiagnostics?: boolean;
   /** Callback when PDF loads successfully */
   onLoad?: (numPages: number) => void;
   /** Callback when PDF fails to load */
@@ -43,10 +36,18 @@ interface PageState {
   rendered: boolean;
 }
 
+interface DiagnosticsInfo {
+  version: string;
+  workerSrc: string;
+  disableWorker: boolean;
+  lastError: string | null;
+}
+
 export function PdfJsViewer({
   data,
   initialScale = 1.5,
   mode = 'all',
+  showDiagnostics = false,
   onLoad,
   onError,
 }: PdfJsViewerProps) {
@@ -57,11 +58,17 @@ export function PdfJsViewer({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pages, setPages] = useState<PageState[]>([]);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsInfo>({
+    version: pdfjsLib.version,
+    workerSrc: '',
+    disableWorker: false,
+    lastError: null,
+  });
   
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
 
-  // Load PDF document
+  // Load PDF document with worker fallback
   useEffect(() => {
     let cancelled = false;
 
@@ -69,9 +76,68 @@ export function PdfJsViewer({
       setIsLoading(true);
       setError(null);
 
-      try {
+      // Attempt 1: Try with local worker
+      const tryLoadWithWorker = async (): Promise<pdfjsLib.PDFDocumentProxy> => {
+        // Set worker right before getDocument call
+        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
+        
+        setDiagnostics(prev => ({
+          ...prev,
+          workerSrc: pdfjsWorkerUrl,
+          disableWorker: false,
+        }));
+
         const loadingTask = pdfjsLib.getDocument({ data });
-        const pdf = await loadingTask.promise;
+        return loadingTask.promise;
+      };
+
+      // Attempt 2: Fallback without worker (main thread)
+      const tryLoadWithoutWorker = async (): Promise<pdfjsLib.PDFDocumentProxy> => {
+        console.warn('PDF.js: Falling back to main thread (no worker)');
+        
+        // Disable worker by setting empty workerSrc
+        // PDF.js will run in main thread when workerSrc is empty/falsy
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+        
+        setDiagnostics(prev => ({
+          ...prev,
+          workerSrc: '(disabled)',
+          disableWorker: true,
+        }));
+
+        const loadingTask = pdfjsLib.getDocument({ data });
+        return loadingTask.promise;
+      };
+
+      try {
+        let pdf: pdfjsLib.PDFDocumentProxy;
+
+        try {
+          // First attempt: with worker
+          pdf = await tryLoadWithWorker();
+        } catch (workerError) {
+          // Check if it's a worker-related error
+          const errorMsg = workerError instanceof Error ? workerError.message : String(workerError);
+          const isWorkerError = 
+            errorMsg.includes('Setting up fake worker failed') ||
+            errorMsg.includes('Failed to fetch dynamically imported module') ||
+            errorMsg.includes('worker') ||
+            errorMsg.includes('Worker');
+
+          setDiagnostics(prev => ({
+            ...prev,
+            lastError: errorMsg,
+          }));
+
+          if (isWorkerError) {
+            console.warn('PDF.js worker error, retrying without worker:', errorMsg);
+            // Retry without worker
+            pdf = await tryLoadWithoutWorker();
+          } else {
+            // Not a worker error, rethrow
+            throw workerError;
+          }
+        }
 
         if (cancelled) return;
 
@@ -88,6 +154,10 @@ export function PdfJsViewer({
         if (cancelled) return;
         const errorMsg = err instanceof Error ? err.message : 'Failed to load PDF';
         setError(errorMsg);
+        setDiagnostics(prev => ({
+          ...prev,
+          lastError: errorMsg,
+        }));
         onError?.(err instanceof Error ? err : new Error(errorMsg));
       } finally {
         if (!cancelled) {
@@ -187,6 +257,16 @@ export function PdfJsViewer({
         <div className="text-center text-destructive">
           <p className="text-sm font-medium">Failed to load PDF</p>
           <p className="text-xs text-muted-foreground mt-1">{error}</p>
+          {showDiagnostics && (
+            <div className="mt-4 p-3 bg-muted rounded-md text-left text-xs font-mono">
+              <p><span className="text-muted-foreground">Version:</span> {diagnostics.version}</p>
+              <p><span className="text-muted-foreground">Worker:</span> {diagnostics.workerSrc || '(none)'}</p>
+              <p><span className="text-muted-foreground">Disabled:</span> {diagnostics.disableWorker ? 'Yes' : 'No'}</p>
+              {diagnostics.lastError && (
+                <p className="mt-2 text-destructive break-all"><span className="text-muted-foreground">Error:</span> {diagnostics.lastError}</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -194,6 +274,17 @@ export function PdfJsViewer({
 
   return (
     <div className="flex flex-col h-full">
+      {/* Diagnostics Panel */}
+      {showDiagnostics && (
+        <div className="p-2 bg-muted/50 border-b border-border text-xs font-mono flex flex-wrap gap-x-4 gap-y-1">
+          <span><span className="text-muted-foreground">v:</span> {diagnostics.version}</span>
+          <span><span className="text-muted-foreground">worker:</span> {diagnostics.disableWorker ? 'disabled (main thread)' : 'enabled'}</span>
+          {diagnostics.lastError && (
+            <span className="text-amber-600"><span className="text-muted-foreground">warn:</span> recovered from worker error</span>
+          )}
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center justify-between p-2 border-b border-border bg-background flex-shrink-0">
         <div className="flex items-center gap-2">
