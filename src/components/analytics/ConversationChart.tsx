@@ -12,7 +12,6 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import { ChartTooltipContent } from '@/components/charts/charts-base';
 import { format, parseISO } from 'date-fns';
 import { ChartCardHeader } from './ChartCardHeader';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 
 interface ConversationChartProps {
@@ -31,7 +30,6 @@ export const ConversationChart = React.memo(function ConversationChart({
   trendValue = 0,
   trendPeriod = 'this month',
 }: ConversationChartProps) {
-  const prefersReducedMotion = useReducedMotion();
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
   
   // Calculate totals for context summary
@@ -155,9 +153,6 @@ export const ConversationChart = React.memo(function ConversationChart({
               />
 
               <Area
-                isAnimationActive
-                animationDuration={300}
-                animationEasing="ease-out"
                 dataKey="active"
                 name="Active"
                 stackId="1"
@@ -175,9 +170,6 @@ export const ConversationChart = React.memo(function ConversationChart({
               />
 
               <Area
-                isAnimationActive
-                animationDuration={300}
-                animationEasing="ease-out"
                 dataKey="closed"
                 name="Closed"
                 stackId="1"
