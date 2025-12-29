@@ -187,9 +187,11 @@ Fonts are registered in `fonts.ts`:
 ## Error Handling
 
 Charts handle errors gracefully:
-- Empty data → "No data available" placeholder
-- Render errors → Caught by `renderChartSafe()` wrapper
-- Font failures → Fallback to Helvetica
+- Empty data → "No data available" placeholder (each chart component)
+- Invalid data → Charts validate data at render time
+- Font failures → Fallback to Helvetica system font
+
+**Note**: React rendering errors cannot be caught with try-catch. Error boundaries don't work in `@react-pdf/renderer`. Charts must validate data before rendering.
 
 ## Testing
 

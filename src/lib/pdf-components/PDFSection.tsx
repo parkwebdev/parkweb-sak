@@ -5,7 +5,7 @@
  */
 
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
-import { colors, SPACING, FONT_SIZE, styles } from './styles';
+import { colors, SPACING, FONT_SIZE } from './styles';
 
 const sectionStyles = StyleSheet.create({
   container: {

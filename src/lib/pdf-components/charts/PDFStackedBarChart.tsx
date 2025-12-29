@@ -13,6 +13,7 @@ import {
   formatDateLabel,
   downsampleData,
   CHART_DIMS,
+  CHART_COLORS,
 } from './pdf-chart-utils';
 import { colors } from '../styles';
 
@@ -220,10 +221,10 @@ export function PDFBookingTrendChart({
     <PDFStackedBarChart
       data={data}
       series={[
-        { key: 'completed', color: '#16a34a', label: 'Completed' },
-        { key: 'confirmed', color: '#2563eb', label: 'Confirmed' },
-        { key: 'cancelled', color: '#eab308', label: 'Cancelled' },
-        { key: 'noShow', color: '#dc2626', label: 'No-Show' },
+        { key: 'completed', color: CHART_COLORS.success, label: 'Completed' },
+        { key: 'confirmed', color: CHART_COLORS.primary, label: 'Confirmed' },
+        { key: 'cancelled', color: CHART_COLORS.warning, label: 'Cancelled' },
+        { key: 'noShow', color: CHART_COLORS.danger, label: 'No-Show' },
       ]}
       width={width}
       height={height}
@@ -245,12 +246,12 @@ export function PDFTrafficTrendChart({
     <PDFStackedBarChart
       data={data}
       series={[
-        { key: 'direct', color: '#2563eb', label: 'Direct' },
-        { key: 'organic', color: '#16a34a', label: 'Organic' },
-        { key: 'paid', color: '#eab308', label: 'Paid' },
-        { key: 'social', color: '#9333ea', label: 'Social' },
-        { key: 'email', color: '#f97316', label: 'Email' },
-        { key: 'referral', color: '#14b8a6', label: 'Referral' },
+        { key: 'direct', color: CHART_COLORS.primary, label: 'Direct' },
+        { key: 'organic', color: CHART_COLORS.success, label: 'Organic' },
+        { key: 'paid', color: CHART_COLORS.warning, label: 'Paid' },
+        { key: 'social', color: CHART_COLORS.purple, label: 'Social' },
+        { key: 'email', color: CHART_COLORS.orange, label: 'Email' },
+        { key: 'referral', color: CHART_COLORS.teal, label: 'Referral' },
       ]}
       width={width}
       height={height}

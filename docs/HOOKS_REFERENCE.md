@@ -1739,8 +1739,97 @@ const {
 
 ---
 
+### useReportExports
+
+Manages report export history with file storage and database records.
+
+```tsx
+import { useReportExports } from '@/hooks/useReportExports';
+
+const {
+  exports,           // ReportExport[] - All export records
+  isLoading,         // boolean - Loading state
+  createExport,      // (params: CreateExportParams) => Promise<ReportExport>
+  deleteExport,      // (id: string) => Promise<void>
+  getDownloadUrl,    // (filePath: string) => Promise<string | null>
+  isCreating,        // boolean - Creating export state
+  isDeleting,        // boolean - Deleting export state
+} = useReportExports();
+```
+
+**CreateExportParams**:
+```typescript
+interface CreateExportParams {
+  blob: Blob;
+  fileName: string;
+  format: 'csv' | 'pdf';
+  dateRangeStart: Date;
+  dateRangeEnd: Date;
+  reportConfig: Record<string, unknown>;
+}
+```
+
+**Key Features**:
+- React Query caching with automatic refetch
+- Uploads files to Supabase Storage (`report-exports` bucket)
+- Creates database records in `report_exports` table
+- Generates signed download URLs (1 hour expiry)
+- Cleans up both storage and database on delete
+
+**File**: `src/hooks/useReportExports.ts`
+
+---
+
+### useScheduledReports
+
+Manages scheduled report configurations with CRUD operations.
+
+```tsx
+import { useScheduledReports } from '@/hooks/useScheduledReports';
+
+const {
+  reports,              // ScheduledReport[] - All scheduled reports
+  loading,              // boolean - Loading state
+  createReport,         // (report: ScheduledReportInsert) => Promise<void>
+  updateReport,         // (id: string, updates: Partial<ScheduledReportInsert>) => Promise<void>
+  deleteReport,         // (id: string) => Promise<void>
+  toggleReportStatus,   // (id: string, active: boolean) => Promise<void>
+  refetch,              // () => void - Trigger background refetch
+} = useScheduledReports();
+```
+
+**ScheduledReport Interface**:
+```typescript
+interface ScheduledReport {
+  id: string;
+  user_id: string;
+  name: string;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  day_of_week: number | null;     // 0-6 for weekly reports
+  day_of_month: number | null;    // 1-31 for monthly reports
+  time_of_day: string;            // HH:MM format
+  recipients: string[];           // Email addresses
+  report_config: ReportConfig;
+  active: boolean;
+  last_sent_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+**Key Features**:
+- React Query caching with real-time updates
+- Supabase subscription for `scheduled_reports` table
+- Automatic cache invalidation on mutations
+- Toast notifications for success/error states
+
+**File**: `src/hooks/useScheduledReports.ts`
+
+---
+
 ## Related Documentation
 
 - [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md) - Data fetching patterns
 - [Application Overview](./APPLICATION_OVERVIEW.md) - Project structure
 - [Design System](./DESIGN_SYSTEM.md) - UI guidelines
+- [PDF Generator](./PDF_GENERATOR.md) - PDF report generation

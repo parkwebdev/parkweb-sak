@@ -22,59 +22,13 @@ import {
   PDFTrafficTrendChart,
   CHART_COLORS,
 } from './charts';
+import type { PDFData, PDFConfig, ReportType } from '@/types/pdf';
 
 // Import fonts (registers on import)
 import './fonts';
 
-/** PDF data structure */
-export interface PDFData {
-  totalConversations?: number;
-  conversationsChange?: number;
-  totalLeads?: number;
-  leadsChange?: number;
-  conversionRate?: number;
-  conversationStats?: Array<{ date: string; total: number; active: number; closed: number }>;
-  conversationFunnel?: Array<{ name: string; count: number; percentage: number; dropOffPercent: number }>;
-  peakActivity?: { peakDay: string; peakTime: string; peakValue: number };
-  leadStats?: Array<{ date: string; total: number }>;
-  leadSourceBreakdown?: Array<{ source: string; leads: number; sessions: number; cvr: number }>;
-  bookingStats?: Array<{ location: string; total: number; confirmed: number; completed: number; no_show: number; show_rate: number }>;
-  bookingTrend?: Array<{ date: string; confirmed: number; completed: number; cancelled: number; noShow: number }>;
-  satisfactionStats?: { average_rating: number; total_ratings: number; distribution?: Array<{ rating: number; count: number }> };
-  recentFeedback?: Array<{ rating: number; feedback: string | null; createdAt: string; triggerType: string }>;
-  aiPerformanceStats?: { containment_rate: number; resolution_rate: number; ai_handled: number; human_takeover: number; total_conversations: number };
-  trafficSources?: Array<{ source: string; visitors: number; percentage: number }>;
-  trafficSourceTrend?: Array<{ date: string; direct: number; organic: number; paid: number; social: number; email: number; referral: number }>;
-  topPages?: Array<{ page: string; visits: number; bounce_rate: number; conversations: number }>;
-  pageEngagement?: { bounceRate: number; avgPagesPerSession: number; totalSessions: number; overallCVR: number };
-  pageDepthDistribution?: Array<{ depth: string; count: number; percentage: number }>;
-  visitorLocations?: Array<{ country: string; visitors: number; percentage: number }>;
-}
-
-/** PDF configuration */
-export interface PDFConfig {
-  includeKPIs?: boolean;
-  includeCharts?: boolean;
-  includeTables?: boolean;
-  includeConversations?: boolean;
-  includeConversationFunnel?: boolean;
-  includePeakActivity?: boolean;
-  includeLeads?: boolean;
-  includeLeadSourceBreakdown?: boolean;
-  includeLeadConversionTrend?: boolean;
-  includeBookings?: boolean;
-  includeBookingTrend?: boolean;
-  includeSatisfaction?: boolean;
-  includeCustomerFeedback?: boolean;
-  includeAIPerformance?: boolean;
-  includeTrafficSources?: boolean;
-  includeTrafficSourceTrend?: boolean;
-  includeTopPages?: boolean;
-  includePageEngagement?: boolean;
-  includePageDepth?: boolean;
-  includeVisitorLocations?: boolean;
-  type?: 'summary' | 'detailed' | 'comparison';
-}
+// Re-export types for backward compatibility
+export type { PDFData, PDFConfig, ReportType } from '@/types/pdf';
 
 interface AnalyticsReportPDFProps {
   data: PDFData;
@@ -110,21 +64,9 @@ export function AnalyticsReportPDF({
     },
   ];
 
-  // Safe chart render wrapper - catches rendering issues
-  const renderChartSafe = (
-    chartElement: React.ReactNode,
-    fallbackMessage = 'Chart unavailable'
-  ): React.ReactNode => {
-    try {
-      return chartElement;
-    } catch {
-      return (
-        <View style={{ padding: 12, backgroundColor: colors.bg, borderRadius: 4 }}>
-          <Text style={{ fontSize: 9, color: colors.muted }}>{fallbackMessage}</Text>
-        </View>
-      );
-    }
-  };
+  // Note: React rendering errors cannot be caught with try-catch.
+  // Error boundaries don't work in @react-pdf/renderer.
+  // Each chart component handles empty/invalid data with empty state placeholders.
 
   return (
     <Document>
@@ -145,7 +87,7 @@ export function AnalyticsReportPDF({
           {/* Conversations */}
           {config.includeConversations && data.conversationStats?.length && (
             <PDFSection title="Conversations">
-              {config.includeCharts && renderChartSafe(
+              {config.includeCharts && (
                 <PDFLineChart
                   data={data.conversationStats}
                   series={[
