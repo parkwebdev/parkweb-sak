@@ -378,7 +378,7 @@ export default function PDFTestPage() {
   return (
     <div className="flex h-full min-h-0 bg-background">
       {/* Controls Sidebar */}
-      <div className="w-80 border-r border-border flex flex-col min-h-0">
+      <div className="w-80 h-full min-h-0 overflow-hidden border-r border-border flex flex-col">
         <div className="p-4 border-b border-border flex-shrink-0">
           <h1 className="text-lg font-semibold text-foreground">PDF Test Page</h1>
           <p className="text-sm text-muted-foreground">Preview and debug PDF reports</p>
@@ -476,8 +476,23 @@ export default function PDFTestPage() {
         </div>
       </div>
 
-      {/* PDF Preview via blob iframe */}
-      <div className="flex-1 min-h-0 flex flex-col bg-muted/50">
+      {/* PDF Preview */}
+      <div className="flex-1 h-full min-h-0 overflow-hidden flex flex-col bg-muted/50">
+        {/* Preview toolbar */}
+        {previewUrl && !isGeneratingPreview && !previewError && (
+          <div className="p-2 border-b border-border flex items-center gap-2 flex-shrink-0 bg-background">
+            <span className="text-xs text-muted-foreground">Preview ready</span>
+            <a
+              href={previewUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-primary hover:underline ml-auto"
+            >
+              Open in new tab
+            </a>
+          </div>
+        )}
+        
         {isGeneratingPreview && (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-muted-foreground">
@@ -500,11 +515,27 @@ export default function PDFTestPage() {
         )}
         
         {previewUrl && !isGeneratingPreview && !previewError && (
-          <iframe
-            src={previewUrl}
-            className="flex-1 w-full border-0"
-            title="PDF Preview"
-          />
+          <object
+            data={previewUrl}
+            type="application/pdf"
+            className="flex-1 w-full"
+          >
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  PDF preview blocked by browser.
+                </p>
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  Open PDF in new tab
+                </a>
+              </div>
+            </div>
+          </object>
         )}
       </div>
     </div>

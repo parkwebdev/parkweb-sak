@@ -71,6 +71,14 @@ const App = () => (
                   <Route path="/login" element={<Auth />} />
                   <Route path="/widget" element={<WidgetPage />} />
                   
+                  {/* Dev-only public routes */}
+                  {import.meta.env.DEV && (
+                    <>
+                      <Route path="/booking-test" element={<BookingComponentsTest />} />
+                      <Route path="/pdf-test" element={<PDFTestPage />} />
+                    </>
+                  )}
+                  
                   {/* Protected routes with shared layout */}
                   <Route element={<ProtectedLayout />}>
                     <Route path="/" element={<GetStartedWrapper />} />
@@ -80,12 +88,6 @@ const App = () => (
                     <Route path="/leads" element={<LeadsWrapper />} />
                     <Route path="/analytics" element={<AnalyticsWrapper />} />
                     <Route path="/settings" element={<SettingsWrapper />} />
-                    {import.meta.env.DEV && (
-                      <>
-                        <Route path="/booking-test" element={<BookingComponentsTest />} />
-                        <Route path="/pdf-test" element={<PDFTestPage />} />
-                      </>
-                    )}
                   </Route>
                   
                   <Route path="*" element={<NotFound />} />
