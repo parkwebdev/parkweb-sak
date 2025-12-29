@@ -138,7 +138,6 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
           trendValue={trendPercentage}
           trendLabel="Visits"
           trendPeriod="this month"
-          contextSummary={`Showing ${totalVisits.toLocaleString()} total visitors across top ${sortedData.length} pages`}
           rightSlot={
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
               <SelectTrigger className="w-[120px] h-8 text-xs">
@@ -233,6 +232,11 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
             );
           })}
         </div>
+
+        {/* Footer context summary */}
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {totalVisits.toLocaleString()} visitors across {sortedData.length} pages
+        </p>
       </CardContent>
     </Card>
   );
