@@ -116,13 +116,19 @@ docs/
 ├── DESIGN_SYSTEM.md               # Design tokens and standards
 ├── COMPONENT_PATTERNS.md          # Component and table patterns
 ├── HOOKS_REFERENCE.md             # Custom hooks documentation
+├── PDF_GENERATOR.md               # PDF report generation
 │
 ├── # Features
 ├── WIDGET_ARCHITECTURE.md         # Widget technical docs
 ├── NATIVE_BOOKING_SYSTEM.md       # Calendar and booking
 ├── SOCIAL_CHANNEL_INTEGRATIONS.md # Social integrations
 ├── STRIPE_PAYMENT_GUIDE.md        # Payment integration
-└── ONBOARDING_GET_STARTED.md      # Onboarding flow
+├── ONBOARDING_GET_STARTED.md      # Onboarding flow
+│
+└── # Archive (completed planning docs)
+    └── archive/
+        ├── ANALYTICS_PRE_REFACTORING_STATE.md
+        └── ANALYTICS_REFACTORING_PLAN.md
 ```
 
 ---
