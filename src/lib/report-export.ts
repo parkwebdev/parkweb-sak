@@ -485,6 +485,53 @@ export const generatePDFReport = async (
     yPosition = getTableEndY(pdf) + 15;
   }
 
+  // Conversation Funnel Table (NEW)
+  if (config.includeConversationFunnel && data.conversationFunnel?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Conversation Funnel', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Stage', 'Count', 'Percentage', 'Drop-off']],
+      body: data.conversationFunnel.map((stage) => [
+        stage.name,
+        stage.count,
+        `${stage.percentage.toFixed(1)}%`,
+        `${stage.dropOffPercent.toFixed(1)}%`,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Peak Activity Summary (NEW)
+  if (config.includePeakActivity && data.peakActivity) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Peak Activity Summary', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Peak Day', data.peakActivity.peakDay],
+        ['Peak Time Block', data.peakActivity.peakTime],
+        ['Peak Conversations', `${data.peakActivity.peakValue}`],
+      ],
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
   // Booking Statistics Table
   if (config.includeBookings && config.includeTables && data.bookingStats?.length) {
     yPosition = checkPageBreak(pdf, yPosition);
@@ -503,6 +550,32 @@ export const generatePDFReport = async (
         stat.completed,
         stat.no_show,
         `${stat.show_rate}%`,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Booking Trend Table (NEW)
+  if (config.includeBookingTrend && data.bookingTrend?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Booking Trend', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Date', 'Confirmed', 'Completed', 'Cancelled', 'No-Show', 'Total']],
+      body: data.bookingTrend.slice(0, 20).map((item) => [
+        item.date,
+        item.confirmed,
+        item.completed,
+        item.cancelled,
+        item.noShow,
+        item.total,
       ]),
       theme: 'grid',
       styles: { fontSize: 9 },
@@ -547,6 +620,30 @@ export const generatePDFReport = async (
 
       yPosition = getTableEndY(pdf) + 15;
     }
+  }
+
+  // Customer Feedback Table (NEW)
+  if (config.includeCustomerFeedback && data.recentFeedback?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Customer Feedback', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Date', 'Rating', 'Feedback', 'Trigger']],
+      body: data.recentFeedback.slice(0, 15).map((item) => [
+        format(new Date(item.createdAt), 'MMM d, yyyy'),
+        `${item.rating} Stars`,
+        (item.feedback || '').substring(0, 50) + ((item.feedback?.length || 0) > 50 ? '...' : ''),
+        item.triggerType,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 8 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
   }
 
   // AI Performance Metrics
@@ -597,6 +694,84 @@ export const generatePDFReport = async (
     yPosition = getTableEndY(pdf) + 15;
   }
 
+  // Traffic Source Trend Table (NEW)
+  if (config.includeTrafficSourceTrend && data.trafficSourceTrend?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Traffic Source Trend', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Date', 'Direct', 'Organic', 'Paid', 'Social', 'Email', 'Referral', 'Total']],
+      body: data.trafficSourceTrend.slice(0, 15).map((item) => [
+        item.date,
+        item.direct,
+        item.organic,
+        item.paid,
+        item.social,
+        item.email,
+        item.referral,
+        item.total,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 8 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Lead Source Breakdown Table (NEW)
+  if (config.includeLeadSourceBreakdown && data.leadSourceBreakdown?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Lead Source Breakdown', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Source', 'Leads', 'Sessions', 'Conversion Rate']],
+      body: data.leadSourceBreakdown.map((source) => [
+        source.source,
+        source.leads,
+        source.sessions,
+        `${source.cvr.toFixed(1)}%`,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Lead Conversion Trend Table (NEW)
+  if (config.includeLeadConversionTrend && data.leadConversionTrend?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Lead Conversion Trend', 20, yPosition);
+    yPosition += 10;
+
+    // Get stage keys from first item
+    const firstItem = data.leadConversionTrend[0];
+    const stageKeys = Object.keys(firstItem).filter(k => k !== 'date');
+    
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Date', ...stageKeys]],
+      body: data.leadConversionTrend.slice(0, 15).map((item) => [
+        item.date as string,
+        ...stageKeys.map(key => item[key] as number),
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 8 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
   // Top Pages Table
   if (config.includeTopPages && config.includeTables && data.topPages?.length) {
     yPosition = checkPageBreak(pdf, yPosition);
@@ -613,6 +788,53 @@ export const generatePDFReport = async (
         page.visits,
         `${page.bounce_rate}%`,
         page.conversations,
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Page Engagement Metrics (NEW)
+  if (config.includePageEngagement && data.pageEngagement) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Page Engagement Metrics', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Bounce Rate', `${data.pageEngagement.bounceRate.toFixed(1)}%`],
+        ['Avg Pages/Session', data.pageEngagement.avgPagesPerSession.toFixed(1)],
+        ['Total Sessions', `${data.pageEngagement.totalSessions}`],
+        ['Conversion Rate', `${data.pageEngagement.overallCVR.toFixed(1)}%`],
+      ],
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    yPosition = getTableEndY(pdf) + 15;
+  }
+
+  // Page Depth Distribution Table (NEW)
+  if (config.includePageDepth && data.pageDepthDistribution?.length) {
+    yPosition = checkPageBreak(pdf, yPosition);
+
+    pdf.setFontSize(14);
+    pdf.text('Page Depth Distribution', 20, yPosition);
+    yPosition += 10;
+
+    autoTable(pdf, {
+      startY: yPosition,
+      head: [['Pages Viewed', 'Sessions', 'Percentage']],
+      body: data.pageDepthDistribution.map((item) => [
+        item.depth,
+        item.count,
+        `${item.percentage.toFixed(1)}%`,
       ]),
       theme: 'grid',
       styles: { fontSize: 9 },

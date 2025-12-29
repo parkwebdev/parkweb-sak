@@ -17,6 +17,7 @@ import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildRepo
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { buildAnalyticsExportData } from '@/lib/analytics-export-data';
+import { calculatePeakActivityData } from '@/lib/peak-activity-utils';
 import { SECTION_INFO, TOOLBAR_SECTIONS, DEFAULT_REPORT_CONFIG } from '@/lib/analytics-constants';
 import { toast } from '@/lib/toast';
 import { subDays, format } from 'date-fns';
@@ -64,30 +65,49 @@ function Analytics() {
     filters,
   });
 
-  // === Export Data (memoized) ===
+  // === Peak Activity Data (calculated from conversation stats) ===
+  const peakActivityData = useMemo(() => 
+    calculatePeakActivityData(data.conversationStats),
+    [data.conversationStats]
+  );
+
+  // === Export Data (memoized with all 9 new fields) ===
   const analyticsExportData = useMemo(() => buildAnalyticsExportData({
+    // KPIs
     totalConversations: data.totalConversations,
     totalLeads: data.totalLeads,
     conversionRate: data.conversionRate,
     totalMessages: data.totalMessages,
+    // Comparison KPIs
     comparisonTotalConversations: data.comparisonTotalConversations,
     comparisonTotalLeads: data.comparisonTotalLeads,
     comparisonConversionRate: data.comparisonConversionRate,
     comparisonTotalMessages: data.comparisonTotalMessages,
     comparisonMode,
+    // Core stats
     conversationStats: data.conversationStats,
     leadStats: data.leadStats,
     agentPerformance: data.agentPerformance,
     usageMetrics: data.usageMetrics,
+    // Business outcomes
     bookingStats: data.bookingStats,
     satisfactionStats: data.satisfactionStats,
     aiPerformanceStats: data.aiPerformanceStats,
+    // Traffic
     trafficSources: data.trafficSources,
     landingPages: data.landingPages,
     locationData: data.locationData,
+    // Original data
     analyticsConversations: data.analyticsConversations,
     leads: data.leads,
-  }), [data, comparisonMode]);
+    // NEW: 9 additional fields for complete exports
+    funnelStages: data.funnelStages,
+    peakActivity: peakActivityData,
+    engagement: data.engagement,
+    leadsBySource: data.leadsBySource,
+    pageDepthDistribution: data.pageDepthDistribution,
+    sourcesByDate: data.sourcesByDate,
+  }), [data, comparisonMode, peakActivityData]);
 
   // === Handlers ===
   const handleDateChange = useCallback((start: Date, end: Date) => {
