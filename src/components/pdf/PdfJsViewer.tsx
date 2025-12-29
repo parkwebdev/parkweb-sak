@@ -1,0 +1,288 @@
+/**
+ * PDF.js Viewer Component
+ * 
+ * Renders PDF documents using PDF.js library, bypassing browser PDF embeds.
+ * This works even when extensions or policies block blob: URLs and native viewers.
+ * 
+ * @module components/pdf/PdfJsViewer
+ */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from '@untitledui/icons';
+
+// Set up the worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+interface PdfJsViewerProps {
+  /** PDF data as ArrayBuffer or Uint8Array */
+  data: ArrayBuffer | Uint8Array;
+  /** Initial scale (default: 1.5) */
+  initialScale?: number;
+  /** Show all pages or single page mode */
+  mode?: 'all' | 'single';
+  /** Callback when PDF loads successfully */
+  onLoad?: (numPages: number) => void;
+  /** Callback when PDF fails to load */
+  onError?: (error: Error) => void;
+}
+
+interface PageState {
+  pageNum: number;
+  rendered: boolean;
+}
+
+export function PdfJsViewer({
+  data,
+  initialScale = 1.5,
+  mode = 'all',
+  onLoad,
+  onError,
+}: PdfJsViewerProps) {
+  const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
+  const [numPages, setNumPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [scale, setScale] = useState(initialScale);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pages, setPages] = useState<PageState[]>([]);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
+
+  // Load PDF document
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPdf = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const loadingTask = pdfjsLib.getDocument({ data });
+        const pdf = await loadingTask.promise;
+
+        if (cancelled) return;
+
+        setPdfDoc(pdf);
+        setNumPages(pdf.numPages);
+        setPages(
+          Array.from({ length: pdf.numPages }, (_, i) => ({
+            pageNum: i + 1,
+            rendered: false,
+          }))
+        );
+        onLoad?.(pdf.numPages);
+      } catch (err) {
+        if (cancelled) return;
+        const errorMsg = err instanceof Error ? err.message : 'Failed to load PDF';
+        setError(errorMsg);
+        onError?.(err instanceof Error ? err : new Error(errorMsg));
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadPdf();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [data, onLoad, onError]);
+
+  // Render a single page to canvas
+  const renderPage = useCallback(
+    async (pageNum: number) => {
+      if (!pdfDoc) return;
+
+      const canvas = canvasRefs.current.get(pageNum);
+      if (!canvas) return;
+
+      try {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale });
+
+        const context = canvas.getContext('2d');
+        if (!context) return;
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({
+          canvasContext: context,
+          viewport,
+        }).promise;
+
+        setPages((prev) =>
+          prev.map((p) =>
+            p.pageNum === pageNum ? { ...p, rendered: true } : p
+          )
+        );
+      } catch (err) {
+        console.error(`Failed to render page ${pageNum}:`, err);
+      }
+    },
+    [pdfDoc, scale]
+  );
+
+  // Render pages when PDF is loaded or scale changes
+  useEffect(() => {
+    if (!pdfDoc || numPages === 0) return;
+
+    if (mode === 'all') {
+      // Render all pages
+      for (let i = 1; i <= numPages; i++) {
+        renderPage(i);
+      }
+    } else {
+      // Render only current page
+      renderPage(currentPage);
+    }
+  }, [pdfDoc, numPages, scale, mode, currentPage, renderPage]);
+
+  // Zoom controls
+  const zoomIn = () => setScale((s) => Math.min(s + 0.25, 3));
+  const zoomOut = () => setScale((s) => Math.max(s - 0.25, 0.5));
+
+  // Page navigation (single page mode)
+  const goToPrevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
+  const goToNextPage = () => setCurrentPage((p) => Math.min(p + 1, numPages));
+
+  // Register canvas ref
+  const setCanvasRef = (pageNum: number) => (el: HTMLCanvasElement | null) => {
+    if (el) {
+      canvasRefs.current.set(pageNum, el);
+    } else {
+      canvasRefs.current.delete(pageNum);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center" role="status" aria-live="polite">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <Loading02 className="h-8 w-8 animate-spin" />
+          <p className="text-sm">Loading PDF...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="text-center text-destructive">
+          <p className="text-sm font-medium">Failed to load PDF</p>
+          <p className="text-xs text-muted-foreground mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between p-2 border-b border-border bg-background flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={zoomOut}
+            disabled={scale <= 0.5}
+            className="h-7 w-7 p-0"
+            aria-label="Zoom out"
+          >
+            <ZoomOut size={16} />
+          </Button>
+          <span className="text-xs text-muted-foreground w-12 text-center">
+            {Math.round(scale * 100)}%
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={zoomIn}
+            disabled={scale >= 3}
+            className="h-7 w-7 p-0"
+            aria-label="Zoom in"
+          >
+            <ZoomIn size={16} />
+          </Button>
+        </div>
+
+        {mode === 'single' && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToPrevPage}
+              disabled={currentPage <= 1}
+              className="h-7 w-7 p-0"
+              aria-label="Previous page"
+            >
+              <ChevronLeft size={16} />
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {currentPage} / {numPages}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToNextPage}
+              disabled={currentPage >= numPages}
+              className="h-7 w-7 p-0"
+              aria-label="Next page"
+            >
+              <ChevronRight size={16} />
+            </Button>
+          </div>
+        )}
+
+        {mode === 'all' && (
+          <span className="text-xs text-muted-foreground">
+            {numPages} page{numPages !== 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
+      {/* PDF Pages */}
+      <ScrollArea className="flex-1">
+        <div
+          ref={containerRef}
+          className="flex flex-col items-center gap-4 p-4 bg-muted/30"
+        >
+          {mode === 'all' ? (
+            // Render all pages
+            pages.map(({ pageNum }) => (
+              <div
+                key={pageNum}
+                className="shadow-lg bg-white"
+                style={{ lineHeight: 0 }}
+              >
+                <canvas
+                  ref={setCanvasRef(pageNum)}
+                  className="block"
+                  aria-label={`Page ${pageNum}`}
+                />
+              </div>
+            ))
+          ) : (
+            // Render single page
+            <div className="shadow-lg bg-white" style={{ lineHeight: 0 }}>
+              <canvas
+                ref={setCanvasRef(currentPage)}
+                className="block"
+                aria-label={`Page ${currentPage}`}
+              />
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+export default PdfJsViewer;

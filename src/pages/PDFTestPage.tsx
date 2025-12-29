@@ -20,14 +20,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Download02, RefreshCcw01, Loading02, ChevronDown, AlertTriangle, CheckCircle } from '@untitledui/icons';
+import { Download02, RefreshCcw01, Loading02, ChevronDown, AlertTriangle, CheckCircle, AlertCircle } from '@untitledui/icons';
+import { PdfJsViewer } from '@/components/pdf/PdfJsViewer';
 import { subDays, format } from 'date-fns';
 
 // Build stamp for cache verification
 const BUILD_STAMP = `Build: ${new Date().toISOString().slice(0, 19)}`;
 
 // Render modes for PDF preview
-type RenderMode = 'object' | 'iframe' | 'embed' | 'none';
+type RenderMode = 'pdfjs' | 'object' | 'iframe' | 'embed' | 'none';
 
 // CSP Diagnostics interface
 interface CSPDiagnostics {
@@ -256,9 +257,12 @@ export default function PDFTestPage() {
   const [endDate] = useState(() => new Date());
   const [refreshKey, setRefreshKey] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [renderMode, setRenderMode] = useState<RenderMode>('object');
-  const [diagnosticsOpen, setDiagnosticsOpen] = useState(true);
+  const [renderMode, setRenderMode] = useState<RenderMode>('pdfjs');
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [embedBlocked, setEmbedBlocked] = useState(false);
+  
+  // PDF ArrayBuffer for PDF.js viewer
+  const [pdfArrayBuffer, setPdfArrayBuffer] = useState<ArrayBuffer | null>(null);
   
   // Blob preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -342,7 +346,7 @@ export default function PDFTestPage() {
     setRefreshKey(prev => prev + 1);
   }, []);
 
-  // Generate preview blob URL
+  // Generate preview blob URL and ArrayBuffer
   useEffect(() => {
     let cancelled = false;
     const oldUrl = previewUrl;
@@ -368,6 +372,12 @@ export default function PDFTestPage() {
         if (!cancelled) {
           const url = URL.createObjectURL(blob);
           setPreviewUrl(url);
+          
+          // Also store ArrayBuffer for PDF.js viewer
+          const arrayBuffer = await blob.arrayBuffer();
+          if (!cancelled) {
+            setPdfArrayBuffer(arrayBuffer);
+          }
         }
       } catch (error) {
         if (!cancelled) {
@@ -692,6 +702,10 @@ export default function PDFTestPage() {
               className="flex items-center gap-3"
             >
               <div className="flex items-center gap-1">
+                <RadioGroupItem value="pdfjs" id="mode-pdfjs" className="h-3 w-3" />
+                <Label htmlFor="mode-pdfjs" className="text-xs cursor-pointer font-medium text-primary">pdf.js</Label>
+              </div>
+              <div className="flex items-center gap-1">
                 <RadioGroupItem value="object" id="mode-object" className="h-3 w-3" />
                 <Label htmlFor="mode-object" className="text-xs cursor-pointer">object</Label>
               </div>
@@ -749,6 +763,11 @@ export default function PDFTestPage() {
           </div>
         )}
         
+        {/* PDF.js Viewer (default - works even when embeds are blocked) */}
+        {pdfArrayBuffer && !isGeneratingPreview && !previewError && renderMode === 'pdfjs' && (
+          <PdfJsViewer data={pdfArrayBuffer} initialScale={1.2} mode="all" />
+        )}
+        
         {previewUrl && !isGeneratingPreview && !previewError && renderMode === 'object' && (
           <object
             data={previewUrl}
@@ -786,6 +805,7 @@ export default function PDFTestPage() {
                   <div className="text-xs text-muted-foreground space-y-1">
                     <p><strong>Troubleshooting:</strong></p>
                     <ul className="list-disc list-inside space-y-0.5">
+                      <li>Use <strong>pdf.js</strong> mode (recommended - always works)</li>
                       <li>Try a different render mode (iframe, embed)</li>
                       <li>Disable browser extensions (ad blockers, PDF viewers)</li>
                       <li>Hard refresh: Cmd+Shift+R (Mac) or Ctrl+Shift+R (Win)</li>
