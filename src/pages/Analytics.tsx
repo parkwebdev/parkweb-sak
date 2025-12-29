@@ -635,19 +635,37 @@ function Analytics() {
           {activeTab === 'conversations' && (
             <div className="space-y-6">
               {/* Peak Activity Heatmap - full width */}
-              <PeakActivityChart
-                conversationStats={conversationStats.map(s => ({ date: s.date, total: s.total }))}
-                loading={loading}
-              />
+              <ErrorBoundary
+                fallback={(error) => (
+                  <div className="rounded-lg border border-border bg-card p-4">
+                    <p className="text-sm font-medium text-foreground">Peak activity chart failed to load</p>
+                    <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
+                  </div>
+                )}
+              >
+                <PeakActivityChart
+                  conversationStats={conversationStats.map(s => ({ date: s.date, total: s.total }))}
+                  loading={loading}
+                />
+              </ErrorBoundary>
               
               {/* Full-width conversation volume chart */}
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem>
-                  <ConversationChart 
-                    data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} 
-                    trendValue={conversationTrendValue} 
-                    trendPeriod="this month" 
-                  />
+                  <ErrorBoundary
+                    fallback={(error) => (
+                      <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-sm font-medium text-foreground">Conversation chart failed to load</p>
+                        <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
+                      </div>
+                    )}
+                  >
+                    <ConversationChart 
+                      data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} 
+                      trendValue={conversationTrendValue} 
+                      trendPeriod="this month" 
+                    />
+                  </ErrorBoundary>
                 </AnimatedItem>
                 <AnimatedItem>
                   <ConversationFunnelCard 
@@ -687,7 +705,18 @@ function Analytics() {
               </div>
               
               <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem><LeadConversionChart data={leadStats} trendValue={leadTrendValue} trendPeriod="this month" /></AnimatedItem>
+                <AnimatedItem>
+                  <ErrorBoundary
+                    fallback={(error) => (
+                      <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-sm font-medium text-foreground">Lead conversion chart failed to load</p>
+                        <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
+                      </div>
+                    )}
+                  >
+                    <LeadConversionChart data={leadStats} trendValue={leadTrendValue} trendPeriod="this month" />
+                  </ErrorBoundary>
+                </AnimatedItem>
               </AnimatedList>
             </div>
           )}
@@ -717,12 +746,21 @@ function Analytics() {
               {/* Trend chart - full width */}
               <AnimatedList staggerDelay={0.1}>
                 <AnimatedItem>
-                  <BookingTrendChart 
-                    data={bookingStats?.trend ?? []} 
-                    loading={bookingLoading}
-                    trendValue={bookingTrendValue}
-                    trendPeriod="this month"
-                  />
+                  <ErrorBoundary
+                    fallback={(error) => (
+                      <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-sm font-medium text-foreground">Booking trend chart failed to load</p>
+                        <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
+                      </div>
+                    )}
+                  >
+                    <BookingTrendChart 
+                      data={bookingStats?.trend ?? []} 
+                      loading={bookingLoading}
+                      trendValue={bookingTrendValue}
+                      trendPeriod="this month"
+                    />
+                  </ErrorBoundary>
                 </AnimatedItem>
               </AnimatedList>
             </div>
@@ -768,10 +806,19 @@ function Analytics() {
                   </div>
                 </AnimatedItem>
                 <AnimatedItem>
-                  <TrafficSourceTrendChart 
-                    data={sourcesByDate} 
-                    loading={trafficLoading}
-                  />
+                  <ErrorBoundary
+                    fallback={(error) => (
+                      <div className="rounded-lg border border-border bg-card p-4">
+                        <p className="text-sm font-medium text-foreground">Traffic source trend chart failed to load</p>
+                        <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
+                      </div>
+                    )}
+                  >
+                    <TrafficSourceTrendChart 
+                      data={sourcesByDate} 
+                      loading={trafficLoading}
+                    />
+                  </ErrorBoundary>
                 </AnimatedItem>
               </AnimatedList>
             </div>

@@ -42,13 +42,13 @@ import {
   type MockEngagementMetrics,
   type MockDailySourceData,
   type MockPageDepthData,
-  type MockLeadSourceData,
 } from '@/lib/mock-analytics-data';
 import type {
   BookingStats,
   SatisfactionStats,
   AIPerformanceStats,
   SparklineDataPoint,
+  LeadSourceData,
 } from '@/types/analytics';
 
 const MOCK_MODE_KEY = 'analytics_mock_mode';
@@ -91,7 +91,7 @@ export interface MockAnalyticsData {
   pageDepthDistribution: MockPageDepthData[];
   
   // Lead source breakdown
-  leadsBySource: MockLeadSourceData[];
+  leadsBySource: LeadSourceData[];
 }
 
 export interface UseMockAnalyticsDataReturn {

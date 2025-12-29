@@ -1532,6 +1532,121 @@ const handleStatusChange = async (leadId: string, newStatus: LeadStatus) => {
 
 ---
 
+## Analytics Hooks
+
+### useConversationFunnel
+
+Fetches and computes conversation funnel data showing drop-off across the customer journey.
+
+```tsx
+import { useConversationFunnel } from '@/hooks/useConversationFunnel';
+
+const {
+  stages,    // FunnelStage[] - Array of funnel stages with counts/percentages
+  loading,   // boolean - Loading state
+  refetch,   // () => Promise<void> - Refetch all funnel data
+} = useConversationFunnel(startDate, endDate, enabled);
+```
+
+**FunnelStage Interface**:
+```typescript
+interface FunnelStage {
+  name: string;           // Stage name (Started, Engaged, Lead Captured, Booked, Resolved)
+  count: number;          // Conversations at this stage
+  percentage: number;     // Percentage of total (0-100)
+  dropOffPercent: number; // Drop-off from previous stage (0-100)
+  color: string;          // HSL color for visualization
+}
+```
+
+**Key Features**:
+- Parallel queries for conversations, leads, and bookings
+- Computes engagement (2+ messages), lead capture, booking, and resolution rates
+- 5-minute stale time for performance
+
+**File**: `src/hooks/useConversationFunnel.ts`
+
+---
+
+### useTrafficAnalytics
+
+Fetches and processes website traffic analytics from conversation metadata.
+
+```tsx
+import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
+
+const {
+  trafficSources,        // TrafficSourceData[] - Traffic by source (organic, direct, etc.)
+  landingPages,          // LandingPageData[] - Landing page performance
+  pageVisits,            // PageVisitData[] - Page visit aggregations
+  locationData,          // LocationData[] - Visitor geography with coordinates
+  engagement,            // EngagementMetrics - Bounce rate, pages/session, duration
+  sourcesByDate,         // DailySourceData[] - Daily traffic source breakdown
+  pageDepthDistribution, // PageDepthData[] - Session depth distribution
+  leadsBySource,         // LeadSourceData[] - Leads captured by traffic source
+  loading,               // boolean - Loading state
+  refetch,               // () => void - Refetch traffic data
+} = useTrafficAnalytics(startDate, endDate, enabled);
+```
+
+**Key Interfaces**:
+```typescript
+interface TrafficSourceData {
+  name: string;   // Source name (e.g., "organic", "direct")
+  value: number;  // Conversation count
+  color: string;  // Chart color
+}
+
+interface LeadSourceData {
+  source: string;   // Traffic source identifier
+  leads: number;    // Leads captured
+  sessions: number; // Sessions from this source
+  cvr: number;      // Conversion rate percentage
+}
+
+interface EngagementMetrics {
+  bounceRate: number;
+  avgPagesPerSession: number;
+  avgSessionDuration: number;
+  totalSessions: number;
+  totalLeads: number;
+  overallCVR: number;
+}
+```
+
+**Key Features**:
+- Extracts traffic data from conversation metadata
+- Real-time updates via Supabase subscription
+- Computes engagement metrics, page depth, and lead source attribution
+
+**File**: `src/hooks/useTrafficAnalytics.ts`
+
+---
+
+### useMockAnalyticsData
+
+Provides toggleable mock data for analytics visualization during development.
+
+```tsx
+import { useMockAnalyticsData } from '@/hooks/useMockAnalyticsData';
+
+const {
+  enabled,     // boolean - Whether mock mode is active
+  setEnabled,  // (enabled: boolean) => void - Toggle mock mode
+  mockData,    // MockAnalyticsData | null - All mock data when enabled
+  regenerate,  // () => void - Generate new random values
+} = useMockAnalyticsData();
+```
+
+**Key Features**:
+- Persisted in localStorage (`analytics_mock_mode` key)
+- Generates comprehensive mock data for all analytics components
+- Useful for development and testing without real data
+
+**File**: `src/hooks/useMockAnalyticsData.ts`
+
+---
+
 ## Related Documentation
 
 - [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md) - Data fetching patterns

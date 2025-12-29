@@ -429,3 +429,21 @@ export interface TopPageData {
   conversions: number;
 }
 
+// =============================================================================
+// LEAD SOURCE ANALYTICS TYPES
+// =============================================================================
+
+/**
+ * Lead source breakdown data for LeadSourceBreakdownCard.
+ * Shows leads captured per traffic source with conversion rates.
+ */
+export interface LeadSourceData {
+  /** Traffic source identifier (e.g., "organic", "direct", "social") */
+  source: string;
+  /** Number of leads captured from this source */
+  leads: number;
+  /** Number of sessions from this source */
+  sessions: number;
+  /** Conversion rate percentage (leads/sessions * 100) */
+  cvr: number;
+}

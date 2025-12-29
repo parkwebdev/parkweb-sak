@@ -19,6 +19,7 @@ import { queryKeys } from '@/lib/query-keys';
 import { logger } from '@/utils/logger';
 import { getCountryCoordinates } from '@/lib/country-coordinates';
 import type { ConversationMetadata } from '@/types/metadata';
+import type { LeadSourceData } from '@/types/analytics';
 
 // =============================================================================
 // TYPES
@@ -84,13 +85,8 @@ export interface PageDepthData {
   percentage: number;
 }
 
-/** Lead source breakdown data */
-export interface LeadSourceData {
-  source: string;
-  leads: number;
-  sessions: number;
-  cvr: number;
-}
+// Re-export LeadSourceData for backwards compatibility
+export type { LeadSourceData };
 
 /** Complete traffic analytics stats */
 interface TrafficStats {
