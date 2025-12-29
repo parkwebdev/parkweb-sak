@@ -6,6 +6,11 @@
  * lead stats, agent performance, usage metrics, bookings, satisfaction,
  * AI performance, traffic sources, top pages, and visitor locations.
  * 
+ * CSV exports include:
+ * - UTF-8 BOM for universal compatibility (Excel, Google Sheets, Numbers, LibreOffice)
+ * - Proper escaping for special characters
+ * - Windows-compatible line endings (CRLF)
+ * 
  * @module lib/report-export
  */
 
@@ -25,8 +30,56 @@ import type {
   LocationStat 
 } from '@/types/report';
 
+// =============================================================================
+// CSV UTILITIES
+// =============================================================================
+
+/** UTF-8 BOM for Excel/Numbers compatibility */
+const UTF8_BOM = '\uFEFF';
+
+/**
+ * Escapes a CSV value properly for universal compatibility.
+ * Handles commas, quotes, newlines, and other special characters.
+ */
+const escapeCSV = (value: string | number | null | undefined): string => {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  // If contains comma, quote, newline, or carriage return, wrap in quotes and escape internal quotes
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+/**
+ * Creates a CSV row from an array of values with proper escaping.
+ */
+const createCSVRow = (...values: (string | number | null | undefined)[]): string => {
+  return values.map(escapeCSV).join(',');
+};
+
+/**
+ * Formats duration in milliseconds to human-readable string.
+ */
+const formatDuration = (ms: number): string => {
+  if (ms < 1000) return `${ms}ms`;
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  if (minutes < 60) return `${minutes}m ${remainingSeconds}s`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h ${remainingMinutes}m`;
+};
+
+// =============================================================================
+// CSV GENERATION
+// =============================================================================
+
 /**
  * Generates a CSV report from analytics data and returns a Blob.
+ * Uses UTF-8 BOM and Windows line endings for universal compatibility.
  */
 export const generateCSVReport = (
   data: ReportData,
@@ -35,130 +88,291 @@ export const generateCSVReport = (
   endDate: Date,
   orgName: string
 ): Blob => {
-  let csvContent = `${orgName} Analytics Report\n`;
-  csvContent += `Period: ${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}\n`;
-  csvContent += `Generated: ${format(new Date(), 'MMM d, yyyy HH:mm')}\n\n`;
+  const lines: string[] = [];
+  
+  // Header
+  lines.push(escapeCSV(`${orgName} Analytics Report`));
+  lines.push(createCSVRow(`Period: ${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}`));
+  lines.push(createCSVRow(`Generated: ${format(new Date(), 'MMM d, yyyy HH:mm')}`));
+  lines.push('');
 
   // KPIs Section
   if (config.includeKPIs) {
-    csvContent += 'KEY PERFORMANCE INDICATORS\n';
-    csvContent += 'Metric,Value,Change\n';
-    csvContent += `Total Conversations,${data.totalConversations || 0},${data.conversationsChange || 0}%\n`;
-    csvContent += `Total Leads,${data.totalLeads || 0},${data.leadsChange || 0}%\n`;
-    csvContent += `Conversion Rate,${data.conversionRate || 0}%,${data.conversionChange || 0}%\n`;
-    csvContent += `Total Messages,${data.totalMessages || 0},${data.messagesChange || 0}%\n\n`;
+    lines.push('KEY PERFORMANCE INDICATORS');
+    lines.push(createCSVRow('Metric', 'Value', 'Change'));
+    lines.push(createCSVRow('Total Conversations', data.totalConversations || 0, `${data.conversationsChange || 0}%`));
+    lines.push(createCSVRow('Total Leads', data.totalLeads || 0, `${data.leadsChange || 0}%`));
+    lines.push(createCSVRow('Conversion Rate', `${data.conversionRate || 0}%`, `${data.conversionChange || 0}%`));
+    lines.push(createCSVRow('Total Messages', data.totalMessages || 0, `${data.messagesChange || 0}%`));
+    lines.push('');
   }
 
   // Conversations Data
   if (config.includeConversations && config.includeTables && data.conversationStats) {
-    csvContent += 'CONVERSATION STATISTICS\n';
-    csvContent += 'Date,Total,Active,Closed\n';
+    lines.push('CONVERSATION STATISTICS');
+    lines.push(createCSVRow('Date', 'Total', 'Active', 'Closed'));
     data.conversationStats.forEach((stat: ConversationStat) => {
-      csvContent += `${stat.date},${stat.total},${stat.active},${stat.closed}\n`;
+      lines.push(createCSVRow(stat.date, stat.total, stat.active, stat.closed));
     });
-    csvContent += '\n';
+    lines.push('');
+  }
+
+  // Conversation Funnel (NEW)
+  if (config.includeConversationFunnel && data.conversationFunnel?.length) {
+    lines.push('CONVERSATION FUNNEL');
+    lines.push(createCSVRow('Stage', 'Count', 'Percentage', 'Drop-off'));
+    data.conversationFunnel.forEach((stage) => {
+      lines.push(createCSVRow(
+        stage.name,
+        stage.count,
+        `${stage.percentage.toFixed(1)}%`,
+        `${stage.dropOffPercent.toFixed(1)}%`
+      ));
+    });
+    lines.push('');
+  }
+
+  // Peak Activity Summary (NEW)
+  if (config.includePeakActivity && data.peakActivity) {
+    lines.push('PEAK ACTIVITY SUMMARY');
+    lines.push(createCSVRow('Metric', 'Value'));
+    lines.push(createCSVRow('Peak Day', data.peakActivity.peakDay));
+    lines.push(createCSVRow('Peak Time Block', data.peakActivity.peakTime));
+    lines.push(createCSVRow('Peak Conversations', data.peakActivity.peakValue));
+    lines.push('');
+    
+    // Heatmap data
+    if (data.peakActivity.data?.length) {
+      lines.push('PEAK ACTIVITY HEATMAP');
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const timeBlocks = ['12a-4a', '4a-8a', '8a-12p', '12p-4p', '4p-8p', '8p-12a'];
+      lines.push(createCSVRow('Time Block', ...days));
+      timeBlocks.forEach((block, blockIdx) => {
+        const rowValues = days.map((_, dayIdx) => data.peakActivity!.data[dayIdx]?.[blockIdx] || 0);
+        lines.push(createCSVRow(block, ...rowValues));
+      });
+      lines.push('');
+    }
   }
 
   // Leads Data
   if (config.includeLeads && config.includeTables && data.leadStats) {
-    csvContent += 'LEAD STATISTICS\n';
-    csvContent += 'Date,Total,New,Contacted,Qualified,Converted\n';
+    lines.push('LEAD STATISTICS');
+    lines.push(createCSVRow('Date', 'Total', 'New', 'Contacted', 'Qualified', 'Converted'));
     data.leadStats.forEach((stat: LeadStat) => {
       const newCount = (stat.new as number) || 0;
       const contacted = (stat.contacted as number) || 0;
       const qualified = (stat.qualified as number) || 0;
       const converted = (stat.converted as number) || (stat.won as number) || 0;
-      csvContent += `${stat.date},${stat.total},${newCount},${contacted},${qualified},${converted}\n`;
+      lines.push(createCSVRow(stat.date, stat.total, newCount, contacted, qualified, converted));
     });
-    csvContent += '\n';
+    lines.push('');
+  }
+
+  // Lead Source Breakdown (NEW)
+  if (config.includeLeadSourceBreakdown && data.leadSourceBreakdown?.length) {
+    lines.push('LEAD SOURCE BREAKDOWN');
+    lines.push(createCSVRow('Source', 'Leads', 'Sessions', 'Conversion Rate'));
+    data.leadSourceBreakdown.forEach((source) => {
+      lines.push(createCSVRow(source.source, source.leads, source.sessions, `${source.cvr.toFixed(1)}%`));
+    });
+    lines.push('');
+  }
+
+  // Lead Conversion Trend (NEW)
+  if (config.includeLeadConversionTrend && data.leadConversionTrend?.length) {
+    lines.push('LEAD CONVERSION TREND');
+    // Get all unique stage keys from the first item
+    const firstItem = data.leadConversionTrend[0];
+    const stageKeys = Object.keys(firstItem).filter(k => k !== 'date');
+    lines.push(createCSVRow('Date', ...stageKeys));
+    data.leadConversionTrend.forEach((item) => {
+      const values = stageKeys.map(key => item[key] as number);
+      lines.push(createCSVRow(item.date as string, ...values));
+    });
+    lines.push('');
   }
 
   // Agent Performance
   if (config.includeAgentPerformance && config.includeTables && data.agentPerformance) {
-    csvContent += 'AGENT PERFORMANCE\n';
-    csvContent += 'Agent,Conversations,Avg Response Time,Satisfaction Score\n';
+    lines.push('AGENT PERFORMANCE');
+    lines.push(createCSVRow('Agent', 'Conversations', 'Avg Response Time', 'Satisfaction Score'));
     data.agentPerformance.forEach((agent: AgentPerformance) => {
-      csvContent += `${agent.agent_name},${agent.total_conversations},${agent.avg_response_time},${agent.satisfaction_score}\n`;
+      lines.push(createCSVRow(
+        agent.agent_name,
+        agent.total_conversations,
+        agent.avg_response_time,
+        agent.satisfaction_score
+      ));
     });
-    csvContent += '\n';
+    lines.push('');
   }
 
   // Usage Metrics
   if (config.includeUsageMetrics && config.includeTables && data.usageMetrics) {
-    csvContent += 'USAGE METRICS\n';
-    csvContent += 'Date,Conversations,Messages,API Calls\n';
+    lines.push('USAGE METRICS');
+    lines.push(createCSVRow('Date', 'Conversations', 'Messages', 'API Calls'));
     data.usageMetrics.forEach((metric: UsageMetric) => {
-      csvContent += `${metric.date},${metric.conversations},${metric.messages},${metric.api_calls}\n`;
+      lines.push(createCSVRow(metric.date, metric.conversations, metric.messages, metric.api_calls));
     });
-    csvContent += '\n';
+    lines.push('');
   }
 
   // Booking Statistics
   if (config.includeBookings && config.includeTables && data.bookingStats) {
-    csvContent += 'BOOKING STATISTICS\n';
-    csvContent += 'Location,Total,Confirmed,Cancelled,Completed,No-Show,Show Rate\n';
+    lines.push('BOOKING STATISTICS');
+    lines.push(createCSVRow('Location', 'Total', 'Confirmed', 'Cancelled', 'Completed', 'No-Show', 'Show Rate'));
     data.bookingStats.forEach((stat: BookingStat) => {
-      csvContent += `${stat.location},${stat.total},${stat.confirmed},${stat.cancelled},${stat.completed},${stat.no_show},${stat.show_rate}%\n`;
+      lines.push(createCSVRow(
+        stat.location,
+        stat.total,
+        stat.confirmed,
+        stat.cancelled,
+        stat.completed,
+        stat.no_show,
+        `${stat.show_rate}%`
+      ));
     });
-    csvContent += '\n';
+    lines.push('');
+  }
+
+  // Booking Trend (NEW)
+  if (config.includeBookingTrend && data.bookingTrend?.length) {
+    lines.push('BOOKING TREND');
+    lines.push(createCSVRow('Date', 'Confirmed', 'Completed', 'Cancelled', 'No-Show', 'Total'));
+    data.bookingTrend.forEach((item) => {
+      lines.push(createCSVRow(
+        item.date,
+        item.confirmed,
+        item.completed,
+        item.cancelled,
+        item.noShow,
+        item.total
+      ));
+    });
+    lines.push('');
   }
 
   // Satisfaction Metrics
   if (config.includeSatisfaction && data.satisfactionStats) {
-    csvContent += 'SATISFACTION METRICS\n';
-    csvContent += `Average Rating,${data.satisfactionStats.average_rating.toFixed(1)}\n`;
-    csvContent += `Total Ratings,${data.satisfactionStats.total_ratings}\n`;
+    lines.push('SATISFACTION METRICS');
+    lines.push(createCSVRow('Metric', 'Value'));
+    lines.push(createCSVRow('Average Rating', data.satisfactionStats.average_rating.toFixed(1)));
+    lines.push(createCSVRow('Total Ratings', data.satisfactionStats.total_ratings));
+    lines.push('');
+    
     if (config.includeTables && data.satisfactionStats.distribution) {
-      csvContent += '\nRating Distribution\n';
-      csvContent += 'Rating,Count,Percentage\n';
+      lines.push('RATING DISTRIBUTION');
+      lines.push(createCSVRow('Rating', 'Count', 'Percentage'));
       data.satisfactionStats.distribution.forEach((d) => {
-        csvContent += `${d.rating} Stars,${d.count},${d.percentage}%\n`;
+        lines.push(createCSVRow(`${d.rating} Stars`, d.count, `${d.percentage}%`));
       });
+      lines.push('');
     }
-    csvContent += '\n';
+  }
+
+  // Customer Feedback (NEW)
+  if (config.includeCustomerFeedback && data.recentFeedback?.length) {
+    lines.push('CUSTOMER FEEDBACK');
+    lines.push(createCSVRow('Date', 'Rating', 'Feedback', 'Trigger'));
+    data.recentFeedback.forEach((item) => {
+      lines.push(createCSVRow(
+        format(new Date(item.createdAt), 'MMM d, yyyy'),
+        `${item.rating} Stars`,
+        item.feedback || '',
+        item.triggerType
+      ));
+    });
+    lines.push('');
   }
 
   // AI Performance Metrics
   if (config.includeAIPerformance && data.aiPerformanceStats) {
-    csvContent += 'ARI PERFORMANCE\n';
-    csvContent += `Containment Rate,${data.aiPerformanceStats.containment_rate}%\n`;
-    csvContent += `Resolution Rate,${data.aiPerformanceStats.resolution_rate}%\n`;
-    csvContent += `Ari Handled,${data.aiPerformanceStats.ai_handled}\n`;
-    csvContent += `Human Takeover,${data.aiPerformanceStats.human_takeover}\n`;
-    csvContent += `Total Conversations,${data.aiPerformanceStats.total_conversations}\n\n`;
+    lines.push('ARI PERFORMANCE');
+    lines.push(createCSVRow('Metric', 'Value'));
+    lines.push(createCSVRow('Containment Rate', `${data.aiPerformanceStats.containment_rate}%`));
+    lines.push(createCSVRow('Resolution Rate', `${data.aiPerformanceStats.resolution_rate}%`));
+    lines.push(createCSVRow('Ari Handled', data.aiPerformanceStats.ai_handled));
+    lines.push(createCSVRow('Human Takeover', data.aiPerformanceStats.human_takeover));
+    lines.push(createCSVRow('Total Conversations', data.aiPerformanceStats.total_conversations));
+    lines.push('');
   }
 
   // Traffic Sources
   if (config.includeTrafficSources && config.includeTables && data.trafficSources) {
-    csvContent += 'TRAFFIC SOURCES\n';
-    csvContent += 'Source,Visitors,Percentage\n';
+    lines.push('TRAFFIC SOURCES');
+    lines.push(createCSVRow('Source', 'Visitors', 'Percentage'));
     data.trafficSources.forEach((source: TrafficSourceStat) => {
-      csvContent += `${source.source},${source.visitors},${source.percentage}%\n`;
+      lines.push(createCSVRow(source.source, source.visitors, `${source.percentage}%`));
     });
-    csvContent += '\n';
+    lines.push('');
+  }
+
+  // Traffic Source Trend (NEW)
+  if (config.includeTrafficSourceTrend && data.trafficSourceTrend?.length) {
+    lines.push('TRAFFIC SOURCE TREND');
+    lines.push(createCSVRow('Date', 'Direct', 'Organic', 'Paid', 'Social', 'Email', 'Referral', 'Total'));
+    data.trafficSourceTrend.forEach((item) => {
+      lines.push(createCSVRow(
+        item.date,
+        item.direct,
+        item.organic,
+        item.paid,
+        item.social,
+        item.email,
+        item.referral,
+        item.total
+      ));
+    });
+    lines.push('');
   }
 
   // Top Pages
   if (config.includeTopPages && config.includeTables && data.topPages) {
-    csvContent += 'TOP PAGES\n';
-    csvContent += 'Page,Visits,Bounce Rate,Conversations\n';
+    lines.push('TOP PAGES');
+    lines.push(createCSVRow('Page', 'Visits', 'Bounce Rate', 'Conversations'));
     data.topPages.forEach((page: TopPageStat) => {
-      csvContent += `"${page.page}",${page.visits},${page.bounce_rate}%,${page.conversations}\n`;
+      lines.push(createCSVRow(page.page, page.visits, `${page.bounce_rate}%`, page.conversations));
     });
-    csvContent += '\n';
+    lines.push('');
+  }
+
+  // Page Engagement Metrics (NEW)
+  if (config.includePageEngagement && data.pageEngagement) {
+    lines.push('PAGE ENGAGEMENT METRICS');
+    lines.push(createCSVRow('Metric', 'Value'));
+    lines.push(createCSVRow('Bounce Rate', `${data.pageEngagement.bounceRate.toFixed(1)}%`));
+    lines.push(createCSVRow('Avg Pages/Session', data.pageEngagement.avgPagesPerSession.toFixed(1)));
+    lines.push(createCSVRow('Avg Session Duration', formatDuration(data.pageEngagement.avgSessionDuration)));
+    lines.push(createCSVRow('Total Sessions', data.pageEngagement.totalSessions));
+    lines.push(createCSVRow('Conversion Rate', `${data.pageEngagement.overallCVR.toFixed(1)}%`));
+    lines.push('');
+  }
+
+  // Page Depth Distribution (NEW)
+  if (config.includePageDepth && data.pageDepthDistribution?.length) {
+    lines.push('PAGE DEPTH DISTRIBUTION');
+    lines.push(createCSVRow('Pages Viewed', 'Sessions', 'Percentage'));
+    data.pageDepthDistribution.forEach((item) => {
+      lines.push(createCSVRow(item.depth, item.count, `${item.percentage.toFixed(1)}%`));
+    });
+    lines.push('');
   }
 
   // Visitor Locations
   if (config.includeVisitorLocations && config.includeTables && data.visitorLocations) {
-    csvContent += 'VISITOR LOCATIONS\n';
-    csvContent += 'Country,Visitors,Percentage\n';
+    lines.push('VISITOR LOCATIONS');
+    lines.push(createCSVRow('Country', 'Visitors', 'Percentage'));
     data.visitorLocations.forEach((loc: LocationStat) => {
-      csvContent += `${loc.country},${loc.visitors},${loc.percentage}%\n`;
+      lines.push(createCSVRow(loc.country, loc.visitors, `${loc.percentage}%`));
     });
   }
 
-  // Create and return blob
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // Join lines with Windows line endings (CRLF) for universal compatibility
+  const csvContent = lines.join('\r\n');
+  
+  // Create blob with UTF-8 BOM prefix for Excel/Numbers compatibility
+  const blob = new Blob([UTF8_BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
   return blob;
 };
 

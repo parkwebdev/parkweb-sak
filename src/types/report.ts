@@ -8,6 +8,12 @@
  * @see src/lib/report-export.ts
  */
 
+// Import shared types from analytics to avoid duplication
+import type { FunnelStage } from './analytics';
+
+// Re-export for convenience
+export type { FunnelStage };
+
 /**
  * Daily conversation statistics for reports.
  */
@@ -203,6 +209,121 @@ export interface ReportData {
   topPages?: TopPageStat[];
   /** Visitor locations */
   visitorLocations?: LocationStat[];
+
+  // NEW: Conversation Funnel
+  /** Funnel stages with drop-off percentages */
+  conversationFunnel?: FunnelStage[];
+
+  // NEW: Peak Activity
+  /** Peak activity heatmap data */
+  peakActivity?: {
+    /** 7 days × 6 time blocks matrix */
+    data: number[][];
+    /** Day with highest activity */
+    peakDay: string;
+    /** Time block with highest activity */
+    peakTime: string;
+    /** Highest conversation count */
+    peakValue: number;
+  };
+
+  // NEW: Page Engagement
+  /** Page engagement metrics */
+  pageEngagement?: {
+    /** Bounce rate percentage */
+    bounceRate: number;
+    /** Average pages per session */
+    avgPagesPerSession: number;
+    /** Average session duration in milliseconds */
+    avgSessionDuration: number;
+    /** Total sessions count */
+    totalSessions: number;
+    /** Overall conversion rate */
+    overallCVR: number;
+  };
+
+  // NEW: Lead Source Breakdown
+  /** Leads by traffic source with conversion rates */
+  leadSourceBreakdown?: LeadSourceBreakdown[];
+
+  // NEW: Page Depth Distribution
+  /** Pages viewed per session distribution */
+  pageDepthDistribution?: PageDepthItem[];
+
+  // NEW: Customer Feedback
+  /** Recent feedback items with ratings */
+  recentFeedback?: FeedbackItemReport[];
+
+  // NEW: Trend Data
+  /** Daily booking trend data */
+  bookingTrend?: BookingTrendItem[];
+  /** Daily traffic source breakdown */
+  trafficSourceTrend?: TrafficSourceTrendItem[];
+  /** Daily lead conversion by stage */
+  leadConversionTrend?: LeadConversionTrendItem[];
+}
+
+/**
+ * Lead source breakdown item.
+ */
+export interface LeadSourceBreakdown {
+  source: string;
+  leads: number;
+  sessions: number;
+  cvr: number;
+}
+
+/**
+ * Page depth distribution item.
+ */
+export interface PageDepthItem {
+  depth: string;
+  count: number;
+  percentage: number;
+}
+
+/**
+ * Feedback item for reports.
+ */
+export interface FeedbackItemReport {
+  rating: number;
+  feedback: string | null;
+  createdAt: string;
+  triggerType: string;
+}
+
+/**
+ * Booking trend item.
+ */
+export interface BookingTrendItem {
+  date: string;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  noShow: number;
+  total: number;
+}
+
+/**
+ * Traffic source trend item.
+ */
+export interface TrafficSourceTrendItem {
+  date: string;
+  direct: number;
+  organic: number;
+  paid: number;
+  social: number;
+  email: number;
+  referral: number;
+  total: number;
+}
+
+/**
+ * Lead conversion trend item with dynamic stage columns.
+ */
+export interface LeadConversionTrendItem {
+  date: string;
+  [stageName: string]: number | string;
 }
 
 /**

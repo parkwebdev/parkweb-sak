@@ -41,14 +41,24 @@ export interface ReportConfig {
   includeConversations: boolean;
   includeLeads: boolean;
   includeUsageMetrics: boolean;
+  includeConversationFunnel: boolean;
+  includePeakActivity: boolean;
   // Business Outcomes
   includeBookings: boolean;
+  includeBookingTrend: boolean;
   includeSatisfaction: boolean;
+  includeCustomerFeedback: boolean;
   includeAIPerformance: boolean;
   // Traffic Analytics
   includeTrafficSources: boolean;
+  includeTrafficSourceTrend: boolean;
   includeTopPages: boolean;
+  includePageEngagement: boolean;
+  includePageDepth: boolean;
   includeVisitorLocations: boolean;
+  // Leads Analytics
+  includeLeadSourceBreakdown: boolean;
+  includeLeadConversionTrend: boolean;
   // Agent Data
   includeAgentPerformance: boolean;
   // Grouping & Export Options
@@ -222,9 +232,36 @@ export const BuildReportSheet = ({
   };
 
   // Count selected items per category
-  const coreMetricsCount = [config.includeConversations, config.includeLeads, config.includeUsageMetrics].filter(Boolean).length;
-  const businessOutcomesCount = [config.includeBookings, config.includeSatisfaction, config.includeAIPerformance].filter(Boolean).length;
-  const trafficCount = [config.includeTrafficSources, config.includeTopPages, config.includeVisitorLocations].filter(Boolean).length;
+  const coreMetricsCount = [
+    config.includeConversations, 
+    config.includeLeads, 
+    config.includeUsageMetrics,
+    config.includeConversationFunnel,
+    config.includePeakActivity
+  ].filter(Boolean).length;
+  
+  const businessOutcomesCount = [
+    config.includeBookings, 
+    config.includeBookingTrend,
+    config.includeSatisfaction, 
+    config.includeCustomerFeedback,
+    config.includeAIPerformance
+  ].filter(Boolean).length;
+  
+  const trafficCount = [
+    config.includeTrafficSources, 
+    config.includeTrafficSourceTrend,
+    config.includeTopPages, 
+    config.includePageEngagement,
+    config.includePageDepth,
+    config.includeVisitorLocations
+  ].filter(Boolean).length;
+  
+  const leadsAnalyticsCount = [
+    config.includeLeadSourceBreakdown,
+    config.includeLeadConversionTrend
+  ].filter(Boolean).length;
+  
   const agentDataCount = config.includeAgentPerformance ? 1 : 0;
   const exportOptionsCount = [config.includeKPIs, config.includeCharts, config.includeTables].filter(Boolean).length;
 
@@ -388,6 +425,22 @@ export const BuildReportSheet = ({
                         </div>
                         <div className="flex items-center gap-3">
                           <Checkbox
+                            id="conversationFunnel"
+                            checked={config.includeConversationFunnel}
+                            onCheckedChange={(checked) => updateConfig('includeConversationFunnel', !!checked)}
+                          />
+                          <Label htmlFor="conversationFunnel" className="text-sm font-normal cursor-pointer">Conversation Funnel</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="peakActivity"
+                            checked={config.includePeakActivity}
+                            onCheckedChange={(checked) => updateConfig('includePeakActivity', !!checked)}
+                          />
+                          <Label htmlFor="peakActivity" className="text-sm font-normal cursor-pointer">Peak Activity Heatmap</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
                             id="leads"
                             checked={config.includeLeads}
                             onCheckedChange={(checked) => updateConfig('includeLeads', !!checked)}
@@ -422,7 +475,15 @@ export const BuildReportSheet = ({
                             checked={config.includeBookings}
                             onCheckedChange={(checked) => updateConfig('includeBookings', !!checked)}
                           />
-                          <Label htmlFor="bookings" className="text-sm font-normal cursor-pointer">Bookings</Label>
+                          <Label htmlFor="bookings" className="text-sm font-normal cursor-pointer">Bookings by Location</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="bookingTrend"
+                            checked={config.includeBookingTrend}
+                            onCheckedChange={(checked) => updateConfig('includeBookingTrend', !!checked)}
+                          />
+                          <Label htmlFor="bookingTrend" className="text-sm font-normal cursor-pointer">Booking Trend</Label>
                         </div>
                         <div className="flex items-center gap-3">
                           <Checkbox
@@ -430,7 +491,15 @@ export const BuildReportSheet = ({
                             checked={config.includeSatisfaction}
                             onCheckedChange={(checked) => updateConfig('includeSatisfaction', !!checked)}
                           />
-                          <Label htmlFor="satisfaction" className="text-sm font-normal cursor-pointer">Satisfaction</Label>
+                          <Label htmlFor="satisfaction" className="text-sm font-normal cursor-pointer">Satisfaction Ratings</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="customerFeedback"
+                            checked={config.includeCustomerFeedback}
+                            onCheckedChange={(checked) => updateConfig('includeCustomerFeedback', !!checked)}
+                          />
+                          <Label htmlFor="customerFeedback" className="text-sm font-normal cursor-pointer">Customer Feedback</Label>
                         </div>
                         <div className="flex items-center gap-3">
                           <Checkbox
@@ -464,6 +533,14 @@ export const BuildReportSheet = ({
                         </div>
                         <div className="flex items-center gap-3">
                           <Checkbox
+                            id="trafficSourceTrend"
+                            checked={config.includeTrafficSourceTrend}
+                            onCheckedChange={(checked) => updateConfig('includeTrafficSourceTrend', !!checked)}
+                          />
+                          <Label htmlFor="trafficSourceTrend" className="text-sm font-normal cursor-pointer">Traffic Source Trend</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
                             id="topPages"
                             checked={config.includeTopPages}
                             onCheckedChange={(checked) => updateConfig('includeTopPages', !!checked)}
@@ -472,11 +549,57 @@ export const BuildReportSheet = ({
                         </div>
                         <div className="flex items-center gap-3">
                           <Checkbox
+                            id="pageEngagement"
+                            checked={config.includePageEngagement}
+                            onCheckedChange={(checked) => updateConfig('includePageEngagement', !!checked)}
+                          />
+                          <Label htmlFor="pageEngagement" className="text-sm font-normal cursor-pointer">Page Engagement Metrics</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="pageDepth"
+                            checked={config.includePageDepth}
+                            onCheckedChange={(checked) => updateConfig('includePageDepth', !!checked)}
+                          />
+                          <Label htmlFor="pageDepth" className="text-sm font-normal cursor-pointer">Page Depth Distribution</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
                             id="visitorLocations"
                             checked={config.includeVisitorLocations}
                             onCheckedChange={(checked) => updateConfig('includeVisitorLocations', !!checked)}
                           />
                           <Label htmlFor="visitorLocations" className="text-sm font-normal cursor-pointer">Visitor Locations</Label>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Leads Analytics */}
+                  <AccordionItem value="leads-analytics" className="border-b-0">
+                    <AccordionTrigger className="py-3 hover:no-underline">
+                      <div className="flex items-center gap-2">
+                        <span>Leads Analytics</span>
+                        <span className="text-xs text-muted-foreground">({leadsAnalyticsCount} selected)</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-3">
+                      <div className="space-y-3 pl-1">
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="leadSourceBreakdown"
+                            checked={config.includeLeadSourceBreakdown}
+                            onCheckedChange={(checked) => updateConfig('includeLeadSourceBreakdown', !!checked)}
+                          />
+                          <Label htmlFor="leadSourceBreakdown" className="text-sm font-normal cursor-pointer">Lead Source Breakdown</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="leadConversionTrend"
+                            checked={config.includeLeadConversionTrend}
+                            onCheckedChange={(checked) => updateConfig('includeLeadConversionTrend', !!checked)}
+                          />
+                          <Label htmlFor="leadConversionTrend" className="text-sm font-normal cursor-pointer">Lead Conversion Trend</Label>
                         </div>
                       </div>
                     </AccordionContent>

@@ -47,14 +47,24 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   includeConversations: true,
   includeLeads: true,
   includeUsageMetrics: true,
+  includeConversationFunnel: true,
+  includePeakActivity: true,
   // Business Outcomes
   includeBookings: true,
+  includeBookingTrend: true,
   includeSatisfaction: true,
+  includeCustomerFeedback: true,
   includeAIPerformance: true,
   // Traffic Analytics
   includeTrafficSources: true,
+  includeTrafficSourceTrend: true,
   includeTopPages: true,
+  includePageEngagement: true,
+  includePageDepth: true,
   includeVisitorLocations: true,
+  // Leads Analytics
+  includeLeadSourceBreakdown: true,
+  includeLeadConversionTrend: true,
   // Agent Data
   includeAgentPerformance: true,
   // Options
