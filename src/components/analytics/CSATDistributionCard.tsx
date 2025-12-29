@@ -99,7 +99,6 @@ export const CSATDistributionCard = React.memo(function CSATDistributionCard({
       <CardContent className="pt-6">
         <ChartCardHeader
           title="CSAT Distribution"
-          contextSummary={`${totalRatings.toLocaleString()} total rating${totalRatings !== 1 ? 's' : ''}`}
           rightSlot={
             <div className="flex items-center gap-1.5">
               <Star01 size={16} className="text-yellow-500 fill-yellow-500" aria-hidden="true" />
@@ -152,7 +151,7 @@ export const CSATDistributionCard = React.memo(function CSATDistributionCard({
                       </p>
                     </div>
                   </TooltipContent>
-                </Tooltip>
+              </Tooltip>
 
                 {/* Percentage */}
                 <span className="text-sm text-muted-foreground w-14 text-right tabular-nums shrink-0 group-hover:text-foreground transition-colors">
@@ -162,6 +161,11 @@ export const CSATDistributionCard = React.memo(function CSATDistributionCard({
             );
           })}
         </div>
+
+        {/* Footer context summary */}
+        <p className="mt-4 text-xs text-muted-foreground">
+          {totalRatings.toLocaleString()} total rating{totalRatings !== 1 ? 's' : ''} • {averageRating.toFixed(1)} average
+        </p>
       </CardContent>
     </Card>
   );

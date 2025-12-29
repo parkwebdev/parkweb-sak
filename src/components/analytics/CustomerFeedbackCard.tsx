@@ -57,7 +57,6 @@ export const CustomerFeedbackCard = React.memo(function CustomerFeedbackCard({ d
       <CardContent className="pt-6">
         <ChartCardHeader
           title="Customer Feedback"
-          contextSummary="Recent feedback from customer ratings"
         />
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -78,6 +77,9 @@ export const CustomerFeedbackCard = React.memo(function CustomerFeedbackCard({ d
               emptyMessage="No feedback found"
             />
             {tableData.length > 10 && <DataTablePagination table={table} />}
+            <p className="text-xs text-muted-foreground">
+              {tableData.length.toLocaleString()} feedback {tableData.length === 1 ? 'response' : 'responses'} from customer ratings
+            </p>
           </div>
         )}
       </CardContent>

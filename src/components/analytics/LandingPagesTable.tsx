@@ -57,7 +57,6 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
         <CardContent className="pt-6">
           <ChartCardHeader
             title="Top Landing Pages"
-            contextSummary="Pages where visitors start their journey"
           />
           <SkeletonTableSection rows={6} />
         </CardContent>
@@ -70,7 +69,6 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
       <CardContent className="pt-6">
         <ChartCardHeader
           title="Top Landing Pages"
-          contextSummary={contextSummary || "Pages where visitors start their journey"}
           rightSlot={
             data.length > 0 ? (
               <div className="w-64">
@@ -99,6 +97,10 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
               pageSizeOptions={[10, 25, 50]}
               showRowsPerPage={true}
             />
+            {/* Footer context summary */}
+            <p className="text-xs text-muted-foreground">
+              {contextSummary || "Pages where visitors start their journey"}
+            </p>
           </>
         )}
       </CardContent>

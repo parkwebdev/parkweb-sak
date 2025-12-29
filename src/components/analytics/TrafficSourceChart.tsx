@@ -135,10 +135,6 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
           trendValue={hasTrendData ? trendPercentage : undefined}
           trendLabel="Traffic"
           trendPeriod="this period"
-          contextSummary={hasTrendData 
-            ? `${total.toLocaleString()} conversations, ${previousTotal.toLocaleString()} last period`
-            : `${total.toLocaleString()} total across ${sortedData.length} sources`
-          }
         />
 
         <div className="space-y-3">
@@ -209,10 +205,18 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
                     </span>
                   </div>
                 )}
-              </div>
+            </div>
             );
           })}
         </div>
+
+        {/* Footer context summary */}
+        <p className="mt-4 text-xs text-muted-foreground">
+          {hasTrendData 
+            ? `${total.toLocaleString()} conversations, ${previousTotal.toLocaleString()} last period`
+            : `${total.toLocaleString()} conversations across ${sortedData.length} sources`
+          }
+        </p>
       </CardContent>
     </Card>
   );
