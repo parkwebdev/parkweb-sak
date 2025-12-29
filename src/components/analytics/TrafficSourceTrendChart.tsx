@@ -10,6 +10,7 @@ import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartCardHeader } from './ChartCardHeader';
+import { ChartTooltipContent } from '@/components/charts/charts-base';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import {
@@ -20,7 +21,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import type { DailySourceData } from '@/hooks/useTrafficAnalytics';
 
@@ -187,13 +187,12 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
                 width={40}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
+                content={<ChartTooltipContent />}
+                cursor={{
+                  stroke: 'hsl(var(--primary))',
+                  strokeWidth: 1,
+                  strokeDasharray: '4 4',
                 }}
-                labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
               />
               {activeSources.map(source => (
                 <Area
