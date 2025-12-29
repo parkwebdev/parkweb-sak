@@ -198,7 +198,7 @@ export const LeadSourceBreakdownCard = React.memo(function LeadSourceBreakdownCa
         </div>
 
         {/* Footer summary */}
-        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="mt-4 px-3 py-2 bg-muted/50 rounded-md flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {totalLeads.toLocaleString()} leads from {totalSessions.toLocaleString()} sessions ({overallCVR.toFixed(1)}% CVR)
           </span>

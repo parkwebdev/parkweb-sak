@@ -79,9 +79,11 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
         />
         
         {/* Context summary footer */}
-        <p className="mt-4 text-xs text-muted-foreground">
-          Showing {totalLeads.toLocaleString()} leads across {stages.length} stages
-        </p>
+        <div className="mt-4 px-3 py-2 bg-muted/50 rounded-md">
+          <p className="text-xs text-muted-foreground">
+            Showing {totalLeads.toLocaleString()} leads across {stages.length} stages
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

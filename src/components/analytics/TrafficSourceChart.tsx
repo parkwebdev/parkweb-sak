@@ -220,7 +220,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
         </div>
 
         {/* Footer context summary with CVR */}
-        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="mt-4 px-3 py-2 bg-muted/50 rounded-md flex items-center justify-between text-xs text-muted-foreground">
           <span>
             {hasTrendData 
               ? `${total.toLocaleString()} conversations, ${previousTotal.toLocaleString()} last period`
