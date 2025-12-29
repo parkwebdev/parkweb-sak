@@ -719,29 +719,6 @@ function Analytics() {
           {/* AI Performance Section */}
           {activeTab === 'ai-performance' && (
             <div className="space-y-6">
-              {/* KPI Cards */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
-                <MetricCardWithChart 
-                  title={avgSatisfaction.toFixed(1)} 
-                  subtitle="Avg Satisfaction" 
-                  description="User ratings out of 5 stars" 
-                  change={calculatePointChange(satisfactionTrend)} 
-                  changeType="points" 
-                  changeLabel="vs last period" 
-                  chartData={generateChartData(satisfactionTrend)} 
-                  animationDelay={0} 
-                />
-                <MetricCardWithChart 
-                  title={`${containmentRate.toFixed(0)}%`} 
-                  subtitle="AI Containment" 
-                  description="Chats resolved without human help" 
-                  change={calculatePointChange(containmentTrend)} 
-                  changeType="points" 
-                  changeLabel="vs last period" 
-                  chartData={generateChartData(containmentTrend)} 
-                  animationDelay={0.05} 
-                />
-              </div>
               
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} trendValue={aiContainmentTrendValue} trendPeriod="this month" /></AnimatedItem>
