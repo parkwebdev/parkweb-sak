@@ -6,7 +6,7 @@
  * @module components/charts/StackedAreaChartCard
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   AreaChart,
   Area,
@@ -53,6 +53,27 @@ export function StackedAreaChartCard({
   const [animationId, setAnimationId] = useState(0);
   const prefersReducedMotion = useReducedMotion();
 
+  // Keep Areas mounted to avoid the left-to-right "entrance" animation.
+  // Instead, drive the hide/show behavior by animating values to/from 0.
+  const transformedData = useMemo(() => {
+    if (hiddenSeries.size === 0) return data;
+
+    return data.map((point) => {
+      const nextPoint: Record<string, unknown> = { ...point };
+      hiddenSeries.forEach((seriesKey) => {
+        const value = nextPoint[seriesKey];
+        // Preserve non-numeric values (e.g. formattedDate) and coerce numeric series to 0.
+        if (typeof value === 'number') {
+          nextPoint[seriesKey] = 0;
+        } else {
+          // If the series value isn't a number (or missing), still force to 0 so the stack collapses.
+          nextPoint[seriesKey] = 0;
+        }
+      });
+      return nextPoint;
+    });
+  }, [data, hiddenSeries]);
+
   const toggleSeries = useCallback((seriesKey: string) => {
     setHiddenSeries(prev => {
       const next = new Set(prev);
@@ -97,7 +118,7 @@ export function StackedAreaChartCard({
       <div className={cn("h-[350px] w-full", className)}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
-            data={data}
+            data={transformedData}
             className="text-muted-foreground [&_.recharts-text]:text-xs"
             margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
           >
@@ -158,7 +179,6 @@ export function StackedAreaChartCard({
                 stroke={color}
                 strokeWidth={2}
                 fill={`url(#gradient-${gradientIdPrefix}-${key})`}
-                hide={hiddenSeries.has(key)}
                 isAnimationActive={!prefersReducedMotion}
                 animationId={animationId}
                 animationDuration={800}
