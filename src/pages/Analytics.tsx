@@ -17,7 +17,7 @@ import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildRepo
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { ReportChartRenderer } from '@/components/analytics/ReportChartRenderer';
 import { generateCSVReport } from '@/lib/report-export';
-import { generateBeautifulPDF } from '@/lib/report-pdf-generator';
+import { generateBeautifulPDF } from '@/lib/pdf-generator';
 import { buildAnalyticsExportData } from '@/lib/analytics-export-data';
 import { calculatePeakActivityData } from '@/lib/peak-activity-utils';
 import { SECTION_INFO, TOOLBAR_SECTIONS, DEFAULT_REPORT_CONFIG } from '@/lib/analytics-constants';
@@ -26,6 +26,7 @@ import { subDays, format } from 'date-fns';
 import { logger } from '@/utils/logger';
 import { downloadFile } from '@/lib/file-download';
 import type { ChartImage, CaptureProgress } from '@/lib/pdf-chart-capture';
+import type { ChartImageData } from '@/lib/pdf-generator';
 
 import {
   ConversationsSection,
