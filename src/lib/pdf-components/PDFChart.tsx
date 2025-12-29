@@ -32,11 +32,16 @@ interface PDFChartProps {
 
 export function PDFChart({ svgString, imageDataUrl, maxHeight = 200 }: PDFChartProps) {
   if (svgString) {
-    return (
-      <View style={chartStyles.container}>
-        <SvgFromString svgString={svgString} maxHeight={maxHeight} />
-      </View>
-    );
+    const svgElement = <SvgFromString svgString={svgString} maxHeight={maxHeight} />;
+    // If SVG parsing failed, SvgFromString returns null
+    if (svgElement) {
+      return (
+        <View style={chartStyles.container}>
+          {svgElement}
+        </View>
+      );
+    }
+    // Fall through to placeholder if SVG failed
   }
 
   if (imageDataUrl) {
@@ -47,7 +52,8 @@ export function PDFChart({ svgString, imageDataUrl, maxHeight = 200 }: PDFChartP
     );
   }
 
-  return null;
+  // Return placeholder when no valid chart data
+  return <PDFChartPlaceholder title="Chart" />;
 }
 
 /**
