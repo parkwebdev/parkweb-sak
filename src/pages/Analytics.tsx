@@ -25,7 +25,7 @@ import { toast } from '@/lib/toast';
 import { subDays, format } from 'date-fns';
 import { logger } from '@/utils/logger';
 import { downloadFile } from '@/lib/file-download';
-import type { ChartImage, CaptureProgress } from '@/lib/pdf-chart-capture';
+import type { ExtractProgress, SvgChartData } from '@/lib/pdf-chart-extract';
 import type { ChartImageData } from '@/lib/pdf-generator';
 
 import {
@@ -50,7 +50,7 @@ function Analytics() {
   
   // === Chart Capture State (for PDF generation) ===
   const [isCapturingCharts, setIsCapturingCharts] = useState(false);
-  const [captureProgress, setCaptureProgress] = useState<CaptureProgress | null>(null);
+  const [captureProgress, setCaptureProgress] = useState<ExtractProgress | null>(null);
   const [pendingExport, setPendingExport] = useState<{ startDate: Date; endDate: Date } | null>(null);
 
   // === Date State ===
@@ -325,7 +325,7 @@ function Analytics() {
   }), [data]);
 
   // Handle chart capture completion
-  const handleChartCapture = useCallback(async (charts: Map<string, ChartImage>) => {
+  const handleChartCapture = useCallback(async (charts: Map<string, SvgChartData>) => {
     if (!pendingExport) return;
     
     setIsCapturingCharts(false);
@@ -334,14 +334,26 @@ function Analytics() {
     try {
       const { startDate: exportStartDate, endDate: exportEndDate } = pendingExport;
       const reportName = `${reportConfig.type === 'summary' ? 'Summary' : reportConfig.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(exportStartDate, 'MMM d')} to ${format(exportEndDate, 'MMM d, yyyy')}`;
-      
+
+      const chartMap: Map<string, ChartImageData> = new Map(
+        Array.from(charts.entries()).map(([id, c]) => [
+          id,
+          {
+            id,
+            svgString: c.svgString,
+            width: c.width,
+            height: c.height,
+          },
+        ])
+      );
+
       const blob = await generateBeautifulPDF({
         data: buildPDFData(),
         config: reportConfig,
         startDate: exportStartDate,
         endDate: exportEndDate,
         orgName: user?.email || 'User',
-        charts,
+        charts: chartMap,
       });
       
       await createExport({
@@ -366,7 +378,7 @@ function Analytics() {
     }
   }, [pendingExport, reportConfig, user?.email, createExport, buildPDFData]);
 
-  const handleCaptureProgress = useCallback((p: CaptureProgress) => {
+  const handleCaptureProgress = useCallback((p: ExtractProgress) => {
     setCaptureProgress(p);
   }, []);
 

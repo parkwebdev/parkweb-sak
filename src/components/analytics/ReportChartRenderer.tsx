@@ -5,11 +5,11 @@
  * Uses direct imports (not lazy) for faster initial render.
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { format, parseISO } from 'date-fns';
-import { captureChartsFromContainer, waitForRender, preloadHtml2Canvas } from '@/lib/pdf-chart-capture';
-import type { ChartImage, CaptureProgress } from '@/lib/pdf-chart-capture';
+import { extractChartsFromContainer, waitForRender } from '@/lib/pdf-chart-extract';
+import type { SvgChartData, ExtractProgress } from '@/lib/pdf-chart-extract';
 
 // Direct imports for faster rendering (no lazy loading overhead)
 import { ConversationChart } from './ConversationChart';
@@ -60,8 +60,8 @@ interface ChartData {
 interface Props {
   data: ChartData;
   config: ChartConfig;
-  onCapture: (charts: Map<string, ChartImage>) => void;
-  onProgress?: (p: CaptureProgress) => void;
+  onCapture: (charts: Map<string, SvgChartData>) => void;
+  onProgress?: (p: ExtractProgress) => void;
   onError?: (err: Error) => void;
 }
 
@@ -90,10 +90,8 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
     onErrorRef.current = onError;
   });
 
-  // Pre-load html2canvas on mount
-  useEffect(() => {
-    preloadHtml2Canvas();
-  }, []);
+  // No external preloading needed for SVG extraction
+
 
   // Create hidden portal container
   useEffect(() => {
@@ -115,7 +113,7 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
       
       try {
         await waitForRender(300);
-        const charts = await captureChartsFromContainer(containerRef.current, onProgressRef.current);
+        const charts = await extractChartsFromContainer(containerRef.current, onProgressRef.current);
         onCaptureRef.current(charts);
       } catch (err) {
         onErrorRef.current?.(err instanceof Error ? err : new Error('Capture failed'));
