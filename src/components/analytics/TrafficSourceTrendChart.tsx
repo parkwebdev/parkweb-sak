@@ -13,6 +13,7 @@ import { ChartCardHeader } from './ChartCardHeader';
 import { ChartTooltipContent } from '@/components/charts/charts-base';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import {
   AreaChart,
   Area,
@@ -53,6 +54,7 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
   loading,
 }: TrafficSourceTrendChartProps) {
   const [hiddenSources, setHiddenSources] = useState<Set<string>>(new Set());
+  const prefersReducedMotion = useReducedMotion();
 
   // Calculate totals and trend
   const { totalSessions, trendPercentage, activeSources } = useMemo(() => {
@@ -100,7 +102,7 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
             <Skeleton className="h-5 w-48 mb-1" />
             <Skeleton className="h-4 w-64" />
           </div>
-          <Skeleton className="h-[280px] w-full" />
+          <Skeleton className="h-[350px] w-full" />
         </CardContent>
       </Card>
     );
@@ -114,7 +116,7 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
             title="Traffic Trend"
             contextSummary="No traffic data available for the selected period"
           />
-          <div className="h-[280px] flex items-center justify-center text-muted-foreground text-sm">
+          <div className="h-[350px] flex items-center justify-center text-muted-foreground text-sm">
             Traffic trend data will appear once conversations are recorded
           </div>
         </CardContent>
@@ -125,7 +127,7 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
   // Format data for chart
   const chartData = data.map(d => ({
     ...d,
-    date: format(parseISO(d.date), 'MMM d'),
+    formattedDate: format(parseISO(d.date), 'MMM d'),
   }));
 
   return (
@@ -138,73 +140,96 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
           trendPeriod="this period"
         />
 
-        {/* Legend with toggle */}
-        <div className="flex flex-wrap gap-3 mb-4">
+        {/* Clickable legend chips above chart */}
+        <div className="flex flex-wrap gap-2 mt-2 mb-4">
           {activeSources.map(source => (
             <button
               key={source}
               onClick={() => toggleSource(source)}
               className={cn(
                 "flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-all",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 hiddenSources.has(source)
                   ? "opacity-40 bg-muted"
                   : "bg-muted/50 hover:bg-muted"
               )}
             >
               <span
-                className="w-2.5 h-2.5 rounded-full"
+                className="h-2 w-2 rounded-full shrink-0"
                 style={{ backgroundColor: SOURCE_COLORS[source] }}
               />
-              <span className="capitalize">{SOURCE_LABELS[source]}</span>
+              <span>{SOURCE_LABELS[source]}</span>
             </button>
           ))}
         </div>
 
-        <div className="h-[280px]">
+        <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart
+              data={chartData}
+              className="text-muted-foreground [&_.recharts-text]:text-xs"
+              margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
+            >
               <defs>
                 {activeSources.map(source => (
-                  <linearGradient key={source} id={`gradient-${source}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient key={source} id={`gradient-traffic-${source}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={SOURCE_COLORS[source]} stopOpacity={0.4} />
                     <stop offset="95%" stopColor={SOURCE_COLORS[source]} stopOpacity={0.05} />
                   </linearGradient>
                 ))}
               </defs>
+
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+
               <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11 }}
-                tickLine={false}
+                dataKey="formattedDate"
                 axisLine={false}
-                className="text-muted-foreground"
+                tickLine={false}
+                interval="preserveStartEnd"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                padding={{ left: 10, right: 10 }}
               />
+
               <YAxis
-                tick={{ fontSize: 11 }}
-                tickLine={false}
                 axisLine={false}
-                className="text-muted-foreground"
+                tickLine={false}
+                interval="preserveStartEnd"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                tickFormatter={(value) => Number(value).toLocaleString()}
                 width={40}
               />
+
               <Tooltip
                 content={<ChartTooltipContent />}
+                formatter={(value) => Number(value).toLocaleString()}
+                labelFormatter={(label) => String(label)}
                 cursor={{
                   stroke: 'hsl(var(--primary))',
                   strokeWidth: 1,
                   strokeDasharray: '4 4',
                 }}
               />
+
               {activeSources.map(source => (
                 <Area
                   key={source}
-                  type="monotone"
                   dataKey={source}
                   name={SOURCE_LABELS[source]}
                   stackId="1"
+                  type="monotone"
                   stroke={SOURCE_COLORS[source]}
-                  fill={`url(#gradient-${source})`}
                   strokeWidth={2}
+                  fill={`url(#gradient-traffic-${source})`}
                   hide={hiddenSources.has(source)}
+                  isAnimationActive={!prefersReducedMotion}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                  activeDot={{
+                    r: 5,
+                    fill: 'hsl(var(--background))',
+                    stroke: SOURCE_COLORS[source],
+                    strokeWidth: 2,
+                  }}
                 />
               ))}
             </AreaChart>
