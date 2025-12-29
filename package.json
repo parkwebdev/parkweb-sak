@@ -52,6 +52,7 @@
     "cmdk": "^1.1.1",
     "color": "^5.0.3",
     "date-fns": "^3.6.0",
+    "html2canvas": "^1.4.1",
     "isomorphic-dompurify": "^2.26.0",
     "jspdf": "^3.0.2",
     "jspdf-autotable": "^5.0.2",
