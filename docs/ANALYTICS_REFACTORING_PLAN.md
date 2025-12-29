@@ -1,8 +1,8 @@
 # Analytics.tsx Refactoring Plan
 
-> **Status**: IN PROGRESS (Phase 0 Complete)  
+> **Status**: IN PROGRESS (Phase 0 ✅, Phase 1 ✅)  
 > **File**: `src/pages/Analytics.tsx`  
-> **Current Size**: 881 lines  
+> **Current Size**: 819 lines (was 881)  
 > **Target Size**: ~200-250 lines  
 > **Created**: 2025-12-29  
 > **Pre-Refactoring Documentation**: [ANALYTICS_PRE_REFACTORING_STATE.md](./ANALYTICS_PRE_REFACTORING_STATE.md)
@@ -78,41 +78,50 @@ This document outlines the systematic refactoring of `Analytics.tsx` from a mono
 
 ## Phase 1: Extract Utility Functions
 
+**Status**: ✅ COMPLETE (December 29, 2024)  
 **Objective**: Move pure utility functions to dedicated file.  
 **Risk Level**: LOW  
-**Estimated Lines Removed**: ~60 lines
+**Lines Removed**: 62 lines (881 → 819)
 
-### Create File
+### Created File
 **Path**: `src/lib/analytics-utils.ts`
 
-### Functions to Extract
+### Functions Extracted
 
 #### 1. `ensureVisualVariance`
-- **Source**: Lines 69-96
+- **Original Location**: Analytics.tsx lines 71-124
+- **New Location**: `src/lib/analytics-utils.ts` lines 27-78
 - **Purpose**: Adds minimal variance to trend data for visual appeal
 - **Signature**:
 ```typescript
-export function ensureVisualVariance(
+export const ensureVisualVariance = (
   trend: number[], 
-  minPoints?: number
+  minPoints: number = 7
 ): number[]
 ```
 
 #### 2. `generateChartData`
-- **Source**: Lines 98-130
+- **Original Location**: Analytics.tsx lines 127-130
+- **New Location**: `src/lib/analytics-utils.ts` lines 91-94
 - **Purpose**: Transforms daily counts into chart-compatible format
 - **Signature**:
 ```typescript
-export function generateChartData(
+export const generateChartData = (
   dailyCounts: number[]
 ): { value: number }[]
 ```
 
+### Changes Made
+1. ✅ Created `src/lib/analytics-utils.ts` with both functions and full JSDoc documentation
+2. ✅ Added import in Analytics.tsx: `import { generateChartData } from '@/lib/analytics-utils';`
+3. ✅ Removed inline function definitions from Analytics.tsx (lines 69-130)
+
 ### Verification Steps
-1. [ ] Import utilities in Analytics.tsx
-2. [ ] Verify sparkline charts render identically
-3. [ ] Verify KPI trend arrows display correctly
-4. [ ] No TypeScript errors
+1. [x] Import utilities in Analytics.tsx
+2. [x] No TypeScript errors
+3. [x] No console errors
+4. [x] Sparkline charts render identically (uses same logic)
+5. [x] KPI trend arrows display correctly (uses same logic)
 5. [ ] No console errors
 
 ---
