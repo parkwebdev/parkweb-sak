@@ -328,7 +328,7 @@ export default function PDFTestPage() {
   ];
 
   return (
-    <div className="flex h-full min-h-0 bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Controls Sidebar */}
       <div className="w-80 h-full min-h-0 overflow-hidden border-r border-border flex flex-col">
         <div className="p-4 border-b border-border flex-shrink-0">
@@ -429,7 +429,7 @@ export default function PDFTestPage() {
       </div>
 
       {/* PDF Preview */}
-      <div className="flex-1 h-full min-h-0 overflow-hidden flex flex-col bg-muted/50">
+      <div className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col bg-muted/50">
         {isGenerating && (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-muted-foreground">
