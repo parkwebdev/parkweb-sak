@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { TrendDown01, MessageChatCircle } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import type { FunnelStage } from '@/hooks/useConversationFunnel';
+import type { FunnelStage } from '@/types/analytics';
 import { ChartCardHeader } from './ChartCardHeader';
 
 interface ConversationFunnelCardProps {

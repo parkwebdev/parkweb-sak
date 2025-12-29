@@ -28,9 +28,21 @@ const COLORS = [
   'hsl(200, 100%, 80%)',
 ];
 
+// Props for Treemap custom content - using intersection with recharts internal types
+type TreemapCellProps = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  name?: string;
+  bookings?: number;
+  index?: number;
+  colors?: string[];
+};
+
 // Custom content renderer for Treemap cells
-const TreemapCell = (props: any) => {
-  const { x, y, width, height, name, bookings, index, colors } = props;
+const TreemapCell: React.FC<TreemapCellProps> = (props) => {
+  const { x = 0, y = 0, width = 0, height = 0, name, bookings, index, colors } = props;
   
   // Skip rendering if missing required props or tiny cells
   if (!name || !colors || width < 4 || height < 4) return null;

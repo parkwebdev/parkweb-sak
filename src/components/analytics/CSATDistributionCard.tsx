@@ -14,12 +14,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Star01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-
-interface RatingDistribution {
-  rating: number;
-  count: number;
-  percentage: number;
-}
+import type { RatingDistribution } from '@/types/analytics';
+import { ChartCardHeader } from './ChartCardHeader';
 
 interface CSATDistributionCardProps {
   distribution: RatingDistribution[];
@@ -83,14 +79,12 @@ export const CSATDistributionCard = React.memo(function CSATDistributionCard({
     return (
       <Card className={cn("h-full", className)}>
         <CardContent className="pt-6">
-          <div className="mb-6">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-semibold text-foreground">CSAT Distribution</span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-0.5">No ratings yet</p>
-          </div>
+          <ChartCardHeader
+            title="CSAT Distribution"
+            contextSummary="No ratings yet"
+          />
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Star01 size={24} className="text-muted-foreground mb-2" />
+            <Star01 size={24} className="text-muted-foreground mb-2" aria-hidden="true" />
             <p className="text-sm text-muted-foreground">
               Rating distribution will appear once customers submit feedback.
             </p>
@@ -103,22 +97,19 @@ export const CSATDistributionCard = React.memo(function CSATDistributionCard({
   return (
     <Card className={cn("h-full", className)}>
       <CardContent className="pt-6">
-        {/* Header with average rating */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <span className="text-base font-semibold text-foreground">CSAT Distribution</span>
+        <ChartCardHeader
+          title="CSAT Distribution"
+          contextSummary={`${totalRatings.toLocaleString()} total rating${totalRatings !== 1 ? 's' : ''}`}
+          rightSlot={
             <div className="flex items-center gap-1.5">
-              <Star01 size={16} className="text-yellow-500 fill-yellow-500" />
+              <Star01 size={16} className="text-yellow-500 fill-yellow-500" aria-hidden="true" />
               <span className="text-lg font-semibold text-foreground tabular-nums">
                 {averageRating.toFixed(1)}
               </span>
               <span className="text-sm text-muted-foreground">avg</span>
             </div>
-          </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {totalRatings.toLocaleString()} total rating{totalRatings !== 1 ? 's' : ''}
-          </p>
-        </div>
+          }
+        />
 
         {/* Rating bars */}
         <div className="space-y-3">

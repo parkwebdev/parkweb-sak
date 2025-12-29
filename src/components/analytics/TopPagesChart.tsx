@@ -15,12 +15,7 @@ import { ChartCardHeader } from './ChartCardHeader';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 
-interface TopPageData {
-  url: string;
-  visits: number;
-  avgDuration: number;
-  conversions: number;
-}
+import type { TopPageData } from '@/types/analytics';
 
 interface TopPagesChartProps {
   data: TopPageData[];
@@ -73,7 +68,7 @@ const getBarColor = (index: number, total: number): string => {
   return BAR_COLORS[colorIndex];
 };
 
-export function TopPagesChart({ data, loading }: TopPagesChartProps) {
+export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }: TopPagesChartProps) {
   const [sortBy, setSortBy] = useState<SortOption>('visits');
   const prefersReducedMotion = useReducedMotion();
 
@@ -187,7 +182,7 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
                 {/* Bar container with tooltip */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex-1 h-8 relative overflow-hidden">
+                    <div className="flex-1 h-8 relative overflow-hidden" role="progressbar" aria-label={`${formatUrl(page.url)}: ${page.visits} visits`} aria-valuenow={page.visits} aria-valuemax={maxValue}>
                       <div
                         className="h-full rounded-md transition-all duration-300 group-hover:opacity-90"
                         style={{ 
@@ -241,4 +236,4 @@ export function TopPagesChart({ data, loading }: TopPagesChartProps) {
       </CardContent>
     </Card>
   );
-}
+});
