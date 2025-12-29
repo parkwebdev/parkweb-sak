@@ -25,6 +25,33 @@ function normalizeSvg(svg: SVGSVGElement): string {
   // Remove animations / non-deterministic bits (if any)
   svg.querySelectorAll('animate, animateTransform').forEach(n => n.remove());
 
+  // Remove metadata that can trip up react-pdf
+  svg.querySelectorAll('title, desc, metadata').forEach(n => n.remove());
+
+  // Flatten <tspan> into text nodes (react-pdf Text nesting can be fragile)
+  svg.querySelectorAll('tspan').forEach((tspan) => {
+    const doc = tspan.ownerDocument;
+    const text = (tspan.textContent || '');
+    tspan.replaceWith(doc.createTextNode(text));
+  });
+
+  // Remove unsupported elements commonly emitted by SVG toolchains
+  svg.querySelectorAll('use, clipPath, mask, filter, foreignObject, style').forEach(n => n.remove());
+
+  // Strip attributes known to crash react-pdf svg renderer
+  const toStrip = ['class', 'style', 'clip-path', 'mask', 'filter', 'transform'];
+  svg.querySelectorAll('*').forEach((el) => {
+    toStrip.forEach((a) => el.removeAttribute(a));
+    Array.from(el.attributes).forEach((attr) => {
+      if (attr.name.startsWith('data-') || attr.name.startsWith('aria-')) {
+        el.removeAttribute(attr.name);
+      }
+      if (attr.value && attr.value.includes('url(')) {
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+
   return new XMLSerializer().serializeToString(svg);
 }
 
