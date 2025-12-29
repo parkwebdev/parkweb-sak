@@ -78,29 +78,39 @@ function attrsToProps(attrs: Record<string, string>) {
 
 function domToTree(node: Element): SvgNode {
   const attrs: Record<string, string> = {};
-  for (const a of Array.from(node.attributes)) attrs[a.name] = a.value;
+  try {
+    for (const a of Array.from(node.attributes || [])) attrs[a.name] = a.value;
+  } catch {
+    // Attributes may be null/undefined in some edge cases
+  }
 
   const children: SvgNode[] = [];
-  for (const c of Array.from(node.childNodes)) {
-    if (c.nodeType === Node.ELEMENT_NODE) {
-      children.push(domToTree(c as Element));
-    } else if (c.nodeType === Node.TEXT_NODE) {
-      const text = (c.textContent || '').trim();
-      if (text) {
-        children.push({ name: '#text', attrs: {}, children: [], text });
+  try {
+    const childNodes = node.childNodes ? Array.from(node.childNodes) : [];
+    for (const c of childNodes) {
+      if (c.nodeType === Node.ELEMENT_NODE) {
+        children.push(domToTree(c as Element));
+      } else if (c.nodeType === Node.TEXT_NODE) {
+        const text = (c.textContent || '').trim();
+        if (text) {
+          children.push({ name: '#text', attrs: {}, children: [], text });
+        }
       }
     }
+  } catch {
+    // ChildNodes may be null/undefined in some edge cases
   }
 
   return { name: node.tagName.toLowerCase(), attrs, children };
 }
 
 function renderNode(node: SvgNode, key: string): React.ReactNode {
+  if (!node) return null;
   if (node.name === '#text') return node.text ?? null;
 
-  const props = attrsToProps(node.attrs);
-  const kids = node.children.map((c, idx) => renderNode(c, `${key}.${idx}`));
-
+  const props = attrsToProps(node.attrs || {});
+  const childrenArray = Array.isArray(node.children) ? node.children : [];
+  const kids = childrenArray.map((c, idx) => renderNode(c, `${key}.${idx}`));
   switch (node.name) {
     case 'g':
       return (
@@ -151,11 +161,18 @@ function renderNode(node: SvgNode, key: string): React.ReactNode {
 export function SvgFromString({
   svgString,
   maxHeight,
+  debugId,
 }: {
   svgString: string;
   maxHeight?: number;
+  debugId?: string;
 }) {
   const parsed = useMemo(() => {
+    if (!svgString || typeof svgString !== 'string') {
+      console.warn(`[SvgFromString${debugId ? `:${debugId}` : ''}] Invalid svgString provided`);
+      return null;
+    }
+    
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgString, 'image/svg+xml');
@@ -163,35 +180,41 @@ export function SvgFromString({
       // Check for parse errors
       const parseError = doc.querySelector('parsererror');
       if (parseError) {
-        console.warn('[SvgFromString] SVG parse error:', parseError.textContent);
+        console.warn(`[SvgFromString${debugId ? `:${debugId}` : ''}] SVG parse error:`, parseError.textContent?.slice(0, 200));
         return null;
       }
       
       const svg = doc.querySelector('svg');
-      if (!svg) return null;
+      if (!svg) {
+        console.warn(`[SvgFromString${debugId ? `:${debugId}` : ''}] No <svg> element found`);
+        return null;
+      }
 
       const viewBox = svg.getAttribute('viewBox') || undefined;
       const width = toNumber(svg.getAttribute('width'));
       const height = toNumber(svg.getAttribute('height'));
+      const tree = domToTree(svg);
 
       return {
         viewBox,
         width,
         height,
-        tree: domToTree(svg),
+        tree,
       };
     } catch (error) {
-      console.warn('[SvgFromString] Failed to parse SVG:', error);
+      console.warn(`[SvgFromString${debugId ? `:${debugId}` : ''}] Failed to parse SVG:`, error);
       return null;
     }
-  }, [svgString]);
+  }, [svgString, debugId]);
 
-  if (!parsed) return null;
+  if (!parsed || !parsed.tree) return null;
 
   // Use a fixed maxHeight to keep layout stable. Width stretches to container.
   const height = maxHeight ?? 200;
 
   try {
+    const rootChildren = Array.isArray(parsed.tree.children) ? parsed.tree.children : [];
+    
     return (
       <Svg
         width="100%"
@@ -199,11 +222,11 @@ export function SvgFromString({
         viewBox={parsed.viewBox}
         preserveAspectRatio="xMidYMid meet"
       >
-        {parsed.tree.children.map((c, idx) => renderNode(c, `root.${idx}`))}
+        {rootChildren.map((c, idx) => renderNode(c, `root.${idx}`))}
       </Svg>
     );
   } catch (error) {
-    console.warn('[SvgFromString] Failed to render SVG:', error);
+    console.warn(`[SvgFromString${debugId ? `:${debugId}` : ''}] Failed to render SVG:`, error);
     return null;
   }
 }

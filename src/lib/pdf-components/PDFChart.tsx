@@ -28,22 +28,21 @@ interface PDFChartProps {
   imageDataUrl?: string;
   /** Maximum height in points */
   maxHeight?: number;
+  /** Debug identifier for logging */
+  debugId?: string;
 }
 
-export function PDFChart({ svgString, imageDataUrl, maxHeight = 200 }: PDFChartProps) {
-  if (svgString) {
-    const svgElement = <SvgFromString svgString={svgString} maxHeight={maxHeight} />;
-    // If SVG parsing failed, SvgFromString returns null
-    if (svgElement) {
-      return (
-        <View style={chartStyles.container}>
-          {svgElement}
-        </View>
-      );
-    }
-    // Fall through to placeholder if SVG failed
+export function PDFChart({ svgString, imageDataUrl, maxHeight = 200, debugId }: PDFChartProps) {
+  // Try SVG first (vector quality)
+  if (svgString && typeof svgString === 'string' && svgString.trim().length > 0) {
+    return (
+      <View style={chartStyles.container}>
+        <SvgFromString svgString={svgString} maxHeight={maxHeight} debugId={debugId} />
+      </View>
+    );
   }
 
+  // Fallback to raster image
   if (imageDataUrl) {
     return (
       <View style={chartStyles.container}>
@@ -53,7 +52,7 @@ export function PDFChart({ svgString, imageDataUrl, maxHeight = 200 }: PDFChartP
   }
 
   // Return placeholder when no valid chart data
-  return <PDFChartPlaceholder title="Chart" />;
+  return <PDFChartPlaceholder title={debugId || "Chart"} />;
 }
 
 /**
