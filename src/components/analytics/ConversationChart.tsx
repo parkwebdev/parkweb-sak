@@ -155,8 +155,8 @@ export const ConversationChart = React.memo(function ConversationChart({
               />
 
               <Area
-                isAnimationActive={!prefersReducedMotion}
-                animationDuration={800}
+                isAnimationActive
+                animationDuration={300}
                 animationEasing="ease-out"
                 dataKey="active"
                 name="Active"
@@ -175,8 +175,8 @@ export const ConversationChart = React.memo(function ConversationChart({
               />
 
               <Area
-                isAnimationActive={!prefersReducedMotion}
-                animationDuration={800}
+                isAnimationActive
+                animationDuration={300}
                 animationEasing="ease-out"
                 dataKey="closed"
                 name="Closed"
