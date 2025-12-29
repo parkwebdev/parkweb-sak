@@ -44,6 +44,7 @@ import { CustomerFeedbackCard } from '@/components/analytics/CustomerFeedbackCar
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { TopPagesChart } from '@/components/analytics/TopPagesChart';
 import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
+import { PageEngagementCard } from '@/components/analytics/PageEngagementCard';
 
 import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
 import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildReportSheet';
@@ -221,6 +222,7 @@ function Analytics() {
     landingPages: realLandingPages,
     pageVisits: realPageVisits,
     locationData: realLocationData,
+    engagement: realEngagement,
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
 
@@ -255,6 +257,7 @@ function Analytics() {
   const landingPages = mockMode && mockData ? mockData.landingPages : realLandingPages;
   const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
   const locationData = mockMode && mockData ? mockData.locationData : realLocationData;
+  const engagement = realEngagement; // No mock data for engagement yet
   const funnelStages = mockMode && mockData ? mockData.funnelStages : realFunnelStages;
 
 
@@ -746,6 +749,7 @@ function Analytics() {
                     data={trafficSources} 
                     loading={trafficLoading || (comparisonMode && comparisonTrafficLoading)}
                     comparisonData={comparisonMode ? comparisonTrafficSources : undefined}
+                    engagement={engagement}
                   />
                 </AnimatedItem>
               </AnimatedList>
@@ -756,6 +760,7 @@ function Analytics() {
           {activeTab === 'pages' && (
             <div className="space-y-6">
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
+                <AnimatedItem><PageEngagementCard engagement={engagement} loading={trafficLoading} /></AnimatedItem>
                 <AnimatedItem><TopPagesChart data={landingPages} loading={trafficLoading} /></AnimatedItem>
                 <AnimatedItem><LandingPagesTable data={landingPages} loading={trafficLoading} /></AnimatedItem>
               </AnimatedList>
