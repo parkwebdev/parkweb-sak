@@ -236,8 +236,6 @@ function Analytics() {
     loading: comparisonTrafficLoading,
   } = useTrafficAnalytics(comparisonStartDate, comparisonEndDate, comparisonMode && shouldFetchRealData);
 
-  // MapLibre with OpenFreeMap - no API token needed!
-
   // Comparison data - only fetch when comparison mode is on AND not in mock mode
   const comparisonData = useAnalytics(
     comparisonStartDate,
