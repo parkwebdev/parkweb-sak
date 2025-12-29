@@ -63,7 +63,7 @@ export function StackedAreaChartCard({
       }
       return next;
     });
-    // Increment animation ID to force Area remount and trigger vertical growth animation
+    // Bump animation id so Recharts interpolates the updated stack geometry (up/down)
     setAnimationId(prev => prev + 1);
   }, []);
 
@@ -150,7 +150,7 @@ export function StackedAreaChartCard({
 
             {series.map(({ key, label, color }) => (
               <Area
-                key={`${key}-${animationId}`}
+                key={key}
                 dataKey={key}
                 name={label}
                 stackId="1"
@@ -160,6 +160,7 @@ export function StackedAreaChartCard({
                 fill={`url(#gradient-${gradientIdPrefix}-${key})`}
                 hide={hiddenSeries.has(key)}
                 isAnimationActive={!prefersReducedMotion}
+                animationId={animationId}
                 animationDuration={800}
                 animationEasing="ease-out"
                 activeDot={{
