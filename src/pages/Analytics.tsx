@@ -26,46 +26,30 @@ import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useMockAnalyticsData } from '@/hooks/useMockAnalyticsData';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgent } from '@/hooks/useAgent';
-// MapLibre with OpenFreeMap - no token needed!
-import { ComparisonView } from '@/components/analytics/ComparisonView';
-import { ConversationChart } from '@/components/analytics/ConversationChart';
-import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
-import { BookingsByLocationChart } from '@/components/analytics/BookingsByLocationChart';
-import { BookingTrendChart } from '@/components/analytics/BookingTrendChart';
-
-import { AIPerformanceCard } from '@/components/analytics/AIPerformanceCard';
-import { CSATDistributionCard } from '@/components/analytics/CSATDistributionCard';
-import { ConversationFunnelCard } from '@/components/analytics/ConversationFunnelCard';
 import { useConversationFunnel } from '@/hooks/useConversationFunnel';
 
-import { PeakActivityChart } from '@/components/analytics/PeakActivityChart';
-import { CustomerFeedbackCard } from '@/components/analytics/CustomerFeedbackCard';
-
-import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
-import { TrafficSourceTrendChart } from '@/components/analytics/TrafficSourceTrendChart';
-import { LeadSourceBreakdownCard } from '@/components/analytics/LeadSourceBreakdownCard';
-import { TopPagesChart } from '@/components/analytics/TopPagesChart';
-import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
-import { PageEngagementCard } from '@/components/analytics/PageEngagementCard';
-import { PageDepthChart } from '@/components/analytics/PageDepthChart';
-
-import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
 import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildReportSheet';
-import { FileCheck02 } from '@untitledui/icons';
-import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
-import { ExportHistoryTable } from '@/components/analytics/ExportHistoryTable';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
-import { MetricCardWithChart } from '@/components/analytics/MetricCardWithChart';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { generateChartData } from '@/lib/analytics-utils';
 import { useReportExports } from '@/hooks/useReportExports';
 import { toast } from '@/lib/toast';
 import { subDays, format } from 'date-fns';
-import { AnimatedList } from '@/components/ui/animated-list';
-import { AnimatedItem } from '@/components/ui/animated-item';
-import ErrorBoundary from '@/components/ErrorBoundary';
 import { logger } from '@/utils/logger';
 import { downloadFile } from '@/lib/file-download';
+
+// Section components
+import {
+  ConversationsSection,
+  LeadsSection,
+  BookingsSection,
+  AIPerformanceSection,
+  SourcesSection,
+  PagesSection,
+  GeographySection,
+  ReportsSection,
+} from '@/components/analytics/sections';
+
 
 
 function Analytics() {
@@ -571,235 +555,100 @@ function Analytics() {
 
           {/* Conversations Section */}
           {activeTab === 'conversations' && (
-            <div className="space-y-6">
-              {/* Peak Activity Heatmap - full width */}
-              <ErrorBoundary
-                fallback={(error) => (
-                  <div className="rounded-lg border border-border bg-card p-4">
-                    <p className="text-sm font-medium text-foreground">Peak activity chart failed to load</p>
-                    <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
-                  </div>
-                )}
-              >
-                <PeakActivityChart
-                  conversationStats={conversationStats.map(s => ({ date: s.date, total: s.total }))}
-                  loading={loading}
-                />
-              </ErrorBoundary>
-              
-              {/* Full-width conversation volume chart */}
-              <AnimatedList className="space-y-6" staggerDelay={0.1}>
-                <AnimatedItem>
-                  <ErrorBoundary
-                    fallback={(error) => (
-                      <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm font-medium text-foreground">Conversation chart failed to load</p>
-                        <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
-                      </div>
-                    )}
-                  >
-                    <ConversationChart 
-                      data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} 
-                      trendValue={conversationTrendValue} 
-                      trendPeriod="this month" 
-                    />
-                  </ErrorBoundary>
-                </AnimatedItem>
-                <AnimatedItem>
-                  <ConversationFunnelCard 
-                    stages={funnelStages} 
-                    loading={funnelLoading} 
-                  />
-                </AnimatedItem>
-              </AnimatedList>
-            </div>
+            <ConversationsSection
+              conversationStats={conversationStats.map(s => ({ 
+                date: s.date, 
+                total: s.total, 
+                active: s.active, 
+                closed: s.closed 
+              }))}
+              funnelStages={funnelStages}
+              conversationTrendValue={conversationTrendValue}
+              loading={loading}
+              funnelLoading={funnelLoading}
+            />
           )}
 
           {/* Leads Section */}
           {activeTab === 'leads' && (
-            <div className="space-y-6">
-              {/* KPI Cards */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
-                <MetricCardWithChart 
-                  title={totalLeads.toLocaleString()} 
-                  subtitle="Total Leads" 
-                  description="Visitors who shared contact info" 
-                  change={calculatePeriodChange(leadTrend)} 
-                  changeType="percentage" 
-                  changeLabel="vs last period" 
-                  chartData={generateChartData(leadTrend)} 
-                  animationDelay={0} 
-                />
-                <MetricCardWithChart 
-                  title={`${conversionRate}%`} 
-                  subtitle="Conversion Rate" 
-                  description="Leads marked as won or converted" 
-                  change={calculatePointChange(conversionTrend)} 
-                  changeType="points" 
-                  changeLabel="vs last period" 
-                  chartData={generateChartData(conversionTrend)} 
-                  animationDelay={0.05} 
-                />
-              </div>
-              
-              <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem>
-                  <ErrorBoundary
-                    fallback={(error) => (
-                      <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm font-medium text-foreground">Lead conversion chart failed to load</p>
-                        <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
-                      </div>
-                    )}
-                  >
-                    <LeadConversionChart data={leadStats} trendValue={leadTrendValue} trendPeriod="this month" />
-                  </ErrorBoundary>
-                </AnimatedItem>
-              </AnimatedList>
-            </div>
+            <LeadsSection
+              totalLeads={totalLeads}
+              conversionRate={conversionRate}
+              leadChartData={generateChartData(leadTrend)}
+              conversionChartData={generateChartData(conversionTrend)}
+              leadStats={leadStats}
+              leadChange={calculatePeriodChange(leadTrend)}
+              conversionChange={calculatePointChange(conversionTrend)}
+              leadTrendValue={leadTrendValue}
+              loading={loading}
+            />
           )}
 
           {/* Bookings Section */}
           {activeTab === 'bookings' && (
-            <div className="space-y-6">
-              {/* KPI Cards - 2 column grid */}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
-                <MetricCardWithChart 
-                  title={totalBookings.toLocaleString()} 
-                  subtitle="Total Bookings" 
-                  description="Appointments scheduled via Ari" 
-                  change={calculatePeriodChange(bookingTrend)} 
-                  changeType="percentage" 
-                  changeLabel="vs last period" 
-                  chartData={generateChartData(bookingTrend)} 
-                  animationDelay={0} 
-                />
-                <BookingsByLocationChart 
-                  data={bookingStats?.byLocation ?? []} 
-                  loading={bookingLoading}
-                  animationDelay={0.05}
-                />
-              </div>
-              
-              {/* Trend chart - full width */}
-              <AnimatedList staggerDelay={0.1}>
-                <AnimatedItem>
-                  <ErrorBoundary
-                    fallback={(error) => (
-                      <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm font-medium text-foreground">Booking trend chart failed to load</p>
-                        <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
-                      </div>
-                    )}
-                  >
-                    <BookingTrendChart 
-                      data={bookingStats?.trend ?? []} 
-                      loading={bookingLoading}
-                      trendValue={bookingTrendValue}
-                      trendPeriod="this month"
-                    />
-                  </ErrorBoundary>
-                </AnimatedItem>
-              </AnimatedList>
-            </div>
+            <BookingsSection
+              totalBookings={totalBookings}
+              bookingChartData={generateChartData(bookingTrend)}
+              bookingChange={calculatePeriodChange(bookingTrend)}
+              bookingsByLocation={bookingStats?.byLocation ?? []}
+              bookingTrendData={bookingStats?.trend ?? []}
+              bookingTrendValue={bookingTrendValue}
+              bookingLoading={bookingLoading}
+            />
           )}
 
           {/* AI Performance Section */}
           {activeTab === 'ai-performance' && (
-            <div className="space-y-6">
-              
-              <AnimatedList className="space-y-6" staggerDelay={0.1}>
-                <AnimatedItem><AIPerformanceCard containmentRate={aiPerformanceStats?.containmentRate ?? 0} resolutionRate={aiPerformanceStats?.resolutionRate ?? 0} totalConversations={aiPerformanceStats?.totalConversations ?? 0} humanTakeover={aiPerformanceStats?.humanTakeover ?? 0} loading={aiPerformanceLoading} trendValue={aiContainmentTrendValue} trendPeriod="this month" /></AnimatedItem>
-                
-                <AnimatedItem>
-                  <CSATDistributionCard 
-                    distribution={satisfactionStats?.distribution ?? []} 
-                    averageRating={satisfactionStats?.averageRating ?? 0} 
-                    totalRatings={satisfactionStats?.totalRatings ?? 0} 
-                    loading={satisfactionLoading} 
-                  />
-                </AnimatedItem>
-                
-                <AnimatedItem><CustomerFeedbackCard data={satisfactionStats?.recentFeedback ?? []} loading={satisfactionLoading} /></AnimatedItem>
-              </AnimatedList>
-            </div>
+            <AIPerformanceSection
+              containmentRate={aiPerformanceStats?.containmentRate ?? 0}
+              resolutionRate={aiPerformanceStats?.resolutionRate ?? 0}
+              totalConversations={aiPerformanceStats?.totalConversations ?? 0}
+              humanTakeover={aiPerformanceStats?.humanTakeover ?? 0}
+              csatDistribution={satisfactionStats?.distribution ?? []}
+              averageRating={satisfactionStats?.averageRating ?? 0}
+              totalRatings={satisfactionStats?.totalRatings ?? 0}
+              recentFeedback={satisfactionStats?.recentFeedback ?? []}
+              aiContainmentTrendValue={aiContainmentTrendValue}
+              aiPerformanceLoading={aiPerformanceLoading}
+              satisfactionLoading={satisfactionLoading}
+            />
           )}
 
           {/* Traffic Sources Section */}
           {activeTab === 'sources' && (
-            <div className="space-y-6">
-              <AnimatedList className="space-y-6" staggerDelay={0.1}>
-                <AnimatedItem>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <TrafficSourceChart 
-                      data={trafficSources} 
-                      loading={trafficLoading || (comparisonMode && comparisonTrafficLoading)}
-                      comparisonData={comparisonMode ? comparisonTrafficSources : undefined}
-                      engagement={engagement}
-                    />
-                    <LeadSourceBreakdownCard
-                      data={leadsBySource}
-                      loading={trafficLoading}
-                    />
-                  </div>
-                </AnimatedItem>
-                <AnimatedItem>
-                  <ErrorBoundary
-                    fallback={(error) => (
-                      <div className="rounded-lg border border-border bg-card p-4">
-                        <p className="text-sm font-medium text-foreground">Traffic source trend chart failed to load</p>
-                        <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
-                      </div>
-                    )}
-                  >
-                    <TrafficSourceTrendChart 
-                      data={sourcesByDate} 
-                      loading={trafficLoading}
-                    />
-                  </ErrorBoundary>
-                </AnimatedItem>
-              </AnimatedList>
-            </div>
+            <SourcesSection
+              trafficSources={trafficSources}
+              comparisonTrafficSources={comparisonTrafficSources}
+              engagement={engagement}
+              leadsBySource={leadsBySource}
+              sourcesByDate={sourcesByDate}
+              comparisonMode={comparisonMode}
+              trafficLoading={trafficLoading}
+              comparisonTrafficLoading={comparisonTrafficLoading}
+            />
           )}
 
           {/* Pages Section */}
           {activeTab === 'pages' && (
-            <div className="space-y-6">
-              <AnimatedList className="space-y-6" staggerDelay={0.1}>
-                <AnimatedItem><PageEngagementCard engagement={engagement} loading={trafficLoading} /></AnimatedItem>
-                <AnimatedItem>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <TopPagesChart data={landingPages} loading={trafficLoading} />
-                    <PageDepthChart data={pageDepthDistribution} loading={trafficLoading} />
-                  </div>
-                </AnimatedItem>
-                <AnimatedItem><LandingPagesTable data={landingPages} loading={trafficLoading} /></AnimatedItem>
-              </AnimatedList>
-            </div>
+            <PagesSection
+              engagement={engagement}
+              landingPages={landingPages}
+              pageDepthDistribution={pageDepthDistribution}
+              trafficLoading={trafficLoading}
+            />
           )}
 
           {/* Geography Section */}
           {activeTab === 'geography' && (
-            <div className="space-y-6">
-              <ErrorBoundary
-                fallback={(error) => (
-                  <div className="rounded-lg border border-border bg-card p-4">
-                    <p className="text-sm font-medium text-foreground">Visitor map failed to load</p>
-                    <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
-                  </div>
-                )}
-              >
-                <VisitorLocationMap data={locationData} loading={trafficLoading} />
-              </ErrorBoundary>
-            </div>
+            <GeographySection
+              locationData={locationData}
+              trafficLoading={trafficLoading}
+            />
           )}
 
           {/* Reports Section */}
           {activeTab === 'reports' && (
-            <div className="space-y-6">
-              <ExportHistoryTable />
-              <ScheduledReportsManager />
-            </div>
+            <ReportsSection />
           )}
         </div>
       </main>
