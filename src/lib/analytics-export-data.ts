@@ -7,9 +7,18 @@
  * @module lib/analytics-export-data
  */
 
-import type { BookingStats, SatisfactionStats, AIPerformanceStats } from '@/types/analytics';
-import type { MockTrafficSource, MockLandingPage, MockLocationData } from '@/lib/mock-analytics-data';
+import type { BookingStats, SatisfactionStats, AIPerformanceStats, FunnelStage, LeadSourceData } from '@/types/analytics';
+import type { MockTrafficSource, MockLandingPage, MockLocationData, MockEngagementMetrics, MockDailySourceData, MockPageDepthData } from '@/lib/mock-analytics-data';
 import type { ConversationStatItem, AgentPerformanceItem, UsageMetricItem } from '@/hooks/useAnalyticsData';
+import type { PeakActivityData } from '@/lib/peak-activity-utils';
+import type { 
+  LeadSourceBreakdown, 
+  PageDepthItem, 
+  FeedbackItemReport, 
+  BookingTrendItem, 
+  TrafficSourceTrendItem, 
+  LeadConversionTrendItem 
+} from '@/types/report';
 
 export interface KPI {
   title: string;
@@ -63,6 +72,43 @@ export interface AnalyticsExportData {
   conversations: unknown[];
   leads: unknown[];
   kpis: KPI[];
+
+  // =========================================================================
+  // NEW: 9 Additional Export Fields (Phase 6)
+  // =========================================================================
+  
+  /** Conversation funnel stages with drop-off percentages */
+  conversationFunnel?: FunnelStage[];
+  
+  /** Peak activity heatmap data */
+  peakActivity?: PeakActivityData;
+  
+  /** Page engagement metrics */
+  pageEngagement?: {
+    bounceRate: number;
+    avgPagesPerSession: number;
+    avgSessionDuration: number;
+    totalSessions: number;
+    overallCVR: number;
+  };
+  
+  /** Leads by traffic source with conversion rates */
+  leadSourceBreakdown?: LeadSourceBreakdown[];
+  
+  /** Pages viewed per session distribution */
+  pageDepthDistribution?: PageDepthItem[];
+  
+  /** Recent feedback items with ratings */
+  recentFeedback?: FeedbackItemReport[];
+  
+  /** Daily booking trend data */
+  bookingTrend?: BookingTrendItem[];
+  
+  /** Daily traffic source breakdown */
+  trafficSourceTrend?: TrafficSourceTrendItem[];
+  
+  /** Daily lead conversion by stage */
+  leadConversionTrend?: LeadConversionTrendItem[];
 }
 
 interface BuildExportDataParams {
@@ -93,6 +139,13 @@ interface BuildExportDataParams {
   // Original data
   analyticsConversations: unknown[];
   leads: unknown[];
+  // NEW: 9 additional data fields
+  funnelStages?: FunnelStage[];
+  peakActivity?: PeakActivityData | null;
+  engagement?: MockEngagementMetrics | null;
+  leadsBySource?: LeadSourceData[];
+  pageDepthDistribution?: MockPageDepthData[];
+  sourcesByDate?: MockDailySourceData[];
 }
 
 /**
@@ -183,6 +236,13 @@ export function buildAnalyticsExportData(params: BuildExportDataParams): Analyti
     locationData,
     analyticsConversations,
     leads,
+    // NEW fields
+    funnelStages,
+    peakActivity,
+    engagement,
+    leadsBySource,
+    pageDepthDistribution,
+    sourcesByDate,
   } = params;
 
   const kpis = buildKPIs({
@@ -195,6 +255,63 @@ export function buildAnalyticsExportData(params: BuildExportDataParams): Analyti
     comparisonConversionRate,
     comparisonTotalMessages,
     comparisonMode,
+  });
+
+  // Transform leadsBySource to LeadSourceBreakdown format
+  const leadSourceBreakdown: LeadSourceBreakdown[] = leadsBySource?.map(ls => ({
+    source: ls.source,
+    leads: ls.leads,
+    sessions: ls.sessions,
+    cvr: ls.cvr,
+  })) || [];
+
+  // Transform pageDepthDistribution
+  const pageDepthItems: PageDepthItem[] = pageDepthDistribution?.map(pd => ({
+    depth: pd.depth,
+    count: pd.count,
+    percentage: pd.percentage,
+  })) || [];
+
+  // Transform recentFeedback from satisfactionStats
+  const recentFeedback: FeedbackItemReport[] = satisfactionStats?.recentFeedback?.map(fb => ({
+    rating: fb.rating,
+    feedback: fb.feedback,
+    createdAt: fb.createdAt,
+    triggerType: fb.triggerType,
+  })) || [];
+
+  // Transform booking trend data
+  const bookingTrendData: BookingTrendItem[] = bookingStats?.trend?.map(bt => ({
+    date: bt.date,
+    confirmed: bt.confirmed,
+    completed: bt.completed,
+    cancelled: bt.cancelled,
+    noShow: bt.noShow,
+    total: bt.total,
+  })) || [];
+
+  // Transform sourcesByDate to TrafficSourceTrendItem format
+  const trafficSourceTrendData: TrafficSourceTrendItem[] = sourcesByDate?.map(sd => ({
+    date: sd.date,
+    direct: sd.direct,
+    organic: sd.organic,
+    paid: sd.paid,
+    social: sd.social,
+    email: sd.email,
+    referral: sd.referral,
+    total: sd.direct + sd.organic + sd.paid + sd.social + sd.email + sd.referral,
+  })) || [];
+
+  // Transform leadStats to LeadConversionTrendItem format
+  const leadConversionTrendData: LeadConversionTrendItem[] = leadStats.map(ls => {
+    const item: LeadConversionTrendItem = { date: ls.date };
+    // Copy all stage counts dynamically
+    Object.keys(ls).forEach(key => {
+      if (key !== 'date') {
+        item[key] = ls[key];
+      }
+    });
+    return item;
   });
 
   return {
@@ -273,5 +390,24 @@ export function buildAnalyticsExportData(params: BuildExportDataParams): Analyti
     conversations: analyticsConversations,
     leads,
     kpis,
+
+    // =========================================================================
+    // NEW: 9 Additional Export Fields
+    // =========================================================================
+    conversationFunnel: funnelStages,
+    peakActivity: peakActivity || undefined,
+    pageEngagement: engagement ? {
+      bounceRate: engagement.bounceRate,
+      avgPagesPerSession: engagement.avgPagesPerSession,
+      avgSessionDuration: engagement.avgSessionDuration,
+      totalSessions: engagement.totalSessions,
+      overallCVR: engagement.overallCVR,
+    } : undefined,
+    leadSourceBreakdown,
+    pageDepthDistribution: pageDepthItems,
+    recentFeedback,
+    bookingTrend: bookingTrendData,
+    trafficSourceTrend: trafficSourceTrendData,
+    leadConversionTrend: leadConversionTrendData,
   };
 }
