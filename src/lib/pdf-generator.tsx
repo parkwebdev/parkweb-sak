@@ -2,7 +2,7 @@
  * PDF Generator using @react-pdf/renderer
  * 
  * Generates PDFs using React components instead of imperative jsPDF calls.
- * Uses raster chart captures from html2canvas as fallback.
+ * Uses SVG chart extraction for vector graphics in PDFs.
  */
 
 import React from 'react';
@@ -25,6 +25,7 @@ interface GenerateOptions {
  * 
  * @param opts - Generation options including data, config, and chart images
  * @returns Promise resolving to a Blob of the generated PDF
+ * @throws Error with descriptive message if PDF generation fails
  */
 export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob> {
   const { data, config, startDate, endDate, orgName, charts } = opts;
@@ -42,9 +43,14 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
     charts: chartMap,
   });
 
-  // Generate the PDF blob
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const blob = await pdf(doc as any).toBlob();
-  
-  return blob;
+  try {
+    // Generate the PDF blob
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const blob = await pdf(doc as any).toBlob();
+    return blob;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[PDF Generator] Failed to generate PDF:', error);
+    throw new Error(`PDF generation failed: ${message}`);
+  }
 }

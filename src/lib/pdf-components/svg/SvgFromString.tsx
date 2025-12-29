@@ -156,21 +156,34 @@ export function SvgFromString({
   maxHeight?: number;
 }) {
   const parsed = useMemo(() => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgString, 'image/svg+xml');
-    const svg = doc.querySelector('svg');
-    if (!svg) return null;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgString, 'image/svg+xml');
+      
+      // Check for parse errors
+      const parseError = doc.querySelector('parsererror');
+      if (parseError) {
+        console.warn('[SvgFromString] SVG parse error:', parseError.textContent);
+        return null;
+      }
+      
+      const svg = doc.querySelector('svg');
+      if (!svg) return null;
 
-    const viewBox = svg.getAttribute('viewBox') || undefined;
-    const width = toNumber(svg.getAttribute('width'));
-    const height = toNumber(svg.getAttribute('height'));
+      const viewBox = svg.getAttribute('viewBox') || undefined;
+      const width = toNumber(svg.getAttribute('width'));
+      const height = toNumber(svg.getAttribute('height'));
 
-    return {
-      viewBox,
-      width,
-      height,
-      tree: domToTree(svg),
-    };
+      return {
+        viewBox,
+        width,
+        height,
+        tree: domToTree(svg),
+      };
+    } catch (error) {
+      console.warn('[SvgFromString] Failed to parse SVG:', error);
+      return null;
+    }
   }, [svgString]);
 
   if (!parsed) return null;
@@ -178,14 +191,19 @@ export function SvgFromString({
   // Use a fixed maxHeight to keep layout stable. Width stretches to container.
   const height = maxHeight ?? 200;
 
-  return (
-    <Svg
-      width="100%"
-      height={height}
-      viewBox={parsed.viewBox}
-      preserveAspectRatio="xMidYMid meet"
-    >
-      {parsed.tree.children.map((c, idx) => renderNode(c, `root.${idx}`))}
-    </Svg>
-  );
+  try {
+    return (
+      <Svg
+        width="100%"
+        height={height}
+        viewBox={parsed.viewBox}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {parsed.tree.children.map((c, idx) => renderNode(c, `root.${idx}`))}
+      </Svg>
+    );
+  } catch (error) {
+    console.warn('[SvgFromString] Failed to render SVG:', error);
+    return null;
+  }
 }

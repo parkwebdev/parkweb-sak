@@ -168,8 +168,9 @@ function Analytics() {
       
       toast.success(`${exportFormat.toUpperCase()} exported and saved`);
     } catch (error: unknown) {
-      logger.error('Export error:', error);
-      toast.error(`Failed to export ${reportConfig.format.toUpperCase()}`);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Export error:', error);
+      toast.error(`Export failed: ${message}`);
     }
   }, [analyticsExportData, reportConfig, user?.email, createExport]);
 
@@ -371,8 +372,9 @@ function Analytics() {
       
       toast.success('PDF exported with charts');
     } catch (error: unknown) {
-      logger.error('PDF export error:', error);
-      toast.error('Failed to export PDF');
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('PDF export error:', error);
+      toast.error(`PDF export failed: ${message}`);
     } finally {
       setPendingExport(null);
     }
