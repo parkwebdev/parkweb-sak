@@ -820,29 +820,6 @@ const {
 
 **File**: `src/hooks/useNotifications.ts`
 
----
-
-### useScheduledReports
-
-**Powered by React Query** - Report data is cached and real-time updates via Supabase subscription automatically invalidate the cache.
-
-```tsx
-import { useScheduledReports } from '@/hooks/useScheduledReports';
-
-const {
-  reports,            // ScheduledReport[] - All reports
-  loading,            // boolean
-  createReport,       // (data) => Promise
-  updateReport,       // (id, data) => Promise
-  deleteReport,       // (id) => Promise
-  toggleReportStatus, // (id, active) => Promise
-  refetch,            // () => void
-} = useScheduledReports();
-```
-
-**File**: `src/hooks/useScheduledReports.ts`
-
----
 
 ### useAgentApiKeys
 
