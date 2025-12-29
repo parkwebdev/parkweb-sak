@@ -10,7 +10,6 @@ import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 import { ChartCardHeader } from './ChartCardHeader';
@@ -182,17 +181,14 @@ export const LeadSourceBreakdownCard = React.memo(function LeadSourceBreakdownCa
                 </Tooltip>
 
                 {/* CVR Badge */}
-                <Badge 
-                  variant="secondary" 
+                <div 
                   className={cn(
-                    "shrink-0 text-xs tabular-nums font-medium",
-                    source.cvr >= 15 ? "bg-success/10 text-success" : 
-                    source.cvr >= 10 ? "bg-warning/10 text-warning-foreground" : 
+                    "shrink-0 px-2 py-0.5 rounded text-xs tabular-nums font-medium",
                     "bg-muted text-muted-foreground"
                   )}
                 >
                   {source.cvr.toFixed(1)}%
-                </Badge>
+                </div>
               </div>
             );
           })}
