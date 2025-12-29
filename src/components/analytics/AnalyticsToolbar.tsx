@@ -93,11 +93,9 @@ export const AnalyticsToolbar = ({
           </PopoverTrigger>
           <PopoverContent className="w-80" align="start">
             <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-3">Filter Analytics</h4>
-              </div>
+              <h4 className="font-medium">Filter Analytics</h4>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Lead Stage</Label>
                   <Select

@@ -122,7 +122,7 @@ export function ExportHistoryTable() {
     <>
       {/* Bulk actions bar */}
       {selectedCount > 0 && (
-        <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md mb-2">
+        <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md mb-4">
           <span className="text-sm text-muted-foreground">
             {selectedCount} selected
           </span>
