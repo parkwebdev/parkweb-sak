@@ -2,27 +2,28 @@
  * ReportChartRenderer Component
  * 
  * Renders chart components offscreen for PDF capture using a portal.
+ * Uses direct imports (not lazy) for faster initial render.
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { format, parseISO } from 'date-fns';
-import { captureChartsFromContainer, waitForRender } from '@/lib/pdf-chart-capture';
+import { captureChartsFromContainer, waitForRender, preloadHtml2Canvas } from '@/lib/pdf-chart-capture';
 import type { ChartImage, CaptureProgress } from '@/lib/pdf-chart-capture';
 
-// Lazy load chart components
-const LazyConversationChart = React.lazy(() => import('./ConversationChart').then(m => ({ default: m.ConversationChart })));
-const LazyConversationFunnelCard = React.lazy(() => import('./ConversationFunnelCard').then(m => ({ default: m.ConversationFunnelCard })));
-const LazyPeakActivityChart = React.lazy(() => import('./PeakActivityChart').then(m => ({ default: m.PeakActivityChart })));
-const LazyBookingTrendChart = React.lazy(() => import('./BookingTrendChart').then(m => ({ default: m.BookingTrendChart })));
-const LazyBookingsByLocationChart = React.lazy(() => import('./BookingsByLocationChart').then(m => ({ default: m.BookingsByLocationChart })));
-const LazyTrafficSourceChart = React.lazy(() => import('./TrafficSourceChart').then(m => ({ default: m.TrafficSourceChart })));
-const LazyTrafficSourceTrendChart = React.lazy(() => import('./TrafficSourceTrendChart').then(m => ({ default: m.TrafficSourceTrendChart })));
-const LazyTopPagesChart = React.lazy(() => import('./TopPagesChart').then(m => ({ default: m.TopPagesChart })));
-const LazyPageDepthChart = React.lazy(() => import('./PageDepthChart').then(m => ({ default: m.PageDepthChart })));
-const LazyLeadSourceBreakdownCard = React.lazy(() => import('./LeadSourceBreakdownCard').then(m => ({ default: m.LeadSourceBreakdownCard })));
-const LazyCSATDistributionCard = React.lazy(() => import('./CSATDistributionCard').then(m => ({ default: m.CSATDistributionCard })));
-const LazyLeadConversionChart = React.lazy(() => import('./LeadConversionChart').then(m => ({ default: m.LeadConversionChart })));
+// Direct imports for faster rendering (no lazy loading overhead)
+import { ConversationChart } from './ConversationChart';
+import { ConversationFunnelCard } from './ConversationFunnelCard';
+import { PeakActivityChart } from './PeakActivityChart';
+import { BookingTrendChart } from './BookingTrendChart';
+import { BookingsByLocationChart } from './BookingsByLocationChart';
+import { TrafficSourceChart } from './TrafficSourceChart';
+import { TrafficSourceTrendChart } from './TrafficSourceTrendChart';
+import { TopPagesChart } from './TopPagesChart';
+import { PageDepthChart } from './PageDepthChart';
+import { LeadSourceBreakdownCard } from './LeadSourceBreakdownCard';
+import { CSATDistributionCard } from './CSATDistributionCard';
+import { LeadConversionChart } from './LeadConversionChart';
 
 const CHART_WIDTH = 700;
 const CHART_HEIGHT = 400;
@@ -75,6 +76,11 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
   const [portal, setPortal] = useState<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
 
+  // Pre-load html2canvas on mount
+  useEffect(() => {
+    preloadHtml2Canvas();
+  }, []);
+
   // Create hidden portal container
   useEffect(() => {
     const el = document.createElement('div');
@@ -89,7 +95,7 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
   const runCapture = useCallback(async () => {
     if (!containerRef.current) return;
     try {
-      await waitForRender(800);
+      await waitForRender(300); // Reduced from 800ms
       const charts = await captureChartsFromContainer(containerRef.current, onProgress);
       onCapture(charts);
     } catch (err) {
@@ -103,7 +109,7 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
 
   useEffect(() => {
     if (portal) {
-      const t = setTimeout(() => setReady(true), 100);
+      const t = setTimeout(() => setReady(true), 50); // Reduced from 100ms
       return () => clearTimeout(t);
     }
   }, [portal]);
@@ -153,72 +159,70 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
 
   return createPortal(
     <div ref={containerRef} className="bg-white text-foreground" style={{ width: CHART_WIDTH }}>
-      <React.Suspense fallback={<div style={{ height: 100 }} />}>
-        {config.includeConversations && convData.length > 0 && (
-          <div data-chart-id="conversation-volume" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
-            <LazyConversationChart data={convData} />
-          </div>
-        )}
-        {config.includeConversationFunnel && data.conversationFunnel?.length && (
-          <div data-chart-id="conversation-funnel" style={{ width: CHART_WIDTH, minHeight: 300, padding: 16 }} className="bg-white">
-            <LazyConversationFunnelCard stages={data.conversationFunnel} />
-          </div>
-        )}
-        {config.includePeakActivity && peakData.length > 0 && (
-          <div data-chart-id="peak-activity" style={{ width: CHART_WIDTH, minHeight: 350, padding: 16 }} className="bg-white">
-            <LazyPeakActivityChart conversationStats={peakData} />
-          </div>
-        )}
-        {config.includeBookingTrend && bookingTrendData.length > 0 && (
-          <div data-chart-id="booking-trend" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
-            <LazyBookingTrendChart data={bookingTrendData} />
-          </div>
-        )}
-        {config.includeBookings && locationData.length > 0 && (
-          <div data-chart-id="bookings-by-location" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
-            <LazyBookingsByLocationChart data={locationData} />
-          </div>
-        )}
-        {config.includeTrafficSources && trafficSourceData.length > 0 && (
-          <div data-chart-id="traffic-sources" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
-            <LazyTrafficSourceChart data={trafficSourceData} />
-          </div>
-        )}
-        {config.includeTrafficSourceTrend && trafficTrendData.length > 0 && (
-          <div data-chart-id="traffic-source-trend" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
-            <LazyTrafficSourceTrendChart data={trafficTrendData} />
-          </div>
-        )}
-        {config.includeTopPages && pagesData.length > 0 && (
-          <div data-chart-id="top-pages" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
-            <LazyTopPagesChart data={pagesData} />
-          </div>
-        )}
-        {config.includePageDepth && depthData.length > 0 && (
-          <div data-chart-id="page-depth" style={{ width: CHART_WIDTH, minHeight: 300, padding: 16 }} className="bg-white">
-            <LazyPageDepthChart data={depthData} />
-          </div>
-        )}
-        {config.includeLeadSourceBreakdown && leadSrcData.length > 0 && (
-          <div data-chart-id="lead-source-breakdown" style={{ width: CHART_WIDTH, minHeight: 300, padding: 16 }} className="bg-white">
-            <LazyLeadSourceBreakdownCard data={leadSrcData} />
-          </div>
-        )}
-        {config.includeSatisfaction && csatData.length > 0 && (
-          <div data-chart-id="csat-distribution" style={{ width: CHART_WIDTH, minHeight: 300, padding: 16 }} className="bg-white">
-            <LazyCSATDistributionCard 
-              distribution={csatData}
-              averageRating={data.satisfactionStats?.average_rating || 0}
-              totalRatings={data.satisfactionStats?.total_ratings || 0}
-            />
-          </div>
-        )}
-        {config.includeLeadConversionTrend && leadConvData.length > 0 && (
-          <div data-chart-id="lead-conversion-trend" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
-            <LazyLeadConversionChart data={leadConvData} />
-          </div>
-        )}
-      </React.Suspense>
+      {config.includeConversations && convData.length > 0 && (
+        <div data-chart-id="conversation-volume" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
+          <ConversationChart data={convData} />
+        </div>
+      )}
+      {config.includeConversationFunnel && data.conversationFunnel?.length && (
+        <div data-chart-id="conversation-funnel" style={{ width: CHART_WIDTH, minHeight: 300, padding: 16 }} className="bg-white">
+          <ConversationFunnelCard stages={data.conversationFunnel} />
+        </div>
+      )}
+      {config.includePeakActivity && peakData.length > 0 && (
+        <div data-chart-id="peak-activity" style={{ width: CHART_WIDTH, minHeight: 350, padding: 16 }} className="bg-white">
+          <PeakActivityChart conversationStats={peakData} />
+        </div>
+      )}
+      {config.includeBookingTrend && bookingTrendData.length > 0 && (
+        <div data-chart-id="booking-trend" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
+          <BookingTrendChart data={bookingTrendData} />
+        </div>
+      )}
+      {config.includeBookings && locationData.length > 0 && (
+        <div data-chart-id="bookings-by-location" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
+          <BookingsByLocationChart data={locationData} />
+        </div>
+      )}
+      {config.includeTrafficSources && trafficSourceData.length > 0 && (
+        <div data-chart-id="traffic-sources" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
+          <TrafficSourceChart data={trafficSourceData} />
+        </div>
+      )}
+      {config.includeTrafficSourceTrend && trafficTrendData.length > 0 && (
+        <div data-chart-id="traffic-source-trend" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
+          <TrafficSourceTrendChart data={trafficTrendData} />
+        </div>
+      )}
+      {config.includeTopPages && pagesData.length > 0 && (
+        <div data-chart-id="top-pages" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
+          <TopPagesChart data={pagesData} />
+        </div>
+      )}
+      {config.includePageDepth && depthData.length > 0 && (
+        <div data-chart-id="page-depth" style={{ width: CHART_WIDTH, minHeight: 300, padding: 16 }} className="bg-white">
+          <PageDepthChart data={depthData} />
+        </div>
+      )}
+      {config.includeLeadSourceBreakdown && leadSrcData.length > 0 && (
+        <div data-chart-id="lead-source-breakdown" style={{ width: CHART_WIDTH, minHeight: 300, padding: 16 }} className="bg-white">
+          <LeadSourceBreakdownCard data={leadSrcData} />
+        </div>
+      )}
+      {config.includeSatisfaction && csatData.length > 0 && (
+        <div data-chart-id="csat-distribution" style={{ width: CHART_WIDTH, minHeight: 300, padding: 16 }} className="bg-white">
+          <CSATDistributionCard 
+            distribution={csatData}
+            averageRating={data.satisfactionStats?.average_rating || 0}
+            totalRatings={data.satisfactionStats?.total_ratings || 0}
+          />
+        </div>
+      )}
+      {config.includeLeadConversionTrend && leadConvData.length > 0 && (
+        <div data-chart-id="lead-conversion-trend" style={{ width: CHART_WIDTH, minHeight: CHART_HEIGHT, padding: 16 }} className="bg-white">
+          <LeadConversionChart data={leadConvData} />
+        </div>
+      )}
     </div>,
     portal
   );
