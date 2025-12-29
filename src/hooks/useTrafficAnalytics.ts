@@ -10,6 +10,7 @@
 
 import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { format, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgent } from '@/hooks/useAgent';
@@ -64,6 +65,25 @@ export interface EngagementMetrics {
   overallCVR: number;
 }
 
+/** Daily traffic source data for time-series charts */
+export interface DailySourceData {
+  date: string;
+  direct: number;
+  organic: number;
+  paid: number;
+  social: number;
+  email: number;
+  referral: number;
+  total: number;
+}
+
+/** Page depth distribution data */
+export interface PageDepthData {
+  depth: string;
+  count: number;
+  percentage: number;
+}
+
 /** Complete traffic analytics stats */
 interface TrafficStats {
   trafficSources: TrafficSourceData[];
@@ -71,6 +91,8 @@ interface TrafficStats {
   pageVisits: PageVisitData[];
   locationData: LocationData[];
   engagement: EngagementMetrics;
+  sourcesByDate: DailySourceData[];
+  pageDepthDistribution: PageDepthData[];
 }
 
 /** Default empty stats */
@@ -87,6 +109,8 @@ const DEFAULT_STATS: TrafficStats = {
     totalLeads: 0,
     overallCVR: 0,
   },
+  sourcesByDate: [],
+  pageDepthDistribution: [],
 };
 
 // =============================================================================
@@ -97,7 +121,7 @@ const DEFAULT_STATS: TrafficStats = {
  * Process raw conversation data into traffic analytics.
  */
 function processConversations(
-  conversations: Array<{ id: string; metadata: unknown }> | null
+  conversations: Array<{ id: string; metadata: unknown; created_at: string }> | null
 ): TrafficStats {
   if (!conversations || conversations.length === 0) {
     return DEFAULT_STATS;
@@ -136,21 +160,36 @@ function processConversations(
   let totalSessionDuration = 0;
   let totalLeads = 0;
 
+  // Daily source breakdown for time-series
+  const dailySourceMap: Record<string, Record<string, number>> = {};
+
+  // Page depth tracking
+  const pageDepthCounts: Record<number, number> = {};
+
   conversations.forEach(conv => {
     const metadata = conv.metadata as ConversationMetadata | null;
     if (!metadata) return;
 
     totalSessions++;
 
+    // Get date for daily breakdown
+    const dateKey = format(parseISO(conv.created_at), 'yyyy-MM-dd');
+    if (!dailySourceMap[dateKey]) {
+      dailySourceMap[dateKey] = { direct: 0, organic: 0, paid: 0, social: 0, email: 0, referral: 0 };
+    }
+
     // Traffic sources
     const journey = metadata.referrer_journey;
+    let entryType = 'direct';
     if (journey?.entry_type) {
-      const entryType = journey.entry_type.toLowerCase();
+      entryType = journey.entry_type.toLowerCase();
       if (Object.prototype.hasOwnProperty.call(sourceCounts, entryType)) {
         sourceCounts[entryType]++;
+        dailySourceMap[dateKey][entryType]++;
       }
     } else {
       sourceCounts.direct++;
+      dailySourceMap[dateKey].direct++;
     }
 
     // Landing pages
@@ -172,6 +211,10 @@ function processConversations(
     // Page visits & session metrics
     const visitedPages = metadata.visited_pages;
     const pagesInSession = visitedPages && Array.isArray(visitedPages) ? visitedPages.length : 0;
+    
+    // Track page depth distribution
+    const depthBucket = pagesInSession === 0 ? 0 : pagesInSession >= 5 ? 5 : pagesInSession;
+    pageDepthCounts[depthBucket] = (pageDepthCounts[depthBucket] || 0) + 1;
     
     // Bounce = only 1 page visited
     if (pagesInSession <= 1) {
@@ -264,12 +307,45 @@ function processConversations(
     overallCVR: totalSessions > 0 ? (totalLeads / totalSessions) * 100 : 0,
   };
 
+  // Build sourcesByDate array sorted by date
+  const sourcesByDate: DailySourceData[] = Object.entries(dailySourceMap)
+    .map(([date, sources]) => ({
+      date,
+      direct: sources.direct || 0,
+      organic: sources.organic || 0,
+      paid: sources.paid || 0,
+      social: sources.social || 0,
+      email: sources.email || 0,
+      referral: sources.referral || 0,
+      total: Object.values(sources).reduce((sum, v) => sum + v, 0),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  // Build page depth distribution
+  const depthLabels: Record<number, string> = {
+    0: '0 pages',
+    1: '1 page',
+    2: '2 pages',
+    3: '3 pages',
+    4: '4 pages',
+    5: '5+ pages',
+  };
+  const pageDepthDistribution: PageDepthData[] = [0, 1, 2, 3, 4, 5]
+    .map(depth => ({
+      depth: depthLabels[depth],
+      count: pageDepthCounts[depth] || 0,
+      percentage: totalSessions > 0 ? ((pageDepthCounts[depth] || 0) / totalSessions) * 100 : 0,
+    }))
+    .filter(d => d.count > 0);
+
   return {
     trafficSources,
     landingPages,
     pageVisits,
     locationData,
     engagement,
+    sourcesByDate,
+    pageDepthDistribution,
   };
 }
 
@@ -313,7 +389,7 @@ export const useTrafficAnalytics = (
 
       const { data, error } = await supabase
         .from('conversations')
-        .select('id, metadata')
+        .select('id, metadata, created_at')
         .eq('user_id', user.id)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
@@ -345,6 +421,8 @@ export const useTrafficAnalytics = (
     pageVisits: stats.pageVisits,
     locationData: stats.locationData,
     engagement: stats.engagement,
+    sourcesByDate: stats.sourcesByDate,
+    pageDepthDistribution: stats.pageDepthDistribution,
     loading: isLoading,
     agentId,
     refetch,
