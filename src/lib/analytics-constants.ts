@@ -1,0 +1,65 @@
+/**
+ * Analytics Constants
+ * 
+ * Shared constants for the Analytics page.
+ * Extracted to reduce page complexity.
+ * 
+ * @module lib/analytics-constants
+ */
+
+import type { AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
+import type { ReportConfig } from '@/components/analytics/BuildReportSheet';
+
+/**
+ * Section title and description mapping
+ */
+export const SECTION_INFO: Record<AnalyticsSection, { title: string; description: string }> = {
+  'conversations': { title: 'Conversations', description: 'Analyze chat sessions and engagement patterns' },
+  'leads': { title: 'Leads', description: 'Track lead generation and conversion metrics' },
+  'bookings': { title: 'Bookings', description: 'Monitor appointment scheduling performance' },
+  'ai-performance': { title: 'Ari Performance', description: 'Measure Ari containment, resolution, and satisfaction' },
+  'sources': { title: 'Traffic Sources', description: 'Understand where your visitors come from' },
+  'pages': { title: 'Top Pages', description: 'See which pages drive the most engagement' },
+  'geography': { title: 'Geography', description: 'View visitor locations around the world' },
+  'reports': { title: 'Reports', description: 'View export history and manage scheduled reports' },
+};
+
+/**
+ * Sections that show the toolbar
+ */
+export const TOOLBAR_SECTIONS: AnalyticsSection[] = [
+  'conversations', 
+  'leads', 
+  'bookings', 
+  'ai-performance', 
+  'sources', 
+  'pages', 
+  'geography'
+];
+
+/**
+ * Default report configuration
+ */
+export const DEFAULT_REPORT_CONFIG: ReportConfig = {
+  format: 'csv',
+  type: 'summary',
+  // Core Metrics
+  includeConversations: true,
+  includeLeads: true,
+  includeUsageMetrics: true,
+  // Business Outcomes
+  includeBookings: true,
+  includeSatisfaction: true,
+  includeAIPerformance: true,
+  // Traffic Analytics
+  includeTrafficSources: true,
+  includeTopPages: true,
+  includeVisitorLocations: true,
+  // Agent Data
+  includeAgentPerformance: true,
+  // Options
+  grouping: 'day',
+  includeKPIs: true,
+  includeCharts: true,
+  includeTables: true,
+};
