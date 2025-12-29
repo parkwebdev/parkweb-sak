@@ -98,14 +98,12 @@ export const ConversationChart = React.memo(function ConversationChart({
               }}
             >
               <defs>
-                <linearGradient id="gradientActive" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(220, 90%, 56%)" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(220, 90%, 56%)" stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="gradientClosed" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(210, 100%, 80%)" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(210, 100%, 80%)" stopOpacity={0.05} />
-                </linearGradient>
+                {seriesConfig.map(({ key, color }) => (
+                  <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                  </linearGradient>
+                ))}
               </defs>
 
               <XAxis
@@ -152,39 +150,25 @@ export const ConversationChart = React.memo(function ConversationChart({
                 }}
               />
 
-              <Area
-                dataKey="active"
-                name="Active"
-                stackId="1"
-                type="monotone"
-                stroke="hsl(220, 90%, 56%)"
-                strokeWidth={2}
-                fill="url(#gradientActive)"
-                hide={hiddenSeries.has('active')}
-                activeDot={{
-                  r: 5,
-                  fill: 'hsl(var(--background))',
-                  stroke: 'hsl(220, 90%, 56%)',
-                  strokeWidth: 2,
-                }}
-              />
-
-              <Area
-                dataKey="closed"
-                name="Closed"
-                stackId="1"
-                type="monotone"
-                stroke="hsl(210, 100%, 80%)"
-                strokeWidth={2}
-                fill="url(#gradientClosed)"
-                hide={hiddenSeries.has('closed')}
-                activeDot={{
-                  r: 5,
-                  fill: 'hsl(var(--background))',
-                  stroke: 'hsl(210, 100%, 80%)',
-                  strokeWidth: 2,
-                }}
-              />
+              {seriesConfig.map(({ key, label, color }) => (
+                <Area
+                  key={key}
+                  dataKey={key}
+                  name={label}
+                  stackId="1"
+                  type="monotone"
+                  stroke={color}
+                  strokeWidth={2}
+                  fill={`url(#gradient-${key})`}
+                  hide={hiddenSeries.has(key)}
+                  activeDot={{
+                    r: 5,
+                    fill: 'hsl(var(--background))',
+                    stroke: color,
+                    strokeWidth: 2,
+                  }}
+                />
+              ))}
 
             </AreaChart>
           </ResponsiveContainer>
