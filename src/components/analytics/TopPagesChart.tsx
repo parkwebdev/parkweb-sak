@@ -80,6 +80,17 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
     }));
   }, [data]);
 
+  const contextSummary = useMemo(() => {
+    switch (sortBy) {
+      case 'conversions':
+        return 'Pages ranked by leads generated';
+      case 'conversion_rate':
+        return 'Pages ranked by visitor-to-lead conversion';
+      default:
+        return 'Pages where visitors start their journey';
+    }
+  }, [sortBy]);
+
   const { maxValue, sortedData } = useMemo(() => {
     const sorted = [...dataWithRates]
       .sort((a, b) => {
@@ -132,7 +143,7 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
       <CardContent className="pt-6">
         <ChartCardHeader
           title="Top Landing Pages"
-          contextSummary="Pages where visitors start their journey"
+          contextSummary={contextSummary}
           rightSlot={
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
               <SelectTrigger className="w-[120px] h-8 text-xs">
