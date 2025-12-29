@@ -18,10 +18,13 @@ import { PDFChart } from './PDFChart';
 // Import fonts (registers on import)
 import './fonts';
 
-/** Chart image data for embedding */
+/** Chart data for embedding */
 export interface ChartImageData {
   id?: string;
-  dataUrl: string;
+  // Preferred: vector charts
+  svgString?: string;
+  // Legacy fallback
+  dataUrl?: string;
   width: number;
   height: number;
 }
@@ -133,7 +136,11 @@ export function AnalyticsReportPDF({
           {config.includeConversations && (
             <PDFSection title="Conversations">
               {config.includeCharts && getChart('conversation-volume') && (
-                <PDFChart imageDataUrl={getChart('conversation-volume')!.dataUrl} maxHeight={180} />
+                <PDFChart
+                  svgString={getChart('conversation-volume')!.svgString}
+                  imageDataUrl={getChart('conversation-volume')!.dataUrl}
+                  maxHeight={180}
+                />
               )}
               {config.includeTables && data.conversationStats?.length && (
                 <PDFTable
@@ -153,7 +160,11 @@ export function AnalyticsReportPDF({
           {config.includeConversationFunnel && data.conversationFunnel?.length && (
             <PDFSection title="Conversation Funnel">
               {config.includeCharts && getChart('conversation-funnel') && (
-                <PDFChart imageDataUrl={getChart('conversation-funnel')!.dataUrl} maxHeight={160} />
+                <PDFChart
+                  svgString={getChart('conversation-funnel')!.svgString}
+                  imageDataUrl={getChart('conversation-funnel')!.dataUrl}
+                  maxHeight={160}
+                />
               )}
               {config.includeTables && (
                 <PDFTable
@@ -177,7 +188,11 @@ export function AnalyticsReportPDF({
           {config.includePeakActivity && data.peakActivity && (
             <PDFSection title="Peak Activity">
               {config.includeCharts && getChart('peak-activity') && (
-                <PDFChart imageDataUrl={getChart('peak-activity')!.dataUrl} maxHeight={180} />
+                <PDFChart
+                  svgString={getChart('peak-activity')!.svgString}
+                  imageDataUrl={getChart('peak-activity')!.dataUrl}
+                  maxHeight={180}
+                />
               )}
               <PDFTable
                 columns={[
@@ -197,7 +212,11 @@ export function AnalyticsReportPDF({
           {config.includeLeadSourceBreakdown && data.leadSourceBreakdown?.length && (
             <PDFSection title="Lead Source Breakdown">
               {config.includeCharts && getChart('lead-source-breakdown') && (
-                <PDFChart imageDataUrl={getChart('lead-source-breakdown')!.dataUrl} maxHeight={160} />
+                <PDFChart
+                  svgString={getChart('lead-source-breakdown')!.svgString}
+                  imageDataUrl={getChart('lead-source-breakdown')!.dataUrl}
+                  maxHeight={160}
+                />
               )}
               {config.includeTables && (
                 <PDFTable
@@ -220,7 +239,11 @@ export function AnalyticsReportPDF({
           {config.includeBookings && data.bookingStats?.length && (
             <PDFSection title="Bookings">
               {config.includeCharts && getChart('bookings-by-location') && (
-                <PDFChart imageDataUrl={getChart('bookings-by-location')!.dataUrl} maxHeight={180} />
+                <PDFChart
+                  svgString={getChart('bookings-by-location')!.svgString}
+                  imageDataUrl={getChart('bookings-by-location')!.dataUrl}
+                  maxHeight={180}
+                />
               )}
               {config.includeTables && (
                 <PDFTable
@@ -245,7 +268,11 @@ export function AnalyticsReportPDF({
           {config.includeBookingTrend && data.bookingTrend?.length && (
             <PDFSection title="Booking Trend">
               {config.includeCharts && getChart('booking-trend') && (
-                <PDFChart imageDataUrl={getChart('booking-trend')!.dataUrl} maxHeight={180} />
+                <PDFChart
+                  svgString={getChart('booking-trend')!.svgString}
+                  imageDataUrl={getChart('booking-trend')!.dataUrl}
+                  maxHeight={180}
+                />
               )}
               {config.includeTables && (
                 <PDFTable
@@ -266,7 +293,11 @@ export function AnalyticsReportPDF({
           {config.includeSatisfaction && data.satisfactionStats && (
             <PDFSection title="Customer Satisfaction">
               {config.includeCharts && getChart('csat-distribution') && (
-                <PDFChart imageDataUrl={getChart('csat-distribution')!.dataUrl} maxHeight={160} />
+                <PDFChart
+                  svgString={getChart('csat-distribution')!.svgString}
+                  imageDataUrl={getChart('csat-distribution')!.dataUrl}
+                  maxHeight={160}
+                />
               )}
               <PDFTable
                 columns={[
@@ -324,7 +355,11 @@ export function AnalyticsReportPDF({
           {config.includeTrafficSources && data.trafficSources?.length && (
             <PDFSection title="Traffic Sources">
               {config.includeCharts && getChart('traffic-sources') && (
-                <PDFChart imageDataUrl={getChart('traffic-sources')!.dataUrl} maxHeight={180} />
+                <PDFChart
+                  svgString={getChart('traffic-sources')!.svgString}
+                  imageDataUrl={getChart('traffic-sources')!.dataUrl}
+                  maxHeight={180}
+                />
               )}
               {config.includeTables && (
                 <PDFTable
@@ -345,7 +380,11 @@ export function AnalyticsReportPDF({
           {/* Traffic Source Trend */}
           {config.includeTrafficSourceTrend && getChart('traffic-source-trend') && (
             <PDFSection title="Traffic Source Trend">
-              <PDFChart imageDataUrl={getChart('traffic-source-trend')!.dataUrl} maxHeight={180} />
+              <PDFChart
+                svgString={getChart('traffic-source-trend')!.svgString}
+                imageDataUrl={getChart('traffic-source-trend')!.dataUrl}
+                maxHeight={180}
+              />
             </PDFSection>
           )}
 
@@ -353,7 +392,11 @@ export function AnalyticsReportPDF({
           {config.includeTopPages && data.topPages?.length && (
             <PDFSection title="Top Pages">
               {config.includeCharts && getChart('top-pages') && (
-                <PDFChart imageDataUrl={getChart('top-pages')!.dataUrl} maxHeight={180} />
+                <PDFChart
+                  svgString={getChart('top-pages')!.svgString}
+                  imageDataUrl={getChart('top-pages')!.dataUrl}
+                  maxHeight={180}
+                />
               )}
               {config.includeTables && (
                 <PDFTable
@@ -395,7 +438,11 @@ export function AnalyticsReportPDF({
           {config.includePageDepth && data.pageDepthDistribution?.length && (
             <PDFSection title="Page Depth Distribution">
               {config.includeCharts && getChart('page-depth') && (
-                <PDFChart imageDataUrl={getChart('page-depth')!.dataUrl} maxHeight={160} />
+                <PDFChart
+                  svgString={getChart('page-depth')!.svgString}
+                  imageDataUrl={getChart('page-depth')!.dataUrl}
+                  maxHeight={160}
+                />
               )}
               {config.includeTables && (
                 <PDFTable

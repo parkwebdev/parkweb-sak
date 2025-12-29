@@ -5,15 +5,16 @@
  * Falls back to Image for raster captures.
  */
 
-import { View, Svg, Image, StyleSheet } from '@react-pdf/renderer';
-import { SPACING, PAGE } from './styles';
+import { View, Image, StyleSheet } from '@react-pdf/renderer';
+import { SPACING } from './styles';
+import { SvgFromString } from './svg/SvgFromString';
 
 const chartStyles = StyleSheet.create({
   container: {
     width: '100%',
     marginBottom: SPACING.MD,
   },
-  
+
   image: {
     width: '100%',
     objectFit: 'contain',
@@ -21,42 +22,32 @@ const chartStyles = StyleSheet.create({
 });
 
 interface PDFChartProps {
-  /** SVG string from Recharts extraction */
+  /** SVG string extracted from Recharts */
   svgString?: string;
-  /** Fallback: base64 data URL from html2canvas */
+  /** Fallback raster data URL (legacy) */
   imageDataUrl?: string;
   /** Maximum height in points */
   maxHeight?: number;
 }
 
 export function PDFChart({ svgString, imageDataUrl, maxHeight = 200 }: PDFChartProps) {
-  // Use raster image fallback if SVG not available
-  if (imageDataUrl && !svgString) {
+  if (svgString) {
     return (
       <View style={chartStyles.container}>
-        <Image
-          src={imageDataUrl}
-          style={[chartStyles.image, { maxHeight }]}
-        />
+        <SvgFromString svgString={svgString} maxHeight={maxHeight} />
       </View>
     );
   }
 
-  // If no chart data, render nothing
-  if (!svgString) {
-    return null;
+  if (imageDataUrl) {
+    return (
+      <View style={chartStyles.container}>
+        <Image src={imageDataUrl} style={[chartStyles.image, { maxHeight }]} />
+      </View>
+    );
   }
 
-  // For SVG, we need to parse and convert to @react-pdf/renderer Svg components
-  // This is complex, so for now we'll use the image fallback approach
-  // The SVG string approach requires parsing the SVG and converting each element
-  
-  return (
-    <View style={chartStyles.container}>
-      {/* SVG parsing would go here - for now this is a placeholder */}
-      {/* In production, you'd use a library like svg2pdf or parse the SVG manually */}
-    </View>
-  );
+  return null;
 }
 
 /**
