@@ -261,9 +261,9 @@ function Analytics() {
   const landingPages = mockMode && mockData ? mockData.landingPages : realLandingPages;
   const pageVisits = mockMode && mockData ? mockData.pageVisits : realPageVisits;
   const locationData = mockMode && mockData ? mockData.locationData : realLocationData;
-  const engagement = realEngagement; // No mock data for engagement yet
-  const sourcesByDate = realSourcesByDate; // No mock data for time-series yet
-  const pageDepthDistribution = realPageDepthDistribution; // No mock data for depth yet
+  const engagement = mockMode && mockData?.engagement ? mockData.engagement : realEngagement;
+  const sourcesByDate = mockMode && mockData?.sourcesByDate ? mockData.sourcesByDate : realSourcesByDate;
+  const pageDepthDistribution = mockMode && mockData?.pageDepthDistribution ? mockData.pageDepthDistribution : realPageDepthDistribution;
   const funnelStages = mockMode && mockData ? mockData.funnelStages : realFunnelStages;
 
 

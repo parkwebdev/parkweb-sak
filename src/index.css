@@ -488,6 +488,20 @@ html::view-transition {
   }
 }
 
+/* Page depth chart bar animation */
+@keyframes growWidth {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--target-width, 100%);
+  }
+}
+
+.animate-grow-width {
+  animation: growWidth 0.6s ease-out forwards;
+}
+
 /* Article content rich text styles */
 .article-content {
   @apply text-sm leading-relaxed;
