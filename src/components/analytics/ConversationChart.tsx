@@ -13,7 +13,7 @@ import { ChartTooltipContent } from '@/components/charts/charts-base';
 import { format, parseISO } from 'date-fns';
 import { ChartCardHeader } from './ChartCardHeader';
 import { cn } from '@/lib/utils';
-import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface ConversationChartProps {
   data: Array<{

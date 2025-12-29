@@ -10,7 +10,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { ChartTooltipContent } from '@/components/charts/charts-base';
 import { format, parseISO } from 'date-fns';
 import { ChartCardHeader } from './ChartCardHeader';
@@ -45,25 +45,21 @@ interface BookingTrendChartProps {
 
 type ViewMode = 'all-statuses' | 'total-only';
 
-/** Color configuration matching ConversationChart blue palette */
-const TREND_COLORS = {
-  completed: 'hsl(220, 90%, 56%)',      // Primary blue (same as Active in ConversationChart)
-  confirmed: 'hsl(210, 100%, 80%)',     // Light blue (same as Closed in ConversationChart)
-  cancelled: 'hsl(220, 70%, 70%)',      // Medium blue
-  noShow: 'hsl(210, 60%, 88%)',         // Pale blue
-  total: 'hsl(220, 90%, 56%)',          // Primary blue for total view
+/** Color configuration for booking statuses */
+const STATUS_COLORS: Record<string, string> = {
+  completed: 'hsl(220, 90%, 56%)',
+  confirmed: 'hsl(210, 100%, 80%)',
+  cancelled: 'hsl(220, 70%, 70%)',
+  noShow: 'hsl(210, 60%, 88%)',
+  total: 'hsl(220, 90%, 56%)',
 };
 
-/**
- * Renders a stacked area chart of booking trends over time.
- * Includes loading skeleton, empty state, and accessible tooltips.
- */
 /** Status configuration for DRY rendering */
 const STATUS_CONFIG = [
-  { key: 'completed', label: 'Completed', color: TREND_COLORS.completed },
-  { key: 'confirmed', label: 'Confirmed', color: TREND_COLORS.confirmed },
-  { key: 'cancelled', label: 'Cancelled', color: TREND_COLORS.cancelled },
-  { key: 'noShow', label: 'No-show', color: TREND_COLORS.noShow },
+  { key: 'completed', label: 'Completed', color: STATUS_COLORS.completed },
+  { key: 'confirmed', label: 'Confirmed', color: STATUS_COLORS.confirmed },
+  { key: 'cancelled', label: 'Cancelled', color: STATUS_COLORS.cancelled },
+  { key: 'noShow', label: 'No-show', color: STATUS_COLORS.noShow },
 ] as const;
 
 export const BookingTrendChart = React.memo(function BookingTrendChart({
@@ -94,6 +90,20 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
     return data.reduce((sum, d) => sum + d.total, 0);
   }, [data]);
 
+  // Format data for chart
+  const chartData = useMemo(() => {
+    return data.map(d => ({
+      ...d,
+      formattedDate: (() => {
+        try {
+          return format(parseISO(d.date), 'MMM d');
+        } catch {
+          return d.date;
+        }
+      })(),
+    }));
+  }, [data]);
+
   // Loading state
   if (loading) {
     return (
@@ -105,11 +115,6 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
               <Skeleton className="h-4 w-56" />
             </div>
             <Skeleton className="h-[350px] w-full" />
-            <div className="flex gap-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-6 w-20" />
-              ))}
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -161,7 +166,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
           }
         />
 
-        {/* Toggle chips above chart */}
+        {/* Clickable legend chips above chart */}
         {viewMode === 'all-statuses' && (
           <div className="flex flex-wrap gap-2 mt-2 mb-4">
             {STATUS_CONFIG.map((status) => (
@@ -169,7 +174,8 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                 key={status.key}
                 onClick={() => toggleStatus(status.key)}
                 className={cn(
-                  "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-all",
+                  "flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-all",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   hiddenStatuses.has(status.key)
                     ? "opacity-40 bg-muted"
                     : "bg-muted/50 hover:bg-muted"
@@ -179,62 +185,41 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                   className="h-2 w-2 rounded-full shrink-0" 
                   style={{ backgroundColor: status.color }}
                 />
-                <span className="text-muted-foreground">{status.label}</span>
+                <span>{status.label}</span>
               </button>
             ))}
           </div>
         )}
 
-        <div className="h-[350px] w-full">
+        <div className={cn("h-[350px] w-full", viewMode === 'total-only' && "mt-2")}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={data}
+              data={chartData}
               className="text-muted-foreground [&_.recharts-text]:text-xs"
-              margin={{
-                top: 10,
-                bottom: 10,
-                left: -10,
-                right: 10,
-              }}
+              margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
             >
               <defs>
-                <linearGradient id="gradientConfirmed" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={TREND_COLORS.confirmed} stopOpacity={0.4} />
-                  <stop offset="95%" stopColor={TREND_COLORS.confirmed} stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="gradientCompleted" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={TREND_COLORS.completed} stopOpacity={0.4} />
-                  <stop offset="95%" stopColor={TREND_COLORS.completed} stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="gradientCancelled" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={TREND_COLORS.cancelled} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={TREND_COLORS.cancelled} stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="gradientNoShow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={TREND_COLORS.noShow} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={TREND_COLORS.noShow} stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="gradientTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={TREND_COLORS.total} stopOpacity={0.4} />
-                  <stop offset="95%" stopColor={TREND_COLORS.total} stopOpacity={0.05} />
+                {STATUS_CONFIG.map(({ key, color }) => (
+                  <linearGradient key={key} id={`gradient-booking-${key}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+                  </linearGradient>
+                ))}
+                <linearGradient id="gradient-booking-total" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={STATUS_COLORS.total} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={STATUS_COLORS.total} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
 
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+
               <XAxis
-                dataKey="date"
+                dataKey="formattedDate"
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
                 tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                 padding={{ left: 10, right: 10 }}
-                tickFormatter={(value) => {
-                  try {
-                    const date = parseISO(value);
-                    return format(date, 'MMM d');
-                  } catch {
-                    return value;
-                  }
-                }}
               />
 
               <YAxis
@@ -249,14 +234,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
               <Tooltip
                 content={<ChartTooltipContent />}
                 formatter={(value) => Number(value).toLocaleString()}
-                labelFormatter={(label) => {
-                  try {
-                    const date = parseISO(String(label));
-                    return format(date, 'MMM d, yyyy');
-                  } catch {
-                    return String(label);
-                  }
-                }}
+                labelFormatter={(label) => String(label)}
                 cursor={{
                   stroke: 'hsl(var(--primary))',
                   strokeWidth: 1,
@@ -266,53 +244,51 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
 
               {viewMode === 'total-only' ? (
                 <Area
-                  isAnimationActive={!prefersReducedMotion}
-                  animationDuration={800}
-                  animationEasing="ease-out"
                   dataKey="total"
                   name="Total"
                   type="monotone"
-                  stroke={TREND_COLORS.total}
+                  stroke={STATUS_COLORS.total}
                   strokeWidth={2}
-                  fill="url(#gradientTotal)"
+                  fill="url(#gradient-booking-total)"
+                  isAnimationActive={!prefersReducedMotion}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                   activeDot={{
                     r: 5,
                     fill: 'hsl(var(--background))',
-                    stroke: TREND_COLORS.total,
+                    stroke: STATUS_COLORS.total,
                     strokeWidth: 2,
                   }}
                 />
               ) : (
-                <>
-                  {STATUS_CONFIG.map((status) => (
-                    <Area
-                      key={status.key}
-                      isAnimationActive={!prefersReducedMotion}
-                      animationDuration={800}
-                      animationEasing="ease-out"
-                      dataKey={status.key}
-                      name={status.label}
-                      stackId="1"
-                      type="monotone"
-                      stroke={status.color}
-                      strokeWidth={2}
-                      fill={`url(#gradient${status.key.charAt(0).toUpperCase() + status.key.slice(1)})`}
-                      hide={hiddenStatuses.has(status.key)}
-                      activeDot={{
-                        r: 5,
-                        fill: 'hsl(var(--background))',
-                        stroke: status.color,
-                        strokeWidth: 2,
-                      }}
-                    />
-                  ))}
-                </>
+                STATUS_CONFIG.map(({ key, label, color }) => (
+                  <Area
+                    key={key}
+                    dataKey={key}
+                    name={label}
+                    stackId="1"
+                    type="monotone"
+                    stroke={color}
+                    strokeWidth={2}
+                    fill={`url(#gradient-booking-${key})`}
+                    hide={hiddenStatuses.has(key)}
+                    isAnimationActive={!prefersReducedMotion}
+                    animationDuration={800}
+                    animationEasing="ease-out"
+                    activeDot={{
+                      r: 5,
+                      fill: 'hsl(var(--background))',
+                      stroke: color,
+                      strokeWidth: 2,
+                    }}
+                  />
+                ))
               )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Footer context summary */}
+        {/* Context summary footer */}
         <p className="mt-4 text-xs text-muted-foreground">
           Showing {totalBookings.toLocaleString()} bookings over {data.length} days
         </p>
