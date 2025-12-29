@@ -684,6 +684,98 @@ interface AIPerformanceStats {
 
 ---
 
+### useAnalyticsData
+
+Consolidated hook for all analytics data fetching and calculations. Combines 6 data hooks into a single interface for the Analytics page.
+
+```tsx
+import { useAnalyticsData } from '@/hooks/useAnalyticsData';
+
+const {
+  // === Raw Data ===
+  conversationStats,          // ConversationStats | null
+  leadStats,                  // LeadStageStats | null
+  stageInfo,                  // StageInfo[]
+  agentPerformance,           // AgentPerformance | null
+  usageMetrics,               // UsageMetrics | null
+  bookingStats,               // BookingStats | null
+  satisfactionStats,          // SatisfactionStats | null
+  aiPerformanceStats,         // AIPerformanceStats | null
+  trafficSources,             // TrafficSourceData[]
+  landingPages,               // LandingPageData[]
+  locationData,               // LocationData[]
+  
+  // === Comparison Data ===
+  comparisonConversationStats, // ConversationStats | null
+  comparisonLeadStats,         // LeadStageStats | null
+  comparisonBookingStats,      // BookingStats | null
+  comparisonTrafficSources,    // TrafficSourceData[]
+  
+  // === Funnel ===
+  funnelStages,               // FunnelStage[]
+  funnelLoading,              // boolean
+  
+  // === Loading States ===
+  loading,                    // boolean - General loading
+  bookingLoading,             // boolean
+  satisfactionLoading,        // boolean
+  aiPerformanceLoading,       // boolean
+  trafficLoading,             // boolean
+  comparisonTrafficLoading,   // boolean
+  
+  // === Calculated KPIs ===
+  totalConversations,         // number
+  totalLeads,                 // number
+  conversionRate,             // string (e.g. "12.5%")
+  totalBookings,              // number
+  totalMessages,              // number
+  
+  // === Trend Values ===
+  conversationTrendValue,     // number (percentage change)
+  leadTrendValue,             // number
+  bookingTrendValue,          // number
+  aiContainmentTrendValue,    // number
+  
+  // === Chart Data (processed) ===
+  leadChartData,              // { value: number }[]
+  conversionChartData,        // { value: number }[]
+  bookingChartData,           // { value: number }[]
+  leadTrend,                  // number[]
+  conversionTrend,            // number[]
+  bookingTrend,               // number[]
+  
+  // === Utility Functions ===
+  calculatePeriodChange,      // (trend: number[]) => number
+  calculatePointChange,       // (trend: number[]) => number
+  
+  // === Mock Mode ===
+  mockMode,                   // boolean
+  setMockMode,                // (enabled: boolean) => void
+  regenerateMockData,         // () => void
+  
+  // === Actions ===
+  refetch,                    // () => void
+} = useAnalyticsData({
+  startDate: Date,
+  endDate: Date,
+  comparisonStartDate: Date,
+  comparisonEndDate: Date,
+  comparisonMode: boolean,
+  filters: { leadStatus: string, conversationStatus: string },
+});
+```
+
+**Key Features:**
+- Consolidates 6 data hooks: `useAnalytics`, `useBookingAnalytics`, `useSatisfactionAnalytics`, `useAIPerformanceAnalytics`, `useTrafficAnalytics`, `useConversationFunnel`
+- Single mock mode toggle affecting all data sources
+- Pre-calculated KPIs and trend values
+- Chart-ready data transformations
+- Comparison mode support for A/B period analysis
+
+**File**: `src/hooks/useAnalyticsData.ts`
+
+---
+
 ### useTrafficAnalytics
 
 Fetches visitor traffic, page analytics, engagement metrics, and session depth data. **Powered by React Query** with real-time updates.

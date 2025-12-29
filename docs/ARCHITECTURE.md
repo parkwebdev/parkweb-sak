@@ -330,6 +330,64 @@ Track performance with:
 - Data tables
 - Scheduled reports
 
+**Component Architecture** (Refactored Dec 2024):
+
+```
+Analytics.tsx (Composition Layer - 271 lines)
+├── Hooks
+│   └── useAnalyticsData           # Consolidated data hook (621 lines)
+│       ├── useAnalytics           # Conversation/lead stats
+│       ├── useBookingAnalytics    # Booking data by location
+│       ├── useSatisfactionAnalytics # CSAT scores and ratings
+│       ├── useAIPerformanceAnalytics # Containment/resolution rates
+│       ├── useTrafficAnalytics    # Traffic sources and pages
+│       └── useConversationFunnel  # Funnel stage data
+├── Section Components (src/components/analytics/sections/)
+│   ├── ConversationsSection       # Conversation charts and funnel
+│   ├── LeadsSection               # Lead KPIs and conversion chart
+│   ├── BookingsSection            # Booking trends by location
+│   ├── AIPerformanceSection       # AI containment and CSAT
+│   ├── SourcesSection             # Traffic source breakdown
+│   ├── PagesSection               # Page engagement and depth
+│   ├── GeographySection           # Visitor location map
+│   └── ReportsSection             # Export history and scheduling
+├── Utilities
+│   ├── analytics-utils.ts         # Chart data transformations
+│   ├── analytics-export-data.ts   # Report data builder
+│   └── analytics-constants.ts     # Section info and defaults
+└── UI Components
+    ├── AnalyticsSectionMenu       # Left navigation tabs
+    ├── AnalyticsToolbar           # Date picker, filters, mock mode
+    └── BuildReportSheet           # Report configuration modal
+```
+
+**Data Flow:**
+
+```
+┌─────────────────┐     ┌────────────────────┐
+│  Analytics.tsx  │────▶│ useAnalyticsData   │ (consolidated hook)
+│  (271 lines)    │     │ (621 lines)        │
+└────────┬────────┘     └────────┬───────────┘
+         │                       │
+         │              ┌────────┴────────────────────┐
+         │              │ Combines 6 data hooks:      │
+         │              │ • useAnalytics              │
+         │              │ • useBookingAnalytics       │
+         │              │ • useSatisfactionAnalytics  │
+         │              │ • useAIPerformanceAnalytics │
+         │              │ • useTrafficAnalytics       │
+         │              │ • useConversationFunnel     │
+         │              └────────┬────────────────────┘
+         ▼                       │
+┌─────────────────┐              ▼
+│ Section         │     ┌────────────────────┐
+│ Components      │◀────│ Pre-calculated:    │
+│ (8 tabs)        │     │ • KPIs & trends    │
+└─────────────────┘     │ • Chart data       │
+                        │ • Mock mode        │
+                        └────────────────────┘
+```
+
 ### 6. Planner (Calendar)
 **Location:** `src/pages/Planner.tsx`
 
