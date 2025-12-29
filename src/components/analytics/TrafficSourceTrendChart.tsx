@@ -136,7 +136,6 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
           trendValue={trendPercentage}
           trendLabel="Traffic"
           trendPeriod="this period"
-          contextSummary={`${totalSessions.toLocaleString()} total sessions across ${activeSources.length} sources`}
         />
 
         {/* Legend with toggle */}
@@ -212,6 +211,11 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
             </AreaChart>
           </ResponsiveContainer>
         </div>
+
+        {/* Context summary footer */}
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {totalSessions.toLocaleString()} sessions across {activeSources.length} sources
+        </p>
       </CardContent>
     </Card>
   );
