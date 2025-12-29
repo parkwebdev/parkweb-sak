@@ -221,19 +221,10 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
                   </TooltipContent>
                 </Tooltip>
 
-                {/* Conversion rate badge */}
-                <div className="flex items-center gap-2 w-20 shrink-0">
-                  <span className={cn(
-                    "text-xs px-1.5 py-0.5 rounded-md tabular-nums",
-                    page.conversionRate > 3 
-                      ? "bg-success/10 text-success" 
-                      : page.conversionRate > 1 
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
-                  )}>
-                    {page.conversionRate.toFixed(1)}%
-                  </span>
-                </div>
+                {/* Percentage - matching PageDepthChart style */}
+                <span className="text-xs text-muted-foreground w-12 shrink-0 tabular-nums">
+                  {page.conversionRate.toFixed(1)}%
+                </span>
               </div>
             );
           })}
