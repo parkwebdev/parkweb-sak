@@ -328,7 +328,7 @@ export default function PDFTestPage() {
   ];
 
   return (
-    <div className="flex-1 h-screen bg-muted/30 flex min-h-0">
+    <div className="flex-1 h-full bg-muted/30 flex min-h-0">
       {/* Controls Sidebar */}
       <aside className="w-80 flex-shrink-0 border-r border-border bg-background flex flex-col min-h-0">
         <div className="p-4 border-b border-border flex-shrink-0">
