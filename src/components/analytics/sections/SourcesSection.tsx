@@ -23,8 +23,8 @@ interface SourcesSectionProps {
   trafficSources: TrafficSourceData[];
   /** Comparison traffic source data (when comparison mode enabled) */
   comparisonTrafficSources?: TrafficSourceData[];
-  /** Engagement metrics */
-  engagement: EngagementMetrics;
+  /** Engagement metrics (null when data is loading or unavailable) */
+  engagement: EngagementMetrics | null;
   /** Lead source breakdown data */
   leadsBySource: LeadSourceData[];
   /** Traffic source trend data by date */

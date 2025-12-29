@@ -7,9 +7,10 @@
 
 import React from 'react';
 import { pdf } from '@react-pdf/renderer';
-import { AnalyticsReportPDF, type PDFData, type PDFConfig } from './pdf-components';
+import { AnalyticsReportPDF } from './pdf-components';
+import type { PDFData, PDFConfig } from '@/types/pdf';
 
-export type { PDFData, PDFConfig };
+export type { PDFData, PDFConfig, ReportType } from '@/types/pdf';
 
 interface GenerateOptions {
   data: PDFData;
