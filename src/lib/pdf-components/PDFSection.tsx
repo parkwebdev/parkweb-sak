@@ -30,11 +30,13 @@ const sectionStyles = StyleSheet.create({
 interface PDFSectionProps {
   title: string;
   children: React.ReactNode;
+  /** If true, forces a page break before this section */
+  break?: boolean;
 }
 
-export function PDFSection({ title, children }: PDFSectionProps) {
+export function PDFSection({ title, children, break: pageBreak }: PDFSectionProps) {
   return (
-    <View style={sectionStyles.container}>
+    <View style={sectionStyles.container} break={pageBreak}>
       <Text style={sectionStyles.title}>{title}</Text>
       <View style={sectionStyles.content}>{children}</View>
     </View>

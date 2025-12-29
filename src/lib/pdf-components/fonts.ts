@@ -6,6 +6,7 @@
  */
 
 import { Font } from '@react-pdf/renderer';
+import { logger } from '@/utils/logger';
 
 // Inter font URLs from jsDelivr (stable CDN, versioned)
 const INTER_FONTS = {
@@ -40,7 +41,7 @@ export function registerFonts(): void {
     
     fontsRegistered = true;
   } catch (error) {
-    console.error('[PDF Fonts] Failed to register Inter fonts, falling back to Helvetica:', error);
+    logger.error('[PDF Fonts] Failed to register Inter fonts, falling back to Helvetica:', error);
     
     // Fallback to system font if CDN fails
     try {
@@ -53,7 +54,7 @@ export function registerFonts(): void {
       });
       fontsRegistered = true;
     } catch (fallbackError) {
-      console.error('[PDF Fonts] Fallback font registration also failed:', fallbackError);
+      logger.error('[PDF Fonts] Fallback font registration also failed:', fallbackError);
     }
   }
 }
