@@ -13,19 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TrendUp01, TrendDown01 } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
-
-interface TrafficSourceData {
-  name: string;
-  value: number;
-  color?: string;
-}
-
-interface TrafficSourceChartProps {
-  data: TrafficSourceData[];
-  loading?: boolean;
-  /** Comparison period data for calculating trend percentage */
-  comparisonData?: TrafficSourceData[];
-}
+import { ChartCardHeader } from './ChartCardHeader';
+import type { TrafficSourceData, TrafficSourceChartProps } from '@/types/analytics';
 
 // Color palette from light to dark (matching TopPagesChart)
 const BAR_COLORS = [
@@ -141,30 +130,16 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
   return (
     <Card className="h-full">
       <CardContent className="pt-6">
-        {/* Trend header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-1.5">
-            <span className="text-base font-semibold text-foreground">
-              {hasTrendData 
-                ? `Traffic ${isPositiveTrend ? 'up' : 'down'} ${Math.abs(trendPercentage).toFixed(1)}% this period`
-                : `${total.toLocaleString()} total conversations`
-              }
-            </span>
-            {hasTrendData && (
-              isPositiveTrend ? (
-                <TrendUp01 size={16} className="text-success" />
-              ) : (
-                <TrendDown01 size={16} className="text-destructive" />
-              )
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {hasTrendData 
-              ? `${total.toLocaleString()} conversations, ${previousTotal.toLocaleString()} last period`
-              : `Across ${sortedData.length} traffic sources`
-            }
-          </p>
-        </div>
+        <ChartCardHeader
+          title="Traffic Sources"
+          trendValue={hasTrendData ? trendPercentage : undefined}
+          trendLabel="Traffic"
+          trendPeriod="this period"
+          contextSummary={hasTrendData 
+            ? `${total.toLocaleString()} conversations, ${previousTotal.toLocaleString()} last period`
+            : `${total.toLocaleString()} total across ${sortedData.length} sources`
+          }
+        />
 
         <div className="space-y-3">
           {sortedData.map((source, index) => {

@@ -8,8 +8,8 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChartTooltipContent } from '@/components/charts/charts-base';
 import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useReducedMotion } from '@/hooks/useReducedMotion';

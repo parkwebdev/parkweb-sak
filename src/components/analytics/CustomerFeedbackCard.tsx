@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,10 +8,11 @@ import {
 } from "@tanstack/react-table";
 import { useState } from "react";
 import { MessageTextSquare01 } from "@untitledui/icons";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table/DataTable";
 import { DataTablePagination } from "@/components/data-table/DataTablePagination";
 import { customerFeedbackColumns, CustomerFeedbackData } from "@/components/data-table/columns/customer-feedback-columns";
+import { ChartCardHeader } from "./ChartCardHeader";
 import type { FeedbackItem } from "@/types/analytics";
 
 interface CustomerFeedbackCardProps {
@@ -19,7 +20,7 @@ interface CustomerFeedbackCardProps {
   loading?: boolean;
 }
 
-export const CustomerFeedbackCard = ({ data, loading }: CustomerFeedbackCardProps) => {
+export const CustomerFeedbackCard = React.memo(function CustomerFeedbackCard({ data, loading }: CustomerFeedbackCardProps) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
@@ -53,15 +54,15 @@ export const CustomerFeedbackCard = ({ data, loading }: CustomerFeedbackCardProp
 
   return (
     <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-base font-semibold">Customer Feedback</CardTitle>
-        <CardDescription>Recent feedback from customer ratings</CardDescription>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
+        <ChartCardHeader
+          title="Customer Feedback"
+          contextSummary="Recent feedback from customer ratings"
+        />
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
-              <MessageTextSquare01 size={24} className="text-muted-foreground" />
+              <MessageTextSquare01 size={24} className="text-muted-foreground" aria-hidden="true" />
             </div>
             <p className="text-sm font-medium text-foreground">No feedback yet</p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -82,4 +83,4 @@ export const CustomerFeedbackCard = ({ data, loading }: CustomerFeedbackCardProp
       </CardContent>
     </Card>
   );
-};
+});

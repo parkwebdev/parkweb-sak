@@ -11,14 +11,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-
-export interface FunnelStage {
-  name: string;
-  count: number;
-  percentage: number;
-  dropOffPercent: number;
-  color: string;
-}
+import type { FunnelStage } from '@/types/analytics';
 
 export interface ConversationFunnelData {
   stages: FunnelStage[];

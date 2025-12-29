@@ -363,5 +363,69 @@ export interface AIPerformanceCardProps extends BaseChartProps {
   totalConversations: number;
   /** Human takeover count */
   humanTakeover: number;
+  /** Trend percentage value */
+  trendValue?: number;
+  /** Period for trend comparison */
+  trendPeriod?: string;
+}
+
+// =============================================================================
+// CONVERSATION FUNNEL TYPES
+// =============================================================================
+
+/**
+ * Funnel stage data for conversation journey visualization.
+ */
+export interface FunnelStage {
+  /** Stage name (e.g., "Started", "Engaged") */
+  name: string;
+  /** Count of conversations at this stage */
+  count: number;
+  /** Percentage of total (0-100) */
+  percentage: number;
+  /** Drop-off percentage from previous stage (0-100) */
+  dropOffPercent: number;
+  /** Color for visualization */
+  color: string;
+}
+
+// =============================================================================
+// TRAFFIC ANALYTICS TYPES
+// =============================================================================
+
+/**
+ * Traffic source data for horizontal bar chart.
+ */
+export interface TrafficSourceData {
+  /** Source name (e.g., "Direct", "Organic", "Social") */
+  name: string;
+  /** Conversation count from this source */
+  value: number;
+  /** Optional custom color */
+  color?: string;
+}
+
+/**
+ * Props for TrafficSourceChart component.
+ */
+export interface TrafficSourceChartProps extends BaseChartProps {
+  /** Traffic source data array */
+  data: TrafficSourceData[];
+  /** Comparison period data for calculating trend percentage */
+  comparisonData?: TrafficSourceData[];
+}
+
+/**
+ * Top page data for landing pages chart.
+ */
+export interface TopPageData {
+  /** Page URL */
+  url: string;
+  /** Number of visits */
+  visits: number;
+  /** Average session duration in milliseconds */
+  avgDuration: number;
+  /** Number of conversions (leads) */
+  conversions: number;
 }
 
