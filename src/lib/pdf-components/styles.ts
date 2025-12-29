@@ -35,9 +35,7 @@ export const PAGE = {
   WIDTH: 595.28,
   HEIGHT: 841.89,
   MARGIN: 40,
-  get CONTENT_WIDTH() {
-    return this.WIDTH - this.MARGIN * 2;
-  },
+  CONTENT_WIDTH: 595.28 - 40 * 2, // 515.28
 };
 
 // Spacing constants (in points)

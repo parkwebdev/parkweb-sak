@@ -27,24 +27,29 @@ interface GenerateOptions {
  * @returns Promise resolving to a Blob of the generated PDF
  */
 export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob> {
-  const { data, config, startDate, endDate, orgName, charts } = opts;
+  try {
+    const { data, config, startDate, endDate, orgName, charts } = opts;
 
-  // Convert Map to the expected format if needed
-  const chartMap = charts instanceof Map ? charts : new Map();
+    // Convert Map to the expected format if needed
+    const chartMap = charts instanceof Map ? charts : new Map();
 
-  // Create the PDF document
-  const doc = React.createElement(AnalyticsReportPDF, {
-    data,
-    config,
-    startDate,
-    endDate,
-    orgName,
-    charts: chartMap,
-  });
+    // Create the PDF document
+    const doc = React.createElement(AnalyticsReportPDF, {
+      data,
+      config,
+      startDate,
+      endDate,
+      orgName,
+      charts: chartMap,
+    });
 
-  // Generate the PDF blob
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const blob = await pdf(doc as any).toBlob();
-  
-  return blob;
+    // Generate the PDF blob
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const blob = await pdf(doc as any).toBlob();
+    
+    return blob;
+  } catch (error) {
+    console.error('PDF generation failed:', error);
+    throw new Error(`PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
