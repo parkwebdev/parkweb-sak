@@ -10,7 +10,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from '@untitledui/icons';
 
 // Import the worker directly - Vite will bundle it locally
@@ -349,7 +348,7 @@ export function PdfJsViewer({
       </div>
 
       {/* PDF Pages */}
-      <ScrollArea className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <div
           ref={containerRef}
           className="flex flex-col items-center gap-4 p-4 bg-muted/30"
@@ -380,7 +379,7 @@ export function PdfJsViewer({
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
