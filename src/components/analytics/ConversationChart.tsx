@@ -6,13 +6,14 @@
  * @module components/analytics/ConversationChart
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartTooltipContent } from '@/components/charts/charts-base';
 import { format, parseISO } from 'date-fns';
 import { ChartCardHeader } from './ChartCardHeader';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { cn } from '@/lib/utils';
 
 interface ConversationChartProps {
   data: Array<{
@@ -31,11 +32,29 @@ export const ConversationChart = React.memo(function ConversationChart({
   trendPeriod = 'this month',
 }: ConversationChartProps) {
   const prefersReducedMotion = useReducedMotion();
+  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
   
   // Calculate totals for context summary
   const totalConversations = useMemo(() => {
     return data.reduce((sum, d) => sum + d.total, 0);
   }, [data]);
+
+  const toggleSeries = (series: string) => {
+    setHiddenSeries(prev => {
+      const next = new Set(prev);
+      if (next.has(series)) {
+        next.delete(series);
+      } else {
+        next.add(series);
+      }
+      return next;
+    });
+  };
+
+  const seriesConfig = [
+    { key: 'active', label: 'Active', color: 'hsl(220, 90%, 56%)' },
+    { key: 'closed', label: 'Closed', color: 'hsl(210, 100%, 80%)' },
+  ];
 
   return (
     <Card className="h-full">
@@ -46,6 +65,28 @@ export const ConversationChart = React.memo(function ConversationChart({
           trendLabel="Conversations"
           trendPeriod={trendPeriod}
         />
+
+        {/* Clickable legend chips above chart */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {seriesConfig.map(({ key, label, color }) => (
+            <button
+              key={key}
+              onClick={() => toggleSeries(key)}
+              className={cn(
+                "flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-all",
+                hiddenSeries.has(key)
+                  ? "opacity-40 bg-muted"
+                  : "bg-muted/50 hover:bg-muted"
+              )}
+            >
+              <span 
+                className="h-2 w-2 rounded-full shrink-0" 
+                style={{ backgroundColor: color }}
+              />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
@@ -124,6 +165,7 @@ export const ConversationChart = React.memo(function ConversationChart({
                 stroke="hsl(220, 90%, 56%)"
                 strokeWidth={2}
                 fill="url(#gradientActive)"
+                hide={hiddenSeries.has('active')}
                 activeDot={{
                   r: 5,
                   fill: 'hsl(var(--background))',
@@ -143,6 +185,7 @@ export const ConversationChart = React.memo(function ConversationChart({
                 stroke="hsl(210, 100%, 80%)"
                 strokeWidth={2}
                 fill="url(#gradientClosed)"
+                hide={hiddenSeries.has('closed')}
                 activeDot={{
                   r: 5,
                   fill: 'hsl(var(--background))',
@@ -155,28 +198,10 @@ export const ConversationChart = React.memo(function ConversationChart({
           </ResponsiveContainer>
         </div>
 
-        {/* Legend section with context summary above chips */}
-        <div className="mt-4 flex flex-col gap-2">
-          <p className="text-xs text-muted-foreground">
-            Showing {totalConversations.toLocaleString()} conversations over {data.length} days
-          </p>
-          <div className="flex flex-wrap gap-2 justify-start">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-              <span 
-                className="h-2 w-2 rounded-full shrink-0" 
-                style={{ backgroundColor: 'hsl(220, 90%, 56%)' }}
-              />
-              <span className="text-xs text-muted-foreground">Active</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-              <span 
-                className="h-2 w-2 rounded-full shrink-0" 
-                style={{ backgroundColor: 'hsl(210, 100%, 80%)' }}
-              />
-              <span className="text-xs text-muted-foreground">Closed</span>
-            </div>
-          </div>
-        </div>
+        {/* Context summary footer */}
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {totalConversations.toLocaleString()} conversations over {data.length} days
+        </p>
       </CardContent>
     </Card>
   );
