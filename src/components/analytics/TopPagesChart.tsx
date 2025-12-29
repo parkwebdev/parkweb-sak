@@ -180,7 +180,7 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
                 style={{ animationDelay: `${animationDelay}ms` }}
               >
                 {/* Label */}
-                <span className="text-sm text-muted-foreground w-20 shrink-0 group-hover:text-foreground transition-colors truncate">
+                <span className="text-sm text-muted-foreground w-24 shrink-0 group-hover:text-foreground transition-colors">
                   {formatUrl(page.url)}
                 </span>
                 
