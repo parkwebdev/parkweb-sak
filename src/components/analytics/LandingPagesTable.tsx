@@ -69,6 +69,7 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
       <CardContent className="pt-6">
         <ChartCardHeader
           title="Top Landing Pages"
+          contextSummary={contextSummary}
           rightSlot={
             data.length > 0 ? (
               <div className="w-64">
@@ -81,11 +82,6 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
             ) : undefined
           }
         />
-        {data.length > 0 && (
-          <p className="mt-2 mb-4 text-xs text-muted-foreground">
-            {contextSummary || "Pages where visitors start their journey"}
-          </p>
-        )}
         {data.length === 0 ? (
           <div className="h-[300px] flex items-center justify-center">
             <span className="text-muted-foreground text-sm">No landing page data available</span>
