@@ -1060,7 +1060,7 @@ export interface AnalyticsExportData {
 
 ### Phase 6.3: Beautiful PDF Reports with Chart Images
 
-**Status**: 🔄 PENDING  
+**Status**: ✅ COMPLETE (December 29, 2024)  
 **Objective**: Generate visually stunning PDFs that match dashboard aesthetics
 
 #### Approach: html2canvas Chart Capture
@@ -1122,25 +1122,48 @@ export interface AnalyticsExportData {
 └─────────────────────────────────────────────────────────────┘
 ```
 
-#### Files to Create
+#### Files Created ✅
 
-| File | Purpose | Lines (Est.) |
-|------|---------|--------------|
-| `src/lib/report-pdf-generator.ts` | Main PDF generation with styling | ~400 |
-| `src/components/analytics/ReportChartRenderer.tsx` | Hidden chart rendering for capture | ~200 |
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/lib/pdf-chart-capture.ts` | Chart capture utilities using html2canvas | ✅ Created |
+| `src/lib/report-pdf-generator.ts` | Beautiful PDF generation with styled tables and embedded charts | ✅ Created |
+| `src/components/analytics/ReportChartRenderer.tsx` | Hidden chart rendering via portal for offscreen capture | ✅ Created |
 
-#### Files to Modify
+#### Files Modified ✅
 
-| File | Changes |
-|------|---------|
-| `src/lib/report-export.ts` | Call new PDF generator |
-| `src/components/analytics/BuildReportSheet.tsx` | Add progress indicator during PDF generation |
+| File | Changes | Status |
+|------|---------|--------|
+| `src/pages/Analytics.tsx` | Added chart capture state, integrated ReportChartRenderer, uses generateBeautifulPDF | ✅ Updated |
+| `src/components/analytics/BuildReportSheet.tsx` | Added captureProgress prop and progress UI during PDF generation | ✅ Updated |
 
-#### Dependencies to Add
+#### Dependencies Added ✅
 
 ```bash
-npm install html2canvas
+npm install html2canvas  # ✅ Already installed
 ```
+
+#### Implementation Summary
+
+1. **Chart Capture Flow**:
+   - When user clicks "Export PDF" with charts enabled, `isCapturingCharts` is set to true
+   - `ReportChartRenderer` mounts and renders charts offscreen via portal
+   - Charts are captured as PNG images using html2canvas
+   - `handleChartCapture` is called with the captured images
+   - `generateBeautifulPDF` creates the PDF with embedded chart images
+
+2. **Progress Indicator**:
+   - Shows "Capturing charts for PDF..." with progress bar
+   - Displays current/total chart count
+   - Shows which chart is being captured
+
+3. **PDF Features**:
+   - Branded header with org name and date range
+   - KPI cards with trend arrows (green up, red down)
+   - Embedded chart images at full resolution
+   - Styled data tables using jspdf-autotable
+   - Automatic page breaks
+   - Page numbers and footer on all pages
 
 #### Chart Capture Workflow
 
