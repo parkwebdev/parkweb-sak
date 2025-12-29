@@ -52,9 +52,10 @@ export async function preloadHtml2Canvas(): Promise<void> {
  */
 export async function captureElement(
   element: HTMLElement,
-  options: { scale?: number; bg?: string } = {}
+  options: { scale?: number; bg?: string; quality?: number } = {}
 ): Promise<{ dataUrl: string; w: number; h: number }> {
-  const { scale = 2, bg = '#ffffff' } = options;
+  // Reduced scale for smaller file size while maintaining quality
+  const { scale = 1.5, bg = '#ffffff', quality = 0.85 } = options;
   
   const html2canvas = await getHtml2Canvas();
 
@@ -68,8 +69,9 @@ export async function captureElement(
     removeContainer: true,
   });
 
+  // Use JPEG for smaller file size (typically 50-70% smaller than PNG)
   return {
-    dataUrl: canvas.toDataURL('image/png', 1.0),
+    dataUrl: canvas.toDataURL('image/jpeg', quality),
     w: canvas.width / scale,
     h: canvas.height / scale,
   };
