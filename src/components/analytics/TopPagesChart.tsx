@@ -91,7 +91,7 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
         }
         return b.visits - a.visits;
       })
-      .slice(0, 8); // Show top 8 for cleaner layout
+      .slice(0, 5); // Show top 5 pages
     
     let max: number;
     if (sortBy === 'conversion_rate') {
