@@ -427,9 +427,9 @@ export default function PDFTestPage() {
       </aside>
 
       {/* PDF Preview */}
-      <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
         {isGenerating && (
-          <div className="h-full flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-muted-foreground">
               <Loading02 className="h-8 w-8 animate-spin" />
               <p className="text-sm">Generating preview...</p>
@@ -438,7 +438,7 @@ export default function PDFTestPage() {
         )}
 
         {error && !isGenerating && (
-          <div className="h-full flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-destructive max-w-md text-center p-4">
               <p className="text-sm font-medium">Failed to generate preview</p>
               <p className="text-xs text-muted-foreground">{error}</p>
@@ -450,7 +450,9 @@ export default function PDFTestPage() {
         )}
 
         {pdfArrayBuffer && !isGenerating && !error && (
-          <PdfJsViewer data={pdfArrayBuffer} initialScale={1.2} mode="all" />
+          <div className="flex-1 min-h-0">
+            <PdfJsViewer data={pdfArrayBuffer} initialScale={1.2} mode="all" />
+          </div>
         )}
       </main>
     </div>
