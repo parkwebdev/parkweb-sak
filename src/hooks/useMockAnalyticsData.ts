@@ -29,6 +29,7 @@ import {
   generateEngagementMetrics,
   generateSourcesByDate,
   generatePageDepthDistribution,
+  generateLeadsBySource,
   type MockConversationStat,
   type MockLeadStat,
   type MockTrafficSource,
@@ -41,6 +42,7 @@ import {
   type MockEngagementMetrics,
   type MockDailySourceData,
   type MockPageDepthData,
+  type MockLeadSourceData,
 } from '@/lib/mock-analytics-data';
 import type {
   BookingStats,
@@ -87,6 +89,9 @@ export interface MockAnalyticsData {
   engagement: MockEngagementMetrics;
   sourcesByDate: MockDailySourceData[];
   pageDepthDistribution: MockPageDepthData[];
+  
+  // Lead source breakdown
+  leadsBySource: MockLeadSourceData[];
 }
 
 export interface UseMockAnalyticsDataReturn {
@@ -168,6 +173,9 @@ export const useMockAnalyticsData = (): UseMockAnalyticsDataReturn => {
       engagement: generateEngagementMetrics(),
       sourcesByDate: generateSourcesByDate(),
       pageDepthDistribution: generatePageDepthDistribution(),
+      
+      // Lead source breakdown
+      leadsBySource: generateLeadsBySource(),
     };
   }, [enabled, refreshKey]);
 

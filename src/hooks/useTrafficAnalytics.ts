@@ -84,6 +84,14 @@ export interface PageDepthData {
   percentage: number;
 }
 
+/** Lead source breakdown data */
+export interface LeadSourceData {
+  source: string;
+  leads: number;
+  sessions: number;
+  cvr: number;
+}
+
 /** Complete traffic analytics stats */
 interface TrafficStats {
   trafficSources: TrafficSourceData[];
@@ -93,6 +101,7 @@ interface TrafficStats {
   engagement: EngagementMetrics;
   sourcesByDate: DailySourceData[];
   pageDepthDistribution: PageDepthData[];
+  leadsBySource: LeadSourceData[];
 }
 
 /** Default empty stats */
@@ -101,6 +110,7 @@ const DEFAULT_STATS: TrafficStats = {
   landingPages: [],
   pageVisits: [],
   locationData: [],
+  leadsBySource: [],
   engagement: {
     bounceRate: 0,
     avgPagesPerSession: 0,
@@ -135,6 +145,16 @@ function processConversations(
     social: 0,
     email: 0,
     referral: 0,
+  };
+
+  // Track leads per source for LeadSourceBreakdownCard
+  const leadsBySourceMap: Record<string, { leads: number; sessions: number }> = {
+    direct: { leads: 0, sessions: 0 },
+    organic: { leads: 0, sessions: 0 },
+    paid: { leads: 0, sessions: 0 },
+    social: { leads: 0, sessions: 0 },
+    email: { leads: 0, sessions: 0 },
+    referral: { leads: 0, sessions: 0 },
   };
 
   // Aggregate landing pages
@@ -186,10 +206,21 @@ function processConversations(
       if (Object.prototype.hasOwnProperty.call(sourceCounts, entryType)) {
         sourceCounts[entryType]++;
         dailySourceMap[dateKey][entryType]++;
+        // Track session for this source
+        if (leadsBySourceMap[entryType]) {
+          leadsBySourceMap[entryType].sessions++;
+          if (metadata.lead_id) {
+            leadsBySourceMap[entryType].leads++;
+          }
+        }
       }
     } else {
       sourceCounts.direct++;
       dailySourceMap[dateKey].direct++;
+      leadsBySourceMap.direct.sessions++;
+      if (metadata.lead_id) {
+        leadsBySourceMap.direct.leads++;
+      }
     }
 
     // Landing pages
@@ -338,6 +369,17 @@ function processConversations(
     }))
     .filter(d => d.count > 0);
 
+  // Build leadsBySource array
+  const leadsBySource: LeadSourceData[] = Object.entries(leadsBySourceMap)
+    .filter(([, data]) => data.sessions > 0)
+    .map(([source, data]) => ({
+      source,
+      leads: data.leads,
+      sessions: data.sessions,
+      cvr: data.sessions > 0 ? (data.leads / data.sessions) * 100 : 0,
+    }))
+    .sort((a, b) => b.leads - a.leads);
+
   return {
     trafficSources,
     landingPages,
@@ -346,6 +388,7 @@ function processConversations(
     engagement,
     sourcesByDate,
     pageDepthDistribution,
+    leadsBySource,
   };
 }
 
@@ -423,6 +466,7 @@ export const useTrafficAnalytics = (
     engagement: stats.engagement,
     sourcesByDate: stats.sourcesByDate,
     pageDepthDistribution: stats.pageDepthDistribution,
+    leadsBySource: stats.leadsBySource,
     loading: isLoading,
     agentId,
     refetch,
