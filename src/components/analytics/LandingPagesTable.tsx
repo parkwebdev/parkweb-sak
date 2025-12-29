@@ -81,6 +81,11 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
             ) : undefined
           }
         />
+        {data.length > 0 && (
+          <p className="mt-2 mb-4 text-xs text-muted-foreground">
+            {contextSummary || "Pages where visitors start their journey"}
+          </p>
+        )}
         {data.length === 0 ? (
           <div className="h-[300px] flex items-center justify-center">
             <span className="text-muted-foreground text-sm">No landing page data available</span>
@@ -97,10 +102,6 @@ export const LandingPagesTable = React.memo(function LandingPagesTable({ data, l
               pageSizeOptions={[10, 25, 50]}
               showRowsPerPage={true}
             />
-            {/* Footer context summary */}
-            <p className="mt-4 text-xs text-muted-foreground">
-              {contextSummary || "Pages where visitors start their journey"}
-            </p>
           </>
         )}
       </CardContent>

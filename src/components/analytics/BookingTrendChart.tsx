@@ -58,6 +58,14 @@ const TREND_COLORS = {
  * Renders a stacked area chart of booking trends over time.
  * Includes loading skeleton, empty state, and accessible tooltips.
  */
+/** Status configuration for DRY rendering */
+const STATUS_CONFIG = [
+  { key: 'completed', label: 'Completed', color: TREND_COLORS.completed },
+  { key: 'confirmed', label: 'Confirmed', color: TREND_COLORS.confirmed },
+  { key: 'cancelled', label: 'Cancelled', color: TREND_COLORS.cancelled },
+  { key: 'noShow', label: 'No-show', color: TREND_COLORS.noShow },
+] as const;
+
 export const BookingTrendChart = React.memo(function BookingTrendChart({
   data,
   loading = false,
@@ -66,7 +74,20 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
   className,
 }: BookingTrendChartProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('all-statuses');
+  const [hiddenStatuses, setHiddenStatuses] = useState<Set<string>>(new Set());
   const prefersReducedMotion = useReducedMotion();
+
+  const toggleStatus = (status: string) => {
+    setHiddenStatuses(prev => {
+      const next = new Set(prev);
+      if (next.has(status)) {
+        next.delete(status);
+      } else {
+        next.add(status);
+      }
+      return next;
+    });
+  };
 
   // Calculate totals for context summary
   const totalBookings = useMemo(() => {
@@ -139,6 +160,31 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
             </Select>
           }
         />
+
+        {/* Toggle chips above chart */}
+        {viewMode === 'all-statuses' && (
+          <div className="flex flex-wrap gap-2 mt-2 mb-4">
+            {STATUS_CONFIG.map((status) => (
+              <button
+                key={status.key}
+                onClick={() => toggleStatus(status.key)}
+                className={cn(
+                  "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-all",
+                  hiddenStatuses.has(status.key)
+                    ? "opacity-40 bg-muted"
+                    : "bg-muted/50 hover:bg-muted"
+                )}
+              >
+                <span 
+                  className="h-2 w-2 rounded-full shrink-0" 
+                  style={{ backgroundColor: status.color }}
+                />
+                <span className="text-muted-foreground">{status.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
@@ -238,135 +284,38 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
                 />
               ) : (
                 <>
-                  <Area
-                    isAnimationActive={!prefersReducedMotion}
-                    animationDuration={800}
-                    animationEasing="ease-out"
-                    dataKey="completed"
-                    name="Completed"
-                    stackId="1"
-                    type="monotone"
-                    stroke={TREND_COLORS.completed}
-                    strokeWidth={2}
-                    fill="url(#gradientCompleted)"
-                    activeDot={{
-                      r: 5,
-                      fill: 'hsl(var(--background))',
-                      stroke: TREND_COLORS.completed,
-                      strokeWidth: 2,
-                    }}
-                  />
-
-                  <Area
-                    isAnimationActive={!prefersReducedMotion}
-                    animationDuration={800}
-                    animationEasing="ease-out"
-                    dataKey="confirmed"
-                    name="Confirmed"
-                    stackId="1"
-                    type="monotone"
-                    stroke={TREND_COLORS.confirmed}
-                    strokeWidth={2}
-                    fill="url(#gradientConfirmed)"
-                    activeDot={{
-                      r: 5,
-                      fill: 'hsl(var(--background))',
-                      stroke: TREND_COLORS.confirmed,
-                      strokeWidth: 2,
-                    }}
-                  />
-
-                  <Area
-                    isAnimationActive={!prefersReducedMotion}
-                    animationDuration={800}
-                    animationEasing="ease-out"
-                    dataKey="cancelled"
-                    name="Cancelled"
-                    stackId="1"
-                    type="monotone"
-                    stroke={TREND_COLORS.cancelled}
-                    strokeWidth={2}
-                    fill="url(#gradientCancelled)"
-                    activeDot={{
-                      r: 5,
-                      fill: 'hsl(var(--background))',
-                      stroke: TREND_COLORS.cancelled,
-                      strokeWidth: 2,
-                    }}
-                  />
-
-                  <Area
-                    isAnimationActive={!prefersReducedMotion}
-                    animationDuration={800}
-                    animationEasing="ease-out"
-                    dataKey="noShow"
-                    name="No-show"
-                    stackId="1"
-                    type="monotone"
-                    stroke={TREND_COLORS.noShow}
-                    strokeWidth={2}
-                    fill="url(#gradientNoShow)"
-                    activeDot={{
-                      r: 5,
-                      fill: 'hsl(var(--background))',
-                      stroke: TREND_COLORS.noShow,
-                      strokeWidth: 2,
-                    }}
-                  />
+                  {STATUS_CONFIG.map((status) => (
+                    <Area
+                      key={status.key}
+                      isAnimationActive={!prefersReducedMotion}
+                      animationDuration={800}
+                      animationEasing="ease-out"
+                      dataKey={status.key}
+                      name={status.label}
+                      stackId="1"
+                      type="monotone"
+                      stroke={status.color}
+                      strokeWidth={2}
+                      fill={`url(#gradient${status.key.charAt(0).toUpperCase() + status.key.slice(1)})`}
+                      hide={hiddenStatuses.has(status.key)}
+                      activeDot={{
+                        r: 5,
+                        fill: 'hsl(var(--background))',
+                        stroke: status.color,
+                        strokeWidth: 2,
+                      }}
+                    />
+                  ))}
                 </>
               )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Legend section with context summary */}
-        <div className="mt-4 flex flex-col gap-2">
-          <p className="text-xs text-muted-foreground">
-            Showing {totalBookings.toLocaleString()} bookings over {data.length} days
-          </p>
-          <div className="flex flex-wrap gap-2 justify-start">
-            {viewMode === 'total-only' ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                <span 
-                  className="h-2 w-2 rounded-full shrink-0" 
-                  style={{ backgroundColor: TREND_COLORS.total }}
-                />
-                <span className="text-xs text-muted-foreground">Total Bookings</span>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.completed }}
-                  />
-                  <span className="text-xs text-muted-foreground">Completed</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.confirmed }}
-                  />
-                  <span className="text-xs text-muted-foreground">Confirmed</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.cancelled }}
-                  />
-                  <span className="text-xs text-muted-foreground">Cancelled</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: TREND_COLORS.noShow }}
-                  />
-                  <span className="text-xs text-muted-foreground">No-show</span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        {/* Footer context summary */}
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {totalBookings.toLocaleString()} bookings over {data.length} days
+        </p>
       </CardContent>
     </Card>
   );
