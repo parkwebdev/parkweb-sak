@@ -6,7 +6,7 @@
  * @module components/analytics/LeadConversionChart
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartTooltipContent } from '@/components/charts/charts-base';
@@ -15,6 +15,7 @@ import { useLeadStages } from '@/hooks/useLeadStages';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { format, parseISO } from 'date-fns';
 import { ChartCardHeader } from './ChartCardHeader';
+import { cn } from '@/lib/utils';
 
 interface LeadStageStats {
   date: string;
@@ -36,6 +37,19 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
   const isDesktop = useBreakpoint('lg');
   const { stages } = useLeadStages();
   const prefersReducedMotion = useReducedMotion();
+  const [hiddenStages, setHiddenStages] = useState<Set<string>>(new Set());
+
+  const toggleStage = (stageKey: string) => {
+    setHiddenStages(prev => {
+      const next = new Set(prev);
+      if (next.has(stageKey)) {
+        next.delete(stageKey);
+      } else {
+        next.add(stageKey);
+      }
+      return next;
+    });
+  };
 
   // Generate gradient definitions and areas based on actual stages with their custom colors
   const stageConfig = useMemo(() => {
@@ -73,6 +87,32 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
           trendLabel="Leads"
           trendPeriod={trendPeriod}
         />
+
+        {/* Toggle chips above chart */}
+        <div className="flex flex-wrap gap-2 mt-2 mb-4">
+          {stageConfig.map((stage) => (
+            <button
+              key={stage.key}
+              onClick={() => toggleStage(stage.key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border border-border transition-all",
+                hiddenStages.has(stage.key)
+                  ? "opacity-40 bg-muted"
+                  : "bg-muted/50 hover:bg-muted"
+              )}
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: stage.color }}
+                aria-hidden="true"
+              />
+              <span className="text-muted-foreground">
+                {stage.name} ({stageCounts[stage.key]?.toLocaleString() ?? 0})
+              </span>
+            </button>
+          ))}
+        </div>
+
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
@@ -156,6 +196,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
                   stroke={stage.color}
                   strokeWidth={2}
                   fill={`url(#${stage.gradientId})`}
+                  hide={hiddenStages.has(stage.key)}
                   activeDot={{
                     r: 6,
                     fill: 'hsl(var(--background))',
@@ -168,27 +209,10 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
           </ResponsiveContainer>
         </div>
         
-        {/* Custom legend as chips below chart */}
-        <div className="flex flex-col items-start gap-2 pt-4">
-          <p className="text-xs text-muted-foreground">
-            Showing {totalLeads.toLocaleString()} leads across {stages.length} stages
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            {stageConfig.map((stage) => (
-              <div
-                key={stage.key}
-                className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground border border-border"
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: stage.color }}
-                  aria-hidden="true"
-                />
-                {stage.name} ({stageCounts[stage.key]?.toLocaleString() ?? 0})
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Footer context summary */}
+        <p className="mt-4 text-xs text-muted-foreground">
+          Showing {totalLeads.toLocaleString()} leads across {stages.length} stages
+        </p>
       </CardContent>
     </Card>
   );
