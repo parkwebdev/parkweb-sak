@@ -14,7 +14,15 @@ import { TrendUp01, TrendDown01 } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 import { ChartCardHeader } from './ChartCardHeader';
-import type { TrafficSourceData, TrafficSourceChartProps } from '@/types/analytics';
+import type { TrafficSourceData } from '@/types/analytics';
+import type { EngagementMetrics } from '@/hooks/useTrafficAnalytics';
+
+interface TrafficSourceChartProps {
+  data: TrafficSourceData[];
+  loading?: boolean;
+  comparisonData?: TrafficSourceData[];
+  engagement?: EngagementMetrics;
+}
 
 // Color palette from light to dark (matching TopPagesChart)
 const BAR_COLORS = [
@@ -36,6 +44,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
   data, 
   loading,
   comparisonData,
+  engagement,
 }: TrafficSourceChartProps) {
   const prefersReducedMotion = useReducedMotion();
   
@@ -210,13 +219,20 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
           })}
         </div>
 
-        {/* Footer context summary */}
-        <p className="mt-4 text-xs text-muted-foreground">
-          {hasTrendData 
-            ? `${total.toLocaleString()} conversations, ${previousTotal.toLocaleString()} last period`
-            : `${total.toLocaleString()} conversations across ${sortedData.length} sources`
-          }
-        </p>
+        {/* Footer context summary with CVR */}
+        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            {hasTrendData 
+              ? `${total.toLocaleString()} conversations, ${previousTotal.toLocaleString()} last period`
+              : `${total.toLocaleString()} conversations across ${sortedData.length} sources`
+            }
+          </span>
+          {engagement && engagement.totalLeads > 0 && (
+            <span className="text-foreground font-medium">
+              {engagement.totalLeads.toLocaleString()} leads ({engagement.overallCVR.toFixed(1)}% CVR)
+            </span>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

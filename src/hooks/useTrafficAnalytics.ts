@@ -54,12 +54,23 @@ export interface LocationData {
   count: number;
 }
 
+/** Engagement metrics */
+export interface EngagementMetrics {
+  bounceRate: number;
+  avgPagesPerSession: number;
+  avgSessionDuration: number;
+  totalSessions: number;
+  totalLeads: number;
+  overallCVR: number;
+}
+
 /** Complete traffic analytics stats */
 interface TrafficStats {
   trafficSources: TrafficSourceData[];
   landingPages: LandingPageData[];
   pageVisits: PageVisitData[];
   locationData: LocationData[];
+  engagement: EngagementMetrics;
 }
 
 /** Default empty stats */
@@ -68,6 +79,14 @@ const DEFAULT_STATS: TrafficStats = {
   landingPages: [],
   pageVisits: [],
   locationData: [],
+  engagement: {
+    bounceRate: 0,
+    avgPagesPerSession: 0,
+    avgSessionDuration: 0,
+    totalSessions: 0,
+    totalLeads: 0,
+    overallCVR: 0,
+  },
 };
 
 // =============================================================================
@@ -110,9 +129,18 @@ function processConversations(
   // Aggregate locations by country
   const locationMap: Record<string, { count: number; city?: string }> = {};
 
+  // Track session-level metrics for engagement
+  let totalSessions = 0;
+  let bounceSessions = 0;
+  let totalPagesViewed = 0;
+  let totalSessionDuration = 0;
+  let totalLeads = 0;
+
   conversations.forEach(conv => {
     const metadata = conv.metadata as ConversationMetadata | null;
     if (!metadata) return;
+
+    totalSessions++;
 
     // Traffic sources
     const journey = metadata.referrer_journey;
@@ -141,9 +169,19 @@ function processConversations(
       }
     }
 
-    // Page visits
+    // Page visits & session metrics
     const visitedPages = metadata.visited_pages;
+    const pagesInSession = visitedPages && Array.isArray(visitedPages) ? visitedPages.length : 0;
+    
+    // Bounce = only 1 page visited
+    if (pagesInSession <= 1) {
+      bounceSessions++;
+    }
+    
+    totalPagesViewed += pagesInSession;
+
     if (visitedPages && Array.isArray(visitedPages)) {
+      let sessionDuration = 0;
       visitedPages.forEach(visit => {
         if (!pageVisitMap[visit.url]) {
           pageVisitMap[visit.url] = { 
@@ -153,12 +191,19 @@ function processConversations(
         }
         pageVisitMap[visit.url].totalVisits++;
         pageVisitMap[visit.url].totalDuration += visit.duration_ms || 0;
+        sessionDuration += visit.duration_ms || 0;
         
         // Also add to landing page duration if it matches
         if (landingPageMap[visit.url]) {
           landingPageMap[visit.url].totalDuration += visit.duration_ms || 0;
         }
       });
+      totalSessionDuration += sessionDuration;
+    }
+
+    // Count leads
+    if (metadata.lead_id) {
+      totalLeads++;
     }
 
     // Location data
@@ -209,11 +254,22 @@ function processConversations(
     .filter((loc): loc is LocationData => loc !== null)
     .sort((a, b) => b.count - a.count);
 
+  // Calculate engagement metrics
+  const engagement: EngagementMetrics = {
+    bounceRate: totalSessions > 0 ? (bounceSessions / totalSessions) * 100 : 0,
+    avgPagesPerSession: totalSessions > 0 ? totalPagesViewed / totalSessions : 0,
+    avgSessionDuration: totalSessions > 0 ? totalSessionDuration / totalSessions : 0,
+    totalSessions,
+    totalLeads,
+    overallCVR: totalSessions > 0 ? (totalLeads / totalSessions) * 100 : 0,
+  };
+
   return {
     trafficSources,
     landingPages,
     pageVisits,
     locationData,
+    engagement,
   };
 }
 
@@ -284,7 +340,11 @@ export const useTrafficAnalytics = (
   }, [conversations]);
 
   return {
-    ...stats,
+    trafficSources: stats.trafficSources,
+    landingPages: stats.landingPages,
+    pageVisits: stats.pageVisits,
+    locationData: stats.locationData,
+    engagement: stats.engagement,
     loading: isLoading,
     agentId,
     refetch,
