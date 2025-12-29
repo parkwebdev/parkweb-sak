@@ -124,11 +124,9 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
   resolutionRate,
   totalConversations,
   humanTakeover,
-  trendValue = 0,
-  trendPeriod = 'this month',
   loading = false,
   className,
-}: AIPerformanceCardProps & { trendValue?: number; trendPeriod?: string }) {
+}: AIPerformanceCardProps) {
   // Loading state
   if (loading) {
     return (
@@ -187,9 +185,7 @@ export const AIPerformanceCard = React.memo(function AIPerformanceCard({
       <CardContent className="pt-6">
         <ChartCardHeader
           title="Conversation Breakdown"
-          trendValue={trendValue}
-          trendLabel="Containment"
-          trendPeriod={trendPeriod}
+          contextSummary={`Based on ${totalConversations.toLocaleString()} conversations`}
         />
         <div className="space-y-6">
           {/* Containment Rate - Stacked Bar */}
