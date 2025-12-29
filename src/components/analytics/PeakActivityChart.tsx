@@ -9,12 +9,12 @@
  */
 
 import React, { useMemo } from 'react';
-import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { springs } from '@/lib/motion-variants';
 import { Skeleton } from '@/components/ui/skeleton';
-import { parseISO, getDay, getHours, format } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
+import { ChartCardHeader } from './ChartCardHeader';
+import { parseISO, getDay } from 'date-fns';
 import {
   Tooltip,
   TooltipContent,
@@ -68,20 +68,6 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
   className,
 }: PeakActivityChartProps) {
   const prefersReducedMotion = useReducedMotion();
-
-  const cardVariants = useMemo(() => ({
-    hidden: { opacity: 0, y: 16 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: springs.smooth,
-    },
-  }), []);
-
-  const reducedVariants = useMemo(() => ({
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0 } },
-  }), []);
 
   // Build heatmap data: aggregate by day of week and hour block
   const { heatmapData, maxValue, peakInfo, totalConversations } = useMemo(() => {
@@ -138,49 +124,38 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
 
   if (loading) {
     return (
-      <div className={cn('rounded-xl bg-muted/50 border border-border p-4', className)}>
-        <Skeleton className="h-4 w-48 mb-4" />
-        <div className="grid grid-cols-7 gap-1">
-          {[...Array(42)].map((_, i) => (
-            <Skeleton key={i} className="h-8 w-full rounded-sm" />
-          ))}
-        </div>
-      </div>
+      <Card className={cn("h-full", className)}>
+        <CardContent className="pt-6">
+          <div className="mb-6">
+            <Skeleton className="h-5 w-32 mb-1" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {[...Array(42)].map((_, i) => (
+              <Skeleton key={i} className="h-8 w-full rounded-sm" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <motion.div 
-      className={cn(
-        'flex flex-col overflow-hidden rounded-xl bg-muted/50 shadow-sm border border-border',
-        className
-      )}
-      variants={prefersReducedMotion ? reducedVariants : cardVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {/* Header */}
-      <div className="px-4 pt-3 pb-2 md:px-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Peak Activity</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {totalConversations.toLocaleString()} conversations by day & time
-            </p>
-          </div>
-          {peakInfo && (
+    <Card className={cn("h-full", className)}>
+      <CardContent className="pt-6">
+        <ChartCardHeader
+          title="Peak Activity"
+          contextSummary={`${totalConversations.toLocaleString()} conversations by day & time`}
+          rightSlot={peakInfo ? (
             <div className="text-right">
               <p className="text-xs font-medium text-primary">Busiest</p>
               <p className="text-xs text-muted-foreground">
                 {peakInfo.day} {peakInfo.time}
               </p>
             </div>
-          )}
-        </div>
-      </div>
+          ) : undefined}
+        />
 
-      {/* Heatmap Grid */}
-      <div className="rounded-t-xl bg-card px-4 py-4 shadow-sm border-t border-border md:px-5">
         {totalConversations === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
             No activity data
@@ -224,17 +199,15 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
                     return (
                       <Tooltip key={`${dayIdx}-${blockIdx}`}>
                         <TooltipTrigger asChild>
-                          <motion.div
+                          <div
                             className={cn(
                               'h-8 rounded-sm cursor-default transition-all hover:ring-2 hover:ring-primary/30',
-                              isPeak && 'ring-2 ring-primary'
+                              isPeak && 'ring-2 ring-primary',
+                              !prefersReducedMotion && 'animate-fade-in'
                             )}
-                            style={{ backgroundColor: bgColor }}
-                            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ 
-                              duration: prefersReducedMotion ? 0 : 0.3, 
-                              delay: prefersReducedMotion ? 0 : (dayIdx * 6 + blockIdx) * 0.015,
+                            style={{ 
+                              backgroundColor: bgColor,
+                              animationDelay: prefersReducedMotion ? '0ms' : `${(dayIdx * 6 + blockIdx) * 15}ms`,
                             }}
                           />
                         </TooltipTrigger>
@@ -252,7 +225,7 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
             </div>
 
             {/* Legend */}
-            <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-border">
+            <div className="flex items-center justify-end gap-1.5 mt-4 pt-4 border-t border-border">
               <span className="text-[10px] text-muted-foreground mr-1">Less</span>
               <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: 'hsl(var(--muted))' }} />
               <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: 'hsl(210, 100%, 95%)' }} />
@@ -264,7 +237,7 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
             </div>
           </TooltipProvider>
         )}
-      </div>
-    </motion.div>
+      </CardContent>
+    </Card>
   );
 });
