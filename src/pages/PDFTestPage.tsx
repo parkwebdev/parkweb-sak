@@ -429,31 +429,33 @@ export default function PDFTestPage() {
       </aside>
 
       {/* PDF Preview */}
-      <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
-        {isGenerating && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3 text-muted-foreground">
-              <Loading02 className="h-8 w-8 animate-spin" />
-              <p className="text-sm">Generating preview...</p>
+      <main className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0">
+          {isGenerating && (
+            <div className="h-full flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                <Loading02 className="h-8 w-8 animate-spin" />
+                <p className="text-sm">Generating preview...</p>
+              </div>
             </div>
-          </div>
-        )}
-        
-        {error && !isGenerating && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3 text-destructive max-w-md text-center p-4">
-              <p className="text-sm font-medium">Failed to generate preview</p>
-              <p className="text-xs text-muted-foreground">{error}</p>
-              <Button onClick={handleRefresh} variant="outline" size="sm">
-                Try Again
-              </Button>
+          )}
+
+          {error && !isGenerating && (
+            <div className="h-full flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3 text-destructive max-w-md text-center p-4">
+                <p className="text-sm font-medium">Failed to generate preview</p>
+                <p className="text-xs text-muted-foreground">{error}</p>
+                <Button onClick={handleRefresh} variant="outline" size="sm">
+                  Try Again
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
-        
-        {pdfArrayBuffer && !isGenerating && !error && (
-          <PdfJsViewer data={pdfArrayBuffer} initialScale={1.2} mode="all" />
-        )}
+          )}
+
+          {pdfArrayBuffer && !isGenerating && !error && (
+            <PdfJsViewer data={pdfArrayBuffer} initialScale={1.2} mode="all" />
+          )}
+        </div>
       </main>
     </div>
   );
