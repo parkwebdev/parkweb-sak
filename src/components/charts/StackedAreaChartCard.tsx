@@ -6,7 +6,7 @@
  * @module components/charts/StackedAreaChartCard
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   AreaChart,
   Area,
@@ -26,9 +26,9 @@ export interface SeriesConfig {
   color: string;
 }
 
-export interface StackedAreaChartCardProps<T extends Record<string, unknown>> {
+export interface StackedAreaChartCardProps {
   /** Chart data array */
-  data: T[];
+  data: Record<string, unknown>[];
   /** Key in data for x-axis labels (default: 'formattedDate') */
   dateKey?: string;
   /** Series configuration array */
@@ -41,32 +41,31 @@ export interface StackedAreaChartCardProps<T extends Record<string, unknown>> {
   className?: string;
 }
 
-export const StackedAreaChartCard = React.memo(function StackedAreaChartCard<
-  T extends Record<string, unknown>
->({
+export function StackedAreaChartCard({
   data,
   dateKey = 'formattedDate',
   series,
   gradientIdPrefix,
   showChips = true,
   className,
-}: StackedAreaChartCardProps<T>) {
+}: StackedAreaChartCardProps) {
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
   const [animationId, setAnimationId] = useState(0);
   const prefersReducedMotion = useReducedMotion();
 
-  const toggleSeries = (key: string) => {
+  const toggleSeries = useCallback((seriesKey: string) => {
     setHiddenSeries(prev => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
+      if (next.has(seriesKey)) {
+        next.delete(seriesKey);
       } else {
-        next.add(key);
+        next.add(seriesKey);
       }
       return next;
     });
-    setAnimationId(v => v + 1);
-  };
+    // Increment animation ID to force Area remount and trigger vertical growth animation
+    setAnimationId(prev => prev + 1);
+  }, []);
 
   return (
     <>
@@ -176,6 +175,4 @@ export const StackedAreaChartCard = React.memo(function StackedAreaChartCard<
       </div>
     </>
   );
-}) as <T extends Record<string, unknown>>(
-  props: StackedAreaChartCardProps<T>
-) => React.ReactElement;
+}
