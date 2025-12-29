@@ -2,32 +2,29 @@
  * Analytics Report PDF Document
  * 
  * Main PDF document component that assembles all sections.
- * Uses @react-pdf/renderer for vector-based PDF generation.
+ * Uses PDF-native chart components for reliable vector rendering.
  */
 
-import { Document, Page, View, Text, Image } from '@react-pdf/renderer';
+import { Document, Page, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
-import { styles, colors, PAGE, SPACING, FONT_SIZE } from './styles';
+import { styles } from './styles';
 import { PDFHeader } from './PDFHeader';
 import { PDFFooter } from './PDFFooter';
 import { PDFKPICards } from './PDFKPICards';
 import { PDFTable } from './PDFTable';
 import { PDFSection } from './PDFSection';
-import { PDFChart } from './PDFChart';
+import { 
+  PDFLineChart, 
+  PDFBarChart, 
+  PDFHorizontalBarChart,
+  PDFPieChart,
+  PDFBookingTrendChart,
+  PDFTrafficTrendChart,
+  CHART_COLORS,
+} from './charts';
 
 // Import fonts (registers on import)
 import './fonts';
-
-/** Chart data for embedding */
-export interface ChartImageData {
-  id?: string;
-  // Preferred: vector charts
-  svgString?: string;
-  // Legacy fallback
-  dataUrl?: string;
-  width: number;
-  height: number;
-}
 
 /** PDF data structure */
 export interface PDFData {
@@ -43,10 +40,11 @@ export interface PDFData {
   leadSourceBreakdown?: Array<{ source: string; leads: number; sessions: number; cvr: number }>;
   bookingStats?: Array<{ location: string; total: number; confirmed: number; completed: number; no_show: number; show_rate: number }>;
   bookingTrend?: Array<{ date: string; confirmed: number; completed: number; cancelled: number; noShow: number }>;
-  satisfactionStats?: { average_rating: number; total_ratings: number };
+  satisfactionStats?: { average_rating: number; total_ratings: number; distribution?: Array<{ rating: number; count: number }> };
   recentFeedback?: Array<{ rating: number; feedback: string | null; createdAt: string; triggerType: string }>;
   aiPerformanceStats?: { containment_rate: number; resolution_rate: number; ai_handled: number; human_takeover: number; total_conversations: number };
   trafficSources?: Array<{ source: string; visitors: number; percentage: number }>;
+  trafficSourceTrend?: Array<{ date: string; direct: number; organic: number; paid: number; social: number; email: number; referral: number }>;
   topPages?: Array<{ page: string; visits: number; bounce_rate: number; conversations: number }>;
   pageEngagement?: { bounceRate: number; avgPagesPerSession: number; totalSessions: number; overallCVR: number };
   pageDepthDistribution?: Array<{ depth: string; count: number; percentage: number }>;
@@ -84,7 +82,6 @@ interface AnalyticsReportPDFProps {
   startDate: Date;
   endDate: Date;
   orgName: string;
-  charts?: Map<string, ChartImageData>;
 }
 
 export function AnalyticsReportPDF({ 
@@ -93,7 +90,6 @@ export function AnalyticsReportPDF({
   startDate, 
   endDate, 
   orgName,
-  charts,
 }: AnalyticsReportPDFProps) {
   // Build KPI data
   const kpis = [
@@ -114,8 +110,6 @@ export function AnalyticsReportPDF({
     },
   ];
 
-  const getChart = (id: string) => charts?.get(id);
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -133,16 +127,19 @@ export function AnalyticsReportPDF({
           )}
 
           {/* Conversations */}
-          {config.includeConversations && (
+          {config.includeConversations && data.conversationStats?.length && (
             <PDFSection title="Conversations">
-              {config.includeCharts && getChart('conversation-volume') && (
-                <PDFChart
-                  svgString={getChart('conversation-volume')!.svgString}
-                  imageDataUrl={getChart('conversation-volume')!.dataUrl}
-                  maxHeight={180}
+              {config.includeCharts && (
+                <PDFLineChart
+                  data={data.conversationStats}
+                  series={[
+                    { key: 'total', color: CHART_COLORS.primary, label: 'Total' },
+                    { key: 'active', color: CHART_COLORS.success, label: 'Active' },
+                    { key: 'closed', color: CHART_COLORS.secondary, label: 'Closed' },
+                  ]}
                 />
               )}
-              {config.includeTables && data.conversationStats?.length && (
+              {config.includeTables && (
                 <PDFTable
                   columns={[
                     { key: 'date', header: 'Date' },
@@ -159,11 +156,11 @@ export function AnalyticsReportPDF({
           {/* Conversation Funnel */}
           {config.includeConversationFunnel && data.conversationFunnel?.length && (
             <PDFSection title="Conversation Funnel">
-              {config.includeCharts && getChart('conversation-funnel') && (
-                <PDFChart
-                  svgString={getChart('conversation-funnel')!.svgString}
-                  imageDataUrl={getChart('conversation-funnel')!.dataUrl}
-                  maxHeight={160}
+              {config.includeCharts && (
+                <PDFHorizontalBarChart
+                  data={data.conversationFunnel.map(s => ({ label: s.name, value: s.count }))}
+                  valueKey="value"
+                  color={CHART_COLORS.primary}
                 />
               )}
               {config.includeTables && (
@@ -187,13 +184,6 @@ export function AnalyticsReportPDF({
           {/* Peak Activity */}
           {config.includePeakActivity && data.peakActivity && (
             <PDFSection title="Peak Activity">
-              {config.includeCharts && getChart('peak-activity') && (
-                <PDFChart
-                  svgString={getChart('peak-activity')!.svgString}
-                  imageDataUrl={getChart('peak-activity')!.dataUrl}
-                  maxHeight={180}
-                />
-              )}
               <PDFTable
                 columns={[
                   { key: 'metric', header: 'Metric' },
@@ -211,11 +201,12 @@ export function AnalyticsReportPDF({
           {/* Lead Source Breakdown */}
           {config.includeLeadSourceBreakdown && data.leadSourceBreakdown?.length && (
             <PDFSection title="Lead Source Breakdown">
-              {config.includeCharts && getChart('lead-source-breakdown') && (
-                <PDFChart
-                  svgString={getChart('lead-source-breakdown')!.svgString}
-                  imageDataUrl={getChart('lead-source-breakdown')!.dataUrl}
-                  maxHeight={160}
+              {config.includeCharts && (
+                <PDFPieChart
+                  data={data.leadSourceBreakdown.map(s => ({ label: s.source, value: s.leads }))}
+                  width={240}
+                  height={140}
+                  donut
                 />
               )}
               {config.includeTables && (
@@ -238,11 +229,11 @@ export function AnalyticsReportPDF({
           {/* Bookings */}
           {config.includeBookings && data.bookingStats?.length && (
             <PDFSection title="Bookings">
-              {config.includeCharts && getChart('bookings-by-location') && (
-                <PDFChart
-                  svgString={getChart('bookings-by-location')!.svgString}
-                  imageDataUrl={getChart('bookings-by-location')!.dataUrl}
-                  maxHeight={180}
+              {config.includeCharts && (
+                <PDFBarChart
+                  data={data.bookingStats.map(s => ({ label: s.location, value: s.total }))}
+                  valueKey="value"
+                  color={CHART_COLORS.primary}
                 />
               )}
               {config.includeTables && (
@@ -267,12 +258,8 @@ export function AnalyticsReportPDF({
           {/* Booking Trend */}
           {config.includeBookingTrend && data.bookingTrend?.length && (
             <PDFSection title="Booking Trend">
-              {config.includeCharts && getChart('booking-trend') && (
-                <PDFChart
-                  svgString={getChart('booking-trend')!.svgString}
-                  imageDataUrl={getChart('booking-trend')!.dataUrl}
-                  maxHeight={180}
-                />
+              {config.includeCharts && (
+                <PDFBookingTrendChart data={data.bookingTrend} />
               )}
               {config.includeTables && (
                 <PDFTable
@@ -292,11 +279,14 @@ export function AnalyticsReportPDF({
           {/* Customer Satisfaction */}
           {config.includeSatisfaction && data.satisfactionStats && (
             <PDFSection title="Customer Satisfaction">
-              {config.includeCharts && getChart('csat-distribution') && (
-                <PDFChart
-                  svgString={getChart('csat-distribution')!.svgString}
-                  imageDataUrl={getChart('csat-distribution')!.dataUrl}
-                  maxHeight={160}
+              {config.includeCharts && data.satisfactionStats.distribution?.length && (
+                <PDFPieChart
+                  data={data.satisfactionStats.distribution.map(d => ({
+                    label: `${d.rating} Star`,
+                    value: d.count,
+                  }))}
+                  width={200}
+                  height={120}
                 />
               )}
               <PDFTable
@@ -354,11 +344,12 @@ export function AnalyticsReportPDF({
           {/* Traffic Sources */}
           {config.includeTrafficSources && data.trafficSources?.length && (
             <PDFSection title="Traffic Sources">
-              {config.includeCharts && getChart('traffic-sources') && (
-                <PDFChart
-                  svgString={getChart('traffic-sources')!.svgString}
-                  imageDataUrl={getChart('traffic-sources')!.dataUrl}
-                  maxHeight={180}
+              {config.includeCharts && (
+                <PDFPieChart
+                  data={data.trafficSources.slice(0, 8).map(s => ({ label: s.source, value: s.visitors }))}
+                  width={240}
+                  height={160}
+                  donut
                 />
               )}
               {config.includeTables && (
@@ -378,24 +369,23 @@ export function AnalyticsReportPDF({
           )}
 
           {/* Traffic Source Trend */}
-          {config.includeTrafficSourceTrend && getChart('traffic-source-trend') && (
+          {config.includeTrafficSourceTrend && data.trafficSourceTrend?.length && (
             <PDFSection title="Traffic Source Trend">
-              <PDFChart
-                svgString={getChart('traffic-source-trend')!.svgString}
-                imageDataUrl={getChart('traffic-source-trend')!.dataUrl}
-                maxHeight={180}
-              />
+              <PDFTrafficTrendChart data={data.trafficSourceTrend} />
             </PDFSection>
           )}
 
           {/* Top Pages */}
           {config.includeTopPages && data.topPages?.length && (
             <PDFSection title="Top Pages">
-              {config.includeCharts && getChart('top-pages') && (
-                <PDFChart
-                  svgString={getChart('top-pages')!.svgString}
-                  imageDataUrl={getChart('top-pages')!.dataUrl}
-                  maxHeight={180}
+              {config.includeCharts && (
+                <PDFHorizontalBarChart
+                  data={data.topPages.slice(0, 8).map(p => ({ 
+                    label: p.page.length > 30 ? p.page.slice(0, 28) + '…' : p.page, 
+                    value: p.visits 
+                  }))}
+                  valueKey="value"
+                  color={CHART_COLORS.teal}
                 />
               )}
               {config.includeTables && (
@@ -437,18 +427,18 @@ export function AnalyticsReportPDF({
           {/* Page Depth */}
           {config.includePageDepth && data.pageDepthDistribution?.length && (
             <PDFSection title="Page Depth Distribution">
-              {config.includeCharts && getChart('page-depth') && (
-                <PDFChart
-                  svgString={getChart('page-depth')!.svgString}
-                  imageDataUrl={getChart('page-depth')!.dataUrl}
-                  maxHeight={160}
+              {config.includeCharts && (
+                <PDFBarChart
+                  data={data.pageDepthDistribution.map(d => ({ label: d.depth, value: d.count }))}
+                  valueKey="value"
+                  color={CHART_COLORS.purple}
                 />
               )}
               {config.includeTables && (
                 <PDFTable
                   columns={[
-                    { key: 'depth', header: 'Pages Viewed' },
-                    { key: 'count', header: 'Sessions', align: 'right' },
+                    { key: 'depth', header: 'Depth' },
+                    { key: 'count', header: 'Count', align: 'right' },
                     { key: 'percentageFormatted', header: 'Percentage', align: 'right' },
                   ]}
                   data={data.pageDepthDistribution.map(d => ({
@@ -463,17 +453,26 @@ export function AnalyticsReportPDF({
           {/* Visitor Locations */}
           {config.includeVisitorLocations && data.visitorLocations?.length && (
             <PDFSection title="Visitor Locations">
-              <PDFTable
-                columns={[
-                  { key: 'country', header: 'Country' },
-                  { key: 'visitors', header: 'Visitors', align: 'right' },
-                  { key: 'percentageFormatted', header: 'Percentage', align: 'right' },
-                ]}
-                data={data.visitorLocations.slice(0, 10).map(l => ({
-                  ...l,
-                  percentageFormatted: `${l.percentage}%`,
-                }))}
-              />
+              {config.includeCharts && (
+                <PDFHorizontalBarChart
+                  data={data.visitorLocations.slice(0, 10).map(l => ({ label: l.country, value: l.visitors }))}
+                  valueKey="value"
+                  color={CHART_COLORS.indigo}
+                />
+              )}
+              {config.includeTables && (
+                <PDFTable
+                  columns={[
+                    { key: 'country', header: 'Country' },
+                    { key: 'visitors', header: 'Visitors', align: 'right' },
+                    { key: 'percentageFormatted', header: 'Percentage', align: 'right' },
+                  ]}
+                  data={data.visitorLocations.slice(0, 15).map(l => ({
+                    ...l,
+                    percentageFormatted: `${l.percentage}%`,
+                  }))}
+                />
+              )}
             </PDFSection>
           )}
         </View>
