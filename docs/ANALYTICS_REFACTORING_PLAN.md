@@ -1,6 +1,6 @@
 # Analytics.tsx Refactoring Plan
 
-> **Status**: COMPLETE (Phase 0 ✅, Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 ✅, Phase 5 ✅)  
+> **Status**: Phase 0-5 ✅ COMPLETE | Phase 6 🔄 PENDING (Reports Overhaul)  
 > **File**: `src/pages/Analytics.tsx`  
 > **Current Size**: 271 lines (was 881 → 668 → 496 → 271)  
 > **Target Size**: ~200-250 lines ✅ ACHIEVED
@@ -819,6 +819,571 @@ Each phase is independent and can be reverted without affecting other phases.
 
 ---
 
+---
+
+## Phase 6: Reports Feature Overhaul
+
+**Status**: 🔄 PENDING  
+**Objective**: Ensure ALL analytics data is exportable in beautiful, comprehensive reports.  
+**Risk Level**: MEDIUM  
+**Priority**: HIGH
+
+### Current State Analysis
+
+#### What's Currently Exportable (in BuildReportSheet.tsx)
+
+| Category | Field | CSV | PDF | Status |
+|----------|-------|-----|-----|--------|
+| **Core Metrics** | Conversations | ✅ | ✅ | Working |
+| | Leads | ✅ | ✅ | Working |
+| | Usage Metrics | ✅ | ✅ | Working |
+| **Business Outcomes** | Bookings (by location) | ✅ | ✅ | Working |
+| | Satisfaction (avg + distribution) | ✅ | ✅ | Working |
+| | AI Performance | ✅ | ✅ | Working |
+| **Traffic Analytics** | Traffic Sources | ✅ | ✅ | Working |
+| | Top Pages | ✅ | ✅ | Working |
+| | Visitor Locations | ✅ | ✅ | Working |
+| **Agent Data** | Agent Performance | ✅ | ✅ | Working |
+| **Export Options** | KPIs | ✅ | ✅ | Working |
+| | Charts | ❌ | ❌ | **MISSING** |
+| | Tables | ✅ | ✅ | Working |
+
+#### What's MISSING from Reports (Critical Gaps)
+
+| Component | Data Type | Visual in Dashboard | In Report? | Priority |
+|-----------|-----------|---------------------|------------|----------|
+| **PeakActivityChart** | Day×Hour Heatmap | ✅ 7×6 grid | ❌ | HIGH |
+| **ConversationFunnelCard** | Funnel Stages | ✅ 5 stages | ❌ | HIGH |
+| **PageDepthChart** | Pages per Session | ✅ Bar chart | ❌ | MEDIUM |
+| **LeadSourceBreakdownCard** | Leads by Source with CVR | ✅ Bar chart | ❌ | HIGH |
+| **PageEngagementCard** | Bounce/CVR/Duration | ✅ Metrics grid | ❌ | MEDIUM |
+| **BookingTrendChart** | Daily Booking Trend | ✅ Stacked area | ❌ | MEDIUM |
+| **TrafficSourceTrendChart** | Daily Source Breakdown | ✅ Stacked area | ❌ | MEDIUM |
+| **LeadConversionChart** | Lead Stage Trend | ✅ Stacked area | ❌ | MEDIUM |
+| **CustomerFeedbackCard** | Recent Feedback Items | ✅ Table | ❌ | LOW |
+
+#### PDF Quality Issues
+
+1. **No Branding**: No logo, no styled header
+2. **Basic Tables Only**: Just jsPDF autoTable output
+3. **No Chart Visualizations**: Missing images of charts
+4. **No Color Coding**: Trends not highlighted
+5. **No Executive Summary**: Just raw data
+6. **No Page Breaks Logic**: Can overflow awkwardly
+
+#### CSV Compatibility Issues
+
+1. **No UTF-8 BOM**: Excel may not recognize encoding
+2. **Simple Escaping**: Special characters may break parsing
+3. **Windows Line Endings**: Unix endings may confuse some apps
+
+---
+
+### Phase 6.1: CSV Universal Compatibility
+
+**Status**: 🔄 PENDING  
+**Objective**: Ensure CSV exports work in Excel, Google Sheets, Numbers, LibreOffice
+
+#### Tasks
+
+- [ ] Add UTF-8 BOM prefix (`\uFEFF`) to all CSV exports
+- [ ] Proper quoting for fields with commas, quotes, newlines
+- [ ] Use `\r\n` line endings for Windows compatibility
+- [ ] Test with Excel (Windows/Mac), Google Sheets, Numbers, LibreOffice
+
+#### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/lib/report-export.ts` | Add BOM, fix escaping, fix line endings |
+
+#### Code Changes
+
+```typescript
+// Add to generateCSVReport function
+const UTF8_BOM = '\uFEFF';
+
+// Escape function for CSV values
+const escapeCSV = (value: string | number): string => {
+  const str = String(value);
+  // If contains comma, quote, or newline, wrap in quotes and escape internal quotes
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+// Use \r\n for Windows compatibility
+csvContent = csvContent.replace(/\n/g, '\r\n');
+
+// Prepend BOM
+return new Blob([UTF8_BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+```
+
+---
+
+### Phase 6.2: Add Missing Report Data Options
+
+**Status**: 🔄 PENDING  
+**Objective**: Add all missing analytics data to report configuration
+
+#### New ReportConfig Fields
+
+```typescript
+export interface ReportConfig {
+  // ... existing fields ...
+  
+  // NEW: Missing data categories
+  includeConversationFunnel: boolean;    // Funnel stages
+  includePeakActivity: boolean;          // Heatmap data
+  includePageEngagement: boolean;        // Bounce/CVR/Duration metrics
+  includeLeadSourceBreakdown: boolean;   // Leads by source with CVR
+  includePageDepth: boolean;             // Pages per session distribution
+  includeCustomerFeedback: boolean;      // Recent feedback items
+  includeBookingTrend: boolean;          // Daily booking trend
+  includeTrafficSourceTrend: boolean;    // Daily traffic by source
+  includeLeadConversionTrend: boolean;   // Lead stage trend over time
+}
+```
+
+#### New Data in AnalyticsExportData
+
+```typescript
+export interface AnalyticsExportData {
+  // ... existing fields ...
+  
+  // NEW: Funnel data
+  conversationFunnel?: FunnelStage[];
+  
+  // NEW: Peak activity heatmap
+  peakActivity?: {
+    data: number[][];  // 7 days × 6 time blocks
+    peakDay: string;
+    peakTime: string;
+    peakValue: number;
+  };
+  
+  // NEW: Page engagement metrics
+  pageEngagement?: {
+    bounceRate: number;
+    avgPagesPerSession: number;
+    avgSessionDuration: number;
+    totalSessions: number;
+    overallCVR: number;
+  };
+  
+  // NEW: Lead source breakdown
+  leadSourceBreakdown?: Array<{
+    source: string;
+    leads: number;
+    sessions: number;
+    cvr: number;
+  }>;
+  
+  // NEW: Page depth distribution
+  pageDepthDistribution?: Array<{
+    depth: string;
+    count: number;
+    percentage: number;
+  }>;
+  
+  // NEW: Customer feedback
+  recentFeedback?: Array<{
+    rating: number;
+    feedback: string | null;
+    createdAt: string;
+    triggerType: string;
+  }>;
+  
+  // NEW: Trend data for charts
+  bookingTrend?: BookingTrendData[];
+  trafficSourceTrend?: DailySourceData[];
+  leadConversionTrend?: Array<{ date: string; [stage: string]: number | string }>;
+}
+```
+
+#### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/analytics/BuildReportSheet.tsx` | Add new checkboxes for all missing data |
+| `src/lib/analytics-export-data.ts` | Add missing data to builder function |
+| `src/types/report.ts` | Add new interfaces for export data |
+| `src/lib/report-export.ts` | Add CSV/PDF sections for new data |
+| `src/hooks/useAnalyticsData.ts` | Expose missing data for export |
+
+#### BuildReportSheet New Accordions
+
+```
+📊 Core Metrics
+  ☑️ Conversations
+  ☑️ Leads
+  ☑️ Usage Metrics
+  ☑️ Conversation Funnel        ← NEW
+  ☑️ Peak Activity Heatmap      ← NEW
+
+💼 Business Outcomes
+  ☑️ Bookings
+  ☑️ Booking Trend              ← NEW
+  ☑️ Satisfaction
+  ☑️ Customer Feedback          ← NEW
+  ☑️ Ari Performance
+
+📈 Traffic Analytics
+  ☑️ Traffic Sources
+  ☑️ Traffic Source Trend       ← NEW
+  ☑️ Top Pages
+  ☑️ Page Engagement Metrics    ← NEW
+  ☑️ Page Depth Distribution    ← NEW
+  ☑️ Visitor Locations
+
+🎯 Leads Analytics
+  ☑️ Lead Source Breakdown      ← NEW
+  ☑️ Lead Conversion Trend      ← NEW
+
+🤖 Agent Data
+  ☑️ Agent Performance
+```
+
+---
+
+### Phase 6.3: Beautiful PDF Reports with Chart Images
+
+**Status**: 🔄 PENDING  
+**Objective**: Generate visually stunning PDFs that match dashboard aesthetics
+
+#### Approach: html2canvas Chart Capture
+
+1. **Install html2canvas** for capturing chart elements as images
+2. **Create hidden render container** to render charts offscreen
+3. **Capture each chart** and embed as image in PDF
+4. **Style PDF** with branded header, color-coded sections
+
+#### PDF Template Structure
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│  📊 [LOGO]  Analytics Report                               │
+│  ─────────────────────────────────────────────────────────  │
+│  Period: Jan 1 - Jan 31, 2025                              │
+│  Generated: Jan 31, 2025 at 2:34 PM                        │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  EXECUTIVE SUMMARY                                          │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
+│  │ 1,234   │ │   456   │ │  12.3%  │ │  4,567  │           │
+│  │ Convos  │ │  Leads  │ │   CVR   │ │  Msgs   │           │
+│  │ ▲ 12.5% │ │ ▲ 8.2%  │ │ ▲ 2.1p  │ │ ▲ 15.3% │           │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘           │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  CONVERSATIONS                                              │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ [Peak Activity Heatmap Image]                       │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ [Conversation Funnel Image]                         │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  Peak: Monday 4p-8p with 234 conversations                 │
+│                                                             │
+│  Conversation Statistics Table                              │
+│  ┌──────────┬─────────┬────────┬────────┐                  │
+│  │ Date     │ Total   │ Active │ Closed │                  │
+│  ├──────────┼─────────┼────────┼────────┤                  │
+│  │ Jan 1    │ 45      │ 12     │ 33     │                  │
+│  │ Jan 2    │ 52      │ 8      │ 44     │                  │
+│  └──────────┴─────────┴────────┴────────┘                  │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  BOOKINGS                                                   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ [Booking Trend Chart Image]                         │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │ [Bookings by Location Chart Image]                  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ... more sections ...                                      │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  Page 1 of 5  │  Generated by Ari Analytics                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Files to Create
+
+| File | Purpose | Lines (Est.) |
+|------|---------|--------------|
+| `src/lib/report-pdf-generator.ts` | Main PDF generation with styling | ~400 |
+| `src/components/analytics/ReportChartRenderer.tsx` | Hidden chart rendering for capture | ~200 |
+
+#### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/lib/report-export.ts` | Call new PDF generator |
+| `src/components/analytics/BuildReportSheet.tsx` | Add progress indicator during PDF generation |
+
+#### Dependencies to Add
+
+```bash
+npm install html2canvas
+```
+
+#### Chart Capture Workflow
+
+```typescript
+// 1. Render chart in hidden container
+const container = document.createElement('div');
+container.style.position = 'absolute';
+container.style.left = '-9999px';
+container.style.width = '800px';
+document.body.appendChild(container);
+
+// 2. Render React component into container
+const root = createRoot(container);
+root.render(<PeakActivityChart data={data} />);
+
+// 3. Wait for render
+await new Promise(resolve => setTimeout(resolve, 500));
+
+// 4. Capture with html2canvas
+const canvas = await html2canvas(container, {
+  scale: 2,  // High DPI
+  backgroundColor: '#ffffff',
+});
+
+// 5. Convert to data URL
+const imageDataUrl = canvas.toDataURL('image/png');
+
+// 6. Add to PDF
+pdf.addImage(imageDataUrl, 'PNG', x, y, width, height);
+
+// 7. Cleanup
+root.unmount();
+document.body.removeChild(container);
+```
+
+---
+
+### Phase 6.4: BuildReportSheet UX Improvements
+
+**Status**: 🔄 PENDING  
+**Objective**: Improve report builder usability
+
+#### Tasks
+
+- [ ] Add "Select All" / "Deselect All" toggles per category
+- [ ] Show data preview counts (e.g., "Bookings (42 records)")
+- [ ] Add "Include comparison data" option when comparison mode active
+- [ ] Add loading progress bar during PDF generation
+- [ ] Group related options visually
+
+#### Select All Implementation
+
+```typescript
+// Per-category select all
+const handleSelectAllCore = (checked: boolean) => {
+  onConfigChange({
+    ...config,
+    includeConversations: checked,
+    includeLeads: checked,
+    includeUsageMetrics: checked,
+    includeConversationFunnel: checked,
+    includePeakActivity: checked,
+  });
+};
+```
+
+#### Progress Bar for PDF
+
+```typescript
+const [exportProgress, setExportProgress] = useState(0);
+
+// During PDF generation
+setExportProgress(10); // Starting
+// ... capture chart 1
+setExportProgress(25);
+// ... capture chart 2
+setExportProgress(40);
+// ... etc
+```
+
+---
+
+### Phase 6.5: New CSV Sections
+
+**Status**: 🔄 PENDING  
+**Objective**: Add all missing data to CSV exports
+
+#### New CSV Sections to Add
+
+```csv
+CONVERSATION FUNNEL
+Stage,Count,Percentage,Drop-off
+Started,1234,100%,0%
+Engaged,987,80%,20%
+Lead Captured,654,53%,34%
+Booked,321,26%,51%
+Resolved,234,19%,27%
+
+PEAK ACTIVITY SUMMARY
+Peak Day,Peak Time Block,Peak Conversations
+Monday,4p-8p,234
+
+PEAK ACTIVITY HEATMAP
+Time,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday
+12a-4a,12,8,5,6,4,3,15
+4a-8a,23,34,31,28,35,32,18
+8a-12p,45,67,72,69,74,71,42
+12p-4p,78,89,95,91,88,85,56
+4p-8p,92,234,187,176,189,145,67
+8p-12a,34,45,42,38,41,36,28
+
+PAGE ENGAGEMENT METRICS
+Metric,Value
+Bounce Rate,34.5%
+Avg Pages/Session,2.8
+Avg Session Duration,3m 42s
+Total Sessions,4567
+Conversion Rate,12.3%
+
+LEAD SOURCE BREAKDOWN
+Source,Leads,Sessions,Conversion Rate
+Organic,234,1234,19.0%
+Direct,156,987,15.8%
+Social,89,654,13.6%
+Paid,45,321,14.0%
+Email,23,234,9.8%
+Referral,12,123,9.8%
+
+PAGE DEPTH DISTRIBUTION
+Pages Viewed,Sessions,Percentage
+1 page,1234,35%
+2-3 pages,1567,45%
+4-5 pages,456,13%
+6+ pages,234,7%
+
+CUSTOMER FEEDBACK
+Date,Rating,Feedback,Trigger
+Jan 15 2025,5,"Great service!",conversation_end
+Jan 14 2025,4,"Pretty good",conversation_end
+Jan 13 2025,2,"Could be better",manual
+
+BOOKING TREND
+Date,Confirmed,Completed,Cancelled,No-Show,Total
+2025-01-01,12,8,2,1,23
+2025-01-02,15,11,1,2,29
+...
+
+TRAFFIC SOURCE TREND
+Date,Direct,Organic,Paid,Social,Email,Referral,Total
+2025-01-01,234,345,56,78,23,12,748
+2025-01-02,256,367,62,85,28,15,813
+...
+
+LEAD CONVERSION TREND
+Date,New,Contacted,Qualified,Proposal,Won
+2025-01-01,12,8,5,3,2
+2025-01-02,15,10,7,4,3
+...
+```
+
+---
+
+### Complete Data Mapping
+
+#### All Analytics Components → Report Data
+
+| Component | Data Source | Export Field | CSV Section | PDF Section |
+|-----------|-------------|--------------|-------------|-------------|
+| **ConversationsSection** | | | | |
+| PeakActivityChart | `conversationStats` | `peakActivity` | PEAK ACTIVITY | Image + Summary |
+| ConversationChart | `conversationStats` | `conversationStats` | CONVERSATION STATISTICS | Image + Table |
+| ConversationFunnelCard | `useConversationFunnel` | `conversationFunnel` | CONVERSATION FUNNEL | Image + Table |
+| **LeadsSection** | | | | |
+| MetricCardWithChart (Total) | `totalLeads`, `leadTrend` | `totalLeads` | KPIs | KPI Card |
+| MetricCardWithChart (CVR) | `conversionRate` | `conversionRate` | KPIs | KPI Card |
+| LeadConversionChart | `leadConversionData` | `leadConversionTrend` | LEAD CONVERSION TREND | Image |
+| **BookingsSection** | | | | |
+| MetricCardWithChart | `confirmedBookings` | `totalBookings` | KPIs | KPI Card |
+| BookingsByLocationChart | `bookingStats.byLocation` | `bookingStats` | BOOKING STATISTICS | Image + Table |
+| BookingTrendChart | `bookingStats.trend` | `bookingTrend` | BOOKING TREND | Image |
+| **AIPerformanceSection** | | | | |
+| AIPerformanceCard | `aiPerformanceStats` | `aiPerformanceStats` | ARI PERFORMANCE | Metrics Card |
+| CSATDistributionCard | `satisfactionStats.distribution` | `satisfactionStats` | SATISFACTION METRICS | Bar Chart Image |
+| CustomerFeedbackCard | `satisfactionStats.recentFeedback` | `recentFeedback` | CUSTOMER FEEDBACK | Table |
+| **SourcesSection** | | | | |
+| TrafficSourceChart | `trafficSources` | `trafficSources` | TRAFFIC SOURCES | Image + Table |
+| LeadSourceBreakdownCard | `leadsBySource` | `leadSourceBreakdown` | LEAD SOURCE BREAKDOWN | Image + Table |
+| TrafficSourceTrendChart | `sourcesByDate` | `trafficSourceTrend` | TRAFFIC SOURCE TREND | Image |
+| **PagesSection** | | | | |
+| PageEngagementCard | `engagement` | `pageEngagement` | PAGE ENGAGEMENT METRICS | Metrics Card |
+| TopPagesChart | `landingPages` | `topPages` | TOP PAGES | Image + Table |
+| PageDepthChart | `pageDepthDistribution` | `pageDepthDistribution` | PAGE DEPTH DISTRIBUTION | Image + Table |
+| LandingPagesTable | `landingPages` | `topPages` | (same as TOP PAGES) | Table |
+| **GeographySection** | | | | |
+| VisitorLocationMap | `locationData` | `visitorLocations` | VISITOR LOCATIONS | Table (no map) |
+
+---
+
+### Implementation Order
+
+| Step | Phase | Description | Est. Time |
+|------|-------|-------------|-----------|
+| 1 | 6.1 | CSV Universal Compatibility | 30 min |
+| 2 | 6.2 | Update ReportConfig interface | 20 min |
+| 3 | 6.2 | Update AnalyticsExportData interface | 30 min |
+| 4 | 6.2 | Update BuildReportSheet UI | 45 min |
+| 5 | 6.2 | Update analytics-export-data.ts builder | 45 min |
+| 6 | 6.5 | Add new CSV sections | 60 min |
+| 7 | 6.3 | Install html2canvas | 5 min |
+| 8 | 6.3 | Create ReportChartRenderer | 90 min |
+| 9 | 6.3 | Create report-pdf-generator.ts | 120 min |
+| 10 | 6.4 | BuildReportSheet UX improvements | 45 min |
+| 11 | - | Testing & verification | 60 min |
+| **Total** | | | **~9 hours** |
+
+---
+
+### Verification Checklist
+
+#### CSV Verification
+- [ ] Opens correctly in Microsoft Excel (Windows)
+- [ ] Opens correctly in Microsoft Excel (Mac)
+- [ ] Opens correctly in Google Sheets
+- [ ] Opens correctly in Apple Numbers
+- [ ] Opens correctly in LibreOffice Calc
+- [ ] Special characters preserved (quotes, commas, newlines)
+- [ ] All data sections present and accurate
+- [ ] Column headers match data
+
+#### PDF Verification
+- [ ] Branded header with logo placeholder
+- [ ] Executive summary with KPI cards
+- [ ] All chart images render clearly
+- [ ] Tables are properly formatted
+- [ ] Page breaks occur at logical points
+- [ ] Footer with page numbers
+- [ ] Color coding for trends (green up, red down)
+- [ ] Correct date range displayed
+- [ ] Generation timestamp accurate
+
+#### Data Completeness Verification
+- [ ] Peak Activity heatmap data exported
+- [ ] Conversation Funnel stages exported
+- [ ] Page Engagement metrics exported
+- [ ] Lead Source breakdown exported
+- [ ] Page Depth distribution exported
+- [ ] Customer Feedback items exported
+- [ ] Booking Trend data exported
+- [ ] Traffic Source Trend data exported
+- [ ] Lead Conversion Trend data exported
+
+---
+
 *Document created: 2025-12-29*  
 *Last updated: 2025-12-29*  
-*Refactoring completed: 2025-12-29*
+*Phase 6 added: 2025-12-29*  
+*Refactoring completed: 2025-12-29 (Phases 0-5)*
