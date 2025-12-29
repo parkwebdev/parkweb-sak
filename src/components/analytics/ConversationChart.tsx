@@ -6,14 +6,11 @@
  * @module components/analytics/ConversationChart
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { ChartTooltipContent } from '@/components/charts/charts-base';
-import { format, parseISO } from 'date-fns';
 import { ChartCardHeader } from './ChartCardHeader';
-import { cn } from '@/lib/utils';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { StackedAreaChartCard, SeriesConfig } from '@/components/charts/StackedAreaChartCard';
+import { format, parseISO } from 'date-fns';
 
 interface ConversationChartProps {
   data: Array<{
@@ -26,7 +23,7 @@ interface ConversationChartProps {
   trendPeriod?: string;
 }
 
-const SERIES_CONFIG = [
+const SERIES_CONFIG: SeriesConfig[] = [
   { key: 'active', label: 'Active', color: 'hsl(220, 90%, 56%)' },
   { key: 'closed', label: 'Closed', color: 'hsl(210, 100%, 80%)' },
 ];
@@ -36,39 +33,24 @@ export const ConversationChart = React.memo(function ConversationChart({
   trendValue = 0,
   trendPeriod = 'this month',
 }: ConversationChartProps) {
-  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
-  const [animationId, setAnimationId] = useState(0);
-  const prefersReducedMotion = useReducedMotion();
-  
   // Calculate totals for context summary
   const totalConversations = useMemo(() => {
     return data.reduce((sum, d) => sum + d.total, 0);
   }, [data]);
 
-  const toggleSeries = (series: string) => {
-    setHiddenSeries(prev => {
-      const next = new Set(prev);
-      if (next.has(series)) {
-        next.delete(series);
-      } else {
-        next.add(series);
-      }
-      return next;
-    });
-    setAnimationId(v => v + 1);
-  };
-
   // Format data for chart
-  const chartData = data.map(d => ({
-    ...d,
-    formattedDate: (() => {
-      try {
-        return format(parseISO(d.date), 'MMM d');
-      } catch {
-        return d.date;
-      }
-    })(),
-  }));
+  const chartData = useMemo(() => {
+    return data.map(d => ({
+      ...d,
+      formattedDate: (() => {
+        try {
+          return format(parseISO(d.date), 'MMM d');
+        } catch {
+          return d.date;
+        }
+      })(),
+    }));
+  }, [data]);
 
   return (
     <Card className="h-full">
@@ -80,101 +62,11 @@ export const ConversationChart = React.memo(function ConversationChart({
           trendPeriod={trendPeriod}
         />
 
-        {/* Clickable legend chips above chart */}
-        <div className="flex flex-wrap gap-2 mt-2 mb-4">
-          {SERIES_CONFIG.map(({ key, label, color }) => (
-            <button
-              key={key}
-              onClick={() => toggleSeries(key)}
-              className={cn(
-                "flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-all",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                hiddenSeries.has(key)
-                  ? "opacity-40 bg-muted"
-                  : "bg-muted/50 hover:bg-muted"
-              )}
-            >
-              <span 
-                className="h-2 w-2 rounded-full shrink-0" 
-                style={{ backgroundColor: color }}
-              />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="h-[350px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={chartData}
-              className="text-muted-foreground [&_.recharts-text]:text-xs"
-              margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
-            >
-              <defs>
-                {SERIES_CONFIG.map(({ key, color }) => (
-                  <linearGradient key={key} id={`gradient-conv-${key}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={color} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={color} stopOpacity={0.05} />
-                  </linearGradient>
-                ))}
-              </defs>
-
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-
-              <XAxis
-                dataKey="formattedDate"
-                axisLine={false}
-                tickLine={false}
-                interval="preserveStartEnd"
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                padding={{ left: 10, right: 10 }}
-              />
-
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                interval="preserveStartEnd"
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                tickFormatter={(value) => Number(value).toLocaleString()}
-                width={40}
-              />
-
-              <Tooltip
-                content={<ChartTooltipContent />}
-                formatter={(value) => Number(value).toLocaleString()}
-                labelFormatter={(label) => String(label)}
-                cursor={{
-                  stroke: 'hsl(var(--primary))',
-                  strokeWidth: 1,
-                  strokeDasharray: '4 4',
-                }}
-              />
-
-              {SERIES_CONFIG.map(({ key, label, color }) => (
-                <Area
-                  key={`${key}-${animationId}`}
-                  dataKey={key}
-                  name={label}
-                  stackId="1"
-                  type="monotone"
-                  stroke={color}
-                  strokeWidth={2}
-                  fill={`url(#gradient-conv-${key})`}
-                  hide={hiddenSeries.has(key)}
-                  isAnimationActive={!prefersReducedMotion}
-                  animationDuration={800}
-                  animationEasing="ease-out"
-                  activeDot={{
-                    r: 5,
-                    fill: 'hsl(var(--background))',
-                    stroke: color,
-                    strokeWidth: 2,
-                  }}
-                />
-              ))}
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        <StackedAreaChartCard
+          data={chartData}
+          series={SERIES_CONFIG}
+          gradientIdPrefix="conv"
+        />
 
         {/* Context summary footer */}
         <p className="mt-4 text-xs text-muted-foreground">
