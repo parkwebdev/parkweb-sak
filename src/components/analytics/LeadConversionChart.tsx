@@ -36,6 +36,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
   const { stages } = useLeadStages();
   const prefersReducedMotion = useReducedMotion();
   const [hiddenStages, setHiddenStages] = useState<Set<string>>(new Set());
+  const [animationId, setAnimationId] = useState(0);
 
   const toggleStage = (stageKey: string) => {
     setHiddenStages(prev => {
@@ -47,6 +48,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
       }
       return next;
     });
+    setAnimationId(v => v + 1);
   };
 
   // Generate gradient definitions and areas based on actual stages with their custom colors
@@ -162,7 +164,7 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
 
               {stageConfig.map((stage) => (
                 <Area
-                  key={stage.key}
+                  key={`${stage.key}-${animationId}`}
                   dataKey={stage.key}
                   name={stage.name}
                   stackId="1"

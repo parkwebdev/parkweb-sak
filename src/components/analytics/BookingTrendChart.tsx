@@ -71,6 +71,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
 }: BookingTrendChartProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('all-statuses');
   const [hiddenStatuses, setHiddenStatuses] = useState<Set<string>>(new Set());
+  const [animationId, setAnimationId] = useState(0);
   const prefersReducedMotion = useReducedMotion();
 
   const toggleStatus = (status: string) => {
@@ -83,6 +84,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
       }
       return next;
     });
+    setAnimationId(v => v + 1);
   };
 
   // Calculate totals for context summary
@@ -263,7 +265,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
               ) : (
                 STATUS_CONFIG.map(({ key, label, color }) => (
                   <Area
-                    key={key}
+                    key={`${key}-${animationId}`}
                     dataKey={key}
                     name={label}
                     stackId="1"

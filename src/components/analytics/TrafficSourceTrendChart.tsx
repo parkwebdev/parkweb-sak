@@ -54,8 +54,8 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
   loading,
 }: TrafficSourceTrendChartProps) {
   const [hiddenSources, setHiddenSources] = useState<Set<string>>(new Set());
+  const [animationId, setAnimationId] = useState(0);
   const prefersReducedMotion = useReducedMotion();
-
   // Calculate totals and trend
   const { totalSessions, trendPercentage, activeSources } = useMemo(() => {
     const total = data.reduce((sum, d) => sum + d.total, 0);
@@ -92,6 +92,7 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
       }
       return next;
     });
+    setAnimationId(v => v + 1);
   };
 
   if (loading) {
@@ -212,7 +213,7 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
 
               {activeSources.map(source => (
                 <Area
-                  key={source}
+                  key={`${source}-${animationId}`}
                   dataKey={source}
                   name={SOURCE_LABELS[source]}
                   stackId="1"
