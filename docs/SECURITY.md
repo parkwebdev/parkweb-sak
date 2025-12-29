@@ -65,6 +65,7 @@ This section tracks the implementation status of security enhancements identifie
 | Secret | Type | Purpose | Status |
 |--------|------|---------|--------|
 | `OPENAI_API_KEY` | Exists | Content moderation API | ✅ Configured |
+| `INTERNAL_WEBHOOK_SECRET` | Exists | Secure trigger-to-function calls | ✅ Configured |
 | `VITE_TURNSTILE_SITE_KEY` | New (public) | Widget CAPTCHA | ⏳ Pending |
 | `CLOUDFLARE_TURNSTILE_SECRET` | New (Supabase) | Token verification | ⏳ Pending |
 | `SECURITY_ALERT_EMAIL` | New (Supabase) | Alert delivery | ⏳ Pending |
@@ -659,6 +660,81 @@ if (outputModeration.action === 'block') {
 | hate/threatening | Medium | Log + Allow |
 | violence | Medium | Log + Allow |
 
+#### Shared Moderation Utility Specification
+
+**File**: `supabase/functions/_shared/moderation.ts`
+
+```typescript
+/**
+ * Content moderation using OpenAI Moderation API
+ * Used as a safety layer regardless of which LLM is used for chat
+ */
+
+interface ModerationResult {
+  flagged: boolean;
+  categories: string[];
+  severity: 'low' | 'medium' | 'high';
+  action: 'allow' | 'warn' | 'block';
+}
+
+const HIGH_SEVERITY_CATEGORIES = [
+  'sexual/minors',
+  'violence/graphic',
+  'self-harm/intent',
+  'self-harm/instructions',
+];
+
+const MEDIUM_SEVERITY_CATEGORIES = [
+  'hate/threatening',
+  'violence',
+  'self-harm',
+];
+
+export async function moderateContent(
+  content: string,
+  openaiKey: string
+): Promise<ModerationResult> {
+  const response = await fetch('https://api.openai.com/v1/moderations', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      input: content,
+      model: 'omni-moderation-latest' 
+    }),
+  });
+
+  if (!response.ok) {
+    console.error('Moderation API error:', response.status);
+    return { flagged: false, categories: [], severity: 'low', action: 'allow' };
+  }
+
+  const data = await response.json();
+  const result = data.results[0];
+
+  const flaggedCategories = Object.entries(result.categories)
+    .filter(([_, flagged]) => flagged)
+    .map(([category]) => category);
+
+  // Determine severity based on flagged categories
+  let severity: 'low' | 'medium' | 'high' = 'low';
+  if (flaggedCategories.some(c => HIGH_SEVERITY_CATEGORIES.includes(c))) {
+    severity = 'high';
+  } else if (flaggedCategories.some(c => MEDIUM_SEVERITY_CATEGORIES.includes(c))) {
+    severity = 'medium';
+  }
+
+  return {
+    flagged: result.flagged,
+    categories: flaggedCategories,
+    severity,
+    action: severity === 'high' ? 'block' : severity === 'medium' ? 'warn' : 'allow',
+  };
+}
+```
+
 #### Implementation Status
 
 🔴 **Planned** - Requires shared moderation utility and integration in `widget-chat`.
@@ -692,14 +768,99 @@ ChatPad uses Cloudflare Turnstile to protect widget forms from automated abuse.
 4. Failed verification blocks submission
 ```
 
+### TurnstileWidget Component Specification
+
+**File**: `src/widget/components/TurnstileWidget.tsx`
+
+```typescript
+import { useEffect, useRef, useState } from 'react';
+
+interface TurnstileWidgetProps {
+  siteKey: string;
+  onVerify: (token: string) => void;
+  onError?: () => void;
+}
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: HTMLElement, options: TurnstileOptions) => string;
+      remove: (widgetId: string) => void;
+    };
+    onTurnstileLoad?: () => void;
+  }
+}
+
+interface TurnstileOptions {
+  sitekey: string;
+  callback: (token: string) => void;
+  'error-callback'?: () => void;
+  appearance: 'interaction-only' | 'always' | 'execute';
+  theme: 'auto' | 'light' | 'dark';
+}
+
+export const TurnstileWidget = ({ siteKey, onVerify, onError }: TurnstileWidgetProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [widgetId, setWidgetId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Load Turnstile script if not already loaded
+    if (!document.querySelector('script[src*="turnstile"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+
+    window.onTurnstileLoad = () => {
+      if (containerRef.current && window.turnstile) {
+        const id = window.turnstile.render(containerRef.current, {
+          sitekey: siteKey,
+          callback: onVerify,
+          'error-callback': onError,
+          appearance: 'interaction-only', // Invisible unless suspicious
+          theme: 'auto',
+        });
+        setWidgetId(id);
+      }
+    };
+
+    // If script already loaded
+    if (window.turnstile && containerRef.current) {
+      window.onTurnstileLoad();
+    }
+
+    return () => {
+      if (widgetId && window.turnstile) {
+        window.turnstile.remove(widgetId);
+      }
+    };
+  }, [siteKey, onVerify, onError, widgetId]);
+
+  return <div ref={containerRef} />;
+};
+```
+
 ### Client-Side Integration
 
 ```typescript
+// In ContactForm.tsx
+import { TurnstileWidget } from './TurnstileWidget';
+
+const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+// Add to form (before submit button)
 <TurnstileWidget
-  siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+  siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || ''}
   onVerify={(token) => setTurnstileToken(token)}
-  appearance="interaction-only"
+  onError={() => console.error('Turnstile verification failed')}
 />
+
+// Include token in form submission
+const leadData = {
+  ...existingData,
+  turnstileToken,
+};
 ```
 
 ### Server-Side Verification
@@ -924,6 +1085,131 @@ ChatPad sends automated email alerts for high-severity security events. This pro
 - **Method**: Email via Resend
 - **Recipient**: Configured via `SECURITY_ALERT_EMAIL` secret
 - **Future**: Super admin dashboard notifications
+
+### Security Alert Edge Function Specification
+
+**File**: `supabase/functions/security-alert/index.ts`
+
+```typescript
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { Resend } from "https://esm.sh/resend@2.0.0";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-internal-secret',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Verify internal secret (prevents external calls)
+    const internalSecret = req.headers.get('x-internal-secret');
+    const expectedSecret = Deno.env.get('INTERNAL_WEBHOOK_SECRET');
+    if (internalSecret !== expectedSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+
+    const event = await req.json();
+    
+    // Determine if this event should trigger an alert
+    const shouldAlert = 
+      event.action === 'suspicious_activity' ||
+      event.action === 'content_blocked' ||
+      (event.success === false && ['user_login', 'api_key_used'].includes(event.action));
+
+    if (!shouldAlert) {
+      return new Response(JSON.stringify({ alerted: false }), { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
+
+    // Send email alert via Resend
+    const resendKey = Deno.env.get('RESEND_API_KEY');
+    const alertEmail = Deno.env.get('SECURITY_ALERT_EMAIL');
+    
+    if (resendKey && alertEmail) {
+      const resend = new Resend(resendKey);
+      
+      await resend.emails.send({
+        from: 'ChatPad Security <security@chatpad.com>',
+        to: alertEmail,
+        subject: `[Security Alert] ${event.action}`,
+        html: `
+          <h2>Security Alert</h2>
+          <p><strong>Action:</strong> ${event.action}</p>
+          <p><strong>Resource:</strong> ${event.resource_type} / ${event.resource_id || 'N/A'}</p>
+          <p><strong>Success:</strong> ${event.success}</p>
+          <p><strong>Time:</strong> ${event.created_at}</p>
+          <pre>${JSON.stringify(event.details, null, 2)}</pre>
+        `,
+      });
+      
+      console.log('Security alert email sent');
+    }
+
+    return new Response(JSON.stringify({ alerted: true }), { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    });
+  } catch (error) {
+    console.error('Security alert error:', error);
+    return new Response(JSON.stringify({ error: 'Internal error' }), { status: 500 });
+  }
+});
+```
+
+### Database Trigger for Alert Dispatch
+
+```sql
+-- Function to call security-alert edge function on concerning events
+CREATE OR REPLACE FUNCTION notify_security_alert()
+RETURNS trigger AS $$
+DECLARE
+  supabase_url TEXT := 'https://mvaimvwdukpgvkifkfpa.supabase.co';
+  internal_secret TEXT;
+BEGIN
+  -- Get internal secret from vault
+  SELECT decrypted_secret INTO internal_secret
+  FROM vault.decrypted_secrets
+  WHERE name = 'INTERNAL_WEBHOOK_SECRET'
+  LIMIT 1;
+
+  -- If no secret found, skip alerting
+  IF internal_secret IS NULL THEN
+    RAISE WARNING 'INTERNAL_WEBHOOK_SECRET not found, skipping security alert';
+    RETURN NEW;
+  END IF;
+
+  -- Only alert on concerning events
+  IF NEW.success = false 
+     OR NEW.action IN ('suspicious_activity', 'content_blocked', 'api_key_revoked') 
+  THEN
+    PERFORM net.http_post(
+      url := supabase_url || '/functions/v1/security-alert',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-internal-secret', internal_secret
+      ),
+      body := to_jsonb(NEW)
+    );
+  END IF;
+
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  -- Log error but don't fail the transaction
+  RAISE WARNING 'Security alert failed: %', SQLERRM;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Create trigger on security_logs table
+CREATE TRIGGER on_security_log_insert
+  AFTER INSERT ON security_logs
+  FOR EACH ROW
+  EXECUTE FUNCTION notify_security_alert();
+```
 
 ### Implementation Status
 
