@@ -34,7 +34,7 @@ interface PDFSectionProps {
 
 export function PDFSection({ title, children }: PDFSectionProps) {
   return (
-    <View style={sectionStyles.container}>
+    <View style={sectionStyles.container} wrap={false}>
       <Text style={sectionStyles.title}>{title}</Text>
       <View style={sectionStyles.content}>
         {children}
