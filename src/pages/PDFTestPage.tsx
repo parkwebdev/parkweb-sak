@@ -336,13 +336,13 @@ export default function PDFTestPage() {
   return (
     <div className="flex h-screen bg-background">
       {/* Controls Sidebar */}
-      <div className="w-80 border-r border-border flex flex-col">
-        <div className="p-4 border-b border-border">
+      <div className="w-80 border-r border-border flex flex-col h-full overflow-hidden">
+        <div className="p-4 border-b border-border flex-shrink-0">
           <h1 className="text-lg font-semibold text-foreground">PDF Test Page</h1>
           <p className="text-sm text-muted-foreground">Preview and debug PDF reports</p>
         </div>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-4 space-y-6">
             {/* Header Settings */}
             <Card>
@@ -422,7 +422,7 @@ export default function PDFTestPage() {
         </ScrollArea>
 
         {/* Actions */}
-        <div className="p-4 border-t border-border space-y-2">
+        <div className="p-4 border-t border-border space-y-2 flex-shrink-0">
           <Button onClick={handleRefresh} variant="outline" className="w-full" size="sm">
             <RefreshCcw01 className="mr-2 h-4 w-4" />
             Refresh Preview
@@ -435,7 +435,7 @@ export default function PDFTestPage() {
       </div>
 
       {/* PDF Viewer */}
-      <div className="flex-1 bg-muted/50">
+      <div className="flex-1 bg-muted/50 h-full overflow-hidden">
         <PDFViewer
           width="100%"
           height="100%"
