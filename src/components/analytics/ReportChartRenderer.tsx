@@ -129,10 +129,11 @@ export const ReportChartRenderer = React.memo(function ReportChartRenderer({
   })) || [];
   
   const locationData = data.bookingStats?.map(s => ({
-    locationId: s.location, // Use location as ID
+    locationId: s.location,
     locationName: s.location, 
     bookings: s.total, 
-    completed: s.confirmed, 
+    confirmed: s.confirmed,
+    completed: s.completed || 0,
     cancelled: s.cancelled, 
     noShow: s.no_show
   })) || [];

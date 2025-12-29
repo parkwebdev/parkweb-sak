@@ -313,7 +313,14 @@ function Analytics() {
       total_ratings: data.satisfactionStats.totalRatings,
       distribution: data.satisfactionStats.distribution,
     } : undefined,
-    leadConversionTrend: data.leadStats ? [{ date: format(new Date(), 'yyyy-MM-dd'), total: data.totalLeads }] : undefined,
+    leadConversionTrend: data.leadStats?.map(s => ({
+      date: s.date,
+      new: (s.new as number) || 0,
+      contacted: (s.contacted as number) || 0,
+      qualified: (s.qualified as number) || 0,
+      converted: (s.converted as number) || (s.won as number) || 0,
+      total: s.total,
+    })),
   }), [data]);
 
   // Handle chart capture completion
