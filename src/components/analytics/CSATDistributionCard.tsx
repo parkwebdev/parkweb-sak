@@ -99,7 +99,7 @@ export const CSATDistributionCard = React.memo(function CSATDistributionCard({
       <CardContent className="pt-6">
         <ChartCardHeader
           title="CSAT Distribution"
-          contextSummary={`${totalRatings.toLocaleString()} total rating${totalRatings !== 1 ? 's' : ''} • ${averageRating.toFixed(1)} average`}
+          contextSummary={`${totalRatings.toLocaleString()} total rating${totalRatings !== 1 ? 's' : ''}`}
           rightSlot={
             <div className="flex items-center gap-1.5">
               <Star01 size={16} className="text-yellow-500 fill-yellow-500" aria-hidden="true" />
