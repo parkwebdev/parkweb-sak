@@ -488,13 +488,15 @@ html::view-transition {
   }
 }
 
-/* Page depth chart bar animation */
+/* Bar chart grow animation - uses scaleX to preserve inline width */
 @keyframes growWidth {
   from {
-    width: 0%;
+    transform: scaleX(0);
+    transform-origin: left center;
   }
   to {
-    width: var(--target-width, 100%);
+    transform: scaleX(1);
+    transform-origin: left center;
   }
 }
 
