@@ -2,29 +2,48 @@
  * Beautiful PDF Report Generator
  * 
  * Generates branded PDF reports with embedded chart images and styled tables.
+ * Uses Inter font for consistent branding with ChatPad design system.
  */
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import type { ChartImage } from './pdf-chart-capture';
+import { registerInterFont, getFontFamily } from './pdf-fonts';
 
-// Colors (RGB tuples)
+// ChatPad Brand Colors (RGB tuples)
 const C = {
-  primary: [15, 23, 42] as const,
-  secondary: [100, 116, 139] as const,
-  accent: [59, 130, 246] as const,
-  success: [34, 197, 94] as const,
-  danger: [239, 68, 68] as const,
-  muted: [148, 163, 184] as const,
-  bg: [248, 250, 252] as const,
+  // Primary text & backgrounds
+  primary: [15, 23, 42] as const,       // slate-900
+  secondary: [71, 85, 105] as const,     // slate-600
+  muted: [148, 163, 184] as const,       // slate-400
+  
+  // Accent colors
+  accent: [37, 99, 235] as const,        // blue-600 (ChatPad primary)
+  success: [22, 163, 74] as const,       // green-600
+  warning: [234, 179, 8] as const,       // yellow-500
+  danger: [220, 38, 38] as const,        // red-600
+  
+  // Backgrounds
+  bg: [248, 250, 252] as const,          // slate-50
+  bgAlt: [241, 245, 249] as const,       // slate-100
   white: [255, 255, 255] as const,
+  
+  // Header gradient
+  headerBg: [15, 23, 42] as const,       // slate-900
+  headerAccent: [30, 41, 59] as const,   // slate-800
 };
 
+// Page dimensions (A4 in mm)
 const PAGE_W = 210;
 const PAGE_H = 297;
 const MARGIN = 20;
 const CONTENT_W = PAGE_W - MARGIN * 2;
+
+// Spacing constants
+const SECTION_GAP = 16;
+const CHART_GAP = 12;
+const TABLE_GAP = 10;
 
 interface PDFData {
   totalConversations?: number;
@@ -84,20 +103,25 @@ interface GenerateOptions {
 export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob> {
   const { data, config, startDate, endDate, orgName, charts } = opts;
   const pdf = new jsPDF('p', 'mm', 'a4');
-  let y = MARGIN;
+  
+  // Register Inter font
+  await registerInterFont(pdf);
+  const fontFamily = getFontFamily();
+  
+  let y = 0;
 
   // Header
-  y = addHeader(pdf, orgName, startDate, endDate, y);
+  y = addHeader(pdf, orgName, startDate, endDate, fontFamily);
 
   // KPIs
   if (config.includeKPIs) {
-    y = addKPIs(pdf, data, y);
+    y = addKPIs(pdf, data, y, fontFamily);
   }
 
   // Conversations
   if (config.includeConversations) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Conversations', y);
+    y = addTitle(pdf, 'Conversations', y, fontFamily);
     if (config.includeCharts && charts?.has('conversation-volume')) {
       y = addImage(pdf, charts.get('conversation-volume')!, y);
     }
@@ -107,18 +131,18 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         startY: y,
         head: [['Date', 'Total', 'Active', 'Closed']],
         body: data.conversationStats.slice(0, 15).map(s => [s.date, s.total, s.active, s.closed]),
-        ...tableStyle(),
+        ...tableStyle(fontFamily),
       });
-      y = tableEnd(pdf) + 10;
+      y = tableEnd(pdf) + TABLE_GAP;
     }
   }
 
   // Funnel
   if (config.includeConversationFunnel && data.conversationFunnel?.length) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Conversation Funnel', y);
+    y = addTitle(pdf, 'Conversation Funnel', y, fontFamily);
     if (config.includeCharts && charts?.has('conversation-funnel')) {
-      y = addImage(pdf, charts.get('conversation-funnel')!, y, 80);
+      y = addImage(pdf, charts.get('conversation-funnel')!, y, 85);
     }
     if (config.includeTables) {
       y = checkBreak(pdf, y, 60);
@@ -126,48 +150,48 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         startY: y,
         head: [['Stage', 'Count', 'Percentage', 'Drop-off']],
         body: data.conversationFunnel.map(s => [s.name, s.count.toLocaleString(), `${s.percentage.toFixed(1)}%`, `${s.dropOffPercent.toFixed(1)}%`]),
-        ...tableStyle(),
+        ...tableStyle(fontFamily),
       });
-      y = tableEnd(pdf) + 10;
+      y = tableEnd(pdf) + TABLE_GAP;
     }
   }
 
   // Peak Activity
   if (config.includePeakActivity && data.peakActivity) {
     y = checkBreak(pdf, y, 120);
-    y = addTitle(pdf, 'Peak Activity', y);
+    y = addTitle(pdf, 'Peak Activity', y, fontFamily);
     if (config.includeCharts && charts?.has('peak-activity')) {
-      y = addImage(pdf, charts.get('peak-activity')!, y, 90);
+      y = addImage(pdf, charts.get('peak-activity')!, y, 95);
     }
     y = checkBreak(pdf, y, 40);
     autoTable(pdf, {
       startY: y,
       head: [['Metric', 'Value']],
       body: [['Peak Day', data.peakActivity.peakDay], ['Peak Time', data.peakActivity.peakTime], ['Peak Value', `${data.peakActivity.peakValue}`]],
-      ...tableStyle(),
+      ...tableStyle(fontFamily),
     });
-    y = tableEnd(pdf) + 10;
+    y = tableEnd(pdf) + TABLE_GAP;
   }
 
   // Leads
   if (config.includeLeads && data.leadStats?.length) {
     y = checkBreak(pdf, y, 80);
-    y = addTitle(pdf, 'Leads', y);
+    y = addTitle(pdf, 'Leads', y, fontFamily);
     autoTable(pdf, {
       startY: y,
       head: [['Date', 'Total']],
       body: data.leadStats.slice(0, 15).map(s => [s.date, s.total]),
-      ...tableStyle(),
+      ...tableStyle(fontFamily),
     });
-    y = tableEnd(pdf) + 10;
+    y = tableEnd(pdf) + TABLE_GAP;
   }
 
   // Lead Source Breakdown
   if (config.includeLeadSourceBreakdown && data.leadSourceBreakdown?.length) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Lead Source Breakdown', y);
+    y = addTitle(pdf, 'Lead Source Breakdown', y, fontFamily);
     if (config.includeCharts && charts?.has('lead-source-breakdown')) {
-      y = addImage(pdf, charts.get('lead-source-breakdown')!, y, 80);
+      y = addImage(pdf, charts.get('lead-source-breakdown')!, y, 85);
     }
     if (config.includeTables) {
       y = checkBreak(pdf, y, 60);
@@ -175,23 +199,23 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         startY: y,
         head: [['Source', 'Leads', 'Sessions', 'CVR']],
         body: data.leadSourceBreakdown.map(s => [s.source, s.leads, s.sessions, `${s.cvr.toFixed(1)}%`]),
-        ...tableStyle(),
+        ...tableStyle(fontFamily),
       });
-      y = tableEnd(pdf) + 10;
+      y = tableEnd(pdf) + TABLE_GAP;
     }
   }
 
   // Lead Conversion Trend
   if (config.includeLeadConversionTrend && charts?.has('lead-conversion-trend')) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Lead Conversion Trend', y);
+    y = addTitle(pdf, 'Lead Conversion Trend', y, fontFamily);
     y = addImage(pdf, charts.get('lead-conversion-trend')!, y);
   }
 
   // Bookings
   if (config.includeBookings && data.bookingStats?.length) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Bookings', y);
+    y = addTitle(pdf, 'Bookings', y, fontFamily);
     if (config.includeCharts && charts?.has('bookings-by-location')) {
       y = addImage(pdf, charts.get('bookings-by-location')!, y);
     }
@@ -201,16 +225,16 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         startY: y,
         head: [['Location', 'Total', 'Confirmed', 'Completed', 'No-Show', 'Show Rate']],
         body: data.bookingStats.map(s => [s.location, s.total, s.confirmed, s.completed, s.no_show, `${s.show_rate}%`]),
-        ...tableStyle(),
+        ...tableStyle(fontFamily),
       });
-      y = tableEnd(pdf) + 10;
+      y = tableEnd(pdf) + TABLE_GAP;
     }
   }
 
   // Booking Trend
   if (config.includeBookingTrend && data.bookingTrend?.length) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Booking Trend', y);
+    y = addTitle(pdf, 'Booking Trend', y, fontFamily);
     if (config.includeCharts && charts?.has('booking-trend')) {
       y = addImage(pdf, charts.get('booking-trend')!, y);
     }
@@ -220,33 +244,33 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         startY: y,
         head: [['Date', 'Confirmed', 'Completed', 'Cancelled', 'No-Show']],
         body: data.bookingTrend.slice(0, 15).map(i => [i.date, i.confirmed, i.completed, i.cancelled, i.noShow]),
-        ...tableStyle(),
+        ...tableStyle(fontFamily),
       });
-      y = tableEnd(pdf) + 10;
+      y = tableEnd(pdf) + TABLE_GAP;
     }
   }
 
   // Satisfaction
   if (config.includeSatisfaction && data.satisfactionStats) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Customer Satisfaction', y);
+    y = addTitle(pdf, 'Customer Satisfaction', y, fontFamily);
     if (config.includeCharts && charts?.has('csat-distribution')) {
-      y = addImage(pdf, charts.get('csat-distribution')!, y, 80);
+      y = addImage(pdf, charts.get('csat-distribution')!, y, 85);
     }
     y = checkBreak(pdf, y, 40);
     autoTable(pdf, {
       startY: y,
       head: [['Metric', 'Value']],
       body: [['Average Rating', `${data.satisfactionStats.average_rating.toFixed(1)} / 5`], ['Total Ratings', data.satisfactionStats.total_ratings.toLocaleString()]],
-      ...tableStyle(),
+      ...tableStyle(fontFamily),
     });
-    y = tableEnd(pdf) + 10;
+    y = tableEnd(pdf) + TABLE_GAP;
   }
 
   // Feedback
   if (config.includeCustomerFeedback && data.recentFeedback?.length) {
     y = checkBreak(pdf, y, 80);
-    y = addTitle(pdf, 'Recent Feedback', y);
+    y = addTitle(pdf, 'Recent Feedback', y, fontFamily);
     autoTable(pdf, {
       startY: y,
       head: [['Date', 'Rating', 'Feedback', 'Trigger']],
@@ -256,16 +280,16 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         (f.feedback || '-').substring(0, 40) + ((f.feedback?.length || 0) > 40 ? '...' : ''),
         f.triggerType
       ]),
-      ...tableStyle(),
+      ...tableStyle(fontFamily),
       columnStyles: { 2: { cellWidth: 60 } },
     });
-    y = tableEnd(pdf) + 10;
+    y = tableEnd(pdf) + TABLE_GAP;
   }
 
   // AI Performance
   if (config.includeAIPerformance && data.aiPerformanceStats) {
     y = checkBreak(pdf, y, 80);
-    y = addTitle(pdf, 'Ari Performance', y);
+    y = addTitle(pdf, 'Ari Performance', y, fontFamily);
     autoTable(pdf, {
       startY: y,
       head: [['Metric', 'Value']],
@@ -276,15 +300,15 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         ['Human Takeover', data.aiPerformanceStats.human_takeover.toLocaleString()],
         ['Total Conversations', data.aiPerformanceStats.total_conversations.toLocaleString()],
       ],
-      ...tableStyle(),
+      ...tableStyle(fontFamily),
     });
-    y = tableEnd(pdf) + 10;
+    y = tableEnd(pdf) + TABLE_GAP;
   }
 
   // Traffic Sources
   if (config.includeTrafficSources && data.trafficSources?.length) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Traffic Sources', y);
+    y = addTitle(pdf, 'Traffic Sources', y, fontFamily);
     if (config.includeCharts && charts?.has('traffic-sources')) {
       y = addImage(pdf, charts.get('traffic-sources')!, y);
     }
@@ -294,23 +318,23 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         startY: y,
         head: [['Source', 'Visitors', 'Percentage']],
         body: data.trafficSources.slice(0, 10).map(s => [s.source, s.visitors.toLocaleString(), `${s.percentage}%`]),
-        ...tableStyle(),
+        ...tableStyle(fontFamily),
       });
-      y = tableEnd(pdf) + 10;
+      y = tableEnd(pdf) + TABLE_GAP;
     }
   }
 
   // Traffic Source Trend
   if (config.includeTrafficSourceTrend && charts?.has('traffic-source-trend')) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Traffic Source Trend', y);
+    y = addTitle(pdf, 'Traffic Source Trend', y, fontFamily);
     y = addImage(pdf, charts.get('traffic-source-trend')!, y);
   }
 
   // Top Pages
   if (config.includeTopPages && data.topPages?.length) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Top Pages', y);
+    y = addTitle(pdf, 'Top Pages', y, fontFamily);
     if (config.includeCharts && charts?.has('top-pages')) {
       y = addImage(pdf, charts.get('top-pages')!, y);
     }
@@ -325,17 +349,17 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
           `${p.bounce_rate}%`,
           p.conversations
         ]),
-        ...tableStyle(),
+        ...tableStyle(fontFamily),
         columnStyles: { 0: { cellWidth: 70 } },
       });
-      y = tableEnd(pdf) + 10;
+      y = tableEnd(pdf) + TABLE_GAP;
     }
   }
 
   // Page Engagement
   if (config.includePageEngagement && data.pageEngagement) {
     y = checkBreak(pdf, y, 60);
-    y = addTitle(pdf, 'Page Engagement', y);
+    y = addTitle(pdf, 'Page Engagement', y, fontFamily);
     autoTable(pdf, {
       startY: y,
       head: [['Metric', 'Value']],
@@ -345,17 +369,17 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         ['Total Sessions', data.pageEngagement.totalSessions.toLocaleString()],
         ['Conversion Rate', `${data.pageEngagement.overallCVR.toFixed(1)}%`],
       ],
-      ...tableStyle(),
+      ...tableStyle(fontFamily),
     });
-    y = tableEnd(pdf) + 10;
+    y = tableEnd(pdf) + TABLE_GAP;
   }
 
   // Page Depth
   if (config.includePageDepth && data.pageDepthDistribution?.length) {
     y = checkBreak(pdf, y, 100);
-    y = addTitle(pdf, 'Page Depth Distribution', y);
+    y = addTitle(pdf, 'Page Depth Distribution', y, fontFamily);
     if (config.includeCharts && charts?.has('page-depth')) {
-      y = addImage(pdf, charts.get('page-depth')!, y, 80);
+      y = addImage(pdf, charts.get('page-depth')!, y, 85);
     }
     if (config.includeTables) {
       y = checkBreak(pdf, y, 60);
@@ -363,114 +387,185 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
         startY: y,
         head: [['Pages Viewed', 'Sessions', 'Percentage']],
         body: data.pageDepthDistribution.map(d => [d.depth, d.count.toLocaleString(), `${d.percentage.toFixed(1)}%`]),
-        ...tableStyle(),
+        ...tableStyle(fontFamily),
       });
-      y = tableEnd(pdf) + 10;
+      y = tableEnd(pdf) + TABLE_GAP;
     }
   }
 
   // Visitor Locations
   if (config.includeVisitorLocations && data.visitorLocations?.length) {
     y = checkBreak(pdf, y, 80);
-    y = addTitle(pdf, 'Visitor Locations', y);
+    y = addTitle(pdf, 'Visitor Locations', y, fontFamily);
     autoTable(pdf, {
       startY: y,
       head: [['Country', 'Visitors', 'Percentage']],
       body: data.visitorLocations.slice(0, 10).map(l => [l.country, l.visitors.toLocaleString(), `${l.percentage}%`]),
-      ...tableStyle(),
+      ...tableStyle(fontFamily),
     });
-    y = tableEnd(pdf) + 10;
+    y = tableEnd(pdf) + TABLE_GAP;
   }
 
   // Footer on all pages
-  addFooters(pdf);
+  addFooters(pdf, fontFamily);
 
   return pdf.output('blob');
 }
 
 // Helper functions
-function addHeader(pdf: jsPDF, org: string, start: Date, end: Date, y: number): number {
-  pdf.setFillColor(...C.primary);
-  pdf.rect(0, 0, PAGE_W, 40, 'F');
+
+function addHeader(pdf: jsPDF, org: string, start: Date, end: Date, fontFamily: string): number {
+  const HEADER_H = 52;
+  
+  // Dark header background
+  pdf.setFillColor(...C.headerBg);
+  pdf.rect(0, 0, PAGE_W, HEADER_H, 'F');
+  
+  // Subtle accent line at bottom
+  pdf.setFillColor(...C.accent);
+  pdf.rect(0, HEADER_H - 2, PAGE_W, 2, 'F');
+  
+  // Organization name
   pdf.setTextColor(...C.white);
-  pdf.setFontSize(20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`${org} - Analytics Report`, MARGIN, 20);
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Period: ${format(start, 'MMM d, yyyy')} - ${format(end, 'MMM d, yyyy')}`, MARGIN, 30);
-  pdf.text(`Generated: ${format(new Date(), 'MMM d, yyyy h:mm a')}`, PAGE_W - MARGIN - 60, 30);
+  pdf.setFontSize(22);
+  pdf.setFont(fontFamily, 'bold');
+  pdf.text(org, MARGIN, 20);
+  
+  // Report title
+  pdf.setFontSize(14);
+  pdf.setFont(fontFamily, 'normal');
+  pdf.setTextColor(200, 200, 200);
+  pdf.text('Analytics Report', MARGIN, 32);
+  
+  // Date range on right
+  pdf.setFontSize(12);
+  pdf.setTextColor(...C.white);
+  const dateText = `${format(start, 'MMM d')} – ${format(end, 'MMM d, yyyy')}`;
+  pdf.text(dateText, PAGE_W - MARGIN, 20, { align: 'right' });
+  
+  // Generated timestamp
+  pdf.setFontSize(9);
+  pdf.setTextColor(160, 160, 160);
+  pdf.text(`Generated ${format(new Date(), 'MMM d, yyyy h:mm a')}`, PAGE_W - MARGIN, 32, { align: 'right' });
+  
+  // Reset text color
   pdf.setTextColor(...C.primary);
-  return 50;
+  
+  return HEADER_H + SECTION_GAP;
 }
 
-function addKPIs(pdf: jsPDF, data: PDFData, y: number): number {
+function addKPIs(pdf: jsPDF, data: PDFData, y: number, fontFamily: string): number {
   const kpis = [
     { label: 'Conversations', value: data.totalConversations?.toLocaleString() || '0', change: data.conversationsChange },
     { label: 'Leads', value: data.totalLeads?.toLocaleString() || '0', change: data.leadsChange },
     { label: 'Conversion Rate', value: `${(data.conversionRate || 0).toFixed(1)}%`, change: null },
   ];
   
-  const cardW = (CONTENT_W - 10) / 3;
-  const cardH = 25;
+  const cardW = (CONTENT_W - 12) / 3;
+  const cardH = 28;
   
   kpis.forEach((kpi, i) => {
-    const x = MARGIN + i * (cardW + 5);
+    const x = MARGIN + i * (cardW + 6);
+    
+    // Card background
     pdf.setFillColor(...C.bg);
     pdf.roundedRect(x, y, cardW, cardH, 3, 3, 'F');
+    
+    // Card border
+    pdf.setDrawColor(...C.bgAlt);
+    pdf.setLineWidth(0.5);
+    pdf.roundedRect(x, y, cardW, cardH, 3, 3, 'S');
+    
+    // Value
     pdf.setTextColor(...C.primary);
-    pdf.setFontSize(16);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(kpi.value, x + 5, y + 12);
-    pdf.setFontSize(9);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(18);
+    pdf.setFont(fontFamily, 'bold');
+    pdf.text(kpi.value, x + 8, y + 14);
+    
+    // Label
+    pdf.setFontSize(10);
+    pdf.setFont(fontFamily, 'normal');
     pdf.setTextColor(...C.secondary);
-    pdf.text(kpi.label, x + 5, y + 20);
+    pdf.text(kpi.label, x + 8, y + 22);
+    
+    // Change indicator
     if (kpi.change !== null && kpi.change !== undefined) {
       const isPos = kpi.change >= 0;
       pdf.setTextColor(isPos ? C.success[0] : C.danger[0], isPos ? C.success[1] : C.danger[1], isPos ? C.success[2] : C.danger[2]);
-      pdf.text(`${isPos ? '↑' : '↓'} ${Math.abs(kpi.change).toFixed(1)}%`, x + cardW - 25, y + 12);
+      pdf.setFontSize(10);
+      pdf.text(`${isPos ? '↑' : '↓'} ${Math.abs(kpi.change).toFixed(1)}%`, x + cardW - 8, y + 14, { align: 'right' });
     }
   });
   
-  return y + cardH + 15;
+  return y + cardH + SECTION_GAP;
 }
 
-function addTitle(pdf: jsPDF, title: string, y: number): number {
+function addTitle(pdf: jsPDF, title: string, y: number, fontFamily: string): number {
+  // Accent bar
   pdf.setFillColor(...C.accent);
-  pdf.rect(MARGIN, y, 4, 8, 'F');
+  pdf.rect(MARGIN, y, 4, 10, 'F');
+  
+  // Title text
   pdf.setTextColor(...C.primary);
-  pdf.setFontSize(14);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(title, MARGIN + 8, y + 6);
-  return y + 15;
+  pdf.setFontSize(16);
+  pdf.setFont(fontFamily, 'bold');
+  pdf.text(title, MARGIN + 10, y + 8);
+  
+  return y + 18;
 }
 
-function addImage(pdf: jsPDF, chart: ChartImage, y: number, maxH = 70): number {
+function addImage(pdf: jsPDF, chart: ChartImage, y: number, maxH = 75): number {
   const ratio = chart.width / chart.height;
-  let imgW = Math.min(CONTENT_W, chart.width * 0.25);
+  
+  // Always use full content width for charts
+  let imgW = CONTENT_W;
   let imgH = imgW / ratio;
-  if (imgH > maxH) { imgH = maxH; imgW = imgH * ratio; }
-  pdf.addImage(chart.dataUrl, 'PNG', MARGIN, y, imgW, imgH);
-  return y + imgH + 10;
+  
+  // Constrain height if needed
+  if (imgH > maxH) {
+    imgH = maxH;
+    imgW = imgH * ratio;
+  }
+  
+  // Center horizontally if narrower than content width
+  const xOffset = MARGIN + (CONTENT_W - imgW) / 2;
+  
+  pdf.addImage(chart.dataUrl, 'JPEG', xOffset, y, imgW, imgH);
+  
+  return y + imgH + CHART_GAP;
 }
 
 function checkBreak(pdf: jsPDF, y: number, needed: number): number {
-  if (y + needed > PAGE_H - MARGIN) {
+  if (y + needed > PAGE_H - MARGIN - 15) {
     pdf.addPage();
     return MARGIN + 10;
   }
   return y;
 }
 
-function tableStyle() {
+function tableStyle(fontFamily: string) {
   return {
-    theme: 'striped' as const,
-    headStyles: { fillColor: C.primary as [number, number, number], textColor: C.white as [number, number, number], fontStyle: 'bold' as const, fontSize: 9 },
-    bodyStyles: { fontSize: 8, textColor: C.primary as [number, number, number] },
-    alternateRowStyles: { fillColor: C.bg as [number, number, number] },
+    theme: 'plain' as const,
+    styles: {
+      font: fontFamily,
+      fontSize: 10,
+      cellPadding: 4,
+    },
+    headStyles: {
+      fillColor: C.primary as [number, number, number],
+      textColor: C.white as [number, number, number],
+      fontStyle: 'bold' as const,
+      fontSize: 10,
+    },
+    bodyStyles: {
+      fontSize: 10,
+      textColor: C.primary as [number, number, number],
+    },
+    alternateRowStyles: {
+      fillColor: C.bgAlt as [number, number, number],
+    },
     margin: { left: MARGIN, right: MARGIN },
-    tableLineColor: C.muted as [number, number, number],
+    tableWidth: CONTENT_W,
   };
 }
 
@@ -478,13 +573,14 @@ function tableEnd(pdf: jsPDF): number {
   return (pdf as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY || MARGIN;
 }
 
-function addFooters(pdf: jsPDF): void {
+function addFooters(pdf: jsPDF, fontFamily: string): void {
   const pages = pdf.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     pdf.setPage(i);
-    pdf.setFontSize(8);
+    pdf.setFontSize(9);
+    pdf.setFont(fontFamily, 'normal');
     pdf.setTextColor(...C.muted);
     pdf.text(`Page ${i} of ${pages}`, PAGE_W / 2, PAGE_H - 10, { align: 'center' });
-    pdf.text('Powered by Ari Analytics', PAGE_W - MARGIN, PAGE_H - 10, { align: 'right' });
+    pdf.text('Powered by Ari', PAGE_W - MARGIN, PAGE_H - 10, { align: 'right' });
   }
 }
