@@ -686,18 +686,22 @@ interface AIPerformanceStats {
 
 ### useTrafficAnalytics
 
-Fetches visitor traffic and page analytics.
+Fetches visitor traffic, page analytics, engagement metrics, and session depth data. **Powered by React Query** with real-time updates.
 
 ```tsx
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 
 const {
-  trafficSources,   // TrafficSourceData[] - Referrer breakdown
-  landingPages,     // LandingPageData[] - Top landing pages
-  pageVisits,       // PageVisitData[] - Page visit data
-  loading,          // boolean
-  agentId,          // string | null
-  refetch,          // () => void
+  trafficSources,          // TrafficSourceData[] - Referrer breakdown
+  landingPages,            // LandingPageData[] - Top landing pages
+  pageVisits,              // PageVisitData[] - Page visit data
+  locationData,            // LocationData[] - Visitor locations with coordinates
+  engagement,              // EngagementMetrics - Bounce rate, CVR, session depth
+  sourcesByDate,           // DailySourceData[] - Daily traffic source breakdown
+  pageDepthDistribution,   // PageDepthData[] - Session depth distribution
+  loading,                 // boolean
+  agentId,                 // string | null
+  refetch,                 // () => void
 } = useTrafficAnalytics(startDate: Date, endDate: Date);
 ```
 

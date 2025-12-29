@@ -491,6 +491,112 @@ export const generateLocationData = (): MockLocationData[] => [
 ];
 
 // =============================================================================
+// ENGAGEMENT METRICS GENERATOR
+// =============================================================================
+
+export interface MockEngagementMetrics {
+  bounceRate: number;
+  avgPagesPerSession: number;
+  avgSessionDuration: number;
+  totalSessions: number;
+  totalLeads: number;
+  overallCVR: number;
+}
+
+/** Generate engagement metrics for PageEngagementCard */
+export const generateEngagementMetrics = (): MockEngagementMetrics => {
+  const totalSessions = randomBetween(800, 2500);
+  const totalLeads = randomBetween(80, 350);
+  return {
+    bounceRate: randomFloat(28, 52),
+    avgPagesPerSession: randomFloat(1.8, 4.2),
+    avgSessionDuration: randomBetween(45000, 180000), // 45s - 3min in ms
+    totalSessions,
+    totalLeads,
+    overallCVR: (totalLeads / totalSessions) * 100,
+  };
+};
+
+// =============================================================================
+// DAILY SOURCE DATA GENERATOR (for TrafficSourceTrendChart)
+// =============================================================================
+
+export interface MockDailySourceData {
+  date: string;
+  direct: number;
+  organic: number;
+  paid: number;
+  social: number;
+  email: number;
+  referral: number;
+  total: number;
+}
+
+/** Generate daily traffic source breakdown for time-series charts */
+export const generateSourcesByDate = (days: number = 30): MockDailySourceData[] => {
+  const dates = generateDateRange(days);
+  return dates.map((date, i) => {
+    // Create realistic trends with some variance
+    const baseMultiplier = 1 + (i * 0.02); // Slight upward trend
+    const weekendDip = [0, 6].includes(new Date(date).getDay()) ? 0.7 : 1;
+    
+    const direct = Math.round(randomBetween(15, 40) * baseMultiplier * weekendDip);
+    const organic = Math.round(randomBetween(25, 55) * baseMultiplier * weekendDip);
+    const paid = Math.round(randomBetween(8, 25) * baseMultiplier * weekendDip);
+    const social = Math.round(randomBetween(10, 30) * baseMultiplier * weekendDip);
+    const email = Math.round(randomBetween(5, 18) * baseMultiplier * weekendDip);
+    const referral = Math.round(randomBetween(8, 22) * baseMultiplier * weekendDip);
+    
+    return {
+      date,
+      direct,
+      organic,
+      paid,
+      social,
+      email,
+      referral,
+      total: direct + organic + paid + social + email + referral,
+    };
+  });
+};
+
+// =============================================================================
+// PAGE DEPTH DISTRIBUTION GENERATOR (for PageDepthChart)
+// =============================================================================
+
+export interface MockPageDepthData {
+  depth: string;
+  count: number;
+  percentage: number;
+}
+
+/** Generate page depth distribution for session depth visualization */
+export const generatePageDepthDistribution = (): MockPageDepthData[] => {
+  const totalSessions = randomBetween(800, 2000);
+  
+  // Realistic distribution: more bounces, decreasing as depth increases
+  const bouncePercent = randomFloat(30, 45);
+  const onePage = Math.round(totalSessions * (bouncePercent / 100));
+  const twoPages = Math.round(totalSessions * randomFloat(0.18, 0.28));
+  const threePages = Math.round(totalSessions * randomFloat(0.12, 0.18));
+  const fourPages = Math.round(totalSessions * randomFloat(0.06, 0.12));
+  const fivePlusPages = Math.max(0, totalSessions - onePage - twoPages - threePages - fourPages);
+  
+  const depths = [
+    { depth: '1 page', count: onePage },
+    { depth: '2 pages', count: twoPages },
+    { depth: '3 pages', count: threePages },
+    { depth: '4 pages', count: fourPages },
+    { depth: '5+ pages', count: fivePlusPages },
+  ];
+  
+  return depths.map(d => ({
+    ...d,
+    percentage: (d.count / totalSessions) * 100,
+  }));
+};
+
+// =============================================================================
 // CONVERSATION FUNNEL GENERATOR
 // =============================================================================
 

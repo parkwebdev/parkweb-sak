@@ -26,6 +26,9 @@ import {
   generateAgentPerformance,
   generateLocationData,
   generateConversationFunnel,
+  generateEngagementMetrics,
+  generateSourcesByDate,
+  generatePageDepthDistribution,
   type MockConversationStat,
   type MockLeadStat,
   type MockTrafficSource,
@@ -35,6 +38,9 @@ import {
   type MockAgentPerformance,
   type MockLocationData,
   type MockFunnelStage,
+  type MockEngagementMetrics,
+  type MockDailySourceData,
+  type MockPageDepthData,
 } from '@/lib/mock-analytics-data';
 import type {
   BookingStats,
@@ -76,6 +82,11 @@ export interface MockAnalyticsData {
   
   // Conversation funnel
   funnelStages: MockFunnelStage[];
+  
+  // Phase A/B additions
+  engagement: MockEngagementMetrics;
+  sourcesByDate: MockDailySourceData[];
+  pageDepthDistribution: MockPageDepthData[];
 }
 
 export interface UseMockAnalyticsDataReturn {
@@ -152,6 +163,11 @@ export const useMockAnalyticsData = (): UseMockAnalyticsDataReturn => {
       
       // Funnel
       funnelStages: generateConversationFunnel(),
+      
+      // Phase A/B additions
+      engagement: generateEngagementMetrics(),
+      sourcesByDate: generateSourcesByDate(),
+      pageDepthDistribution: generatePageDepthDistribution(),
     };
   }, [enabled, refreshKey]);
 
