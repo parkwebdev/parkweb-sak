@@ -2,13 +2,13 @@
  * PDF Test Page
  * 
  * Development-only page for previewing PDF reports exactly as they render.
- * Uses @react-pdf/renderer's PDFViewer for real-time preview.
+ * Uses blob iframe for CSP-friendly live preview (Chrome's native PDF viewer).
  * 
  * @module pages/PDFTestPage
  */
 
-import { useState, useMemo } from 'react';
-import { PDFViewer } from '@react-pdf/renderer';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { pdf } from '@react-pdf/renderer';
 import { AnalyticsReportPDF } from '@/lib/pdf-components';
 import { generateBeautifulPDF } from '@/lib/pdf-generator';
 import type { PDFData, PDFConfig, ReportType } from '@/types/pdf';
@@ -19,8 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Download02, RefreshCcw01 } from '@untitledui/icons';
+import { Download02, RefreshCcw01, Loading02 } from '@untitledui/icons';
 import { subDays, format } from 'date-fns';
 
 // Comprehensive sample data matching PDFData interface
@@ -221,6 +220,11 @@ export default function PDFTestPage() {
   const [endDate] = useState(() => new Date());
   const [refreshKey, setRefreshKey] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  
+  // Blob preview state
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   // Toggle a config option
   const toggleConfig = (key: keyof PDFConfig) => {
@@ -233,9 +237,59 @@ export default function PDFTestPage() {
   };
 
   // Force refresh the PDF viewer
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setRefreshKey(prev => prev + 1);
-  };
+  }, []);
+
+  // Generate preview blob URL
+  useEffect(() => {
+    let cancelled = false;
+    const oldUrl = previewUrl;
+    
+    const generatePreview = async () => {
+      setIsGeneratingPreview(true);
+      setPreviewError(null);
+      
+      try {
+        const doc = (
+          <AnalyticsReportPDF
+            data={SAMPLE_PDF_DATA}
+            config={config}
+            startDate={startDate}
+            endDate={endDate}
+            orgName={orgName}
+          />
+        );
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blob = await pdf(doc as any).toBlob();
+        
+        if (!cancelled) {
+          const url = URL.createObjectURL(blob);
+          setPreviewUrl(url);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Failed to generate PDF preview:', error);
+          setPreviewError(error instanceof Error ? error.message : 'Failed to generate preview');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsGeneratingPreview(false);
+        }
+      }
+    };
+    
+    generatePreview();
+    
+    return () => {
+      cancelled = true;
+      // Revoke old URL on cleanup
+      if (oldUrl) {
+        URL.revokeObjectURL(oldUrl);
+      }
+    };
+  }, [config, startDate, endDate, orgName, refreshKey]);
 
   // Download the PDF
   const handleDownload = async () => {
@@ -261,18 +315,6 @@ export default function PDFTestPage() {
       setIsDownloading(false);
     }
   };
-
-  // Memoize the PDF document to prevent unnecessary re-renders
-  const pdfDocument = useMemo(() => (
-    <AnalyticsReportPDF
-      key={refreshKey}
-      data={SAMPLE_PDF_DATA}
-      config={config}
-      startDate={startDate}
-      endDate={endDate}
-      orgName={orgName}
-    />
-  ), [config, startDate, endDate, orgName, refreshKey]);
 
   // Config section toggles grouped by category
   const configSections = [
@@ -334,9 +376,9 @@ export default function PDFTestPage() {
   ];
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-full min-h-0 bg-background">
       {/* Controls Sidebar */}
-      <div className="w-80 border-r border-border flex flex-col h-full overflow-hidden">
+      <div className="w-80 border-r border-border flex flex-col min-h-0">
         <div className="p-4 border-b border-border flex-shrink-0">
           <h1 className="text-lg font-semibold text-foreground">PDF Test Page</h1>
           <p className="text-sm text-muted-foreground">Preview and debug PDF reports</p>
@@ -434,16 +476,36 @@ export default function PDFTestPage() {
         </div>
       </div>
 
-      {/* PDF Viewer */}
-      <div className="flex-1 bg-muted/50 h-full overflow-hidden">
-        <PDFViewer
-          width="100%"
-          height="100%"
-          showToolbar={true}
-          className="border-0"
-        >
-          {pdfDocument}
-        </PDFViewer>
+      {/* PDF Preview via blob iframe */}
+      <div className="flex-1 min-h-0 flex flex-col bg-muted/50">
+        {isGeneratingPreview && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+              <Loading02 className="h-8 w-8 animate-spin" />
+              <p className="text-sm">Generating preview...</p>
+            </div>
+          </div>
+        )}
+        
+        {previewError && !isGeneratingPreview && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 text-destructive max-w-md text-center p-4">
+              <p className="text-sm font-medium">Failed to generate preview</p>
+              <p className="text-xs text-muted-foreground">{previewError}</p>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                Try Again
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {previewUrl && !isGeneratingPreview && !previewError && (
+          <iframe
+            src={previewUrl}
+            className="flex-1 w-full border-0"
+            title="PDF Preview"
+          />
+        )}
       </div>
     </div>
   );
