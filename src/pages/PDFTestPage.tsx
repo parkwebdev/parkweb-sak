@@ -7,20 +7,56 @@
  * @module pages/PDFTestPage
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { AnalyticsReportPDF } from '@/lib/pdf-components';
 import { generateBeautifulPDF } from '@/lib/pdf-generator';
 import type { PDFData, PDFConfig, ReportType } from '@/types/pdf';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Download02, RefreshCcw01, Loading02 } from '@untitledui/icons';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Download02, RefreshCcw01, Loading02, ChevronDown, AlertTriangle, CheckCircle } from '@untitledui/icons';
 import { subDays, format } from 'date-fns';
+
+// Build stamp for cache verification
+const BUILD_STAMP = `Build: ${new Date().toISOString().slice(0, 19)}`;
+
+// Render modes for PDF preview
+type RenderMode = 'object' | 'iframe' | 'none';
+
+// CSP Diagnostics interface
+interface CSPDiagnostics {
+  metaCSP: string | null;
+  headerCSP: string | null;
+  headerCSPReportOnly: string | null;
+  objectSrcAllowsBlob: boolean;
+  frameSrcAllowsBlob: boolean;
+  environment: string;
+  buildStamp: string;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// Check if a CSP string allows blob: for a specific directive
+function cspAllowsBlob(csp: string | null, directive: string): boolean {
+  if (!csp) return true; // No CSP = allowed
+  const regex = new RegExp(`${directive}\\s+([^;]+)`, 'i');
+  const match = csp.match(regex);
+  if (!match) {
+    // Check for default-src if specific directive not found
+    const defaultMatch = csp.match(/default-src\s+([^;]+)/i);
+    if (defaultMatch) {
+      return defaultMatch[1].includes('blob:') || defaultMatch[1].includes("'none'") === false;
+    }
+    return true; // Directive not specified = allowed
+  }
+  return match[1].includes('blob:');
+}
 
 // Comprehensive sample data matching PDFData interface
 const SAMPLE_PDF_DATA: PDFData = {
@@ -220,11 +256,75 @@ export default function PDFTestPage() {
   const [endDate] = useState(() => new Date());
   const [refreshKey, setRefreshKey] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [renderMode, setRenderMode] = useState<RenderMode>('object');
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(true);
   
   // Blob preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  
+  // CSP Diagnostics state
+  const [cspDiagnostics, setCspDiagnostics] = useState<CSPDiagnostics>({
+    metaCSP: null,
+    headerCSP: null,
+    headerCSPReportOnly: null,
+    objectSrcAllowsBlob: true,
+    frameSrcAllowsBlob: true,
+    environment: 'unknown',
+    buildStamp: BUILD_STAMP,
+    isLoading: true,
+    error: null,
+  });
+  
+  // Fetch CSP diagnostics on mount
+  useEffect(() => {
+    const fetchCSPDiagnostics = async () => {
+      try {
+        // Get meta CSP
+        const metaTag = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        const metaCSP = metaTag?.getAttribute('content') || null;
+        
+        // Try to get header CSP
+        let headerCSP: string | null = null;
+        let headerCSPReportOnly: string | null = null;
+        
+        try {
+          const response = await fetch(window.location.href, {
+            method: 'HEAD',
+            cache: 'no-store',
+          });
+          headerCSP = response.headers.get('content-security-policy');
+          headerCSPReportOnly = response.headers.get('content-security-policy-report-only');
+        } catch (e) {
+          console.warn('Could not fetch CSP headers:', e);
+        }
+        
+        // The effective CSP is the header if it exists, otherwise the meta
+        const effectiveCSP = headerCSP || metaCSP;
+        
+        setCspDiagnostics({
+          metaCSP,
+          headerCSP,
+          headerCSPReportOnly,
+          objectSrcAllowsBlob: cspAllowsBlob(effectiveCSP, 'object-src'),
+          frameSrcAllowsBlob: cspAllowsBlob(effectiveCSP, 'frame-src'),
+          environment: import.meta.env.MODE,
+          buildStamp: BUILD_STAMP,
+          isLoading: false,
+          error: null,
+        });
+      } catch (error) {
+        setCspDiagnostics(prev => ({
+          ...prev,
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Failed to fetch CSP',
+        }));
+      }
+    };
+    
+    fetchCSPDiagnostics();
+  }, []);
 
   // Toggle a config option
   const toggleConfig = (key: keyof PDFConfig) => {
@@ -478,20 +578,150 @@ export default function PDFTestPage() {
 
       {/* PDF Preview */}
       <div className="flex-1 h-full min-h-0 overflow-hidden flex flex-col bg-muted/50">
-        {/* Preview toolbar */}
-        {previewUrl && !isGeneratingPreview && !previewError && (
-          <div className="p-2 border-b border-border flex items-center gap-2 flex-shrink-0 bg-background">
-            <span className="text-xs text-muted-foreground">Preview ready</span>
-            <a
-              href={previewUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs text-primary hover:underline ml-auto"
+        {/* CSP Diagnostics Panel */}
+        <Collapsible open={diagnosticsOpen} onOpenChange={setDiagnosticsOpen}>
+          <CollapsibleTrigger asChild>
+            <button className="w-full p-3 border-b border-border flex items-center justify-between bg-background hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                {cspDiagnostics.isLoading ? (
+                  <Loading02 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : cspDiagnostics.objectSrcAllowsBlob && cspDiagnostics.frameSrcAllowsBlob ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                )}
+                <span className="text-sm font-medium">CSP Diagnostics</span>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${diagnosticsOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-4 border-b border-border bg-background space-y-4">
+              {cspDiagnostics.isLoading ? (
+                <p className="text-sm text-muted-foreground">Loading CSP diagnostics...</p>
+              ) : cspDiagnostics.error ? (
+                <p className="text-sm text-destructive">Error: {cspDiagnostics.error}</p>
+              ) : (
+                <>
+                  {/* Environment Info */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Environment:</span>
+                      <span className="ml-2 font-mono">{cspDiagnostics.environment}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Build:</span>
+                      <span className="ml-2 font-mono text-[10px]">{cspDiagnostics.buildStamp}</span>
+                    </div>
+                  </div>
+                  
+                  {/* CSP Status */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      {cspDiagnostics.objectSrcAllowsBlob ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="text-xs">
+                        object-src blob: {cspDiagnostics.objectSrcAllowsBlob ? 'ALLOWED' : 'BLOCKED'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {cspDiagnostics.frameSrcAllowsBlob ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="text-xs">
+                        frame-src blob: {cspDiagnostics.frameSrcAllowsBlob ? 'ALLOWED' : 'BLOCKED'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* CSP Details */}
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Meta CSP:</p>
+                      <pre className="text-[10px] font-mono bg-muted p-2 rounded overflow-x-auto max-h-20 whitespace-pre-wrap break-all">
+                        {cspDiagnostics.metaCSP || '(none)'}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Header CSP:</p>
+                      <pre className="text-[10px] font-mono bg-muted p-2 rounded overflow-x-auto max-h-20 whitespace-pre-wrap break-all">
+                        {cspDiagnostics.headerCSP || '(none - meta CSP applies)'}
+                      </pre>
+                    </div>
+                    {cspDiagnostics.headerCSPReportOnly && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Header CSP (Report Only):</p>
+                        <pre className="text-[10px] font-mono bg-muted p-2 rounded overflow-x-auto max-h-20 whitespace-pre-wrap break-all">
+                          {cspDiagnostics.headerCSPReportOnly}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Diagnosis */}
+                  {cspDiagnostics.headerCSP && !cspDiagnostics.objectSrcAllowsBlob && (
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded text-xs">
+                      <strong>Issue:</strong> Server is sending a CSP header that blocks blob: for object-src. 
+                      Fix this in your hosting config (netlify.toml, vercel.json, etc.), not in index.html.
+                    </div>
+                  )}
+                  {!cspDiagnostics.headerCSP && !cspDiagnostics.objectSrcAllowsBlob && (
+                    <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded text-xs">
+                      <strong>Issue:</strong> Meta CSP blocks blob: for object-src. Check index.html.
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        
+        {/* Preview toolbar with render mode toggle */}
+        <div className="p-2 border-b border-border flex items-center gap-4 flex-shrink-0 bg-background">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Render:</span>
+            <RadioGroup
+              value={renderMode}
+              onValueChange={(v) => setRenderMode(v as RenderMode)}
+              className="flex items-center gap-3"
             >
-              Open in new tab
-            </a>
+              <div className="flex items-center gap-1">
+                <RadioGroupItem value="object" id="mode-object" className="h-3 w-3" />
+                <Label htmlFor="mode-object" className="text-xs cursor-pointer">object</Label>
+              </div>
+              <div className="flex items-center gap-1">
+                <RadioGroupItem value="iframe" id="mode-iframe" className="h-3 w-3" />
+                <Label htmlFor="mode-iframe" className="text-xs cursor-pointer">iframe</Label>
+              </div>
+              <div className="flex items-center gap-1">
+                <RadioGroupItem value="none" id="mode-none" className="h-3 w-3" />
+                <Label htmlFor="mode-none" className="text-xs cursor-pointer">no-embed</Label>
+              </div>
+            </RadioGroup>
           </div>
-        )}
+          
+          {previewUrl && (
+            <div className="flex items-center gap-2 ml-auto">
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-primary hover:underline"
+              >
+                Open in new tab
+              </a>
+              <Button onClick={handleDownload} variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                <Download02 className="h-3 w-3 mr-1" />
+                Download
+              </Button>
+            </div>
+          )}
+        </div>
         
         {isGeneratingPreview && (
           <div className="flex-1 flex items-center justify-center">
@@ -514,7 +744,7 @@ export default function PDFTestPage() {
           </div>
         )}
         
-        {previewUrl && !isGeneratingPreview && !previewError && (
+        {previewUrl && !isGeneratingPreview && !previewError && renderMode === 'object' && (
           <object
             data={previewUrl}
             type="application/pdf"
@@ -523,19 +753,46 @@ export default function PDFTestPage() {
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  PDF preview blocked by browser.
+                  PDF preview blocked by browser (object tag).
                 </p>
+                <p className="text-xs text-muted-foreground">
+                  Try switching to iframe mode or use "Open in new tab".
+                </p>
+              </div>
+            </div>
+          </object>
+        )}
+        
+        {previewUrl && !isGeneratingPreview && !previewError && renderMode === 'iframe' && (
+          <iframe
+            src={previewUrl}
+            className="flex-1 w-full border-0"
+            title="PDF Preview"
+          />
+        )}
+        
+        {previewUrl && !isGeneratingPreview && !previewError && renderMode === 'none' && (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Embedding disabled. Use the actions above to view the PDF.
+              </p>
+              <div className="flex items-center justify-center gap-3">
                 <a
                   href={previewUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
                 >
                   Open PDF in new tab
                 </a>
+                <Button onClick={handleDownload} variant="outline">
+                  <Download02 className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
               </div>
             </div>
-          </object>
+          </div>
         )}
       </div>
     </div>
