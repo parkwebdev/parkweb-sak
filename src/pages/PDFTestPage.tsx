@@ -328,9 +328,9 @@ export default function PDFTestPage() {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen bg-background">
       {/* Controls Sidebar */}
-      <div className="w-80 h-full min-h-0 overflow-hidden border-r border-border flex flex-col">
+      <div className="w-80 flex-shrink-0 border-r border-border flex flex-col overflow-hidden">
         <div className="p-4 border-b border-border flex-shrink-0">
           <h1 className="text-lg font-semibold text-foreground">PDF Test Page</h1>
           <p className="text-sm text-muted-foreground">Preview and configure PDF reports</p>
@@ -429,7 +429,7 @@ export default function PDFTestPage() {
       </div>
 
       {/* PDF Preview */}
-      <div className="flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col bg-muted/50">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden bg-muted/50">
         {isGenerating && (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-muted-foreground">
