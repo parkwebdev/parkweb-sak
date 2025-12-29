@@ -43,6 +43,7 @@ import { CustomerFeedbackCard } from '@/components/analytics/CustomerFeedbackCar
 
 import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
 import { TrafficSourceTrendChart } from '@/components/analytics/TrafficSourceTrendChart';
+import { LeadSourceBreakdownCard } from '@/components/analytics/LeadSourceBreakdownCard';
 import { TopPagesChart } from '@/components/analytics/TopPagesChart';
 import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
 import { PageEngagementCard } from '@/components/analytics/PageEngagementCard';
@@ -227,6 +228,7 @@ function Analytics() {
     engagement: realEngagement,
     sourcesByDate: realSourcesByDate,
     pageDepthDistribution: realPageDepthDistribution,
+    leadsBySource: realLeadsBySource,
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate, shouldFetchRealData);
 
@@ -264,6 +266,7 @@ function Analytics() {
   const engagement = mockMode && mockData?.engagement ? mockData.engagement : realEngagement;
   const sourcesByDate = mockMode && mockData?.sourcesByDate ? mockData.sourcesByDate : realSourcesByDate;
   const pageDepthDistribution = mockMode && mockData?.pageDepthDistribution ? mockData.pageDepthDistribution : realPageDepthDistribution;
+  const leadsBySource = mockMode && mockData?.leadsBySource ? mockData.leadsBySource : realLeadsBySource;
   const funnelStages = mockMode && mockData ? mockData.funnelStages : realFunnelStages;
 
 
@@ -751,12 +754,18 @@ function Analytics() {
             <div className="space-y-6">
               <AnimatedList className="space-y-6" staggerDelay={0.1}>
                 <AnimatedItem>
-                  <TrafficSourceChart 
-                    data={trafficSources} 
-                    loading={trafficLoading || (comparisonMode && comparisonTrafficLoading)}
-                    comparisonData={comparisonMode ? comparisonTrafficSources : undefined}
-                    engagement={engagement}
-                  />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <TrafficSourceChart 
+                      data={trafficSources} 
+                      loading={trafficLoading || (comparisonMode && comparisonTrafficLoading)}
+                      comparisonData={comparisonMode ? comparisonTrafficSources : undefined}
+                      engagement={engagement}
+                    />
+                    <LeadSourceBreakdownCard
+                      data={leadsBySource}
+                      loading={trafficLoading}
+                    />
+                  </div>
                 </AnimatedItem>
                 <AnimatedItem>
                   <TrafficSourceTrendChart 

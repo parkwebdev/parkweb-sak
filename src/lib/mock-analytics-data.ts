@@ -597,6 +597,44 @@ export const generatePageDepthDistribution = (): MockPageDepthData[] => {
 };
 
 // =============================================================================
+// LEAD SOURCE BREAKDOWN GENERATOR
+// =============================================================================
+
+export interface MockLeadSourceData {
+  source: string;
+  leads: number;
+  sessions: number;
+  cvr: number;
+}
+
+/** Generate leads by traffic source for LeadSourceBreakdownCard */
+export const generateLeadsBySource = (): MockLeadSourceData[] => {
+  const sources = [
+    { source: 'organic', sessions: randomBetween(400, 800) },
+    { source: 'direct', sessions: randomBetween(300, 600) },
+    { source: 'social', sessions: randomBetween(150, 400) },
+    { source: 'referral', sessions: randomBetween(100, 300) },
+    { source: 'email', sessions: randomBetween(80, 200) },
+    { source: 'paid', sessions: randomBetween(120, 350) },
+  ];
+  
+  return sources.map(({ source, sessions }) => {
+    // Realistic CVR ranges: organic/referral tend to convert better
+    const cvrMultiplier = ['organic', 'referral', 'email'].includes(source) 
+      ? randomFloat(0.12, 0.22) 
+      : randomFloat(0.06, 0.15);
+    const leads = Math.round(sessions * cvrMultiplier);
+    
+    return {
+      source,
+      leads,
+      sessions,
+      cvr: (leads / sessions) * 100,
+    };
+  }).sort((a, b) => b.leads - a.leads);
+};
+
+// =============================================================================
 // CONVERSATION FUNNEL GENERATOR
 // =============================================================================
 
