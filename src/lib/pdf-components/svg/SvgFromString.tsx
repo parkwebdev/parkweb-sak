@@ -12,7 +12,10 @@ import {
   Path,
   Rect,
   Circle,
+  Ellipse,
   Line,
+  Polyline,
+  Polygon,
   Text as PdfText,
   Defs,
   LinearGradient,
@@ -24,7 +27,10 @@ import {
 const PathAny = Path as unknown as React.ComponentType<any>;
 const RectAny = Rect as unknown as React.ComponentType<any>;
 const CircleAny = Circle as unknown as React.ComponentType<any>;
+const EllipseAny = Ellipse as unknown as React.ComponentType<any>;
 const LineAny = Line as unknown as React.ComponentType<any>;
+const PolylineAny = Polyline as unknown as React.ComponentType<any>;
+const PolygonAny = Polygon as unknown as React.ComponentType<any>;
 const LinearGradientAny = LinearGradient as unknown as React.ComponentType<any>;
 const StopAny = Stop as unknown as React.ComponentType<any>;
 
@@ -41,10 +47,34 @@ function toNumber(v: string | undefined): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-function attrsToProps(attrs: Record<string, string>) {
+function attrsToProps(attrs: Record<string, string>, debugId?: string) {
   // react-pdf expects camelCased prop names for some attributes.
+  // Also: it can crash on unsupported attrs (class/style/data-*/clip-path/mask/filter/transform).
   const out: Record<string, any> = {};
+
   for (const [k, v] of Object.entries(attrs)) {
+    if (!k) continue;
+
+    // Hard filters (known crashers / non-SVGPresentationAttributes)
+    if (
+      k === 'class' ||
+      k === 'className' ||
+      k === 'style' ||
+      k === 'clip-path' ||
+      k === 'mask' ||
+      k === 'filter' ||
+      k === 'transform' ||
+      k.startsWith('data-') ||
+      k.startsWith('aria-')
+    ) {
+      continue;
+    }
+
+    // URL-based refs often show up as `url(#id)` and can crash in react-pdf.
+    if (typeof v === 'string' && v.includes('url(')) {
+      continue;
+    }
+
     switch (k) {
       case 'stroke-width':
         out.strokeWidth = toNumber(v) ?? v;
@@ -73,6 +103,13 @@ function attrsToProps(attrs: Record<string, string>) {
         out[k] = v;
     }
   }
+
+  // Lightweight debugging (only when a debugId is passed)
+  if (debugId && Object.keys(attrs).length - Object.keys(out).length > 0) {
+    // Avoid noisy logs; just one-liner per chart
+    console.warn(`[SvgFromString:${debugId}] Filtered unsupported SVG attrs`);
+  }
+
   return out;
 }
 
@@ -104,13 +141,16 @@ function domToTree(node: Element): SvgNode {
   return { name: node.tagName.toLowerCase(), attrs, children };
 }
 
-function renderNode(node: SvgNode, key: string): React.ReactNode {
+function renderNode(node: SvgNode, key: string, debugId?: string): React.ReactNode {
   if (!node) return null;
   if (node.name === '#text') return node.text ?? null;
 
-  const props = attrsToProps(node.attrs || {});
+  const props = attrsToProps(node.attrs || {}, debugId);
   const childrenArray = Array.isArray(node.children) ? node.children : [];
-  const kids = childrenArray.map((c, idx) => renderNode(c, `${key}.${idx}`));
+  const kids = childrenArray
+    .map((c, idx) => renderNode(c, `${key}.${idx}`, debugId))
+    .filter(Boolean);
+
   switch (node.name) {
     case 'g':
       return (
@@ -118,37 +158,56 @@ function renderNode(node: SvgNode, key: string): React.ReactNode {
           {kids}
         </G>
       );
+
     case 'path':
       return <PathAny key={key} {...props} />;
+
     case 'rect':
       return <RectAny key={key} {...props} />;
+
     case 'circle':
       return <CircleAny key={key} {...props} />;
+
+    case 'ellipse':
+      return <EllipseAny key={key} {...props} />;
+
     case 'line':
       return <LineAny key={key} {...props} />;
+
+    case 'polyline':
+      return <PolylineAny key={key} {...props} />;
+
+    case 'polygon':
+      return <PolygonAny key={key} {...props} />;
+
     case 'text':
+    case 'tspan':
       return (
         <PdfText key={key} {...props}>
           {kids}
         </PdfText>
       );
+
     case 'defs':
-      return (
-        <Defs key={key}>
-          {kids}
-        </Defs>
-      );
+      return <Defs key={key}>{kids}</Defs>;
+
     case 'lineargradient':
       return (
         <LinearGradientAny key={key} {...props}>
           {kids}
         </LinearGradientAny>
       );
+
     case 'stop':
       return <StopAny key={key} {...props} />;
 
-    // Common, but not needed for Recharts: ignore safely
+    // Metadata / unsupported structural nodes: ignore safely
+    case 'title':
+    case 'desc':
+    case 'metadata':
+    case 'use':
     case 'clippath':
+    case 'mask':
     case 'style':
       return null;
 
@@ -214,7 +273,11 @@ export function SvgFromString({
 
   try {
     const rootChildren = Array.isArray(parsed.tree.children) ? parsed.tree.children : [];
-    
+
+    const rendered = rootChildren
+      .map((c, idx) => renderNode(c, `root.${idx}`, debugId))
+      .filter(Boolean);
+
     return (
       <Svg
         width="100%"
@@ -222,7 +285,7 @@ export function SvgFromString({
         viewBox={parsed.viewBox}
         preserveAspectRatio="xMidYMid meet"
       >
-        {rootChildren.map((c, idx) => renderNode(c, `root.${idx}`))}
+        {rendered}
       </Svg>
     );
   } catch (error) {
