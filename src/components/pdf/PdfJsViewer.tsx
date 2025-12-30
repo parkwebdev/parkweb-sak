@@ -10,8 +10,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Expand01, LayoutLeft } from '@untitledui/icons';
-import { PdfThumbnailSidebar } from './PdfThumbnailSidebar';
+import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Expand01, LayoutLeft, RefreshCcw01 } from '@untitledui/icons';
+import { PdfThumbnailSidebar, ThumbnailRotationMode } from './PdfThumbnailSidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Import the worker directly - Vite will bundle it locally
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -66,6 +73,7 @@ export function PdfJsViewer({
   const [error, setError] = useState<string | null>(null);
   const [pages, setPages] = useState<PageState[]>([]);
   const [thumbnailsOpen, setThumbnailsOpen] = useState(false);
+  const [thumbnailRotationMode, setThumbnailRotationMode] = useState<ThumbnailRotationMode>('auto');
   const [diagnostics, setDiagnostics] = useState<DiagnosticsInfo>({
     version: pdfjsLib.version,
     workerSrc: '',
@@ -451,6 +459,32 @@ export function PdfJsViewer({
                 <LayoutLeft size={16} />
               </Button>
               <div className="w-px h-4 bg-border mx-1" />
+              {/* Rotation mode dropdown - only show when thumbnails are open */}
+              {thumbnailsOpen && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs gap-1"
+                      aria-label="Thumbnail rotation mode"
+                    >
+                      <RefreshCcw01 size={14} />
+                      <span className="hidden sm:inline capitalize">{thumbnailRotationMode}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuRadioGroup
+                      value={thumbnailRotationMode}
+                      onValueChange={(value) => setThumbnailRotationMode(value as ThumbnailRotationMode)}
+                    >
+                      <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="respect">Respect PDF rotation</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="ignore">Ignore PDF rotation</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </>
           )}
           <Button
@@ -536,6 +570,7 @@ export function PdfJsViewer({
             onPageClick={goToPage}
             isOpen={thumbnailsOpen}
             onToggle={() => setThumbnailsOpen((prev) => !prev)}
+            rotationMode={thumbnailRotationMode}
           />
         )}
 

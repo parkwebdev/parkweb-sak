@@ -12,6 +12,9 @@ import { Button } from '@/components/ui/button';
 import { LayoutLeft, ChevronLeft } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
+/** Rotation mode for thumbnails */
+export type ThumbnailRotationMode = 'auto' | 'respect' | 'ignore';
+
 interface PdfThumbnailSidebarProps {
   /** PDF document proxy */
   pdfDoc: pdfjsLib.PDFDocumentProxy | null;
@@ -25,6 +28,8 @@ interface PdfThumbnailSidebarProps {
   isOpen: boolean;
   /** Toggle sidebar visibility */
   onToggle: () => void;
+  /** Rotation mode for thumbnails */
+  rotationMode?: ThumbnailRotationMode;
 }
 
 const THUMBNAIL_SCALE = 0.2; // Scale for thumbnail rendering
@@ -36,10 +41,56 @@ export function PdfThumbnailSidebar({
   onPageClick,
   isOpen,
   onToggle,
+  rotationMode = 'auto',
 }: PdfThumbnailSidebarProps) {
   const thumbnailRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set());
   const activeThumbRef = useRef<HTMLButtonElement>(null);
+  const [detectedRotation, setDetectedRotation] = useState<number | null>(null);
+
+  // Detect if PDF has inconsistent rotation metadata
+  useEffect(() => {
+    if (!pdfDoc || numPages === 0) return;
+
+    const detectRotation = async () => {
+      // Sample first few pages to detect rotation pattern
+      const samplesToCheck = Math.min(5, numPages);
+      const rotations: number[] = [];
+
+      for (let i = 1; i <= samplesToCheck; i++) {
+        try {
+          const page = await pdfDoc.getPage(i);
+          rotations.push(page.rotate);
+        } catch {
+          rotations.push(0);
+        }
+      }
+
+      // If page 1 has different rotation than majority of other pages,
+      // we likely need to ignore rotation metadata
+      const page1Rotation = rotations[0] ?? 0;
+      const otherRotations = rotations.slice(1);
+      const majorityDifferent = otherRotations.filter(r => r !== page1Rotation).length > otherRotations.length / 2;
+
+      // Store the detected "should ignore" state
+      // If majority of pages have different rotation than page 1, ignore all rotation
+      if (majorityDifferent && otherRotations.length > 0) {
+        setDetectedRotation(0); // Force rotation to 0
+      } else {
+        setDetectedRotation(null); // Let PDF.js handle it
+      }
+    };
+
+    detectRotation();
+  }, [pdfDoc, numPages]);
+
+  // Determine effective rotation based on mode
+  const getEffectiveRotation = useCallback((): number | undefined => {
+    if (rotationMode === 'ignore') return 0;
+    if (rotationMode === 'respect') return undefined;
+    // Auto mode: use detected value
+    return detectedRotation ?? undefined;
+  }, [rotationMode, detectedRotation]);
 
   // Render a single thumbnail
   const renderThumbnail = useCallback(
@@ -51,8 +102,12 @@ export function PdfThumbnailSidebar({
 
       try {
         const page = await pdfDoc.getPage(pageNum);
-        // Let PDF.js apply correct rotation from page metadata
-        const viewport = page.getViewport({ scale: THUMBNAIL_SCALE });
+        const effectiveRotation = getEffectiveRotation();
+        // Apply rotation based on mode
+        const viewport = page.getViewport({ 
+          scale: THUMBNAIL_SCALE,
+          rotation: effectiveRotation
+        });
 
         const context = canvas.getContext('2d');
         if (!context) return;
@@ -84,8 +139,13 @@ export function PdfThumbnailSidebar({
         console.error(`Failed to render thumbnail ${pageNum}:`, err);
       }
     },
-    [pdfDoc, renderedPages]
+    [pdfDoc, renderedPages, getEffectiveRotation]
   );
+
+  // Clear rendered pages when rotation mode changes
+  useEffect(() => {
+    setRenderedPages(new Set());
+  }, [rotationMode, detectedRotation]);
 
   // Render all thumbnails when sidebar opens
   useEffect(() => {
@@ -99,7 +159,7 @@ export function PdfThumbnailSidebar({
     };
 
     renderAllThumbnails();
-  }, [isOpen, pdfDoc, numPages, renderThumbnail]);
+  }, [isOpen, pdfDoc, numPages, renderThumbnail, rotationMode, detectedRotation]);
 
   // Scroll active thumbnail into view
   useEffect(() => {
