@@ -612,169 +612,138 @@ export default function ReportBuilder() {
                   </Select>
                 </div>
 
-                {/* Data Categories Accordion */}
-                <div className="space-y-2">
+                {/* Data Categories */}
+                <div className="space-y-4">
                   <Label className="text-sm font-medium">Data to Include</Label>
-                  <Accordion type="multiple" defaultValue={['core', 'business']} className="!bg-transparent !border-0 !rounded-none !px-0 space-y-2">
-                    {/* Core Metrics */}
-                    <AccordionItem value="core" className="border border-border rounded-lg overflow-hidden">
-                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
-                        <div className="flex items-center gap-2">
-                          <span>Core Metrics</span>
-                          <Badge variant="secondary" className="text-xs h-5">{coreMetricsCount}</Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3 space-y-2">
-                        {[
-                          { key: 'includeConversations', label: 'Conversations' },
-                          { key: 'includeConversationFunnel', label: 'Conversation Funnel' },
-                          { key: 'includePeakActivity', label: 'Peak Activity Heatmap' },
-                          { key: 'includeLeads', label: 'Leads' },
-                          { key: 'includeUsageMetrics', label: 'Usage Metrics' },
-                        ].map(item => (
-                          <div key={item.key} className="flex items-center gap-2">
-                            <Checkbox
-                              id={item.key}
-                              checked={config[item.key as keyof ReportConfig] as boolean}
-                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                            />
-                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Business Outcomes */}
-                    <AccordionItem value="business" className="border border-border rounded-lg overflow-hidden">
-                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
-                        <div className="flex items-center gap-2">
-                          <span>Business Outcomes</span>
-                          <Badge variant="secondary" className="text-xs h-5">{businessOutcomesCount}</Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3 space-y-2">
-                        {[
-                          { key: 'includeBookings', label: 'Bookings by Location' },
-                          { key: 'includeBookingTrend', label: 'Booking Trend' },
-                          { key: 'includeSatisfaction', label: 'Satisfaction Ratings' },
-                          { key: 'includeCSATDistribution', label: 'CSAT Distribution' },
-                          { key: 'includeCustomerFeedback', label: 'Customer Feedback' },
-                          { key: 'includeAIPerformance', label: 'Ari Performance' },
-                          { key: 'includeAIPerformanceTrend', label: 'Ari Performance Trend' },
-                        ].map(item => (
-                          <div key={item.key} className="flex items-center gap-2">
-                            <Checkbox
-                              id={item.key}
-                              checked={config[item.key as keyof ReportConfig] as boolean}
-                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                            />
-                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Traffic Analytics */}
-                    <AccordionItem value="traffic" className="border border-border rounded-lg overflow-hidden">
-                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
-                        <div className="flex items-center gap-2">
-                          <span>Traffic Analytics</span>
-                          <Badge variant="secondary" className="text-xs h-5">{trafficCount}</Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3 space-y-2">
-                        {[
-                          { key: 'includeTrafficSources', label: 'Traffic Sources' },
-                          { key: 'includeTrafficSourceTrend', label: 'Traffic Source Trend' },
-                          { key: 'includeTopPages', label: 'Top Pages' },
-                          { key: 'includePageEngagement', label: 'Page Engagement' },
-                          { key: 'includePageDepth', label: 'Page Depth' },
-                          { key: 'includeVisitorLocations', label: 'Visitor Locations' },
-                          { key: 'includeVisitorCities', label: 'Top Cities' },
-                        ].map(item => (
-                          <div key={item.key} className="flex items-center gap-2">
-                            <Checkbox
-                              id={item.key}
-                              checked={config[item.key as keyof ReportConfig] as boolean}
-                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                            />
-                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Leads Analytics */}
-                    <AccordionItem value="leads-analytics" className="border border-border rounded-lg overflow-hidden">
-                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
-                        <div className="flex items-center gap-2">
-                          <span>Leads Analytics</span>
-                          <Badge variant="secondary" className="text-xs h-5">{leadsAnalyticsCount}</Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3 space-y-2">
-                        {[
-                          { key: 'includeLeadSourceBreakdown', label: 'Lead Source Breakdown' },
-                          { key: 'includeLeadConversionTrend', label: 'Lead Conversion Trend' },
-                        ].map(item => (
-                          <div key={item.key} className="flex items-center gap-2">
-                            <Checkbox
-                              id={item.key}
-                              checked={config[item.key as keyof ReportConfig] as boolean}
-                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                            />
-                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Agent Data */}
-                    <AccordionItem value="agent" className="border border-border rounded-lg overflow-hidden">
-                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
-                        <div className="flex items-center gap-2">
-                          <span>Agent Data</span>
-                          <Badge variant="secondary" className="text-xs h-5">{agentDataCount}</Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3 space-y-2">
-                        <div className="flex items-center gap-2">
+                  
+                  {/* Core Metrics */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Core Metrics</p>
+                    <div className="space-y-1.5">
+                      {[
+                        { key: 'includeConversations', label: 'Conversations' },
+                        { key: 'includeConversationFunnel', label: 'Conversation Funnel' },
+                        { key: 'includePeakActivity', label: 'Peak Activity Heatmap' },
+                        { key: 'includeLeads', label: 'Leads' },
+                        { key: 'includeUsageMetrics', label: 'Usage Metrics' },
+                      ].map(item => (
+                        <div key={item.key} className="flex items-center gap-2">
                           <Checkbox
-                            id="includeAgentPerformance"
-                            checked={config.includeAgentPerformance}
-                            onCheckedChange={(checked) => updateConfig('includeAgentPerformance', !!checked)}
+                            id={item.key}
+                            checked={config[item.key as keyof ReportConfig] as boolean}
+                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
                           />
-                          <Label htmlFor="includeAgentPerformance" className="text-sm font-normal cursor-pointer">Agent Performance</Label>
+                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
                         </div>
-                      </AccordionContent>
-                    </AccordionItem>
+                      ))}
+                    </div>
+                  </div>
 
-                    {/* Export Options */}
-                    <AccordionItem value="options" className="border border-border rounded-lg overflow-hidden">
-                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
-                        <div className="flex items-center gap-2">
-                          <span>Export Options</span>
-                          <Badge variant="secondary" className="text-xs h-5">{exportOptionsCount}</Badge>
+                  {/* Business Outcomes */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Business Outcomes</p>
+                    <div className="space-y-1.5">
+                      {[
+                        { key: 'includeBookings', label: 'Bookings by Location' },
+                        { key: 'includeBookingTrend', label: 'Booking Trend' },
+                        { key: 'includeSatisfaction', label: 'Satisfaction Ratings' },
+                        { key: 'includeCSATDistribution', label: 'CSAT Distribution' },
+                        { key: 'includeCustomerFeedback', label: 'Customer Feedback' },
+                        { key: 'includeAIPerformance', label: 'Ari Performance' },
+                        { key: 'includeAIPerformanceTrend', label: 'Ari Performance Trend' },
+                      ].map(item => (
+                        <div key={item.key} className="flex items-center gap-2">
+                          <Checkbox
+                            id={item.key}
+                            checked={config[item.key as keyof ReportConfig] as boolean}
+                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                          />
+                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3 space-y-2">
-                        {[
-                          { key: 'includeKPIs', label: 'KPI Summary' },
-                          { key: 'includeCharts', label: 'Charts' },
-                          { key: 'includeTables', label: 'Data Tables' },
-                        ].map(item => (
-                          <div key={item.key} className="flex items-center gap-2">
-                            <Checkbox
-                              id={item.key}
-                              checked={config[item.key as keyof ReportConfig] as boolean}
-                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                            />
-                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                          </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Traffic Analytics */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Traffic Analytics</p>
+                    <div className="space-y-1.5">
+                      {[
+                        { key: 'includeTrafficSources', label: 'Traffic Sources' },
+                        { key: 'includeTrafficSourceTrend', label: 'Traffic Source Trend' },
+                        { key: 'includeTopPages', label: 'Top Pages' },
+                        { key: 'includePageEngagement', label: 'Page Engagement' },
+                        { key: 'includePageDepth', label: 'Page Depth' },
+                        { key: 'includeVisitorLocations', label: 'Visitor Locations' },
+                        { key: 'includeVisitorCities', label: 'Top Cities' },
+                      ].map(item => (
+                        <div key={item.key} className="flex items-center gap-2">
+                          <Checkbox
+                            id={item.key}
+                            checked={config[item.key as keyof ReportConfig] as boolean}
+                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                          />
+                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Leads Analytics */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Leads Analytics</p>
+                    <div className="space-y-1.5">
+                      {[
+                        { key: 'includeLeadSourceBreakdown', label: 'Lead Source Breakdown' },
+                        { key: 'includeLeadConversionTrend', label: 'Lead Conversion Trend' },
+                      ].map(item => (
+                        <div key={item.key} className="flex items-center gap-2">
+                          <Checkbox
+                            id={item.key}
+                            checked={config[item.key as keyof ReportConfig] as boolean}
+                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                          />
+                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Agent Data */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Agent Data</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="includeAgentPerformance"
+                          checked={config.includeAgentPerformance}
+                          onCheckedChange={(checked) => updateConfig('includeAgentPerformance', !!checked)}
+                        />
+                        <Label htmlFor="includeAgentPerformance" className="text-sm font-normal cursor-pointer">Agent Performance</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Export Options */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Export Options</p>
+                    <div className="space-y-1.5">
+                      {[
+                        { key: 'includeKPIs', label: 'KPI Summary' },
+                        { key: 'includeCharts', label: 'Charts' },
+                        { key: 'includeTables', label: 'Data Tables' },
+                      ].map(item => (
+                        <div key={item.key} className="flex items-center gap-2">
+                          <Checkbox
+                            id={item.key}
+                            checked={config[item.key as keyof ReportConfig] as boolean}
+                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                          />
+                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Grouping */}
