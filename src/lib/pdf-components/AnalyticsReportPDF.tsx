@@ -156,6 +156,29 @@ export function AnalyticsReportPDF({
             </PDFSection>
           )}
 
+          {/* Lead Activity */}
+          {config.includeLeads && data.leadStats?.length && (
+            <PDFSection title="Lead Activity">
+              {config.includeCharts && (
+                <PDFLineChart
+                  data={data.leadStats}
+                  series={[
+                    { key: 'total', color: CHART_COLORS.primary, label: 'Total Leads' },
+                  ]}
+                />
+              )}
+              {config.includeTables && (
+                <PDFTable
+                  columns={[
+                    { key: 'date', header: 'Date' },
+                    { key: 'total', header: 'Total Leads', align: 'right' },
+                  ]}
+                  data={data.leadStats}
+                />
+              )}
+            </PDFSection>
+          )}
+
           {/* Lead Source Breakdown */}
           {config.includeLeadSourceBreakdown && data.leadSourceBreakdown?.length && (
             <PDFSection title="Lead Source Breakdown">

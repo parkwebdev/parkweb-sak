@@ -122,104 +122,113 @@ function Analytics() {
   }, []);
 
   // Build PDF data from analytics data
-  const buildPDFData = useCallback(() => ({
-    totalConversations: data.totalConversations,
-    conversationsChange: data.conversationTrendValue,
-    totalLeads: data.totalLeads,
-    leadsChange: data.leadTrendValue,
-    conversionRate: data.conversionRate ? parseFloat(data.conversionRate) : 0,
-    conversationStats: data.conversationStats,
-    conversationFunnel: data.funnelStages?.map(s => ({
-      name: s.name,
-      count: s.count,
-      percentage: s.percentage,
-      dropOffPercent: s.dropOffPercent,
-    })),
-    peakActivity: peakActivityData ? {
-      peakDay: peakActivityData.peakDay,
-      peakTime: peakActivityData.peakTime,
-      peakValue: peakActivityData.peakValue,
-    } : undefined,
-    leadStats: data.leadStats ? [{ date: format(new Date(), 'yyyy-MM-dd'), total: data.totalLeads }] : undefined,
-    leadSourceBreakdown: data.leadsBySource?.map(s => ({
-      source: s.source,
-      leads: s.leads,
-      sessions: s.sessions,
-      cvr: s.cvr,
-    })),
-    bookingStats: data.bookingStats?.byLocation?.map(l => ({
-      location: l.locationName,
-      total: l.bookings,
-      confirmed: l.bookings - l.completed - l.cancelled - l.noShow,
-      completed: l.completed,
-      no_show: l.noShow,
-      show_rate: Math.round((l.completed / Math.max(l.bookings, 1)) * 100),
-    })),
-    bookingTrend: data.bookingStats?.trend?.map(t => ({
-      date: t.date,
-      confirmed: t.confirmed,
-      completed: t.completed,
-      cancelled: t.cancelled,
-      noShow: t.noShow,
-    })),
-    satisfactionStats: data.satisfactionStats ? {
-      average_rating: data.satisfactionStats.averageRating,
-      total_ratings: data.satisfactionStats.totalRatings,
-      distribution: data.satisfactionStats.distribution?.map(d => ({
-        rating: d.rating,
-        count: d.count,
+  const buildPDFData = useCallback(() => {
+    // Calculate totals for percentage calculations
+    const totalTrafficVisitors = data.trafficSources?.reduce((sum, s) => sum + s.value, 0) || 1;
+    const totalLocationVisitors = data.locationData?.reduce((sum, l) => sum + l.count, 0) || 1;
+    
+    return {
+      totalConversations: data.totalConversations,
+      conversationsChange: data.conversationTrendValue,
+      totalLeads: data.totalLeads,
+      leadsChange: data.leadTrendValue,
+      conversionRate: data.conversionRate ? parseFloat(data.conversionRate) : 0,
+      conversationStats: data.conversationStats,
+      conversationFunnel: data.funnelStages?.map(s => ({
+        name: s.name,
+        count: s.count,
+        percentage: s.percentage,
+        dropOffPercent: s.dropOffPercent,
       })),
-    } : undefined,
-    recentFeedback: data.satisfactionStats?.recentFeedback?.map(f => ({
-      rating: f.rating,
-      feedback: f.feedback,
-      createdAt: f.createdAt,
-      triggerType: f.triggerType,
-    })),
-    aiPerformanceStats: data.aiPerformanceStats ? {
-      containment_rate: data.aiPerformanceStats.containmentRate,
-      resolution_rate: data.aiPerformanceStats.resolutionRate,
-      ai_handled: data.aiPerformanceStats.totalConversations - data.aiPerformanceStats.humanTakeover,
-      human_takeover: data.aiPerformanceStats.humanTakeover,
-      total_conversations: data.aiPerformanceStats.totalConversations,
-    } : undefined,
-    trafficSources: data.trafficSources?.map(s => ({
-      source: s.name,
-      visitors: s.value,
-      percentage: 0,
-    })),
-    trafficSourceTrend: data.sourcesByDate?.map(s => ({
-      date: s.date,
-      direct: s.direct,
-      organic: s.organic,
-      paid: s.paid,
-      social: s.social,
-      email: s.email,
-      referral: s.referral,
-    })),
-    topPages: data.landingPages?.map(p => ({
-      page: p.url,
-      visits: p.visits,
-      bounce_rate: 0,
-      conversations: p.conversions,
-    })),
-    pageEngagement: data.engagement ? {
-      bounceRate: data.engagement.bounceRate,
-      avgPagesPerSession: data.engagement.avgPagesPerSession,
-      totalSessions: data.engagement.totalSessions,
-      overallCVR: data.engagement.overallCVR,
-    } : undefined,
-    pageDepthDistribution: data.pageDepthDistribution?.map(d => ({
-      depth: d.depth,
-      count: d.count,
-      percentage: d.percentage,
-    })),
-    visitorLocations: data.locationData?.map(l => ({
-      country: l.country,
-      visitors: l.count,
-      percentage: 0,
-    })),
-  }), [data, peakActivityData]);
+      peakActivity: peakActivityData ? {
+        peakDay: peakActivityData.peakDay,
+        peakTime: peakActivityData.peakTime,
+        peakValue: peakActivityData.peakValue,
+      } : undefined,
+      // Full lead stats array for daily breakdown
+      leadStats: data.leadStats?.map(s => ({ date: s.date, total: s.total })),
+      leadSourceBreakdown: data.leadsBySource?.map(s => ({
+        source: s.source,
+        leads: s.leads,
+        sessions: s.sessions,
+        cvr: s.cvr,
+      })),
+      bookingStats: data.bookingStats?.byLocation?.map(l => ({
+        location: l.locationName,
+        total: l.bookings,
+        confirmed: l.bookings - l.completed - l.cancelled - l.noShow,
+        completed: l.completed,
+        no_show: l.noShow,
+        show_rate: Math.round((l.completed / Math.max(l.bookings, 1)) * 100),
+      })),
+      bookingTrend: data.bookingStats?.trend?.map(t => ({
+        date: t.date,
+        confirmed: t.confirmed,
+        completed: t.completed,
+        cancelled: t.cancelled,
+        noShow: t.noShow,
+      })),
+      satisfactionStats: data.satisfactionStats ? {
+        average_rating: data.satisfactionStats.averageRating,
+        total_ratings: data.satisfactionStats.totalRatings,
+        distribution: data.satisfactionStats.distribution?.map(d => ({
+          rating: d.rating,
+          count: d.count,
+        })),
+      } : undefined,
+      recentFeedback: data.satisfactionStats?.recentFeedback?.map(f => ({
+        rating: f.rating,
+        feedback: f.feedback,
+        createdAt: f.createdAt,
+        triggerType: f.triggerType,
+      })),
+      aiPerformanceStats: data.aiPerformanceStats ? {
+        containment_rate: data.aiPerformanceStats.containmentRate,
+        resolution_rate: data.aiPerformanceStats.resolutionRate,
+        ai_handled: data.aiPerformanceStats.totalConversations - data.aiPerformanceStats.humanTakeover,
+        human_takeover: data.aiPerformanceStats.humanTakeover,
+        total_conversations: data.aiPerformanceStats.totalConversations,
+      } : undefined,
+      // Calculate real percentages for traffic sources
+      trafficSources: data.trafficSources?.map(s => ({
+        source: s.name,
+        visitors: s.value,
+        percentage: Math.round((s.value / totalTrafficVisitors) * 100),
+      })),
+      trafficSourceTrend: data.sourcesByDate?.map(s => ({
+        date: s.date,
+        direct: s.direct,
+        organic: s.organic,
+        paid: s.paid,
+        social: s.social,
+        email: s.email,
+        referral: s.referral,
+      })),
+      topPages: data.landingPages?.map(p => ({
+        page: p.url,
+        visits: p.visits,
+        bounce_rate: data.engagement?.bounceRate ?? 0,
+        conversations: p.conversions,
+      })),
+      pageEngagement: data.engagement ? {
+        bounceRate: data.engagement.bounceRate,
+        avgPagesPerSession: data.engagement.avgPagesPerSession,
+        totalSessions: data.engagement.totalSessions,
+        overallCVR: data.engagement.overallCVR,
+      } : undefined,
+      pageDepthDistribution: data.pageDepthDistribution?.map(d => ({
+        depth: d.depth,
+        count: d.count,
+        percentage: d.percentage,
+      })),
+      // Calculate real percentages for visitor locations
+      visitorLocations: data.locationData?.map(l => ({
+        country: l.country,
+        visitors: l.count,
+        percentage: Math.round((l.count / totalLocationVisitors) * 100),
+      })),
+    };
+  }, [data, peakActivityData]);
 
   const handleExport = useCallback(async (exportStartDate: Date, exportEndDate: Date) => {
     const exportFormat = reportConfig.format;
