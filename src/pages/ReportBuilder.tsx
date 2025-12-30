@@ -239,6 +239,12 @@ export default function ReportBuilder() {
   const startMs = startDate.getTime();
   const endMs = endDate.getTime();
 
+  // === Stable data version key (primitives only) to prevent re-renders ===
+  const dataVersion = useMemo(() => {
+    if (isDataLoading) return null;
+    return `${data.totalConversations}-${data.totalLeads}-${data.conversionRate}-${data.totalMessages}`;
+  }, [isDataLoading, data.totalConversations, data.totalLeads, data.conversionRate, data.totalMessages]);
+
   // === CSV Export Data ===
   const analyticsExportData = useMemo(() => buildAnalyticsExportData({
     totalConversations: data.totalConversations,
@@ -284,9 +290,8 @@ export default function ReportBuilder() {
       return;
     }
 
-    // Wait for data to finish loading
-    if (isDataLoading || !pdfData) {
-      setIsGenerating(true);
+    // Wait for data - but don't set isGenerating (let isDataLoading handle UI)
+    if (!dataVersion || !pdfData) {
       return;
     }
 
@@ -328,7 +333,7 @@ export default function ReportBuilder() {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [configKey, isDataLoading, pdfData, startMs, endMs, user?.email, refreshKey]);
+  }, [configKey, dataVersion, startMs, endMs, user?.email, refreshKey, pdfData, config, startDate, endDate]);
 
   // === Export Handler ===
   const handleExport = useCallback(async () => {
@@ -586,7 +591,7 @@ export default function ReportBuilder() {
                 {/* Data Categories Accordion */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Data to Include</Label>
-                  <Accordion type="multiple" defaultValue={['core', 'business']} className="space-y-2">
+                  <Accordion type="multiple" defaultValue={['core', 'business']} className="!bg-transparent !border-0 !rounded-none !px-0 space-y-2">
                     {/* Core Metrics */}
                     <AccordionItem value="core" className="border border-border rounded-lg overflow-hidden">
                       <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
@@ -958,16 +963,25 @@ export default function ReportBuilder() {
         ) : (
           /* PDF Preview */
           <>
-            {isGenerating && (
+            {isDataLoading && (
               <div className="flex-1 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3 text-muted-foreground">
                   <Loading02 className="h-8 w-8 animate-spin" />
-                  <p className="text-sm">Generating preview...</p>
+                  <p className="text-sm">Loading analytics data...</p>
                 </div>
               </div>
             )}
 
-            {previewError && !isGenerating && (
+            {!isDataLoading && isGenerating && (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                  <Loading02 className="h-8 w-8 animate-spin" />
+                  <p className="text-sm">Generating PDF preview...</p>
+                </div>
+              </div>
+            )}
+
+            {!isDataLoading && previewError && !isGenerating && (
               <div className="flex-1 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3 text-destructive max-w-md text-center p-4">
                   <p className="text-sm font-medium">Failed to generate preview</p>
@@ -979,18 +993,9 @@ export default function ReportBuilder() {
               </div>
             )}
 
-            {pdfArrayBuffer && !isGenerating && !previewError && (
+            {!isDataLoading && pdfArrayBuffer && !isGenerating && !previewError && (
               <div className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden">
                 <PdfJsViewer data={pdfArrayBuffer} initialScale={1.0} mode="all" />
-              </div>
-            )}
-
-            {!pdfArrayBuffer && !isGenerating && !previewError && (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                  <Loading02 className="h-8 w-8 animate-spin" />
-                  <p className="text-sm">Loading...</p>
-                </div>
               </div>
             )}
           </>
