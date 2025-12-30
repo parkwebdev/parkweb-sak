@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Download02, RefreshCcw01, Loading02 } from '@untitledui/icons';
 import { PdfJsViewer } from '@/components/pdf/PdfJsViewer';
 import { subDays, format } from 'date-fns';
@@ -328,7 +328,7 @@ export default function PDFTestPage() {
   ];
 
   return (
-    <div className="flex flex-1 min-h-0 min-w-0 bg-muted/30">
+    <div className="flex h-full min-h-0 min-w-0 bg-muted/30">
       {/* Controls Sidebar */}
       <aside className="w-80 flex-shrink-0 border-r border-border bg-background h-full min-h-0 overflow-y-auto overscroll-contain">
         <div className="p-4 border-b border-border sticky top-0 bg-background z-10">
