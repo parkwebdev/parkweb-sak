@@ -53,8 +53,10 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   includeBookings: true,
   includeBookingTrend: true,
   includeSatisfaction: true,
+  includeCSATDistribution: false,
   includeCustomerFeedback: true,
   includeAIPerformance: true,
+  includeAIPerformanceTrend: false,
   // Traffic Analytics
   includeTrafficSources: true,
   includeTrafficSourceTrend: true,
@@ -62,6 +64,7 @@ export const DEFAULT_REPORT_CONFIG: ReportConfig = {
   includePageEngagement: true,
   includePageDepth: true,
   includeVisitorLocations: true,
+  includeVisitorCities: false,
   // Leads Analytics
   includeLeadSourceBreakdown: true,
   includeLeadConversionTrend: true,

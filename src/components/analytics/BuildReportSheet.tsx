@@ -47,8 +47,10 @@ export interface ReportConfig {
   includeBookings: boolean;
   includeBookingTrend: boolean;
   includeSatisfaction: boolean;
+  includeCSATDistribution: boolean;
   includeCustomerFeedback: boolean;
   includeAIPerformance: boolean;
+  includeAIPerformanceTrend: boolean;
   // Traffic Analytics
   includeTrafficSources: boolean;
   includeTrafficSourceTrend: boolean;
@@ -56,6 +58,7 @@ export interface ReportConfig {
   includePageEngagement: boolean;
   includePageDepth: boolean;
   includeVisitorLocations: boolean;
+  includeVisitorCities: boolean;
   // Leads Analytics
   includeLeadSourceBreakdown: boolean;
   includeLeadConversionTrend: boolean;
@@ -252,9 +255,11 @@ export const BuildReportSheet = ({
   const businessOutcomesCount = [
     config.includeBookings, 
     config.includeBookingTrend,
-    config.includeSatisfaction, 
+    config.includeSatisfaction,
+    config.includeCSATDistribution,
     config.includeCustomerFeedback,
-    config.includeAIPerformance
+    config.includeAIPerformance,
+    config.includeAIPerformanceTrend
   ].filter(Boolean).length;
   
   const trafficCount = [
@@ -263,7 +268,8 @@ export const BuildReportSheet = ({
     config.includeTopPages, 
     config.includePageEngagement,
     config.includePageDepth,
-    config.includeVisitorLocations
+    config.includeVisitorLocations,
+    config.includeVisitorCities
   ].filter(Boolean).length;
   
   const leadsAnalyticsCount = [
@@ -504,6 +510,14 @@ export const BuildReportSheet = ({
                         </div>
                         <div className="flex items-center gap-3">
                           <Checkbox
+                            id="csatDistribution"
+                            checked={config.includeCSATDistribution}
+                            onCheckedChange={(checked) => updateConfig('includeCSATDistribution', !!checked)}
+                          />
+                          <Label htmlFor="csatDistribution" className="text-sm font-normal cursor-pointer">CSAT Rating Distribution</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
                             id="customerFeedback"
                             checked={config.includeCustomerFeedback}
                             onCheckedChange={(checked) => updateConfig('includeCustomerFeedback', !!checked)}
@@ -517,6 +531,14 @@ export const BuildReportSheet = ({
                             onCheckedChange={(checked) => updateConfig('includeAIPerformance', !!checked)}
                           />
                           <Label htmlFor="aiPerformance" className="text-sm font-normal cursor-pointer">Ari Performance</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="aiPerformanceTrend"
+                            checked={config.includeAIPerformanceTrend}
+                            onCheckedChange={(checked) => updateConfig('includeAIPerformanceTrend', !!checked)}
+                          />
+                          <Label htmlFor="aiPerformanceTrend" className="text-sm font-normal cursor-pointer">Ari Performance Trend</Label>
                         </div>
                       </div>
                     </AccordionContent>
@@ -579,6 +601,14 @@ export const BuildReportSheet = ({
                             onCheckedChange={(checked) => updateConfig('includeVisitorLocations', !!checked)}
                           />
                           <Label htmlFor="visitorLocations" className="text-sm font-normal cursor-pointer">Visitor Locations</Label>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id="visitorCities"
+                            checked={config.includeVisitorCities}
+                            onCheckedChange={(checked) => updateConfig('includeVisitorCities', !!checked)}
+                          />
+                          <Label htmlFor="visitorCities" className="text-sm font-normal cursor-pointer">Top Cities</Label>
                         </div>
                       </div>
                     </AccordionContent>

@@ -67,6 +67,15 @@ const SAMPLE_PDF_DATA: PDFData = {
     { source: 'Social Media', leads: 28, sessions: 890, cvr: 3.1 },
     { source: 'Referral', leads: 13, sessions: 420, cvr: 3.1 },
   ],
+  leadConversionTrend: [
+    { date: '2024-12-23', total: 42, new: 18, contacted: 12, qualified: 8, won: 3, lost: 1 },
+    { date: '2024-12-24', total: 38, new: 15, contacted: 11, qualified: 7, won: 4, lost: 1 },
+    { date: '2024-12-25', total: 25, new: 10, contacted: 8, qualified: 4, won: 2, lost: 1 },
+    { date: '2024-12-26', total: 56, new: 24, contacted: 16, qualified: 10, won: 4, lost: 2 },
+    { date: '2024-12-27', total: 67, new: 28, contacted: 20, qualified: 12, won: 5, lost: 2 },
+    { date: '2024-12-28', total: 52, new: 22, contacted: 15, qualified: 9, won: 4, lost: 2 },
+    { date: '2024-12-29', total: 62, new: 26, contacted: 18, qualified: 11, won: 5, lost: 2 },
+  ],
   bookingStats: [
     { location: 'Downtown Office', total: 89, confirmed: 67, completed: 54, no_show: 8, show_rate: 87 },
     { location: 'Mall Location', total: 67, confirmed: 52, completed: 48, no_show: 3, show_rate: 92 },
@@ -93,6 +102,13 @@ const SAMPLE_PDF_DATA: PDFData = {
       { rating: 1, count: 7 },
     ],
   },
+  csatDistribution: [
+    { rating: 5, count: 142, percentage: 49 },
+    { rating: 4, count: 89, percentage: 31 },
+    { rating: 3, count: 34, percentage: 12 },
+    { rating: 2, count: 15, percentage: 5 },
+    { rating: 1, count: 7, percentage: 3 },
+  ],
   recentFeedback: [
     { rating: 5, feedback: 'Ari was incredibly helpful and answered all my questions quickly!', createdAt: '2024-12-29T14:32:00Z', triggerType: 'conversation_end' },
     { rating: 4, feedback: 'Good experience, but took a bit to understand my question.', createdAt: '2024-12-29T11:15:00Z', triggerType: 'conversation_end' },
@@ -107,6 +123,15 @@ const SAMPLE_PDF_DATA: PDFData = {
     human_takeover: 158,
     total_conversations: 1247,
   },
+  aiPerformanceTrend: [
+    { date: '2024-12-23', containment_rate: 85.2, resolution_rate: 90.1 },
+    { date: '2024-12-24', containment_rate: 86.5, resolution_rate: 91.3 },
+    { date: '2024-12-25', containment_rate: 84.8, resolution_rate: 89.7 },
+    { date: '2024-12-26', containment_rate: 87.9, resolution_rate: 92.4 },
+    { date: '2024-12-27', containment_rate: 88.2, resolution_rate: 93.1 },
+    { date: '2024-12-28', containment_rate: 87.1, resolution_rate: 92.0 },
+    { date: '2024-12-29', containment_rate: 88.5, resolution_rate: 93.5 },
+  ],
   trafficSources: [
     { source: 'Direct', visitors: 4521, percentage: 35.2 },
     { source: 'Google', visitors: 3845, percentage: 29.9 },
@@ -150,13 +175,36 @@ const SAMPLE_PDF_DATA: PDFData = {
     { country: 'Australia', visitors: 771, percentage: 6.0 },
     { country: 'Other', visitors: 1938, percentage: 15.1 },
   ],
+  visitorCities: [
+    { city: 'New York', country: 'United States', visitors: 1842 },
+    { city: 'Los Angeles', country: 'United States', visitors: 1256 },
+    { city: 'London', country: 'United Kingdom', visitors: 987 },
+    { city: 'Toronto', country: 'Canada', visitors: 654 },
+    { city: 'Chicago', country: 'United States', visitors: 543 },
+    { city: 'Sydney', country: 'Australia', visitors: 421 },
+    { city: 'Berlin', country: 'Germany', visitors: 389 },
+    { city: 'Vancouver', country: 'Canada', visitors: 312 },
+  ],
+  usageMetrics: [
+    { date: '2024-12-23', conversations: 156, messages: 1245, api_calls: 3420 },
+    { date: '2024-12-24', conversations: 142, messages: 1123, api_calls: 3150 },
+    { date: '2024-12-25', conversations: 98, messages: 756, api_calls: 2100 },
+    { date: '2024-12-26', conversations: 178, messages: 1456, api_calls: 3980 },
+    { date: '2024-12-27', conversations: 203, messages: 1678, api_calls: 4520 },
+    { date: '2024-12-28', conversations: 187, messages: 1534, api_calls: 4120 },
+    { date: '2024-12-29', conversations: 283, messages: 2345, api_calls: 6210 },
+  ],
+  agentPerformance: [
+    { agent_name: 'Ari (Primary)', total_conversations: 1089, avg_response_time: 1.2, satisfaction_score: 4.5 },
+    { agent_name: 'Backup Agent', total_conversations: 158, avg_response_time: 2.8, satisfaction_score: 4.1 },
+  ],
 };
 
 // Default config - professional report focused on key metrics
 const DEFAULT_CONFIG: PDFConfig = {
   type: 'detailed',
   includeKPIs: true,
-  includeCharts: false,         // Tables are cleaner for exports
+  includeCharts: false,
   includeTables: true,
   includeConversations: true,
   includeConversationFunnel: false,
@@ -167,14 +215,19 @@ const DEFAULT_CONFIG: PDFConfig = {
   includeBookings: true,
   includeBookingTrend: false,
   includeSatisfaction: true,
+  includeCSATDistribution: false,
   includeCustomerFeedback: false,
   includeAIPerformance: true,
+  includeAIPerformanceTrend: false,
   includeTrafficSources: false,
   includeTrafficSourceTrend: false,
   includeTopPages: false,
   includePageEngagement: false,
   includePageDepth: false,
   includeVisitorLocations: false,
+  includeVisitorCities: false,
+  includeUsageMetrics: false,
+  includeAgentPerformance: false,
 };
 
 export default function PDFTestPage() {
@@ -305,6 +358,7 @@ export default function PDFTestPage() {
       title: 'Customer Satisfaction',
       items: [
         { key: 'includeSatisfaction', label: 'Satisfaction Metrics' },
+        { key: 'includeCSATDistribution', label: 'CSAT Distribution Chart' },
         { key: 'includeCustomerFeedback', label: 'Customer Feedback' },
       ],
     },
@@ -312,6 +366,7 @@ export default function PDFTestPage() {
       title: 'AI Performance',
       items: [
         { key: 'includeAIPerformance', label: 'AI Performance' },
+        { key: 'includeAIPerformanceTrend', label: 'AI Performance Trend' },
       ],
     },
     {
@@ -323,6 +378,14 @@ export default function PDFTestPage() {
         { key: 'includePageEngagement', label: 'Page Engagement' },
         { key: 'includePageDepth', label: 'Page Depth' },
         { key: 'includeVisitorLocations', label: 'Visitor Locations' },
+        { key: 'includeVisitorCities', label: 'Top Cities' },
+      ],
+    },
+    {
+      title: 'Usage & Agents',
+      items: [
+        { key: 'includeUsageMetrics', label: 'Usage Metrics' },
+        { key: 'includeAgentPerformance', label: 'Agent Performance' },
       ],
     },
   ];
