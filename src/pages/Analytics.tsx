@@ -7,22 +7,14 @@
  * @page
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
-import { useAuth } from '@/hooks/useAuth';
-import { useReportExports } from '@/hooks/useReportExports';
-import { BuildReportSheet, ReportConfig } from '@/components/analytics/BuildReportSheet';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
-import { generateCSVReport } from '@/lib/report-export';
-import { generateBeautifulPDF } from '@/lib/pdf-generator';
-import { buildAnalyticsExportData } from '@/lib/analytics-export-data';
-import { calculatePeakActivityData } from '@/lib/peak-activity-utils';
-import { SECTION_INFO, TOOLBAR_SECTIONS, DEFAULT_REPORT_CONFIG } from '@/lib/analytics-constants';
-import { toast } from '@/lib/toast';
-import { subDays, format } from 'date-fns';
-import { downloadFile } from '@/lib/file-download';
+import { SECTION_INFO, TOOLBAR_SECTIONS } from '@/lib/analytics-constants';
+import { subDays } from 'date-fns';
 
 import {
   ConversationsSection,
@@ -37,13 +29,10 @@ import {
 
 
 function Analytics() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   
   // === UI State ===
   const [activeTab, setActiveTab] = useState<AnalyticsSection>('conversations');
-  const [exportSheetOpen, setExportSheetOpen] = useState(false);
-  const [reportConfig, setReportConfig] = useState<ReportConfig>(DEFAULT_REPORT_CONFIG);
-  const [isExporting, setIsExporting] = useState(false);
 
   // === Date State ===
   const [startDate, setStartDate] = useState(() => subDays(new Date(), 30));
@@ -52,9 +41,6 @@ function Analytics() {
   const [comparisonStartDate, setComparisonStartDate] = useState(() => subDays(new Date(), 60));
   const [comparisonEndDate, setComparisonEndDate] = useState(() => subDays(new Date(), 30));
   const [filters, setFilters] = useState({ leadStatus: 'all', conversationStatus: 'all' });
-
-  // === Report Exports ===
-  const { createExport, isCreating } = useReportExports();
 
   // === Analytics Data ===
   const data = useAnalyticsData({
@@ -66,50 +52,6 @@ function Analytics() {
     filters,
   });
 
-  // === Peak Activity Data (calculated from conversation stats) ===
-  const peakActivityData = useMemo(() => 
-    calculatePeakActivityData(data.conversationStats),
-    [data.conversationStats]
-  );
-
-  // === Export Data (memoized with all 9 new fields) ===
-  const analyticsExportData = useMemo(() => buildAnalyticsExportData({
-    // KPIs
-    totalConversations: data.totalConversations,
-    totalLeads: data.totalLeads,
-    conversionRate: data.conversionRate,
-    totalMessages: data.totalMessages,
-    // Comparison KPIs
-    comparisonTotalConversations: data.comparisonTotalConversations,
-    comparisonTotalLeads: data.comparisonTotalLeads,
-    comparisonConversionRate: data.comparisonConversionRate,
-    comparisonTotalMessages: data.comparisonTotalMessages,
-    comparisonMode,
-    // Core stats
-    conversationStats: data.conversationStats,
-    leadStats: data.leadStats,
-    agentPerformance: data.agentPerformance,
-    usageMetrics: data.usageMetrics,
-    // Business outcomes
-    bookingStats: data.bookingStats,
-    satisfactionStats: data.satisfactionStats,
-    aiPerformanceStats: data.aiPerformanceStats,
-    // Traffic
-    trafficSources: data.trafficSources,
-    landingPages: data.landingPages,
-    locationData: data.locationData,
-    // Original data
-    analyticsConversations: data.analyticsConversations,
-    leads: data.leads,
-    // NEW: 9 additional fields for complete exports
-    funnelStages: data.funnelStages,
-    peakActivity: peakActivityData,
-    engagement: data.engagement,
-    leadsBySource: data.leadsBySource,
-    pageDepthDistribution: data.pageDepthDistribution,
-    sourcesByDate: data.sourcesByDate,
-  }), [data, comparisonMode, peakActivityData]);
-
   // === Handlers ===
   const handleDateChange = useCallback((start: Date, end: Date) => {
     setStartDate(start);
@@ -120,212 +62,6 @@ function Analytics() {
     setComparisonStartDate(start);
     setComparisonEndDate(end);
   }, []);
-
-  // Build PDF data from analytics data
-  const buildPDFData = useCallback(() => {
-    // Calculate totals for percentage calculations
-    const totalTrafficVisitors = data.trafficSources?.reduce((sum, s) => sum + s.value, 0) || 1;
-    const totalLocationVisitors = data.locationData?.reduce((sum, l) => sum + l.count, 0) || 1;
-    const totalRatings = data.satisfactionStats?.totalRatings || 1;
-    
-    return {
-      // === KPIs ===
-      totalConversations: data.totalConversations,
-      conversationsChange: data.conversationTrendValue,
-      totalLeads: data.totalLeads,
-      leadsChange: data.leadTrendValue,
-      conversionRate: data.conversionRate ? parseFloat(data.conversionRate) : 0,
-
-      // === Conversation Data ===
-      conversationStats: data.conversationStats,
-      conversationFunnel: data.funnelStages?.map(s => ({
-        name: s.name,
-        count: s.count,
-        percentage: s.percentage,
-        dropOffPercent: s.dropOffPercent,
-      })),
-      peakActivity: peakActivityData ? {
-        peakDay: peakActivityData.peakDay,
-        peakTime: peakActivityData.peakTime,
-        peakValue: peakActivityData.peakValue,
-      } : undefined,
-
-      // === Lead Data ===
-      leadStats: data.leadStats?.map(s => ({ date: s.date, total: s.total })),
-      leadSourceBreakdown: data.leadsBySource?.map(s => ({
-        source: s.source,
-        leads: s.leads,
-        sessions: s.sessions,
-        cvr: s.cvr,
-      })),
-      // Lead conversion trend with stage breakdown
-      leadConversionTrend: data.leadStats?.map(s => ({
-        date: s.date,
-        total: s.total,
-        new: (s.new as number) ?? 0,
-        contacted: (s.contacted as number) ?? 0,
-        qualified: (s.qualified as number) ?? 0,
-        won: (s.won as number) ?? 0,
-        lost: (s.lost as number) ?? 0,
-      })),
-
-      // === Booking Data (FIXED: use actual confirmed count if available) ===
-      bookingStats: data.bookingStats?.byLocation?.map(l => ({
-        location: l.locationName,
-        total: l.bookings,
-        // Use confirmed if available, otherwise calculate as pending
-        confirmed: (l as { confirmed?: number }).confirmed ?? Math.max(0, l.bookings - l.completed - l.cancelled - l.noShow),
-        completed: l.completed,
-        no_show: l.noShow,
-        show_rate: Math.round((l.completed / Math.max(l.bookings, 1)) * 100),
-      })),
-      bookingTrend: data.bookingStats?.trend?.map(t => ({
-        date: t.date,
-        confirmed: t.confirmed,
-        completed: t.completed,
-        cancelled: t.cancelled,
-        noShow: t.noShow,
-      })),
-
-      // === Satisfaction Data ===
-      satisfactionStats: data.satisfactionStats ? {
-        average_rating: data.satisfactionStats.averageRating,
-        total_ratings: data.satisfactionStats.totalRatings,
-        distribution: data.satisfactionStats.distribution?.map(d => ({
-          rating: d.rating,
-          count: d.count,
-        })),
-      } : undefined,
-      // CSAT distribution with percentages for charts
-      csatDistribution: data.satisfactionStats?.distribution?.map(d => ({
-        rating: d.rating,
-        count: d.count,
-        percentage: Math.round((d.count / totalRatings) * 100),
-      })),
-      recentFeedback: data.satisfactionStats?.recentFeedback?.map(f => ({
-        rating: f.rating,
-        feedback: f.feedback,
-        createdAt: f.createdAt,
-        triggerType: f.triggerType,
-      })),
-
-      // === AI Performance Data ===
-      aiPerformanceStats: data.aiPerformanceStats ? {
-        containment_rate: data.aiPerformanceStats.containmentRate,
-        resolution_rate: data.aiPerformanceStats.resolutionRate,
-        ai_handled: data.aiPerformanceStats.totalConversations - data.aiPerformanceStats.humanTakeover,
-        human_takeover: data.aiPerformanceStats.humanTakeover,
-        total_conversations: data.aiPerformanceStats.totalConversations,
-      } : undefined,
-      // AI performance trend (now passed through from hook)
-      aiPerformanceTrend: data.aiPerformanceTrend?.map(t => ({
-        date: t.date,
-        containment_rate: t.containmentRate,
-        resolution_rate: t.resolutionRate,
-      })),
-
-      // === Traffic Data ===
-      trafficSources: data.trafficSources?.map(s => ({
-        source: s.name,
-        visitors: s.value,
-        percentage: Math.round((s.value / totalTrafficVisitors) * 100),
-      })),
-      trafficSourceTrend: data.sourcesByDate?.map(s => ({
-        date: s.date,
-        direct: s.direct,
-        organic: s.organic,
-        paid: s.paid,
-        social: s.social,
-        email: s.email,
-        referral: s.referral,
-      })),
-
-      // === Page Data (FIXED: use per-page bounce rate if available) ===
-      topPages: data.landingPages?.map(p => ({
-        page: p.url,
-        visits: p.visits,
-        bounce_rate: (p as { bounceRate?: number }).bounceRate ?? data.engagement?.bounceRate ?? 0,
-        conversations: p.conversions,
-      })),
-      pageEngagement: data.engagement ? {
-        bounceRate: data.engagement.bounceRate,
-        avgPagesPerSession: data.engagement.avgPagesPerSession,
-        totalSessions: data.engagement.totalSessions,
-        overallCVR: data.engagement.overallCVR,
-      } : undefined,
-      pageDepthDistribution: data.pageDepthDistribution?.map(d => ({
-        depth: d.depth,
-        count: d.count,
-        percentage: d.percentage,
-      })),
-
-      // === Geography Data ===
-      visitorLocations: data.locationData?.map(l => ({
-        country: l.country,
-        visitors: l.count,
-        percentage: Math.round((l.count / totalLocationVisitors) * 100),
-      })),
-      visitorCities: data.locationData?.filter(l => l.city).map(l => ({
-        city: l.city || '',
-        country: l.country,
-        visitors: l.count,
-      })),
-
-      // === Usage & Performance Data ===
-      usageMetrics: data.usageMetrics?.map(u => ({
-        date: u.date,
-        conversations: u.conversations,
-        messages: u.messages,
-        api_calls: u.api_calls,
-      })),
-      agentPerformance: data.agentPerformance?.map(a => ({
-        agent_name: a.agent_name,
-        total_conversations: a.total_conversations,
-        avg_response_time: a.avg_response_time,
-        satisfaction_score: a.satisfaction_score,
-      })),
-    };
-  }, [data, peakActivityData]);
-
-  const handleExport = useCallback(async (exportStartDate: Date, exportEndDate: Date) => {
-    const exportFormat = reportConfig.format;
-    setIsExporting(true);
-    
-    try {
-      const reportName = `${reportConfig.type === 'summary' ? 'Summary' : reportConfig.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(exportStartDate, 'MMM d')} to ${format(exportEndDate, 'MMM d, yyyy')}`;
-      
-      const blob = exportFormat === 'csv'
-        ? generateCSVReport(analyticsExportData, reportConfig, exportStartDate, exportEndDate, user?.email || 'User')
-        : await generateBeautifulPDF({
-            data: buildPDFData(),
-            config: reportConfig,
-            startDate: exportStartDate,
-            endDate: exportEndDate,
-            orgName: user?.email || 'User',
-          });
-      
-      await createExport({
-        name: reportName,
-        format: exportFormat,
-        file: blob,
-        dateRangeStart: exportStartDate,
-        dateRangeEnd: exportEndDate,
-        reportConfig,
-      });
-      
-      const url = URL.createObjectURL(blob);
-      await downloadFile(url, `${reportName.replace(/[^a-zA-Z0-9-_]/g, '_')}.${exportFormat}`);
-      URL.revokeObjectURL(url);
-      
-      toast.success(`${exportFormat.toUpperCase()} exported and saved`);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error('Export error:', error);
-      toast.error(`Export failed: ${message}`);
-    } finally {
-      setIsExporting(false);
-    }
-  }, [analyticsExportData, reportConfig, user?.email, createExport, buildPDFData]);
 
   // === Derived State ===
   const showToolbar = TOOLBAR_SECTIONS.includes(activeTab);
@@ -344,7 +80,7 @@ function Analytics() {
               <p className="text-sm text-muted-foreground mt-1">{SECTION_INFO[activeTab].description}</p>
             </div>
             {showBuildReport && (
-              <Button size="sm" onClick={() => setExportSheetOpen(true)}>Build Report</Button>
+              <Button size="sm" onClick={() => navigate('/report-builder')}>Build Report</Button>
             )}
           </div>
 
@@ -452,15 +188,6 @@ function Analytics() {
           {activeTab === 'reports' && <ReportsSection />}
         </div>
       </main>
-      
-      <BuildReportSheet
-        open={exportSheetOpen}
-        onOpenChange={setExportSheetOpen}
-        config={reportConfig}
-        onConfigChange={setReportConfig}
-        onExport={handleExport}
-        isExporting={isCreating || isExporting}
-      />
     </div>
   );
 }
