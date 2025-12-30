@@ -244,7 +244,7 @@ export function PdfJsViewer({
         // Account for device pixel ratio for crisp rendering on Retina displays
         const pixelRatio = window.devicePixelRatio || 1;
         
-        // Create viewport at the desired CSS scale
+        // Create viewport at the desired CSS scale (let PDF.js apply page rotation)
         const viewport = page.getViewport({ scale });
 
         const context = canvas.getContext('2d');
@@ -258,12 +258,15 @@ export function PdfJsViewer({
         canvas.style.width = `${viewport.width}px`;
         canvas.style.height = `${viewport.height}px`;
         
-        // Scale the context to account for the higher resolution
-        context.scale(pixelRatio, pixelRatio);
+        // Reset context before render to avoid accumulated transforms
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Use transform param instead of context.scale() to avoid flip/mirror issues
         await page.render({
           canvasContext: context,
           viewport,
+          transform: pixelRatio !== 1 ? [pixelRatio, 0, 0, pixelRatio, 0, 0] : undefined,
         }).promise;
 
         setPages((prev) =>
