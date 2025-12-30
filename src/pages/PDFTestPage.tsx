@@ -8,8 +8,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { pdf } from '@react-pdf/renderer';
-import { AnalyticsReportPDF } from '@/lib/pdf-components';
 import { generateBeautifulPDF } from '@/lib/pdf-generator';
 import type { PDFData, PDFConfig, ReportType } from '@/types/pdf';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -253,7 +251,7 @@ export default function PDFTestPage() {
     setRefreshKey(prev => prev + 1);
   }, []);
 
-  // Generate PDF ArrayBuffer for viewer
+  // Generate PDF ArrayBuffer for viewer using the same production pipeline
   useEffect(() => {
     let cancelled = false;
     
@@ -262,18 +260,15 @@ export default function PDFTestPage() {
       setError(null);
       
       try {
-        const doc = (
-          <AnalyticsReportPDF
-            data={SAMPLE_PDF_DATA}
-            config={config}
-            startDate={startDate}
-            endDate={endDate}
-            orgName={orgName}
-          />
-        );
-        
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const blob = await pdf(doc as any).toBlob();
+        // Use the same generateBeautifulPDF function as production exports
+        // This ensures preview matches downloaded output and validates sanitization
+        const blob = await generateBeautifulPDF({
+          data: SAMPLE_PDF_DATA,
+          config,
+          startDate,
+          endDate,
+          orgName,
+        });
         
         if (!cancelled) {
           const arrayBuffer = await blob.arrayBuffer();
