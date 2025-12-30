@@ -206,6 +206,17 @@ export default function ReportBuilder() {
     }
   }, []);
 
+  // === Toggle all items in a section ===
+  const toggleSection = useCallback((keys: string[], selectAll: boolean) => {
+    setConfig(prev => {
+      const updates = { ...prev };
+      keys.forEach(key => {
+        (updates as Record<string, unknown>)[key] = selectAll;
+      });
+      return updates;
+    });
+  }, []);
+
   // === Memoized comparison dates (stable references) ===
   const comparisonStartDate = useMemo(() => subDays(startDate, 30), [startDate]);
   const comparisonEndDate = useMemo(() => subDays(endDate, 30), [endDate]);
@@ -618,7 +629,20 @@ export default function ReportBuilder() {
                   
                   {/* Core Metrics */}
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Core Metrics</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Core Metrics</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const keys = ['includeConversations', 'includeConversationFunnel', 'includePeakActivity', 'includeLeads', 'includeUsageMetrics'];
+                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                          toggleSection(keys, !allSelected);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {['includeConversations', 'includeConversationFunnel', 'includePeakActivity', 'includeLeads', 'includeUsageMetrics'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                      </button>
+                    </div>
                     <div className="space-y-1.5">
                       {[
                         { key: 'includeConversations', label: 'Conversations' },
@@ -641,7 +665,20 @@ export default function ReportBuilder() {
 
                   {/* Business Outcomes */}
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Business Outcomes</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Business Outcomes</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const keys = ['includeBookings', 'includeBookingTrend', 'includeSatisfaction', 'includeCSATDistribution', 'includeCustomerFeedback', 'includeAIPerformance', 'includeAIPerformanceTrend'];
+                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                          toggleSection(keys, !allSelected);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {['includeBookings', 'includeBookingTrend', 'includeSatisfaction', 'includeCSATDistribution', 'includeCustomerFeedback', 'includeAIPerformance', 'includeAIPerformanceTrend'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                      </button>
+                    </div>
                     <div className="space-y-1.5">
                       {[
                         { key: 'includeBookings', label: 'Bookings by Location' },
@@ -666,7 +703,20 @@ export default function ReportBuilder() {
 
                   {/* Traffic Analytics */}
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Traffic Analytics</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Traffic Analytics</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const keys = ['includeTrafficSources', 'includeTrafficSourceTrend', 'includeTopPages', 'includePageEngagement', 'includePageDepth', 'includeVisitorLocations', 'includeVisitorCities'];
+                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                          toggleSection(keys, !allSelected);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {['includeTrafficSources', 'includeTrafficSourceTrend', 'includeTopPages', 'includePageEngagement', 'includePageDepth', 'includeVisitorLocations', 'includeVisitorCities'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                      </button>
+                    </div>
                     <div className="space-y-1.5">
                       {[
                         { key: 'includeTrafficSources', label: 'Traffic Sources' },
@@ -691,7 +741,20 @@ export default function ReportBuilder() {
 
                   {/* Leads Analytics */}
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Leads Analytics</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Leads Analytics</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const keys = ['includeLeadSourceBreakdown', 'includeLeadConversionTrend'];
+                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                          toggleSection(keys, !allSelected);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {['includeLeadSourceBreakdown', 'includeLeadConversionTrend'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                      </button>
+                    </div>
                     <div className="space-y-1.5">
                       {[
                         { key: 'includeLeadSourceBreakdown', label: 'Lead Source Breakdown' },
@@ -726,7 +789,20 @@ export default function ReportBuilder() {
 
                   {/* Export Options */}
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Export Options</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Export Options</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const keys = ['includeKPIs', 'includeCharts', 'includeTables'];
+                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                          toggleSection(keys, !allSelected);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {['includeKPIs', 'includeCharts', 'includeTables'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                      </button>
+                    </div>
                     <div className="space-y-1.5">
                       {[
                         { key: 'includeKPIs', label: 'KPI Summary' },
