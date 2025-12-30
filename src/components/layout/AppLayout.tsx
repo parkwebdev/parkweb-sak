@@ -62,9 +62,11 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Button>
           </div>
           
-          {/* Page Content - flex-1 fills remaining space, min-h-0 enables children overflow */}
-          <main id="main-content" className="flex-1 min-h-0 overflow-hidden" tabIndex={-1}>
-            {children}
+          {/* Page Content - flex column container so children can use flex-1 properly */}
+          <main id="main-content" className="flex-1 min-h-0 overflow-hidden flex flex-col" tabIndex={-1}>
+            <div className="flex-1 min-h-0 flex flex-col">
+              {children}
+            </div>
           </main>
         </div>
       </div>
