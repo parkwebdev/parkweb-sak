@@ -10,7 +10,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Expand01 } from '@untitledui/icons';
+import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Expand01, LayoutLeft } from '@untitledui/icons';
+import { PdfThumbnailSidebar } from './PdfThumbnailSidebar';
 
 // Import the worker directly - Vite will bundle it locally
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -26,6 +27,8 @@ interface PdfJsViewerProps {
   showDiagnostics?: boolean;
   /** Start with fit-to-width enabled */
   initialFitToWidth?: boolean;
+  /** Show thumbnail sidebar (default: true for multi-page PDFs) */
+  showThumbnails?: boolean;
   /** Callback when PDF loads successfully */
   onLoad?: (numPages: number) => void;
   /** Callback when PDF fails to load */
@@ -50,6 +53,7 @@ export function PdfJsViewer({
   mode = 'all',
   showDiagnostics = false,
   initialFitToWidth = false,
+  showThumbnails = true,
   onLoad,
   onError,
 }: PdfJsViewerProps) {
@@ -61,6 +65,7 @@ export function PdfJsViewer({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pages, setPages] = useState<PageState[]>([]);
+  const [thumbnailsOpen, setThumbnailsOpen] = useState(false);
   const [diagnostics, setDiagnostics] = useState<DiagnosticsInfo>({
     version: pdfjsLib.version,
     workerSrc: '',
@@ -71,6 +76,7 @@ export function PdfJsViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  const pageContainerRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const basePageWidth = useRef<number>(0);
 
   // Load PDF document with worker fallback
@@ -306,6 +312,20 @@ export function PdfJsViewer({
   const goToPrevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
   const goToNextPage = () => setCurrentPage((p) => Math.min(p + 1, numPages));
 
+  // Navigate to a specific page (for thumbnail clicks)
+  const goToPage = useCallback((pageNum: number) => {
+    if (mode === 'single') {
+      setCurrentPage(pageNum);
+    } else {
+      // In 'all' mode, scroll to the page
+      const pageContainer = pageContainerRefs.current.get(pageNum);
+      if (pageContainer) {
+        pageContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    setCurrentPage(pageNum);
+  }, [mode]);
+
   // Register canvas ref
   const setCanvasRef = (pageNum: number) => (el: HTMLCanvasElement | null) => {
     if (el) {
@@ -314,6 +334,57 @@ export function PdfJsViewer({
       canvasRefs.current.delete(pageNum);
     }
   };
+
+  // Register page container ref
+  const setPageContainerRef = (pageNum: number) => (el: HTMLDivElement | null) => {
+    if (el) {
+      pageContainerRefs.current.set(pageNum, el);
+    } else {
+      pageContainerRefs.current.delete(pageNum);
+    }
+  };
+
+  // Track current page based on scroll position in 'all' mode
+  useEffect(() => {
+    if (mode !== 'all' || !scrollContainerRef.current) return;
+
+    const handleScroll = () => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const containerTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+      const viewCenter = containerTop + containerHeight / 3;
+
+      // Find which page is most visible
+      let closestPage = 1;
+      let closestDistance = Infinity;
+
+      pageContainerRefs.current.forEach((el, pageNum) => {
+        const rect = el.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const pageTop = rect.top - containerRect.top + containerTop;
+        const pageCenter = pageTop + rect.height / 2;
+        const distance = Math.abs(pageCenter - viewCenter);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestPage = pageNum;
+        }
+      });
+
+      if (closestPage !== currentPage) {
+        setCurrentPage(closestPage);
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    container.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [mode, currentPage]);
 
   if (isLoading) {
     return (
@@ -363,6 +434,22 @@ export function PdfJsViewer({
       {/* Toolbar */}
       <div className="flex items-center justify-between p-2 border-b border-border bg-background flex-shrink-0">
         <div className="flex items-center gap-2">
+          {/* Thumbnail toggle */}
+          {showThumbnails && numPages > 1 && (
+            <>
+              <Button
+                variant={thumbnailsOpen ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setThumbnailsOpen((prev) => !prev)}
+                className="h-7 w-7 p-0"
+                aria-label={thumbnailsOpen ? 'Hide page thumbnails' : 'Show page thumbnails'}
+                aria-pressed={thumbnailsOpen}
+              >
+                <LayoutLeft size={16} />
+              </Button>
+              <div className="w-px h-4 bg-border mx-1" />
+            </>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -430,42 +517,58 @@ export function PdfJsViewer({
 
         {mode === 'all' && (
           <span className="text-xs text-muted-foreground">
-            {numPages} page{numPages !== 1 ? 's' : ''}
+            Page {currentPage} of {numPages}
           </span>
         )}
       </div>
 
-      {/* PDF Pages */}
-      <div ref={scrollContainerRef} className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
-        <div
-          ref={containerRef}
-          className="flex flex-col items-center gap-4 p-4 bg-muted/30"
-        >
-          {mode === 'all' ? (
-            // Render all pages
-            pages.map(({ pageNum }) => (
-              <div
-                key={pageNum}
-                className="shadow-lg bg-white"
-                style={{ lineHeight: 0 }}
-              >
+      {/* Main content area with optional thumbnail sidebar */}
+      <div className="flex flex-1 min-h-0 min-w-0 overflow-hidden relative">
+        {/* Thumbnail Sidebar */}
+        {showThumbnails && numPages > 1 && (
+          <PdfThumbnailSidebar
+            pdfDoc={pdfDoc}
+            numPages={numPages}
+            currentPage={currentPage}
+            onPageClick={goToPage}
+            isOpen={thumbnailsOpen}
+            onToggle={() => setThumbnailsOpen((prev) => !prev)}
+          />
+        )}
+
+        {/* PDF Pages */}
+        <div ref={scrollContainerRef} className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
+          <div
+            ref={containerRef}
+            className="flex flex-col items-center gap-4 p-4 bg-muted/30"
+          >
+            {mode === 'all' ? (
+              // Render all pages
+              pages.map(({ pageNum }) => (
+                <div
+                  key={pageNum}
+                  ref={setPageContainerRef(pageNum)}
+                  className="shadow-lg bg-white"
+                  style={{ lineHeight: 0 }}
+                >
+                  <canvas
+                    ref={setCanvasRef(pageNum)}
+                    className="block"
+                    aria-label={`Page ${pageNum}`}
+                  />
+                </div>
+              ))
+            ) : (
+              // Render single page
+              <div className="shadow-lg bg-white" style={{ lineHeight: 0 }}>
                 <canvas
-                  ref={setCanvasRef(pageNum)}
+                  ref={setCanvasRef(currentPage)}
                   className="block"
-                  aria-label={`Page ${pageNum}`}
+                  aria-label={`Page ${currentPage}`}
                 />
               </div>
-            ))
-          ) : (
-            // Render single page
-            <div className="shadow-lg bg-white" style={{ lineHeight: 0 }}>
-              <canvas
-                ref={setCanvasRef(currentPage)}
-                className="block"
-                aria-label={`Page ${currentPage}`}
-              />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
