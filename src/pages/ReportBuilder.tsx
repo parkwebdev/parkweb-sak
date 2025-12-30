@@ -569,6 +569,24 @@ export default function ReportBuilder() {
                       </PopoverContent>
                     </Popover>
                   )}
+
+                  {/* Grouping */}
+                  <div className="space-y-1.5 pt-2">
+                    <Label className="text-sm font-medium">Group Data By</Label>
+                    <Select
+                      value={config.grouping}
+                      onValueChange={(v) => updateConfig('grouping', v as 'day' | 'week' | 'month')}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="day">Daily</SelectItem>
+                        <SelectItem value="week">Weekly</SelectItem>
+                        <SelectItem value="month">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Format Selection */}
@@ -608,8 +626,6 @@ export default function ReportBuilder() {
 
                 {/* Data Categories */}
                 <div className="space-y-0">
-                  <Label className="text-sm font-medium">Data to Include</Label>
-                  
                   {/* Core Metrics */}
                   <div className="py-4 space-y-2">
                     <div className="flex items-center justify-between pb-2">
@@ -815,23 +831,6 @@ export default function ReportBuilder() {
                   </div>
                 </div>
 
-                {/* Grouping */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Group Data By</Label>
-                  <Select
-                    value={config.grouping}
-                    onValueChange={(v) => updateConfig('grouping', v as 'day' | 'week' | 'month')}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="day">Daily</SelectItem>
-                      <SelectItem value="week">Weekly</SelectItem>
-                      <SelectItem value="month">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </>
             ) : (
               /* Schedule Step */
