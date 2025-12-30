@@ -51,22 +51,32 @@ export function PdfThumbnailSidebar({
 
       try {
         const page = await pdfDoc.getPage(pageNum);
-        // Force upright thumbnails (some PDFs contain rotation metadata)
-        const viewport = page.getViewport({ scale: THUMBNAIL_SCALE, rotation: 0 });
+        // Let PDF.js apply correct rotation from page metadata
+        const viewport = page.getViewport({ scale: THUMBNAIL_SCALE });
 
         const context = canvas.getContext('2d');
         if (!context) return;
 
-        // Reset any prior transforms to avoid flipped/accumulated renders
-        context.setTransform(1, 0, 0, 1, 0, 0);
+        // Use transform pattern for HiDPI - avoids accumulated context transforms
+        const pixelRatio = window.devicePixelRatio || 1;
 
-        canvas.width = Math.floor(viewport.width);
-        canvas.height = Math.floor(viewport.height);
+        // Set canvas buffer size to physical pixels
+        canvas.width = Math.floor(viewport.width * pixelRatio);
+        canvas.height = Math.floor(viewport.height * pixelRatio);
+
+        // Set CSS size to maintain visual dimensions
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+
+        // Reset context and clear before render
+        context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Render with transform instead of context.scale() to avoid flip issues
         await page.render({
           canvasContext: context,
           viewport,
+          transform: pixelRatio !== 1 ? [pixelRatio, 0, 0, pixelRatio, 0, 0] : undefined,
         }).promise;
 
         setRenderedPages((prev) => new Set(prev).add(pageNum));
