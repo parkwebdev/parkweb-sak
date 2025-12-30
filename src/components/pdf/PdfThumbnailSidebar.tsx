@@ -120,11 +120,16 @@ export function PdfThumbnailSidebar({
   return (
     <div
       className={cn(
-        'flex-shrink-0 border-r border-border bg-muted/50 transition-all duration-200 overflow-hidden',
+        'flex-shrink-0 border-r border-border bg-muted/50 overflow-hidden transition-[width] duration-300 ease-in-out',
         isOpen ? 'w-32' : 'w-0'
       )}
     >
-        <div className="h-full flex flex-col">
+      <div 
+        className={cn(
+          'h-full flex flex-col w-32 transition-opacity duration-200 ease-in-out',
+          isOpen ? 'opacity-100 delay-100' : 'opacity-0'
+        )}
+      >
           {/* Sidebar header */}
           <div className="flex items-center justify-between p-2 border-b border-border bg-background/50">
             <span className="text-xs font-medium text-muted-foreground">Pages</span>
