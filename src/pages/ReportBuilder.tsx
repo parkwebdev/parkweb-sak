@@ -582,7 +582,7 @@ export default function ReportBuilder() {
                         "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors flex-1",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         config.format === 'pdf'
-                          ? "bg-primary/10 text-foreground border-primary"
+                          ? "bg-primary/5 text-foreground border-primary"
                           : "bg-background text-foreground border-border hover:bg-muted"
                       )}
                     >
@@ -596,7 +596,7 @@ export default function ReportBuilder() {
                         "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors flex-1",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         config.format === 'csv'
-                          ? "bg-primary/10 text-foreground border-primary"
+                          ? "bg-primary/5 text-foreground border-primary"
                           : "bg-background text-foreground border-border hover:bg-muted"
                       )}
                     >
