@@ -150,30 +150,30 @@ export function downsampleData<T>(data: T[], maxPoints = 30): T[] {
   return result;
 }
 
-/** PDF Chart color palette (matches design system) */
+/** PDF Chart color palette - muted, professional tones */
 export const CHART_COLORS = {
-  primary: '#2563eb',    // blue-600
+  primary: '#334155',    // slate-700 (main data)
   secondary: '#64748b',  // slate-500
-  success: '#16a34a',    // green-600
-  warning: '#eab308',    // yellow-500
+  success: '#059669',    // emerald-600
+  warning: '#d97706',    // amber-600
   danger: '#dc2626',     // red-600
-  purple: '#9333ea',     // purple-600
-  teal: '#14b8a6',       // teal-500
-  orange: '#f97316',     // orange-500
-  pink: '#ec4899',       // pink-500
-  indigo: '#6366f1',     // indigo-500
+  purple: '#7c3aed',     // violet-600
+  teal: '#0d9488',       // teal-600
+  orange: '#ea580c',     // orange-600
+  pink: '#db2777',       // pink-600
+  indigo: '#4f46e5',     // indigo-600
 } as const;
 
 export const CHART_COLOR_ARRAY = [
   CHART_COLORS.primary,
-  CHART_COLORS.success,
-  CHART_COLORS.warning,
-  CHART_COLORS.purple,
   CHART_COLORS.teal,
+  CHART_COLORS.indigo,
+  CHART_COLORS.purple,
+  CHART_COLORS.success,
   CHART_COLORS.orange,
   CHART_COLORS.pink,
+  CHART_COLORS.warning,
   CHART_COLORS.danger,
-  CHART_COLORS.indigo,
   CHART_COLORS.secondary,
 ];
 

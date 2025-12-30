@@ -19,7 +19,7 @@ const sectionStyles = StyleSheet.create({
     marginBottom: SPACING.MD,
     paddingLeft: SPACING.SM,
     borderLeftWidth: 3,
-    borderLeftColor: colors.accent,
+    borderLeftColor: colors.primary,
   },
   
   content: {

@@ -6,6 +6,7 @@
 
 export { AnalyticsReportPDF } from './AnalyticsReportPDF';
 export type { PDFData, PDFConfig } from './AnalyticsReportPDF';
+export { PDFLogo } from './PDFLogo';
 export { PDFHeader } from './PDFHeader';
 export { PDFFooter } from './PDFFooter';
 export { PDFKPICards } from './PDFKPICards';
