@@ -217,8 +217,8 @@ function Analytics() {
         human_takeover: data.aiPerformanceStats.humanTakeover,
         total_conversations: data.aiPerformanceStats.totalConversations,
       } : undefined,
-      // AI performance trend (if available from hook)
-      aiPerformanceTrend: (data.aiPerformanceStats as { trend?: Array<{ date: string; containmentRate: number; resolutionRate: number }> })?.trend?.map(t => ({
+      // AI performance trend (now passed through from hook)
+      aiPerformanceTrend: data.aiPerformanceTrend?.map(t => ({
         date: t.date,
         containment_rate: t.containmentRate,
         resolution_rate: t.resolutionRate,

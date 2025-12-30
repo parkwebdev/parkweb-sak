@@ -66,6 +66,13 @@ export interface PageVisitItem {
   totalDuration: number;
 }
 
+export interface AIPerformanceTrendItem {
+  date: string;
+  containmentRate: number;
+  resolutionRate: number;
+  total: number;
+}
+
 export interface UseAnalyticsDataReturn {
   // === Raw Data ===
   conversationStats: ConversationStatItem[];
@@ -77,6 +84,9 @@ export interface UseAnalyticsDataReturn {
   bookingStats: BookingStats | null;
   satisfactionStats: SatisfactionStats | null;
   aiPerformanceStats: AIPerformanceStats | null;
+  
+  // === AI Performance Trend (for PDF export) ===
+  aiPerformanceTrend: AIPerformanceTrendItem[];
   
   // === Traffic Data ===
   trafficSources: MockTrafficSource[];
@@ -215,6 +225,7 @@ export const useAnalyticsData = (options: UseAnalyticsDataOptions): UseAnalytics
   // === AI Performance Analytics ===
   const {
     stats: realAIPerformanceStats,
+    trend: realAIPerformanceTrend,
     loading: aiPerformanceLoading,
   } = useAIPerformanceAnalytics(startDate, endDate, shouldFetchRealData);
 
@@ -279,6 +290,13 @@ export const useAnalyticsData = (options: UseAnalyticsDataOptions): UseAnalytics
   const aiPerformanceStats = useMemo(() => {
     return mockMode && mockData ? mockData.aiPerformanceStats : realAIPerformanceStats;
   }, [mockMode, mockData, realAIPerformanceStats]);
+
+  const aiPerformanceTrend = useMemo(() => {
+    if (mockMode && mockData?.aiPerformanceTrend) {
+      return mockData.aiPerformanceTrend;
+    }
+    return realAIPerformanceTrend || [];
+  }, [mockMode, mockData, realAIPerformanceTrend]);
 
   const trafficSources = useMemo(() => {
     return mockMode && mockData ? mockData.trafficSources : realTrafficSources;
@@ -526,6 +544,9 @@ export const useAnalyticsData = (options: UseAnalyticsDataOptions): UseAnalytics
     bookingStats,
     satisfactionStats,
     aiPerformanceStats,
+    
+    // AI Performance Trend (for PDF export)
+    aiPerformanceTrend,
     
     // Traffic Data
     trafficSources,
