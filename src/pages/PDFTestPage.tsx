@@ -152,29 +152,29 @@ const SAMPLE_PDF_DATA: PDFData = {
   ],
 };
 
-// Default config with all sections enabled
+// Default config - professional report focused on key metrics
 const DEFAULT_CONFIG: PDFConfig = {
   type: 'detailed',
   includeKPIs: true,
-  includeCharts: true,
+  includeCharts: false,         // Tables are cleaner for exports
   includeTables: true,
   includeConversations: true,
-  includeConversationFunnel: true,
-  includePeakActivity: true,
+  includeConversationFunnel: false,
+  includePeakActivity: false,
   includeLeads: true,
   includeLeadSourceBreakdown: true,
-  includeLeadConversionTrend: true,
+  includeLeadConversionTrend: false,
   includeBookings: true,
-  includeBookingTrend: true,
+  includeBookingTrend: false,
   includeSatisfaction: true,
-  includeCustomerFeedback: true,
+  includeCustomerFeedback: false,
   includeAIPerformance: true,
-  includeTrafficSources: true,
-  includeTrafficSourceTrend: true,
-  includeTopPages: true,
-  includePageEngagement: true,
-  includePageDepth: true,
-  includeVisitorLocations: true,
+  includeTrafficSources: false,
+  includeTrafficSourceTrend: false,
+  includeTopPages: false,
+  includePageEngagement: false,
+  includePageDepth: false,
+  includeVisitorLocations: false,
 };
 
 export default function PDFTestPage() {

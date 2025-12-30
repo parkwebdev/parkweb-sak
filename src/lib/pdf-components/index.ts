@@ -12,7 +12,7 @@ export { PDFFooter } from './PDFFooter';
 export { PDFKPICards } from './PDFKPICards';
 export { PDFTable } from './PDFTable';
 export { PDFSection } from './PDFSection';
-export { styles, colors, PAGE, SPACING, FONT_SIZE, tableStyles } from './styles';
+export { styles, colors, PAGE, SPACING, FONT_SIZE } from './styles';
 export { registerFonts } from './fonts';
 
 // Native PDF chart components
