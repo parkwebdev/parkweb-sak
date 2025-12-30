@@ -490,7 +490,7 @@ export default function ReportBuilder() {
   return (
     <div className="flex h-full min-h-0 min-w-0 bg-muted/30">
       {/* Sidebar */}
-      <aside className="w-[340px] flex-shrink-0 border-r border-border bg-background h-full min-h-0 flex flex-col">
+      <aside className="w-[340px] flex-shrink-0 border-r border-border bg-background h-full min-h-0 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-border flex items-center gap-3">
           <Button
@@ -511,7 +511,7 @@ export default function ReportBuilder() {
           </div>
         </div>
         {/* Content */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain">
           <div className="p-4 space-y-5">
             {step === 'configure' ? (
               <>
@@ -912,7 +912,7 @@ export default function ReportBuilder() {
               </>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-border space-y-2">
