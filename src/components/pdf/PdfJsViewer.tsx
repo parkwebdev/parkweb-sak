@@ -272,7 +272,7 @@ export function PdfJsViewer({
   }
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+    <div className="flex flex-1 min-w-0 flex-col min-h-0 overflow-hidden">
       {/* Diagnostics Panel */}
       {showDiagnostics && (
         <div className="p-2 bg-muted/50 border-b border-border text-xs font-mono flex flex-wrap gap-x-4 gap-y-1">
@@ -348,7 +348,7 @@ export function PdfJsViewer({
       </div>
 
       {/* PDF Pages */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
         <div
           ref={containerRef}
           className="flex flex-col items-center gap-4 p-4 bg-muted/30"
