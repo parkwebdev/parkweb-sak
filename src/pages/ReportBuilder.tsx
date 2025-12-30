@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { generateBeautifulPDF } from '@/lib/pdf-generator';
 import { generateCSVReport } from '@/lib/report-export';
 import { buildPDFData } from '@/lib/build-pdf-data';
+import { aggregatePDFData } from '@/lib/data-aggregation';
 import { buildAnalyticsExportData } from '@/lib/analytics-export-data';
 import { calculatePeakActivityData } from '@/lib/peak-activity-utils';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
@@ -257,12 +258,14 @@ export default function ReportBuilder() {
   }, [isDataLoading, data.totalConversations, data.totalLeads, data.conversionRate, data.totalMessages, data.bookingStats?.totalBookings]);
 
   // === PDF Data - computed from stable dataVersion ===
-  // Only recomputes when dataVersion changes (not on every data object reference change)
+  // Only recomputes when dataVersion or grouping changes
   const pdfData = useMemo(() => {
     if (!dataVersion) return null;
-    return buildPDFData(data, peakActivityData);
+    const rawData = buildPDFData(data, peakActivityData);
+    // Apply grouping aggregation (weekly/monthly)
+    return aggregatePDFData(rawData, config.grouping);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataVersion, peakActivityData]);
+  }, [dataVersion, peakActivityData, config.grouping]);
 
   // === Generation guard ref to prevent duplicate generations ===
   const lastPreviewKeyRef = useRef<string | null>(null);
@@ -319,7 +322,7 @@ export default function ReportBuilder() {
     }
 
     // Build a unique key for this preview configuration
-    const previewKey = `${configKey}|${dataVersion}|${startMs}|${endMs}|${user?.email ?? ''}|${refreshKey}`;
+    const previewKey = `${configKey}|${dataVersion}|${startMs}|${endMs}|${user?.email ?? ''}|${refreshKey}|${config.grouping}`;
 
     // Skip if we already generated for this exact configuration
     if (lastPreviewKeyRef.current === previewKey) {
