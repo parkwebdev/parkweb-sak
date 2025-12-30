@@ -993,18 +993,6 @@ export default function ReportBuilder() {
                   Export Now
                 </Button>
               </div>
-              {config.format === 'pdf' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setRefreshKey(k => k + 1)}
-                  className="w-full"
-                  disabled={isGenerating}
-                >
-                  <RefreshCcw01 className="mr-2 h-4 w-4" />
-                  Refresh Preview
-                </Button>
-              )}
             </>
           ) : (
             <div className="flex gap-2">
