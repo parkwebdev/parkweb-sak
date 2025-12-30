@@ -34,6 +34,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { PdfJsViewer } from '@/components/pdf/PdfJsViewer';
 import { PdfIcon, CsvIcon } from '@/components/analytics/ExportIcons';
 import { cn } from '@/lib/utils';
@@ -663,6 +664,8 @@ export default function ReportBuilder() {
                     </div>
                   </div>
 
+                  <Separator />
+
                   {/* Business Outcomes */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -700,6 +703,8 @@ export default function ReportBuilder() {
                       ))}
                     </div>
                   </div>
+
+                  <Separator />
 
                   {/* Traffic Analytics */}
                   <div className="space-y-2">
@@ -739,6 +744,8 @@ export default function ReportBuilder() {
                     </div>
                   </div>
 
+                  <Separator />
+
                   {/* Leads Analytics */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -772,6 +779,8 @@ export default function ReportBuilder() {
                     </div>
                   </div>
 
+                  <Separator />
+
                   {/* Agent Data */}
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Agent Data</p>
@@ -786,6 +795,8 @@ export default function ReportBuilder() {
                       </div>
                     </div>
                   </div>
+
+                  <Separator />
 
                   {/* Export Options */}
                   <div className="space-y-2">
