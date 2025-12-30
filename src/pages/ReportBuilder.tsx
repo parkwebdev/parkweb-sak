@@ -977,19 +977,19 @@ export default function ReportBuilder() {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
+                  size="default"
                   onClick={() => setStep('schedule')}
                   className="flex-1"
                   disabled={isExporting}
                 >
-                  <FileCheck02 className="mr-2 h-4 w-4" />
                   Schedule
                 </Button>
                 <Button
+                  size="default"
                   onClick={handleExport}
                   loading={isExporting}
                   className="flex-1"
                 >
-                  <Download02 className="mr-2 h-4 w-4" />
                   Export Now
                 </Button>
               </div>
