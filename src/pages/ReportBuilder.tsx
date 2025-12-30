@@ -7,7 +7,7 @@
  * @page
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateBeautifulPDF } from '@/lib/pdf-generator';
 import { generateCSVReport } from '@/lib/report-export';
@@ -206,12 +206,16 @@ export default function ReportBuilder() {
     }
   }, []);
 
+  // === Memoized comparison dates (stable references) ===
+  const comparisonStartDate = useMemo(() => subDays(startDate, 30), [startDate]);
+  const comparisonEndDate = useMemo(() => subDays(endDate, 30), [endDate]);
+
   // === Fetch Analytics Data ===
   const data = useAnalyticsData({
     startDate,
     endDate,
-    comparisonStartDate: subDays(startDate, 30),
-    comparisonEndDate: subDays(endDate, 30),
+    comparisonStartDate,
+    comparisonEndDate,
     comparisonMode: false,
     filters: { leadStatus: 'all', conversationStatus: 'all' },
   });
@@ -226,12 +230,6 @@ export default function ReportBuilder() {
     [data.conversationStats]
   );
 
-  // === PDF Data (memoized) - only compute when not loading ===
-  const pdfData = useMemo(() => {
-    if (isDataLoading) return null;
-    return buildPDFData(data, peakActivityData);
-  }, [data, peakActivityData, isDataLoading]);
-
   // === Stable config key for dependency tracking ===
   const configKey = useMemo(() => JSON.stringify(config), [config]);
 
@@ -242,8 +240,20 @@ export default function ReportBuilder() {
   // === Stable data version key (primitives only) to prevent re-renders ===
   const dataVersion = useMemo(() => {
     if (isDataLoading) return null;
-    return `${data.totalConversations}-${data.totalLeads}-${data.conversionRate}-${data.totalMessages}`;
-  }, [isDataLoading, data.totalConversations, data.totalLeads, data.conversionRate, data.totalMessages]);
+    // Include booking total to detect booking data changes
+    return `${data.totalConversations}-${data.totalLeads}-${data.conversionRate}-${data.totalMessages}-${data.bookingStats?.totalBookings ?? 0}`;
+  }, [isDataLoading, data.totalConversations, data.totalLeads, data.conversionRate, data.totalMessages, data.bookingStats?.totalBookings]);
+
+  // === PDF Data - computed from stable dataVersion ===
+  // Only recomputes when dataVersion changes (not on every data object reference change)
+  const pdfData = useMemo(() => {
+    if (!dataVersion) return null;
+    return buildPDFData(data, peakActivityData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataVersion, peakActivityData]);
+
+  // === Generation guard ref to prevent duplicate generations ===
+  const lastPreviewKeyRef = useRef<string | null>(null);
 
   // === CSV Export Data ===
   const analyticsExportData = useMemo(() => buildAnalyticsExportData({
@@ -287,14 +297,26 @@ export default function ReportBuilder() {
     if (config.format !== 'pdf') {
       setPdfArrayBuffer(null);
       setIsGenerating(false);
+      lastPreviewKeyRef.current = null;
       return;
     }
 
-    // Wait for data - but don't set isGenerating (let isDataLoading handle UI)
+    // Wait for data to be ready
     if (!dataVersion || !pdfData) {
       return;
     }
 
+    // Build a unique key for this preview configuration
+    const previewKey = `${configKey}|${dataVersion}|${startMs}|${endMs}|${user?.email ?? ''}|${refreshKey}`;
+
+    // Skip if we already generated for this exact configuration
+    if (lastPreviewKeyRef.current === previewKey) {
+      logger.debug('PDF preview skipped - same key', { previewKey });
+      return;
+    }
+
+    logger.debug('PDF preview generation starting', { previewKey });
+    
     let cancelled = false;
 
     const generatePreview = async () => {
@@ -313,10 +335,12 @@ export default function ReportBuilder() {
         if (!cancelled) {
           const arrayBuffer = await blob.arrayBuffer();
           setPdfArrayBuffer(arrayBuffer);
+          lastPreviewKeyRef.current = previewKey;
+          logger.debug('PDF preview generation complete', { previewKey });
         }
       } catch (err) {
         if (!cancelled) {
-          console.error('Failed to generate PDF preview:', err);
+          logger.error('Failed to generate PDF preview:', err);
           setPreviewError(err instanceof Error ? err.message : 'Failed to generate preview');
         }
       } finally {
@@ -333,7 +357,8 @@ export default function ReportBuilder() {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [configKey, dataVersion, startMs, endMs, user?.email, refreshKey, pdfData, config, startDate, endDate]);
+    // ONLY stable primitives in dependencies - no object references!
+  }, [configKey, dataVersion, startMs, endMs, user?.email, refreshKey]);
 
   // === Export Handler ===
   const handleExport = useCallback(async () => {
