@@ -118,27 +118,12 @@ export function PdfThumbnailSidebar({
   }, [pdfDoc]);
 
   return (
-    <>
-      {/* Toggle button when sidebar is closed */}
-      {!isOpen && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggle}
-          className="absolute left-2 top-2 z-10 h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border border-border shadow-sm"
-          aria-label="Show page thumbnails"
-        >
-          <LayoutLeft size={16} />
-        </Button>
+    <div
+      className={cn(
+        'flex-shrink-0 border-r border-border bg-muted/50 transition-all duration-200 overflow-hidden',
+        isOpen ? 'w-32' : 'w-0'
       )}
-
-      {/* Sidebar */}
-      <div
-        className={cn(
-          'flex-shrink-0 border-r border-border bg-muted/50 transition-all duration-200 overflow-hidden',
-          isOpen ? 'w-32' : 'w-0'
-        )}
-      >
+    >
         <div className="h-full flex flex-col">
           {/* Sidebar header */}
           <div className="flex items-center justify-between p-2 border-b border-border bg-background/50">
@@ -191,8 +176,7 @@ export function PdfThumbnailSidebar({
             ))}
           </div>
         </div>
-      </div>
-    </>
+    </div>
   );
 }
 
