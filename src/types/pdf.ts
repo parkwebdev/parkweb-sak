@@ -2,6 +2,7 @@
  * PDF Report Types
  * 
  * Type definitions for PDF report generation.
+ * Synchronized with ReportConfig and analytics data structures.
  * 
  * @module types/pdf
  */
@@ -15,9 +16,18 @@
 export type ReportType = 'summary' | 'detailed' | 'comparison';
 
 /**
+ * Data grouping interval for reports
+ */
+export type ReportGrouping = 'day' | 'week' | 'month';
+
+/**
  * PDF data structure containing all possible report data
  */
 export interface PDFData {
+  // ============================================================================
+  // KPI METRICS
+  // ============================================================================
+  
   /** Total number of conversations */
   totalConversations?: number;
   /** Percentage change in conversations vs previous period */
@@ -28,6 +38,11 @@ export interface PDFData {
   leadsChange?: number;
   /** Lead conversion rate percentage */
   conversionRate?: number;
+
+  // ============================================================================
+  // CONVERSATION DATA
+  // ============================================================================
+  
   /** Daily conversation statistics */
   conversationStats?: Array<{ 
     date: string; 
@@ -48,6 +63,11 @@ export interface PDFData {
     peakTime: string; 
     peakValue: number;
   };
+
+  // ============================================================================
+  // LEAD DATA
+  // ============================================================================
+  
   /** Daily lead statistics */
   leadStats?: Array<{ 
     date: string; 
@@ -60,6 +80,21 @@ export interface PDFData {
     sessions: number; 
     cvr: number;
   }>;
+  /** Lead conversion trend with stage breakdown */
+  leadConversionTrend?: Array<{
+    date: string;
+    total: number;
+    new?: number;
+    contacted?: number;
+    qualified?: number;
+    won?: number;
+    lost?: number;
+  }>;
+
+  // ============================================================================
+  // BOOKING DATA
+  // ============================================================================
+  
   /** Booking statistics by location */
   bookingStats?: Array<{ 
     location: string; 
@@ -77,6 +112,11 @@ export interface PDFData {
     cancelled: number; 
     noShow: number;
   }>;
+
+  // ============================================================================
+  // SATISFACTION DATA
+  // ============================================================================
+  
   /** Customer satisfaction statistics */
   satisfactionStats?: { 
     average_rating: number; 
@@ -86,6 +126,12 @@ export interface PDFData {
       count: number;
     }>;
   };
+  /** CSAT distribution with percentages */
+  csatDistribution?: Array<{
+    rating: number;
+    count: number;
+    percentage: number;
+  }>;
   /** Recent customer feedback entries */
   recentFeedback?: Array<{ 
     rating: number; 
@@ -93,6 +139,11 @@ export interface PDFData {
     createdAt: string; 
     triggerType: string;
   }>;
+
+  // ============================================================================
+  // AI PERFORMANCE DATA
+  // ============================================================================
+  
   /** AI agent performance metrics */
   aiPerformanceStats?: { 
     containment_rate: number; 
@@ -101,6 +152,17 @@ export interface PDFData {
     human_takeover: number; 
     total_conversations: number;
   };
+  /** AI performance trend over time */
+  aiPerformanceTrend?: Array<{
+    date: string;
+    containment_rate: number;
+    resolution_rate: number;
+  }>;
+
+  // ============================================================================
+  // TRAFFIC DATA
+  // ============================================================================
+  
   /** Traffic source breakdown */
   trafficSources?: Array<{ 
     source: string; 
@@ -117,6 +179,11 @@ export interface PDFData {
     email: number; 
     referral: number;
   }>;
+
+  // ============================================================================
+  // PAGE DATA
+  // ============================================================================
+  
   /** Top page performance metrics */
   topPages?: Array<{ 
     page: string; 
@@ -137,59 +204,171 @@ export interface PDFData {
     count: number; 
     percentage: number;
   }>;
+
+  // ============================================================================
+  // GEOGRAPHY DATA
+  // ============================================================================
+  
   /** Visitor geographic distribution */
   visitorLocations?: Array<{ 
     country: string; 
     visitors: number; 
     percentage: number;
   }>;
+  /** City-level visitor data */
+  visitorCities?: Array<{
+    city: string;
+    country: string;
+    visitors: number;
+  }>;
+
+  // ============================================================================
+  // USAGE & PERFORMANCE DATA
+  // ============================================================================
+  
+  /** Usage metrics over time */
+  usageMetrics?: Array<{
+    date: string;
+    conversations: number;
+    messages: number;
+    api_calls: number;
+  }>;
+  /** Agent performance breakdown */
+  agentPerformance?: Array<{
+    agent_name: string;
+    total_conversations: number;
+    avg_response_time: number;
+    satisfaction_score: number;
+  }>;
 }
 
 /**
  * PDF report configuration options
  * Controls which sections and visualizations are included
+ * 
+ * Note: This should stay synchronized with ReportConfig in BuildReportSheet.tsx
  */
 export interface PDFConfig {
+  // ============================================================================
+  // REPORT SETTINGS
+  // ============================================================================
+  
+  /** Report type determining level of detail */
+  type?: ReportType;
+  /** Data grouping interval */
+  grouping?: ReportGrouping;
+
+  // ============================================================================
+  // GLOBAL TOGGLES
+  // ============================================================================
+  
   /** Include key performance indicator cards */
   includeKPIs?: boolean;
   /** Include chart visualizations */
   includeCharts?: boolean;
   /** Include data tables */
   includeTables?: boolean;
+
+  // ============================================================================
+  // CONVERSATION SECTION
+  // ============================================================================
+  
   /** Include conversations section */
   includeConversations?: boolean;
   /** Include conversation funnel visualization */
   includeConversationFunnel?: boolean;
   /** Include peak activity metrics */
   includePeakActivity?: boolean;
+
+  // ============================================================================
+  // LEADS SECTION
+  // ============================================================================
+  
   /** Include leads section */
   includeLeads?: boolean;
   /** Include lead source breakdown */
   includeLeadSourceBreakdown?: boolean;
   /** Include lead conversion trend */
   includeLeadConversionTrend?: boolean;
+
+  // ============================================================================
+  // BOOKINGS SECTION
+  // ============================================================================
+  
   /** Include bookings section */
   includeBookings?: boolean;
   /** Include booking trend chart */
   includeBookingTrend?: boolean;
+
+  // ============================================================================
+  // SATISFACTION SECTION
+  // ============================================================================
+  
   /** Include satisfaction metrics */
   includeSatisfaction?: boolean;
+  /** Include CSAT distribution chart */
+  includeCSATDistribution?: boolean;
   /** Include customer feedback section */
   includeCustomerFeedback?: boolean;
+
+  // ============================================================================
+  // AI PERFORMANCE SECTION
+  // ============================================================================
+  
   /** Include AI performance metrics */
   includeAIPerformance?: boolean;
+  /** Include AI performance trend over time */
+  includeAIPerformanceTrend?: boolean;
+
+  // ============================================================================
+  // TRAFFIC SECTION
+  // ============================================================================
+  
   /** Include traffic sources */
   includeTrafficSources?: boolean;
   /** Include traffic source trend */
   includeTrafficSourceTrend?: boolean;
+
+  // ============================================================================
+  // PAGES SECTION
+  // ============================================================================
+  
   /** Include top pages analysis */
   includeTopPages?: boolean;
   /** Include page engagement metrics */
   includePageEngagement?: boolean;
   /** Include page depth distribution */
   includePageDepth?: boolean;
+
+  // ============================================================================
+  // GEOGRAPHY SECTION
+  // ============================================================================
+  
   /** Include visitor location data */
   includeVisitorLocations?: boolean;
-  /** Report type determining level of detail */
-  type?: ReportType;
+  /** Include city-level data */
+  includeVisitorCities?: boolean;
+
+  // ============================================================================
+  // USAGE & PERFORMANCE SECTION
+  // ============================================================================
+  
+  /** Include usage metrics (conversations, messages, API calls) */
+  includeUsageMetrics?: boolean;
+  /** Include agent performance breakdown */
+  includeAgentPerformance?: boolean;
 }
+
+/**
+ * Maximum row limits for PDF tables to prevent overflow
+ */
+export const PDF_TABLE_LIMITS = {
+  /** Max rows for standard tables */
+  DEFAULT: 20,
+  /** Max rows for feedback/comments */
+  FEEDBACK: 10,
+  /** Max data points for charts */
+  CHART_POINTS: 30,
+  /** Max items for pie/donut charts */
+  PIE_SEGMENTS: 8,
+} as const;
