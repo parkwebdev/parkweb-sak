@@ -25,7 +25,7 @@ const kpiStyles = StyleSheet.create({
   
   value: {
     fontSize: FONT_SIZE.XL,
-    fontWeight: 700,
+    fontWeight: 800,
     color: colors.primary,
     marginBottom: SPACING.XS,
   },
