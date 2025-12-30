@@ -11,10 +11,12 @@ import { PDFLogo } from './PDFLogo';
 
 const headerStyles = StyleSheet.create({
   container: {
-    backgroundColor: colors.headerBg,
+    backgroundColor: colors.white,
     paddingHorizontal: PAGE.MARGIN,
-    paddingTop: SPACING.XL,
-    paddingBottom: SPACING.XL,
+    paddingTop: SPACING.LG,
+    paddingBottom: SPACING.LG,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   
   row: {
@@ -42,29 +44,28 @@ const headerStyles = StyleSheet.create({
   },
   
   orgName: {
-    fontSize: FONT_SIZE.XXL,
+    fontSize: FONT_SIZE.XL,
     fontWeight: 700,
-    color: colors.headerText,
+    color: colors.primary,
     marginBottom: SPACING.XS,
   },
   
   reportTitle: {
-    fontSize: FONT_SIZE.LG,
-    color: colors.headerSubtext,
+    fontSize: FONT_SIZE.MD,
+    color: colors.secondary,
   },
   
   dateRange: {
-    fontSize: FONT_SIZE.MD,
-    color: colors.headerText,
+    fontSize: FONT_SIZE.SM,
+    color: colors.primary,
     marginBottom: SPACING.XS,
   },
   
   generatedAt: {
-    fontSize: FONT_SIZE.SM,
-    color: colors.headerSubtext,
+    fontSize: FONT_SIZE.XS,
+    color: colors.muted,
   },
 });
-
 interface PDFHeaderProps {
   orgName: string;
   startDate: Date;
@@ -87,7 +88,7 @@ export function PDFHeader({ orgName, startDate, endDate, reportType = 'detailed'
       <View style={headerStyles.row}>
         <View style={headerStyles.left}>
           <View style={headerStyles.logoContainer}>
-            <PDFLogo size={36} color={colors.headerText} />
+            <PDFLogo size={32} color={colors.primary} />
           </View>
           <View style={headerStyles.textContainer}>
             <Text style={headerStyles.orgName}>{orgName}</Text>

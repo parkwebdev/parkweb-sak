@@ -15,15 +15,16 @@ const tableStyles = StyleSheet.create({
   
   headerRow: {
     flexDirection: 'row',
-    backgroundColor: colors.primary,
-    borderRadius: 6,
+    backgroundColor: colors.bgMuted,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
     minHeight: 32,
   },
   
   headerCell: {
     padding: SPACING.SM,
     paddingVertical: 10,
-    color: colors.white,
+    color: colors.primary,
     fontSize: FONT_SIZE.SM,
     fontWeight: 600,
   },
@@ -50,7 +51,6 @@ const tableStyles = StyleSheet.create({
     color: colors.primary,
   },
 });
-
 interface ColumnDef {
   key: string;
   header: string;

@@ -24,15 +24,15 @@ const kpiStyles = StyleSheet.create({
   },
   
   value: {
-    fontSize: FONT_SIZE.XXL,
-    fontWeight: 700,
+    fontSize: FONT_SIZE.XL,
+    fontWeight: 600,
     color: colors.primary,
     marginBottom: SPACING.XS,
   },
   
   label: {
     fontSize: FONT_SIZE.SM,
-    color: colors.secondary,
+    color: colors.muted,
     marginBottom: SPACING.XS,
   },
   
