@@ -52,19 +52,12 @@ export function PdfThumbnailSidebar({
       try {
         const page = await pdfDoc.getPage(pageNum);
         const viewport = page.getViewport({ scale: THUMBNAIL_SCALE });
-        
-        // Account for device pixel ratio
-        const pixelRatio = window.devicePixelRatio || 1;
 
         const context = canvas.getContext('2d');
         if (!context) return;
 
-        canvas.width = Math.floor(viewport.width * pixelRatio);
-        canvas.height = Math.floor(viewport.height * pixelRatio);
-        canvas.style.width = `${viewport.width}px`;
-        canvas.style.height = `${viewport.height}px`;
-
-        context.scale(pixelRatio, pixelRatio);
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
 
         await page.render({
           canvasContext: context,
