@@ -34,7 +34,7 @@ import AnalyticsWrapper from "./pages/AnalyticsWrapper";
 import SettingsWrapper from "./pages/SettingsWrapper";
 import PlannerWrapper from "./pages/PlannerWrapper";
 import BookingComponentsTest from "./pages/BookingComponentsTest";
-import PDFTestPage from "./pages/PDFTestPage";
+import ReportBuilder from "./pages/ReportBuilder";
 
 /** React Query client instance with default configuration */
 const queryClient = new QueryClient();
@@ -80,9 +80,7 @@ const App = () => (
                     <Route path="/leads" element={<LeadsWrapper />} />
                     <Route path="/analytics" element={<AnalyticsWrapper />} />
                     <Route path="/settings" element={<SettingsWrapper />} />
-                    
-                    {/* PDF test route */}
-                    <Route path="/pdf-test" element={<PDFTestPage />} />
+                    <Route path="/report-builder" element={<ReportBuilder />} />
                     
                     {/* Dev-only routes inside layout */}
                     {import.meta.env.DEV && (
