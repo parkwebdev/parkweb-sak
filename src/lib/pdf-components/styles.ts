@@ -143,44 +143,4 @@ export const styles = StyleSheet.create({
   },
 });
 
-// Table styles
-export const tableStyles = StyleSheet.create({
-  table: {
-    width: '100%',
-    marginBottom: SPACING.MD,
-  },
-  
-  headerRow: {
-    flexDirection: 'row',
-    backgroundColor: colors.primary,
-    borderRadius: 6,
-  },
-  
-  headerCell: {
-    flex: 1,
-    padding: SPACING.SM,
-    color: colors.white,
-    fontSize: FONT_SIZE.SM,
-    fontWeight: 600,
-  },
-  
-  row: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.white,
-  },
-  
-  rowAlt: {
-    flexDirection: 'row',
-    backgroundColor: colors.bgAlt,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  
-  cell: {
-    flex: 1,
-    padding: SPACING.SM,
-    fontSize: FONT_SIZE.BASE,
-  },
-});
+// Note: Table styles are defined locally in PDFTable.tsx for cleaner encapsulation
