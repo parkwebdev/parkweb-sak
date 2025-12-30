@@ -1,7 +1,7 @@
 /**
  * PDF Table Component
  * 
- * Renders data tables with proper styling and alternating rows.
+ * Renders data tables with proper styling and page break handling.
  */
 
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
@@ -16,13 +16,13 @@ const tableStyles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    minHeight: 28,
+    borderRadius: 6,
+    minHeight: 32,
   },
   
   headerCell: {
     padding: SPACING.SM,
+    paddingVertical: 10,
     color: colors.white,
     fontSize: FONT_SIZE.SM,
     fontWeight: 600,
@@ -31,16 +31,17 @@ const tableStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: colors.bgAlt,
-    minHeight: 26,
+    borderBottomColor: colors.border,
+    minHeight: 28,
+    backgroundColor: colors.white,
   },
   
   rowAlt: {
     flexDirection: 'row',
-    backgroundColor: colors.bg,
+    backgroundColor: colors.bgAlt,
     borderBottomWidth: 1,
-    borderBottomColor: colors.bgAlt,
-    minHeight: 26,
+    borderBottomColor: colors.border,
+    minHeight: 28,
   },
   
   cell: {
@@ -86,8 +87,8 @@ export function PDFTable({ columns, data, maxRows = 15 }: PDFTableProps) {
 
   return (
     <View style={tableStyles.table}>
-      {/* Header */}
-      <View style={tableStyles.headerRow}>
+      {/* Header - wrap={false} prevents header from being orphaned */}
+      <View style={tableStyles.headerRow} wrap={false}>
         {columns.map((col) => (
           <Text key={col.key} style={getCellStyle(col, true)}>
             {col.header}
@@ -95,11 +96,12 @@ export function PDFTable({ columns, data, maxRows = 15 }: PDFTableProps) {
         ))}
       </View>
       
-      {/* Rows */}
+      {/* Rows - each row tries to stay together */}
       {displayData.map((row, rowIndex) => (
         <View 
           key={rowIndex} 
           style={rowIndex % 2 === 0 ? tableStyles.row : tableStyles.rowAlt}
+          wrap={false}
         >
           {columns.map((col) => (
             <Text key={col.key} style={getCellStyle(col)}>

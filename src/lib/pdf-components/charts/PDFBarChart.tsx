@@ -64,7 +64,7 @@ export function PDFBarChart({
   const { scale: xScale, bandwidth } = scaleBand(labels, [0, plotWidth], 8);
 
   return (
-    <View style={{ width, height, marginBottom: 8 }}>
+    <View style={{ width, height, marginBottom: 8 }} wrap={false}>
       <Svg width={width} height={height}>
         <Rect x={0} y={0} width={width} height={height} fill={colors.white} />
 
@@ -79,7 +79,7 @@ export function PDFBarChart({
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke={colors.bgAlt}
+                  stroke={colors.bgMuted}
                   strokeWidth={1}
                 />
                 <SvgText
@@ -112,7 +112,7 @@ export function PDFBarChart({
                 width={bandwidth}
                 height={barHeight}
                 fill={color}
-                rx={2}
+                rx={3}
               />
             );
           })}
@@ -187,7 +187,7 @@ export function PDFGroupedBarChart({
   const barWidth = (groupWidth - 4) / series.length;
 
   return (
-    <View style={{ width, height, marginBottom: 8 }}>
+    <View style={{ width, height, marginBottom: 8 }} wrap={false}>
       <Svg width={width} height={height}>
         <Rect x={0} y={0} width={width} height={height} fill={colors.white} />
 
@@ -202,7 +202,7 @@ export function PDFGroupedBarChart({
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke={colors.bgAlt}
+                  stroke={colors.bgMuted}
                   strokeWidth={1}
                 />
                 <SvgText
@@ -240,7 +240,7 @@ export function PDFGroupedBarChart({
                       width={barWidth - 2}
                       height={barHeight}
                       fill={s.color}
-                      rx={1}
+                      rx={2}
                     />
                   );
                 })}
@@ -281,7 +281,7 @@ export function PDFGroupedBarChart({
                 width={10}
                 height={10}
                 fill={s.color}
-                rx={1}
+                rx={2}
               />
               <SvgText
                 x={padding.left + i * 70 + 14}
@@ -304,8 +304,8 @@ function PDFBarChartEmpty({ width }: { width: number; height: number }) {
     <View style={{ 
       width, 
       height: 60, 
-      backgroundColor: colors.bg, 
-      borderRadius: 4,
+      backgroundColor: colors.bgAlt, 
+      borderRadius: 6,
       justifyContent: 'center',
       alignItems: 'center',
     }}>
@@ -340,7 +340,7 @@ export function PDFHorizontalBarChart({
   const { scale: yScale, bandwidth } = scaleBand(labels, [0, plotHeight], 4);
 
   return (
-    <View style={{ width, height: chartHeight, marginBottom: 8 }}>
+    <View style={{ width, height: chartHeight, marginBottom: 8 }} wrap={false}>
       <Svg width={width} height={chartHeight}>
         <Rect x={0} y={0} width={width} height={chartHeight} fill={colors.white} />
 
@@ -373,7 +373,7 @@ export function PDFHorizontalBarChart({
                   width={barWidth}
                   height={bandwidth}
                   fill={color}
-                  rx={2}
+                  rx={3}
                 />
                 
                 {/* Value */}

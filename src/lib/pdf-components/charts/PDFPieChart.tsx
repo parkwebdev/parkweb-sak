@@ -76,7 +76,7 @@ export function PDFPieChart({
   });
 
   return (
-    <View style={{ width, height, marginBottom: 8 }}>
+    <View style={{ width, height, marginBottom: 8 }} wrap={false}>
       <Svg width={width} height={height}>
         {/* Pie segments */}
         <G>
@@ -168,8 +168,8 @@ function PDFPieChartEmpty({ width }: { width: number; height: number }) {
     <View style={{ 
       width, 
       height: 60, 
-      backgroundColor: colors.bg, 
-      borderRadius: 4,
+      backgroundColor: colors.bgAlt, 
+      borderRadius: 6,
       justifyContent: 'center',
       alignItems: 'center',
     }}>

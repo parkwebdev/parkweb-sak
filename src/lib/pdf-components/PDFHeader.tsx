@@ -14,7 +14,7 @@ const headerStyles = StyleSheet.create({
     backgroundColor: colors.headerBg,
     paddingHorizontal: PAGE.MARGIN,
     paddingTop: SPACING.XL,
-    paddingBottom: SPACING.LG,
+    paddingBottom: SPACING.XL,
   },
   
   row: {
@@ -63,13 +63,6 @@ const headerStyles = StyleSheet.create({
     fontSize: FONT_SIZE.SM,
     color: colors.headerSubtext,
   },
-  
-  accentLine: {
-    height: 2,
-    backgroundColor: colors.accentSubtle,
-    marginTop: SPACING.LG,
-    marginHorizontal: -PAGE.MARGIN,
-  },
 });
 
 interface PDFHeaderProps {
@@ -106,7 +99,6 @@ export function PDFHeader({ orgName, startDate, endDate, reportType = 'detailed'
           <Text style={headerStyles.generatedAt}>{generatedText}</Text>
         </View>
       </View>
-      <View style={headerStyles.accentLine} />
     </View>
   );
 }

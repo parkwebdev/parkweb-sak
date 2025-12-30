@@ -1,11 +1,11 @@
 /**
  * PDF KPI Cards Component
  * 
- * Displays key performance indicators in a card grid.
+ * Displays key performance indicators in a clean card grid.
  */
 
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
-import { colors, SPACING, FONT_SIZE, PAGE } from './styles';
+import { colors, SPACING, FONT_SIZE } from './styles';
 
 const kpiStyles = StyleSheet.create({
   container: {
@@ -16,15 +16,15 @@ const kpiStyles = StyleSheet.create({
   
   card: {
     flex: 1,
-    backgroundColor: colors.bg,
-    borderRadius: 6,
-    padding: SPACING.MD,
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    padding: SPACING.LG,
     borderWidth: 1,
-    borderColor: colors.bgAlt,
+    borderColor: colors.border,
   },
   
   value: {
-    fontSize: FONT_SIZE.XL,
+    fontSize: FONT_SIZE.XXL,
     fontWeight: 700,
     color: colors.primary,
     marginBottom: SPACING.XS,
@@ -70,7 +70,7 @@ interface PDFKPICardsProps {
 
 export function PDFKPICards({ kpis }: PDFKPICardsProps) {
   return (
-    <View style={kpiStyles.container}>
+    <View style={kpiStyles.container} wrap={false}>
       {kpis.map((kpi, index) => {
         const changeStyle = kpi.change == null 
           ? kpiStyles.changeNeutral 

@@ -86,7 +86,7 @@ export function PDFStackedBarChart({
     }));
 
   return (
-    <View style={{ width, height, marginBottom: 8 }}>
+    <View style={{ width, height, marginBottom: 8 }} wrap={false}>
       <Svg width={width} height={height}>
         <Rect x={0} y={0} width={width} height={height} fill={colors.white} />
 
@@ -101,7 +101,7 @@ export function PDFStackedBarChart({
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke={colors.bgAlt}
+                  stroke={colors.bgMuted}
                   strokeWidth={1}
                 />
                 <SvgText
@@ -174,7 +174,7 @@ export function PDFStackedBarChart({
                 width={10}
                 height={10}
                 fill={s.color}
-                rx={1}
+                rx={2}
               />
               <SvgText
                 x={padding.left + i * 70 + 14}
@@ -197,8 +197,8 @@ function PDFStackedBarChartEmpty({ width }: { width: number; height: number }) {
     <View style={{ 
       width, 
       height: 60, 
-      backgroundColor: colors.bg, 
-      borderRadius: 4,
+      backgroundColor: colors.bgAlt, 
+      borderRadius: 6,
       justifyContent: 'center',
       alignItems: 'center',
     }}>
