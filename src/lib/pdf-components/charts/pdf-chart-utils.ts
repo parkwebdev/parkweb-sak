@@ -177,9 +177,9 @@ export const CHART_COLOR_ARRAY = [
   '#f43f5e',  // rose-500
 ];
 
-/** Chart dimensions */
+/** Chart dimensions - matches PAGE.CONTENT_WIDTH exactly */
 export const CHART_DIMS = {
-  width: 515,
+  width: 515.28,
   height: 180,
   padding: { top: 20, right: 20, bottom: 30, left: 50 },
 } as const;

@@ -37,8 +37,7 @@ export function PDFSection({ title, children, break: pageBreak }: PDFSectionProp
     <View 
       style={sectionStyles.container} 
       break={pageBreak}
-      // Keeps section title together with at least some content
-      minPresenceAhead={60}
+      wrap={false}
     >
       <Text style={sectionStyles.title}>{title}</Text>
       <View style={sectionStyles.content}>{children}</View>
