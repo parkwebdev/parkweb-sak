@@ -172,7 +172,7 @@ export function PdfJsViewer({
     };
   }, [data, onLoad, onError]);
 
-  // Render a single page to canvas
+  // Render a single page to canvas with high-DPI support
   const renderPage = useCallback(
     async (pageNum: number) => {
       if (!pdfDoc) return;
@@ -182,13 +182,26 @@ export function PdfJsViewer({
 
       try {
         const page = await pdfDoc.getPage(pageNum);
+        
+        // Account for device pixel ratio for crisp rendering on Retina displays
+        const pixelRatio = window.devicePixelRatio || 1;
+        
+        // Create viewport at the desired CSS scale
         const viewport = page.getViewport({ scale });
 
         const context = canvas.getContext('2d');
         if (!context) return;
 
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+        // Set canvas buffer size to physical pixels (scaled by DPR)
+        canvas.width = Math.floor(viewport.width * pixelRatio);
+        canvas.height = Math.floor(viewport.height * pixelRatio);
+        
+        // Set CSS size to maintain visual dimensions
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+        
+        // Scale the context to account for the higher resolution
+        context.scale(pixelRatio, pixelRatio);
 
         await page.render({
           canvasContext: context,
