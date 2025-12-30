@@ -10,15 +10,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Expand01, LayoutLeft, RefreshCcw01 } from '@untitledui/icons';
-import { PdfThumbnailSidebar, ThumbnailRotationMode } from './PdfThumbnailSidebar';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Loading02,
+  ZoomIn,
+  ZoomOut,
+  ChevronLeft,
+  ChevronRight,
+  Expand01,
+} from '@untitledui/icons';
 
 // Import the worker directly - Vite will bundle it locally
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -34,8 +33,6 @@ interface PdfJsViewerProps {
   showDiagnostics?: boolean;
   /** Start with fit-to-width enabled */
   initialFitToWidth?: boolean;
-  /** Show thumbnail sidebar (default: true for multi-page PDFs) */
-  showThumbnails?: boolean;
   /** Callback when PDF loads successfully */
   onLoad?: (numPages: number) => void;
   /** Callback when PDF fails to load */
@@ -60,7 +57,6 @@ export function PdfJsViewer({
   mode = 'all',
   showDiagnostics = false,
   initialFitToWidth = false,
-  showThumbnails = true,
   onLoad,
   onError,
 }: PdfJsViewerProps) {
@@ -72,8 +68,6 @@ export function PdfJsViewer({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pages, setPages] = useState<PageState[]>([]);
-  const [thumbnailsOpen, setThumbnailsOpen] = useState(false);
-  const [thumbnailRotationMode, setThumbnailRotationMode] = useState<ThumbnailRotationMode>('auto');
   const [diagnostics, setDiagnostics] = useState<DiagnosticsInfo>({
     version: pdfjsLib.version,
     workerSrc: '',
@@ -445,48 +439,6 @@ export function PdfJsViewer({
       {/* Toolbar */}
       <div className="flex items-center justify-between p-2 border-b border-border bg-background flex-shrink-0">
         <div className="flex items-center gap-2">
-          {/* Thumbnail toggle */}
-          {showThumbnails && numPages > 1 && (
-            <>
-              <Button
-                variant={thumbnailsOpen ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setThumbnailsOpen((prev) => !prev)}
-                className="h-7 w-7 p-0"
-                aria-label={thumbnailsOpen ? 'Hide page thumbnails' : 'Show page thumbnails'}
-                aria-pressed={thumbnailsOpen}
-              >
-                <LayoutLeft size={16} />
-              </Button>
-              <div className="w-px h-4 bg-border mx-1" />
-              {/* Rotation mode dropdown - only show when thumbnails are open */}
-              {thumbnailsOpen && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-xs gap-1"
-                      aria-label="Thumbnail rotation mode"
-                    >
-                      <RefreshCcw01 size={14} />
-                      <span className="hidden sm:inline capitalize">{thumbnailRotationMode}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuRadioGroup
-                      value={thumbnailRotationMode}
-                      onValueChange={(value) => setThumbnailRotationMode(value as ThumbnailRotationMode)}
-                    >
-                      <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="respect">Respect PDF rotation</DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="ignore">Ignore PDF rotation</DropdownMenuRadioItem>
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </>
-          )}
           <Button
             variant="ghost"
             size="sm"
@@ -559,20 +511,8 @@ export function PdfJsViewer({
         )}
       </div>
 
-      {/* Main content area with optional thumbnail sidebar */}
+      {/* Main content area */}
       <div className="flex flex-1 min-h-0 min-w-0 overflow-hidden relative">
-        {/* Thumbnail Sidebar */}
-        {showThumbnails && numPages > 1 && (
-          <PdfThumbnailSidebar
-            pdfDoc={pdfDoc}
-            numPages={numPages}
-            currentPage={currentPage}
-            onPageClick={goToPage}
-            isOpen={thumbnailsOpen}
-            onToggle={() => setThumbnailsOpen((prev) => !prev)}
-            rotationMode={thumbnailRotationMode}
-          />
-        )}
 
         {/* PDF Pages */}
         <div ref={scrollContainerRef} className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
