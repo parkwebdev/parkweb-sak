@@ -51,13 +51,18 @@ export function PdfThumbnailSidebar({
 
       try {
         const page = await pdfDoc.getPage(pageNum);
-        const viewport = page.getViewport({ scale: THUMBNAIL_SCALE });
+        // Force upright thumbnails (some PDFs contain rotation metadata)
+        const viewport = page.getViewport({ scale: THUMBNAIL_SCALE, rotation: 0 });
 
         const context = canvas.getContext('2d');
         if (!context) return;
 
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        // Reset any prior transforms to avoid flipped/accumulated renders
+        context.setTransform(1, 0, 0, 1, 0, 0);
+
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
         await page.render({
           canvasContext: context,
