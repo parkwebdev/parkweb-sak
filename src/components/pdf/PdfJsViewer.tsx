@@ -10,7 +10,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Button } from '@/components/ui/button';
-import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from '@untitledui/icons';
+import { Loading02, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Expand01 } from '@untitledui/icons';
 
 // Import the worker directly - Vite will bundle it locally
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -24,6 +24,8 @@ interface PdfJsViewerProps {
   mode?: 'all' | 'single';
   /** Show diagnostics panel */
   showDiagnostics?: boolean;
+  /** Start with fit-to-width enabled */
+  initialFitToWidth?: boolean;
   /** Callback when PDF loads successfully */
   onLoad?: (numPages: number) => void;
   /** Callback when PDF fails to load */
@@ -47,6 +49,7 @@ export function PdfJsViewer({
   initialScale = 1.5,
   mode = 'all',
   showDiagnostics = false,
+  initialFitToWidth = false,
   onLoad,
   onError,
 }: PdfJsViewerProps) {
@@ -54,6 +57,7 @@ export function PdfJsViewer({
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(initialScale);
+  const [fitToWidth, setFitToWidth] = useState(initialFitToWidth);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pages, setPages] = useState<PageState[]>([]);
@@ -65,7 +69,9 @@ export function PdfJsViewer({
   });
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const canvasRefs = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  const basePageWidth = useRef<number>(0);
 
   // Load PDF document with worker fallback
   useEffect(() => {
@@ -140,6 +146,11 @@ export function PdfJsViewer({
 
         if (cancelled) return;
 
+        // Store the base page width (at scale 1) for fit-to-width calculations
+        const firstPage = await pdf.getPage(1);
+        const baseViewport = firstPage.getViewport({ scale: 1 });
+        basePageWidth.current = baseViewport.width;
+
         setPdfDoc(pdf);
         setNumPages(pdf.numPages);
         setPages(
@@ -171,6 +182,47 @@ export function PdfJsViewer({
       cancelled = true;
     };
   }, [data, onLoad, onError]);
+
+  // Calculate fit-to-width scale
+  const calculateFitToWidthScale = useCallback(() => {
+    if (!scrollContainerRef.current || basePageWidth.current === 0) return null;
+    
+    // Get container width minus padding (32px = 16px * 2 for p-4)
+    const containerWidth = scrollContainerRef.current.clientWidth - 32;
+    const newScale = containerWidth / basePageWidth.current;
+    
+    // Clamp between 0.5 and 3
+    return Math.max(0.5, Math.min(3, newScale));
+  }, []);
+
+  // Handle fit-to-width mode
+  useEffect(() => {
+    if (!fitToWidth || !pdfDoc) return;
+
+    const updateScale = () => {
+      const newScale = calculateFitToWidthScale();
+      if (newScale !== null) {
+        setScale(newScale);
+      }
+    };
+
+    // Initial calculation
+    updateScale();
+
+    // Listen for container resize
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateScale();
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [fitToWidth, pdfDoc, calculateFitToWidthScale]);
 
   // Render a single page to canvas with high-DPI support
   const renderPage = useCallback(
@@ -235,9 +287,20 @@ export function PdfJsViewer({
     }
   }, [pdfDoc, numPages, scale, mode, currentPage, renderPage]);
 
-  // Zoom controls
-  const zoomIn = () => setScale((s) => Math.min(s + 0.25, 3));
-  const zoomOut = () => setScale((s) => Math.max(s - 0.25, 0.5));
+  // Zoom controls - disable fit-to-width when manually zooming
+  const zoomIn = () => {
+    setFitToWidth(false);
+    setScale((s) => Math.min(s + 0.25, 3));
+  };
+  const zoomOut = () => {
+    setFitToWidth(false);
+    setScale((s) => Math.max(s - 0.25, 0.5));
+  };
+
+  // Toggle fit-to-width mode
+  const toggleFitToWidth = () => {
+    setFitToWidth((prev) => !prev);
+  };
 
   // Page navigation (single page mode)
   const goToPrevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
@@ -323,6 +386,18 @@ export function PdfJsViewer({
           >
             <ZoomIn size={16} />
           </Button>
+          <div className="w-px h-4 bg-border mx-1" />
+          <Button
+            variant={fitToWidth ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={toggleFitToWidth}
+            className="h-7 px-2 text-xs gap-1"
+            aria-label="Fit to width"
+            aria-pressed={fitToWidth}
+          >
+            <Expand01 size={14} />
+            <span className="hidden sm:inline">Fit</span>
+          </Button>
         </div>
 
         {mode === 'single' && (
@@ -361,7 +436,7 @@ export function PdfJsViewer({
       </div>
 
       {/* PDF Pages */}
-      <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
+      <div ref={scrollContainerRef} className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
         <div
           ref={containerRef}
           className="flex flex-col items-center gap-4 p-4 bg-muted/30"
