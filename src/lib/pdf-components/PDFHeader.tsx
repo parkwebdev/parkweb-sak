@@ -11,12 +11,10 @@ import { PDFLogo } from './PDFLogo';
 
 const headerStyles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.primary,
     paddingHorizontal: PAGE.MARGIN,
     paddingTop: SPACING.LG,
     paddingBottom: SPACING.LG,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   
   row: {
@@ -46,18 +44,18 @@ const headerStyles = StyleSheet.create({
   orgName: {
     fontSize: FONT_SIZE.XL,
     fontWeight: 700,
-    color: colors.primary,
+    color: colors.white,
     marginBottom: SPACING.XS,
   },
   
   reportTitle: {
     fontSize: FONT_SIZE.MD,
-    color: colors.secondary,
+    color: colors.muted,
   },
   
   dateRange: {
     fontSize: FONT_SIZE.SM,
-    color: colors.primary,
+    color: colors.white,
     marginBottom: SPACING.XS,
   },
   
@@ -88,7 +86,7 @@ export function PDFHeader({ orgName, startDate, endDate, reportType = 'detailed'
       <View style={headerStyles.row}>
         <View style={headerStyles.left}>
           <View style={headerStyles.logoContainer}>
-            <PDFLogo size={32} color={colors.primary} />
+            <PDFLogo size={32} color={colors.white} />
           </View>
           <View style={headerStyles.textContainer}>
             <Text style={headerStyles.orgName}>{orgName}</Text>

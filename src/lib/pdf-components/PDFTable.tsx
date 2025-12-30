@@ -5,12 +5,13 @@
  */
 
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
+import { format, parseISO, isValid } from 'date-fns';
 import { colors, SPACING, FONT_SIZE } from './styles';
 
 const tableStyles = StyleSheet.create({
   table: {
     width: '100%',
-    marginBottom: SPACING.MD,
+    marginBottom: SPACING.SM,
   },
   
   headerRow: {
@@ -18,12 +19,12 @@ const tableStyles = StyleSheet.create({
     backgroundColor: colors.bgMuted,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    minHeight: 32,
+    minHeight: 22,
   },
   
   headerCell: {
-    padding: SPACING.SM,
-    paddingVertical: 10,
+    padding: SPACING.XS,
+    paddingVertical: 5,
     color: colors.primary,
     fontSize: FONT_SIZE.SM,
     fontWeight: 600,
@@ -33,7 +34,7 @@ const tableStyles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    minHeight: 28,
+    minHeight: 18,
     backgroundColor: colors.white,
   },
   
@@ -42,12 +43,13 @@ const tableStyles = StyleSheet.create({
     backgroundColor: colors.bgAlt,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    minHeight: 28,
+    minHeight: 18,
   },
   
   cell: {
-    padding: SPACING.SM,
-    fontSize: FONT_SIZE.BASE,
+    padding: SPACING.XS,
+    paddingVertical: 3,
+    fontSize: FONT_SIZE.SM,
     color: colors.primary,
   },
 });
@@ -82,6 +84,15 @@ export function PDFTable({ columns, data, maxRows = 15 }: PDFTableProps) {
   const formatValue = (value: string | number | null | undefined): string => {
     if (value == null) return '-';
     if (typeof value === 'number') return value.toLocaleString();
+    
+    // Check if it's an ISO date string (YYYY-MM-DD)
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      const parsed = parseISO(value);
+      if (isValid(parsed)) {
+        return format(parsed, 'MMM d, yyyy');
+      }
+    }
+    
     return String(value);
   };
 
