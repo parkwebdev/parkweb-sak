@@ -382,7 +382,7 @@ export default function ReportBuilder() {
     setIsExporting(true);
 
     try {
-      const reportName = `${config.type === 'summary' ? 'Summary' : config.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(startDate, 'MMM d')} to ${format(endDate, 'MMM d, yyyy')}`;
+      const reportName = `Analytics Report - ${format(startDate, 'MMM d')} to ${format(endDate, 'MMM d, yyyy')}`;
 
       const blob = config.format === 'csv'
         ? generateCSVReport(analyticsExportData, config, startDate, endDate, user?.email || 'User')
@@ -604,24 +604,6 @@ export default function ReportBuilder() {
                       <span className="text-sm font-medium">CSV</span>
                     </button>
                   </div>
-                </div>
-
-                {/* Report Type */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Report Style</Label>
-                  <Select
-                    value={config.type}
-                    onValueChange={(v) => updateConfig('type', v as ReportType)}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="summary">Summary</SelectItem>
-                      <SelectItem value="detailed">Detailed</SelectItem>
-                      <SelectItem value="comparison">Comparison</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 {/* Data Categories */}
