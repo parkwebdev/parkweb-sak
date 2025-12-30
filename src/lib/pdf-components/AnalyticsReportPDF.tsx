@@ -456,6 +456,146 @@ export function AnalyticsReportPDF({
               )}
             </PDFSection>
           )}
+
+          {/* Visitor Cities */}
+          {config.includeVisitorCities && data.visitorCities?.length && (
+            <PDFSection title="Top Cities">
+              {config.includeTables && (
+                <PDFTable
+                  columns={[
+                    { key: 'city', header: 'City' },
+                    { key: 'country', header: 'Country' },
+                    { key: 'visitors', header: 'Visitors', align: 'right' },
+                  ]}
+                  data={data.visitorCities.slice(0, 15)}
+                />
+              )}
+            </PDFSection>
+          )}
+
+          {/* Lead Conversion Trend */}
+          {config.includeLeadConversionTrend && data.leadConversionTrend?.length && (
+            <PDFSection title="Lead Conversion Trend">
+              {config.includeTables && (
+                <PDFTable
+                  columns={[
+                    { key: 'date', header: 'Date' },
+                    { key: 'total', header: 'Total', align: 'right' },
+                    { key: 'new', header: 'New', align: 'right' },
+                    { key: 'contacted', header: 'Contacted', align: 'right' },
+                    { key: 'qualified', header: 'Qualified', align: 'right' },
+                    { key: 'won', header: 'Won', align: 'right' },
+                    { key: 'lost', header: 'Lost', align: 'right' },
+                  ]}
+                  data={data.leadConversionTrend.slice(0, 20)}
+                />
+              )}
+            </PDFSection>
+          )}
+
+          {/* CSAT Distribution */}
+          {config.includeCSATDistribution && data.csatDistribution?.length && (
+            <PDFSection title="CSAT Rating Distribution">
+              {config.includeCharts && (
+                <PDFBarChart
+                  data={data.csatDistribution.map(d => ({ label: `${d.rating} Star`, value: d.count }))}
+                  valueKey="value"
+                  color={CHART_COLORS.warning}
+                />
+              )}
+              {config.includeTables && (
+                <PDFTable
+                  columns={[
+                    { key: 'ratingFormatted', header: 'Rating' },
+                    { key: 'count', header: 'Count', align: 'right' },
+                    { key: 'percentageFormatted', header: 'Percentage', align: 'right' },
+                  ]}
+                  data={data.csatDistribution.map(d => ({
+                    ...d,
+                    ratingFormatted: `${d.rating} ★`,
+                    percentageFormatted: `${d.percentage}%`,
+                  }))}
+                />
+              )}
+            </PDFSection>
+          )}
+
+          {/* AI Performance Trend */}
+          {config.includeAIPerformanceTrend && data.aiPerformanceTrend?.length && (
+            <PDFSection title="AI Performance Trend">
+              {config.includeCharts && (
+                <PDFLineChart
+                  data={data.aiPerformanceTrend}
+                  series={[
+                    { key: 'containment_rate', color: CHART_COLORS.primary, label: 'Containment' },
+                    { key: 'resolution_rate', color: CHART_COLORS.success, label: 'Resolution' },
+                  ]}
+                />
+              )}
+              {config.includeTables && (
+                <PDFTable
+                  columns={[
+                    { key: 'date', header: 'Date' },
+                    { key: 'containmentFormatted', header: 'Containment Rate', align: 'right' },
+                    { key: 'resolutionFormatted', header: 'Resolution Rate', align: 'right' },
+                  ]}
+                  data={data.aiPerformanceTrend.slice(0, 20).map(t => ({
+                    ...t,
+                    containmentFormatted: `${t.containment_rate}%`,
+                    resolutionFormatted: `${t.resolution_rate}%`,
+                  }))}
+                />
+              )}
+            </PDFSection>
+          )}
+
+          {/* Usage Metrics */}
+          {config.includeUsageMetrics && data.usageMetrics?.length && (
+            <PDFSection title="Usage Metrics">
+              {config.includeCharts && (
+                <PDFLineChart
+                  data={data.usageMetrics}
+                  series={[
+                    { key: 'conversations', color: CHART_COLORS.primary, label: 'Conversations' },
+                    { key: 'messages', color: CHART_COLORS.success, label: 'Messages' },
+                    { key: 'api_calls', color: CHART_COLORS.secondary, label: 'API Calls' },
+                  ]}
+                />
+              )}
+              {config.includeTables && (
+                <PDFTable
+                  columns={[
+                    { key: 'date', header: 'Date' },
+                    { key: 'conversations', header: 'Conversations', align: 'right' },
+                    { key: 'messages', header: 'Messages', align: 'right' },
+                    { key: 'api_calls', header: 'API Calls', align: 'right' },
+                  ]}
+                  data={data.usageMetrics.slice(0, 20)}
+                />
+              )}
+            </PDFSection>
+          )}
+
+          {/* Agent Performance */}
+          {config.includeAgentPerformance && data.agentPerformance?.length && (
+            <PDFSection title="Agent Performance">
+              {config.includeTables && (
+                <PDFTable
+                  columns={[
+                    { key: 'agent_name', header: 'Agent' },
+                    { key: 'total_conversations', header: 'Conversations', align: 'right' },
+                    { key: 'avgResponseFormatted', header: 'Avg Response (s)', align: 'right' },
+                    { key: 'satisfactionFormatted', header: 'CSAT', align: 'right' },
+                  ]}
+                  data={data.agentPerformance.map(a => ({
+                    ...a,
+                    avgResponseFormatted: a.avg_response_time.toFixed(1),
+                    satisfactionFormatted: a.satisfaction_score.toFixed(1),
+                  }))}
+                />
+              )}
+            </PDFSection>
+          )}
         </View>
 
         <PDFFooter />
