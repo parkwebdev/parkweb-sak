@@ -1,12 +1,13 @@
 /**
  * PDF Header Component
  * 
- * Branded header with organization name, report title, and date range.
+ * Branded header with ChatPad logo, organization name, report title, and date range.
  */
 
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { colors, PAGE, SPACING, FONT_SIZE } from './styles';
+import { PDFLogo } from './PDFLogo';
 
 const headerStyles = StyleSheet.create({
   container: {
@@ -23,6 +24,16 @@ const headerStyles = StyleSheet.create({
   },
   
   left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  
+  logoContainer: {
+    marginRight: SPACING.MD,
+  },
+  
+  textContainer: {
     flex: 1,
   },
   
@@ -54,8 +65,8 @@ const headerStyles = StyleSheet.create({
   },
   
   accentLine: {
-    height: 3,
-    backgroundColor: colors.accent,
+    height: 2,
+    backgroundColor: colors.accentSubtle,
     marginTop: SPACING.LG,
     marginHorizontal: -PAGE.MARGIN,
   },
@@ -82,8 +93,13 @@ export function PDFHeader({ orgName, startDate, endDate, reportType = 'detailed'
     <View style={headerStyles.container}>
       <View style={headerStyles.row}>
         <View style={headerStyles.left}>
-          <Text style={headerStyles.orgName}>{orgName}</Text>
-          <Text style={headerStyles.reportTitle}>{reportTitle}</Text>
+          <View style={headerStyles.logoContainer}>
+            <PDFLogo size={36} color={colors.headerText} />
+          </View>
+          <View style={headerStyles.textContainer}>
+            <Text style={headerStyles.orgName}>{orgName}</Text>
+            <Text style={headerStyles.reportTitle}>{reportTitle}</Text>
+          </View>
         </View>
         <View style={headerStyles.right}>
           <Text style={headerStyles.dateRange}>{dateText}</Text>

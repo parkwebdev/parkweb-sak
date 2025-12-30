@@ -6,17 +6,18 @@
 
 import { StyleSheet } from '@react-pdf/renderer';
 
-// ChatPad Brand Colors
+// ChatPad Brand Colors - Neutral/Professional palette
 export const colors = {
   // Primary text & backgrounds
   primary: '#0f172a',       // slate-900
   secondary: '#475569',      // slate-600
   muted: '#94a3b8',          // slate-400
   
-  // Accent colors
-  accent: '#2563eb',         // blue-600 (ChatPad primary)
-  success: '#16a34a',        // green-600
-  warning: '#eab308',        // yellow-500
+  // Accent colors - more muted, professional
+  accent: '#334155',         // slate-700 (neutral accent)
+  accentSubtle: '#64748b',   // slate-500
+  success: '#059669',        // emerald-600 (slightly muted)
+  warning: '#d97706',        // amber-600 (slightly muted)
   danger: '#dc2626',         // red-600
   
   // Backgrounds
@@ -27,7 +28,7 @@ export const colors = {
   // Header
   headerBg: '#0f172a',       // slate-900
   headerText: '#ffffff',
-  headerSubtext: '#94a3b8',  // slate-400
+  headerSubtext: '#cbd5e1',  // slate-300 (slightly lighter for better contrast)
 };
 
 // Page dimensions (A4 in points: 595.28 x 841.89)
