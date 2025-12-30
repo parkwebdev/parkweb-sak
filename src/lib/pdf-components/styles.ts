@@ -8,31 +8,27 @@ import { StyleSheet } from '@react-pdf/renderer';
 
 // ChatPad Brand Colors - Clean, professional palette
 export const colors = {
-  // Primary text & backgrounds
-  primary: '#0f172a',       // slate-900
-  secondary: '#475569',      // slate-600
-  muted: '#94a3b8',          // slate-400
+  // Neutral grays (matching app design system)
+  primary: '#171717',      // neutral-900 - primary text
+  secondary: '#525252',    // neutral-600 - secondary text
+  muted: '#a3a3a3',        // neutral-400 - muted text
+  border: '#e5e5e5',       // neutral-200 - borders
+  bgAlt: '#fafafa',        // neutral-50 - alternating rows
+  bgMuted: '#f5f5f5',      // neutral-100 - muted backgrounds (table headers)
   
-  // Accent colors - vibrant for charts and highlights
-  accent: '#0d9488',         // teal-600 (brand accent)
-  success: '#10b981',        // emerald-500
-  warning: '#f59e0b',        // amber-500
-  danger: '#ef4444',         // red-500
-  
-  // Backgrounds
-  bg: '#ffffff',             // pure white
-  bgAlt: '#f8fafc',          // slate-50 (subtle alternating)
-  bgMuted: '#f1f5f9',        // slate-100
+  // Base colors
   white: '#ffffff',
   
-  // Borders
-  border: '#e2e8f0',         // slate-200
-  borderLight: '#f1f5f9',    // slate-100
+  // Status colors (keep for charts)
+  success: '#10b981',      // emerald-500
+  warning: '#f59e0b',      // amber-500
+  danger: '#ef4444',       // red-500
+  info: '#14b8a6',         // teal-500
   
-  // Header
-  headerBg: '#0f172a',       // slate-900
-  headerText: '#ffffff',
-  headerSubtext: '#94a3b8',  // slate-400
+  // Header - now white with dark text
+  headerBg: '#ffffff',
+  headerText: '#171717',
+  headerSubtext: '#525252',
 };
 
 // Page dimensions (A4 in points: 595.28 x 841.89)
