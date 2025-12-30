@@ -625,12 +625,12 @@ export default function ReportBuilder() {
                 </div>
 
                 {/* Data Categories */}
-                <div className="space-y-4">
+                <div className="space-y-0">
                   <Label className="text-sm font-medium">Data to Include</Label>
                   
                   {/* Core Metrics */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div className="py-3 space-y-2">
+                    <div className="flex items-center justify-between pb-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Core Metrics</p>
                       <button
                         type="button"
@@ -667,8 +667,8 @@ export default function ReportBuilder() {
                   <Separator />
 
                   {/* Business Outcomes */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div className="py-3 space-y-2">
+                    <div className="flex items-center justify-between pb-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Business Outcomes</p>
                       <button
                         type="button"
@@ -707,8 +707,8 @@ export default function ReportBuilder() {
                   <Separator />
 
                   {/* Traffic Analytics */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div className="py-3 space-y-2">
+                    <div className="flex items-center justify-between pb-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Traffic Analytics</p>
                       <button
                         type="button"
@@ -747,8 +747,8 @@ export default function ReportBuilder() {
                   <Separator />
 
                   {/* Leads Analytics */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div className="py-3 space-y-2">
+                    <div className="flex items-center justify-between pb-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Leads Analytics</p>
                       <button
                         type="button"
@@ -782,8 +782,8 @@ export default function ReportBuilder() {
                   <Separator />
 
                   {/* Agent Data */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Agent Data</p>
+                  <div className="py-3 space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide pb-1">Agent Data</p>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <Checkbox
@@ -799,8 +799,8 @@ export default function ReportBuilder() {
                   <Separator />
 
                   {/* Export Options */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                  <div className="py-3 space-y-2">
+                    <div className="flex items-center justify-between pb-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Export Options</p>
                       <button
                         type="button"
