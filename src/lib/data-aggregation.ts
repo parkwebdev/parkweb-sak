@@ -6,9 +6,9 @@
  * 
  * @module lib/data-aggregation
  */
-
 import { startOfWeek, startOfMonth, format, parseISO, isValid } from 'date-fns';
 import type { PDFData, ReportGrouping } from '@/types/pdf';
+import type { AnalyticsExportData } from '@/lib/analytics-export-data';
 
 /**
  * Get the period key for a given date and grouping
@@ -267,5 +267,76 @@ export function aggregatePDFData(data: PDFData, grouping: ReportGrouping): PDFDa
     // - topPages, pageEngagement, pageDepthDistribution
     // - visitorLocations, visitorCities
     // - agentPerformance
+  };
+}
+
+/**
+ * Aggregate AnalyticsExportData (for CSV exports) based on grouping
+ */
+export function aggregateAnalyticsExportData(
+  data: AnalyticsExportData,
+  grouping: ReportGrouping
+): AnalyticsExportData {
+  if (grouping === 'day') {
+    return data;
+  }
+
+  // Get dynamic keys for leadStats (all keys except 'date')
+  const leadStatsKeys = data.leadStats[0] 
+    ? Object.keys(data.leadStats[0]).filter(k => k !== 'date')
+    : ['total'];
+
+  // Get dynamic keys for leadConversionTrend
+  const leadConversionKeys = data.leadConversionTrend?.[0]
+    ? Object.keys(data.leadConversionTrend[0]).filter(k => k !== 'date')
+    : [];
+
+  return {
+    ...data,
+    
+    // Aggregate time-series data (cast through unknown to handle generic function)
+    conversationStats: aggregateArray(
+      data.conversationStats as unknown as Record<string, unknown>[],
+      grouping,
+      'date',
+      ['total', 'active', 'closed']
+    ) as unknown as typeof data.conversationStats || [],
+    
+    leadStats: aggregateArray(
+      data.leadStats as unknown as Record<string, unknown>[],
+      grouping,
+      'date',
+      leadStatsKeys
+    ) as unknown as typeof data.leadStats || [],
+    
+    usageMetrics: aggregateArray(
+      data.usageMetrics as unknown as Record<string, unknown>[],
+      grouping,
+      'date',
+      ['conversations', 'messages', 'api_calls']
+    ) as unknown as typeof data.usageMetrics || [],
+    
+    bookingTrend: aggregateArray(
+      data.bookingTrend as unknown as Record<string, unknown>[] | undefined,
+      grouping,
+      'date',
+      ['confirmed', 'completed', 'cancelled', 'noShow', 'total']
+    ) as unknown as typeof data.bookingTrend,
+    
+    trafficSourceTrend: aggregateArray(
+      data.trafficSourceTrend as unknown as Record<string, unknown>[] | undefined,
+      grouping,
+      'date',
+      ['direct', 'organic', 'paid', 'social', 'email', 'referral', 'total']
+    ) as unknown as typeof data.trafficSourceTrend,
+    
+    leadConversionTrend: aggregateArray(
+      data.leadConversionTrend as unknown as Record<string, unknown>[] | undefined,
+      grouping,
+      'date',
+      leadConversionKeys
+    ) as unknown as typeof data.leadConversionTrend,
+    
+    // Non-time-series data preserved unchanged
   };
 }

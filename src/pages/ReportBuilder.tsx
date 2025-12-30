@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { generateBeautifulPDF } from '@/lib/pdf-generator';
 import { generateCSVReport } from '@/lib/report-export';
 import { buildPDFData } from '@/lib/build-pdf-data';
-import { aggregatePDFData } from '@/lib/data-aggregation';
+import { aggregatePDFData, aggregateAnalyticsExportData } from '@/lib/data-aggregation';
 import { buildAnalyticsExportData } from '@/lib/analytics-export-data';
 import { calculatePeakActivityData } from '@/lib/peak-activity-utils';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
@@ -270,36 +270,40 @@ export default function ReportBuilder() {
   // === Generation guard ref to prevent duplicate generations ===
   const lastPreviewKeyRef = useRef<string | null>(null);
 
-  // === CSV Export Data ===
-  const analyticsExportData = useMemo(() => buildAnalyticsExportData({
-    totalConversations: data.totalConversations,
-    totalLeads: data.totalLeads,
-    conversionRate: data.conversionRate,
-    totalMessages: data.totalMessages,
-    comparisonTotalConversations: data.comparisonTotalConversations,
-    comparisonTotalLeads: data.comparisonTotalLeads,
-    comparisonConversionRate: data.comparisonConversionRate,
-    comparisonTotalMessages: data.comparisonTotalMessages,
-    comparisonMode: false,
-    conversationStats: data.conversationStats,
-    leadStats: data.leadStats,
-    agentPerformance: data.agentPerformance,
-    usageMetrics: data.usageMetrics,
-    bookingStats: data.bookingStats,
-    satisfactionStats: data.satisfactionStats,
-    aiPerformanceStats: data.aiPerformanceStats,
-    trafficSources: data.trafficSources,
-    landingPages: data.landingPages,
-    locationData: data.locationData,
-    analyticsConversations: data.analyticsConversations,
-    leads: data.leads,
-    funnelStages: data.funnelStages,
-    peakActivity: peakActivityData,
-    engagement: data.engagement,
-    leadsBySource: data.leadsBySource,
-    pageDepthDistribution: data.pageDepthDistribution,
-    sourcesByDate: data.sourcesByDate,
-  }), [data, peakActivityData]);
+  // === CSV Export Data (with grouping aggregation) ===
+  const analyticsExportData = useMemo(() => {
+    const rawData = buildAnalyticsExportData({
+      totalConversations: data.totalConversations,
+      totalLeads: data.totalLeads,
+      conversionRate: data.conversionRate,
+      totalMessages: data.totalMessages,
+      comparisonTotalConversations: data.comparisonTotalConversations,
+      comparisonTotalLeads: data.comparisonTotalLeads,
+      comparisonConversionRate: data.comparisonConversionRate,
+      comparisonTotalMessages: data.comparisonTotalMessages,
+      comparisonMode: false,
+      conversationStats: data.conversationStats,
+      leadStats: data.leadStats,
+      agentPerformance: data.agentPerformance,
+      usageMetrics: data.usageMetrics,
+      bookingStats: data.bookingStats,
+      satisfactionStats: data.satisfactionStats,
+      aiPerformanceStats: data.aiPerformanceStats,
+      trafficSources: data.trafficSources,
+      landingPages: data.landingPages,
+      locationData: data.locationData,
+      analyticsConversations: data.analyticsConversations,
+      leads: data.leads,
+      funnelStages: data.funnelStages,
+      peakActivity: peakActivityData,
+      engagement: data.engagement,
+      leadsBySource: data.leadsBySource,
+      pageDepthDistribution: data.pageDepthDistribution,
+      sourcesByDate: data.sourcesByDate,
+    });
+    // Apply grouping aggregation (weekly/monthly)
+    return aggregateAnalyticsExportData(rawData, config.grouping);
+  }, [data, peakActivityData, config.grouping]);
 
   // === Config Helpers ===
   const updateConfig = <K extends keyof ReportConfig>(key: K, value: ReportConfig[K]) => {
