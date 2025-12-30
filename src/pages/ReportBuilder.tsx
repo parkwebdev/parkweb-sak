@@ -38,7 +38,7 @@ import { PdfJsViewer } from '@/components/pdf/PdfJsViewer';
 import { PdfIcon, CsvIcon } from '@/components/analytics/ExportIcons';
 import { cn } from '@/lib/utils';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
-import { DateRange } from 'react-day-picker';
+import type { DateRange } from 'react-day-picker';
 
 import { 
   ArrowLeft, 
@@ -162,12 +162,10 @@ export default function ReportBuilder() {
   // === Config State ===
   const [config, setConfig] = useState<ReportConfig>(DEFAULT_CONFIG);
 
-  // === Date State ===
+  // === Date State (stable references to prevent re-renders) ===
   const [datePreset, setDatePreset] = useState<DatePreset>('last30');
-  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
-  });
+  const [startDate, setStartDate] = useState<Date>(() => subDays(new Date(), 30));
+  const [endDate, setEndDate] = useState<Date>(() => new Date());
 
   // === PDF Preview State ===
   const [pdfArrayBuffer, setPdfArrayBuffer] = useState<ArrayBuffer | null>(null);
@@ -188,14 +186,25 @@ export default function ReportBuilder() {
   const [recipients, setRecipients] = useState<string[]>([]);
   const [isScheduling, setIsScheduling] = useState(false);
 
-  // === Get Current Date Range ===
-  const getCurrentDateRange = useCallback(() => {
-    return datePreset === 'custom'
-      ? { start: customDateRange?.from || new Date(), end: customDateRange?.to || new Date() }
-      : getDateRangeFromPreset(datePreset);
-  }, [datePreset, customDateRange]);
+  // === Handle Preset Change (updates stable date state) ===
+  const handlePresetChange = useCallback((preset: DatePreset) => {
+    setDatePreset(preset);
+    if (preset !== 'custom') {
+      const { start, end } = getDateRangeFromPreset(preset);
+      setStartDate(start);
+      setEndDate(end);
+    }
+  }, []);
 
-  const { start: startDate, end: endDate } = getCurrentDateRange();
+  // === Handle Custom Date Range Change ===
+  const handleCustomDateChange = useCallback((range: DateRange | undefined) => {
+    if (range?.from) {
+      setStartDate(range.from);
+      if (range.to) {
+        setEndDate(range.to);
+      }
+    }
+  }, []);
 
   // === Fetch Analytics Data ===
   const data = useAnalyticsData({
@@ -225,6 +234,10 @@ export default function ReportBuilder() {
 
   // === Stable config key for dependency tracking ===
   const configKey = useMemo(() => JSON.stringify(config), [config]);
+
+  // === Stable date primitives for useEffect dependencies ===
+  const startMs = startDate.getTime();
+  const endMs = endDate.getTime();
 
   // === CSV Export Data ===
   const analyticsExportData = useMemo(() => buildAnalyticsExportData({
@@ -260,14 +273,6 @@ export default function ReportBuilder() {
   // === Config Helpers ===
   const updateConfig = <K extends keyof ReportConfig>(key: K, value: ReportConfig[K]) => {
     setConfig(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handlePresetChange = (preset: DatePreset) => {
-    setDatePreset(preset);
-    if (preset !== 'custom') {
-      const { start, end } = getDateRangeFromPreset(preset);
-      setCustomDateRange({ from: start, to: end });
-    }
   };
 
   // === Generate PDF Preview ===
@@ -323,7 +328,7 @@ export default function ReportBuilder() {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [configKey, isDataLoading, pdfData, startDate, endDate, user?.email, refreshKey]);
+  }, [configKey, isDataLoading, pdfData, startMs, endMs, user?.email, refreshKey]);
 
   // === Export Handler ===
   const handleExport = useCallback(async () => {
@@ -333,18 +338,17 @@ export default function ReportBuilder() {
     }
 
     setIsExporting(true);
-    const { start, end } = getCurrentDateRange();
 
     try {
-      const reportName = `${config.type === 'summary' ? 'Summary' : config.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(start, 'MMM d')} to ${format(end, 'MMM d, yyyy')}`;
+      const reportName = `${config.type === 'summary' ? 'Summary' : config.type === 'detailed' ? 'Detailed' : 'Comparison'} Report - ${format(startDate, 'MMM d')} to ${format(endDate, 'MMM d, yyyy')}`;
 
       const blob = config.format === 'csv'
-        ? generateCSVReport(analyticsExportData, config, start, end, user?.email || 'User')
+        ? generateCSVReport(analyticsExportData, config, startDate, endDate, user?.email || 'User')
         : await generateBeautifulPDF({
             data: pdfData!,
             config,
-            startDate: start,
-            endDate: end,
+            startDate,
+            endDate,
             orgName: user?.email || 'Your Organization',
           });
 
@@ -352,8 +356,8 @@ export default function ReportBuilder() {
         name: reportName,
         format: config.format,
         file: blob,
-        dateRangeStart: start,
-        dateRangeEnd: end,
+        dateRangeStart: startDate,
+        dateRangeEnd: endDate,
         reportConfig: config,
       });
 
@@ -369,7 +373,7 @@ export default function ReportBuilder() {
     } finally {
       setIsExporting(false);
     }
-  }, [config, pdfData, analyticsExportData, getCurrentDateRange, user?.email, createExport]);
+  }, [config, pdfData, analyticsExportData, startDate, endDate, user?.email, createExport]);
 
   // === Scheduling Handlers ===
   const handleAddRecipient = () => {
@@ -389,7 +393,6 @@ export default function ReportBuilder() {
 
     setIsScheduling(true);
     try {
-      const { start, end } = getCurrentDateRange();
       await createReport({
         name: scheduleName,
         recipients,
@@ -400,8 +403,8 @@ export default function ReportBuilder() {
         report_config: {
           format: config.format,
           type: config.type,
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
           ...config,
         },
         active: true,
@@ -510,25 +513,15 @@ export default function ReportBuilder() {
                       <PopoverTrigger asChild>
                         <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal">
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {customDateRange?.from ? (
-                            customDateRange.to ? (
-                              <>
-                                {format(customDateRange.from, "LLL dd, y")} - {format(customDateRange.to, "LLL dd, y")}
-                              </>
-                            ) : (
-                              format(customDateRange.from, "LLL dd, y")
-                            )
-                          ) : (
-                            <span className="text-muted-foreground">Pick a date range</span>
-                          )}
+                          {format(startDate, "LLL dd, y")} - {format(endDate, "LLL dd, y")}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="range"
-                          defaultMonth={customDateRange?.from}
-                          selected={customDateRange}
-                          onSelect={setCustomDateRange}
+                          defaultMonth={startDate}
+                          selected={{ from: startDate, to: endDate }}
+                          onSelect={handleCustomDateChange}
                           numberOfMonths={2}
                           className="pointer-events-auto"
                         />
