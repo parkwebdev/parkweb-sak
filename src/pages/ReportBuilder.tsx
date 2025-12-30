@@ -207,14 +207,24 @@ export default function ReportBuilder() {
     filters: { leadStatus: 'all', conversationStatus: 'all' },
   });
 
+  // === Loading State ===
+  const isDataLoading = data.loading || data.bookingLoading || data.satisfactionLoading || 
+    data.aiPerformanceLoading || data.trafficLoading || data.funnelLoading;
+
   // === Peak Activity Data ===
   const peakActivityData = useMemo(() =>
     calculatePeakActivityData(data.conversationStats),
     [data.conversationStats]
   );
 
-  // === PDF Data (memoized) ===
-  const pdfData = useMemo(() => buildPDFData(data, peakActivityData), [data, peakActivityData]);
+  // === PDF Data (memoized) - only compute when not loading ===
+  const pdfData = useMemo(() => {
+    if (isDataLoading) return null;
+    return buildPDFData(data, peakActivityData);
+  }, [data, peakActivityData, isDataLoading]);
+
+  // === Stable config key for dependency tracking ===
+  const configKey = useMemo(() => JSON.stringify(config), [config]);
 
   // === CSV Export Data ===
   const analyticsExportData = useMemo(() => buildAnalyticsExportData({
@@ -265,6 +275,13 @@ export default function ReportBuilder() {
     // Only generate preview for PDF format
     if (config.format !== 'pdf') {
       setPdfArrayBuffer(null);
+      setIsGenerating(false);
+      return;
+    }
+
+    // Wait for data to finish loading
+    if (isDataLoading || !pdfData) {
+      setIsGenerating(true);
       return;
     }
 
@@ -300,16 +317,21 @@ export default function ReportBuilder() {
     };
 
     // Debounce preview generation
-    const timeout = setTimeout(generatePreview, 300);
+    const timeout = setTimeout(generatePreview, 500);
 
     return () => {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [config, pdfData, startDate, endDate, user?.email, refreshKey]);
+  }, [configKey, isDataLoading, pdfData, startDate, endDate, user?.email, refreshKey]);
 
   // === Export Handler ===
   const handleExport = useCallback(async () => {
+    if (config.format === 'pdf' && !pdfData) {
+      toast.error('Data is still loading. Please wait.');
+      return;
+    }
+
     setIsExporting(true);
     const { start, end } = getCurrentDateRange();
 
@@ -319,7 +341,7 @@ export default function ReportBuilder() {
       const blob = config.format === 'csv'
         ? generateCSVReport(analyticsExportData, config, start, end, user?.email || 'User')
         : await generateBeautifulPDF({
-            data: pdfData,
+            data: pdfData!,
             config,
             startDate: start,
             endDate: end,
@@ -571,16 +593,16 @@ export default function ReportBuilder() {
                 {/* Data Categories Accordion */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Data to Include</Label>
-                  <Accordion type="multiple" defaultValue={['core', 'business']} className="space-y-1">
+                  <Accordion type="multiple" defaultValue={['core', 'business']} className="space-y-2">
                     {/* Core Metrics */}
-                    <AccordionItem value="core" className="border rounded-lg px-3">
-                      <AccordionTrigger className="py-2 hover:no-underline text-sm">
+                    <AccordionItem value="core" className="border border-border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
                         <div className="flex items-center gap-2">
                           <span>Core Metrics</span>
                           <Badge variant="secondary" className="text-xs h-5">{coreMetricsCount}</Badge>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="pb-3 space-y-2">
+                      <AccordionContent className="px-3 pb-3 space-y-2">
                         {[
                           { key: 'includeConversations', label: 'Conversations' },
                           { key: 'includeConversationFunnel', label: 'Conversation Funnel' },
@@ -601,14 +623,14 @@ export default function ReportBuilder() {
                     </AccordionItem>
 
                     {/* Business Outcomes */}
-                    <AccordionItem value="business" className="border rounded-lg px-3">
-                      <AccordionTrigger className="py-2 hover:no-underline text-sm">
+                    <AccordionItem value="business" className="border border-border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
                         <div className="flex items-center gap-2">
                           <span>Business Outcomes</span>
                           <Badge variant="secondary" className="text-xs h-5">{businessOutcomesCount}</Badge>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="pb-3 space-y-2">
+                      <AccordionContent className="px-3 pb-3 space-y-2">
                         {[
                           { key: 'includeBookings', label: 'Bookings by Location' },
                           { key: 'includeBookingTrend', label: 'Booking Trend' },
@@ -631,14 +653,14 @@ export default function ReportBuilder() {
                     </AccordionItem>
 
                     {/* Traffic Analytics */}
-                    <AccordionItem value="traffic" className="border rounded-lg px-3">
-                      <AccordionTrigger className="py-2 hover:no-underline text-sm">
+                    <AccordionItem value="traffic" className="border border-border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
                         <div className="flex items-center gap-2">
                           <span>Traffic Analytics</span>
                           <Badge variant="secondary" className="text-xs h-5">{trafficCount}</Badge>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="pb-3 space-y-2">
+                      <AccordionContent className="px-3 pb-3 space-y-2">
                         {[
                           { key: 'includeTrafficSources', label: 'Traffic Sources' },
                           { key: 'includeTrafficSourceTrend', label: 'Traffic Source Trend' },
@@ -661,14 +683,14 @@ export default function ReportBuilder() {
                     </AccordionItem>
 
                     {/* Leads Analytics */}
-                    <AccordionItem value="leads-analytics" className="border rounded-lg px-3">
-                      <AccordionTrigger className="py-2 hover:no-underline text-sm">
+                    <AccordionItem value="leads-analytics" className="border border-border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
                         <div className="flex items-center gap-2">
                           <span>Leads Analytics</span>
                           <Badge variant="secondary" className="text-xs h-5">{leadsAnalyticsCount}</Badge>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="pb-3 space-y-2">
+                      <AccordionContent className="px-3 pb-3 space-y-2">
                         {[
                           { key: 'includeLeadSourceBreakdown', label: 'Lead Source Breakdown' },
                           { key: 'includeLeadConversionTrend', label: 'Lead Conversion Trend' },
@@ -686,14 +708,14 @@ export default function ReportBuilder() {
                     </AccordionItem>
 
                     {/* Agent Data */}
-                    <AccordionItem value="agent" className="border rounded-lg px-3">
-                      <AccordionTrigger className="py-2 hover:no-underline text-sm">
+                    <AccordionItem value="agent" className="border border-border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
                         <div className="flex items-center gap-2">
                           <span>Agent Data</span>
                           <Badge variant="secondary" className="text-xs h-5">{agentDataCount}</Badge>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="pb-3 space-y-2">
+                      <AccordionContent className="px-3 pb-3 space-y-2">
                         <div className="flex items-center gap-2">
                           <Checkbox
                             id="includeAgentPerformance"
@@ -706,14 +728,14 @@ export default function ReportBuilder() {
                     </AccordionItem>
 
                     {/* Export Options */}
-                    <AccordionItem value="options" className="border rounded-lg px-3">
-                      <AccordionTrigger className="py-2 hover:no-underline text-sm">
+                    <AccordionItem value="options" className="border border-border rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm hover:bg-muted/50">
                         <div className="flex items-center gap-2">
                           <span>Export Options</span>
                           <Badge variant="secondary" className="text-xs h-5">{exportOptionsCount}</Badge>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="pb-3 space-y-2">
+                      <AccordionContent className="px-3 pb-3 space-y-2">
                         {[
                           { key: 'includeKPIs', label: 'KPI Summary' },
                           { key: 'includeCharts', label: 'Charts' },
