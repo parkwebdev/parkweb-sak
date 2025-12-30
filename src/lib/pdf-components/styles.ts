@@ -70,13 +70,14 @@ export const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontSize: FONT_SIZE.BASE,
     color: colors.primary,
-    paddingBottom: 60, // Space for footer
+    paddingTop: PAGE.MARGIN,      // Top margin for all pages
+    paddingBottom: 60,            // Space for footer
   },
 
   // Content area (below header)
   content: {
     paddingHorizontal: PAGE.MARGIN,
-    paddingTop: SPACING.LG,
+    paddingTop: SPACING.MD,
   },
 
   // Section container
