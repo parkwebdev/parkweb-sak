@@ -6,29 +6,33 @@
 
 import { StyleSheet } from '@react-pdf/renderer';
 
-// ChatPad Brand Colors - Neutral/Professional palette
+// ChatPad Brand Colors - Clean, professional palette
 export const colors = {
   // Primary text & backgrounds
   primary: '#0f172a',       // slate-900
   secondary: '#475569',      // slate-600
   muted: '#94a3b8',          // slate-400
   
-  // Accent colors - more muted, professional
-  accent: '#334155',         // slate-700 (neutral accent)
-  accentSubtle: '#64748b',   // slate-500
-  success: '#059669',        // emerald-600 (slightly muted)
-  warning: '#d97706',        // amber-600 (slightly muted)
-  danger: '#dc2626',         // red-600
+  // Accent colors - vibrant for charts and highlights
+  accent: '#0d9488',         // teal-600 (brand accent)
+  success: '#10b981',        // emerald-500
+  warning: '#f59e0b',        // amber-500
+  danger: '#ef4444',         // red-500
   
   // Backgrounds
-  bg: '#f8fafc',             // slate-50
-  bgAlt: '#f1f5f9',          // slate-100
+  bg: '#ffffff',             // pure white
+  bgAlt: '#f8fafc',          // slate-50 (subtle alternating)
+  bgMuted: '#f1f5f9',        // slate-100
   white: '#ffffff',
+  
+  // Borders
+  border: '#e2e8f0',         // slate-200
+  borderLight: '#f1f5f9',    // slate-100
   
   // Header
   headerBg: '#0f172a',       // slate-900
   headerText: '#ffffff',
-  headerSubtext: '#cbd5e1',  // slate-300 (slightly lighter for better contrast)
+  headerSubtext: '#94a3b8',  // slate-400
 };
 
 // Page dimensions (A4 in points: 595.28 x 841.89)
@@ -90,9 +94,6 @@ export const styles = StyleSheet.create({
     fontWeight: 600,
     color: colors.primary,
     marginBottom: SPACING.MD,
-    paddingLeft: SPACING.SM,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.accent,
   },
 
   // Flex rows
@@ -128,19 +129,21 @@ export const styles = StyleSheet.create({
 
   // Cards
   card: {
-    backgroundColor: colors.bg,
-    borderRadius: 6,
-    padding: SPACING.MD,
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    padding: SPACING.LG,
     marginBottom: SPACING.SM,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
 
   cardBordered: {
     backgroundColor: colors.white,
-    borderRadius: 6,
-    padding: SPACING.MD,
+    borderRadius: 8,
+    padding: SPACING.LG,
     marginBottom: SPACING.SM,
     borderWidth: 1,
-    borderColor: colors.bgAlt,
+    borderColor: colors.border,
   },
 });
 
@@ -154,8 +157,7 @@ export const tableStyles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
+    borderRadius: 6,
   },
   
   headerCell: {
@@ -169,14 +171,15 @@ export const tableStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: colors.bgAlt,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.white,
   },
   
   rowAlt: {
     flexDirection: 'row',
-    backgroundColor: colors.bg,
+    backgroundColor: colors.bgAlt,
     borderBottomWidth: 1,
-    borderBottomColor: colors.bgAlt,
+    borderBottomColor: colors.border,
   },
   
   cell: {

@@ -45,7 +45,6 @@ export function generateTicks(min: number, max: number, targetCount = 5): number
   const range = max - min;
   const roughStep = range / (targetCount - 1);
   
-  // Find a "nice" step size
   const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
   const normalized = roughStep / magnitude;
   
@@ -142,7 +141,6 @@ export function downsampleData<T>(data: T[], maxPoints = 30): T[] {
     result.push(data[Math.floor(i * step)]);
   }
   
-  // Always include the last point
   if (result[result.length - 1] !== data[data.length - 1]) {
     result[result.length - 1] = data[data.length - 1];
   }
@@ -150,36 +148,38 @@ export function downsampleData<T>(data: T[], maxPoints = 30): T[] {
   return result;
 }
 
-/** PDF Chart color palette - muted, professional tones */
+/** PDF Chart color palette - vibrant, on-brand colors */
 export const CHART_COLORS = {
-  primary: '#334155',    // slate-700 (main data)
-  secondary: '#64748b',  // slate-500
-  success: '#059669',    // emerald-600
-  warning: '#d97706',    // amber-600
-  danger: '#dc2626',     // red-600
-  purple: '#7c3aed',     // violet-600
-  teal: '#0d9488',       // teal-600
-  orange: '#ea580c',     // orange-600
-  pink: '#db2777',       // pink-600
-  indigo: '#4f46e5',     // indigo-600
+  primary: '#0d9488',    // teal-600 (main brand)
+  secondary: '#6366f1',  // indigo-500
+  success: '#10b981',    // emerald-500
+  warning: '#f59e0b',    // amber-500
+  danger: '#ef4444',     // red-500
+  purple: '#8b5cf6',     // violet-500
+  teal: '#14b8a6',       // teal-500
+  orange: '#f97316',     // orange-500
+  pink: '#ec4899',       // pink-500
+  indigo: '#6366f1',     // indigo-500
+  blue: '#3b82f6',       // blue-500
+  cyan: '#06b6d4',       // cyan-500
 } as const;
 
 export const CHART_COLOR_ARRAY = [
-  CHART_COLORS.primary,
-  CHART_COLORS.teal,
-  CHART_COLORS.indigo,
-  CHART_COLORS.purple,
-  CHART_COLORS.success,
-  CHART_COLORS.orange,
-  CHART_COLORS.pink,
-  CHART_COLORS.warning,
-  CHART_COLORS.danger,
-  CHART_COLORS.secondary,
+  '#0d9488',  // teal-600 (primary)
+  '#6366f1',  // indigo-500
+  '#f97316',  // orange-500
+  '#8b5cf6',  // violet-500
+  '#10b981',  // emerald-500
+  '#ec4899',  // pink-500
+  '#eab308',  // yellow-500
+  '#3b82f6',  // blue-500
+  '#14b8a6',  // teal-500
+  '#f43f5e',  // rose-500
 ];
 
 /** Chart dimensions */
 export const CHART_DIMS = {
-  width: 515,      // PAGE.CONTENT_WIDTH
+  width: 515,
   height: 180,
   padding: { top: 20, right: 20, bottom: 30, left: 50 },
 } as const;

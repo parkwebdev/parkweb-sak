@@ -2,6 +2,7 @@
  * PDF Section Component
  * 
  * Container for report sections with title and optional chart/table.
+ * Includes proper page break handling to prevent content cutoff.
  */
 
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
@@ -17,13 +18,10 @@ const sectionStyles = StyleSheet.create({
     fontWeight: 600,
     color: colors.primary,
     marginBottom: SPACING.MD,
-    paddingLeft: SPACING.SM,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
   },
   
   content: {
-    // Content styling
+    // Content styling handled by children
   },
 });
 
@@ -36,7 +34,12 @@ interface PDFSectionProps {
 
 export function PDFSection({ title, children, break: pageBreak }: PDFSectionProps) {
   return (
-    <View style={sectionStyles.container} break={pageBreak}>
+    <View 
+      style={sectionStyles.container} 
+      break={pageBreak}
+      // Keeps section title together with at least some content
+      minPresenceAhead={60}
+    >
       <Text style={sectionStyles.title}>{title}</Text>
       <View style={sectionStyles.content}>{children}</View>
     </View>
