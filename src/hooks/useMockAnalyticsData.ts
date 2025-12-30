@@ -30,6 +30,7 @@ import {
   generateSourcesByDate,
   generatePageDepthDistribution,
   generateLeadsBySource,
+  generateAIPerformanceTrend,
   type MockConversationStat,
   type MockLeadStat,
   type MockTrafficSource,
@@ -47,6 +48,7 @@ import type {
   BookingStats,
   SatisfactionStats,
   AIPerformanceStats,
+  AIPerformanceTrendData,
   SparklineDataPoint,
   LeadSourceData,
 } from '@/types/analytics';
@@ -92,6 +94,9 @@ export interface MockAnalyticsData {
   
   // Lead source breakdown
   leadsBySource: LeadSourceData[];
+  
+  // AI Performance trend for PDF export
+  aiPerformanceTrend: AIPerformanceTrendData[];
 }
 
 export interface UseMockAnalyticsDataReturn {
@@ -176,6 +181,9 @@ export const useMockAnalyticsData = (): UseMockAnalyticsDataReturn => {
       
       // Lead source breakdown
       leadsBySource: generateLeadsBySource(),
+      
+      // AI Performance trend for PDF export
+      aiPerformanceTrend: generateAIPerformanceTrend(),
     };
   }, [enabled, refreshKey]);
 
