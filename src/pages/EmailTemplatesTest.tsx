@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Copy01, Send01, Loading02, Phone01, Monitor01 } from '@untitledui/icons';
+import { Copy01, Send01, Loading02, Phone01, Monitor01, Moon01, Sun } from '@untitledui/icons';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
@@ -34,9 +34,10 @@ interface EmailPreviewProps {
   showSource: boolean;
   templateType: string;
   subject: string;
+  darkMode: boolean;
 }
 
-function EmailPreview({ html, width, showSource, templateType, subject }: EmailPreviewProps) {
+function EmailPreview({ html, width, showSource, templateType, subject, darkMode }: EmailPreviewProps) {
   const iframeWidth = width === 'mobile' ? 375 : 600;
   const [testEmail, setTestEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -69,11 +70,27 @@ function EmailPreview({ html, width, showSource, templateType, subject }: EmailP
     }
   };
 
+  // Simulate dark mode email client by injecting dark mode styles
+  const darkModeHtml = darkMode
+    ? html.replace(
+        '</head>',
+        `<style>
+          @media (prefers-color-scheme: dark) {
+            body { background-color: #1a1a1a !important; }
+          }
+          body { background-color: #1a1a1a !important; }
+        </style></head>`
+      )
+    : html;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b gap-4">
         <CardTitle className="text-sm font-medium shrink-0">
           {showSource ? 'HTML Source' : `Preview (${width === 'mobile' ? '375px' : '600px'})`}
+          {darkMode && !showSource && (
+            <span className="ml-2 text-xs font-normal text-muted-foreground">• Dark Mode</span>
+          )}
         </CardTitle>
         <div className="flex items-center gap-2 flex-1 justify-end">
           <Input
@@ -99,10 +116,19 @@ function EmailPreview({ html, width, showSource, templateType, subject }: EmailP
             <code>{html}</code>
           </pre>
         ) : (
-          <div className="flex justify-center bg-muted/50 p-4">
+          <div 
+            className="flex justify-center p-4 transition-colors duration-200"
+            style={{ backgroundColor: darkMode ? '#0d0d0d' : '#f5f5f5' }}
+          >
             <iframe
-              srcDoc={html}
-              style={{ width: iframeWidth, height: 650, border: 'none', background: '#f5f5f5' }}
+              srcDoc={darkModeHtml}
+              style={{ 
+                width: iframeWidth, 
+                height: 650, 
+                border: 'none', 
+                background: darkMode ? '#1a1a1a' : '#ffffff',
+                borderRadius: 8,
+              }}
               title="Email Preview"
             />
           </div>
@@ -116,6 +142,7 @@ export default function EmailTemplatesTest() {
   const [activeTemplate, setActiveTemplate] = useState<EmailTemplateType>('invitation');
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>('desktop');
   const [showSource, setShowSource] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   // Team Invitation data
   const [invitationData, setInvitationData] = useState<TeamInvitationData>({
@@ -416,9 +443,29 @@ export default function EmailTemplatesTest() {
                 </Button>
               </div>
 
+              {/* Dark Mode Toggle */}
+              <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5">
+                <Button
+                  variant={!darkMode ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setDarkMode(false)}
+                  className="h-7 text-xs px-2"
+                >
+                  <Sun size={14} />
+                </Button>
+                <Button
+                  variant={darkMode ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setDarkMode(true)}
+                  className="h-7 text-xs px-2"
+                >
+                  <Moon01 size={14} />
+                </Button>
+              </div>
+
               {/* Source Toggle */}
               <div className="flex items-center gap-2">
-                <Label htmlFor="show-source" className="text-xs text-muted-foreground">Show Source</Label>
+                <Label htmlFor="show-source" className="text-xs text-muted-foreground">Source</Label>
                 <Switch id="show-source" checked={showSource} onCheckedChange={setShowSource} />
               </div>
             </div>
@@ -432,6 +479,7 @@ export default function EmailTemplatesTest() {
             html={getTemplateHtml()}
             width={previewWidth}
             showSource={showSource}
+            darkMode={darkMode}
             templateType={activeTemplate}
             subject={getTemplateSubject()}
           />
