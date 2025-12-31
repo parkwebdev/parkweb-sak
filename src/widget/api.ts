@@ -271,6 +271,7 @@ export async function createLead(agentId: string, data: {
   email: string;
   customFields: Record<string, any>;
   _formLoadTime?: number; // Spam protection: timestamp when form was loaded
+  turnstileToken?: string | null; // Bot protection: Cloudflare Turnstile token
 }): Promise<{ leadId: string; conversationId: string | null }> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/create-widget-lead`, {
     method: 'POST',

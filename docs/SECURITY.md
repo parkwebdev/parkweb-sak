@@ -905,7 +905,7 @@ If Turnstile is not configured or verification fails due to network issues, form
 
 ### Implementation Status
 
-🔴 **Planned** - Requires Turnstile account setup and widget component.
+🟢 **Complete** - TurnstileWidget component created, server-side verification added to create-widget-lead, and ContactForm integrated. Requires `VITE_TURNSTILE_SITE_KEY` env var and `CLOUDFLARE_TURNSTILE_SECRET` Supabase secret.
 
 ---
 

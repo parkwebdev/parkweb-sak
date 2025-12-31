@@ -9,6 +9,51 @@ const corsHeaders = {
 // Minimum time (ms) between form load and submission to consider legitimate
 const MIN_FORM_TIME_MS = 2000; // 2 seconds
 
+/**
+ * Verify Cloudflare Turnstile token server-side.
+ * Returns true if verification passes, false otherwise.
+ * Fails open if Turnstile is not configured (allows submission but logs warning).
+ */
+async function verifyTurnstile(token: string | null): Promise<{ success: boolean; failOpen: boolean }> {
+  const turnstileSecret = Deno.env.get('CLOUDFLARE_TURNSTILE_SECRET');
+  
+  // Fail open if not configured
+  if (!turnstileSecret) {
+    console.warn('Turnstile: CLOUDFLARE_TURNSTILE_SECRET not configured, skipping verification');
+    return { success: true, failOpen: true };
+  }
+  
+  // Fail open if no token provided
+  if (!token) {
+    console.warn('Turnstile: No token provided, allowing submission (fail-open)');
+    return { success: true, failOpen: true };
+  }
+  
+  try {
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        secret: turnstileSecret,
+        response: token,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error('Turnstile: Verification request failed', response.status);
+      return { success: true, failOpen: true }; // Fail open on network errors
+    }
+    
+    const data = await response.json();
+    console.log('Turnstile verification result:', data.success ? 'passed' : 'failed');
+    return { success: data.success === true, failOpen: false };
+  } catch (error) {
+    console.error('Turnstile: Verification error', error);
+    return { success: true, failOpen: true }; // Fail open on exceptions
+  }
+}
 // Geo-IP lookup using ip-api.com (free, no API key needed)
 async function getLocationFromIP(ip: string): Promise<{ country: string; city: string }> {
   if (!ip || ip === 'unknown') {
@@ -65,7 +110,21 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { agentId, firstName, lastName, email, customFields, _formLoadTime, referrerJourney } = await req.json();
+    const { agentId, firstName, lastName, email, customFields, _formLoadTime, referrerJourney, turnstileToken } = await req.json();
+
+    // Bot protection: Verify Turnstile token (runs before other checks for early rejection)
+    const turnstileResult = await verifyTurnstile(turnstileToken);
+    if (!turnstileResult.success) {
+      console.log('Bot detected: Turnstile verification failed');
+      // Return success to not tip off bots, but don't create lead
+      return new Response(
+        JSON.stringify({ leadId: 'bot-blocked', conversationId: null }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (turnstileResult.failOpen) {
+      console.log('Turnstile: Verification skipped (fail-open mode)');
+    }
 
     // Spam protection: Check timing (reject if submitted too fast)
     if (_formLoadTime) {

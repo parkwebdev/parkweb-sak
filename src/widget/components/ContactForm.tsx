@@ -14,8 +14,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { PhoneInputField } from '../constants';
 import { createLead } from '../api';
 import { useSystemTheme } from '../hooks/useSystemTheme';
+import { TurnstileWidget } from './TurnstileWidget';
 import type { ChatUser } from '../types';
 import { logger } from '@/utils/logger';
+
+// Turnstile site key from environment (public key, safe to expose)
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
 
 /** Custom field configuration */
 interface CustomField {
@@ -76,6 +80,7 @@ export const ContactForm = ({
 }: ContactFormProps) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [checkboxValues, setCheckboxValues] = useState<Record<string, boolean>>({});
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const systemTheme = useSystemTheme();
 
   // Theme-aware colors (hex intentional for iframe isolation - see component JSDoc)
@@ -157,7 +162,8 @@ export const ContactForm = ({
         lastName: trimmedLastName, 
         email: trimmedEmail, 
         customFields: customFieldData, 
-        _formLoadTime: formLoadTime 
+        _formLoadTime: formLoadTime,
+        turnstileToken: turnstileToken,
       });
       
       const userData: ChatUser = { 
@@ -242,6 +248,16 @@ export const ContactForm = ({
               )}
             </div>
           ))}
+          
+          {/* Cloudflare Turnstile bot protection (invisible unless suspicious) */}
+          {TURNSTILE_SITE_KEY && (
+            <TurnstileWidget
+              siteKey={TURNSTILE_SITE_KEY}
+              onVerify={(token) => setTurnstileToken(token)}
+              onError={() => logger.warn('Turnstile verification failed')}
+              onExpire={() => setTurnstileToken(null)}
+            />
+          )}
           
           <WidgetButton type="submit" size="default" className="w-full" style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}>
             Start Chat
