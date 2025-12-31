@@ -95,7 +95,7 @@ export const createExportHistoryColumns = ({
     size: 160,
     minSize: 120,
     maxSize: 200,
-    header: () => <span>Date Range</span>,
+    header: () => <span className="text-sm font-medium">Date Range</span>,
     cell: ({ row }) => {
       const exportItem = row.original;
       return (
@@ -115,7 +115,7 @@ export const createExportHistoryColumns = ({
     size: 80,
     minSize: 60,
     maxSize: 100,
-    header: () => <span>Size</span>,
+    header: () => <span className="text-sm font-medium">Size</span>,
     cell: ({ row }) => {
       return (
         <span className="text-muted-foreground">
@@ -159,7 +159,7 @@ export const createExportHistoryColumns = ({
     size: 100,
     minSize: 80,
     maxSize: 120,
-    header: () => <span className="text-right block">Actions</span>,
+    header: () => <span className="text-sm font-medium text-right block">Actions</span>,
     cell: ({ row }) => {
       const exportItem = row.original;
       

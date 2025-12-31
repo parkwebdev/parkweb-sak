@@ -154,9 +154,11 @@ export function DataTable<TData, TValue>({
             <TableRow>
               <TableCell
                 colSpan={columns.length}
-                className="h-24 text-center text-muted-foreground"
+                className="h-48"
               >
-                {emptyMessage}
+                <div className="flex items-center justify-center h-full">
+                  {emptyMessage}
+                </div>
               </TableCell>
             </TableRow>
           )}
