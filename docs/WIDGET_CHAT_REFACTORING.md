@@ -391,11 +391,12 @@ This section maps EVERY line of `widget-chat/index.ts` to its target location.
 
 | Lines | Content | Target | Action |
 |-------|---------|--------|--------|
-| 1 | `import { serve } from "https://deno.land/std@0.168.0/http/server.ts";` | `widget-chat/index.ts` | KEEP |
-| 2 | `import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";` | `widget-chat/index.ts` | KEEP |
-| 3 | Empty line | - | DELETE |
-| 4-7 | `const corsHeaders = { ... }` | `_shared/cors.ts` | MOVE |
-| 8-12 | Empty lines | - | DELETE |
+| 1-2 | Deno imports (`serve`, `createClient`) | `widget-chat/index.ts` | KEEP |
+| 3 | Empty line (separator) | N/A | DISCARD (formatting) |
+| 4-7 | `corsHeaders` constant | `_shared/cors.ts` | MOVE |
+| 8 | Empty line (separator) | N/A | DISCARD (formatting) |
+| 9-11 | Section header comment: `OBSERVABILITY: ERROR CODES & REQUEST LIMITS` | N/A | DISCARD (section marker) |
+| 12 | Empty line (separator) | N/A | DISCARD (formatting) |
 
 #### Lines 13-107: Error Handling
 
