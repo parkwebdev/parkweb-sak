@@ -679,7 +679,9 @@ export const useAnalytics = (
       supabase.removeChannel(ratingsChannel);
       supabase.removeChannel(eventsChannel);
     };
-  }, [enabled, user?.id, agentId, startDate, endDate, filters]);
+  // IMPORTANT: Use primitive filter values as dependencies, NOT the filters object.
+  // Passing the object directly causes infinite re-renders when callers pass inline object literals.
+  }, [enabled, user?.id, agentId, startDate, endDate, filters.leadStatus, filters.conversationStatus]);
 
   // Transform trend data to SparklineDataPoint format for compatibility
   const bookingTrend: SparklineDataPoint[] = useMemo(() => 

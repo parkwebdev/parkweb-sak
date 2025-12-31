@@ -125,6 +125,9 @@ export default function ReportBuilder() {
   const comparisonStartDate = useMemo(() => subDays(startDate, 30), [startDate]);
   const comparisonEndDate = useMemo(() => subDays(endDate, 30), [endDate]);
 
+  // === Stable Filters (memoized to prevent infinite re-render loops) ===
+  const filters = useMemo(() => ({ leadStatus: 'all', conversationStatus: 'all' }), []);
+
   // === Fetch Analytics Data ===
   const data = useAnalyticsData({
     startDate,
@@ -132,7 +135,7 @@ export default function ReportBuilder() {
     comparisonStartDate,
     comparisonEndDate,
     comparisonMode: false,
-    filters: { leadStatus: 'all', conversationStatus: 'all' },
+    filters,
   });
 
   // === Loading State ===
