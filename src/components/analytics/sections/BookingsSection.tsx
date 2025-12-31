@@ -31,7 +31,7 @@ interface BookingsSectionProps {
   /** Trend value for booking trend chart */
   bookingTrendValue: number;
   /** Loading state */
-  bookingLoading: boolean;
+  loading: boolean;
 }
 
 export function BookingsSection({
@@ -41,7 +41,7 @@ export function BookingsSection({
   bookingsByLocation,
   bookingTrendData,
   bookingTrendValue,
-  bookingLoading,
+  loading,
 }: BookingsSectionProps) {
   return (
     <div className="space-y-6">
@@ -59,7 +59,7 @@ export function BookingsSection({
         />
         <BookingsByLocationChart 
           data={bookingsByLocation} 
-          loading={bookingLoading}
+          loading={loading}
           animationDelay={0.05}
         />
       </div>
@@ -77,7 +77,7 @@ export function BookingsSection({
           >
             <BookingTrendChart 
               data={bookingTrendData} 
-              loading={bookingLoading}
+              loading={loading}
               trendValue={bookingTrendValue}
               trendPeriod="this month"
             />

@@ -8,10 +8,12 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ChartCardHeader } from './ChartCardHeader';
 import { StackedAreaChartCard, SeriesConfig } from '@/components/charts/StackedAreaChartCard';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { format, parseISO } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface LeadStageStats {
   date: string;
@@ -20,15 +22,24 @@ interface LeadStageStats {
 }
 
 interface LeadConversionChartProps {
+  /** Daily lead stage data */
   data: LeadStageStats[];
+  /** Whether data is currently loading */
+  loading?: boolean;
+  /** Trend percentage value */
   trendValue?: number;
+  /** Period for trend comparison */
   trendPeriod?: string;
+  /** Optional CSS class name */
+  className?: string;
 }
 
 export const LeadConversionChart = React.memo(function LeadConversionChart({ 
   data,
+  loading = false,
   trendValue = 0,
   trendPeriod = 'this month',
+  className,
 }: LeadConversionChartProps) {
   const { stages } = useLeadStages();
 
@@ -62,8 +73,25 @@ export const LeadConversionChart = React.memo(function LeadConversionChart({
     }));
   }, [data]);
 
+  // Loading state
+  if (loading) {
+    return (
+      <Card className={cn('h-full', className)}>
+        <CardContent className="pt-6">
+          <div className="space-y-4" role="status" aria-label="Loading lead conversion data">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-56" />
+            </div>
+            <Skeleton className="h-[350px] w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="h-full">
+    <Card className={cn('h-full', className)}>
       <CardContent className="pt-6">
         <ChartCardHeader
           title="Lead Conversion Funnel"

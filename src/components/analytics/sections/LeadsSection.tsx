@@ -83,7 +83,7 @@ export function LeadsSection({
               </div>
             )}
           >
-            <LeadConversionChart data={leadStats} trendValue={leadTrendValue} trendPeriod="this month" />
+            <LeadConversionChart data={leadStats} loading={loading} trendValue={leadTrendValue} trendPeriod="this month" />
           </ErrorBoundary>
         </AnimatedItem>
       </AnimatedList>
