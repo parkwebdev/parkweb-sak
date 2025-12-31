@@ -117,7 +117,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
             />
           </div>
           <div className="px-4 py-2 border-t border-border bg-muted/30">
-            <p className="text-2xs text-muted-foreground text-center">
+            <p className="text-xs text-muted-foreground text-center">
               Click on a location marker to view detailed analytics for that region
             </p>
           </div>
