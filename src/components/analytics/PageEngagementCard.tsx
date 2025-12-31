@@ -113,13 +113,13 @@ export const PageEngagementCard = React.memo(function PageEngagementCard({
           }
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {metrics.map((metric) => (
             <Tooltip key={metric.label}>
               <TooltipTrigger asChild>
-                <div className="space-y-1 cursor-help">
-                  <p className="text-xs text-muted-foreground">{metric.label}</p>
-                  <p className={cn("text-2xl font-semibold tabular-nums", metric.colorClass)}>
+                <div className="p-4 rounded-lg bg-muted/50 border border-border/50 cursor-help transition-colors hover:bg-muted/70">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">{metric.label}</p>
+                  <p className={cn("text-2xl font-bold tabular-nums tracking-tight", metric.colorClass)}>
                     {hasData ? metric.value : '—'}
                   </p>
                 </div>
