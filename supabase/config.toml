@@ -129,3 +129,6 @@ verify_jwt = false
 [functions.renew-calendar-webhooks]
 verify_jwt = false
 schedule = "0 2 * * *"
+
+[functions.send-test-email]
+verify_jwt = true

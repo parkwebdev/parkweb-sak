@@ -13,8 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Copy01, Eye, Code01, Monitor01, Phone01 } from '@untitledui/icons';
+import { Copy01, Eye, Code01, Monitor01, Phone01, Send01, Loading02 } from '@untitledui/icons';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   generateTeamInvitationEmail,
   generateNotificationEmail,
@@ -35,22 +36,82 @@ interface EmailPreviewProps {
   showSource: boolean;
 }
 
-function EmailPreview({ title, html, width, showSource }: EmailPreviewProps) {
+function EmailPreview({ 
+  title, 
+  html, 
+  width, 
+  showSource,
+  templateType,
+  subject,
+}: EmailPreviewProps & { templateType: string; subject: string }) {
   const iframeWidth = width === 'mobile' ? 375 : 600;
+  const [testEmail, setTestEmail] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   const copyHtml = () => {
     navigator.clipboard.writeText(html);
     toast.success('HTML copied to clipboard');
   };
 
+  const sendTestEmail = async () => {
+    if (!testEmail) {
+      toast.error('Please enter an email address');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-test-email', {
+        body: {
+          to: testEmail,
+          templateType,
+          html,
+          subject,
+        },
+      });
+
+      if (error) throw error;
+      
+      toast.success(`Test email sent to ${testEmail}`);
+      setTestEmail('');
+    } catch (error: any) {
+      console.error('Failed to send test email:', error);
+      toast.error(error.message || 'Failed to send test email');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Button variant="ghost" size="sm" onClick={copyHtml}>
-          <Copy01 size={16} className="mr-1" />
-          Copy HTML
-        </Button>
+      <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b gap-4">
+        <CardTitle className="text-sm font-medium shrink-0">{title}</CardTitle>
+        <div className="flex items-center gap-2 flex-1 justify-end">
+          <Input
+            type="email"
+            placeholder="test@example.com"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            className="max-w-[200px] h-8 text-sm"
+          />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={sendTestEmail}
+            disabled={isSending || !testEmail}
+          >
+            {isSending ? (
+              <Loading02 size={16} className="mr-1 animate-spin" />
+            ) : (
+              <Send01 size={16} className="mr-1" />
+            )}
+            Send Test
+          </Button>
+          <Button variant="ghost" size="sm" onClick={copyHtml}>
+            <Copy01 size={16} className="mr-1" />
+            Copy HTML
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {showSource ? (
@@ -211,6 +272,8 @@ export default function EmailTemplatesTest() {
               html={generateTeamInvitationEmail(invitationData)}
               width={previewWidth}
               showSource={showSource}
+              templateType="team_invitation"
+              subject={`${invitationData.invitedBy} invited you to join ${invitationData.companyName} on Pilot`}
             />
           </TabsContent>
 
@@ -278,6 +341,8 @@ export default function EmailTemplatesTest() {
               html={generateNotificationEmail(notificationData)}
               width={previewWidth}
               showSource={showSource}
+              templateType="notification"
+              subject={notificationData.title}
             />
           </TabsContent>
 
@@ -343,6 +408,8 @@ export default function EmailTemplatesTest() {
               html={generateBookingConfirmationEmail(bookingData)}
               width={previewWidth}
               showSource={showSource}
+              templateType="booking_confirmation"
+              subject={`Confirmed: ${bookingData.eventType} on ${bookingData.date}`}
             />
           </TabsContent>
 
@@ -376,6 +443,8 @@ export default function EmailTemplatesTest() {
               html={generateScheduledReportEmail(reportData)}
               width={previewWidth}
               showSource={showSource}
+              templateType="scheduled_report"
+              subject={`${reportData.reportName} — ${reportData.dateRange}`}
             />
           </TabsContent>
         </Tabs>
