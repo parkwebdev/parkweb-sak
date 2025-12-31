@@ -20,9 +20,19 @@ import {
   Zap,
   Share07,
   File02,
-  Globe01,
-  FileCheck02,
 } from '@untitledui/icons';
+import {
+  ConversationsFilled,
+  LeadsFilled,
+  BookingsFilled,
+  AriPerformanceFilled,
+  SourcesFilled,
+  PagesFilled,
+  GeographyOutline,
+  GeographyFilled,
+  ReportsOutline,
+  ReportsFilled,
+} from '@/components/icons/AnalyticsMenuIcons';
 
 // Re-export AnalyticsSection type for backwards compatibility
 export type { AnalyticsSection } from '@/lib/analytics-constants';
@@ -31,25 +41,26 @@ interface SectionItem {
   id: AnalyticsSection;
   label: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
+  activeIcon: React.ComponentType<{ size?: number; className?: string }>;
   group: string;
 }
 
 const SECTIONS: SectionItem[] = [
   // Engagement
-  { id: 'conversations', label: 'Conversations', icon: MessageChatCircle, group: 'Engagement' },
-  { id: 'leads', label: 'Leads', icon: Users01, group: 'Engagement' },
+  { id: 'conversations', label: 'Conversations', icon: MessageChatCircle, activeIcon: ConversationsFilled, group: 'Engagement' },
+  { id: 'leads', label: 'Leads', icon: Users01, activeIcon: LeadsFilled, group: 'Engagement' },
   
   // Performance
-  { id: 'bookings', label: 'Bookings', icon: Calendar, group: 'Performance' },
-  { id: 'ai-performance', label: 'Ari Performance', icon: Zap, group: 'Performance' },
+  { id: 'bookings', label: 'Bookings', icon: Calendar, activeIcon: BookingsFilled, group: 'Performance' },
+  { id: 'ai-performance', label: 'Ari Performance', icon: Zap, activeIcon: AriPerformanceFilled, group: 'Performance' },
   
   // Traffic
-  { id: 'sources', label: 'Sources', icon: Share07, group: 'Traffic' },
-  { id: 'pages', label: 'Pages', icon: File02, group: 'Traffic' },
-  { id: 'geography', label: 'Geography', icon: Globe01, group: 'Traffic' },
+  { id: 'sources', label: 'Sources', icon: Share07, activeIcon: SourcesFilled, group: 'Traffic' },
+  { id: 'pages', label: 'Pages', icon: File02, activeIcon: PagesFilled, group: 'Traffic' },
+  { id: 'geography', label: 'Geography', icon: GeographyOutline, activeIcon: GeographyFilled, group: 'Traffic' },
   
   // Reporting
-  { id: 'reports', label: 'Reports', icon: FileCheck02, group: 'Reporting' },
+  { id: 'reports', label: 'Reports', icon: ReportsOutline, activeIcon: ReportsFilled, group: 'Reporting' },
 ];
 
 interface AnalyticsSectionMenuProps {
@@ -81,6 +92,7 @@ export function AnalyticsSectionMenu({
           <div className="space-y-0.5">
             {items.map((item, index) => {
               const isActive = activeSection === item.id;
+              const Icon = isActive ? item.activeIcon : item.icon;
               
               return (
                 <motion.button
@@ -96,7 +108,7 @@ export function AnalyticsSectionMenu({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: (groupIndex * 4 + index) * 0.02, ...springs.smooth }}
                 >
-                  <item.icon size={15} className="flex-shrink-0" />
+                  <Icon size={15} className="flex-shrink-0" />
                   <span className="truncate">{item.label}</span>
                 </motion.button>
               );
