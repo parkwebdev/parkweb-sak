@@ -34,6 +34,7 @@ import AnalyticsWrapper from "./pages/AnalyticsWrapper";
 import SettingsWrapper from "./pages/SettingsWrapper";
 import PlannerWrapper from "./pages/PlannerWrapper";
 import BookingComponentsTest from "./pages/BookingComponentsTest";
+import EmailTemplatesTest from "./pages/EmailTemplatesTest";
 import ReportBuilder from "./pages/ReportBuilder";
 
 /** React Query client instance with default configuration */
@@ -84,7 +85,10 @@ const App = () => (
                     
                     {/* Dev-only routes inside layout */}
                     {import.meta.env.DEV && (
-                      <Route path="/booking-test" element={<BookingComponentsTest />} />
+                      <>
+                        <Route path="/booking-test" element={<BookingComponentsTest />} />
+                        <Route path="/email-templates-test" element={<EmailTemplatesTest />} />
+                      </>
                     )}
                   </Route>
                   
