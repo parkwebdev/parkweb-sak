@@ -1,8 +1,7 @@
 /**
  * Email Templates Test Page
  * 
- * Dev-only page for previewing and testing email templates.
- * Renders all email templates with mock data controls.
+ * Dev-only page for previewing and testing email templates with sidebar navigation.
  */
 
 import { useState } from 'react';
@@ -11,11 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Copy01, Eye, Code01, Monitor01, Phone01, Send01, Loading02 } from '@untitledui/icons';
+import { Copy01, Send01, Loading02, Phone01, Monitor01 } from '@untitledui/icons';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
 import {
   generateTeamInvitationEmail,
   generateNotificationEmail,
@@ -30,20 +29,14 @@ import {
 type PreviewWidth = 'mobile' | 'desktop';
 
 interface EmailPreviewProps {
-  title: string;
   html: string;
   width: PreviewWidth;
   showSource: boolean;
+  templateType: string;
+  subject: string;
 }
 
-function EmailPreview({ 
-  title, 
-  html, 
-  width, 
-  showSource,
-  templateType,
-  subject,
-}: EmailPreviewProps & { templateType: string; subject: string }) {
+function EmailPreview({ html, width, showSource, templateType, subject }: EmailPreviewProps) {
   const iframeWidth = width === 'mobile' ? 375 : 600;
   const [testEmail, setTestEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -62,16 +55,10 @@ function EmailPreview({
     setIsSending(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-test-email', {
-        body: {
-          to: testEmail,
-          templateType,
-          html,
-          subject,
-        },
+        body: { to: testEmail, templateType, html, subject },
       });
 
       if (error) throw error;
-      
       toast.success(`Test email sent to ${testEmail}`);
       setTestEmail('');
     } catch (error: any) {
@@ -85,7 +72,9 @@ function EmailPreview({
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between py-3 px-4 border-b gap-4">
-        <CardTitle className="text-sm font-medium shrink-0">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium shrink-0">
+          {showSource ? 'HTML Source' : `Preview (${width === 'mobile' ? '375px' : '600px'})`}
+        </CardTitle>
         <div className="flex items-center gap-2 flex-1 justify-end">
           <Input
             type="email"
@@ -94,36 +83,27 @@ function EmailPreview({
             onChange={(e) => setTestEmail(e.target.value)}
             className="max-w-[200px] h-8 text-sm"
           />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={sendTestEmail}
-            disabled={isSending || !testEmail}
-          >
-            {isSending ? (
-              <Loading02 size={16} className="mr-1 animate-spin" />
-            ) : (
-              <Send01 size={16} className="mr-1" />
-            )}
+          <Button variant="outline" size="sm" onClick={sendTestEmail} disabled={isSending || !testEmail}>
+            {isSending ? <Loading02 size={16} className="mr-1 animate-spin" /> : <Send01 size={16} className="mr-1" />}
             Send Test
           </Button>
           <Button variant="ghost" size="sm" onClick={copyHtml}>
             <Copy01 size={16} className="mr-1" />
-            Copy HTML
+            Copy
           </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         {showSource ? (
-          <pre className="p-4 text-xs overflow-auto max-h-[500px] bg-muted">
+          <pre className="p-4 text-xs overflow-auto max-h-[600px] bg-muted">
             <code>{html}</code>
           </pre>
         ) : (
           <div className="flex justify-center bg-muted/50 p-4">
             <iframe
               srcDoc={html}
-              style={{ width: iframeWidth, height: 600, border: 'none', background: '#f5f5f5' }}
-              title={title}
+              style={{ width: iframeWidth, height: 650, border: 'none', background: '#f5f5f5' }}
+              title="Email Preview"
             />
           </div>
         )}
@@ -133,7 +113,7 @@ function EmailPreview({
 }
 
 export default function EmailTemplatesTest() {
-  // Global controls
+  const [activeTemplate, setActiveTemplate] = useState<EmailTemplateType>('invitation');
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>('desktop');
   const [showSource, setShowSource] = useState(false);
 
@@ -178,277 +158,285 @@ export default function EmailTemplatesTest() {
     viewReportUrl: 'https://getpilot.io/analytics',
   });
 
+  // Generate HTML and subject based on active template
+  const getTemplateHtml = () => {
+    switch (activeTemplate) {
+      case 'invitation': return generateTeamInvitationEmail(invitationData);
+      case 'notification': return generateNotificationEmail(notificationData);
+      case 'booking': return generateBookingConfirmationEmail(bookingData);
+      case 'report': return generateScheduledReportEmail(reportData);
+    }
+  };
+
+  const getTemplateSubject = () => {
+    switch (activeTemplate) {
+      case 'invitation': return `${invitationData.invitedBy} invited you to join ${invitationData.companyName} on Pilot`;
+      case 'notification': return notificationData.title;
+      case 'booking': return `Confirmed: ${bookingData.eventType} on ${bookingData.date}`;
+      case 'report': return `${reportData.reportName} — ${reportData.dateRange}`;
+    }
+  };
+
+  // Render mock data controls based on active template
+  const renderMockDataControls = () => {
+    switch (activeTemplate) {
+      case 'invitation':
+        return (
+          <Card>
+            <CardHeader className="py-3 px-4 border-b">
+              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="inv-by" className="text-xs">Invited By</Label>
+                <Input
+                  id="inv-by"
+                  value={invitationData.invitedBy}
+                  onChange={(e) => setInvitationData({ ...invitationData, invitedBy: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="inv-company" className="text-xs">Company Name</Label>
+                <Input
+                  id="inv-company"
+                  value={invitationData.companyName}
+                  onChange={(e) => setInvitationData({ ...invitationData, companyName: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="inv-url" className="text-xs">Signup URL</Label>
+                <Input
+                  id="inv-url"
+                  value={invitationData.signupUrl}
+                  onChange={(e) => setInvitationData({ ...invitationData, signupUrl: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'notification':
+        return (
+          <Card>
+            <CardHeader className="py-3 px-4 border-b">
+              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="notif-title" className="text-xs">Title</Label>
+                <Input
+                  id="notif-title"
+                  value={notificationData.title}
+                  onChange={(e) => setNotificationData({ ...notificationData, title: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notif-type" className="text-xs">Type</Label>
+                <Select
+                  value={notificationData.type}
+                  onValueChange={(v) => setNotificationData({ ...notificationData, type: v as NotificationData['type'] })}
+                >
+                  <SelectTrigger id="notif-type" className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="team">Team</SelectItem>
+                    <SelectItem value="scope_work">Scope Work</SelectItem>
+                    <SelectItem value="onboarding">Onboarding</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                    <SelectItem value="security">Security</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="notif-message" className="text-xs">Message</Label>
+                <Input
+                  id="notif-message"
+                  value={notificationData.message}
+                  onChange={(e) => setNotificationData({ ...notificationData, message: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notif-action-url" className="text-xs">Action URL</Label>
+                <Input
+                  id="notif-action-url"
+                  value={notificationData.actionUrl}
+                  onChange={(e) => setNotificationData({ ...notificationData, actionUrl: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notif-action-label" className="text-xs">Action Label</Label>
+                <Input
+                  id="notif-action-label"
+                  value={notificationData.actionLabel}
+                  onChange={(e) => setNotificationData({ ...notificationData, actionLabel: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'booking':
+        return (
+          <Card>
+            <CardHeader className="py-3 px-4 border-b">
+              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="book-name" className="text-xs">Visitor Name</Label>
+                <Input
+                  id="book-name"
+                  value={bookingData.visitorName}
+                  onChange={(e) => setBookingData({ ...bookingData, visitorName: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="book-type" className="text-xs">Event Type</Label>
+                <Input
+                  id="book-type"
+                  value={bookingData.eventType}
+                  onChange={(e) => setBookingData({ ...bookingData, eventType: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="book-date" className="text-xs">Date</Label>
+                <Input
+                  id="book-date"
+                  value={bookingData.date}
+                  onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="book-time" className="text-xs">Time</Label>
+                <Input
+                  id="book-time"
+                  value={bookingData.time}
+                  onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="book-tz" className="text-xs">Timezone</Label>
+                <Input
+                  id="book-tz"
+                  value={bookingData.timezone}
+                  onChange={(e) => setBookingData({ ...bookingData, timezone: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="book-loc" className="text-xs">Location</Label>
+                <Input
+                  id="book-loc"
+                  value={bookingData.location || ''}
+                  onChange={(e) => setBookingData({ ...bookingData, location: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'report':
+        return (
+          <Card>
+            <CardHeader className="py-3 px-4 border-b">
+              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="report-name" className="text-xs">Report Name</Label>
+                <Input
+                  id="report-name"
+                  value={reportData.reportName}
+                  onChange={(e) => setReportData({ ...reportData, reportName: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="report-range" className="text-xs">Date Range</Label>
+                <Input
+                  id="report-range"
+                  value={reportData.dateRange}
+                  onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+    }
+  };
+
   return (
-    <div className="h-screen bg-background overflow-auto">
-      <div className="max-w-7xl mx-auto space-y-6 p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Email Templates</h1>
-            <p className="text-muted-foreground text-sm">Preview and test email templates with mock data</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Width Toggle */}
-            <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-              <Button
-                variant={previewWidth === 'mobile' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setPreviewWidth('mobile')}
-              >
-                <Phone01 size={16} className="mr-1" />
-                Mobile
-              </Button>
-              <Button
-                variant={previewWidth === 'desktop' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setPreviewWidth('desktop')}
-              >
-                <Monitor01 size={16} className="mr-1" />
-                Desktop
-              </Button>
-            </div>
+    <div className="h-screen bg-background flex min-h-0">
+      {/* Left Sidebar */}
+      <EmailTemplateSidebar activeTemplate={activeTemplate} onTemplateChange={setActiveTemplate} />
 
-            {/* Source Toggle */}
-            <div className="flex items-center gap-2">
-              <Label htmlFor="show-source" className="text-sm">
-                {showSource ? <Code01 size={16} /> : <Eye size={16} />}
-              </Label>
-              <Switch
-                id="show-source"
-                checked={showSource}
-                onCheckedChange={setShowSource}
-              />
-              <span className="text-sm text-muted-foreground">
-                {showSource ? 'Source' : 'Preview'}
-              </span>
+      {/* Right Content */}
+      <main className="flex-1 min-w-0 overflow-y-auto">
+        <div className="p-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">Email Templates</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">Preview and test email templates with mock data</p>
+            </div>
+            <div className="flex items-center gap-4">
+              {/* Width Toggle */}
+              <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5">
+                <Button
+                  variant={previewWidth === 'mobile' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setPreviewWidth('mobile')}
+                  className="h-7 text-xs px-3"
+                >
+                  <Phone01 size={14} className="mr-1" />
+                  Mobile
+                </Button>
+                <Button
+                  variant={previewWidth === 'desktop' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setPreviewWidth('desktop')}
+                  className="h-7 text-xs px-3"
+                >
+                  <Monitor01 size={14} className="mr-1" />
+                  Desktop
+                </Button>
+              </div>
+
+              {/* Source Toggle */}
+              <div className="flex items-center gap-2">
+                <Label htmlFor="show-source" className="text-xs text-muted-foreground">Show Source</Label>
+                <Switch id="show-source" checked={showSource} onCheckedChange={setShowSource} />
+              </div>
             </div>
           </div>
+
+          {/* Mock Data Controls */}
+          {renderMockDataControls()}
+
+          {/* Email Preview */}
+          <EmailPreview
+            html={getTemplateHtml()}
+            width={previewWidth}
+            showSource={showSource}
+            templateType={activeTemplate}
+            subject={getTemplateSubject()}
+          />
         </div>
-
-        <Tabs defaultValue="invitation" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="invitation">Team Invitation</TabsTrigger>
-            <TabsTrigger value="notification">Notification</TabsTrigger>
-            <TabsTrigger value="booking">Booking Confirmation</TabsTrigger>
-            <TabsTrigger value="report">Scheduled Report</TabsTrigger>
-          </TabsList>
-
-          {/* Team Invitation */}
-          <TabsContent value="invitation" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Mock Data Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="inv-by">Invited By</Label>
-                  <Input
-                    id="inv-by"
-                    value={invitationData.invitedBy}
-                    onChange={(e) => setInvitationData({ ...invitationData, invitedBy: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="inv-company">Company Name</Label>
-                  <Input
-                    id="inv-company"
-                    value={invitationData.companyName}
-                    onChange={(e) => setInvitationData({ ...invitationData, companyName: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="inv-url">Signup URL</Label>
-                  <Input
-                    id="inv-url"
-                    value={invitationData.signupUrl}
-                    onChange={(e) => setInvitationData({ ...invitationData, signupUrl: e.target.value })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            <EmailPreview
-              title="Team Invitation Email"
-              html={generateTeamInvitationEmail(invitationData)}
-              width={previewWidth}
-              showSource={showSource}
-              templateType="team_invitation"
-              subject={`${invitationData.invitedBy} invited you to join ${invitationData.companyName} on Pilot`}
-            />
-          </TabsContent>
-
-          {/* Notification */}
-          <TabsContent value="notification" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Mock Data Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="notif-title">Title</Label>
-                  <Input
-                    id="notif-title"
-                    value={notificationData.title}
-                    onChange={(e) => setNotificationData({ ...notificationData, title: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notif-type">Type</Label>
-                  <Select
-                    value={notificationData.type}
-                    onValueChange={(v) => setNotificationData({ ...notificationData, type: v as NotificationData['type'] })}
-                  >
-                    <SelectTrigger id="notif-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="team">Team</SelectItem>
-                      <SelectItem value="scope_work">Scope Work</SelectItem>
-                      <SelectItem value="onboarding">Onboarding</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
-                      <SelectItem value="security">Security</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="notif-message">Message</Label>
-                  <Input
-                    id="notif-message"
-                    value={notificationData.message}
-                    onChange={(e) => setNotificationData({ ...notificationData, message: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notif-action-url">Action URL</Label>
-                  <Input
-                    id="notif-action-url"
-                    value={notificationData.actionUrl}
-                    onChange={(e) => setNotificationData({ ...notificationData, actionUrl: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notif-action-label">Action Label</Label>
-                  <Input
-                    id="notif-action-label"
-                    value={notificationData.actionLabel}
-                    onChange={(e) => setNotificationData({ ...notificationData, actionLabel: e.target.value })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            <EmailPreview
-              title="Notification Email"
-              html={generateNotificationEmail(notificationData)}
-              width={previewWidth}
-              showSource={showSource}
-              templateType="notification"
-              subject={notificationData.title}
-            />
-          </TabsContent>
-
-          {/* Booking Confirmation */}
-          <TabsContent value="booking" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Mock Data Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="book-name">Visitor Name</Label>
-                  <Input
-                    id="book-name"
-                    value={bookingData.visitorName}
-                    onChange={(e) => setBookingData({ ...bookingData, visitorName: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="book-type">Event Type</Label>
-                  <Input
-                    id="book-type"
-                    value={bookingData.eventType}
-                    onChange={(e) => setBookingData({ ...bookingData, eventType: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="book-date">Date</Label>
-                  <Input
-                    id="book-date"
-                    value={bookingData.date}
-                    onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="book-time">Time</Label>
-                  <Input
-                    id="book-time"
-                    value={bookingData.time}
-                    onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="book-tz">Timezone</Label>
-                  <Input
-                    id="book-tz"
-                    value={bookingData.timezone}
-                    onChange={(e) => setBookingData({ ...bookingData, timezone: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="book-loc">Location</Label>
-                  <Input
-                    id="book-loc"
-                    value={bookingData.location || ''}
-                    onChange={(e) => setBookingData({ ...bookingData, location: e.target.value })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            <EmailPreview
-              title="Booking Confirmation Email"
-              html={generateBookingConfirmationEmail(bookingData)}
-              width={previewWidth}
-              showSource={showSource}
-              templateType="booking_confirmation"
-              subject={`Confirmed: ${bookingData.eventType} on ${bookingData.date}`}
-            />
-          </TabsContent>
-
-          {/* Scheduled Report */}
-          <TabsContent value="report" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Mock Data Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="report-name">Report Name</Label>
-                  <Input
-                    id="report-name"
-                    value={reportData.reportName}
-                    onChange={(e) => setReportData({ ...reportData, reportName: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="report-range">Date Range</Label>
-                  <Input
-                    id="report-range"
-                    value={reportData.dateRange}
-                    onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            <EmailPreview
-              title="Scheduled Report Email"
-              html={generateScheduledReportEmail(reportData)}
-              width={previewWidth}
-              showSource={showSource}
-              templateType="scheduled_report"
-              subject={`${reportData.reportName} — ${reportData.dateRange}`}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
+      </main>
     </div>
   );
 }
