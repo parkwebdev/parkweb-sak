@@ -62,6 +62,118 @@ export interface EmailVerificationData {
   expiresIn?: string;
 }
 
+// NEW TEMPLATE DATA TYPES
+
+export interface BookingCancellationData {
+  visitorName: string;
+  eventType: string;
+  date: string;
+  time: string;
+  timezone: string;
+  reason?: string;
+  rescheduleUrl?: string;
+}
+
+export interface BookingReminderData {
+  visitorName: string;
+  eventType: string;
+  date: string;
+  time: string;
+  timezone: string;
+  location?: string;
+  reminderTime: string; // e.g., "24 hours", "1 hour"
+  calendarLink?: string;
+}
+
+export interface NewLeadNotificationData {
+  leadName: string;
+  leadEmail?: string;
+  leadPhone?: string;
+  source: string;
+  message?: string;
+  viewLeadUrl: string;
+}
+
+export interface HumanTakeoverAlertData {
+  conversationId: string;
+  visitorName?: string;
+  requestReason?: string;
+  conversationPreview: string;
+  takeoverUrl: string;
+}
+
+export interface ConversationSummaryData {
+  period: string; // e.g., "Dec 25-31, 2024"
+  totalConversations: number;
+  leadsGenerated: number;
+  avgResponseTime: string;
+  topTopics: string[];
+  viewDetailsUrl: string;
+}
+
+export interface WelcomeEmailData {
+  userName: string;
+  companyName?: string;
+  getStartedUrl: string;
+}
+
+export interface BookingRescheduledData {
+  visitorName: string;
+  eventType: string;
+  oldDate: string;
+  oldTime: string;
+  newDate: string;
+  newTime: string;
+  timezone: string;
+  calendarLink?: string;
+}
+
+export interface LeadStatusChangeData {
+  leadName: string;
+  previousStage: string;
+  newStage: string;
+  changedBy: string;
+  viewLeadUrl: string;
+}
+
+export interface WebhookFailureAlertData {
+  webhookName: string;
+  endpoint: string;
+  errorCode: number;
+  errorMessage: string;
+  failedAt: string;
+  retryCount: number;
+  configureUrl: string;
+}
+
+export interface CalendarIntegrationSuccessData {
+  userName: string;
+  calendarType: 'Google Calendar' | 'Outlook Calendar';
+  email: string;
+  connectedAt: string;
+}
+
+export interface TeamMemberRemovedData {
+  memberName: string;
+  removedBy: string;
+  teamName: string;
+  reason?: string;
+}
+
+export interface AccountInactivityWarningData {
+  userName: string;
+  lastActiveDate: string;
+  daysInactive: number;
+  loginUrl: string;
+}
+
+export interface FeatureAnnouncementData {
+  featureTitle: string;
+  description: string;
+  imageUrl?: string;
+  learnMoreUrl: string;
+}
+
 // =============================================================================
 // DESIGN TOKENS
 // =============================================================================
@@ -75,6 +187,9 @@ const colors = {
   border: '#e5e5e5',
   buttonBg: '#171717',
   buttonText: '#ffffff',
+  success: '#22c55e',
+  warning: '#f59e0b',
+  error: '#ef4444',
   // Dark mode overrides
   dark: {
     background: '#0a0a0a',
@@ -214,15 +329,21 @@ const paragraph = (text: string, muted = false): string => {
   return `<p class="${className}" style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: ${color};">${text}</p>`;
 };
 
-const button = (text: string, url: string): string => `
+const button = (text: string, url: string, variant: 'primary' | 'secondary' = 'primary'): string => {
+  const bgColor = variant === 'primary' ? colors.buttonBg : 'transparent';
+  const textColor = variant === 'primary' ? colors.buttonText : colors.buttonBg;
+  const border = variant === 'secondary' ? `border: 1px solid ${colors.border};` : '';
+  
+  return `
   <table role="presentation" cellpadding="0" cellspacing="0" border="0">
     <tr>
-      <td class="email-btn" style="border-radius: 6px; background-color: ${colors.buttonBg};">
-        <a href="${url}" target="_blank" class="email-btn-text" style="display: inline-block; font-family: ${fonts.stack}; font-size: 14px; font-weight: 600; color: ${colors.buttonText}; text-decoration: none; padding: 12px 24px; border-radius: 6px;">${text}</a>
+      <td class="email-btn" style="border-radius: 6px; background-color: ${bgColor}; ${border}">
+        <a href="${url}" target="_blank" class="email-btn-text" style="display: inline-block; font-family: ${fonts.stack}; font-size: 14px; font-weight: 600; color: ${textColor}; text-decoration: none; padding: 12px 24px; border-radius: 6px;">${text}</a>
       </td>
     </tr>
   </table>
 `;
+};
 
 const spacer = (height = 24): string => `
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -237,8 +358,32 @@ const detailRow = (label: string, value: string): string => `
   </tr>
 `;
 
+const badge = (text: string, color: string): string => `
+  <span style="display: inline-block; padding: 4px 10px; font-size: 12px; font-weight: 600; color: ${color}; background-color: ${color}15; border-radius: 4px;">${text}</span>
+`;
+
+const divider = (): string => `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr><td class="email-border" style="height: 1px; background-color: ${colors.border};"></td></tr>
+  </table>
+`;
+
+const alertBox = (text: string, type: 'warning' | 'error' | 'success' = 'warning'): string => {
+  const colorMap = { warning: colors.warning, error: colors.error, success: colors.success };
+  const bgColor = colorMap[type];
+  return `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${bgColor}10; border-left: 4px solid ${bgColor}; border-radius: 4px;">
+    <tr>
+      <td style="padding: 16px;">
+        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: ${colors.text};">${text}</p>
+      </td>
+    </tr>
+  </table>
+`;
+};
+
 // =============================================================================
-// TEMPLATES
+// EXISTING TEMPLATES
 // =============================================================================
 
 export function generateTeamInvitationEmail(data: TeamInvitationData): string {
@@ -375,6 +520,418 @@ export function generateEmailVerificationEmail(data: EmailVerificationData): str
   
   return generateWrapper({
     preheaderText: 'Verify your email to get started with Pilot',
+    content,
+  });
+}
+
+// =============================================================================
+// NEW TEMPLATES - HIGH PRIORITY
+// =============================================================================
+
+export function generateBookingCancellationEmail(data: BookingCancellationData): string {
+  const content = `
+    ${heading('Your booking has been cancelled')}
+    ${paragraph(`Hi <strong>${data.visitorName}</strong>, your appointment has been cancelled.`)}
+    
+    <!-- Cancelled Event Card -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p class="email-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: ${colors.text}; text-decoration: line-through; opacity: 0.6;">${data.eventType}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${detailRow('Date', data.date)}
+            ${detailRow('Time', `${data.time} (${data.timezone})`)}
+            ${data.reason ? detailRow('Reason', data.reason) : ''}
+          </table>
+        </td>
+      </tr>
+    </table>
+    
+    ${data.rescheduleUrl ? `
+      ${spacer(24)}
+      ${paragraph('Would you like to book a new appointment?', true)}
+      ${button('Reschedule', data.rescheduleUrl)}
+    ` : ''}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `Your ${data.eventType} on ${data.date} has been cancelled`,
+    content,
+  });
+}
+
+export function generateBookingReminderEmail(data: BookingReminderData): string {
+  const content = `
+    ${heading('Reminder: Your appointment is coming up')}
+    ${paragraph(`Hi <strong>${data.visitorName}</strong>, this is a friendly reminder that your appointment is in <strong>${data.reminderTime}</strong>.`)}
+    
+    <!-- Event Card -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p class="email-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: ${colors.text};">${data.eventType}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${detailRow('Date', data.date)}
+            ${detailRow('Time', `${data.time} (${data.timezone})`)}
+            ${data.location ? detailRow('Location', data.location) : ''}
+          </table>
+        </td>
+      </tr>
+    </table>
+    
+    ${data.calendarLink ? `${spacer(24)}${button('View in Calendar', data.calendarLink)}` : ''}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `Reminder: ${data.eventType} on ${data.date} at ${data.time}`,
+    content,
+  });
+}
+
+export function generateNewLeadNotificationEmail(data: NewLeadNotificationData): string {
+  const content = `
+    ${heading('New lead captured')}
+    ${paragraph(`A new lead has been captured from <strong>${data.source}</strong>.`)}
+    
+    <!-- Lead Card -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p class="email-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: ${colors.text};">${data.leadName}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${data.leadEmail ? detailRow('Email', data.leadEmail) : ''}
+            ${data.leadPhone ? detailRow('Phone', data.leadPhone) : ''}
+            ${detailRow('Source', data.source)}
+          </table>
+          ${data.message ? `
+            ${spacer(12)}
+            <p class="email-text-muted" style="margin: 0; font-size: 14px; font-style: italic; color: ${colors.textMuted};">"${data.message}"</p>
+          ` : ''}
+        </td>
+      </tr>
+    </table>
+    
+    ${spacer(24)}
+    ${button('View Lead', data.viewLeadUrl)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `New lead: ${data.leadName} from ${data.source}`,
+    content,
+  });
+}
+
+export function generateHumanTakeoverAlertEmail(data: HumanTakeoverAlertData): string {
+  const content = `
+    ${heading('Human assistance requested')}
+    ${alertBox('A conversation requires your immediate attention.', 'warning')}
+    ${spacer(16)}
+    
+    <!-- Conversation Preview -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${data.visitorName ? detailRow('Visitor', data.visitorName) : ''}
+            ${detailRow('Conversation', data.conversationId)}
+            ${data.requestReason ? detailRow('Reason', data.requestReason) : ''}
+          </table>
+          ${spacer(12)}
+          <p class="email-text-muted" style="margin: 0; font-size: 14px; color: ${colors.textMuted};">Preview:</p>
+          <p class="email-text" style="margin: 8px 0 0 0; font-size: 14px; line-height: 1.5; color: ${colors.text};">${data.conversationPreview}</p>
+        </td>
+      </tr>
+    </table>
+    
+    ${spacer(24)}
+    ${button('Take Over Conversation', data.takeoverUrl)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `Urgent: Human takeover requested${data.visitorName ? ` by ${data.visitorName}` : ''}`,
+    content,
+  });
+}
+
+export function generateConversationSummaryEmail(data: ConversationSummaryData): string {
+  const topicsHtml = data.topTopics.map(topic => 
+    `<span style="display: inline-block; padding: 4px 12px; margin: 4px 4px 4px 0; font-size: 13px; color: ${colors.text}; background-color: ${colors.background}; border-radius: 4px;">${topic}</span>`
+  ).join('');
+  
+  const content = `
+    ${heading('Conversation Summary')}
+    ${paragraph(`Here's your summary for <strong>${data.period}</strong>.`)}
+    
+    <!-- Metrics Grid -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 16px; text-align: center; vertical-align: top; width: 33%;">
+          <p class="email-text" style="margin: 0 0 4px 0; font-size: 28px; font-weight: 600; color: ${colors.text};">${data.totalConversations}</p>
+          <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">Conversations</p>
+        </td>
+        <td style="padding: 16px; text-align: center; vertical-align: top; width: 33%;">
+          <p class="email-text" style="margin: 0 0 4px 0; font-size: 28px; font-weight: 600; color: ${colors.success};">${data.leadsGenerated}</p>
+          <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">Leads Generated</p>
+        </td>
+        <td style="padding: 16px; text-align: center; vertical-align: top; width: 33%;">
+          <p class="email-text" style="margin: 0 0 4px 0; font-size: 28px; font-weight: 600; color: ${colors.text};">${data.avgResponseTime}</p>
+          <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">Avg Response</p>
+        </td>
+      </tr>
+    </table>
+    
+    ${data.topTopics.length > 0 ? `
+      ${spacer(24)}
+      <p class="email-text-muted" style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: ${colors.textMuted};">Top Topics</p>
+      <div>${topicsHtml}</div>
+    ` : ''}
+    
+    ${spacer(24)}
+    ${button('View Details', data.viewDetailsUrl)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `${data.totalConversations} conversations, ${data.leadsGenerated} leads - ${data.period}`,
+    content,
+  });
+}
+
+// =============================================================================
+// NEW TEMPLATES - MEDIUM PRIORITY
+// =============================================================================
+
+export function generateWelcomeEmail(data: WelcomeEmailData): string {
+  const companyNote = data.companyName 
+    ? ` We're excited to have ${data.companyName} on board.`
+    : '';
+  
+  const content = `
+    ${heading(`Welcome to Pilot, ${data.userName}!`)}
+    ${paragraph(`Thanks for joining Pilot.${companyNote}`)}
+    ${paragraph('Pilot helps you manage conversations, capture leads, and provide AI-powered customer support—all in one place.', true)}
+    
+    <!-- Quick Start -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p class="email-text" style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: ${colors.text};">Get started in 3 steps:</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">1. Set up your AI agent</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">2. Add your knowledge base</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">3. Install the widget on your site</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    
+    ${spacer(24)}
+    ${button('Get Started', data.getStartedUrl)}
+    ${spacer(16)}
+    ${paragraph("Need help? Reply to this email and we'll get back to you.", true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `Welcome to Pilot, ${data.userName}! Let's get you set up.`,
+    content,
+  });
+}
+
+export function generateBookingRescheduledEmail(data: BookingRescheduledData): string {
+  const content = `
+    ${heading('Your booking has been rescheduled')}
+    ${paragraph(`Hi <strong>${data.visitorName}</strong>, your appointment has been moved to a new time.`)}
+    
+    <!-- Old Time (crossed out) -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-radius: 8px; border: 1px dashed ${colors.border};">
+      <tr>
+        <td style="padding: 16px;">
+          <p class="email-text-muted" style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: ${colors.textMuted};">Previous Time</p>
+          <p class="email-text" style="margin: 0; font-size: 16px; color: ${colors.text}; text-decoration: line-through; opacity: 0.6;">${data.oldDate} at ${data.oldTime}</p>
+        </td>
+      </tr>
+    </table>
+    
+    ${spacer(16)}
+    
+    <!-- New Time -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <p class="email-text-muted" style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: ${colors.textMuted};">New Time</p>
+          <p class="email-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: ${colors.text};">${data.eventType}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${detailRow('Date', data.newDate)}
+            ${detailRow('Time', `${data.newTime} (${data.timezone})`)}
+          </table>
+        </td>
+      </tr>
+    </table>
+    
+    ${data.calendarLink ? `${spacer(24)}${button('Update Calendar', data.calendarLink)}` : ''}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `Your ${data.eventType} has been rescheduled to ${data.newDate} at ${data.newTime}`,
+    content,
+  });
+}
+
+export function generateLeadStatusChangeEmail(data: LeadStatusChangeData): string {
+  const content = `
+    ${heading('Lead status updated')}
+    ${paragraph(`<strong>${data.leadName}</strong> has been moved to a new stage.`)}
+    
+    <!-- Status Change -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px; text-align: center;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
+            <tr>
+              <td style="padding: 8px 16px; font-size: 14px; color: ${colors.textMuted}; background-color: ${colors.card}; border-radius: 4px;">${data.previousStage}</td>
+              <td style="padding: 0 16px; font-size: 18px; color: ${colors.textMuted};">→</td>
+              <td style="padding: 8px 16px; font-size: 14px; font-weight: 600; color: ${colors.buttonText}; background-color: ${colors.buttonBg}; border-radius: 4px;">${data.newStage}</td>
+            </tr>
+          </table>
+          ${spacer(16)}
+          <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">Changed by ${data.changedBy}</p>
+        </td>
+      </tr>
+    </table>
+    
+    ${spacer(24)}
+    ${button('View Lead', data.viewLeadUrl)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `${data.leadName} moved from ${data.previousStage} to ${data.newStage}`,
+    content,
+  });
+}
+
+export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData): string {
+  const content = `
+    ${heading('Webhook delivery failed')}
+    ${alertBox(`Failed to deliver to <strong>${data.webhookName}</strong> after ${data.retryCount} retries.`, 'error')}
+    ${spacer(16)}
+    
+    <!-- Error Details -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${detailRow('Endpoint', data.endpoint)}
+            ${detailRow('Error Code', String(data.errorCode))}
+            ${detailRow('Failed At', data.failedAt)}
+            ${detailRow('Retries', String(data.retryCount))}
+          </table>
+          ${spacer(12)}
+          <p class="email-text-muted" style="margin: 0 0 4px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: ${colors.textMuted};">Error Message</p>
+          <p class="email-text" style="margin: 0; font-size: 13px; font-family: monospace; padding: 8px; background-color: ${colors.card}; border-radius: 4px; color: ${colors.error};">${data.errorMessage}</p>
+        </td>
+      </tr>
+    </table>
+    
+    ${spacer(24)}
+    ${button('Configure Webhook', data.configureUrl)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `Webhook failed: ${data.webhookName} - Error ${data.errorCode}`,
+    content,
+  });
+}
+
+export function generateCalendarIntegrationSuccessEmail(data: CalendarIntegrationSuccessData): string {
+  const content = `
+    ${heading('Calendar connected successfully')}
+    ${paragraph(`Hi <strong>${data.userName}</strong>, your calendar has been connected to Pilot.`)}
+    
+    <!-- Connection Details -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${detailRow('Provider', data.calendarType)}
+            ${detailRow('Account', data.email)}
+            ${detailRow('Connected', data.connectedAt)}
+          </table>
+        </td>
+      </tr>
+    </table>
+    
+    ${spacer(16)}
+    ${paragraph('Your bookings will now sync automatically. Visitors can schedule appointments based on your real-time availability.', true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `${data.calendarType} connected to Pilot`,
+    content,
+  });
+}
+
+// =============================================================================
+// NEW TEMPLATES - LOWER PRIORITY
+// =============================================================================
+
+export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): string {
+  const content = `
+    ${heading('Removed from team')}
+    ${paragraph(`Hi <strong>${data.memberName}</strong>, you have been removed from <strong>${data.teamName}</strong> by ${data.removedBy}.`)}
+    ${data.reason ? paragraph(`Reason: ${data.reason}`, true) : ''}
+    ${spacer(8)}
+    ${paragraph('You no longer have access to this team\'s resources. If you believe this was a mistake, please contact your team administrator.', true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `You've been removed from ${data.teamName}`,
+    content,
+  });
+}
+
+export function generateAccountInactivityWarningEmail(data: AccountInactivityWarningData): string {
+  const content = `
+    ${heading('We miss you!')}
+    ${paragraph(`Hi <strong>${data.userName}</strong>, we noticed you haven't logged in for a while.`)}
+    ${alertBox(`Your account has been inactive for ${data.daysInactive} days. Last activity: ${data.lastActiveDate}`, 'warning')}
+    ${spacer(16)}
+    ${paragraph('Your conversations and leads are waiting for you. Log in to stay connected with your customers.', true)}
+    ${spacer(8)}
+    ${button('Log In Now', data.loginUrl)}
+    ${spacer(24)}
+    ${paragraph('If you no longer wish to use Pilot, you can delete your account in settings.', true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `We miss you! Your account has been inactive for ${data.daysInactive} days`,
+    content,
+  });
+}
+
+export function generateFeatureAnnouncementEmail(data: FeatureAnnouncementData): string {
+  const content = `
+    ${heading(data.featureTitle)}
+    ${data.imageUrl ? `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="padding-bottom: 24px;">
+            <img src="${data.imageUrl}" alt="${data.featureTitle}" width="100%" style="display: block; border-radius: 8px; max-width: 100%;">
+          </td>
+        </tr>
+      </table>
+    ` : ''}
+    ${paragraph(data.description)}
+    ${spacer(8)}
+    ${button('Learn More', data.learnMoreUrl)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: `New in Pilot: ${data.featureTitle}`,
     content,
   });
 }

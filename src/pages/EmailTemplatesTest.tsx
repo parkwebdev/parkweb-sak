@@ -23,12 +23,38 @@ import {
   generateScheduledReportEmail,
   generatePasswordResetEmail,
   generateEmailVerificationEmail,
+  generateBookingCancellationEmail,
+  generateBookingReminderEmail,
+  generateNewLeadNotificationEmail,
+  generateHumanTakeoverAlertEmail,
+  generateConversationSummaryEmail,
+  generateWelcomeEmail,
+  generateBookingRescheduledEmail,
+  generateLeadStatusChangeEmail,
+  generateWebhookFailureAlertEmail,
+  generateCalendarIntegrationSuccessEmail,
+  generateTeamMemberRemovedEmail,
+  generateAccountInactivityWarningEmail,
+  generateFeatureAnnouncementEmail,
   type TeamInvitationData,
   type NotificationData,
   type BookingConfirmationData,
   type ScheduledReportData,
   type PasswordResetData,
   type EmailVerificationData,
+  type BookingCancellationData,
+  type BookingReminderData,
+  type NewLeadNotificationData,
+  type HumanTakeoverAlertData,
+  type ConversationSummaryData,
+  type WelcomeEmailData,
+  type BookingRescheduledData,
+  type LeadStatusChangeData,
+  type WebhookFailureAlertData,
+  type CalendarIntegrationSuccessData,
+  type TeamMemberRemovedData,
+  type AccountInactivityWarningData,
+  type FeatureAnnouncementData,
 } from '@/lib/email-templates';
 
 type PreviewWidth = 'mobile' | 'desktop';
@@ -75,19 +101,9 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
     }
   };
 
-  // Force light or dark mode by injecting explicit styles that override
-  // the email's @media (prefers-color-scheme: dark) queries
   const getPreviewHtml = () => {
-    // Light mode colors (from email-templates.ts)
     const lightModeStyles = `
       <style type="text/css">
-        /* Force light mode - disable prefers-color-scheme and set explicit colors */
-        @media (prefers-color-scheme: dark) {
-          .email-bg, .email-card, .email-text, .email-text-muted, 
-          .email-border, .email-btn, .email-btn-text, .email-detail-bg {
-            /* Reset dark mode overrides */
-          }
-        }
         .email-bg { background-color: #f5f5f5 !important; }
         .email-card { background-color: #ffffff !important; }
         .email-text { color: #171717 !important; }
@@ -101,10 +117,8 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
       </style>
     `;
 
-    // Dark mode colors (from email-templates.ts)
     const darkModeStyles = `
       <style type="text/css">
-        /* Force dark mode - override all email template classes */
         .email-bg { background-color: #0a0a0a !important; }
         .email-card { background-color: #171717 !important; }
         .email-text { color: #fafafa !important; }
@@ -185,14 +199,13 @@ export default function EmailTemplatesTest() {
   const [showSource, setShowSource] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Team Invitation data
+  // Existing template data
   const [invitationData, setInvitationData] = useState<TeamInvitationData>({
     invitedBy: 'John Smith',
     companyName: 'Acme Corporation',
     signupUrl: 'https://getpilot.io/signup?token=abc123',
   });
 
-  // Notification data
   const [notificationData, setNotificationData] = useState<NotificationData>({
     title: 'New Lead Captured',
     message: 'A new lead has been captured from your chat widget. Sarah Johnson expressed interest in your Enterprise plan.',
@@ -201,7 +214,6 @@ export default function EmailTemplatesTest() {
     type: 'team',
   });
 
-  // Booking data
   const [bookingData, setBookingData] = useState<BookingConfirmationData>({
     visitorName: 'Michael Chen',
     eventType: 'Product Demo',
@@ -213,7 +225,6 @@ export default function EmailTemplatesTest() {
     calendarLink: 'https://calendar.google.com/event?id=abc123',
   });
 
-  // Report data
   const [reportData, setReportData] = useState<ScheduledReportData>({
     reportName: 'Weekly Analytics Report',
     dateRange: 'Jan 6 - Jan 12, 2025',
@@ -226,22 +237,130 @@ export default function EmailTemplatesTest() {
     viewReportUrl: 'https://getpilot.io/analytics',
   });
 
-  // Password Reset data
   const [passwordResetData, setPasswordResetData] = useState<PasswordResetData>({
     userName: 'Alex',
     resetUrl: 'https://getpilot.io/reset-password?token=abc123',
     expiresIn: '1 hour',
   });
 
-  // Email Verification data
   const [emailVerificationData, setEmailVerificationData] = useState<EmailVerificationData>({
     userName: 'Alex',
     verificationUrl: 'https://getpilot.io/verify-email?token=xyz789',
     expiresIn: '24 hours',
   });
 
-  // Generate HTML and subject based on active template
-  const getTemplateHtml = () => {
+  // NEW template data
+  const [bookingCancellationData, setBookingCancellationData] = useState<BookingCancellationData>({
+    visitorName: 'Michael Chen',
+    eventType: 'Product Demo',
+    date: 'Thursday, January 15, 2025',
+    time: '2:00 PM',
+    timezone: 'EST',
+    reason: 'Scheduling conflict',
+    rescheduleUrl: 'https://getpilot.io/book',
+  });
+
+  const [bookingReminderData, setBookingReminderData] = useState<BookingReminderData>({
+    visitorName: 'Michael Chen',
+    eventType: 'Product Demo',
+    date: 'Thursday, January 15, 2025',
+    time: '2:00 PM',
+    timezone: 'EST',
+    location: 'Google Meet',
+    reminderTime: '24 hours',
+    calendarLink: 'https://calendar.google.com/event?id=abc123',
+  });
+
+  const [newLeadData, setNewLeadData] = useState<NewLeadNotificationData>({
+    leadName: 'Sarah Johnson',
+    leadEmail: 'sarah@example.com',
+    leadPhone: '+1 (555) 123-4567',
+    source: 'Chat Widget',
+    message: 'Interested in the Enterprise plan. Need a demo.',
+    viewLeadUrl: 'https://getpilot.io/leads/123',
+  });
+
+  const [humanTakeoverData, setHumanTakeoverData] = useState<HumanTakeoverAlertData>({
+    conversationId: 'conv_abc123',
+    visitorName: 'John Doe',
+    requestReason: 'Complex billing question',
+    conversationPreview: 'I need help understanding my invoice. The charges don\'t seem right...',
+    takeoverUrl: 'https://getpilot.io/conversations/abc123',
+  });
+
+  const [conversationSummaryData, setConversationSummaryData] = useState<ConversationSummaryData>({
+    period: 'Dec 25-31, 2024',
+    totalConversations: 156,
+    leadsGenerated: 23,
+    avgResponseTime: '1.4s',
+    topTopics: ['Pricing', 'Features', 'Integration', 'Support'],
+    viewDetailsUrl: 'https://getpilot.io/analytics',
+  });
+
+  const [welcomeData, setWelcomeData] = useState<WelcomeEmailData>({
+    userName: 'Alex',
+    companyName: 'Acme Inc',
+    getStartedUrl: 'https://getpilot.io/onboarding',
+  });
+
+  const [bookingRescheduledData, setBookingRescheduledData] = useState<BookingRescheduledData>({
+    visitorName: 'Michael Chen',
+    eventType: 'Product Demo',
+    oldDate: 'Thursday, January 15, 2025',
+    oldTime: '2:00 PM',
+    newDate: 'Friday, January 17, 2025',
+    newTime: '3:00 PM',
+    timezone: 'EST',
+    calendarLink: 'https://calendar.google.com/event?id=abc123',
+  });
+
+  const [leadStatusChangeData, setLeadStatusChangeData] = useState<LeadStatusChangeData>({
+    leadName: 'Sarah Johnson',
+    previousStage: 'New',
+    newStage: 'Qualified',
+    changedBy: 'John Smith',
+    viewLeadUrl: 'https://getpilot.io/leads/123',
+  });
+
+  const [webhookFailureData, setWebhookFailureData] = useState<WebhookFailureAlertData>({
+    webhookName: 'CRM Sync',
+    endpoint: 'https://api.example.com/webhook',
+    errorCode: 500,
+    errorMessage: 'Internal Server Error: Connection timeout after 30s',
+    failedAt: 'Jan 10, 2025 at 3:45 PM',
+    retryCount: 3,
+    configureUrl: 'https://getpilot.io/settings/webhooks',
+  });
+
+  const [calendarIntegrationData, setCalendarIntegrationData] = useState<CalendarIntegrationSuccessData>({
+    userName: 'Alex',
+    calendarType: 'Google Calendar',
+    email: 'alex@example.com',
+    connectedAt: 'Jan 10, 2025 at 2:30 PM',
+  });
+
+  const [teamMemberRemovedData, setTeamMemberRemovedData] = useState<TeamMemberRemovedData>({
+    memberName: 'Jane Doe',
+    removedBy: 'John Smith',
+    teamName: 'Acme Corporation',
+    reason: 'Role change',
+  });
+
+  const [accountInactivityData, setAccountInactivityData] = useState<AccountInactivityWarningData>({
+    userName: 'Alex',
+    lastActiveDate: 'December 1, 2024',
+    daysInactive: 30,
+    loginUrl: 'https://getpilot.io/login',
+  });
+
+  const [featureAnnouncementData, setFeatureAnnouncementData] = useState<FeatureAnnouncementData>({
+    featureTitle: 'Introducing AI-Powered Lead Scoring',
+    description: 'Our new AI-powered lead scoring automatically prioritizes your most promising leads based on conversation context, engagement patterns, and buying signals. Focus on what matters most.',
+    imageUrl: 'https://placehold.co/520x260/171717/fafafa?text=AI+Lead+Scoring',
+    learnMoreUrl: 'https://getpilot.io/features/lead-scoring',
+  });
+
+  const getTemplateHtml = (): string => {
     switch (activeTemplate) {
       case 'invitation': return generateTeamInvitationEmail(invitationData);
       case 'notification': return generateNotificationEmail(notificationData);
@@ -249,10 +368,24 @@ export default function EmailTemplatesTest() {
       case 'report': return generateScheduledReportEmail(reportData);
       case 'password-reset': return generatePasswordResetEmail(passwordResetData);
       case 'email-verification': return generateEmailVerificationEmail(emailVerificationData);
+      case 'booking-cancellation': return generateBookingCancellationEmail(bookingCancellationData);
+      case 'booking-reminder': return generateBookingReminderEmail(bookingReminderData);
+      case 'new-lead': return generateNewLeadNotificationEmail(newLeadData);
+      case 'human-takeover': return generateHumanTakeoverAlertEmail(humanTakeoverData);
+      case 'conversation-summary': return generateConversationSummaryEmail(conversationSummaryData);
+      case 'welcome': return generateWelcomeEmail(welcomeData);
+      case 'booking-rescheduled': return generateBookingRescheduledEmail(bookingRescheduledData);
+      case 'lead-status-change': return generateLeadStatusChangeEmail(leadStatusChangeData);
+      case 'webhook-failure': return generateWebhookFailureAlertEmail(webhookFailureData);
+      case 'calendar-integration': return generateCalendarIntegrationSuccessEmail(calendarIntegrationData);
+      case 'team-member-removed': return generateTeamMemberRemovedEmail(teamMemberRemovedData);
+      case 'account-inactivity': return generateAccountInactivityWarningEmail(accountInactivityData);
+      case 'feature-announcement': return generateFeatureAnnouncementEmail(featureAnnouncementData);
+      default: return '';
     }
   };
 
-  const getTemplateSubject = () => {
+  const getTemplateSubject = (): string => {
     switch (activeTemplate) {
       case 'invitation': return `${invitationData.invitedBy} invited you to join ${invitationData.companyName} on Pilot`;
       case 'notification': return notificationData.title;
@@ -260,10 +393,23 @@ export default function EmailTemplatesTest() {
       case 'report': return `${reportData.reportName} — ${reportData.dateRange}`;
       case 'password-reset': return 'Reset your password';
       case 'email-verification': return 'Verify your email address';
+      case 'booking-cancellation': return `Cancelled: ${bookingCancellationData.eventType} on ${bookingCancellationData.date}`;
+      case 'booking-reminder': return `Reminder: ${bookingReminderData.eventType} in ${bookingReminderData.reminderTime}`;
+      case 'new-lead': return `New lead: ${newLeadData.leadName}`;
+      case 'human-takeover': return 'Human assistance requested';
+      case 'conversation-summary': return `Conversation Summary — ${conversationSummaryData.period}`;
+      case 'welcome': return `Welcome to Pilot, ${welcomeData.userName}!`;
+      case 'booking-rescheduled': return `Rescheduled: ${bookingRescheduledData.eventType}`;
+      case 'lead-status-change': return `${leadStatusChangeData.leadName} moved to ${leadStatusChangeData.newStage}`;
+      case 'webhook-failure': return `Webhook failed: ${webhookFailureData.webhookName}`;
+      case 'calendar-integration': return `${calendarIntegrationData.calendarType} connected`;
+      case 'team-member-removed': return `Removed from ${teamMemberRemovedData.teamName}`;
+      case 'account-inactivity': return 'We miss you!';
+      case 'feature-announcement': return `New: ${featureAnnouncementData.featureTitle}`;
+      default: return '';
     }
   };
 
-  // Render mock data controls based on active template
   const renderMockDataControls = () => {
     switch (activeTemplate) {
       case 'invitation':
@@ -303,21 +449,20 @@ export default function EmailTemplatesTest() {
         return (
           <div className="p-4 grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="notif-title" className="text-xs">Title</Label>
+              <Label className="text-xs">Title</Label>
               <Input
-                id="notif-title"
                 value={notificationData.title}
                 onChange={(e) => setNotificationData({ ...notificationData, title: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notif-type" className="text-xs">Type</Label>
+              <Label className="text-xs">Type</Label>
               <Select
                 value={notificationData.type}
                 onValueChange={(v) => setNotificationData({ ...notificationData, type: v as NotificationData['type'] })}
               >
-                <SelectTrigger id="notif-type" className="h-8 text-sm">
+                <SelectTrigger className="h-8 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -330,29 +475,10 @@ export default function EmailTemplatesTest() {
               </Select>
             </div>
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="notif-message" className="text-xs">Message</Label>
+              <Label className="text-xs">Message</Label>
               <Input
-                id="notif-message"
                 value={notificationData.message}
                 onChange={(e) => setNotificationData({ ...notificationData, message: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notif-action-url" className="text-xs">Action URL</Label>
-              <Input
-                id="notif-action-url"
-                value={notificationData.actionUrl}
-                onChange={(e) => setNotificationData({ ...notificationData, actionUrl: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notif-action-label" className="text-xs">Action Label</Label>
-              <Input
-                id="notif-action-label"
-                value={notificationData.actionLabel}
-                onChange={(e) => setNotificationData({ ...notificationData, actionLabel: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
@@ -363,54 +489,48 @@ export default function EmailTemplatesTest() {
         return (
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="book-name" className="text-xs">Visitor Name</Label>
+              <Label className="text-xs">Visitor Name</Label>
               <Input
-                id="book-name"
                 value={bookingData.visitorName}
                 onChange={(e) => setBookingData({ ...bookingData, visitorName: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="book-type" className="text-xs">Event Type</Label>
+              <Label className="text-xs">Event Type</Label>
               <Input
-                id="book-type"
                 value={bookingData.eventType}
                 onChange={(e) => setBookingData({ ...bookingData, eventType: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="book-date" className="text-xs">Date</Label>
+              <Label className="text-xs">Date</Label>
               <Input
-                id="book-date"
                 value={bookingData.date}
                 onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="book-time" className="text-xs">Time</Label>
+              <Label className="text-xs">Time</Label>
               <Input
-                id="book-time"
                 value={bookingData.time}
                 onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="book-tz" className="text-xs">Timezone</Label>
+              <Label className="text-xs">Timezone</Label>
               <Input
-                id="book-tz"
                 value={bookingData.timezone}
                 onChange={(e) => setBookingData({ ...bookingData, timezone: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="book-loc" className="text-xs">Location</Label>
+              <Label className="text-xs">Location</Label>
               <Input
-                id="book-loc"
                 value={bookingData.location || ''}
                 onChange={(e) => setBookingData({ ...bookingData, location: e.target.value })}
                 className="h-8 text-sm"
@@ -423,18 +543,16 @@ export default function EmailTemplatesTest() {
         return (
           <div className="p-4 grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="report-name" className="text-xs">Report Name</Label>
+              <Label className="text-xs">Report Name</Label>
               <Input
-                id="report-name"
                 value={reportData.reportName}
                 onChange={(e) => setReportData({ ...reportData, reportName: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="report-range" className="text-xs">Date Range</Label>
+              <Label className="text-xs">Date Range</Label>
               <Input
-                id="report-range"
                 value={reportData.dateRange}
                 onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
                 className="h-8 text-sm"
@@ -447,27 +565,24 @@ export default function EmailTemplatesTest() {
         return (
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="reset-name" className="text-xs">User Name</Label>
+              <Label className="text-xs">User Name</Label>
               <Input
-                id="reset-name"
                 value={passwordResetData.userName || ''}
                 onChange={(e) => setPasswordResetData({ ...passwordResetData, userName: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reset-url" className="text-xs">Reset URL</Label>
+              <Label className="text-xs">Reset URL</Label>
               <Input
-                id="reset-url"
                 value={passwordResetData.resetUrl}
                 onChange={(e) => setPasswordResetData({ ...passwordResetData, resetUrl: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reset-expires" className="text-xs">Expires In</Label>
+              <Label className="text-xs">Expires In</Label>
               <Input
-                id="reset-expires"
                 value={passwordResetData.expiresIn || ''}
                 onChange={(e) => setPasswordResetData({ ...passwordResetData, expiresIn: e.target.value })}
                 className="h-8 text-sm"
@@ -480,29 +595,516 @@ export default function EmailTemplatesTest() {
         return (
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="verify-name" className="text-xs">User Name</Label>
+              <Label className="text-xs">User Name</Label>
               <Input
-                id="verify-name"
                 value={emailVerificationData.userName || ''}
                 onChange={(e) => setEmailVerificationData({ ...emailVerificationData, userName: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="verify-url" className="text-xs">Verification URL</Label>
+              <Label className="text-xs">Verification URL</Label>
               <Input
-                id="verify-url"
                 value={emailVerificationData.verificationUrl}
                 onChange={(e) => setEmailVerificationData({ ...emailVerificationData, verificationUrl: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="verify-expires" className="text-xs">Expires In</Label>
+              <Label className="text-xs">Expires In</Label>
               <Input
-                id="verify-expires"
                 value={emailVerificationData.expiresIn || ''}
                 onChange={(e) => setEmailVerificationData({ ...emailVerificationData, expiresIn: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'booking-cancellation':
+        return (
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Visitor Name</Label>
+              <Input
+                value={bookingCancellationData.visitorName}
+                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, visitorName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Event Type</Label>
+              <Input
+                value={bookingCancellationData.eventType}
+                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, eventType: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Date</Label>
+              <Input
+                value={bookingCancellationData.date}
+                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, date: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Time</Label>
+              <Input
+                value={bookingCancellationData.time}
+                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, time: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Reason</Label>
+              <Input
+                value={bookingCancellationData.reason || ''}
+                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, reason: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'booking-reminder':
+        return (
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Visitor Name</Label>
+              <Input
+                value={bookingReminderData.visitorName}
+                onChange={(e) => setBookingReminderData({ ...bookingReminderData, visitorName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Event Type</Label>
+              <Input
+                value={bookingReminderData.eventType}
+                onChange={(e) => setBookingReminderData({ ...bookingReminderData, eventType: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Reminder Time</Label>
+              <Input
+                value={bookingReminderData.reminderTime}
+                onChange={(e) => setBookingReminderData({ ...bookingReminderData, reminderTime: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'new-lead':
+        return (
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Lead Name</Label>
+              <Input
+                value={newLeadData.leadName}
+                onChange={(e) => setNewLeadData({ ...newLeadData, leadName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Email</Label>
+              <Input
+                value={newLeadData.leadEmail || ''}
+                onChange={(e) => setNewLeadData({ ...newLeadData, leadEmail: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Source</Label>
+              <Input
+                value={newLeadData.source}
+                onChange={(e) => setNewLeadData({ ...newLeadData, source: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="col-span-3 space-y-2">
+              <Label className="text-xs">Message</Label>
+              <Input
+                value={newLeadData.message || ''}
+                onChange={(e) => setNewLeadData({ ...newLeadData, message: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'human-takeover':
+        return (
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Visitor Name</Label>
+              <Input
+                value={humanTakeoverData.visitorName || ''}
+                onChange={(e) => setHumanTakeoverData({ ...humanTakeoverData, visitorName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Reason</Label>
+              <Input
+                value={humanTakeoverData.requestReason || ''}
+                onChange={(e) => setHumanTakeoverData({ ...humanTakeoverData, requestReason: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label className="text-xs">Preview</Label>
+              <Input
+                value={humanTakeoverData.conversationPreview}
+                onChange={(e) => setHumanTakeoverData({ ...humanTakeoverData, conversationPreview: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'conversation-summary':
+        return (
+          <div className="p-4 grid grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Period</Label>
+              <Input
+                value={conversationSummaryData.period}
+                onChange={(e) => setConversationSummaryData({ ...conversationSummaryData, period: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Conversations</Label>
+              <Input
+                type="number"
+                value={conversationSummaryData.totalConversations}
+                onChange={(e) => setConversationSummaryData({ ...conversationSummaryData, totalConversations: Number(e.target.value) })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Leads</Label>
+              <Input
+                type="number"
+                value={conversationSummaryData.leadsGenerated}
+                onChange={(e) => setConversationSummaryData({ ...conversationSummaryData, leadsGenerated: Number(e.target.value) })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Avg Response</Label>
+              <Input
+                value={conversationSummaryData.avgResponseTime}
+                onChange={(e) => setConversationSummaryData({ ...conversationSummaryData, avgResponseTime: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'welcome':
+        return (
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">User Name</Label>
+              <Input
+                value={welcomeData.userName}
+                onChange={(e) => setWelcomeData({ ...welcomeData, userName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Company</Label>
+              <Input
+                value={welcomeData.companyName || ''}
+                onChange={(e) => setWelcomeData({ ...welcomeData, companyName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Get Started URL</Label>
+              <Input
+                value={welcomeData.getStartedUrl}
+                onChange={(e) => setWelcomeData({ ...welcomeData, getStartedUrl: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'booking-rescheduled':
+        return (
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Visitor Name</Label>
+              <Input
+                value={bookingRescheduledData.visitorName}
+                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, visitorName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Old Date</Label>
+              <Input
+                value={bookingRescheduledData.oldDate}
+                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, oldDate: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">New Date</Label>
+              <Input
+                value={bookingRescheduledData.newDate}
+                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, newDate: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Old Time</Label>
+              <Input
+                value={bookingRescheduledData.oldTime}
+                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, oldTime: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">New Time</Label>
+              <Input
+                value={bookingRescheduledData.newTime}
+                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, newTime: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Timezone</Label>
+              <Input
+                value={bookingRescheduledData.timezone}
+                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, timezone: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'lead-status-change':
+        return (
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Lead Name</Label>
+              <Input
+                value={leadStatusChangeData.leadName}
+                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, leadName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Changed By</Label>
+              <Input
+                value={leadStatusChangeData.changedBy}
+                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, changedBy: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Previous Stage</Label>
+              <Input
+                value={leadStatusChangeData.previousStage}
+                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, previousStage: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">New Stage</Label>
+              <Input
+                value={leadStatusChangeData.newStage}
+                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, newStage: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'webhook-failure':
+        return (
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Webhook Name</Label>
+              <Input
+                value={webhookFailureData.webhookName}
+                onChange={(e) => setWebhookFailureData({ ...webhookFailureData, webhookName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Error Code</Label>
+              <Input
+                type="number"
+                value={webhookFailureData.errorCode}
+                onChange={(e) => setWebhookFailureData({ ...webhookFailureData, errorCode: Number(e.target.value) })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Retry Count</Label>
+              <Input
+                type="number"
+                value={webhookFailureData.retryCount}
+                onChange={(e) => setWebhookFailureData({ ...webhookFailureData, retryCount: Number(e.target.value) })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="col-span-3 space-y-2">
+              <Label className="text-xs">Error Message</Label>
+              <Input
+                value={webhookFailureData.errorMessage}
+                onChange={(e) => setWebhookFailureData({ ...webhookFailureData, errorMessage: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'calendar-integration':
+        return (
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">User Name</Label>
+              <Input
+                value={calendarIntegrationData.userName}
+                onChange={(e) => setCalendarIntegrationData({ ...calendarIntegrationData, userName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Calendar Type</Label>
+              <Select
+                value={calendarIntegrationData.calendarType}
+                onValueChange={(v) => setCalendarIntegrationData({ ...calendarIntegrationData, calendarType: v as CalendarIntegrationSuccessData['calendarType'] })}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Google Calendar">Google Calendar</SelectItem>
+                  <SelectItem value="Outlook Calendar">Outlook Calendar</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Email</Label>
+              <Input
+                value={calendarIntegrationData.email}
+                onChange={(e) => setCalendarIntegrationData({ ...calendarIntegrationData, email: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Connected At</Label>
+              <Input
+                value={calendarIntegrationData.connectedAt}
+                onChange={(e) => setCalendarIntegrationData({ ...calendarIntegrationData, connectedAt: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'team-member-removed':
+        return (
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Member Name</Label>
+              <Input
+                value={teamMemberRemovedData.memberName}
+                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, memberName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Removed By</Label>
+              <Input
+                value={teamMemberRemovedData.removedBy}
+                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, removedBy: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Team Name</Label>
+              <Input
+                value={teamMemberRemovedData.teamName}
+                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, teamName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Reason</Label>
+              <Input
+                value={teamMemberRemovedData.reason || ''}
+                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, reason: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'account-inactivity':
+        return (
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">User Name</Label>
+              <Input
+                value={accountInactivityData.userName}
+                onChange={(e) => setAccountInactivityData({ ...accountInactivityData, userName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Last Active</Label>
+              <Input
+                value={accountInactivityData.lastActiveDate}
+                onChange={(e) => setAccountInactivityData({ ...accountInactivityData, lastActiveDate: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Days Inactive</Label>
+              <Input
+                type="number"
+                value={accountInactivityData.daysInactive}
+                onChange={(e) => setAccountInactivityData({ ...accountInactivityData, daysInactive: Number(e.target.value) })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'feature-announcement':
+        return (
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Feature Title</Label>
+              <Input
+                value={featureAnnouncementData.featureTitle}
+                onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, featureTitle: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Image URL</Label>
+              <Input
+                value={featureAnnouncementData.imageUrl || ''}
+                onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, imageUrl: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label className="text-xs">Description</Label>
+              <Input
+                value={featureAnnouncementData.description}
+                onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, description: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
@@ -516,7 +1118,6 @@ export default function EmailTemplatesTest() {
 
   return (
     <div className="h-screen bg-background flex min-h-0">
-      {/* Left Sidebar */}
       <EmailTemplateSidebar 
         activeTemplate={activeTemplate} 
         onTemplateChange={setActiveTemplate}
@@ -526,10 +1127,8 @@ export default function EmailTemplatesTest() {
         onDarkModeChange={setDarkMode}
       />
 
-      {/* Right Content */}
       <main className="flex-1 min-w-0 overflow-y-auto">
         <div className="p-6 space-y-6">
-          {/* Header */}
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-xl font-semibold text-foreground">Email Templates</h1>
@@ -541,7 +1140,6 @@ export default function EmailTemplatesTest() {
             </div>
           </div>
 
-          {/* Mock Data Controls */}
           <Collapsible defaultOpen>
             <Card>
               <CollapsibleTrigger asChild>
@@ -558,7 +1156,6 @@ export default function EmailTemplatesTest() {
             </Card>
           </Collapsible>
 
-          {/* Email Preview */}
           <EmailPreview
             html={getTemplateHtml()}
             width={previewWidth}
