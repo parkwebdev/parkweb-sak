@@ -142,10 +142,8 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boo
 
       return (data || []) as RawCalendarEvent[];
     },
-    realtime: enabled && connectedAccountIds.length > 0 ? {
-      table: 'calendar_events',
-      // Realtime will update on any calendar event change
-    } : undefined,
+    // NOTE: Realtime removed - was subscribing to ALL calendar_events globally
+    // which caused ERR_INSUFFICIENT_RESOURCES. React Query cache + manual refetch is sufficient.
     enabled: enabled && !!agentId && !!user?.id && connectedAccountIds.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
