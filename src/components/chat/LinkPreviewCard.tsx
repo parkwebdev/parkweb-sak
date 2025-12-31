@@ -65,6 +65,11 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
     data.image ? getProxiedImageUrl(data.image) : undefined,
   [data.image]);
 
+  // Proxy favicons to avoid CSP img-src violations
+  const proxiedFaviconUrl = useMemo(() => 
+    data.favicon ? getProxiedImageUrl(data.favicon) : undefined,
+  [data.favicon]);
+
   const hasImage = proxiedImageUrl && !imageError;
 
   // If this is a video link, render VideoEmbed instead
@@ -114,9 +119,9 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
       <div className="p-3 space-y-1">
         {/* Domain with favicon */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
-          {data.favicon && !faviconError ? (
+          {proxiedFaviconUrl && !faviconError ? (
             <img
-              src={data.favicon}
+              src={proxiedFaviconUrl}
               alt=""
               className="w-3.5 h-3.5 rounded-sm"
               onError={() => setFaviconError(true)}
