@@ -149,8 +149,8 @@ export function GetStarted() {
         onComplete={handleCelebrationComplete} 
       />
       
-      <main className={`flex-1 min-h-0 h-full overflow-y-auto bg-background flex flex-col ${allComplete ? 'justify-center' : ''}`}>
-        <div className="max-w-5xl mx-auto w-full py-4 lg:py-8 flex-1 flex flex-col">
+      <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background flex flex-col justify-center">
+        <div className="max-w-5xl mx-auto w-full py-4 lg:py-8">
           {/* Header */}
           <header className="w-full font-medium">
             <div className="items-stretch flex w-full flex-col gap-2 px-4 lg:px-8 py-0">
