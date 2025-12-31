@@ -71,11 +71,11 @@ function getMarkerFillColor(count: number, maxCount: number): string {
   return "#22c55e";
 }
 
-function createCircleSVG(fillColor: string, size: number): string {
-  // Simple circle marker with subtle shadow
+function createCircleSVG(fillColor: string, size: number, withBorder: boolean = true): string {
+  // Simple circle marker with optional border
   return `
   <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" fill="${fillColor}" stroke="white" stroke-width="2"/>
+    <circle cx="12" cy="12" r="10" fill="${fillColor}"${withBorder ? ' stroke="white" stroke-width="2"' : ''}/>
   </svg>`;
 }
 
@@ -846,15 +846,15 @@ export function MapLibreMap({
           ) : (
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#22c55e", 14) }} />
+                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#22c55e", 14, false) }} />
                 <span>Low</span>
               </div>
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#f59e0b", 14) }} />
+                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#f59e0b", 14, false) }} />
                 <span>Medium</span>
               </div>
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#ef4444", 14) }} />
+                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#ef4444", 14, false) }} />
                 <span>High</span>
               </div>
             </div>
