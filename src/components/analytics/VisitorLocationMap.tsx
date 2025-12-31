@@ -61,7 +61,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Skeleton className="h-[400px] w-full rounded-none" />
+          <Skeleton className="h-[calc(100vh-320px)] min-h-[400px] w-full rounded-none" />
         </CardContent>
       </Card>
     );
@@ -76,7 +76,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
             <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex items-center justify-center h-[calc(100vh-320px)] min-h-[400px]">
           <div className="text-center text-muted-foreground">
             <Globe02 size={40} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm">No location data available</p>
@@ -104,7 +104,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="h-[400px] w-full">
+          <div className="h-[calc(100vh-320px)] min-h-[400px] w-full">
             <MapLibreMap
               center={[0, 20]}
               zoom={1.5}
