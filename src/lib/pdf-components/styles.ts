@@ -77,7 +77,7 @@ export const styles = StyleSheet.create({
   // Content area (below header)
   content: {
     paddingHorizontal: PAGE.MARGIN,
-    paddingTop: SPACING.MD,
+    paddingTop: SPACING.XL,
   },
 
   // Section container
