@@ -10,9 +10,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
-import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
+import { AnalyticsDatePicker } from '@/components/analytics/AnalyticsDatePicker';
 import { SECTION_INFO, TOOLBAR_SECTIONS } from '@/lib/analytics-constants';
 import { AnalyticsDatePreset, getDateRangeFromPreset } from '@/components/analytics/constants';
 
@@ -81,28 +83,38 @@ function Analytics() {
       
       <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
         <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
+          {/* Header with inline controls */}
+          <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold">{SECTION_INFO[activeTab].title}</h1>
               <p className="text-sm text-muted-foreground mt-1">{SECTION_INFO[activeTab].description}</p>
             </div>
-            {showBuildReport && (
-              <Button size="sm" onClick={() => navigate('/report-builder')}>Build Report</Button>
-            )}
+            
+            <div className="flex items-center gap-3">
+              {showToolbar && (
+                <>
+                  <AnalyticsDatePicker
+                    selectedPreset={datePreset}
+                    onPresetChange={setDatePreset}
+                  />
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="mock-toggle" className="text-sm text-muted-foreground cursor-pointer">
+                      {data.mockMode ? 'Mock Data' : 'Live Data'}
+                    </Label>
+                    <Switch
+                      id="mock-toggle"
+                      checked={data.mockMode}
+                      onCheckedChange={data.setMockMode}
+                      aria-label="Toggle mock data mode"
+                    />
+                  </div>
+                </>
+              )}
+              {showBuildReport && (
+                <Button size="sm" onClick={() => navigate('/report-builder')}>Build Report</Button>
+              )}
+            </div>
           </div>
-
-          {/* Toolbar */}
-          {showToolbar && (
-            <AnalyticsToolbar
-              selectedPreset={datePreset}
-              onPresetChange={setDatePreset}
-              onRefresh={data.refetch}
-              isLoading={data.loading}
-              mockMode={data.mockMode}
-              onMockModeChange={data.setMockMode}
-            />
-          )}
 
           {/* Sections */}
           {activeTab === 'conversations' && (
