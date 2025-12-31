@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Copy01, Send01, Loading02, Phone01, Monitor01, Moon01, Sun, ChevronDown } from '@untitledui/icons';
+import { Copy01, Send01, Loading02, ChevronDown } from '@untitledui/icons';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
@@ -517,7 +517,14 @@ export default function EmailTemplatesTest() {
   return (
     <div className="h-screen bg-background flex min-h-0">
       {/* Left Sidebar */}
-      <EmailTemplateSidebar activeTemplate={activeTemplate} onTemplateChange={setActiveTemplate} />
+      <EmailTemplateSidebar 
+        activeTemplate={activeTemplate} 
+        onTemplateChange={setActiveTemplate}
+        previewWidth={previewWidth}
+        onPreviewWidthChange={setPreviewWidth}
+        darkMode={darkMode}
+        onDarkModeChange={setDarkMode}
+      />
 
       {/* Right Content */}
       <main className="flex-1 min-w-0 overflow-y-auto">
@@ -528,54 +535,9 @@ export default function EmailTemplatesTest() {
               <h1 className="text-xl font-semibold text-foreground">Email Templates</h1>
               <p className="text-sm text-muted-foreground mt-0.5">Preview and test email templates with mock data</p>
             </div>
-            <div className="flex items-center gap-4">
-              {/* Width Toggle */}
-              <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5">
-                <Button
-                  variant={previewWidth === 'mobile' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setPreviewWidth('mobile')}
-                  className="h-7 text-xs px-3"
-                >
-                  <Phone01 size={14} className="mr-1" />
-                  Mobile
-                </Button>
-                <Button
-                  variant={previewWidth === 'desktop' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setPreviewWidth('desktop')}
-                  className="h-7 text-xs px-3"
-                >
-                  <Monitor01 size={14} className="mr-1" />
-                  Desktop
-                </Button>
-              </div>
-
-              {/* Dark Mode Toggle */}
-              <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5">
-                <Button
-                  variant={!darkMode ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setDarkMode(false)}
-                  className="h-7 text-xs px-2"
-                >
-                  <Sun size={14} />
-                </Button>
-                <Button
-                  variant={darkMode ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setDarkMode(true)}
-                  className="h-7 text-xs px-2"
-                >
-                  <Moon01 size={14} />
-                </Button>
-              </div>
-
-              {/* Source Toggle */}
-              <div className="flex items-center gap-2">
-                <Label htmlFor="show-source" className="text-xs text-muted-foreground">Source</Label>
-                <Switch id="show-source" checked={showSource} onCheckedChange={setShowSource} />
-              </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="show-source" className="text-xs text-muted-foreground">Source</Label>
+              <Switch id="show-source" checked={showSource} onCheckedChange={setShowSource} />
             </div>
           </div>
 
