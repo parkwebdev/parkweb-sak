@@ -562,21 +562,33 @@ import { Send01, Check } from '@untitledui/icons';
 
 ### Widget Icon Architecture
 
-All widget icons are centralized in `src/widget/icons.tsx`:
+All widget icons are centralized in `src/widget/icons/`:
 
-```typescript
-// src/widget/icons.tsx - Re-exports with individual imports
-export { Send01 } from '@untitledui/icons/react/icons/Send01';
-export { Microphone01 } from '@untitledui/icons/react/icons/Microphone01';
-export { Check } from '@untitledui/icons/react/icons/Check';
-// ... ~25 icons total
+```
+src/widget/icons/
+├── index.ts          # Central re-export point
+├── untitled-ui.ts    # UntitledUI icon re-exports (~25 icons)
+├── NavIcons.tsx      # Custom navigation icons with fill animation
+└── WidgetStarIcon.tsx # Custom star icon for ratings
 ```
 
-Widget files import from the local icons file:
+```typescript
+// src/widget/icons/index.ts - Central export
+export * from './untitled-ui';
+export { WidgetStarIcon } from './WidgetStarIcon';
+export { HomeNavIcon, ChatNavIcon, HelpNavIcon, NewsNavIcon } from './NavIcons';
+
+// src/widget/icons/untitled-ui.ts - Individual imports for tree-shaking
+import { Send01 } from '@untitledui/icons/react/icons/Send01';
+import { Microphone01 } from '@untitledui/icons/react/icons/Microphone01';
+export { Send01, Microphone01, /* ... ~25 icons */ };
+```
+
+Widget files import from the local icons folder:
 
 ```typescript
 // ✅ CORRECT - Import from widget icons
-import { Send01, Check } from '../icons';
+import { Send01, Check, WidgetStarIcon } from '../icons';
 
 // ❌ WRONG - Direct import from @untitledui/icons
 import { Send01 } from '@untitledui/icons';
