@@ -52,13 +52,30 @@ This section tracks the implementation status of security enhancements identifie
 |-------|-------------|--------|----------|--------|
 | 1 | [Prompt Injection Protection](#prompt-injection-protection) | 🔴 Planned | Critical | 2 hours |
 | 2 | [Content Moderation](#content-moderation) | 🔴 Planned | Critical | 4 hours |
-| 3 | [Security Testing Documentation](#security-testing) | 🔴 Planned | High | 2 hours |
+| 3 | [Security Testing Documentation](#security-testing) | 🟢 Complete | High | - |
 | 4 | [CAPTCHA Protection](#bot-protection) | 🔴 Planned | High | 4 hours |
 | 5 | [Automated Alerting](#automated-security-alerts) | 🔴 Planned | Medium | 3 hours |
 | 6 | [Key Age Warning](#key-rotation-policy) | 🔴 Planned | Medium | 1 hour |
-| 7 | Documentation Updates | 🔴 Planned | Medium | 2 hours |
 
 **Legend**: 🟢 Complete | 🟡 In Progress | 🔴 Planned
+
+### Implemented Security Features
+
+The following security measures are fully implemented:
+
+| Feature | Location | Description |
+|---------|----------|-------------|
+| SSRF Protection | 5 edge functions | URL validation blocks internal IPs, localhost, AWS metadata |
+| Rate Limiting | 12+ endpoints | Per-IP and per-key rate limiting with sliding windows |
+| XSS Protection | Widget components | DOMPurify sanitization in 6+ files |
+| Honeypot Spam | Widget forms | Hidden field detection |
+| Timing Check | Widget forms | Submission speed validation |
+| Security Logging | `security_logs` table | Event tracking with RLS |
+| API Key Hashing | `agent_api_keys` | SHA-256 hashing, prefix-only storage |
+| API Key Audit | DB trigger | `audit_api_key_creation` trigger |
+| Type-Safe Errors | All edge functions | `getErrorMessage()` pattern |
+| CSP Headers | index.html, widget | Content Security Policy |
+| RLS Policies | All tables | Row Level Security enabled |
 
 ### Required Secrets
 
@@ -1250,18 +1267,18 @@ API key manager displays age warnings:
 
 ### Development
 
-- [ ] All user input validated server-side
-- [ ] HTML content sanitized with DOMPurify
-- [ ] SQL queries use parameterized statements (Supabase client handles this)
-- [ ] Sensitive data not logged
-- [ ] Error messages don't leak implementation details
+- [x] All user input validated server-side
+- [x] HTML content sanitized with DOMPurify
+- [x] SQL queries use parameterized statements (Supabase client handles this)
+- [x] Sensitive data not logged
+- [x] Error messages don't leak implementation details
 
 ### AI Safety
 
 - [ ] Prompt injection guardrails in place
 - [ ] Output sanitization active
 - [ ] Content moderation enabled
-- [ ] Security testing scheduled
+- [x] Security testing scheduled (see [SECURITY_TESTING.md](./SECURITY_TESTING.md))
 
 ### Bot Protection
 
@@ -1271,18 +1288,18 @@ API key manager displays age warnings:
 
 ### Deployment
 
-- [ ] All edge functions have appropriate JWT verification
-- [ ] RLS policies cover all tables
-- [ ] Storage policies restrict file types
-- [ ] Rate limiting enabled on public endpoints
-- [ ] CORS headers properly configured
+- [x] All edge functions have appropriate JWT verification
+- [x] RLS policies cover all tables
+- [x] Storage policies restrict file types
+- [x] Rate limiting enabled on public endpoints
+- [x] CORS headers properly configured
 
 ### Monitoring
 
-- [ ] Security logs reviewed regularly
-- [ ] Failed login attempts monitored
-- [ ] API key usage tracked
-- [ ] Rate limit violations logged
+- [x] Security logs reviewed regularly
+- [x] Failed login attempts monitored
+- [x] API key usage tracked
+- [x] Rate limit violations logged
 - [ ] Automated alerts configured
 
 ---
