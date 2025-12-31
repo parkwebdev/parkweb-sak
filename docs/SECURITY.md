@@ -101,21 +101,24 @@ These features will be implemented when building the super admin panel:
 
 ## Content Security Policy (CSP)
 
-ChatPad implements CSP via meta tags with different policies for the admin app and embeddable widget:
+ChatPad implements CSP via `<meta>` tags with different policies for the admin app and embeddable widget.
+
+---
 
 ### Main Application (index.html)
 
-Strict policy with clickjacking protection:
+Strict policy with clickjacking protection for the authenticated admin dashboard.
 
 ```
 default-src 'self';
-script-src 'self' 'unsafe-inline';
+script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval';
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-font-src 'self' https://fonts.gstatic.com;
-img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co;
-connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co;
+font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net;
+img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://flagcdn.com https://i.ytimg.com https://img.youtube.com https://i.vimeocdn.com https://*.basemaps.cartocdn.com;
+connect-src 'self' data: https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://cdn.jsdelivr.net;
+worker-src 'self' blob:;
 media-src 'self';
-frame-src 'self';
+frame-src 'self' blob: https://www.youtube.com https://youtube.com https://player.vimeo.com https://www.loom.com https://fast.wistia.net;
 frame-ancestors 'self';
 object-src 'none';
 base-uri 'self';
@@ -123,50 +126,119 @@ form-action 'self';
 upgrade-insecure-requests;
 ```
 
+#### Allowed Domains (Main App)
+
+| Domain | Directive | Purpose |
+|--------|-----------|---------|
+| `https://mvaimvwdukpgvkifkfpa.supabase.co` | img-src, connect-src | Supabase Storage images and API calls |
+| `wss://mvaimvwdukpgvkifkfpa.supabase.co` | connect-src | Supabase Realtime WebSocket connections |
+| `https://fonts.googleapis.com` | style-src | Google Fonts CSS stylesheets |
+| `https://fonts.gstatic.com` | font-src | Google Fonts font files |
+| `https://cdn.jsdelivr.net` | font-src, connect-src | MapLibre GL fonts and resources |
+| `https://flagcdn.com` | img-src | Country flag images for phone input |
+| `https://i.ytimg.com`, `https://img.youtube.com` | img-src | YouTube video thumbnails |
+| `https://i.vimeocdn.com` | img-src | Vimeo video thumbnails |
+| `https://basemaps.cartocdn.com`, `https://*.basemaps.cartocdn.com` | img-src, connect-src | MapLibre basemap tiles |
+| `https://www.youtube.com`, `https://youtube.com` | frame-src | Embedded YouTube videos |
+| `https://player.vimeo.com` | frame-src | Embedded Vimeo videos |
+| `https://www.loom.com` | frame-src | Embedded Loom videos |
+| `https://fast.wistia.net` | frame-src | Embedded Wistia videos |
+
+#### Special Directives (Main App)
+
+| Directive | Value | Purpose |
+|-----------|-------|---------|
+| `script-src 'wasm-unsafe-eval'` | - | Required for PDF.js WebAssembly image decoder |
+| `connect-src data:` | - | Allows PDF.js inline WASM loading (base64 data URLs) |
+| `worker-src blob:` | - | PDF.js web workers and MapLibre workers |
+| `frame-ancestors 'self'` | - | Clickjacking protection (prevents embedding in iframes) |
+
+---
+
 ### Embeddable Widget (widget.html)
 
-Permissive policy for embedding on customer sites:
+Permissive policy for embedding on customer sites.
 
 ```
 default-src 'self';
-script-src 'self' 'unsafe-inline';
+script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com;
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 font-src 'self' https://fonts.gstatic.com;
 img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://*;
-connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co;
+connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co https://challenges.cloudflare.com;
 media-src 'self' blob:;
-frame-src 'self';
+frame-src 'self' https://challenges.cloudflare.com;
 object-src 'none';
 base-uri 'self';
 upgrade-insecure-requests;
 ```
 
-**Key Differences:**
-- Widget omits `frame-ancestors` to allow embedding anywhere
-- Widget allows `https://*` for `img-src` to display link preview images from external sites
-- Widget allows `blob:` for `media-src` to support voice recording playback
+#### Allowed Domains (Widget)
+
+| Domain | Directive | Purpose |
+|--------|-----------|---------|
+| `https://mvaimvwdukpgvkifkfpa.supabase.co` | img-src, connect-src | Supabase Storage and API |
+| `wss://mvaimvwdukpgvkifkfpa.supabase.co` | connect-src | Realtime subscriptions |
+| `https://challenges.cloudflare.com` | script-src, connect-src, frame-src | Cloudflare Turnstile bot protection |
+| `https://fonts.googleapis.com` | style-src | Google Fonts CSS |
+| `https://fonts.gstatic.com` | font-src | Google Fonts files |
+| `https://*` | img-src | Link preview images from any external site |
+
+#### Key Differences from Main App
+
+| Difference | Reason |
+|------------|--------|
+| No `frame-ancestors` | Widget must be embeddable on any customer website |
+| `img-src https://*` | Display Open Graph images from link previews |
+| `media-src blob:` | Support voice recording playback |
+| Includes Cloudflare Turnstile | Bot protection on public forms |
+
+---
 
 ### CSP Protection Benefits
 
-| Protection | Directive |
-|------------|-----------|
-| Block external malicious scripts | `script-src 'self'` |
-| Prevent data exfiltration | `connect-src` whitelist |
-| Block malicious iframes | `frame-src 'self'` |
-| Prevent clickjacking (admin) | `frame-ancestors 'self'` |
-| Block plugin exploits | `object-src 'none'` |
-| Prevent base tag hijacking | `base-uri 'self'` |
-| Block form data theft | `form-action 'self'` |
-| Enforce HTTPS | `upgrade-insecure-requests` |
+| Protection | Directive | Attack Prevented |
+|------------|-----------|------------------|
+| Block external malicious scripts | `script-src 'self'` | XSS via script injection |
+| Prevent data exfiltration | `connect-src` whitelist | Data theft to attacker servers |
+| Block malicious iframes | `frame-src 'self'` | Phishing overlays |
+| Prevent clickjacking (admin) | `frame-ancestors 'self'` | UI redressing attacks |
+| Block plugin exploits | `object-src 'none'` | Flash/Java exploits |
+| Prevent base tag hijacking | `base-uri 'self'` | Relative URL manipulation |
+| Block form data theft | `form-action 'self'` | Form submission hijacking |
+| Enforce HTTPS | `upgrade-insecure-requests` | Mixed content attacks |
+
+---
 
 ### Why 'unsafe-inline' is Required
 
 The `'unsafe-inline'` directive is necessary for:
-- **Vite**: Uses inline module scripts for dynamic imports
-- **Tailwind/Radix**: Inject inline styles for dynamic components  
-- **Motion/Framer**: Apply inline transforms for animations
 
-Without server-side rendering for nonces/hashes, this is the practical approach while still providing significant protection through source whitelisting.
+- **Vite**: Uses inline module scripts for dynamic imports and HMR
+- **Tailwind/Radix**: Inject inline styles for dynamic component styling
+- **Motion/Framer**: Apply inline CSS transforms for animations
+- **React**: Some third-party components use inline styles
+
+Without server-side rendering for nonces/hashes, this is the practical approach while still providing significant protection through domain whitelisting.
+
+---
+
+### Updating CSP
+
+When adding new third-party services:
+
+1. **Identify required domains** - Check browser console for CSP violations
+2. **Add to appropriate directive** - Use the most restrictive directive that works
+3. **Update this documentation** - Add the domain and purpose to the tables above
+4. **Test both apps** - Verify both `index.html` and `widget.html` if applicable
+
+**CSP Violation Example:**
+```
+Refused to load the script 'https://example.com/script.js' because it violates 
+the following Content Security Policy directive: "script-src 'self' 'unsafe-inline'".
+```
+
+**Fix:** Add `https://example.com` to `script-src` in the appropriate HTML file.
 
 ---
 
