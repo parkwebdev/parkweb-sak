@@ -52,7 +52,7 @@ export { widgetLogger, configureWidgetLogger } from './widget-logger';
 
 /**
  * LocalStorage migration utility
- * Migrates chatpad_* keys to pilot_* keys for existing users
+ * Migrates legacy localStorage keys to pilot_* keys for existing users
  * @see {@link ./migration}
  */
 export { migrateLocalStorage } from './migration';

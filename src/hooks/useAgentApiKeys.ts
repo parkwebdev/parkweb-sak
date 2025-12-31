@@ -33,7 +33,7 @@ interface AgentApiKey {
  */
 function generateApiKey(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let key = 'cpk_'; // ChatPad Key prefix
+  let key = 'cpk_'; // Pilot Key prefix (kept for backwards compatibility)
   for (let i = 0; i < 48; i++) {
     key += chars.charAt(Math.floor(Math.random() * chars.length));
   }

@@ -1,7 +1,7 @@
 /**
  * PDF Logo Component
  * 
- * ChatPad logo for @react-pdf/renderer documents.
+ * Pilot logo for @react-pdf/renderer documents.
  * Uses Svg and Path primitives from react-pdf.
  */
 
@@ -13,7 +13,7 @@ interface PDFLogoProps {
 }
 
 /**
- * ChatPad logo for PDF documents.
+ * Pilot logo for PDF documents.
  * Renders the brand logo using react-pdf's Svg primitives.
  */
 export function PDFLogo({ size = 24, color = '#ffffff' }: PDFLogoProps) {

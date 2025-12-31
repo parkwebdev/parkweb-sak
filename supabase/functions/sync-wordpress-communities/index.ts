@@ -227,7 +227,7 @@ async function discoverEndpoints(siteUrl: string): Promise<{
     const response = await fetch(`${normalizedUrl}/wp-json/wp/v2`, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'ChatPad/1.0',
+        'User-Agent': 'Pilot/1.0',
       },
     });
     
@@ -243,7 +243,7 @@ async function discoverEndpoints(siteUrl: string): Promise<{
     const rootResponse = await fetch(`${normalizedUrl}/wp-json`, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'ChatPad/1.0',
+        'User-Agent': 'Pilot/1.0',
       },
     });
     
@@ -559,7 +559,7 @@ async function testWordPressConnection(
     const response = await fetch(apiUrl, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'ChatPad/1.0',
+        'User-Agent': 'Pilot/1.0',
       },
     });
 
@@ -607,7 +607,7 @@ async function fetchWordPressCommunities(
     const response = await fetch(apiUrl, {
       headers: {
         'Accept': 'application/json',
-        'User-Agent': 'ChatPad/1.0',
+        'User-Agent': 'Pilot/1.0',
       },
     });
 
@@ -666,7 +666,7 @@ async function fetchTaxonomyTerms(
         const response = await fetch(apiUrl, {
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'ChatPad/1.0',
+            'User-Agent': 'Pilot/1.0',
           },
         });
 

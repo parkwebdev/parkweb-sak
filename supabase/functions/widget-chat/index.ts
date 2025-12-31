@@ -1626,8 +1626,8 @@ Return ONLY the bullet points, no introduction or conclusion.`;
       headers: {
         'Authorization': `Bearer ${openrouterKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://chatpad.ai',
-        'X-Title': 'ChatPad Conversation Summary',
+        'HTTP-Referer': 'https://getpilot.io',
+        'X-Title': 'Pilot Conversation Summary',
       },
       body: JSON.stringify({
         model: MODEL_TIERS.lite, // Use cheapest model for summaries
@@ -2093,8 +2093,8 @@ Output ONLY valid JSON array, no other text.`;
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://chatpad.ai',
-        'X-Title': 'ChatPad',
+        'HTTP-Referer': 'https://getpilot.io',
+        'X-Title': 'Pilot',
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash-lite',
@@ -2371,8 +2371,8 @@ async function generateEmbedding(query: string): Promise<number[]> {
     headers: {
       'Authorization': `Bearer ${openrouterApiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://chatpad.ai',
-      'X-Title': 'ChatPad',
+      'HTTP-Referer': 'https://getpilot.io',
+      'X-Title': 'Pilot',
     },
     body: JSON.stringify({
       model: EMBEDDING_MODEL,
@@ -3875,8 +3875,8 @@ NEVER mark complete when:
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://chatpad.ai',
-        'X-Title': 'ChatPad',
+        'HTTP-Referer': 'https://getpilot.io',
+        'X-Title': 'Pilot',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(aiRequestBody),
@@ -4300,8 +4300,8 @@ NEVER mark complete when:
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'https://chatpad.ai',
-            'X-Title': 'ChatPad',
+            'HTTP-Referer': 'https://getpilot.io',
+            'X-Title': 'Pilot',
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({

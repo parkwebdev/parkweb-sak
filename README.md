@@ -1,4 +1,4 @@
-# ChatPad - AI Agent Platform
+# Pilot - AI Agent Platform
 
 A comprehensive multi-tenant AI agent platform for building, deploying, and managing conversational AI agents with RAG (Retrieval Augmented Generation) capabilities.
 
@@ -95,7 +95,7 @@ The following secrets are managed in Supabase:
 │   ├── DESIGN_SYSTEM.md     # Design tokens & standards
 │   ├── HOOKS_REFERENCE.md   # Custom hooks reference
 │   ├── APPLICATION_OVERVIEW.md
-│   ├── CHATPAD_ARCHITECTURE.md
+│   ├── ARCHITECTURE.md
 │   ├── AI_ARCHITECTURE.md
 │   ├── DATABASE_SCHEMA.md
 │   ├── EDGE_FUNCTIONS.md
@@ -137,7 +137,7 @@ Comprehensive documentation is available in the `/docs` directory:
 - [Hooks Reference](docs/HOOKS_REFERENCE.md) - Custom hooks documentation
 
 ### Architecture
-- [System Architecture](docs/CHATPAD_ARCHITECTURE.md) - Architecture and data flow
+- [System Architecture](docs/ARCHITECTURE.md) - Architecture and data flow
 - [AI Architecture](docs/AI_ARCHITECTURE.md) - RAG and model routing
 - [Database Schema](docs/DATABASE_SCHEMA.md) - Tables and RLS policies
 - [Edge Functions](docs/EDGE_FUNCTIONS.md) - API reference

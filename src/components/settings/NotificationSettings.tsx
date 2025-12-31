@@ -215,7 +215,7 @@ export function NotificationSettings() {
     }
 
     new Notification('Test Notification', {
-      body: 'This is a test notification from ChatPad.',
+      body: 'This is a test notification from Pilot.',
       icon: '/favicon.png',
     });
 

@@ -30,11 +30,11 @@ function formatIcsDate(date: Date): string {
  * Generate .ics content with METHOD:REQUEST for Accept/Decline in email clients
  */
 function generateCalendarInvite(data: BookingEmailRequest): string {
-  const uid = `${data.confirmation_id}@getpilot.app`;
+  const uid = `${data.confirmation_id}@getpilot.io`;
   const now = new Date();
   const startDate = new Date(data.start_time);
   const endDate = new Date(data.end_time);
-  const organizerEmail = data.organizer_email || 'bookings@getpilot.app';
+  const organizerEmail = data.organizer_email || 'bookings@getpilot.io';
   
   const description = [
     `Confirmation: ${data.confirmation_id}`,
@@ -233,7 +233,7 @@ serve(async (req) => {
 
     // Send email with .ics attachment
     const emailResponse = await resend.emails.send({
-      from: `${data.location_name} <bookings@getpilot.app>`,
+      from: `${data.location_name} <bookings@getpilot.io>`,
       to: [data.to],
       subject: `Your tour at ${data.location_name} is confirmed`,
       html: generateEmailHtml(data),

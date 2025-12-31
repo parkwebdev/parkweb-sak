@@ -153,7 +153,7 @@ const handler = async (req: Request): Promise<Response> => {
     await supabase.from('notifications').insert({
       user_id: user_id,
       type: 'system',
-      title: 'Welcome to ChatPad! 🎉',
+      title: 'Welcome to Pilot! 🎉',
       message: 'Configure Ari to get started with your AI assistant',
       data: { first_login: true },
       read: false

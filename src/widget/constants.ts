@@ -91,7 +91,7 @@ export const BookingConfirmed = lazy(() =>
 // ============================================================================
 
 /**
- * Detect mobile full-screen mode (matches media query in chatpad-widget.js)
+ * Detect mobile full-screen mode (matches media query in pilot-widget.js)
  */
 export const getIsMobileFullScreen = (): boolean => {
   if (typeof window === 'undefined') return false;

@@ -1,7 +1,7 @@
 /**
  * PDF Footer Component
  * 
- * Page footer with ChatPad logo, branding, and page number.
+ * Page footer with Pilot logo, branding, and page number.
  */
 
 import { View, Text, StyleSheet } from '@react-pdf/renderer';

@@ -82,7 +82,7 @@ const WidgetPage = () => {
     if (root) root.style.height = '100%';
   }, []);
   
-  // Listen for config from parent window (sent by chatpad-widget.js)
+  // Listen for config from parent window (sent by pilot-widget.js)
   useEffect(() => {
     if (!hasValidAgentId) {
       return; // Error already set in initial state

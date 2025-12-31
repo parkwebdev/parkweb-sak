@@ -770,7 +770,7 @@ async function processSitemap(
   
   const response = await fetch(sitemapUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; ChatPad/1.0; +https://chatpad.ai)',
+      'User-Agent': 'Mozilla/5.0 (compatible; Pilot/1.0; +https://getpilot.io)',
     },
   });
   
@@ -797,7 +797,7 @@ async function processSitemap(
         console.log('Fetching child sitemap:', childSitemapUrl);
         const childResponse = await fetch(childSitemapUrl, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; ChatPad/1.0; +https://chatpad.ai)',
+            'User-Agent': 'Mozilla/5.0 (compatible; Pilot/1.0; +https://getpilot.io)',
           },
         });
         
@@ -875,7 +875,7 @@ async function fetchUrlContent(url: string): Promise<string> {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ChatPad/1.0; +https://chatpad.ai)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Pilot/1.0; +https://getpilot.io)',
       },
     });
     if (!response.ok) {

@@ -298,7 +298,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     
     // Simplified embed code - config loaded dynamically from edge function
     // Note: primaryColor is hardcoded to #000000, not configurable
-    return `<!-- ChatPad Ari Agent -->
+    return `<!-- Pilot Ari Agent -->
 <script
   src="${scriptUrl}"
   data-agent-id="${agentId}"

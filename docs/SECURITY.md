@@ -1223,7 +1223,7 @@ serve(async (req) => {
       const resend = new Resend(resendKey);
       
       await resend.emails.send({
-        from: 'Pilot Security <security@getpilot.app>',
+        from: 'Pilot Security <security@getpilot.io>',
         to: alertEmail,
         subject: `[Security Alert] ${event.action}`,
         html: `

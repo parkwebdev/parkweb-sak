@@ -572,9 +572,9 @@ const Auth = () => {
         {/* Footer */}
         <footer className="flex justify-between items-center px-8 py-6 text-sm text-muted-foreground">
           <p>© Pilot 2025</p>
-          <a href="mailto:help@getpilot.app" className="flex items-center gap-2 hover:text-foreground transition-colors">
+          <a href="mailto:help@getpilot.io" className="flex items-center gap-2 hover:text-foreground transition-colors">
             <Mail01 className="w-4 h-4" />
-            help@getpilot.app
+            help@getpilot.io
           </a>
         </footer>
       </div>

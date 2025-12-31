@@ -214,7 +214,7 @@ export const HomeView = ({
                 rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-0.5 ml-1"
               >
-                <WidgetStarIcon className="h-3 w-3" /> ChatPad
+                <WidgetStarIcon className="h-3 w-3" /> Pilot
               </a>
             </span>
           </div>

@@ -559,7 +559,7 @@ serve(async (req) => {
             end_time: endTime.toISOString(),
             timezone,
             confirmation_id: bookingId,
-            organizer_email: 'bookings@getpilot.app',
+            organizer_email: 'bookings@getpilot.io',
           }),
         });
         console.log('Booking confirmation email sent:', emailResponse.ok);

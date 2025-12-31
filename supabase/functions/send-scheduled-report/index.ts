@@ -79,7 +79,7 @@ serve(async (req: Request): Promise<Response> => {
         // Send email to all recipients
         for (const recipient of report.recipients) {
           await resend.emails.send({
-            from: "Pilot Analytics <reports@getpilot.app>",
+            from: "Pilot Analytics <reports@getpilot.io>",
             to: [recipient],
             subject: `${report.name} - ${report.frequency.charAt(0).toUpperCase() + report.frequency.slice(1)} Report`,
             html: reportContent,
