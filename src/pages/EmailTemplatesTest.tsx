@@ -545,7 +545,7 @@ export default function EmailTemplatesTest() {
           <Collapsible defaultOpen>
             <Card>
               <CollapsibleTrigger asChild>
-                <CardHeader className="py-3 px-4 border-b cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
                     <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
