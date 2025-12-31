@@ -157,21 +157,17 @@ export function GetStarted() {
               <h1 className="text-3xl font-bold text-foreground">
                 Get started with Ari, your AI sales agent
               </h1>
-              {/* Progress subheader */}
-              <div className="flex items-center gap-2 text-sm">
-                {allComplete ? (
-                  <CompletedBadgeIcon className="text-status-active flex-shrink-0" />
-                ) : (
+              {/* Progress subheader - only show when not complete */}
+              {!allComplete && (
+                <div className="flex items-center gap-2 text-sm">
                   <ProgressCircle completedCount={completedCount} totalCount={totalCount} />
-                )}
-                <span className="text-muted-foreground">
-                  {allComplete ? 'Completed' : 'Progress'}
-                </span>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-muted-foreground">
-                  {completedCount}/{totalCount} steps
-                </span>
-              </div>
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-muted-foreground">
+                    {completedCount}/{totalCount} steps
+                  </span>
+                </div>
+              )}
             </div>
           </header>
 
