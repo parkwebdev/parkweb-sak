@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ChartCardHeader } from './ChartCardHeader';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
-import type { PageDepthData } from '@/hooks/useTrafficAnalytics';
+import type { PageDepthData } from '@/types/analytics';
 
 interface PageDepthChartProps {
   data: PageDepthData[];

@@ -25,51 +25,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ArrowLeft, X } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
-import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 
 import { PdfIcon, CsvIcon } from './ExportIcons';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { isValidEmail } from '@/utils/validation';
 import { logger } from '@/utils/logger';
+import { 
+  type ReportConfig, 
+  type DatePreset,
+  DATE_PRESETS,
+  getDateRangeFromPreset,
+} from '@/types/report-config';
 
-export interface ReportConfig {
-  format: 'csv' | 'pdf';
-  type: 'summary' | 'detailed' | 'comparison';
-  // Core Metrics
-  includeConversations: boolean;
-  includeLeads: boolean;
-  includeUsageMetrics: boolean;
-  includeConversationFunnel: boolean;
-  includePeakActivity: boolean;
-  // Business Outcomes
-  includeBookings: boolean;
-  includeBookingTrend: boolean;
-  includeSatisfaction: boolean;
-  includeCSATDistribution: boolean;
-  includeCustomerFeedback: boolean;
-  includeAIPerformance: boolean;
-  includeAIPerformanceTrend: boolean;
-  // Traffic Analytics
-  includeTrafficSources: boolean;
-  includeTrafficSourceTrend: boolean;
-  includeTopPages: boolean;
-  includePageEngagement: boolean;
-  includePageDepth: boolean;
-  includeVisitorLocations: boolean;
-  includeVisitorCities: boolean;
-  // Leads Analytics
-  includeLeadSourceBreakdown: boolean;
-  includeLeadConversionTrend: boolean;
-  // Agent Data
-  includeAgentPerformance: boolean;
-  // Grouping & Export Options
-  grouping: 'day' | 'week' | 'month';
-  includeKPIs: boolean;
-  includeCharts: boolean;
-  includeTables: boolean;
-}
+// Re-export ReportConfig for backward compatibility
+export type { ReportConfig } from '@/types/report-config';
 
-type DatePreset = 'today' | 'last7' | 'last30' | 'last60' | 'last90' | 'thisMonth' | 'lastMonth';
 type Step = 'configure' | 'schedule';
 
 interface CaptureProgress {
@@ -88,41 +59,6 @@ interface BuildReportSheetProps {
   /** Progress info when capturing charts for PDF */
   captureProgress?: CaptureProgress | null;
 }
-
-const DATE_PRESETS: { value: DatePreset; label: string }[] = [
-  { value: 'today', label: 'Today' },
-  { value: 'last7', label: 'Last 7 Days' },
-  { value: 'last30', label: 'Last 30 Days' },
-  { value: 'last60', label: 'Last 60 Days' },
-  { value: 'last90', label: 'Last 90 Days' },
-  { value: 'thisMonth', label: 'This Month' },
-  { value: 'lastMonth', label: 'Last Month' },
-];
-
-const getDateRangeFromPreset = (preset: DatePreset): { start: Date; end: Date } => {
-  const today = new Date();
-  
-  switch (preset) {
-    case 'today':
-      return { start: today, end: today };
-    case 'last7':
-      return { start: subDays(today, 7), end: today };
-    case 'last30':
-      return { start: subDays(today, 30), end: today };
-    case 'last60':
-      return { start: subDays(today, 60), end: today };
-    case 'last90':
-      return { start: subDays(today, 90), end: today };
-    case 'thisMonth':
-      return { start: startOfMonth(today), end: today };
-    case 'lastMonth': {
-      const lastMonth = subMonths(today, 1);
-      return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
-    }
-    default:
-      return { start: subDays(today, 30), end: today };
-  }
-};
 
 export const BuildReportSheet = ({
   open,
