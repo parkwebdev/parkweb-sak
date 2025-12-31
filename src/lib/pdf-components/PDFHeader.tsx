@@ -15,6 +15,7 @@ const headerStyles = StyleSheet.create({
     paddingHorizontal: PAGE.MARGIN,
     paddingTop: SPACING.LG,
     paddingBottom: SPACING.LG,
+    marginTop: -PAGE.MARGIN,      // Pull header up into page padding (first page only)
   },
   
   row: {
