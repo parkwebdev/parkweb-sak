@@ -10,7 +10,6 @@ import { format } from 'date-fns';
 import { styles } from './styles';
 import { PDFHeader } from './PDFHeader';
 import { PDFFooter } from './PDFFooter';
-import { PDFKPICards } from './PDFKPICards';
 import { PDFTable } from './PDFTable';
 import { PDFSection } from './PDFSection';
 import { PDFExecutiveSummary } from './PDFExecutiveSummary';
@@ -47,25 +46,6 @@ export function AnalyticsReportPDF({
   endDate, 
   orgName,
 }: AnalyticsReportPDFProps) {
-  // Build KPI data
-  const kpis = [
-    { 
-      label: 'Conversations', 
-      value: data.totalConversations ?? 0, 
-      change: data.conversationsChange 
-    },
-    { 
-      label: 'Leads', 
-      value: data.totalLeads ?? 0, 
-      change: data.leadsChange 
-    },
-    { 
-      label: 'Conversion Rate', 
-      value: `${(data.conversionRate ?? 0).toFixed(1)}%`, 
-      change: null 
-    },
-  ];
-
   // Note: React rendering errors cannot be caught with try-catch.
   // Error boundaries don't work in @react-pdf/renderer.
   // Each chart component handles empty/invalid data with empty state placeholders.
@@ -83,11 +63,6 @@ export function AnalyticsReportPDF({
         <View style={styles.content} wrap>
           {/* Executive Summary */}
           <PDFExecutiveSummary data={data} />
-
-          {/* KPIs */}
-          {config.includeKPIs && (
-            <PDFKPICards kpis={kpis} />
-          )}
 
           {/* Conversations */}
           {config.includeConversations && data.conversationStats?.length && (

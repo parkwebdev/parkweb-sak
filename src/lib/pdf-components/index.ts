@@ -9,7 +9,7 @@ export type { PDFData, PDFConfig } from './AnalyticsReportPDF';
 export { PDFLogo } from './PDFLogo';
 export { PDFHeader } from './PDFHeader';
 export { PDFFooter } from './PDFFooter';
-export { PDFKPICards } from './PDFKPICards';
+export { PDFExecutiveSummary } from './PDFExecutiveSummary';
 export { PDFTable } from './PDFTable';
 export { PDFSection } from './PDFSection';
 export { styles, colors, PAGE, SPACING, FONT_SIZE } from './styles';
