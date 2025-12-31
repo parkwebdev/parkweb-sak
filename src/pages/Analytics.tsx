@@ -7,14 +7,14 @@
  * @page
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { SECTION_INFO, TOOLBAR_SECTIONS } from '@/lib/analytics-constants';
-import { subDays } from 'date-fns';
+import { AnalyticsDatePreset, getDateRangeFromPreset } from '@/components/analytics/constants';
 
 import {
   ConversationsSection,
@@ -51,34 +51,25 @@ function Analytics() {
     }
   }, []);
 
-  // === Date State ===
-  const [startDate, setStartDate] = useState(() => subDays(new Date(), 30));
-  const [endDate, setEndDate] = useState(() => new Date());
-  const [comparisonMode, setComparisonMode] = useState(false);
-  const [comparisonStartDate, setComparisonStartDate] = useState(() => subDays(new Date(), 60));
-  const [comparisonEndDate, setComparisonEndDate] = useState(() => subDays(new Date(), 30));
-  const [filters, setFilters] = useState({ leadStatus: 'all', conversationStatus: 'all' });
+  // === Date State (Simplified) ===
+  const [datePreset, setDatePreset] = useState<AnalyticsDatePreset>('last30');
+  const [filters] = useState({ leadStatus: 'all', conversationStatus: 'all' });
+
+  // Compute date range from preset
+  const { start: startDate, end: endDate } = useMemo(
+    () => getDateRangeFromPreset(datePreset),
+    [datePreset]
+  );
 
   // === Analytics Data ===
   const data = useAnalyticsData({
     startDate,
     endDate,
-    comparisonStartDate,
-    comparisonEndDate,
-    comparisonMode,
+    comparisonStartDate: startDate,
+    comparisonEndDate: endDate,
+    comparisonMode: false,
     filters,
   });
-
-  // === Handlers ===
-  const handleDateChange = useCallback((start: Date, end: Date) => {
-    setStartDate(start);
-    setEndDate(end);
-  }, []);
-
-  const handleComparisonDateChange = useCallback((start: Date, end: Date) => {
-    setComparisonStartDate(start);
-    setComparisonEndDate(end);
-  }, []);
 
   // === Derived State ===
   const showToolbar = TOOLBAR_SECTIONS.includes(activeTab);
@@ -104,20 +95,10 @@ function Analytics() {
           {/* Toolbar */}
           {showToolbar && (
             <AnalyticsToolbar
-              startDate={startDate}
-              endDate={endDate}
-              onDateChange={handleDateChange}
-              comparisonMode={comparisonMode}
-              onComparisonModeChange={setComparisonMode}
-              comparisonStartDate={comparisonStartDate}
-              comparisonEndDate={comparisonEndDate}
-              onComparisonDateChange={handleComparisonDateChange}
-              filters={filters}
-              onFiltersChange={setFilters}
-              mockMode={data.mockMode}
-              onMockModeChange={data.setMockMode}
-              onRegenerateMockData={data.regenerateMockData}
+              selectedPreset={datePreset}
+              onPresetChange={setDatePreset}
               onRefresh={data.refetch}
+              isLoading={data.loading}
             />
           )}
 
@@ -180,9 +161,9 @@ function Analytics() {
               sourcesByDate={data.sourcesByDate}
               leadsBySource={data.leadsBySource}
               engagement={data.engagement}
-              comparisonMode={comparisonMode}
+              comparisonMode={false}
               trafficLoading={data.trafficLoading}
-              comparisonTrafficLoading={data.comparisonTrafficLoading ?? false}
+              comparisonTrafficLoading={false}
             />
           )}
 
