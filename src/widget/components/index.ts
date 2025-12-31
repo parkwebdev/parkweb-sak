@@ -16,9 +16,6 @@ export { WidgetHeader } from './WidgetHeader';
 /** Bottom navigation bar with home/chat/help tabs */
 export { WidgetNav } from './WidgetNav';
 
-/** Human takeover notification banner */
-export { TakeoverBanner } from './TakeoverBanner';
-
 /** Animated typing indicator dots */
 export { TypingIndicator } from './TypingIndicator';
 
