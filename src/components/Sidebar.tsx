@@ -20,7 +20,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import ChatPadLogo from './ChatPadLogo';
+import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
 import type { ConversationMetadata } from '@/types/metadata';
 
@@ -113,7 +113,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
         {/* Header with logo */}
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-start">
-            <ChatPadLogo className="h-6 w-6 text-foreground flex-shrink-0" />
+            <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
             {onClose && (
               <button
                 onClick={onClose}

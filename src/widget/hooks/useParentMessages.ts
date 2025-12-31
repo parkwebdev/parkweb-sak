@@ -102,7 +102,7 @@ export function useParentMessages(
     const handleParentMessage = (event: MessageEvent) => {
       if (!event.data || typeof event.data !== 'object') return;
       
-      if (event.data.type === 'chatpad-parent-page-info') {
+      if (event.data.type === 'pilot-parent-page-info') {
         const { url, referrer, utmParams, browserLanguage } = event.data;
         logger.debug('[Widget] Received parent page info:', { url, referrer, utmParams, browserLanguage });
         
@@ -142,7 +142,7 @@ export function useParentMessages(
           
           setReferrerJourney(journey);
           logger.debug('[Widget] Set referrer journey from parent:', journey);
-          localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
+          localStorage.setItem(`pilot_referrer_journey_${agentId}`, JSON.stringify(journey));
         }
         
         // Track page visit with parent URL
@@ -193,10 +193,10 @@ export function useParentMessages(
       if (!event.data || typeof event.data !== 'object') return;
 
       switch (event.data.type) {
-        case 'chatpad-widget-opened':
+        case 'pilot-widget-opened':
           setIsOpen(true);
           break;
-        case 'chatpad-widget-closed':
+        case 'pilot-widget-closed':
           // Blur any focused elements to release mobile keyboard/scroll lock
           if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
@@ -213,21 +213,21 @@ export function useParentMessages(
   // Signal to parent that widget is ready to display (eliminates flicker on first open)
   useEffect(() => {
     if (window.parent !== window) {
-      window.parent.postMessage({ type: 'chatpad-widget-ready' }, '*');
+      window.parent.postMessage({ type: 'pilot-widget-ready' }, '*');
     }
   }, []);
 
   // Notify parent of unread count
   const notifyUnreadCount = useCallback((count: number) => {
     if (window.parent !== window) {
-      window.parent.postMessage({ type: 'chatpad-unread-count', count }, '*');
+      window.parent.postMessage({ type: 'pilot-unread-count', count }, '*');
     }
   }, []);
 
   // Notify parent to close widget
   const notifyClose = useCallback(() => {
     if (window.parent !== window) {
-      window.parent.postMessage({ type: 'chatpad-widget-close' }, '*');
+      window.parent.postMessage({ type: 'pilot-widget-close' }, '*');
     }
   }, []);
 

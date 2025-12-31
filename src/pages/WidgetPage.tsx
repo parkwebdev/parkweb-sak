@@ -89,7 +89,7 @@ const WidgetPage = () => {
     }
     
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'chatpad-widget-config' && event.data.config) {
+      if (event.data?.type === 'pilot-widget-config' && event.data.config) {
         // Transform the config data to WidgetConfig format
         const data = event.data.config;
         const widgetConfig: WidgetConfig = {
@@ -143,7 +143,7 @@ const WidgetPage = () => {
     
     // Signal to parent that we're ready to receive config
     if (window.parent !== window) {
-      window.parent.postMessage({ type: 'chatpad-widget-ready' }, '*');
+      window.parent.postMessage({ type: 'pilot-widget-ready' }, '*');
     }
     
     return () => window.removeEventListener('message', handleMessage);

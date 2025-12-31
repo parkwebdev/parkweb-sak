@@ -240,7 +240,7 @@ export function useWidgetConversations(options: UseWidgetConversationsOptions) {
       ));
       
       // Update localStorage timestamp immediately
-      const readKey = `chatpad_last_read_${agentId}_${activeConversationId}`;
+      const readKey = `pilot_last_read_${agentId}_${activeConversationId}`;
       localStorage.setItem(readKey, new Date().toISOString());
       
       // Then sync with server

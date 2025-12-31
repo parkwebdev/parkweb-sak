@@ -271,7 +271,7 @@ export function useWidgetMessaging({
         if (chatUser) {
           const updatedUser = { ...chatUser, conversationId: response.conversationId };
           setChatUser(updatedUser);
-          localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
+          localStorage.setItem(`pilot_user_${config.agentId}`, JSON.stringify(updatedUser));
         }
       }
 
@@ -467,7 +467,7 @@ export function useWidgetMessaging({
 
   // === Form Submit Handler ===
   const handleFormSubmit = useCallback(async (userData: ChatUser, conversationId?: string) => {
-    localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
+    localStorage.setItem(`pilot_user_${config.agentId}`, JSON.stringify(userData));
     setChatUser(userData);
     
     // Clear messages and set up for AI greeting
@@ -500,7 +500,7 @@ export function useWidgetMessaging({
         
         const updatedUser = { ...userData, conversationId: response.conversationId };
         setChatUser(updatedUser);
-        localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
+        localStorage.setItem(`pilot_user_${config.agentId}`, JSON.stringify(updatedUser));
       }
       
       if (response.response) {

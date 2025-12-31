@@ -15,7 +15,7 @@ import { useSecurityLog } from '@/hooks/useSecurityLog';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Eye, EyeOff, User01, Key01, UsersPlus, CheckCircle, Mail01, ArrowLeft } from '@untitledui/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import ChatPadLogo from '@/components/ChatPadLogo';
+import PilotLogo from '@/components/PilotLogo';
 import { logger } from '@/utils/logger';
 
 const signupSteps: StepItem[] = [
@@ -550,7 +550,7 @@ const Auth = () => {
         <div className="flex flex-col gap-12 px-8 pt-8">
           {/* Logo with text */}
           <div className="flex items-center">
-            <ChatPadLogo className="h-8 w-8 text-foreground" />
+            <PilotLogo className="h-8 w-8 text-foreground" />
           </div>
           
           {/* Step Progress (only for signup) */}
@@ -571,10 +571,10 @@ const Auth = () => {
 
         {/* Footer */}
         <footer className="flex justify-between items-center px-8 py-6 text-sm text-muted-foreground">
-          <p>© ChatPad 2025</p>
-          <a href="mailto:help@chatpad.ai" className="flex items-center gap-2 hover:text-foreground transition-colors">
+          <p>© Pilot 2025</p>
+          <a href="mailto:help@getpilot.app" className="flex items-center gap-2 hover:text-foreground transition-colors">
             <Mail01 className="w-4 h-4" />
-            help@chatpad.ai
+            help@getpilot.app
           </a>
         </footer>
       </div>
@@ -584,7 +584,7 @@ const Auth = () => {
         <div className="flex h-full w-full flex-col items-center gap-8 px-4 md:px-8">
           {/* Mobile Logo with text */}
           <div className="lg:hidden flex items-center">
-            <ChatPadLogo className="h-8 w-8 text-foreground" />
+            <PilotLogo className="h-8 w-8 text-foreground" />
           </div>
 
           <div className="flex w-full max-w-sm flex-col gap-8 flex-1 justify-center">
