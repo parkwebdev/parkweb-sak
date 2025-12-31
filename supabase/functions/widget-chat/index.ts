@@ -509,8 +509,8 @@ async function detectConversationLanguage(
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openRouterApiKey}`,
-        'HTTP-Referer': 'https://chatpad.ai',
-        'X-Title': 'ChatPad',
+        'HTTP-Referer': 'https://getpilot.app',
+        'X-Title': 'Pilot',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

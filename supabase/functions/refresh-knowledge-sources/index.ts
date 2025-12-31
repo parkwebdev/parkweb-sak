@@ -58,7 +58,7 @@ async function fetchUrlContent(url: string): Promise<{ content: string; title: s
   try {
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "ChatPad-Bot/1.0 (Content Refresh)",
+        "User-Agent": "Pilot-Bot/1.0 (Content Refresh)",
       },
     });
 
@@ -107,8 +107,8 @@ async function extractPropertiesWithAI(
       headers: {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://chatpad.ai",
-        "X-Title": "ChatPad Property Extraction",
+        "HTTP-Referer": "https://getpilot.app",
+        "X-Title": "Pilot Property Extraction",
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",

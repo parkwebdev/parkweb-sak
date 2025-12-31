@@ -217,9 +217,9 @@ const handler = async (req: Request): Promise<Response> => {
     const emailContent = generateEmailContent(type, sanitizedTitle, sanitizedMessage, sanitizedData);
 
     const emailResponse = await resend.emails.send({
-      from: "ChatPad Team <team@chatpad.app>",
+      from: "Pilot Team <team@getpilot.app>",
       to: [sanitizedTo],
-      reply_to: "team@chatpad.app",
+      reply_to: "team@getpilot.app",
       subject: emailContent.subject,
       html: emailContent.html,
     });
@@ -309,7 +309,7 @@ function generateEmailContent(
         <!-- Header with Logo -->
         <div style="background-color: #ffffff; padding: 40px 20px; text-align: center; border-bottom: 1px solid #e0e0e0;">
           <div style="text-align: center;">
-            <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/email-assets/chatpad-logo.png" alt="ChatPad Logo" style="width: 60px; height: 60px; border-radius: 8px;" />
+            <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/email-assets/pilot-logo.png" alt="Pilot Logo" style="width: 60px; height: 60px; border-radius: 8px;" />
           </div>
         </div>
         

@@ -1,5 +1,5 @@
 /**
- * ChatPad Widget - Iframe-Based Loader
+ * Pilot Widget - Iframe-Based Loader
  * Loading: "When Idle" mode - loads in background when browser is idle
  */
 (function() {
@@ -9,13 +9,13 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
   
   const WIDGET_STYLES = `
-    .chatpad-widget-container {
+    .pilot-widget-container {
       position: fixed;
       z-index: 999999;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
     
-    .chatpad-widget-button {
+    .pilot-widget-button {
       position: fixed;
       width: 50px;
       height: 50px;
@@ -30,42 +30,42 @@
       /* Colors set dynamically via JS based on system theme */
     }
     
-    .chatpad-widget-button:hover {
+    .pilot-widget-button:hover {
       transform: scale(1.1);
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
     }
     
-    .chatpad-widget-button svg {
+    .pilot-widget-button svg {
       width: 28px;
       height: 28px;
       position: absolute;
       transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
-    /* Open icon (ChatPad logo) - visible by default */
-    .chatpad-widget-button .chatpad-icon-open {
+    /* Open icon (Pilot logo) - visible by default */
+    .pilot-widget-button .pilot-icon-open {
       opacity: 1;
       transform: rotate(0deg) scale(1);
     }
     
     /* Close icon (chevron down) - hidden by default */
-    .chatpad-widget-button .chatpad-icon-close {
+    .pilot-widget-button .pilot-icon-close {
       opacity: 0;
       transform: rotate(0deg) scale(0.5);
     }
     
     /* When widget is open: swap icons with rotation */
-    .chatpad-widget-button.chatpad-widget-button-open .chatpad-icon-open {
+    .pilot-widget-button.pilot-widget-button-open .pilot-icon-open {
       opacity: 0;
       transform: rotate(180deg) scale(0.5);
     }
     
-    .chatpad-widget-button.chatpad-widget-button-open .chatpad-icon-close {
+    .pilot-widget-button.pilot-widget-button-open .pilot-icon-close {
       opacity: 1;
       transform: rotate(0deg) scale(1);
     }
     
-    .chatpad-widget-iframe-container {
+    .pilot-widget-iframe-container {
       position: fixed;
       z-index: 999998;
       background: transparent;
@@ -75,21 +75,21 @@
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     }
     
-    .chatpad-widget-iframe-container.hidden {
+    .pilot-widget-iframe-container.hidden {
       opacity: 0;
       pointer-events: none;
       transform: translateY(20px) scale(0.95);
       visibility: hidden;
     }
     
-    .chatpad-widget-iframe-container.visible {
+    .pilot-widget-iframe-container.visible {
       opacity: 1;
       pointer-events: all;
       transform: translateY(0) scale(1);
       visibility: visible;
     }
     
-    .chatpad-widget-iframe {
+    .pilot-widget-iframe {
       width: 100%;
       height: 100%;
       border: none;
@@ -98,12 +98,12 @@
     }
     
     /* Position variants */
-    .chatpad-position-bottom-right .chatpad-widget-button {
+    .pilot-position-bottom-right .pilot-widget-button {
       bottom: 24px;
       right: 24px;
     }
     
-    .chatpad-position-bottom-right .chatpad-widget-iframe-container {
+    .pilot-position-bottom-right .pilot-widget-iframe-container {
       bottom: 100px;
       right: 24px;
       width: 400px;
@@ -111,12 +111,12 @@
       max-height: calc(100vh - 120px);
     }
     
-    .chatpad-position-bottom-left .chatpad-widget-button {
+    .pilot-position-bottom-left .pilot-widget-button {
       bottom: 24px;
       left: 24px;
     }
     
-    .chatpad-position-bottom-left .chatpad-widget-iframe-container {
+    .pilot-position-bottom-left .pilot-widget-iframe-container {
       bottom: 100px;
       left: 24px;
       width: 400px;
@@ -124,12 +124,12 @@
       max-height: calc(100vh - 120px);
     }
     
-    .chatpad-position-top-right .chatpad-widget-button {
+    .pilot-position-top-right .pilot-widget-button {
       top: 24px;
       right: 24px;
     }
     
-    .chatpad-position-top-right .chatpad-widget-iframe-container {
+    .pilot-position-top-right .pilot-widget-iframe-container {
       top: 100px;
       right: 24px;
       width: 400px;
@@ -137,12 +137,12 @@
       max-height: calc(100vh - 120px);
     }
     
-    .chatpad-position-top-left .chatpad-widget-button {
+    .pilot-position-top-left .pilot-widget-button {
       top: 24px;
       left: 24px;
     }
     
-    .chatpad-position-top-left .chatpad-widget-iframe-container {
+    .pilot-position-top-left .pilot-widget-iframe-container {
       top: 100px;
       left: 24px;
       width: 400px;
@@ -152,7 +152,7 @@
     
     /* Mobile responsive */
     @media (max-width: 480px) {
-      .chatpad-widget-iframe-container {
+      .pilot-widget-iframe-container {
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
@@ -163,11 +163,11 @@
         border-radius: 0 !important;
       }
       
-      .chatpad-widget-iframe {
+      .pilot-widget-iframe {
         border-radius: 0 !important;
       }
       
-      .chatpad-widget-button {
+      .pilot-widget-button {
         bottom: 20px !important;
         right: 20px !important;
         top: auto !important;
@@ -175,7 +175,7 @@
       }
     }
     
-    .chatpad-badge {
+    .pilot-badge {
       position: absolute;
       top: -8px;
       right: -8px;
@@ -190,20 +190,20 @@
       align-items: center;
       justify-content: center;
       padding: 0 4px;
-      animation: chatpad-pulse 2s infinite;
+      animation: pilot-pulse 2s infinite;
     }
     
-    .chatpad-badge.visible {
+    .pilot-badge.visible {
       display: flex;
     }
     
-    @keyframes chatpad-pulse {
+    @keyframes pilot-pulse {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.1); }
     }
   `;
   
-  class ChatPadWidget {
+  class PilotWidget {
     constructor(config) {
       this.config = {
         agentId: config.agentId,
@@ -238,8 +238,8 @@
       
       // Create container
       this.container = document.createElement('div');
-      this.container.className = `chatpad-widget-container chatpad-position-${this.config.position}`;
-      this.container.style.setProperty('--chatpad-primary-color', this.config.primaryColor);
+      this.container.className = `pilot-widget-container pilot-position-${this.config.position}`;
+      this.container.style.setProperty('--pilot-primary-color', this.config.primaryColor);
       document.body.appendChild(this.container);
       
       // Create button
@@ -302,7 +302,7 @@
           }
         }
       } catch (e) {
-        console.warn('ChatPad: Config prefetch failed, will fetch in iframe', e);
+        console.warn('Pilot: Config prefetch failed, will fetch in iframe', e);
       }
     }
     
@@ -312,7 +312,7 @@
     sendConfigToIframe() {
       if (this.cachedConfig && this.iframe?.contentWindow) {
         this.iframe.contentWindow.postMessage({
-          type: 'chatpad-widget-config',
+          type: 'pilot-widget-config',
           config: this.cachedConfig,
         }, '*');
       }
@@ -361,18 +361,18 @@
     
     createButton() {
       this.button = document.createElement('button');
-      this.button.className = 'chatpad-widget-button';
+      this.button.className = 'pilot-widget-button';
       this.button.innerHTML = `
-        <svg class="chatpad-icon-open" viewBox="0 0 130.1 154.21" fill="currentColor">
+        <svg class="pilot-icon-open" viewBox="0 0 130.1 154.21" fill="currentColor">
           <path d="M119.03 0H11.07C4.95 0 0 4.95 0 11.07v107.96c0 6.11 4.95 11.07 11.07 11.07l64.98-.1c19.77 0 26.87 7.95 40.85 21.93 4.87 4.87 13.2 1.42 13.2-5.47V11.07C130.1 4.96 125.15 0 119.03 0m-14.78 64.47c0 .58-.47 1.06-1.06 1.06h-4.93c-3.45 0-6.85.54-10.07 1.58-4.89 1.58-7.21 7.05-4.89 11.55 1.53 2.96 3.53 5.69 5.98 8.08l3.46 3.39c.42.42.42 1.1 0 1.51l-.02.02c-.41.4-1.07.4-1.48 0l-3.49-3.42a32.4 32.4 0 0 0-8.26-5.85c-4.6-2.27-10.2 0-11.81 4.78a30.9 30.9 0 0 0-1.62 9.85v4.8c0 .58-.47 1.06-1.06 1.06h-.05c-.58 0-1.06-.47-1.06-1.06v-4.8c0-3.38-.56-6.7-1.62-9.85-1.61-4.79-7.21-7.05-11.81-4.78a32 32 0 0 0-8.26 5.85l-3.49 3.42c-.41.4-1.07.4-1.48 0l-.02-.02c-.42-.42-.42-1.1 0-1.51l3.46-3.39c2.44-2.39 4.45-5.12 5.98-8.08 2.32-4.5 0-9.97-4.89-11.55a32.8 32.8 0 0 0-10.07-1.58h-4.93a1.06 1.06 0 0 1 0-2.12h4.93c3.45 0 6.85-.54 10.07-1.58 4.89-1.58 7.21-7.05 4.89-11.55a31.4 31.4 0 0 0-5.98-8.08l-3.46-3.39c-.42-.42-.42-1.1 0-1.51l.02-.02c.41-.4 1.07-.4 1.48 0l3.49 3.42a32.4 32.4 0 0 0 8.26 5.85c4.6 2.27 10.2 0 11.81-4.78 1.06-3.15 1.62-6.47 1.62-9.85v-4.8c0-.58.47-1.06 1.06-1.06H65c.58 0 1.06.47 1.06 1.06v4.8c0 3.38.56 6.7 1.62 9.85 1.61 4.79 7.21 7.05 11.81 4.78 3.03-1.49 5.82-3.46 8.26-5.85l3.49-3.42c.41-.4 1.07-.4 1.48 0l.02.02c.42.42.42 1.1 0 1.51l-3.46 3.39a31.7 31.7 0 0 0-5.98 8.08c-2.32 4.5 0 9.97 4.89 11.55 3.22 1.04 6.62 1.58 10.07 1.58h4.93c.58 0 1.06.47 1.06 1.06" />
         </svg>
-        <svg class="chatpad-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="pilot-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 9l6 6 6-6"/>
         </svg>
-        <span class="chatpad-badge"></span>
+        <span class="pilot-badge"></span>
       `;
       
-      this.badge = this.button.querySelector('.chatpad-badge');
+      this.badge = this.button.querySelector('.pilot-badge');
       
       // Set initial button theme based on system preference
       this.updateButtonTheme(this.getSystemTheme());
@@ -391,7 +391,7 @@
      */
     createIframeContainer() {
       this.iframeContainer = document.createElement('div');
-      this.iframeContainer.className = 'chatpad-widget-iframe-container hidden';
+      this.iframeContainer.className = 'pilot-widget-iframe-container hidden';
       this.container.appendChild(this.iframeContainer);
     }
     
@@ -418,7 +418,7 @@
       }
       
       this.iframe = document.createElement('iframe');
-      this.iframe.className = 'chatpad-widget-iframe';
+      this.iframe.className = 'pilot-widget-iframe';
       // Use widget.html for optimized widget bundle
       this.iframe.src = `${this.config.appUrl}/widget.html?${params.toString()}`;
       this.iframe.allow = 'microphone; camera';
@@ -443,12 +443,12 @@
     showContainer() {
       this.iframeContainer.classList.remove('hidden');
       this.iframeContainer.classList.add('visible');
-      this.button.classList.add('chatpad-widget-button-open');
+      this.button.classList.add('pilot-widget-button-open');
       
       // Notify iframe
       if (this.iframe && this.iframe.contentWindow) {
         this.iframe.contentWindow.postMessage({
-          type: 'chatpad-widget-opened',
+          type: 'pilot-widget-opened',
         }, '*');
       }
     }
@@ -466,7 +466,7 @@
       this.isOpen = false;
       this.iframeContainer.classList.remove('visible');
       this.iframeContainer.classList.add('hidden');
-      this.button.classList.remove('chatpad-widget-button-open');
+      this.button.classList.remove('pilot-widget-button-open');
       
       // Set inert attribute to fully disable interactions and prevent scroll lock
       this.iframeContainer.setAttribute('inert', '');
@@ -485,7 +485,7 @@
       // Notify iframe (if loaded)
       if (this.iframe && this.iframe.contentWindow) {
         this.iframe.contentWindow.postMessage({
-          type: 'chatpad-widget-closed',
+          type: 'pilot-widget-closed',
         }, '*');
       }
     }
@@ -495,7 +495,7 @@
       if (!event.data || typeof event.data !== 'object') return;
       
       switch (event.data.type) {
-        case 'chatpad-widget-ready':
+        case 'pilot-widget-ready':
           // Widget iframe is ready, send cached config if available
           this.widgetReady = true;
           if (this.cachedConfig) {
@@ -505,15 +505,15 @@
           this.sendParentPageInfo();
           break;
           
-        case 'chatpad-widget-close':
+        case 'pilot-widget-close':
           this.close();
           break;
         
-        case 'chatpad-widget-open':
+        case 'pilot-widget-open':
           this.open();
           break;
           
-        case 'chatpad-widget-state':
+        case 'pilot-widget-state':
           if (event.data.isOpen !== undefined) {
             if (event.data.isOpen && !this.isOpen) {
               this.open();
@@ -523,13 +523,13 @@
           }
           break;
           
-        case 'chatpad-widget-resize':
+        case 'pilot-widget-resize':
           if (event.data.height) {
             this.iframeContainer.style.height = `${Math.min(event.data.height, window.innerHeight - 120)}px`;
           }
           break;
           
-        case 'chatpad-unread-count':
+        case 'pilot-unread-count':
           this.updateUnreadBadge(event.data.count);
           break;
       }
@@ -555,7 +555,7 @@
       } catch (e) { /* ignore */ }
       
       this.iframe.contentWindow.postMessage({
-        type: 'chatpad-parent-page-info',
+        type: 'pilot-parent-page-info',
         url: this.currentParentUrl,
         referrer: this.parentReferrer,
         utmParams: utmParams,
@@ -608,7 +608,7 @@
       locationSlug: currentScript.getAttribute('data-location') || null,
     };
     
-    const widget = new ChatPadWidget(config);
+    const widget = new PilotWidget(config);
     
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => widget.init());
@@ -618,5 +618,5 @@
   }
   
   // Export for manual instantiation
-  window.ChatPadWidget = ChatPadWidget;
+  window.PilotWidget = PilotWidget;
 })();

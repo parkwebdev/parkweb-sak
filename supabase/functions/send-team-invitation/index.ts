@@ -64,9 +64,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email using Resend
     const emailResponse = await resend.emails.send({
-      from: "ChatPad Team <team@chatpad.app>",
+      from: "Pilot Team <team@getpilot.app>",
       to: [email],
-      reply_to: "team@chatpad.app",
+      reply_to: "team@getpilot.app",
       subject: subject,
       html: htmlContent,
       text: textContent,

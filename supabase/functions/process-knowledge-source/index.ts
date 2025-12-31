@@ -151,8 +151,8 @@ async function generateEmbedding(text: string): Promise<number[]> {
     headers: {
       'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://chatpad.ai',
-      'X-Title': 'ChatPad',
+      'HTTP-Referer': 'https://getpilot.app',
+      'X-Title': 'Pilot',
     },
     body: JSON.stringify({
       input: text,

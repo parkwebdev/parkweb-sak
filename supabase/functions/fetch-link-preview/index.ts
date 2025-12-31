@@ -468,7 +468,7 @@ serve(async (req) => {
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ChatPadBot/1.0; +https://chatpad.ai)',
+        'User-Agent': 'Mozilla/5.0 (compatible; PilotBot/1.0; +https://getpilot.app)',
         'Accept': 'text/html,application/xhtml+xml',
       },
       signal: controller.signal,

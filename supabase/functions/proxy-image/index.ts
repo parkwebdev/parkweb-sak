@@ -140,7 +140,7 @@ serve(async (req) => {
     // Fetch the image with appropriate headers
     const response = await fetch(imageUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; ChatPad/1.0; +https://chatpad.ai)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Pilot/1.0; +https://getpilot.app)',
         'Accept': 'image/*',
         'Referer': parsedUrl.origin,
       },

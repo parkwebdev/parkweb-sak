@@ -79,7 +79,7 @@ serve(async (req: Request): Promise<Response> => {
         // Send email to all recipients
         for (const recipient of report.recipients) {
           await resend.emails.send({
-            from: "ChatPad Analytics <reports@resend.dev>",
+            from: "Pilot Analytics <reports@getpilot.app>",
             to: [recipient],
             subject: `${report.name} - ${report.frequency.charAt(0).toUpperCase() + report.frequency.slice(1)} Report`,
             html: reportContent,
@@ -284,7 +284,7 @@ function generateReportHTML(report: ScheduledReport, data: any, userName: string
         </div>
 
         <div class="footer">
-          <p>This is an automated report from ChatPad Analytics</p>
+          <p>This is an automated report from Pilot Analytics</p>
           <p>Report generated on ${new Date().toLocaleDateString()}</p>
         </div>
       </body>
