@@ -63,14 +63,25 @@ export const FONT_SIZE = {
 
 // Common styles
 export const styles = StyleSheet.create({
-  // Page
+  // Page - first page (no top padding, header is at top)
+  pageFirst: {
+    flexDirection: 'column',
+    backgroundColor: colors.white,
+    fontFamily: 'Inter',
+    fontSize: FONT_SIZE.BASE,
+    color: colors.primary,
+    paddingTop: 0,                // No top padding for first page
+    paddingBottom: 60,            // Space for footer
+  },
+  
+  // Page - subsequent pages (with top margin)
   page: {
     flexDirection: 'column',
     backgroundColor: colors.white,
     fontFamily: 'Inter',
     fontSize: FONT_SIZE.BASE,
     color: colors.primary,
-    paddingTop: PAGE.MARGIN,      // Top margin for all pages
+    paddingTop: PAGE.MARGIN,      // Top margin for continuation pages
     paddingBottom: 60,            // Space for footer
   },
 
