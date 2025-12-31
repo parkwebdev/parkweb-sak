@@ -43,7 +43,7 @@ The widget is used in **three contexts**:
 #### Customer Embed Flow (Production)
 
 ```
-1. Customer adds <script src="https://app.getpilot.app/widget/serve-widget?agentId=xxx">
+1. Customer adds <script src="https://app.getpilot.io/widget/serve-widget?agentId=xxx">
 2. serve-widget edge function returns loader script (~1KB)
 3. Loader creates iframe pointing to /widget.html?agentId=xxx
 4. widget.html → widget-entry.tsx → WidgetPage → ChatWidget
