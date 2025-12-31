@@ -17,6 +17,12 @@ const sectionStyles = StyleSheet.create({
     fontSize: FONT_SIZE.LG,
     fontWeight: 600,
     color: colors.primary,
+    marginBottom: SPACING.XS,
+  },
+
+  description: {
+    fontSize: FONT_SIZE.SM,
+    color: colors.muted,
     marginBottom: SPACING.MD,
   },
   
@@ -27,12 +33,14 @@ const sectionStyles = StyleSheet.create({
 
 interface PDFSectionProps {
   title: string;
+  /** Optional description shown below the title */
+  description?: string;
   children: React.ReactNode;
   /** If true, forces a page break before this section */
   break?: boolean;
 }
 
-export function PDFSection({ title, children, break: pageBreak }: PDFSectionProps) {
+export function PDFSection({ title, description, children, break: pageBreak }: PDFSectionProps) {
   return (
     <View 
       style={sectionStyles.container} 
@@ -40,6 +48,7 @@ export function PDFSection({ title, children, break: pageBreak }: PDFSectionProp
       wrap={false}
     >
       <Text style={sectionStyles.title}>{title}</Text>
+      {description && <Text style={sectionStyles.description}>{description}</Text>}
       <View style={sectionStyles.content}>{children}</View>
     </View>
   );
