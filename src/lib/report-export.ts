@@ -17,7 +17,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
-import { ReportConfig } from '@/components/analytics/BuildReportSheet';
+import type { ReportConfig } from '@/types/report-config';
 import { formatDateUS, getTriggerLabel } from '@/lib/formatting-utils';
 import type { 
   ReportData, 

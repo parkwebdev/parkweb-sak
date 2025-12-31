@@ -1765,6 +1765,11 @@ interface CreateExportParams {
 - Generates signed download URLs (1 hour expiry)
 - Cleans up both storage and database on delete
 
+**Note**: The `ReportConfig` type should be imported from `@/types/report-config`:
+```tsx
+import type { ReportConfig } from '@/types/report-config';
+```
+
 **File**: `src/hooks/useReportExports.ts`
 
 ---
@@ -1811,6 +1816,11 @@ interface ScheduledReport {
 - Supabase subscription for `scheduled_reports` table
 - Automatic cache invalidation on mutations
 - Toast notifications for success/error states
+
+**Note**: The `ReportConfig` type should be imported from `@/types/report-config`:
+```tsx
+import type { ReportConfig } from '@/types/report-config';
+```
 
 **File**: `src/hooks/useScheduledReports.ts`
 

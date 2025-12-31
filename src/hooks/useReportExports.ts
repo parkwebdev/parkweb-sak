@@ -14,7 +14,7 @@ import { useAgent } from '@/hooks/useAgent';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { queryKeys } from '@/lib/query-keys';
-import type { ReportConfig } from '@/components/analytics/BuildReportSheet';
+import type { ReportConfig } from '@/types/report-config';
 import type { Json } from '@/integrations/supabase/types';
 
 export interface ReportExport {

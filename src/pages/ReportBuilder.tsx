@@ -416,6 +416,7 @@ export default function ReportBuilder() {
             size="icon"
             onClick={() => navigate('/analytics')}
             className="h-8 w-8"
+            aria-label="Back to analytics"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -442,6 +443,7 @@ export default function ReportBuilder() {
                         key={preset.value}
                         type="button"
                         onClick={() => handlePresetChange(preset.value)}
+                        aria-pressed={datePreset === preset.value}
                         className={cn(
                           "px-2.5 py-1 text-xs rounded-full border transition-colors",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -481,6 +483,7 @@ export default function ReportBuilder() {
                     <button
                       type="button"
                       onClick={() => updateConfig('format', 'pdf')}
+                      aria-pressed={config.format === 'pdf'}
                       className={cn(
                         "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors flex-1",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -495,6 +498,7 @@ export default function ReportBuilder() {
                     <button
                       type="button"
                       onClick={() => updateConfig('format', 'csv')}
+                      aria-pressed={config.format === 'csv'}
                       className={cn(
                         "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors flex-1",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -898,18 +902,18 @@ export default function ReportBuilder() {
           /* PDF Preview */
           <>
             {isDataLoading && (
-              <div className="flex-1 flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center" role="status" aria-live="polite">
                 <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                  <Loading02 className="h-8 w-8 animate-spin" />
+                  <Loading02 className="h-8 w-8 animate-spin" aria-hidden="true" />
                   <p className="text-sm">Loading analytics data...</p>
                 </div>
               </div>
             )}
 
             {!isDataLoading && isGenerating && (
-              <div className="flex-1 flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center" role="status" aria-live="polite">
                 <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                  <Loading02 className="h-8 w-8 animate-spin" />
+                  <Loading02 className="h-8 w-8 animate-spin" aria-hidden="true" />
                   <p className="text-sm">Generating PDF preview...</p>
                 </div>
               </div>

@@ -1,6 +1,11 @@
 /**
  * BuildReportSheet Component
  * 
+ * @deprecated This component is no longer in active use. The Report Builder functionality
+ * has been migrated to the dedicated ReportBuilder page (/report-builder) which provides
+ * a better UX with live PDF preview. This file is kept for potential future use as an
+ * inline sheet alternative but may be removed in a future cleanup.
+ * 
  * Unified report builder sheet combining immediate export and scheduling.
  * Features date range pills, format selection (CSV/PDF), data category accordions,
  * and a scheduling step for automated report delivery.
