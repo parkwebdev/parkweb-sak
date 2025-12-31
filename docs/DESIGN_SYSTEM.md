@@ -1,4 +1,4 @@
-# ChatPad Design System
+# Pilot Design System
 
 > **Last Updated**: December 2025  
 > **Status**: Active  
@@ -32,7 +32,7 @@ Comprehensive design system documentation for consistent UI development.
 
 ### Font Family
 
-ChatPad uses **Geist** as the primary font family with **Geist Mono** for code.
+Pilot uses **Geist** as the primary font family with **Geist Mono** for code.
 
 ```css
 /* Primary font */
@@ -536,7 +536,7 @@ const Component = () => {
 
 ### UntitledUI Icons
 
-ChatPad uses **UntitledUI Icons** exclusively. Never use Lucide or other icon libraries.
+Pilot uses **UntitledUI Icons** exclusively. Never use Lucide or other icon libraries.
 
 ```tsx
 // ✅ Correct - UntitledUI Icons
@@ -824,7 +824,7 @@ Before shipping any component, verify:
 
 ## WCAG 2.2 Compliance
 
-ChatPad implements WCAG 2.2 AA compliance with the following key requirements:
+Pilot implements WCAG 2.2 AA compliance with the following key requirements:
 
 ### Focus Appearance (2.4.13)
 

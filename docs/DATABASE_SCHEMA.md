@@ -1,10 +1,10 @@
-# ChatPad Database Schema
+# Pilot Database Schema
 
 > **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [Security](./SECURITY.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Architecture](./ARCHITECTURE.md)
 
-Complete database schema and Supabase integration documentation for the ChatPad platform.
+Complete database schema and Supabase integration documentation for the Pilot platform.
 
 ---
 
@@ -20,7 +20,7 @@ Complete database schema and Supabase integration documentation for the ChatPad 
 
 ## Overview
 
-ChatPad uses a **user-based ownership model** with team member access sharing. The primary access pattern uses `user_id` columns to identify resource ownership, with the `team_members` table enabling shared access between team members.
+Pilot uses a **user-based ownership model** with team member access sharing. The primary access pattern uses `user_id` columns to identify resource ownership, with the `team_members` table enabling shared access between team members.
 
 ### Key Concepts
 

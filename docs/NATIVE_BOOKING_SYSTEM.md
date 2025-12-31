@@ -5,7 +5,7 @@
 > **Priority**: High  
 > **Related**: [AI Architecture](./AI_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Social Channel Integrations](./SOCIAL_CHANNEL_INTEGRATIONS.md)
 
-This document provides the complete implementation blueprint for ChatPad's native booking system, enabling AI agents to intelligently route inquiries across multiple communities, maintain real-time property listings, check calendar availability, and book tours autonomously.
+This document provides the complete implementation blueprint for Pilot's native booking system, enabling AI agents to intelligently route inquiries across multiple communities, maintain real-time property listings, check calendar availability, and book tours autonomously.
 
 ---
 
@@ -97,7 +97,7 @@ Enable mobile home park operators (and similar multi-location businesses) to dep
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              CHATPAD PLATFORM                                │
+│                              PILOT PLATFORM                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
@@ -316,9 +316,9 @@ const RELATIONSHIP_SIGNALS = [
 
 ### Overview
 
-For clients using WordPress with custom post types for communities and homes, ChatPad integrates directly with the WordPress REST API to:
+For clients using WordPress with custom post types for communities and homes, Pilot integrates directly with the WordPress REST API to:
 
-1. **Auto-import communities** as ChatPad Locations
+1. **Auto-import communities** as Pilot Locations
 2. **Sync home/property listings** for AI knowledge and RAG
 3. **Enable smart widget detection** based on URL paths and taxonomy
 4. **Keep data fresh** with scheduled sync
@@ -379,7 +379,7 @@ For clients using WordPress with custom post types for communities and homes, Ch
 │       └── [Test Connection] [Import Communities] [Sync Homes]       │
 │                                                                      │
 │   ┌────────────────────┐    ┌─────────────────────────────────┐     │
-│   │  /wp-json/wp/v2/   │    │  ChatPad Database               │     │
+│   │  /wp-json/wp/v2/   │    │  Pilot Database               │     │
 │   │  community         │───▶│  locations table                │     │
 │   │  (20 communities)  │    │  - wordpress_slug               │     │
 │   └────────────────────┘    │  - wordpress_community_id       │     │
@@ -1157,7 +1157,7 @@ Build location management UI and OAuth calendar connections enabling appointment
 
 #### 2.3.1 Database: `calendar_events` Table
 
-Local storage for bookings created through ChatPad:
+Local storage for bookings created through Pilot:
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
@@ -1422,14 +1422,14 @@ Widget renders location picker buttons when tool is called.
 ```html
 <!-- Explicit location (recommended for single-location pages) -->
 <script
-  src="https://app.chatpad.ai/widget.js"
+  src="https://app.getpilot.app/widget.js"
   data-agent-id="abc123"
   data-location="forge-at-the-lake"
 ></script>
 
 <!-- Auto-detect from URL (for multi-location sites) -->
 <script
-  src="https://app.chatpad.ai/widget.js"
+  src="https://app.getpilot.app/widget.js"
   data-agent-id="abc123"
   data-wordpress-site="https://example.com"
 ></script>
@@ -2157,4 +2157,4 @@ CREATE INDEX idx_conversations_location ON conversations(location_id);
 
 *Document Version: 1.0*  
 *Created: December 2024*  
-*Maintainer: ChatPad Engineering*
+*Maintainer: Pilot Engineering*

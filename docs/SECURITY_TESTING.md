@@ -5,7 +5,7 @@
 > **Owner**: Security Team
 > **Related**: [SECURITY.md](./SECURITY.md)
 
-This document outlines the security testing program for ChatPad, including schedules, test cases, and vulnerability disclosure processes.
+This document outlines the security testing program for Pilot, including schedules, test cases, and vulnerability disclosure processes.
 
 ---
 
@@ -284,7 +284,7 @@ npm audit --json > audit-report.json
 ### Scope
 
 **In Scope**:
-- ChatPad web application
+- Pilot web application
 - Widget embed functionality
 - Edge functions/API
 - Authentication system

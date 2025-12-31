@@ -15,7 +15,7 @@ Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design syste
    - [Error Handling in Components](#error-handling-in-components)
 3. [Accessibility Standards](#accessibility-standards)
 4. [Button & Input Standards](#button--input-standards)
-5. [ChatPad Component Library](#chatpad-component-library)
+5. [Pilot Component Library](#pilot-component-library)
 6. [Motion Integration](#motion-integration)
 7. [Form Patterns](#form-patterns)
 8. [Data Table Patterns](#data-table-patterns)
@@ -237,9 +237,9 @@ All form inputs MUST use consistent sizing via the `size` prop.
 
 ---
 
-## ChatPad Component Library
+## Pilot Component Library
 
-Custom components built for ChatPad following shadcn patterns.
+Custom components built for Pilot following shadcn patterns.
 
 ### Layout Components
 
@@ -358,7 +358,7 @@ Custom components built for ChatPad following shadcn patterns.
 
 ## Motion Integration
 
-ChatPad uses `motion/react` (Framer Motion) for animations with accessibility support.
+Pilot uses `motion/react` (Framer Motion) for animations with accessibility support.
 
 ### Required Pattern: Reduced Motion Check
 
@@ -444,7 +444,7 @@ For the embedded chat widget, prioritize performance:
 
 ## Form Patterns
 
-ChatPad uses React Hook Form + Zod for form management with auto-save patterns.
+Pilot uses React Hook Form + Zod for form management with auto-save patterns.
 
 ### Standard Form Setup
 
@@ -534,7 +534,7 @@ updateMutation.mutate(data, {
 
 ## Data Table Patterns
 
-ChatPad uses TanStack Table with motion integration for all data tables.
+Pilot uses TanStack Table with motion integration for all data tables.
 
 ### Architecture Overview
 
@@ -758,7 +758,7 @@ export function LeadsTable({ leads, onView, onStatusChange }) {
 
 ## Typography System
 
-ChatPad uses a refined typography system built on Geist fonts.
+Pilot uses a refined typography system built on Geist fonts.
 
 ### Font Families
 
@@ -804,14 +804,14 @@ ChatPad uses a refined typography system built on Geist fonts.
 <PageHeader title="Settings" description="Manage preferences" />
 
 // ❌ WRONG
-<h1 className="text-3xl">Too large for ChatPad's compact design</h1>
+<h1 className="text-3xl">Too large for Pilot's compact design</h1>
 ```
 
 ---
 
 ## Icon System
 
-ChatPad uses UntitledUI icons exclusively. **Never use Lucide icons.**
+Pilot uses UntitledUI icons exclusively. **Never use Lucide icons.**
 
 ### Import Pattern
 

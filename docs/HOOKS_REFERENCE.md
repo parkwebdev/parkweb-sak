@@ -1,10 +1,10 @@
-# ChatPad Hooks Reference
+# Pilot Hooks Reference
 
 > **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md)
 
-Complete reference for all custom React hooks in the ChatPad application.
+Complete reference for all custom React hooks in the Pilot application.
 
 ---
 
