@@ -209,7 +209,7 @@ export const HomeView = ({
             <span className="text-xs text-muted-foreground inline-flex items-center">
               Powered by
               <a 
-                href="https://pad.chat" 
+                href="https://getpilot.io" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-0.5 ml-1"
