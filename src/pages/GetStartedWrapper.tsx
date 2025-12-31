@@ -16,7 +16,7 @@ const GetStarted = lazy(() => import('./GetStarted').then(module => ({ default: 
 function GetStartedWrapper() {
   return (
     <PageTransition>
-      <Suspense fallback={<SkeletonGetStartedPage className="min-h-[400px]" />}>
+      <Suspense fallback={<SkeletonGetStartedPage className="min-h-[400px] h-full" />}>
         <GetStarted />
       </Suspense>
     </PageTransition>
