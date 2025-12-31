@@ -597,24 +597,24 @@ export const useAnalytics = (
   };
 
   useEffect(() => {
-    // Skip all fetching when disabled (e.g., mock mode is on)
-    if (!enabled) {
+    // Skip all fetching when disabled or no user (prevents channel leaks)
+    if (!enabled || !user?.id) {
       setLoading(false);
       return;
     }
 
     fetchAllData();
 
-    // Subscribe to real-time updates
+    // Subscribe to real-time updates with user-scoped channel names
     const conversationsChannel = supabase
-      .channel('analytics-conversations')
+      .channel(`analytics-conversations-${user.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'conversations',
-          filter: `user_id=eq.${user?.id}`,
+          filter: `user_id=eq.${user.id}`,
         },
         () => {
           fetchConversationStats();
@@ -624,14 +624,14 @@ export const useAnalytics = (
       .subscribe();
 
     const leadsChannel = supabase
-      .channel('analytics-leads')
+      .channel(`analytics-leads-${user.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'leads',
-          filter: `user_id=eq.${user?.id}`,
+          filter: `user_id=eq.${user.id}`,
         },
         () => {
           fetchLeadStats();
@@ -639,8 +639,10 @@ export const useAnalytics = (
       )
       .subscribe();
 
+    // Note: conversation_ratings doesn't have direct user_id column
+    // Using user-scoped channel name to prevent cross-user channel collisions
     const ratingsChannel = supabase
-      .channel('analytics-ratings')
+      .channel(`analytics-ratings-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -654,8 +656,10 @@ export const useAnalytics = (
       )
       .subscribe();
 
+    // Note: calendar_events uses connected_account_id, not user_id directly
+    // Using user-scoped channel name to prevent cross-user channel collisions
     const eventsChannel = supabase
-      .channel('analytics-calendar-events')
+      .channel(`analytics-calendar-events-${user.id}`)
       .on(
         'postgres_changes',
         {
