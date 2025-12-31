@@ -7,7 +7,7 @@
  * @module hooks/useSupabaseQuery
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { 
   useQuery, 
   useMutation, 
@@ -79,6 +79,12 @@ export function useSupabaseQuery<TData, TError = Error>({
 }: UseSupabaseQueryOptions<TData, TError>) {
   const queryClient = useQueryClient();
   const channelRef = useRef<RealtimeChannel | null>(null);
+  
+  // Memoize queryKey serialization to prevent unnecessary effect re-runs
+  const stableQueryKeyString = useMemo(
+    () => JSON.stringify(queryKey),
+    [queryKey]
+  );
 
   // Set up real-time subscription for cache invalidation
   useEffect(() => {
@@ -86,8 +92,8 @@ export function useSupabaseQuery<TData, TError = Error>({
 
     const { table, schema = 'public', filter } = realtime;
 
-    // Create unique channel name
-    const channelName = `supabase-query-${table}-${filter || 'all'}-${Date.now()}`;
+    // Deterministic channel name - reuses existing channel on re-subscribe
+    const channelName = `sq-${table}-${filter || 'all'}-${stableQueryKeyString.slice(0, 50)}`;
 
     const channel = supabase
       .channel(channelName)
@@ -114,7 +120,7 @@ export function useSupabaseQuery<TData, TError = Error>({
         channelRef.current = null;
       }
     };
-  }, [realtime?.table, realtime?.filter, enabled, queryClient, JSON.stringify(queryKey)]);
+  }, [realtime?.table, realtime?.filter, enabled, queryClient, stableQueryKeyString]);
 
   return useQuery({
     queryKey,
