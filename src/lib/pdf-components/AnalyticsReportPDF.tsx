@@ -70,7 +70,7 @@ export function AnalyticsReportPDF({
 
   return (
     <Document>
-      <Page size="A4" style={styles.page} wrap>
+      <Page size="A4" style={styles.pageFirst} wrap>
         <PDFHeader 
           orgName={orgName} 
           startDate={startDate} 
