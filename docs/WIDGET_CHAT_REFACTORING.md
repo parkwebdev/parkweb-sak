@@ -385,6 +385,8 @@ supabase/functions/
 
 This section maps EVERY line of `widget-chat/index.ts` to its target location.
 
+> **Important**: Line numbers in this document are approximate and based on the file state at the time of planning. Always verify exact line numbers during extraction using IDE search for function/constant names.
+
 #### Lines 1-12: Imports & CORS
 
 | Lines | Content | Target | Action |
@@ -400,9 +402,12 @@ This section maps EVERY line of `widget-chat/index.ts` to its target location.
 | Lines | Content | Target | Action |
 |-------|---------|--------|--------|
 | 13-26 | `ErrorCodes` constant | `_shared/errors.ts` | MOVE |
-| 27-35 | `type ErrorCode` | `_shared/errors.ts` | MOVE |
+| 27-28 | `type ErrorCode` | `_shared/errors.ts` | MOVE |
+| 29-31 | Request size limits (`MAX_MESSAGE_LENGTH`, `MAX_FILES_PER_MESSAGE`) | `_shared/errors.ts` | MOVE |
 | 37-84 | `createLogger` function | `_shared/logger.ts` | MOVE |
 | 86-107 | `createErrorResponse` function | `_shared/errors.ts` | MOVE |
+
+> **Note**: Line numbers are approximate based on document version at time of planning. Verify exact line numbers during extraction using IDE search.
 
 #### Lines 110-166: Type Definitions
 
@@ -2411,7 +2416,9 @@ The refactoring is **COMPLETE** when ALL of the following are true:
 | Tools | 1059 | 5 files |
 | Memory | 516 | 3 files |
 | Main Handler | 1910 | 1 file (refactored) |
-| **TOTAL** | **4678** | **29 files** |
+| **TOTAL** | **4639** | **29 files** |
+
+> **Note**: The 39-line difference between the category total (4,639) and the file size (4,678) consists of empty lines, comment headers, section dividers, and whitespace that are implicitly handled during extraction.
 
 ---
 
