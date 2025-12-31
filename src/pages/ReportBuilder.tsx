@@ -409,7 +409,12 @@ export default function ReportBuilder() {
   const exportOptionsCount = [config.includeKPIs, config.includeCharts, config.includeTables].filter(Boolean).length;
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 bg-muted/30">
+    <motion.div 
+      className="flex h-full min-h-0 min-w-0 bg-muted/30"
+      initial={prefersReducedMotion ? false : { opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+    >
       {/* Sidebar */}
       <aside className="w-[340px] flex-shrink-0 border-r border-border bg-background h-full min-h-0 flex flex-col overflow-hidden">
         {/* Header */}
@@ -1001,6 +1006,6 @@ export default function ReportBuilder() {
           )}
         </AnimatePresence>
       </main>
-    </div>
+    </motion.div>
   );
 }
