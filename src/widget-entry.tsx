@@ -1,3 +1,4 @@
+// Cache invalidation: force rebuild after icons restructure (2024-12-31)
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import WidgetPage from './pages/WidgetPage';
