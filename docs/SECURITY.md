@@ -51,9 +51,9 @@ This section tracks the implementation status of security enhancements identifie
 | Phase | Description | Status | Priority | Effort |
 |-------|-------------|--------|----------|--------|
 | 1 | [Prompt Injection Protection](#prompt-injection-protection) | 🟢 Complete | Critical | - |
-| 2 | [Content Moderation](#content-moderation) | 🔴 Planned | Critical | 4 hours |
+| 2 | [Content Moderation](#content-moderation) | 🟢 Complete | Critical | - |
 | 3 | [Security Testing Documentation](#security-testing) | 🟢 Complete | High | - |
-| 4 | [CAPTCHA Protection](#bot-protection) | 🔴 Planned | High | 4 hours |
+| 4 | [CAPTCHA Protection](#bot-protection) | 🟢 Complete | High | - |
 | 5 | [Automated Alerting](#automated-security-alerts) | 🔴 Planned | Medium | 3 hours |
 | 6 | [Key Age Warning](#key-rotation-policy) | 🔴 Planned | Medium | 1 hour |
 
@@ -81,11 +81,11 @@ The following security measures are fully implemented:
 
 | Secret | Type | Purpose | Status |
 |--------|------|---------|--------|
-| `OPENAI_API_KEY` | Exists | Content moderation API | ✅ Configured |
-| `INTERNAL_WEBHOOK_SECRET` | Exists | Secure trigger-to-function calls | ✅ Configured |
-| `VITE_TURNSTILE_SITE_KEY` | New (public) | Widget CAPTCHA | ⏳ Pending |
-| `CLOUDFLARE_TURNSTILE_SECRET` | New (Supabase) | Token verification | ⏳ Pending |
-| `SECURITY_ALERT_EMAIL` | New (Supabase) | Alert delivery | ⏳ Pending |
+| `OPENAI_API_KEY` | Supabase | Content moderation API | ✅ Configured |
+| `INTERNAL_WEBHOOK_SECRET` | Supabase | Secure trigger-to-function calls | ✅ Configured |
+| `VITE_TURNSTILE_SITE_KEY` | Public (.env) | Widget CAPTCHA | ✅ Configured |
+| `CLOUDFLARE_TURNSTILE_SECRET` | Supabase | Token verification | ✅ Configured |
+| `SECURITY_ALERT_EMAIL` | Supabase | Alert delivery | ⏳ Pending |
 
 ### Deferred to Super Admin Build
 
@@ -623,7 +623,7 @@ const BLOCKED_PATTERNS = [
 
 #### Implementation Status
 
-🔴 **Planned** - To be added to `widget-chat` edge function.
+🟢 **Complete** - Security guardrails injected into system prompt and output sanitization applied to all AI responses in `widget-chat` edge function (lines 298-342, 3574).
 
 ### Content Moderation
 
@@ -1277,14 +1277,14 @@ API key manager displays age warnings:
 
 - [x] Prompt injection guardrails in place
 - [x] Output sanitization active
-- [ ] Content moderation enabled
+- [x] Content moderation enabled (pre-flight and post-generation)
 - [x] Security testing scheduled (see [SECURITY_TESTING.md](./SECURITY_TESTING.md))
 
 ### Bot Protection
 
-- [ ] Turnstile configured for widget forms
-- [ ] Token verification in edge functions
-- [ ] Fail-open behavior documented
+- [x] Turnstile configured for widget forms (TurnstileWidget component)
+- [x] Token verification in edge functions (create-widget-lead)
+- [x] Fail-open behavior documented (verifyTurnstile returns failOpen: true on error)
 
 ### Deployment
 
