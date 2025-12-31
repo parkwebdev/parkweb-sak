@@ -23,12 +23,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, ArrowLeft, X } from '@untitledui/icons';
+import { ArrowLeft, X } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
-import { DateRange } from 'react-day-picker';
+
 import { PdfIcon, CsvIcon } from './ExportIcons';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { isValidEmail } from '@/utils/validation';
@@ -71,7 +69,7 @@ export interface ReportConfig {
   includeTables: boolean;
 }
 
-type DatePreset = 'today' | 'last7' | 'last30' | 'thisMonth' | 'lastMonth' | 'custom';
+type DatePreset = 'today' | 'last7' | 'last30' | 'last60' | 'last90' | 'thisMonth' | 'lastMonth';
 type Step = 'configure' | 'schedule';
 
 interface CaptureProgress {
@@ -93,11 +91,12 @@ interface BuildReportSheetProps {
 
 const DATE_PRESETS: { value: DatePreset; label: string }[] = [
   { value: 'today', label: 'Today' },
-  { value: 'last7', label: 'Last 7 days' },
-  { value: 'last30', label: 'Last 30 days' },
-  { value: 'thisMonth', label: 'This month' },
-  { value: 'lastMonth', label: 'Last month' },
-  { value: 'custom', label: 'Custom' },
+  { value: 'last7', label: 'Last 7 Days' },
+  { value: 'last30', label: 'Last 30 Days' },
+  { value: 'last60', label: 'Last 60 Days' },
+  { value: 'last90', label: 'Last 90 Days' },
+  { value: 'thisMonth', label: 'This Month' },
+  { value: 'lastMonth', label: 'Last Month' },
 ];
 
 const getDateRangeFromPreset = (preset: DatePreset): { start: Date; end: Date } => {
@@ -110,6 +109,10 @@ const getDateRangeFromPreset = (preset: DatePreset): { start: Date; end: Date } 
       return { start: subDays(today, 7), end: today };
     case 'last30':
       return { start: subDays(today, 30), end: today };
+    case 'last60':
+      return { start: subDays(today, 60), end: today };
+    case 'last90':
+      return { start: subDays(today, 90), end: today };
     case 'thisMonth':
       return { start: startOfMonth(today), end: today };
     case 'lastMonth': {
@@ -137,10 +140,8 @@ export const BuildReportSheet = ({
   
   // Date range state
   const [datePreset, setDatePreset] = useState<DatePreset>('last30');
-  const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
-    to: new Date(),
-  });
+
+  // Scheduling state
 
   // Scheduling state
   const [scheduleName, setScheduleName] = useState('');
@@ -158,16 +159,10 @@ export const BuildReportSheet = ({
 
   const handlePresetChange = (preset: DatePreset) => {
     setDatePreset(preset);
-    if (preset !== 'custom') {
-      const { start, end } = getDateRangeFromPreset(preset);
-      setCustomDateRange({ from: start, to: end });
-    }
   };
 
   const getCurrentDateRange = () => {
-    return datePreset === 'custom' 
-      ? { start: customDateRange?.from || new Date(), end: customDateRange?.to || new Date() }
-      : getDateRangeFromPreset(datePreset);
+    return getDateRangeFromPreset(datePreset);
   };
 
   const handleExport = () => {
@@ -315,37 +310,6 @@ export const BuildReportSheet = ({
                   ))}
                 </div>
                 
-                {/* Custom Date Picker */}
-                {datePreset === 'custom' && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {customDateRange?.from ? (
-                          customDateRange.to ? (
-                            <>
-                              {format(customDateRange.from, "LLL dd, y")} - {format(customDateRange.to, "LLL dd, y")}
-                            </>
-                          ) : (
-                            format(customDateRange.from, "LLL dd, y")
-                          )
-                        ) : (
-                          <span className="text-muted-foreground">Pick a date range</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="range"
-                        defaultMonth={customDateRange?.from}
-                        selected={customDateRange}
-                        onSelect={setCustomDateRange}
-                        numberOfMonths={2}
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                )}
               </div>
 
               {/* Format Selection */}
@@ -894,7 +858,7 @@ export const BuildReportSheet = ({
                 <div className="text-sm space-y-1">
                   <p><span className="text-muted-foreground">Format:</span> {config.format.toUpperCase()}</p>
                   <p><span className="text-muted-foreground">Style:</span> {config.type.charAt(0).toUpperCase() + config.type.slice(1)}</p>
-                  <p><span className="text-muted-foreground">Date Range:</span> {datePreset === 'custom' ? 'Custom' : DATE_PRESETS.find(p => p.value === datePreset)?.label}</p>
+                  <p><span className="text-muted-foreground">Date Range:</span> {DATE_PRESETS.find(p => p.value === datePreset)?.label}</p>
                 </div>
               </div>
             </div>
