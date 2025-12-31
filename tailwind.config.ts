@@ -128,6 +128,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--accent-purple))",
           foreground: "hsl(var(--accent-purple-foreground))",
         },
+        rating: "hsl(var(--rating))",
       },
       borderRadius: {
         lg: "var(--radius)",
