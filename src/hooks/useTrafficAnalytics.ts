@@ -19,7 +19,13 @@ import { queryKeys } from '@/lib/query-keys';
 import { logger } from '@/utils/logger';
 import { getCountryCoordinates } from '@/lib/country-coordinates';
 import type { ConversationMetadata } from '@/types/metadata';
-import type { LeadSourceData } from '@/types/analytics';
+import type { 
+  LeadSourceData, 
+  EngagementMetrics, 
+  DailySourceData, 
+  PageDepthData,
+  LocationData,
+} from '@/types/analytics';
 
 // =============================================================================
 // TYPES
@@ -47,46 +53,14 @@ export interface PageVisitData {
   totalDuration: number;
 }
 
-/** Location data with coordinates for map visualization */
-export interface LocationData {
-  country: string;
-  city?: string;
-  lat: number;
-  lng: number;
-  count: number;
-}
-
-/** Engagement metrics */
-export interface EngagementMetrics {
-  bounceRate: number;
-  avgPagesPerSession: number;
-  avgSessionDuration: number;
-  totalSessions: number;
-  totalLeads: number;
-  overallCVR: number;
-}
-
-/** Daily traffic source data for time-series charts */
-export interface DailySourceData {
-  date: string;
-  direct: number;
-  organic: number;
-  paid: number;
-  social: number;
-  email: number;
-  referral: number;
-  total: number;
-}
-
-/** Page depth distribution data */
-export interface PageDepthData {
-  depth: string;
-  count: number;
-  percentage: number;
-}
-
-// Re-export LeadSourceData for backwards compatibility
-export type { LeadSourceData };
+// Re-export types from analytics.ts for backwards compatibility
+export type { 
+  LeadSourceData, 
+  EngagementMetrics, 
+  DailySourceData, 
+  PageDepthData,
+  LocationData,
+};
 
 /** Complete traffic analytics stats */
 interface TrafficStats {

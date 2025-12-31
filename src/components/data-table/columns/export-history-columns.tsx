@@ -13,7 +13,8 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Download01, Trash01 } from '@untitledui/icons';
 import { PdfIcon, CsvIcon } from '@/components/analytics/ExportIcons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDateRangeFromStrings, formatFileSize } from '@/lib/formatting-utils';
+import { formatDistanceToNow, format } from 'date-fns';
 import type { ReportExport } from '@/hooks/useReportExports';
 
 /**
@@ -27,39 +28,6 @@ export interface ExportHistoryColumnsProps {
   /** Whether download is in progress */
   isDownloading?: boolean;
 }
-
-/**
- * Format file size in human-readable format
- */
-const formatFileSize = (bytes: number | null): string => {
-  if (!bytes) return '-';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-};
-
-/**
- * Format date range
- */
-const formatDateRange = (start: string, end: string): string => {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  
-  // Same month and year
-  if (
-    startDate.getMonth() === endDate.getMonth() &&
-    startDate.getFullYear() === endDate.getFullYear()
-  ) {
-    return `${format(startDate, 'MMM d')} - ${format(endDate, 'd, yyyy')}`;
-  }
-  
-  // Same year
-  if (startDate.getFullYear() === endDate.getFullYear()) {
-    return `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
-  }
-  
-  return `${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}`;
-};
 
 /**
  * Create export history table columns
@@ -132,7 +100,7 @@ export const createExportHistoryColumns = ({
       const exportItem = row.original;
       return (
         <span className="text-muted-foreground whitespace-nowrap">
-          {formatDateRange(exportItem.date_range_start, exportItem.date_range_end)}
+          {formatDateRangeFromStrings(exportItem.date_range_start, exportItem.date_range_end)}
         </span>
       );
     },

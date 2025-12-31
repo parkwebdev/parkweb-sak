@@ -81,11 +81,11 @@ export const AnalyticsToolbar = ({
         {/* Filters Popover */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm">
-              <FilterLines className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" aria-label="Open analytics filters menu">
+              <FilterLines className="h-4 w-4 mr-2" aria-hidden="true" />
               Filters
               {activeFilterCount > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs" aria-label={`${activeFilterCount} active filters`}>
                   {activeFilterCount}
                 </Badge>
               )}
@@ -161,7 +161,7 @@ export const AnalyticsToolbar = ({
         {/* Mock Data Toggle - Dev Only */}
         {onMockModeChange && (
           <div className="flex items-center gap-2 px-2 py-1 bg-warning/10 border border-warning/30 rounded-md">
-            <Beaker02 className="h-4 w-4 text-warning" />
+            <Beaker02 className="h-4 w-4 text-warning" aria-hidden="true" />
             <Label htmlFor="mock-toggle" className="text-xs font-medium text-warning cursor-pointer">
               Mock Data
             </Label>

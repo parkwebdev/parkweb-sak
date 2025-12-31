@@ -7,9 +7,28 @@
  * @module lib/analytics-constants
  */
 
-import type { AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import type { ReportConfig } from '@/components/analytics/BuildReportSheet';
 
+// =============================================================================
+// ANALYTICS SECTION TYPE
+// =============================================================================
+
+/**
+ * Valid analytics section identifiers.
+ * Used for tab navigation and section rendering.
+ */
+export const ANALYTICS_SECTIONS = [
+  'conversations',
+  'leads',
+  'bookings',
+  'ai-performance',
+  'sources',
+  'pages',
+  'geography',
+  'reports',
+] as const;
+
+export type AnalyticsSection = (typeof ANALYTICS_SECTIONS)[number];
 /**
  * Section title and description mapping
  */

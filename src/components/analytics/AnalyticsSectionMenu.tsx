@@ -12,6 +12,7 @@ import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
+import { type AnalyticsSection } from '@/lib/analytics-constants';
 import {
   MessageChatCircle,
   Users01,
@@ -23,15 +24,8 @@ import {
   FileCheck02,
 } from '@untitledui/icons';
 
-export type AnalyticsSection = 
-  | 'conversations'
-  | 'leads'
-  | 'bookings'
-  | 'ai-performance'
-  | 'sources'
-  | 'pages'
-  | 'geography'
-  | 'reports';
+// Re-export AnalyticsSection type for backwards compatibility
+export type { AnalyticsSection } from '@/lib/analytics-constants';
 
 interface SectionItem {
   id: AnalyticsSection;
