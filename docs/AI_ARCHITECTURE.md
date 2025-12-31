@@ -1,10 +1,10 @@
-# ChatPad AI Architecture
+# Pilot AI Architecture
 
 > **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [Edge Functions](./EDGE_FUNCTIONS.md), [Database Schema](./DATABASE_SCHEMA.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
 
-Complete documentation of how AI is used throughout the ChatPad platform.
+Complete documentation of how AI is used throughout the Pilot platform.
 
 ---
 
@@ -27,7 +27,7 @@ Complete documentation of how AI is used throughout the ChatPad platform.
 
 ## Overview
 
-ChatPad uses AI in three primary ways:
+Pilot uses AI in three primary ways:
 
 | Component | Purpose | Provider |
 |-----------|---------|----------|

@@ -21,14 +21,14 @@
 
 ## Executive Summary
 
-This document outlines the architecture for integrating social messaging channels (Facebook Messenger, Instagram DM, Email) with ChatPad agents. The key innovation is **multi-account support per agent**, enabling businesses with multiple locations to connect all their social accounts to a single AI agent with intelligent routing.
+This document outlines the architecture for integrating social messaging channels (Facebook Messenger, Instagram DM, Email) with Pilot agents. The key innovation is **multi-account support per agent**, enabling businesses with multiple locations to connect all their social accounts to a single AI agent with intelligent routing.
 
 ---
 
 ## Problem Statement
 
 ### Current Limitation
-ChatPad currently supports only web widget conversations. Businesses also receive customer inquiries via:
+Pilot currently supports only web widget conversations. Businesses also receive customer inquiries via:
 - Facebook Messenger (often multiple pages per business)
 - Instagram DMs (multiple accounts)
 - Email (multiple inboxes)
@@ -149,7 +149,7 @@ Agent: MHP Communities
 │  1. Click "Connect Facebook"                                         │
 │     └── Redirect to Meta OAuth                                       │
 │                                                                      │
-│  2. User authorizes ChatPad for business pages                       │
+│  2. User authorizes Pilot for business pages                       │
 │     └── Grant pages_messaging, pages_read_engagement                 │
 │                                                                      │
 │  3. Select pages to connect                                          │

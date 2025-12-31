@@ -2,7 +2,7 @@
 
 ## Overview
 
-The PDF generator creates analytics reports using `@react-pdf/renderer` with native vector chart components. This provides crisp, scalable graphics that render identically across all PDF viewers.
+The Pilot PDF generator creates analytics reports using `@react-pdf/renderer` with native vector chart components. This provides crisp, scalable graphics that render identically across all PDF viewers.
 
 ## Architecture
 

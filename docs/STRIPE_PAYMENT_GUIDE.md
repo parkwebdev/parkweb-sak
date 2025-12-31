@@ -114,7 +114,7 @@ serve(async (req) => {
 - Implement proper staging/production environment separation
 - Create automated tests for webhook event processing
 
-## ChatPad-Specific Implementation
+## Pilot-Specific Implementation
 
 Reference existing patterns:
 - See `supabase/functions/` for Edge Function structure

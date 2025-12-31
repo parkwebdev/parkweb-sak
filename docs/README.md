@@ -1,8 +1,8 @@
-# ChatPad Documentation
+# Pilot Documentation
 
 > **Last Updated**: December 2025
 
-Welcome to the ChatPad documentation. This index provides quick access to all technical guides and architecture documentation.
+Welcome to the Pilot documentation. This index provides quick access to all technical guides and architecture documentation.
 
 ---
 

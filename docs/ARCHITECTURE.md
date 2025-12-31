@@ -1,10 +1,10 @@
-# ChatPad Architecture
+# Pilot Architecture
 
 > **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [AI Architecture](./AI_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Security](./SECURITY.md)
 
-Comprehensive system architecture for the ChatPad AI agent platform.
+Comprehensive system architecture for the Pilot AI agent platform.
 
 ---
 
@@ -29,7 +29,7 @@ Comprehensive system architecture for the ChatPad AI agent platform.
 
 ## Introduction
 
-ChatPad is a multi-tenant AI agent platform for building, deploying, and managing conversational AI agents. It enables businesses to:
+Pilot is a multi-tenant AI agent platform for building, deploying, and managing conversational AI agents. It enables businesses to:
 
 - **Deploy AI Agents**: Embeddable chat widgets for websites
 - **Knowledge Management**: RAG-powered responses using custom knowledge bases
@@ -508,7 +508,7 @@ Primary deployment method - JavaScript snippet for websites:
 Direct link to full-page chat interface:
 
 ```
-https://app.chatpad.com/widget/[agent-id]
+https://app.getpilot.app/widget/[agent-id]
 ```
 
 **Use Cases:**
@@ -611,7 +611,7 @@ const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
 ## Directory Structure
 
 ```
-chatpad/
+pilot/
 ├── docs/                          # Documentation
 │   ├── README.md                  # Documentation index
 │   ├── ARCHITECTURE.md            # This file
@@ -625,7 +625,7 @@ chatpad/
 │   └── SECURITY.md                # Security documentation
 │
 ├── public/                        # Static assets
-│   ├── chatpad-widget.js          # Widget loader script
+│   ├── pilot-widget.js          # Widget loader script
 │   └── widget-test.html           # Widget testing page
 │
 ├── src/

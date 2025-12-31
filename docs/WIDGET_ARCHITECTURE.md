@@ -1,10 +1,10 @@
-# ChatPad Widget Architecture
+# Pilot Widget Architecture
 
 > **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [Security](./SECURITY.md), [Edge Functions](./EDGE_FUNCTIONS.md), [AI Architecture](./AI_ARCHITECTURE.md)
 
-Technical documentation for the ChatPad embeddable chat widget.
+Technical documentation for the Pilot embeddable chat widget.
 
 ---
 
@@ -28,7 +28,7 @@ Technical documentation for the ChatPad embeddable chat widget.
 
 ## Overview
 
-The ChatPad widget is a high-performance, embeddable chat interface that can be added to any website. It provides AI-powered conversations with optional human takeover, a help center, and lead capture functionality.
+The Pilot widget is a high-performance, embeddable chat interface that can be added to any website. It provides AI-powered conversations with optional human takeover, a help center, and lead capture functionality.
 
 ### Widget Usage Map
 
@@ -36,14 +36,14 @@ The widget is used in **three contexts**:
 
 | Context | Entry Point | Description |
 |---------|-------------|-------------|
-| **Customer Embed** | `public/chatpad-widget.js` → iframe → `/widget.html` → `src/widget-entry.tsx` → `WidgetPage` → `ChatWidget` | Widget embedded on customer websites via `<script>` tag |
+| **Customer Embed** | `public/pilot-widget.js` → iframe → `/widget.html` → `src/widget-entry.tsx` → `WidgetPage` → `ChatWidget` | Widget embedded on customer websites via `<script>` tag |
 | **Admin Preview** | `src/components/agents/embed/EmbedPreviewPanel.tsx` & `src/pages/AriConfigurator.tsx` | Live preview in admin panel showing widget with `containedPreview=true` |
 | **Debug Route** | `/widget` route in `src/App.tsx` → `WidgetPage` | Direct route for testing the widget in development |
 
 #### Customer Embed Flow (Production)
 
 ```
-1. Customer adds <script src="https://app.chatpad.ai/widget/serve-widget?agentId=xxx">
+1. Customer adds <script src="https://app.getpilot.app/widget/serve-widget?agentId=xxx">
 2. serve-widget edge function returns loader script (~1KB)
 3. Loader creates iframe pointing to /widget.html?agentId=xxx
 4. widget.html → widget-entry.tsx → WidgetPage → ChatWidget
@@ -226,9 +226,9 @@ The widget uses an **async loading** approach for optimal perceived performance.
 
 2. Loader Script Executes
    ├── Reads config from script attributes
-   └── Loads chatpad-widget.js with async attribute (non-blocking)
+   └── Loads pilot-widget.js with async attribute (non-blocking)
 
-3. chatpad-widget.js Initializes
+3. pilot-widget.js Initializes
    ├── Creates floating button immediately
    ├── Fetches widget config in background
    └── Creates hidden iframe
@@ -258,7 +258,7 @@ The loader is served by the `serve-widget` edge function:
   
   // Load the widget bundle directly (async, non-blocking)
   var widgetScript = document.createElement('script');
-  widgetScript.src = config.appUrl + '/chatpad-widget.js';
+  widgetScript.src = config.appUrl + '/pilot-widget.js';
   widgetScript.async = true;
   widgetScript.setAttribute('data-agent-id', config.agentId);
   widgetScript.setAttribute('data-position', config.position);
@@ -275,12 +275,12 @@ Widget signals readiness to parent via postMessage:
 ```typescript
 // ChatWidget.tsx
 useEffect(() => {
-  window.parent.postMessage({ type: 'chatpad-widget-ready' }, '*');
+  window.parent.postMessage({ type: 'pilot-widget-ready' }, '*');
 }, []);
 
-// chatpad-widget.js
+// pilot-widget.js
 window.addEventListener('message', function(event) {
-  if (event.data.type === 'chatpad-widget-ready') {
+  if (event.data.type === 'pilot-widget-ready') {
     container.style.display = 'block';
   }
 });
@@ -304,7 +304,7 @@ interface WidgetConfig {
   primaryColor: string;           // Primary brand color (hex)
   gradientStartColor: string;     // Primary brand color for gradients
   gradientEndColor: string;       // Secondary brand color for gradients
-  showBranding: boolean;          // Show "Powered by ChatPad"
+  showBranding: boolean;          // Show "Powered by Pilot"
   
   // Hero Section
   heroTitle: string;              // Main greeting

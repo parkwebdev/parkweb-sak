@@ -1,10 +1,10 @@
-# ChatPad Security Documentation
+# Pilot Security Documentation
 
 > **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [Database Schema](./DATABASE_SCHEMA.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
 
-Security implementation details for the ChatPad platform.
+Security implementation details for the Pilot platform.
 
 ---
 
@@ -28,7 +28,7 @@ Security implementation details for the ChatPad platform.
 
 ## Overview
 
-ChatPad implements defense-in-depth security with multiple layers:
+Pilot implements defense-in-depth security with multiple layers:
 
 1. **Content Security Policy**: CSP headers to prevent XSS and injection attacks
 2. **Authentication**: Supabase Auth with JWT tokens
@@ -101,7 +101,7 @@ These features will be implemented when building the super admin panel:
 
 ## Content Security Policy (CSP)
 
-ChatPad implements CSP via `<meta>` tags with different policies for the admin app and embeddable widget.
+Pilot implements CSP via `<meta>` tags with different policies for the admin app and embeddable widget.
 
 ---
 
@@ -246,7 +246,7 @@ the following Content Security Policy directive: "script-src 'self' 'unsafe-inli
 
 ### Supabase Auth
 
-ChatPad uses Supabase Auth for user authentication:
+Pilot uses Supabase Auth for user authentication:
 
 ```typescript
 // Sign in
@@ -294,7 +294,7 @@ SELECT role FROM user_roles WHERE user_id = auth.uid();
 
 ### Core Access Pattern
 
-ChatPad uses `has_account_access()` for team-based access:
+Pilot uses `has_account_access()` for team-based access:
 
 ```sql
 -- Security definer function (bypasses RLS)
@@ -657,7 +657,7 @@ Link.configure({
 
 ## AI Safety
 
-ChatPad implements multiple layers of protection against AI-related security threats.
+Pilot implements multiple layers of protection against AI-related security threats.
 
 ### Prompt Injection Protection
 
@@ -699,7 +699,7 @@ const BLOCKED_PATTERNS = [
 
 ### Content Moderation
 
-ChatPad uses OpenAI's Moderation API as a dedicated safety layer, independent of the LLM used for chat (OpenRouter).
+Pilot uses OpenAI's Moderation API as a dedicated safety layer, independent of the LLM used for chat (OpenRouter).
 
 #### Why a Separate Moderation Layer?
 
@@ -840,7 +840,7 @@ See [SECURITY_TESTING.md](./SECURITY_TESTING.md) for:
 
 ## Bot Protection
 
-ChatPad uses Cloudflare Turnstile to protect widget forms from automated abuse.
+Pilot uses Cloudflare Turnstile to protect widget forms from automated abuse.
 
 ### Implementation
 
@@ -1040,7 +1040,7 @@ Images optimized before storage to reduce attack surface:
 
 ## Type-Safe Error Handling
 
-ChatPad enforces type-safe error handling to prevent accidental exposure of raw error objects or stack traces to users.
+Pilot enforces type-safe error handling to prevent accidental exposure of raw error objects or stack traces to users.
 
 ### The Pattern
 
@@ -1157,7 +1157,7 @@ USING (is_admin(auth.uid()));
 
 ### Overview
 
-ChatPad sends automated email alerts for high-severity security events. This provides immediate visibility into potential security issues without requiring a dedicated dashboard.
+Pilot sends automated email alerts for high-severity security events. This provides immediate visibility into potential security issues without requiring a dedicated dashboard.
 
 ### Alert Triggers
 
@@ -1223,7 +1223,7 @@ serve(async (req) => {
       const resend = new Resend(resendKey);
       
       await resend.emails.send({
-        from: 'ChatPad Security <security@chatpad.com>',
+        from: 'Pilot Security <security@getpilot.app>',
         to: alertEmail,
         subject: `[Security Alert] ${event.action}`,
         html: `
