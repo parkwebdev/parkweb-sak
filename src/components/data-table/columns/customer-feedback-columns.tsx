@@ -6,6 +6,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DataTableColumnHeader } from "../DataTableColumnHeader";
 import { cn } from "@/lib/utils";
+import { getTriggerLabel } from "@/lib/formatting-utils";
 
 export interface CustomerFeedbackData {
   id: string;
@@ -48,20 +49,6 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-const getTriggerLabel = (triggerType: string): string => {
-  switch (triggerType) {
-    case "conversation_end":
-      return "End of chat";
-    case "manual":
-      return "Manual";
-    case "inactivity":
-      return "Inactivity";
-    case "escalation":
-      return "Escalation";
-    default:
-      return triggerType || "Unknown";
-  }
-};
 
 export const customerFeedbackColumns: ColumnDef<CustomerFeedbackData>[] = [
   {

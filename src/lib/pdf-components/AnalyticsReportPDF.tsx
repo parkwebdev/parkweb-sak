@@ -23,6 +23,7 @@ import {
   CHART_COLORS,
 } from './charts';
 import type { PDFData, PDFConfig, ReportType } from '@/types/pdf';
+import { getTriggerLabel } from '@/lib/formatting-utils';
 
 // Import fonts (registers on import)
 import './fonts';
@@ -291,13 +292,14 @@ export function AnalyticsReportPDF({
                   { key: 'dateFormatted', header: 'Date' },
                   { key: 'ratingFormatted', header: 'Rating' },
                   { key: 'feedbackTruncated', header: 'Feedback', width: '45%' },
-                  { key: 'triggerType', header: 'Trigger' },
+                  { key: 'triggerFormatted', header: 'Trigger' },
                 ]}
                 data={data.recentFeedback.slice(0, 10).map(f => ({
                   ...f,
                   dateFormatted: format(new Date(f.createdAt), 'MMM d, yyyy'),
                   ratingFormatted: `${f.rating} ★`,
                   feedbackTruncated: (f.feedback || '-').substring(0, 40) + ((f.feedback?.length || 0) > 40 ? '...' : ''),
+                  triggerFormatted: getTriggerLabel(f.triggerType),
                 }))}
               />
             </PDFSection>
