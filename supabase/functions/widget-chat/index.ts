@@ -509,7 +509,7 @@ async function detectConversationLanguage(
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openRouterApiKey}`,
-        'HTTP-Referer': 'https://getpilot.app',
+        'HTTP-Referer': 'https://getpilot.io',
         'X-Title': 'Pilot',
         'Content-Type': 'application/json',
       },

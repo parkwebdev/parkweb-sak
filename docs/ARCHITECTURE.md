@@ -508,7 +508,7 @@ Primary deployment method - JavaScript snippet for websites:
 Direct link to full-page chat interface:
 
 ```
-https://app.getpilot.app/widget/[agent-id]
+https://app.getpilot.io/widget/[agent-id]
 ```
 
 **Use Cases:**

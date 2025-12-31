@@ -468,7 +468,7 @@ serve(async (req) => {
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; PilotBot/1.0; +https://getpilot.app)',
+        'User-Agent': 'Mozilla/5.0 (compatible; PilotBot/1.0; +https://getpilot.io)',
         'Accept': 'text/html,application/xhtml+xml',
       },
       signal: controller.signal,

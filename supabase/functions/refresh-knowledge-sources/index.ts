@@ -107,7 +107,7 @@ async function extractPropertiesWithAI(
       headers: {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://getpilot.app",
+        "HTTP-Referer": "https://getpilot.io",
         "X-Title": "Pilot Property Extraction",
       },
       body: JSON.stringify({

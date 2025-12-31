@@ -1422,14 +1422,14 @@ Widget renders location picker buttons when tool is called.
 ```html
 <!-- Explicit location (recommended for single-location pages) -->
 <script
-  src="https://app.getpilot.app/widget.js"
+  src="https://app.getpilot.io/widget.js"
   data-agent-id="abc123"
   data-location="forge-at-the-lake"
 ></script>
 
 <!-- Auto-detect from URL (for multi-location sites) -->
 <script
-  src="https://app.getpilot.app/widget.js"
+  src="https://app.getpilot.io/widget.js"
   data-agent-id="abc123"
   data-wordpress-site="https://example.com"
 ></script>
