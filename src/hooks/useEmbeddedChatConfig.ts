@@ -283,7 +283,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
   }, [agentId]);
 
   const generateEmbedCode = (): string => {
-    const scriptUrl = `https://cdn.pad.chat/`;
+    const scriptUrl = `https://cdn.getpilot.io/`;
     
     // Build optional attributes for location detection
     const locationAttrs: string[] = [];
