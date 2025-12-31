@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Copy01, Send01, Loading02, Phone01, Monitor01, Moon01, Sun } from '@untitledui/icons';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Copy01, Send01, Loading02, Phone01, Monitor01, Moon01, Sun, ChevronDown } from '@untitledui/icons';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
@@ -267,276 +268,249 @@ export default function EmailTemplatesTest() {
     switch (activeTemplate) {
       case 'invitation':
         return (
-          <Card>
-            <CardHeader className="py-3 px-4 border-b">
-              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="inv-by" className="text-xs">Invited By</Label>
-                <Input
-                  id="inv-by"
-                  value={invitationData.invitedBy}
-                  onChange={(e) => setInvitationData({ ...invitationData, invitedBy: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="inv-company" className="text-xs">Company Name</Label>
-                <Input
-                  id="inv-company"
-                  value={invitationData.companyName}
-                  onChange={(e) => setInvitationData({ ...invitationData, companyName: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="inv-url" className="text-xs">Signup URL</Label>
-                <Input
-                  id="inv-url"
-                  value={invitationData.signupUrl}
-                  onChange={(e) => setInvitationData({ ...invitationData, signupUrl: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="inv-by" className="text-xs">Invited By</Label>
+              <Input
+                id="inv-by"
+                value={invitationData.invitedBy}
+                onChange={(e) => setInvitationData({ ...invitationData, invitedBy: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="inv-company" className="text-xs">Company Name</Label>
+              <Input
+                id="inv-company"
+                value={invitationData.companyName}
+                onChange={(e) => setInvitationData({ ...invitationData, companyName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="inv-url" className="text-xs">Signup URL</Label>
+              <Input
+                id="inv-url"
+                value={invitationData.signupUrl}
+                onChange={(e) => setInvitationData({ ...invitationData, signupUrl: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
         );
 
       case 'notification':
         return (
-          <Card>
-            <CardHeader className="py-3 px-4 border-b">
-              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="notif-title" className="text-xs">Title</Label>
-                <Input
-                  id="notif-title"
-                  value={notificationData.title}
-                  onChange={(e) => setNotificationData({ ...notificationData, title: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notif-type" className="text-xs">Type</Label>
-                <Select
-                  value={notificationData.type}
-                  onValueChange={(v) => setNotificationData({ ...notificationData, type: v as NotificationData['type'] })}
-                >
-                  <SelectTrigger id="notif-type" className="h-8 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="team">Team</SelectItem>
-                    <SelectItem value="scope_work">Scope Work</SelectItem>
-                    <SelectItem value="onboarding">Onboarding</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
-                    <SelectItem value="security">Security</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="notif-message" className="text-xs">Message</Label>
-                <Input
-                  id="notif-message"
-                  value={notificationData.message}
-                  onChange={(e) => setNotificationData({ ...notificationData, message: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notif-action-url" className="text-xs">Action URL</Label>
-                <Input
-                  id="notif-action-url"
-                  value={notificationData.actionUrl}
-                  onChange={(e) => setNotificationData({ ...notificationData, actionUrl: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notif-action-label" className="text-xs">Action Label</Label>
-                <Input
-                  id="notif-action-label"
-                  value={notificationData.actionLabel}
-                  onChange={(e) => setNotificationData({ ...notificationData, actionLabel: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="notif-title" className="text-xs">Title</Label>
+              <Input
+                id="notif-title"
+                value={notificationData.title}
+                onChange={(e) => setNotificationData({ ...notificationData, title: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notif-type" className="text-xs">Type</Label>
+              <Select
+                value={notificationData.type}
+                onValueChange={(v) => setNotificationData({ ...notificationData, type: v as NotificationData['type'] })}
+              >
+                <SelectTrigger id="notif-type" className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="team">Team</SelectItem>
+                  <SelectItem value="scope_work">Scope Work</SelectItem>
+                  <SelectItem value="onboarding">Onboarding</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
+                  <SelectItem value="security">Security</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="notif-message" className="text-xs">Message</Label>
+              <Input
+                id="notif-message"
+                value={notificationData.message}
+                onChange={(e) => setNotificationData({ ...notificationData, message: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notif-action-url" className="text-xs">Action URL</Label>
+              <Input
+                id="notif-action-url"
+                value={notificationData.actionUrl}
+                onChange={(e) => setNotificationData({ ...notificationData, actionUrl: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notif-action-label" className="text-xs">Action Label</Label>
+              <Input
+                id="notif-action-label"
+                value={notificationData.actionLabel}
+                onChange={(e) => setNotificationData({ ...notificationData, actionLabel: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
         );
 
       case 'booking':
         return (
-          <Card>
-            <CardHeader className="py-3 px-4 border-b">
-              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="book-name" className="text-xs">Visitor Name</Label>
-                <Input
-                  id="book-name"
-                  value={bookingData.visitorName}
-                  onChange={(e) => setBookingData({ ...bookingData, visitorName: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="book-type" className="text-xs">Event Type</Label>
-                <Input
-                  id="book-type"
-                  value={bookingData.eventType}
-                  onChange={(e) => setBookingData({ ...bookingData, eventType: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="book-date" className="text-xs">Date</Label>
-                <Input
-                  id="book-date"
-                  value={bookingData.date}
-                  onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="book-time" className="text-xs">Time</Label>
-                <Input
-                  id="book-time"
-                  value={bookingData.time}
-                  onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="book-tz" className="text-xs">Timezone</Label>
-                <Input
-                  id="book-tz"
-                  value={bookingData.timezone}
-                  onChange={(e) => setBookingData({ ...bookingData, timezone: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="book-loc" className="text-xs">Location</Label>
-                <Input
-                  id="book-loc"
-                  value={bookingData.location || ''}
-                  onChange={(e) => setBookingData({ ...bookingData, location: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="book-name" className="text-xs">Visitor Name</Label>
+              <Input
+                id="book-name"
+                value={bookingData.visitorName}
+                onChange={(e) => setBookingData({ ...bookingData, visitorName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="book-type" className="text-xs">Event Type</Label>
+              <Input
+                id="book-type"
+                value={bookingData.eventType}
+                onChange={(e) => setBookingData({ ...bookingData, eventType: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="book-date" className="text-xs">Date</Label>
+              <Input
+                id="book-date"
+                value={bookingData.date}
+                onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="book-time" className="text-xs">Time</Label>
+              <Input
+                id="book-time"
+                value={bookingData.time}
+                onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="book-tz" className="text-xs">Timezone</Label>
+              <Input
+                id="book-tz"
+                value={bookingData.timezone}
+                onChange={(e) => setBookingData({ ...bookingData, timezone: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="book-loc" className="text-xs">Location</Label>
+              <Input
+                id="book-loc"
+                value={bookingData.location || ''}
+                onChange={(e) => setBookingData({ ...bookingData, location: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
         );
 
       case 'report':
         return (
-          <Card>
-            <CardHeader className="py-3 px-4 border-b">
-              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="report-name" className="text-xs">Report Name</Label>
-                <Input
-                  id="report-name"
-                  value={reportData.reportName}
-                  onChange={(e) => setReportData({ ...reportData, reportName: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="report-range" className="text-xs">Date Range</Label>
-                <Input
-                  id="report-range"
-                  value={reportData.dateRange}
-                  onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="report-name" className="text-xs">Report Name</Label>
+              <Input
+                id="report-name"
+                value={reportData.reportName}
+                onChange={(e) => setReportData({ ...reportData, reportName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="report-range" className="text-xs">Date Range</Label>
+              <Input
+                id="report-range"
+                value={reportData.dateRange}
+                onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
         );
 
       case 'password-reset':
         return (
-          <Card>
-            <CardHeader className="py-3 px-4 border-b">
-              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="reset-name" className="text-xs">User Name</Label>
-                <Input
-                  id="reset-name"
-                  value={passwordResetData.userName || ''}
-                  onChange={(e) => setPasswordResetData({ ...passwordResetData, userName: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reset-url" className="text-xs">Reset URL</Label>
-                <Input
-                  id="reset-url"
-                  value={passwordResetData.resetUrl}
-                  onChange={(e) => setPasswordResetData({ ...passwordResetData, resetUrl: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reset-expires" className="text-xs">Expires In</Label>
-                <Input
-                  id="reset-expires"
-                  value={passwordResetData.expiresIn || ''}
-                  onChange={(e) => setPasswordResetData({ ...passwordResetData, expiresIn: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-name" className="text-xs">User Name</Label>
+              <Input
+                id="reset-name"
+                value={passwordResetData.userName || ''}
+                onChange={(e) => setPasswordResetData({ ...passwordResetData, userName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reset-url" className="text-xs">Reset URL</Label>
+              <Input
+                id="reset-url"
+                value={passwordResetData.resetUrl}
+                onChange={(e) => setPasswordResetData({ ...passwordResetData, resetUrl: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reset-expires" className="text-xs">Expires In</Label>
+              <Input
+                id="reset-expires"
+                value={passwordResetData.expiresIn || ''}
+                onChange={(e) => setPasswordResetData({ ...passwordResetData, expiresIn: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
         );
 
       case 'email-verification':
         return (
-          <Card>
-            <CardHeader className="py-3 px-4 border-b">
-              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="verify-name" className="text-xs">User Name</Label>
-                <Input
-                  id="verify-name"
-                  value={emailVerificationData.userName || ''}
-                  onChange={(e) => setEmailVerificationData({ ...emailVerificationData, userName: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="verify-url" className="text-xs">Verification URL</Label>
-                <Input
-                  id="verify-url"
-                  value={emailVerificationData.verificationUrl}
-                  onChange={(e) => setEmailVerificationData({ ...emailVerificationData, verificationUrl: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="verify-expires" className="text-xs">Expires In</Label>
-                <Input
-                  id="verify-expires"
-                  value={emailVerificationData.expiresIn || ''}
-                  onChange={(e) => setEmailVerificationData({ ...emailVerificationData, expiresIn: e.target.value })}
-                  className="h-8 text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="verify-name" className="text-xs">User Name</Label>
+              <Input
+                id="verify-name"
+                value={emailVerificationData.userName || ''}
+                onChange={(e) => setEmailVerificationData({ ...emailVerificationData, userName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="verify-url" className="text-xs">Verification URL</Label>
+              <Input
+                id="verify-url"
+                value={emailVerificationData.verificationUrl}
+                onChange={(e) => setEmailVerificationData({ ...emailVerificationData, verificationUrl: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="verify-expires" className="text-xs">Expires In</Label>
+              <Input
+                id="verify-expires"
+                value={emailVerificationData.expiresIn || ''}
+                onChange={(e) => setEmailVerificationData({ ...emailVerificationData, expiresIn: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
         );
+
+      default:
+        return null;
     }
   };
 
@@ -606,7 +580,21 @@ export default function EmailTemplatesTest() {
           </div>
 
           {/* Mock Data Controls */}
-          {renderMockDataControls()}
+          <Collapsible defaultOpen>
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="py-3 px-4 border-b cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
+                    <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                {renderMockDataControls()}
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Email Preview */}
           <EmailPreview
