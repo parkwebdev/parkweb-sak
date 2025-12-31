@@ -31,6 +31,8 @@ export function useLeadStages() {
   const { data: stages = [], isLoading: loading, refetch } = useSupabaseQuery<LeadStage[]>({
     queryKey: queryKeys.leadStages,
     queryFn: async () => {
+      if (!user) return [];
+      
       const { data, error } = await supabase
         .from('lead_stages')
         .select('*')
@@ -39,10 +41,12 @@ export function useLeadStages() {
       if (error) throw error;
       return (data || []) as LeadStage[];
     },
-    realtime: {
+    realtime: user ? {
       table: 'lead_stages',
       schema: 'public',
-    },
+      filter: `user_id=eq.${user.id}`,
+    } : undefined,
+    enabled: !!user,
   });
 
   // Seed default stages if none exist
