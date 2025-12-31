@@ -97,16 +97,18 @@ function Analytics() {
                     selectedPreset={datePreset}
                     onPresetChange={setDatePreset}
                   />
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="mock-toggle" className="text-sm text-muted-foreground cursor-pointer">
+                  <div className="flex items-center gap-1.5">
+                    <Label htmlFor="mock-toggle" className="text-xs text-muted-foreground cursor-pointer">
                       {data.mockMode ? 'Mock Data' : 'Live Data'}
                     </Label>
-                    <Switch
-                      id="mock-toggle"
-                      checked={data.mockMode}
-                      onCheckedChange={data.setMockMode}
-                      aria-label="Toggle mock data mode"
-                    />
+                    <div className="scale-[0.65] origin-left -mr-4">
+                      <Switch
+                        id="mock-toggle"
+                        checked={data.mockMode}
+                        onCheckedChange={data.setMockMode}
+                        aria-label="Toggle mock data mode"
+                      />
+                    </div>
                   </div>
                 </>
               )}
