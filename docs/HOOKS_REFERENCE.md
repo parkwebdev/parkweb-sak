@@ -83,6 +83,56 @@ const mutation = useSupabaseMutation({
 - `enabled`: Whether to run the query
 - All standard React Query options
 
+#### ⚠️ Required Pattern: `enabled` Condition
+
+**CRITICAL**: All `useSupabaseQuery` hooks with realtime subscriptions MUST include proper `enabled` conditions and user-scoped filters to prevent:
+
+1. **Channel Leaks**: Subscriptions created before authentication wastes resources
+2. **Global Subscriptions**: Missing filters subscribe to ALL table changes instead of user-specific data
+3. **ERR_INSUFFICIENT_RESOURCES**: Supabase connection limits exceeded from orphaned channels
+
+```tsx
+// ✅ CORRECT: All three protections in place
+const { data, isLoading } = useSupabaseQuery({
+  queryKey: queryKeys.leadStages,
+  queryFn: async () => {
+    if (!user) return [];  // 1. Guard in queryFn
+    
+    const { data, error } = await supabase
+      .from('lead_stages')
+      .select('*')
+      .order('order_index', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+  realtime: user ? {
+    table: 'lead_stages',
+    schema: 'public',
+    filter: `user_id=eq.${user.id}`,  // 2. User-scoped filter
+  } : undefined,
+  enabled: !!user,  // 3. Prevent query/subscription before auth
+});
+
+// ❌ WRONG: Missing all protections
+const { data } = useSupabaseQuery({
+  queryKey: queryKeys.leadStages,
+  queryFn: async () => {
+    const { data } = await supabase.from('lead_stages').select('*');
+    return data;
+  },
+  realtime: {
+    table: 'lead_stages',  // Subscribes to ALL lead_stages globally!
+  },
+  // No enabled condition - runs immediately!
+});
+```
+
+**Checklist for new hooks**:
+- [ ] `enabled: !!user` (or equivalent condition)
+- [ ] Guard in `queryFn`: `if (!user) return []`
+- [ ] Conditional `realtime`: `user ? {...} : undefined`
+- [ ] User-scoped filter: `filter: \`user_id=eq.${user.id}\``
+
 ---
 
 ## Error Handling Convention
