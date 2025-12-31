@@ -35,6 +35,8 @@ Welcome to the ChatPad documentation. This index provides quick access to all te
 | Guide | Description |
 |-------|-------------|
 | [Design System](./DESIGN_SYSTEM.md) | Colors, typography, spacing, icons |
+| [PDF Generator](./PDF_GENERATOR.md) | PDF report generation architecture |
+| [Onboarding Flow](./ONBOARDING_GET_STARTED.md) | Onboarding experience specification |
 | [Component Patterns](./COMPONENT_PATTERNS.md) | shadcn components, data tables, forms, motion |
 
 ### Feature Development

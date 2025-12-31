@@ -310,12 +310,13 @@ We will not pursue legal action against security researchers who:
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Prompt injection test cases | 🔴 Planned | Document complete, tests not yet run |
-| Automated test script | 🔴 Planned | Script template ready |
-| RLS audit queries | 🟢 Ready | Can run now |
+| Prompt injection test cases | 🟢 Complete | Test cases documented and validated |
+| Automated test script | 🟡 In Progress | Script template ready, needs automation |
+| RLS audit queries | 🟢 Active | Queries run regularly |
 | Dependency scanning | 🟢 Active | Dependabot enabled |
-| Red team schedule | 🔴 Planned | Needs scheduling |
-| Disclosure policy | 🟢 Documented | Needs security email setup |
+| Content moderation | 🟢 Active | Guardrails implemented in widget-chat |
+| Red team schedule | 🟡 In Progress | Monthly internal testing underway |
+| Disclosure policy | 🟢 Documented | Policy published |
 
 ---
 
