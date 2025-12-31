@@ -15,6 +15,7 @@ import { toast } from '@/lib/toast';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
 import { logger } from '@/utils/logger';
+import { useStableObject } from '@/hooks/useStableObject';
 import type { CalendarEvent, EventType, EventStatus } from '@/types/calendar';
 
 interface UseCalendarEventsOptions {
@@ -23,11 +24,13 @@ interface UseCalendarEventsOptions {
 }
 
 export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
+  // Stabilize options to prevent infinite loops from inline {} callers
+  const stableOptions = useStableObject(options);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: events = [], isLoading, refetch } = useSupabaseQuery<CalendarEvent[]>({
-    queryKey: queryKeys.calendarEvents.list({ locationId: options.locationId }),
+    queryKey: queryKeys.calendarEvents.list({ locationId: stableOptions.locationId }),
     queryFn: async () => {
       if (!user) return [];
 
@@ -56,8 +59,8 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
         .order('start_time', { ascending: true });
 
       // Filter by location if provided
-      if (options.locationId) {
-        query = query.eq('location_id', options.locationId);
+      if (stableOptions.locationId) {
+        query = query.eq('location_id', stableOptions.locationId);
       }
 
       const { data, error } = await query;
@@ -108,9 +111,9 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
       });
     },
     // Only subscribe to realtime when locationId is provided to avoid global subscription
-    realtime: options.locationId ? {
+    realtime: stableOptions.locationId ? {
       table: 'calendar_events',
-      filter: `location_id=eq.${options.locationId}`,
+      filter: `location_id=eq.${stableOptions.locationId}`,
     } : undefined,
     enabled: !!user,
     staleTime: 60000, // 1 minute

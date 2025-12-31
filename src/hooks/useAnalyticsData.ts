@@ -16,6 +16,7 @@ import { useAIPerformanceAnalytics } from '@/hooks/useAIPerformanceAnalytics';
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useConversationFunnel } from '@/hooks/useConversationFunnel';
 import { useMockAnalyticsData } from '@/hooks/useMockAnalyticsData';
+import { useStableObject } from '@/hooks/useStableObject';
 import { generateChartData } from '@/lib/analytics-utils';
 import type { BookingStats, SatisfactionStats, AIPerformanceStats, LeadSourceData } from '@/types/analytics';
 import type { MockTrafficSource, MockLandingPage, MockLocationData, MockFunnelStage, MockEngagementMetrics, MockDailySourceData, MockPageDepthData } from '@/lib/mock-analytics-data';
@@ -184,6 +185,9 @@ export const useAnalyticsData = (options: UseAnalyticsDataOptions): UseAnalytics
     filters,
   } = options;
 
+  // Stabilize filters to prevent infinite loops from inline object callers
+  const stableFilters = useStableObject(filters);
+
   // === Mock Data Mode ===
   const {
     enabled: mockMode,
@@ -208,7 +212,7 @@ export const useAnalyticsData = (options: UseAnalyticsDataOptions): UseAnalytics
     leads,
     loading,
     refetch,
-  } = useAnalytics(startDate, endDate, filters, shouldFetchRealData);
+  } = useAnalytics(startDate, endDate, stableFilters, shouldFetchRealData);
 
   // === Booking Analytics ===
   const {

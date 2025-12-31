@@ -44,6 +44,99 @@ queryClient.invalidateQueries({ queryKey: queryKeys.agent.all });
 
 ---
 
+### Primitive Dependencies Pattern
+
+When a hook accepts an options object, internal `useEffect` should depend on **primitive values** rather than the whole object to prevent infinite loops:
+
+```tsx
+// ✅ CORRECT: Depend on primitive values
+useEffect(() => {
+  fetchAllData();
+}, [enabled, user?.id, filters.leadStatus, filters.conversationStatus]);
+
+// ❌ WRONG: Object dependency causes re-runs every render
+useEffect(() => {
+  fetchAllData();
+}, [enabled, user?.id, filters]); // filters is a new object each render!
+```
+
+For cases where you can't decompose to primitives, use the `useStableObject` utility hook:
+
+```tsx
+import { useStableObject } from '@/hooks/useStableObject';
+
+const stableFilters = useStableObject(filters);
+useEffect(() => {
+  fetchData(stableFilters);
+}, [stableFilters]); // Safe - stable reference
+```
+
+---
+
+### useStableObject / useStableArray (`src/hooks/useStableObject.ts`)
+
+Utility hooks that memoize objects/arrays by their serialized value, preventing infinite re-render loops caused by passing inline object literals as props or dependencies.
+
+**Problem this solves:**
+- Object literals in JSX create new references every render
+- This causes `useEffect` dependencies to trigger infinitely
+- Common source of `ERR_INSUFFICIENT_RESOURCES` errors
+
+```tsx
+import { useStableObject, useStableArray } from '@/hooks/useStableObject';
+
+// Instead of inline objects that cause infinite loops:
+const filters = useStableObject({ leadStatus: 'all', conversationStatus: 'all' });
+const data = useAnalyticsData({ filters });
+
+// Safe for useEffect dependencies:
+const options = useStableObject({ enabled: true, limit: 10 });
+useEffect(() => {
+  fetchData(options);
+}, [options]); // Won't cause infinite loops
+
+// For arrays:
+const ids = useStableArray([1, 2, 3]);
+useEffect(() => {
+  fetchItems(ids);
+}, [ids]); // Won't cause infinite loops
+```
+
+**When to use:**
+- Passing object props to hooks that use them in `useEffect` dependencies
+- When you see infinite fetch loops or `ERR_INSUFFICIENT_RESOURCES`
+- As defensive protection in hooks that accept options objects
+
+**Signatures:**
+```tsx
+function useStableObject<T extends Record<string, unknown>>(obj: T): T;
+function useStableArray<T>(arr: T[]): T[];
+```
+
+---
+
+### useSupabaseQuery (`src/hooks/useSupabaseQuery.ts`)
+
+Centralized query key factory for type-safe cache management. All query keys are defined here.
+
+```tsx
+import { queryKeys } from '@/lib/query-keys';
+
+// Examples
+queryKeys.agent.all           // ['agent'] - Invalidate all agent data
+queryKeys.agent.detail(userId) // ['agent', userId] - Specific user's agent
+
+queryKeys.locations.all       // Invalidate all locations
+queryKeys.locations.list(agentId) // Locations for specific agent
+
+// Use with React Query
+queryClient.invalidateQueries({ queryKey: queryKeys.agent.all });
+```
+
+**Available Keys**: `agent`, `profile`, `knowledgeSources`, `locations`, `helpArticles`, `helpCategories`, `announcements`, `newsItems`, `conversations`, `leads`, `team`, `properties`, `webhooks`, `agentTools`, `connectedAccounts`, `calendarEvents`, `analytics`, `notifications`
+
+---
+
 ### useSupabaseQuery (`src/hooks/useSupabaseQuery.ts`)
 
 Combines React Query with Supabase real-time subscriptions for automatic cache invalidation.
