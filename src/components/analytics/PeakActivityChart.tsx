@@ -162,13 +162,15 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
           </div>
         ) : (
           <TooltipProvider>
-            <div className="space-y-1">
+            {/* Heatmap grid with ARIA grid role */}
+            <div role="grid" aria-label={`Peak activity heatmap showing ${totalConversations.toLocaleString()} conversations by day and time`} className="space-y-1">
               {/* Time block headers */}
-              <div className="grid gap-1" style={{ gridTemplateColumns: '2.5rem repeat(6, 1fr)' }}>
-                <div /> {/* Empty corner cell */}
+              <div role="row" className="grid gap-1" style={{ gridTemplateColumns: '2.5rem repeat(6, 1fr)' }}>
+                <div role="columnheader" aria-hidden="true" /> {/* Empty corner cell */}
                 {TIME_BLOCKS.map((block) => (
                   <div 
-                    key={block.label} 
+                    key={block.label}
+                    role="columnheader"
                     className="text-2xs text-muted-foreground text-center font-medium"
                   >
                     {block.label}
@@ -179,12 +181,13 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
               {/* Day rows */}
               {DAYS.map((day, dayIdx) => (
                 <div 
-                  key={day} 
+                  key={day}
+                  role="row"
                   className="grid gap-1" 
                   style={{ gridTemplateColumns: '2.5rem repeat(6, 1fr)' }}
                 >
                   {/* Day label */}
-                  <div className="text-xs text-muted-foreground font-medium flex items-center">
+                  <div role="rowheader" className="text-xs text-muted-foreground font-medium flex items-center">
                     {day}
                   </div>
                   
@@ -196,20 +199,23 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
                       FULL_DAYS[dayIdx] === peakInfo.day && 
                       block.label === peakInfo.time;
                     
-                    return (
-                      <Tooltip key={`${dayIdx}-${blockIdx}`}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={cn(
-                              'h-8 rounded-sm cursor-default transition-all hover:ring-2 hover:ring-primary/30',
-                              isPeak && 'ring-2 ring-primary',
-                              !prefersReducedMotion && 'animate-fade-in'
-                            )}
-                            style={{ 
-                              backgroundColor: bgColor,
-                              animationDelay: prefersReducedMotion ? '0ms' : `${(dayIdx * 6 + blockIdx) * 15}ms`,
-                            }}
-                          />
+                      return (
+                        <Tooltip key={`${dayIdx}-${blockIdx}`}>
+                          <TooltipTrigger asChild>
+                            <div
+                              role="gridcell"
+                              aria-label={`${FULL_DAYS[dayIdx]} ${block.label}: ${value.toLocaleString()} conversations`}
+                              tabIndex={0}
+                              className={cn(
+                                'h-8 rounded-sm cursor-default transition-all hover:ring-2 hover:ring-primary/30 focus:ring-2 focus:ring-primary focus:outline-none',
+                                isPeak && 'ring-2 ring-primary',
+                                !prefersReducedMotion && 'animate-fade-in'
+                              )}
+                              style={{ 
+                                backgroundColor: bgColor,
+                                animationDelay: prefersReducedMotion ? '0ms' : `${(dayIdx * 6 + blockIdx) * 15}ms`,
+                              }}
+                            />
                         </TooltipTrigger>
                         <TooltipContent side="top" className="text-center">
                           <p className="text-sm font-medium">{FULL_DAYS[dayIdx]}</p>

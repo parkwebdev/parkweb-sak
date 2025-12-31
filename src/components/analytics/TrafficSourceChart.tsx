@@ -14,8 +14,7 @@ import { TrendUp01, TrendDown01 } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
 import { ChartCardHeader } from './ChartCardHeader';
-import type { TrafficSourceData } from '@/types/analytics';
-import type { EngagementMetrics } from '@/hooks/useTrafficAnalytics';
+import type { TrafficSourceData, EngagementMetrics } from '@/types/analytics';
 
 interface TrafficSourceChartProps {
   data: TrafficSourceData[];
@@ -146,7 +145,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
           trendPeriod="this period"
         />
 
-        <div className="space-y-3">
+        <div role="list" aria-label="Traffic sources breakdown" className="space-y-3">
           {sortedData.map((source, index) => {
             const widthPercentage = (source.value / maxValue) * 100;
             const barColor = getBarColor(index, sortedData.length);
@@ -160,7 +159,9 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
 
             return (
               <div 
-                key={source.name} 
+                key={source.name}
+                role="listitem"
+                aria-label={`${source.name}: ${source.value.toLocaleString()} conversations, ${percentage}% of total`}
                 className="flex items-center gap-3 cursor-pointer group animate-fade-in"
                 style={{ animationDelay: `${animationDelay}ms` }}
               >

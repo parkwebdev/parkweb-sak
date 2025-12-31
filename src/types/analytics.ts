@@ -406,6 +406,75 @@ export interface TrafficSourceData {
 }
 
 /**
+ * Engagement metrics for traffic analytics.
+ * Consolidated from useTrafficAnalytics for type reuse.
+ */
+export interface EngagementMetrics {
+  /** Bounce rate percentage (0-100) */
+  bounceRate: number;
+  /** Average pages viewed per session */
+  avgPagesPerSession: number;
+  /** Average session duration in milliseconds */
+  avgSessionDuration: number;
+  /** Total number of sessions */
+  totalSessions: number;
+  /** Total leads captured */
+  totalLeads: number;
+  /** Overall conversion rate percentage (0-100) */
+  overallCVR: number;
+}
+
+/**
+ * Daily traffic source data for time-series charts.
+ */
+export interface DailySourceData {
+  /** Date string in ISO format (e.g., "2024-01-15") */
+  date: string;
+  /** Direct traffic count */
+  direct: number;
+  /** Organic search traffic count */
+  organic: number;
+  /** Paid traffic count */
+  paid: number;
+  /** Social media traffic count */
+  social: number;
+  /** Email traffic count */
+  email: number;
+  /** Referral traffic count */
+  referral: number;
+  /** Total traffic for this date */
+  total: number;
+}
+
+/**
+ * Page depth distribution data.
+ */
+export interface PageDepthData {
+  /** Depth label (e.g., "1 page", "5+ pages") */
+  depth: string;
+  /** Session count at this depth */
+  count: number;
+  /** Percentage of total sessions (0-100) */
+  percentage: number;
+}
+
+/**
+ * Location data with coordinates for map visualization.
+ */
+export interface LocationData {
+  /** Country name */
+  country: string;
+  /** Optional city name */
+  city?: string;
+  /** Latitude coordinate */
+  lat: number;
+  /** Longitude coordinate */
+  lng: number;
+  /** Visitor count from this location */
+  count: number;
+}
+
+/**
  * Props for TrafficSourceChart component.
  */
 export interface TrafficSourceChartProps extends BaseChartProps {

@@ -780,6 +780,8 @@ const {
 
 Fetches visitor traffic, page analytics, engagement metrics, and session depth data. **Powered by React Query** with real-time updates.
 
+**Type Consolidation (Verified December 2025)**: All traffic analytics types (`EngagementMetrics`, `DailySourceData`, `PageDepthData`, `LocationData`) are now centralized in `src/types/analytics.ts`. The hook re-exports these for backwards compatibility.
+
 ```tsx
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 
@@ -791,6 +793,7 @@ const {
   engagement,              // EngagementMetrics - Bounce rate, CVR, session depth
   sourcesByDate,           // DailySourceData[] - Daily traffic source breakdown
   pageDepthDistribution,   // PageDepthData[] - Session depth distribution
+  leadsBySource,           // LeadSourceData[] - Leads per traffic source
   loading,                 // boolean
   agentId,                 // string | null
   refetch,                 // () => void

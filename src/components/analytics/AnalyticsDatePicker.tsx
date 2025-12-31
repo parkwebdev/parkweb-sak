@@ -15,8 +15,8 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Calendar, ChevronDown } from '@untitledui/icons';
-import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { formatDateRange, formatShortDateRange } from '@/lib/formatting-utils';
 import { DATE_PRESETS, COMPARISON_OPTIONS, type ComparisonType } from './constants';
 
 interface AnalyticsDatePickerProps {
@@ -112,14 +112,6 @@ export const AnalyticsDatePicker = ({
     if (enabled && comparisonType !== 'custom') {
       updateComparisonDates(comparisonType, startDate, endDate);
     }
-  };
-
-  const formatDateRange = (start: Date, end: Date) => {
-    return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
-  };
-
-  const formatShortDateRange = (start: Date, end: Date) => {
-    return `${format(start, 'MMM d')} - ${format(end, 'MMM d')}`;
   };
 
   // Check if current date range matches a preset
