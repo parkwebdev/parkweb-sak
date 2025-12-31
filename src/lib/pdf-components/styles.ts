@@ -1,12 +1,12 @@
 /**
  * PDF Design System Styles
  * 
- * StyleSheet definitions for @react-pdf/renderer aligned with ChatPad branding.
+ * StyleSheet definitions for @react-pdf/renderer aligned with Pilot branding.
  */
 
 import { StyleSheet } from '@react-pdf/renderer';
 
-// ChatPad Brand Colors - Clean, professional palette
+// Pilot Brand Colors - Clean, professional palette
 export const colors = {
   // Neutral grays (matching app design system)
   primary: '#171717',      // neutral-900 - primary text

@@ -132,7 +132,7 @@ export const ToolUseCasesModal = ({ open, onOpenChange }: ToolUseCasesModalProps
                 <div className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center justify-center">3</span>
                   <div className="text-sm text-muted-foreground">
-                    <p>ChatPad calls your endpoint:</p>
+                    <p>Pilot calls your endpoint:</p>
                     <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-x-auto">
 {`POST https://your-api.com/weather
 Body: {"location": "NYC"}`}

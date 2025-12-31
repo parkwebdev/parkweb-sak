@@ -467,7 +467,7 @@ async function fetchWordPressHomes(
     console.log(`Fetching WordPress homes page ${page}: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
-      headers: { 'Accept': 'application/json', 'User-Agent': 'ChatPad/1.0' },
+      headers: { 'Accept': 'application/json', 'User-Agent': 'Pilot/1.0' },
     });
 
     if (!response.ok) {

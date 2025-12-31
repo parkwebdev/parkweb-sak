@@ -107,7 +107,7 @@ function formatIcsDate(date: Date): string {
 function generateIcsContent(data: BookingConfirmationData): string {
   const eventTitle = `Tour at ${data.locationName}`;
   const eventLocation = data.address || data.locationName;
-  const uid = `${data.confirmationId || Date.now()}@getpilot.app`;
+  const uid = `${data.confirmationId || Date.now()}@getpilot.io`;
   const now = new Date();
   const dtstamp = formatIcsDate(now);
   

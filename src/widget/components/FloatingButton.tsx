@@ -2,7 +2,7 @@
  * FloatingButton Component
  * 
  * The circular floating action button that opens/closes the widget.
- * Displays the ChatPad logo when closed, X icon when open.
+ * Displays the Pilot logo when closed, X icon when open.
  * Adapts to system dark/light mode.
  * 
  * @module widget/components/FloatingButton
@@ -28,7 +28,7 @@ interface FloatingButtonProps {
  * Dark mode: white button, black icon
  * 
  * @param props - Component props
- * @returns Styled button element with ChatPad logo or X icon
+ * @returns Styled button element with Pilot logo or X icon
  */
 /**
  * Floating action button component for widget toggle.

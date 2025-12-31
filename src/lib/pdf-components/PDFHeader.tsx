@@ -1,7 +1,7 @@
 /**
  * PDF Header Component
  * 
- * Branded header with ChatPad logo, organization name, report title, and date range.
+ * Branded header with Pilot logo, organization name, report title, and date range.
  */
 
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
