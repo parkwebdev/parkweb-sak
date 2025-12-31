@@ -84,7 +84,7 @@ function Analytics() {
       <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
         <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
           {/* Header with inline controls */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold">{SECTION_INFO[activeTab].title}</h1>
               <p className="text-sm text-muted-foreground mt-1">{SECTION_INFO[activeTab].description}</p>
