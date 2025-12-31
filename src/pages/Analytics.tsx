@@ -99,6 +99,8 @@ function Analytics() {
               onPresetChange={setDatePreset}
               onRefresh={data.refetch}
               isLoading={data.loading}
+              mockMode={data.mockMode}
+              onMockModeChange={data.setMockMode}
             />
           )}
 
