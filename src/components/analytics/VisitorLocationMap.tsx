@@ -54,7 +54,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
   if (loading) {
     return (
       <Card className="overflow-hidden">
-        <CardHeader className="pb-2">
+        <CardHeader className="py-3">
           <div className="flex items-center gap-2">
             <Globe02 size={16} className="text-muted-foreground" />
             <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
@@ -70,7 +70,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
   if (data.length === 0) {
     return (
       <Card className="overflow-hidden">
-        <CardHeader className="pb-2">
+        <CardHeader className="py-3">
           <div className="flex items-center gap-2">
             <Globe02 size={16} className="text-muted-foreground" />
             <CardTitle className="text-base font-medium">Visitor Locations</CardTitle>
@@ -90,7 +90,7 @@ export function VisitorLocationMap({ data, loading }: VisitorLocationMapProps) {
   return (
     <>
       <Card className="overflow-hidden">
-        <CardHeader className="pb-2">
+        <CardHeader className="py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe02 size={16} className="text-muted-foreground" />
