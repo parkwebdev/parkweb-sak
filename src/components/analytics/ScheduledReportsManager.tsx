@@ -16,8 +16,14 @@ import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 
-export const ScheduledReportsManager = () => {
-  const { reports, loading, toggleReportStatus, deleteReport } = useScheduledReports();
+interface ScheduledReportsManagerProps {
+  /** Optional external loading state override */
+  loading?: boolean;
+}
+
+export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledReportsManagerProps) => {
+  const { reports, loading: internalLoading, toggleReportStatus, deleteReport } = useScheduledReports();
+  const loading = externalLoading ?? internalLoading;
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [savedReportIds, setSavedReportIds] = useState<Set<string>>(new Set());
 

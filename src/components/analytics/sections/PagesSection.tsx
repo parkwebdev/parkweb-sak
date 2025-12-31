@@ -16,8 +16,7 @@ import { PageDepthChart } from '@/components/analytics/PageDepthChart';
 import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
-import type { EngagementMetrics, PageDepthData } from '@/hooks/useTrafficAnalytics';
-import type { TopPageData } from '@/types/analytics';
+import type { EngagementMetrics, PageDepthData, TopPageData } from '@/types/analytics';
 
 interface PagesSectionProps {
   /** Page engagement metrics */

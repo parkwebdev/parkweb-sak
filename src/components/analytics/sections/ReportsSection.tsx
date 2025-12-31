@@ -11,11 +11,16 @@
 import { ExportHistoryTable } from '@/components/analytics/ExportHistoryTable';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 
-export function ReportsSection() {
+interface ReportsSectionProps {
+  /** Loading state for consistency with other section components */
+  loading?: boolean;
+}
+
+export function ReportsSection({ loading }: ReportsSectionProps) {
   return (
     <div className="space-y-6">
-      <ExportHistoryTable />
-      <ScheduledReportsManager />
+      <ExportHistoryTable loading={loading} />
+      <ScheduledReportsManager loading={loading} />
     </div>
   );
 }

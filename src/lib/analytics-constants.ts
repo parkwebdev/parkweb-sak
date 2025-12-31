@@ -7,7 +7,7 @@
  * @module lib/analytics-constants
  */
 
-import type { ReportConfig } from '@/components/analytics/BuildReportSheet';
+import type { ReportConfig } from '@/types/report-config';
 
 // =============================================================================
 // ANALYTICS SECTION TYPE

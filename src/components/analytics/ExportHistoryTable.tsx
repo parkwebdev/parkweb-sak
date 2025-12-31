@@ -31,8 +31,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { FileX02 } from '@untitledui/icons';
 
-export function ExportHistoryTable() {
-  const { exports, loading, deleteExport, getDownloadUrl } = useReportExports();
+interface ExportHistoryTableProps {
+  /** Optional external loading state override */
+  loading?: boolean;
+}
+
+export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTableProps) {
+  const { exports, loading: internalLoading, deleteExport, getDownloadUrl } = useReportExports();
+  const loading = externalLoading ?? internalLoading;
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
