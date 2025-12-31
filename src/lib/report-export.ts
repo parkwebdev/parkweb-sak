@@ -18,6 +18,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ReportConfig } from '@/components/analytics/BuildReportSheet';
+import { formatDateUS, getTriggerLabel } from '@/lib/formatting-utils';
 import type { 
   ReportData, 
   ConversationStat, 
@@ -112,7 +113,7 @@ export const generateCSVReport = (
     lines.push('CONVERSATION STATISTICS');
     lines.push(createCSVRow('Date', 'Total', 'Active', 'Closed'));
     data.conversationStats.forEach((stat: ConversationStat) => {
-      lines.push(createCSVRow(stat.date, stat.total, stat.active, stat.closed));
+      lines.push(createCSVRow(formatDateUS(stat.date), stat.total, stat.active, stat.closed));
     });
     lines.push('');
   }
@@ -164,7 +165,7 @@ export const generateCSVReport = (
       const contacted = (stat.contacted as number) || 0;
       const qualified = (stat.qualified as number) || 0;
       const converted = (stat.converted as number) || (stat.won as number) || 0;
-      lines.push(createCSVRow(stat.date, stat.total, newCount, contacted, qualified, converted));
+      lines.push(createCSVRow(formatDateUS(stat.date), stat.total, newCount, contacted, qualified, converted));
     });
     lines.push('');
   }
@@ -188,7 +189,7 @@ export const generateCSVReport = (
     lines.push(createCSVRow('Date', ...stageKeys));
     data.leadConversionTrend.forEach((item) => {
       const values = stageKeys.map(key => item[key] as number);
-      lines.push(createCSVRow(item.date as string, ...values));
+      lines.push(createCSVRow(formatDateUS(item.date as string), ...values));
     });
     lines.push('');
   }
@@ -213,7 +214,7 @@ export const generateCSVReport = (
     lines.push('USAGE METRICS');
     lines.push(createCSVRow('Date', 'Conversations', 'Messages', 'API Calls'));
     data.usageMetrics.forEach((metric: UsageMetric) => {
-      lines.push(createCSVRow(metric.date, metric.conversations, metric.messages, metric.api_calls));
+      lines.push(createCSVRow(formatDateUS(metric.date), metric.conversations, metric.messages, metric.api_calls));
     });
     lines.push('');
   }
@@ -242,7 +243,7 @@ export const generateCSVReport = (
     lines.push(createCSVRow('Date', 'Confirmed', 'Completed', 'Cancelled', 'No-Show', 'Total'));
     data.bookingTrend.forEach((item) => {
       lines.push(createCSVRow(
-        item.date,
+        formatDateUS(item.date),
         item.confirmed,
         item.completed,
         item.cancelled,
@@ -280,7 +281,7 @@ export const generateCSVReport = (
         format(new Date(item.createdAt), 'MMM d, yyyy'),
         `${item.rating} Stars`,
         item.feedback || '',
-        item.triggerType
+        getTriggerLabel(item.triggerType)
       ));
     });
     lines.push('');
@@ -314,7 +315,7 @@ export const generateCSVReport = (
     lines.push(createCSVRow('Date', 'Direct', 'Organic', 'Paid', 'Social', 'Email', 'Referral', 'Total'));
     data.trafficSourceTrend.forEach((item) => {
       lines.push(createCSVRow(
-        item.date,
+        formatDateUS(item.date),
         item.direct,
         item.organic,
         item.paid,
