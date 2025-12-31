@@ -70,18 +70,32 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
     }
   };
 
-  // Simulate dark mode email client by injecting dark mode styles
-  const darkModeHtml = darkMode
-    ? html.replace(
-        '</head>',
-        `<style>
-          @media (prefers-color-scheme: dark) {
-            body { background-color: #1a1a1a !important; }
-          }
-          body { background-color: #1a1a1a !important; }
-        </style></head>`
-      )
-    : html;
+  // Simulate dark mode email client by injecting forced dark mode styles
+  // This overrides the @media (prefers-color-scheme: dark) with explicit styles
+  const getDarkModeHtml = () => {
+    if (!darkMode) return html;
+    
+    // Inject forced dark mode styles that override the email's classes
+    const darkModeStyles = `
+      <style type="text/css">
+        /* Force dark mode - override all email template classes */
+        .email-bg { background-color: #0a0a0a !important; }
+        .email-card { background-color: #171717 !important; }
+        .email-text { color: #fafafa !important; }
+        .email-text-muted { color: #a3a3a3 !important; }
+        .email-border { border-color: #262626 !important; }
+        .email-btn { background-color: #fafafa !important; }
+        .email-btn-text { color: #171717 !important; }
+        .email-detail-bg { background-color: #0a0a0a !important; }
+        body { background-color: #0a0a0a !important; }
+        table.email-bg { background-color: #0a0a0a !important; }
+      </style>
+    `;
+    
+    return html.replace('</head>', `${darkModeStyles}</head>`);
+  };
+
+  const previewHtml = getDarkModeHtml();
 
   return (
     <Card className="overflow-hidden">
@@ -121,7 +135,7 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
             style={{ backgroundColor: darkMode ? '#0d0d0d' : '#f5f5f5' }}
           >
             <iframe
-              srcDoc={darkModeHtml}
+              srcDoc={previewHtml}
               style={{ 
                 width: iframeWidth, 
                 height: 650, 
