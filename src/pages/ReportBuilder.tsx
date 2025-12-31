@@ -250,7 +250,7 @@ export default function ReportBuilder() {
           config,
           startDate,
           endDate,
-          orgName: user?.email || 'Your Organization',
+          orgName: 'Ari Agent',
         });
 
         if (!cancelled) {
@@ -300,7 +300,7 @@ export default function ReportBuilder() {
             config,
             startDate,
             endDate,
-            orgName: user?.email || 'Your Organization',
+            orgName: 'Ari Agent',
           });
 
       await createExport({
