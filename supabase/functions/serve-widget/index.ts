@@ -103,7 +103,7 @@ serve(async (req) => {
   };
   
   var script = document.createElement('script');
-  script.src = config.appUrl + '/chatpad-widget.js';
+  script.src = config.appUrl + '/pilot-widget.js';
   script.async = true;
   script.setAttribute('data-agent-id', config.agentId);
   script.setAttribute('data-position', config.position);

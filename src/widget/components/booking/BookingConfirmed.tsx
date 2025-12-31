@@ -107,7 +107,7 @@ function formatIcsDate(date: Date): string {
 function generateIcsContent(data: BookingConfirmationData): string {
   const eventTitle = `Tour at ${data.locationName}`;
   const eventLocation = data.address || data.locationName;
-  const uid = `${data.confirmationId || Date.now()}@chatpad`;
+  const uid = `${data.confirmationId || Date.now()}@getpilot.app`;
   const now = new Date();
   const dtstamp = formatIcsDate(now);
   
@@ -124,7 +124,7 @@ function generateIcsContent(data: BookingConfirmationData): string {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//ChatPad//Booking//EN',
+    'PRODID:-//Pilot//Booking//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',

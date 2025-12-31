@@ -30,11 +30,11 @@ function formatIcsDate(date: Date): string {
  * Generate .ics content with METHOD:REQUEST for Accept/Decline in email clients
  */
 function generateCalendarInvite(data: BookingEmailRequest): string {
-  const uid = `${data.confirmation_id}@chatpad.app`;
+  const uid = `${data.confirmation_id}@getpilot.app`;
   const now = new Date();
   const startDate = new Date(data.start_time);
   const endDate = new Date(data.end_time);
-  const organizerEmail = data.organizer_email || 'bookings@chatpad.app';
+  const organizerEmail = data.organizer_email || 'bookings@getpilot.app';
   
   const description = [
     `Confirmation: ${data.confirmation_id}`,
@@ -45,7 +45,7 @@ function generateCalendarInvite(data: BookingEmailRequest): string {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//ChatPad//Booking//EN',
+    'PRODID:-//Pilot//Booking//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',  // Enables Accept/Decline in email clients
     'BEGIN:VEVENT',
@@ -170,7 +170,7 @@ function generateEmailHtml(data: BookingEmailRequest): string {
           <tr>
             <td style="padding: 24px 32px; border-top: 1px solid #e4e4e7; text-align: center;">
               <p style="margin: 0; color: #a1a1aa; font-size: 12px;">
-                Powered by ChatPad
+                Powered by Pilot
               </p>
             </td>
           </tr>
@@ -233,7 +233,7 @@ serve(async (req) => {
 
     // Send email with .ics attachment
     const emailResponse = await resend.emails.send({
-      from: `${data.location_name} <bookings@chatpad.app>`,
+      from: `${data.location_name} <bookings@getpilot.app>`,
       to: [data.to],
       subject: `Your tour at ${data.location_name} is confirmed`,
       html: generateEmailHtml(data),

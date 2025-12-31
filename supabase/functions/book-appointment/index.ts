@@ -458,7 +458,7 @@ serve(async (req) => {
       booking.property_address ? `Property: ${booking.property_address}` : null,
       booking.notes ? `Notes: ${booking.notes}` : null,
       '',
-      'Booked via ChatPad AI',
+      'Booked via Pilot AI',
     ].filter(Boolean).join('\n');
 
     // Create event on external calendar
@@ -525,7 +525,7 @@ serve(async (req) => {
         status: 'confirmed',
         metadata: {
           property_address: booking.property_address,
-          booked_via: 'chatpad_ai',
+          booked_via: 'pilot_ai',
           booked_at: new Date().toISOString(),
         },
       })
@@ -559,7 +559,7 @@ serve(async (req) => {
             end_time: endTime.toISOString(),
             timezone,
             confirmation_id: bookingId,
-            organizer_email: 'bookings@chatpad.app',
+            organizer_email: 'bookings@getpilot.app',
           }),
         });
         console.log('Booking confirmation email sent:', emailResponse.ok);
