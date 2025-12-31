@@ -50,7 +50,7 @@ This section tracks the implementation status of security enhancements identifie
 
 | Phase | Description | Status | Priority | Effort |
 |-------|-------------|--------|----------|--------|
-| 1 | [Prompt Injection Protection](#prompt-injection-protection) | 🔴 Planned | Critical | 2 hours |
+| 1 | [Prompt Injection Protection](#prompt-injection-protection) | 🟢 Complete | Critical | - |
 | 2 | [Content Moderation](#content-moderation) | 🔴 Planned | Critical | 4 hours |
 | 3 | [Security Testing Documentation](#security-testing) | 🟢 Complete | High | - |
 | 4 | [CAPTCHA Protection](#bot-protection) | 🔴 Planned | High | 4 hours |
@@ -1275,8 +1275,8 @@ API key manager displays age warnings:
 
 ### AI Safety
 
-- [ ] Prompt injection guardrails in place
-- [ ] Output sanitization active
+- [x] Prompt injection guardrails in place
+- [x] Output sanitization active
 - [ ] Content moderation enabled
 - [x] Security testing scheduled (see [SECURITY_TESTING.md](./SECURITY_TESTING.md))
 
