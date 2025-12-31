@@ -1337,6 +1337,46 @@ if (data?.[0]?.rate_limited) {
 
 ---
 
+### `translate-messages`
+
+**Purpose:** Translates message content between languages using AI.
+
+**Auth:** Authenticated (requires JWT)
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  messages: Array<{
+    id: string;
+    content: string;
+  }>;
+  targetLanguage: string;  // e.g., "Spanish", "French", "German"
+}
+```
+
+**Response:**
+```typescript
+{
+  translations: Array<{
+    id: string;
+    original: string;
+    translated: string;
+  }>;
+  targetLanguage: string;
+}
+```
+
+**Details:**
+- Uses Lovable AI Gateway for translation
+- Preserves message IDs for mapping
+- Handles batch translations efficiently
+- Returns original content alongside translations
+- Rate limited: 10 requests/minute
+
+---
+
 ### `test-tool-endpoint`
 
 **Purpose:** Tests a custom tool endpoint configuration.
