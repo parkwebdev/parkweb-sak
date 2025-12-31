@@ -233,6 +233,36 @@ serve(async (req) => {
       };
     }
 
+    // Process custom fields early: extract phone from type-tagged fields and flatten for storage
+    const { _formLoadTime: _, ...rawCustomFields } = customFields || {};
+    
+    let extractedPhone: string | null = null;
+    const flattenedCustomFields: Record<string, unknown> = {};
+
+    for (const [label, fieldData] of Object.entries(rawCustomFields)) {
+      if (typeof fieldData === 'object' && fieldData !== null && 'type' in fieldData && 'value' in fieldData) {
+        // New structured format with type metadata
+        const typedField = fieldData as { value: unknown; type: string };
+        flattenedCustomFields[label] = typedField.value;
+        
+        // Extract phone value from any field with type: 'phone'
+        if (typedField.type === 'phone' && typedField.value) {
+          extractedPhone = String(typedField.value);
+          console.log(`Extracted phone from field "${label}": ${extractedPhone}`);
+        }
+      } else {
+        // Legacy format (backward compatible) - also check for phone in field name
+        flattenedCustomFields[label] = fieldData;
+        
+        // Fallback: detect phone by common field names for legacy data
+        const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'Phone Number', 'telephone', 'mobile', 'Mobile'];
+        if (!extractedPhone && phoneKeys.some(k => label.toLowerCase().includes(k.toLowerCase()))) {
+          extractedPhone = String(fieldData);
+          console.log(`Extracted phone from legacy field "${label}": ${extractedPhone}`);
+        }
+      }
+    }
+
     const conversationMetadata: ConversationMetadata = {
       ip_address: ipAddress,
       country,
@@ -244,7 +274,7 @@ serve(async (req) => {
       session_started_at: new Date().toISOString(),
       lead_name: `${sanitizedFirstName} ${sanitizedLastName}`,
       lead_email: sanitizedEmail,
-      custom_fields: customFields || {},
+      custom_fields: flattenedCustomFields,
       tags: [],
       messages_count: 0,
       visited_pages: [],
@@ -283,36 +313,6 @@ serve(async (req) => {
 
     const conversationId = conversation?.id || null;
 
-    // Process custom fields: extract phone from type-tagged fields and flatten for storage
-    const { _formLoadTime: _, ...rawCustomFields } = customFields || {};
-    
-    let extractedPhone: string | null = null;
-    const flattenedCustomFields: Record<string, unknown> = {};
-
-    for (const [label, fieldData] of Object.entries(rawCustomFields)) {
-      if (typeof fieldData === 'object' && fieldData !== null && 'type' in fieldData && 'value' in fieldData) {
-        // New structured format with type metadata
-        const typedField = fieldData as { value: unknown; type: string };
-        flattenedCustomFields[label] = typedField.value;
-        
-        // Extract phone value from any field with type: 'phone'
-        if (typedField.type === 'phone' && typedField.value) {
-          extractedPhone = String(typedField.value);
-          console.log(`Extracted phone from field "${label}": ${extractedPhone}`);
-        }
-      } else {
-        // Legacy format (backward compatible) - also check for phone in field name
-        flattenedCustomFields[label] = fieldData;
-        
-        // Fallback: detect phone by common field names for legacy data
-        const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'Phone Number', 'telephone', 'mobile', 'Mobile'];
-        if (!extractedPhone && phoneKeys.some(k => label.toLowerCase().includes(k.toLowerCase()))) {
-          extractedPhone = String(fieldData);
-          console.log(`Extracted phone from legacy field "${label}": ${extractedPhone}`);
-        }
-      }
-    }
-    
     const { data: lead, error: leadError } = await supabase
       .from('leads')
       .insert({

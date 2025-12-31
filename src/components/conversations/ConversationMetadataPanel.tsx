@@ -378,9 +378,20 @@ export function ConversationMetadataPanel({
                 const phoneFieldEntries: [string, unknown][] = [];
                 const otherFieldEntries: [string, unknown][] = [];
 
-                Object.entries(customFields).forEach(([key, value]) => {
+                // Helper to extract value from typed {type, value} objects or return raw value
+                const getFieldValue = (val: unknown): unknown => {
+                  if (typeof val === 'object' && val !== null && 'type' in val && 'value' in val) {
+                    return (val as { type: string; value: unknown }).value;
+                  }
+                  return val;
+                };
+
+                Object.entries(customFields).forEach(([key, rawValue]) => {
                   // Skip internal rich text content fields (used for consent tooltips)
                   if (key.endsWith('_content')) return;
+                  
+                  // Extract actual value from typed objects
+                  const value = getFieldValue(rawValue);
                   
                   if (isPhoneFieldKey(key)) {
                     phoneFieldEntries.push([key, value]);
