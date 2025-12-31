@@ -95,8 +95,9 @@ export const useConversations = () => {
     fetchSoundPreference();
 
     // Subscribe to new messages for notification sounds only
+    // User-scoped channel name prevents cross-user collisions
     const messagesChannel = supabase
-      .channel('messages-notifications')
+      .channel(`messages-notifications-${user.id}`)
       .on(
         'postgres_changes',
         {

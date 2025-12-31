@@ -107,10 +107,11 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
         };
       });
     },
-    realtime: {
+    // Only subscribe to realtime when locationId is provided to avoid global subscription
+    realtime: options.locationId ? {
       table: 'calendar_events',
-      filter: options.locationId ? `location_id=eq.${options.locationId}` : undefined,
-    },
+      filter: `location_id=eq.${options.locationId}`,
+    } : undefined,
     enabled: !!user,
     staleTime: 60000, // 1 minute
   });
