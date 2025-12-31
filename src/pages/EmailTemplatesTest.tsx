@@ -20,10 +20,14 @@ import {
   generateNotificationEmail,
   generateBookingConfirmationEmail,
   generateScheduledReportEmail,
+  generatePasswordResetEmail,
+  generateEmailVerificationEmail,
   type TeamInvitationData,
   type NotificationData,
   type BookingConfirmationData,
   type ScheduledReportData,
+  type PasswordResetData,
+  type EmailVerificationData,
 } from '@/lib/email-templates';
 
 type PreviewWidth = 'mobile' | 'desktop';
@@ -221,6 +225,20 @@ export default function EmailTemplatesTest() {
     viewReportUrl: 'https://getpilot.io/analytics',
   });
 
+  // Password Reset data
+  const [passwordResetData, setPasswordResetData] = useState<PasswordResetData>({
+    userName: 'Alex',
+    resetUrl: 'https://getpilot.io/reset-password?token=abc123',
+    expiresIn: '1 hour',
+  });
+
+  // Email Verification data
+  const [emailVerificationData, setEmailVerificationData] = useState<EmailVerificationData>({
+    userName: 'Alex',
+    verificationUrl: 'https://getpilot.io/verify-email?token=xyz789',
+    expiresIn: '24 hours',
+  });
+
   // Generate HTML and subject based on active template
   const getTemplateHtml = () => {
     switch (activeTemplate) {
@@ -228,6 +246,8 @@ export default function EmailTemplatesTest() {
       case 'notification': return generateNotificationEmail(notificationData);
       case 'booking': return generateBookingConfirmationEmail(bookingData);
       case 'report': return generateScheduledReportEmail(reportData);
+      case 'password-reset': return generatePasswordResetEmail(passwordResetData);
+      case 'email-verification': return generateEmailVerificationEmail(emailVerificationData);
     }
   };
 
@@ -237,6 +257,8 @@ export default function EmailTemplatesTest() {
       case 'notification': return notificationData.title;
       case 'booking': return `Confirmed: ${bookingData.eventType} on ${bookingData.date}`;
       case 'report': return `${reportData.reportName} — ${reportData.dateRange}`;
+      case 'password-reset': return 'Reset your password';
+      case 'email-verification': return 'Verify your email address';
     }
   };
 
@@ -433,6 +455,82 @@ export default function EmailTemplatesTest() {
                   id="report-range"
                   value={reportData.dateRange}
                   onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'password-reset':
+        return (
+          <Card>
+            <CardHeader className="py-3 px-4 border-b">
+              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-name" className="text-xs">User Name</Label>
+                <Input
+                  id="reset-name"
+                  value={passwordResetData.userName || ''}
+                  onChange={(e) => setPasswordResetData({ ...passwordResetData, userName: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reset-url" className="text-xs">Reset URL</Label>
+                <Input
+                  id="reset-url"
+                  value={passwordResetData.resetUrl}
+                  onChange={(e) => setPasswordResetData({ ...passwordResetData, resetUrl: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reset-expires" className="text-xs">Expires In</Label>
+                <Input
+                  id="reset-expires"
+                  value={passwordResetData.expiresIn || ''}
+                  onChange={(e) => setPasswordResetData({ ...passwordResetData, expiresIn: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'email-verification':
+        return (
+          <Card>
+            <CardHeader className="py-3 px-4 border-b">
+              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="verify-name" className="text-xs">User Name</Label>
+                <Input
+                  id="verify-name"
+                  value={emailVerificationData.userName || ''}
+                  onChange={(e) => setEmailVerificationData({ ...emailVerificationData, userName: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="verify-url" className="text-xs">Verification URL</Label>
+                <Input
+                  id="verify-url"
+                  value={emailVerificationData.verificationUrl}
+                  onChange={(e) => setEmailVerificationData({ ...emailVerificationData, verificationUrl: e.target.value })}
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="verify-expires" className="text-xs">Expires In</Label>
+                <Input
+                  id="verify-expires"
+                  value={emailVerificationData.expiresIn || ''}
+                  onChange={(e) => setEmailVerificationData({ ...emailVerificationData, expiresIn: e.target.value })}
                   className="h-8 text-sm"
                 />
               </div>

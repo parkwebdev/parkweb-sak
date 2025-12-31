@@ -50,6 +50,18 @@ export interface ScheduledReportData {
   viewReportUrl: string;
 }
 
+export interface PasswordResetData {
+  userName?: string;
+  resetUrl: string;
+  expiresIn?: string;
+}
+
+export interface EmailVerificationData {
+  userName?: string;
+  verificationUrl: string;
+  expiresIn?: string;
+}
+
 // =============================================================================
 // DESIGN TOKENS
 // =============================================================================
@@ -318,6 +330,51 @@ export function generateScheduledReportEmail(data: ScheduledReportData): string 
   
   return generateWrapper({
     preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready`,
+    content,
+  });
+}
+
+export function generatePasswordResetEmail(data: PasswordResetData): string {
+  const greeting = data.userName ? `Hi ${data.userName},` : 'Hi,';
+  const expiryNote = data.expiresIn 
+    ? `This link will expire in ${data.expiresIn}.`
+    : 'This link will expire in 1 hour.';
+  
+  const content = `
+    ${heading('Reset your password')}
+    ${paragraph(`${greeting} we received a request to reset your password.`)}
+    ${paragraph('Click the button below to choose a new password:', true)}
+    ${spacer(8)}
+    ${button('Reset Password', data.resetUrl)}
+    ${spacer(24)}
+    ${paragraph(expiryNote, true)}
+    ${paragraph("If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.", true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: 'Reset your Pilot password',
+    content,
+  });
+}
+
+export function generateEmailVerificationEmail(data: EmailVerificationData): string {
+  const greeting = data.userName ? `Welcome ${data.userName}!` : 'Welcome!';
+  const expiryNote = data.expiresIn 
+    ? `This link will expire in ${data.expiresIn}.`
+    : 'This link will expire in 24 hours.';
+  
+  const content = `
+    ${heading('Verify your email')}
+    ${paragraph(`${greeting} Thanks for signing up for Pilot. Please verify your email address to get started.`)}
+    ${spacer(8)}
+    ${button('Verify Email', data.verificationUrl)}
+    ${spacer(24)}
+    ${paragraph(expiryNote, true)}
+    ${paragraph("If you didn't create a Pilot account, you can safely ignore this email.", true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: 'Verify your email to get started with Pilot',
     content,
   });
 }
