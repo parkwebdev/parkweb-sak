@@ -341,6 +341,95 @@ function sanitizeAiOutput(content: string): { sanitized: string; redactionsAppli
   return { sanitized, redactionsApplied };
 }
 
+// ============================================
+// CONTENT MODERATION (OpenAI Moderation API)
+// ============================================
+
+interface ModerationResult {
+  flagged: boolean;
+  categories: string[];
+  severity: 'low' | 'medium' | 'high';
+  action: 'allow' | 'warn' | 'block';
+}
+
+const HIGH_SEVERITY_CATEGORIES = [
+  'sexual/minors',
+  'violence/graphic',
+  'self-harm/intent',
+  'self-harm/instructions',
+];
+
+const MEDIUM_SEVERITY_CATEGORIES = [
+  'hate/threatening',
+  'violence',
+  'self-harm',
+];
+
+/**
+ * Content moderation using OpenAI Moderation API.
+ * Used as a safety layer regardless of which LLM is used for chat.
+ */
+async function moderateContent(content: string): Promise<ModerationResult> {
+  const openaiKey = Deno.env.get('OPENAI_API_KEY');
+  
+  // If no OpenAI key, fail open (allow content but log warning)
+  if (!openaiKey) {
+    console.warn('OPENAI_API_KEY not configured - skipping content moderation');
+    return { flagged: false, categories: [], severity: 'low', action: 'allow' };
+  }
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/moderations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        input: content,
+        model: 'omni-moderation-latest' 
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Moderation API error:', response.status);
+      // Fail open on API errors
+      return { flagged: false, categories: [], severity: 'low', action: 'allow' };
+    }
+
+    const data = await response.json();
+    const result = data.results?.[0];
+
+    if (!result) {
+      console.warn('No moderation result returned');
+      return { flagged: false, categories: [], severity: 'low', action: 'allow' };
+    }
+
+    const flaggedCategories = Object.entries(result.categories || {})
+      .filter(([_, flagged]) => flagged)
+      .map(([category]) => category);
+
+    // Determine severity based on flagged categories
+    let severity: 'low' | 'medium' | 'high' = 'low';
+    if (flaggedCategories.some(c => HIGH_SEVERITY_CATEGORIES.includes(c))) {
+      severity = 'high';
+    } else if (flaggedCategories.some(c => MEDIUM_SEVERITY_CATEGORIES.includes(c))) {
+      severity = 'medium';
+    }
+
+    return {
+      flagged: result.flagged || false,
+      categories: flaggedCategories,
+      severity,
+      action: severity === 'high' ? 'block' : severity === 'medium' ? 'warn' : 'allow',
+    };
+  } catch (error) {
+    console.error('Moderation API call failed:', error);
+    // Fail open on exceptions
+    return { flagged: false, categories: [], severity: 'low', action: 'allow' };
+  }
+}
+
 // Language detection mapping for common languages
 const LANGUAGE_NAMES: Record<string, string> = {
   'en': 'English',
@@ -462,7 +551,6 @@ async function detectConversationLanguage(
     return null;
   }
 }
-
 
 // US State abbreviation to full name mapping for bidirectional search
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -3061,9 +3149,53 @@ serve(async (req) => {
     
     // Save the user message to database (skip for greeting requests and preview mode)
     let userMessageId: string | undefined;
+    let userMessageBlocked = false;
     if (messages && messages.length > 0 && !isGreetingRequest && !previewMode) {
       const lastUserMessage = messages[messages.length - 1];
       if (lastUserMessage.role === 'user') {
+        // PRE-FLIGHT CONTENT MODERATION: Check user message before processing
+        const userModeration = await moderateContent(lastUserMessage.content);
+        if (userModeration.action === 'block') {
+          console.warn(`[${requestId}] Content blocked: User message flagged for ${userModeration.categories.join(', ')}`);
+          // Log security event
+          supabase.from('security_logs').insert({
+            action: 'content_blocked',
+            resource_type: 'conversation',
+            resource_id: activeConversationId,
+            success: true,
+            details: { 
+              type: 'user_message',
+              categories: userModeration.categories,
+              severity: userModeration.severity,
+              request_id: requestId,
+              agent_id: agentId,
+            },
+          }).then(() => {
+            console.log(`[${requestId}] Security event logged: content_blocked (user)`);
+          }).catch(err => {
+            console.error(`[${requestId}] Failed to log security event:`, err);
+          });
+          
+          userMessageBlocked = true;
+        } else if (userModeration.action === 'warn') {
+          // Log warning but allow message
+          console.warn(`[${requestId}] Content warning: User message flagged for ${userModeration.categories.join(', ')}`);
+          supabase.from('security_logs').insert({
+            action: 'content_warning',
+            resource_type: 'conversation',
+            resource_id: activeConversationId,
+            success: true,
+            details: { 
+              type: 'user_message',
+              categories: userModeration.categories,
+              severity: userModeration.severity,
+              request_id: requestId,
+              agent_id: agentId,
+            },
+          }).catch(err => {
+            console.error(`[${requestId}] Failed to log content warning:`, err);
+          });
+        }
         const { data: userMsg, error: msgError } = await supabase.from('messages').insert({
           conversation_id: activeConversationId,
           role: 'user',
@@ -3093,6 +3225,21 @@ serve(async (req) => {
           })
           .eq('id', activeConversationId);
       }
+    }
+
+    // Early return if user message was blocked by content moderation
+    if (userMessageBlocked) {
+      return new Response(
+        JSON.stringify({
+          conversationId: activeConversationId,
+          response: "I'm not able to respond to that type of message. How else can I help you today?",
+          sources: [],
+          status: 'active',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // ============================================
@@ -4180,17 +4327,65 @@ NEVER mark complete when:
       assistantContent = 'I apologize, but I was unable to generate a response.';
     }
 
+    // POST-GENERATION CONTENT MODERATION: Check AI response before delivery
+    const outputModeration = await moderateContent(assistantContent);
+    if (outputModeration.action === 'block') {
+      console.warn(`[${requestId}] AI output blocked: Flagged for ${outputModeration.categories.join(', ')}`);
+      // Log security event
+      supabase.from('security_logs').insert({
+        action: 'ai_output_blocked',
+        resource_type: 'conversation',
+        resource_id: activeConversationId,
+        success: true,
+        details: { 
+          type: 'ai_response',
+          categories: outputModeration.categories,
+          severity: outputModeration.severity,
+          request_id: requestId,
+          agent_id: agentId,
+        },
+      }).then(() => {
+        console.log(`[${requestId}] Security event logged: ai_output_blocked`);
+      }).catch(err => {
+        console.error(`[${requestId}] Failed to log security event:`, err);
+      });
+      
+      // Replace with safe fallback response
+      assistantContent = "I apologize, but I wasn't able to generate an appropriate response. How else can I help you?";
+    } else if (outputModeration.action === 'warn') {
+      console.warn(`[${requestId}] AI output warning: Flagged for ${outputModeration.categories.join(', ')}`);
+      supabase.from('security_logs').insert({
+        action: 'ai_output_warning',
+        resource_type: 'conversation',
+        resource_id: activeConversationId,
+        success: true,
+        details: { 
+          type: 'ai_response',
+          categories: outputModeration.categories,
+          severity: outputModeration.severity,
+          request_id: requestId,
+          agent_id: agentId,
+        },
+      }).catch(err => {
+        console.error(`[${requestId}] Failed to log output warning:`, err);
+      });
+    }
+
     // SECURITY: Sanitize AI output to prevent accidental leakage of sensitive information
     const { sanitized, redactionsApplied } = sanitizeAiOutput(assistantContent);
     if (redactionsApplied > 0) {
       console.warn(`[${requestId}] Security: Redacted ${redactionsApplied} sensitive pattern(s) from AI response`);
-      // Log security event for monitoring
+      // Log security event for monitoring (include agent_id for traceability)
       supabase.from('security_logs').insert({
         action: 'ai_output_sanitized',
         resource_type: 'conversation',
         resource_id: activeConversationId,
         success: true,
-        details: { redactions_count: redactionsApplied, request_id: requestId },
+        details: { 
+          redactions_count: redactionsApplied, 
+          request_id: requestId,
+          agent_id: agentId,
+        },
       }).then(() => {
         console.log(`[${requestId}] Security event logged: ai_output_sanitized`);
       }).catch(err => {

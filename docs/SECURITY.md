@@ -754,7 +754,7 @@ export async function moderateContent(
 
 #### Implementation Status
 
-🔴 **Planned** - Requires shared moderation utility and integration in `widget-chat`.
+🟢 **Complete** - Implemented in `widget-chat` edge function with pre-flight (user message) and post-generation (AI response) moderation checks.
 
 ### Security Testing
 
