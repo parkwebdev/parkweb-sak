@@ -476,7 +476,10 @@ export function ConversationMetadataPanel({
                           const isBoolean = typeof value === 'boolean';
                           const isConsent = isConsentFieldKey(key);
                           const consentContentKey = `${key}_content`;
-                          const consentContent = customFields[consentContentKey] as string | undefined;
+                          const rawConsentContent = customFields[consentContentKey];
+                          // Extract value from typed objects using same helper
+                          const consentContentValue = getFieldValue(rawConsentContent);
+                          const consentContent = typeof consentContentValue === 'string' ? consentContentValue : undefined;
                           // Sanitize consent content to prevent XSS
                           const sanitizedConsentContent = consentContent 
                             ? DOMPurify.sanitize(consentContent, {
