@@ -89,7 +89,7 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
     logger.debug('[Widget] Captured referrer journey (fallback):', journey);
     
     // Persist to localStorage
-    localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
+    localStorage.setItem(`pilot_referrer_journey_${agentId}`, JSON.stringify(journey));
   }, [agentId, referrerJourney]);
 
   // Capture referrer journey on initial load (fallback for non-iframe mode)
@@ -116,7 +116,7 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
   // Load referrer journey from localStorage on mount
   useEffect(() => {
     if (previewMode || referrerJourney) return;
-    const stored = localStorage.getItem(`chatpad_referrer_journey_${agentId}`);
+    const stored = localStorage.getItem(`pilot_referrer_journey_${agentId}`);
     if (stored) {
       try {
         setReferrerJourney(JSON.parse(stored));
@@ -187,13 +187,13 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
         const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
         // Try to update localStorage with final duration (best effort)
         try {
-          const stored = localStorage.getItem(`chatpad_page_visits_${agentId}`);
+          const stored = localStorage.getItem(`pilot_page_visits_${agentId}`);
           if (stored) {
             const visits = JSON.parse(stored);
             const lastIndex = visits.findIndex((v: PageVisit) => v.url === currentPageRef.current.url && v.duration_ms === 0);
             if (lastIndex !== -1) {
               visits[lastIndex].duration_ms = duration;
-              localStorage.setItem(`chatpad_page_visits_${agentId}`, JSON.stringify(visits));
+              localStorage.setItem(`pilot_page_visits_${agentId}`, JSON.stringify(visits));
             }
           }
         } catch { /* ignore */ }
@@ -212,14 +212,14 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
   // Persist page visits to localStorage
   useEffect(() => {
     if (pageVisits.length > 0 && !previewMode) {
-      localStorage.setItem(`chatpad_page_visits_${agentId}`, JSON.stringify(pageVisits));
+      localStorage.setItem(`pilot_page_visits_${agentId}`, JSON.stringify(pageVisits));
     }
   }, [pageVisits, agentId, previewMode]);
 
   // Load page visits from localStorage on mount
   useEffect(() => {
     if (previewMode) return;
-    const stored = localStorage.getItem(`chatpad_page_visits_${agentId}`);
+    const stored = localStorage.getItem(`pilot_page_visits_${agentId}`);
     if (stored) {
       try {
         setPageVisits(JSON.parse(stored));

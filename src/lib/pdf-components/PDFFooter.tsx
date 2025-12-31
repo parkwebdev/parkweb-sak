@@ -44,7 +44,7 @@ export function PDFFooter() {
     <View style={footerStyles.container} fixed>
       <View style={footerStyles.branding}>
         <PDFLogo size={12} color={colors.muted} />
-        <Text style={footerStyles.brandingText}>Powered by ChatPad</Text>
+        <Text style={footerStyles.brandingText}>Powered by Pilot</Text>
       </View>
       <Text 
         style={footerStyles.pageNumber}

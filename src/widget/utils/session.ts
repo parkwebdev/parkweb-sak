@@ -9,10 +9,10 @@
  * @returns The session ID string
  */
 export function getSessionId(): string {
-  let sessionId = localStorage.getItem('chatpad_session_id');
+  let sessionId = localStorage.getItem('pilot_session_id');
   if (!sessionId) {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('chatpad_session_id', sessionId);
+    localStorage.setItem('pilot_session_id', sessionId);
   }
   return sessionId;
 }
@@ -23,7 +23,7 @@ export function getSessionId(): string {
  * @returns The visitor ID string
  */
 export function getOrCreateVisitorId(agentId: string): string {
-  const key = `chatpad_visitor_id_${agentId}`;
+  const key = `pilot_visitor_id_${agentId}`;
   const stored = localStorage.getItem(key);
   if (stored) return stored;
   
@@ -40,7 +40,7 @@ export function getOrCreateVisitorId(agentId: string): string {
  */
 export function hasTakeoverNoticeBeenShown(agentId: string, conversationId: string): boolean {
   if (!conversationId) return false;
-  const key = `chatpad_takeover_noticed_${agentId}_${conversationId}`;
+  const key = `pilot_takeover_noticed_${agentId}_${conversationId}`;
   return localStorage.getItem(key) === 'true';
 }
 
@@ -51,7 +51,7 @@ export function hasTakeoverNoticeBeenShown(agentId: string, conversationId: stri
  */
 export function setTakeoverNoticeShown(agentId: string, conversationId: string): void {
   if (!conversationId) return;
-  const key = `chatpad_takeover_noticed_${agentId}_${conversationId}`;
+  const key = `pilot_takeover_noticed_${agentId}_${conversationId}`;
   localStorage.setItem(key, 'true');
 }
 
@@ -62,6 +62,6 @@ export function setTakeoverNoticeShown(agentId: string, conversationId: string):
  */
 export function clearTakeoverNotice(agentId: string, conversationId: string): void {
   if (!conversationId) return;
-  const key = `chatpad_takeover_noticed_${agentId}_${conversationId}`;
+  const key = `pilot_takeover_noticed_${agentId}_${conversationId}`;
   localStorage.removeItem(key);
 }

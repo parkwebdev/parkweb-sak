@@ -28,7 +28,7 @@
  */
 import { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { submitConversationRating, type WidgetConfig } from './api';
-import { widgetLogger, configureWidgetLogger } from './utils';
+import { widgetLogger, configureWidgetLogger, migrateLocalStorage } from './utils';
 
 // Types and constants extracted for maintainability
 import type { ViewType, ChatUser, ChatWidgetProps } from './types';
@@ -101,12 +101,15 @@ const ChatWidgetInner = ({
   const [currentView, setCurrentView] = useState<ViewType>('home');
   
   const [chatUser, setChatUser] = useState<ChatUser | null>(() => {
+    // Run migration before reading any localStorage keys
+    migrateLocalStorage();
+    
     try {
-      const stored = localStorage.getItem(`chatpad_user_${agentId}`);
+      const stored = localStorage.getItem(`pilot_user_${agentId}`);
       return stored ? JSON.parse(stored) : null;
     } catch {
       // Handle corrupted localStorage data gracefully
-      localStorage.removeItem(`chatpad_user_${agentId}`);
+      localStorage.removeItem(`pilot_user_${agentId}`);
       return null;
     }
   });
@@ -120,10 +123,10 @@ const ChatWidgetInner = ({
   
   // Visitor ID state
   const [visitorId] = useState(() => {
-    const stored = localStorage.getItem(`chatpad_visitor_id_${agentId}`);
+    const stored = localStorage.getItem(`pilot_visitor_id_${agentId}`);
     if (stored) return stored;
     const newId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem(`chatpad_visitor_id_${agentId}`, newId);
+    localStorage.setItem(`pilot_visitor_id_${agentId}`, newId);
     return newId;
   });
 
@@ -336,7 +339,7 @@ const ChatWidgetInner = ({
 
   // Calculate and notify unread count
   useEffect(() => {
-    const readKey = `chatpad_last_read_${agentId}_${activeConversationId}`;
+    const readKey = `pilot_last_read_${agentId}_${activeConversationId}`;
     const lastReadTimestamp = localStorage.getItem(readKey);
     const lastReadDate = lastReadTimestamp ? new Date(lastReadTimestamp) : null;
     
@@ -355,11 +358,11 @@ const ChatWidgetInner = ({
   useEffect(() => {
     if (!previewMode && window.parent !== window) {
       const handleResize = () => {
-        const widgetElement = document.getElementById('chatpad-widget-root');
+        const widgetElement = document.getElementById('pilot-widget-root');
         if (widgetElement) {
           const height = widgetElement.scrollHeight;
           window.parent.postMessage({
-            type: 'chatpad-widget-resize',
+            type: 'pilot-widget-resize',
             height: height
           }, '*');
         }
@@ -368,7 +371,7 @@ const ChatWidgetInner = ({
       handleResize();
 
       const resizeObserver = new ResizeObserver(handleResize);
-      const widgetElement = document.getElementById('chatpad-widget-root');
+      const widgetElement = document.getElementById('pilot-widget-root');
       if (widgetElement) {
         resizeObserver.observe(widgetElement);
       }
@@ -394,7 +397,7 @@ const ChatWidgetInner = ({
 
   // Widget content
   const widgetContent = (
-    <div id="chatpad-widget-root" className="h-full bg-transparent flex flex-col items-end gap-4 justify-end">
+    <div id="pilot-widget-root" className="h-full bg-transparent flex flex-col items-end gap-4 justify-end">
       {(isOpen || isIframeMode) && (
         <WidgetCard
           className={isIframeMode 

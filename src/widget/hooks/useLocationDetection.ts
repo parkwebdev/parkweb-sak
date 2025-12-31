@@ -204,7 +204,7 @@ export function useLocationDetection({
       
       // Persist selection for this session
       try {
-        localStorage.setItem(`chatpad_location_${agentId}`, JSON.stringify({
+        localStorage.setItem(`pilot_location_${agentId}`, JSON.stringify({
           id: selected.id,
           name: selected.name,
         }));
@@ -226,7 +226,7 @@ export function useLocationDetection({
       try {
         // Check for previously selected location in localStorage
         try {
-          const stored = localStorage.getItem(`chatpad_location_${agentId}`);
+          const stored = localStorage.getItem(`pilot_location_${agentId}`);
           if (stored) {
             const parsed = JSON.parse(stored);
             if (parsed?.id && parsed?.name) {

@@ -82,7 +82,7 @@ export class WidgetApiError extends Error {
  */
 export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storageKey: 'chatpad-widget-auth',
+    storageKey: 'pilot-widget-auth',
     persistSession: false,
     autoRefreshToken: false,
   }
