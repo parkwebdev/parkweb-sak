@@ -82,13 +82,11 @@ const App = () => (
                     <Route path="/analytics" element={<AnalyticsWrapper />} />
                     <Route path="/settings" element={<SettingsWrapper />} />
                     <Route path="/report-builder" element={<ReportBuilder />} />
+                    <Route path="/email-templates-test" element={<EmailTemplatesTest />} />
                     
                     {/* Dev-only routes inside layout */}
                     {import.meta.env.DEV && (
-                      <>
-                        <Route path="/booking-test" element={<BookingComponentsTest />} />
-                        <Route path="/email-templates-test" element={<EmailTemplatesTest />} />
-                      </>
+                      <Route path="/booking-test" element={<BookingComponentsTest />} />
                     )}
                   </Route>
                   
