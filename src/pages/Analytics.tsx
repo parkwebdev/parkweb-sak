@@ -7,8 +7,8 @@
  * @page
  */
 
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
@@ -30,9 +30,26 @@ import {
 
 function Analytics() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // === UI State ===
-  const [activeTab, setActiveTab] = useState<AnalyticsSection>('conversations');
+  const [activeTab, setActiveTab] = useState<AnalyticsSection>(() => {
+    const tabParam = searchParams.get('tab');
+    const validTabs: AnalyticsSection[] = ['conversations', 'leads', 'bookings', 'ai-performance', 'sources', 'pages', 'geography', 'reports'];
+    if (tabParam && validTabs.includes(tabParam as AnalyticsSection)) {
+      return tabParam as AnalyticsSection;
+    }
+    return 'conversations';
+  });
+
+  // Clear tab param from URL after reading (clean URL)
+  useEffect(() => {
+    if (searchParams.has('tab')) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('tab');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, []);
 
   // === Date State ===
   const [startDate, setStartDate] = useState(() => subDays(new Date(), 30));
