@@ -113,12 +113,12 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
 
   // Empty state message
   const emptyMessage = exports.length === 0 && !loading ? (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
+    <div className="flex flex-col items-center justify-center py-12">
       <div className="p-3 rounded-full bg-muted mb-4">
         <FileX02 className="h-6 w-6 text-muted-foreground" />
       </div>
       <h3 className="font-medium text-foreground mb-1">No exports yet</h3>
-      <p className="text-sm text-muted-foreground max-w-xs">
+      <p className="text-sm text-muted-foreground max-w-xs mx-auto">
         Export your first report using the Export button above. All exports will appear here for easy re-download.
       </p>
     </div>

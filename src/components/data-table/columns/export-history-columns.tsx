@@ -95,7 +95,9 @@ export const createExportHistoryColumns = ({
     size: 160,
     minSize: 120,
     maxSize: 200,
-    header: () => <span className="text-sm font-medium">Date Range</span>,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date Range" />
+    ),
     cell: ({ row }) => {
       const exportItem = row.original;
       return (
@@ -115,7 +117,9 @@ export const createExportHistoryColumns = ({
     size: 80,
     minSize: 60,
     maxSize: 100,
-    header: () => <span className="text-sm font-medium">Size</span>,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Size" />
+    ),
     cell: ({ row }) => {
       return (
         <span className="text-muted-foreground">
@@ -159,7 +163,10 @@ export const createExportHistoryColumns = ({
     size: 100,
     minSize: 80,
     maxSize: 120,
-    header: () => <span className="text-sm font-medium text-right block">Actions</span>,
+    meta: { align: 'right' as const },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Actions" />
+    ),
     cell: ({ row }) => {
       const exportItem = row.original;
       
