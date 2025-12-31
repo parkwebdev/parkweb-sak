@@ -15,8 +15,7 @@ import { LeadSourceBreakdownCard } from '@/components/analytics/LeadSourceBreakd
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import type { TrafficSourceData, LeadSourceData } from '@/types/analytics';
-import type { EngagementMetrics, DailySourceData } from '@/hooks/useTrafficAnalytics';
+import type { TrafficSourceData, LeadSourceData, EngagementMetrics, DailySourceData } from '@/types/analytics';
 
 interface SourcesSectionProps {
   /** Traffic source data */

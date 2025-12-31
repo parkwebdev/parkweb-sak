@@ -9,16 +9,11 @@
 
 import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import type { LocationData } from '@/types/analytics';
 
 interface GeographySectionProps {
   /** Location data for map markers */
-  locationData: Array<{
-    country: string;
-    city?: string;
-    lat: number;
-    lng: number;
-    count: number;
-  }>;
+  locationData: LocationData[];
   /** Loading state */
   trafficLoading: boolean;
 }

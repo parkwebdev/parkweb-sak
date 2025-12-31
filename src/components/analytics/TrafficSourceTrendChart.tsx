@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ChartCardHeader } from './ChartCardHeader';
 import { StackedAreaChartCard, SeriesConfig } from '@/components/charts/StackedAreaChartCard';
 import { format, parseISO } from 'date-fns';
-import type { DailySourceData } from '@/hooks/useTrafficAnalytics';
+import type { DailySourceData } from '@/types/analytics';
 
 interface TrafficSourceTrendChartProps {
   data: DailySourceData[];
@@ -87,7 +87,7 @@ export const TrafficSourceTrendChart = React.memo(function TrafficSourceTrendCha
   if (loading) {
     return (
       <Card className="h-full">
-        <CardContent className="pt-6">
+        <CardContent className="pt-6" role="status" aria-label="Loading traffic trends">
           <div className="mb-6">
             <Skeleton className="h-5 w-48 mb-1" />
             <Skeleton className="h-4 w-64" />

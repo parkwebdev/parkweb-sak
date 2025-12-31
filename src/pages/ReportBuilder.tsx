@@ -24,6 +24,13 @@ import { downloadFile } from '@/lib/file-download';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import type { PDFConfig, ReportType } from '@/types/pdf';
+import { 
+  type ReportConfig, 
+  type DatePreset,
+  DATE_PRESETS,
+  DEFAULT_REPORT_CONFIG,
+  getDateRangeFromPreset,
+} from '@/types/report-config';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,8 +45,7 @@ import { Separator } from '@/components/ui/separator';
 import { PdfJsViewer } from '@/components/pdf/PdfJsViewer';
 import { PdfIcon, CsvIcon } from '@/components/analytics/ExportIcons';
 import { cn } from '@/lib/utils';
-import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
-
+import { format, subDays } from 'date-fns';
 
 import { 
   ArrowLeft, 
@@ -50,108 +56,10 @@ import {
   FileCheck02,
 } from '@untitledui/icons';
 
-// === Types ===
+// Re-export ReportConfig for backward compatibility
+export type { ReportConfig } from '@/types/report-config';
 
-export interface ReportConfig {
-  format: 'csv' | 'pdf';
-  type: 'summary' | 'detailed' | 'comparison';
-  includeConversations: boolean;
-  includeLeads: boolean;
-  includeUsageMetrics: boolean;
-  includeConversationFunnel: boolean;
-  includePeakActivity: boolean;
-  includeBookings: boolean;
-  includeBookingTrend: boolean;
-  includeSatisfaction: boolean;
-  includeCSATDistribution: boolean;
-  includeCustomerFeedback: boolean;
-  includeAIPerformance: boolean;
-  includeAIPerformanceTrend: boolean;
-  includeTrafficSources: boolean;
-  includeTrafficSourceTrend: boolean;
-  includeTopPages: boolean;
-  includePageEngagement: boolean;
-  includePageDepth: boolean;
-  includeVisitorLocations: boolean;
-  includeVisitorCities: boolean;
-  includeLeadSourceBreakdown: boolean;
-  includeLeadConversionTrend: boolean;
-  includeAgentPerformance: boolean;
-  grouping: 'day' | 'week' | 'month';
-  includeKPIs: boolean;
-  includeCharts: boolean;
-  includeTables: boolean;
-}
-
-type DatePreset = 'today' | 'last7' | 'last30' | 'last60' | 'last90' | 'thisMonth' | 'lastMonth';
 type Step = 'configure' | 'schedule';
-
-// === Constants ===
-
-const DATE_PRESETS: { value: DatePreset; label: string }[] = [
-  { value: 'today', label: 'Today' },
-  { value: 'last7', label: 'Last 7 Days' },
-  { value: 'last30', label: 'Last 30 Days' },
-  { value: 'last60', label: 'Last 60 Days' },
-  { value: 'last90', label: 'Last 90 Days' },
-  { value: 'thisMonth', label: 'This Month' },
-  { value: 'lastMonth', label: 'Last Month' },
-];
-
-const DEFAULT_CONFIG: ReportConfig = {
-  format: 'pdf',
-  type: 'detailed',
-  includeConversations: true,
-  includeLeads: true,
-  includeUsageMetrics: false,
-  includeConversationFunnel: false,
-  includePeakActivity: false,
-  includeBookings: true,
-  includeBookingTrend: false,
-  includeSatisfaction: true,
-  includeCSATDistribution: false,
-  includeCustomerFeedback: false,
-  includeAIPerformance: true,
-  includeAIPerformanceTrend: false,
-  includeTrafficSources: false,
-  includeTrafficSourceTrend: false,
-  includeTopPages: false,
-  includePageEngagement: false,
-  includePageDepth: false,
-  includeVisitorLocations: false,
-  includeVisitorCities: false,
-  includeLeadSourceBreakdown: true,
-  includeLeadConversionTrend: false,
-  includeAgentPerformance: false,
-  grouping: 'day',
-  includeKPIs: true,
-  includeCharts: false,
-  includeTables: true,
-};
-
-const getDateRangeFromPreset = (preset: DatePreset): { start: Date; end: Date } => {
-  const today = new Date();
-  switch (preset) {
-    case 'today':
-      return { start: today, end: today };
-    case 'last7':
-      return { start: subDays(today, 7), end: today };
-    case 'last30':
-      return { start: subDays(today, 30), end: today };
-    case 'last60':
-      return { start: subDays(today, 60), end: today };
-    case 'last90':
-      return { start: subDays(today, 90), end: today };
-    case 'thisMonth':
-      return { start: startOfMonth(today), end: today };
-    case 'lastMonth': {
-      const lastMonth = subMonths(today, 1);
-      return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
-    }
-    default:
-      return { start: subDays(today, 30), end: today };
-  }
-};
 
 // === Component ===
 
@@ -165,7 +73,7 @@ export default function ReportBuilder() {
   const [step, setStep] = useState<Step>('configure');
 
   // === Config State ===
-  const [config, setConfig] = useState<ReportConfig>(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<ReportConfig>(DEFAULT_REPORT_CONFIG);
 
   // === Date State (stable references to prevent re-renders) ===
   const [datePreset, setDatePreset] = useState<DatePreset>('last30');

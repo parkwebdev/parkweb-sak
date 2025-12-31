@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChartCardHeader } from './ChartCardHeader';
 import { cn } from '@/lib/utils';
-import type { EngagementMetrics } from '@/hooks/useTrafficAnalytics';
+import type { EngagementMetrics } from '@/types/analytics';
 
 interface PageEngagementCardProps {
   engagement: EngagementMetrics;
