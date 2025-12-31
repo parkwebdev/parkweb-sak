@@ -1,8 +1,8 @@
 import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { Mail01, Bell01, Calendar, File02 } from '@untitledui/icons';
+import { Mail01, Bell01, Calendar, File02, Key01, CheckCircle } from '@untitledui/icons';
 
-export type EmailTemplateType = 'invitation' | 'notification' | 'booking' | 'report';
+export type EmailTemplateType = 'invitation' | 'notification' | 'booking' | 'report' | 'password-reset' | 'email-verification';
 
 interface TemplateItem {
   id: EmailTemplateType;
@@ -16,6 +16,8 @@ const TEMPLATES: TemplateItem[] = [
   { id: 'booking', label: 'Booking Confirmation', icon: Calendar, group: 'Transactional' },
   { id: 'notification', label: 'Notification', icon: Bell01, group: 'Notifications' },
   { id: 'report', label: 'Scheduled Report', icon: File02, group: 'Reports' },
+  { id: 'password-reset', label: 'Password Reset', icon: Key01, group: 'Auth' },
+  { id: 'email-verification', label: 'Email Verification', icon: CheckCircle, group: 'Auth' },
 ];
 
 interface EmailTemplateSidebarProps {
@@ -35,7 +37,7 @@ export function EmailTemplateSidebar({ activeTemplate, onTemplateChange }: Email
     return acc;
   }, {} as Record<string, TemplateItem[]>);
 
-  const groupOrder = ['Transactional', 'Notifications', 'Reports'];
+  const groupOrder = ['Auth', 'Transactional', 'Notifications', 'Reports'];
 
   return (
     <aside className="w-60 shrink-0 border-r border-border bg-card overflow-y-auto">
