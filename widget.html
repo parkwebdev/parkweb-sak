@@ -8,13 +8,13 @@
     <!-- Note: No frame-ancestors directive so widget can be embedded on any site -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' 'unsafe-inline';
+      script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
       img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://*;
-      connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co;
+      connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co https://challenges.cloudflare.com;
       media-src 'self' blob:;
-      frame-src 'self';
+      frame-src 'self' https://challenges.cloudflare.com;
       object-src 'none';
       base-uri 'self';
       upgrade-insecure-requests;
