@@ -8,11 +8,8 @@
  */
 
 import { useRef } from 'react';
-import { WidgetButton, WidgetSkeletonWelcome, WidgetSkeletonCard } from '../ui';
-import { X, ChevronRight, MessageChatCircle, BookOpen01, Zap } from '../icons';
-import { WidgetStarIcon } from '../icons/WidgetStarIcon';
-import { CSSAnimatedList } from '../CSSAnimatedList';
-import { CSSAnimatedItem } from '../CSSAnimatedItem';
+import { WidgetButton, WidgetSkeletonWelcome, WidgetSkeletonCard, CSSAnimatedList, CSSAnimatedItem } from '../ui';
+import { X, ChevronRight, MessageChatCircle, BookOpen01, Zap, WidgetStarIcon } from '../icons';
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
 import { generateGradientPalette, hexToRgb } from '@/lib/color-utils';
 import type { WidgetConfig } from '../api';

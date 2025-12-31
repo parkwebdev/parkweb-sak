@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { HomeNavIcon, ChatNavIcon, HelpNavIcon, NewsNavIcon } from '../NavIcons';
+import { HomeNavIcon, ChatNavIcon, HelpNavIcon, NewsNavIcon } from '../icons';
 import type { ViewType } from '../types';
 
 /** Props for the WidgetNav component */

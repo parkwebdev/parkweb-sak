@@ -9,12 +9,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { WidgetButton, WidgetInput, WidgetSkeletonArticleContent } from '../ui';
+import { WidgetButton, WidgetInput, WidgetSkeletonArticleContent, CSSAnimatedList, CSSAnimatedItem } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, ThumbsUp, ThumbsDown, CheckCircle } from '../icons';
-import { CSSAnimatedList } from '../CSSAnimatedList';
-import { CSSAnimatedItem } from '../CSSAnimatedItem';
 import { CategoryIcon } from '../category-icons';
 import { submitArticleFeedback } from '../api';
 import { getSessionId } from '../utils';

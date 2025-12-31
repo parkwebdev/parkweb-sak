@@ -46,3 +46,7 @@ export {
   WidgetSkeletonNewsItem,
   WidgetSkeletonConversationItem,
 } from './WidgetSkeleton';
+
+// Animation components (CSS-only staggered animations)
+export { CSSAnimatedList } from './CSSAnimatedList';
+export { CSSAnimatedItem } from './CSSAnimatedItem';
