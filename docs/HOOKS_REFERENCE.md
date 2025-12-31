@@ -496,6 +496,274 @@ const {
 
 ---
 
+### useCalendarEvents
+
+Manages calendar events for booking/scheduling. **Powered by React Query** with real-time updates.
+
+```tsx
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+
+const {
+  events,           // CalendarEvent[] - All calendar events
+  isLoading,        // boolean - Loading state
+  refetch,          // () => void - Trigger background refetch
+  invalidateEvents, // () => Promise<void> - Invalidate cache
+  cancelEvent,      // (eventId: string, reason?: string) => Promise<boolean>
+  completeEvent,    // (eventId: string) => Promise<boolean>
+  rescheduleEvent,  // (eventId: string, newStart: Date, newEnd: Date, reason?: string) => Promise<boolean>
+} = useCalendarEvents(options?: UseCalendarEventsOptions);
+```
+
+**Options:**
+```typescript
+interface UseCalendarEventsOptions {
+  agentId?: string;       // Filter by agent
+  locationId?: string;    // Filter by location
+  startDate?: Date;       // Filter events after date
+  endDate?: Date;         // Filter events before date
+  status?: string;        // Filter by status
+}
+```
+
+**CalendarEvent Interface:**
+```typescript
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+  visitorName: string | null;
+  visitorEmail: string | null;
+  visitorPhone: string | null;
+  locationId: string | null;
+  connectedAccountId: string;
+  externalEventId: string | null;
+  notes: string | null;
+  metadata: Record<string, any> | null;
+}
+```
+
+**Key Features:**
+- React Query caching with real-time updates
+- Supports filtering by agent, location, date range, and status
+- CRUD operations for event management
+- Integrates with connected calendar accounts
+
+**File**: `src/hooks/useCalendarEvents.ts`
+
+---
+
+### useConnectedAccounts
+
+Manages OAuth connected accounts (Google Calendar, Outlook Calendar). **Powered by React Query** with real-time updates.
+
+```tsx
+import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
+
+const {
+  accounts,           // ConnectedAccount[] - All connected accounts
+  loading,            // boolean - Loading state
+  disconnectAccount,  // (accountId: string) => Promise<boolean>
+  refreshTokens,      // (accountId: string) => Promise<boolean>
+  refetch,            // () => void - Trigger background refetch
+} = useConnectedAccounts(locationId?: string, agentId?: string);
+```
+
+**ConnectedAccount Interface:**
+```typescript
+interface ConnectedAccount {
+  id: string;
+  location_id: string | null;
+  agent_id: string;
+  user_id: string;
+  provider: 'google_calendar' | 'outlook_calendar';
+  account_email: string;
+  calendar_id: string | null;
+  calendar_name: string | null;
+  is_active: boolean;
+  last_synced_at: string | null;
+  sync_error: string | null;
+  webhook_channel_id: string | null;
+  webhook_resource_id: string | null;
+  webhook_expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+**Key Features:**
+- React Query caching with 1-minute stale time
+- Real-time updates via Supabase subscription
+- OAuth token refresh support
+- Webhook subscription tracking
+
+**File**: `src/hooks/useConnectedAccounts.ts`
+
+---
+
+### useProperties
+
+Manages property listings with location enrichment and validation statistics. **Powered by React Query** with real-time updates.
+
+```tsx
+import { useProperties } from '@/hooks/useProperties';
+
+const {
+  properties,              // Property[] - Raw properties
+  propertiesWithLocation,  // PropertyWithLocation[] - Properties with location data
+  uniqueLocations,         // LocationOption[] - Unique location options
+  validationStats,         // ValidationStats - Data quality metrics
+  propertyCounts,          // Map<string, number> - Count by location
+  loading,                 // boolean - Loading state
+  getPropertyCount,        // (locationName: string) => number
+  refetch,                 // () => void - Trigger background refetch
+} = useProperties(agentId?: string);
+```
+
+**Key Interfaces:**
+```typescript
+interface PropertyWithLocation {
+  id: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  price: number | null;
+  beds: number | null;
+  baths: number | null;
+  sqft: number | null;
+  status: 'available' | 'pending' | 'sold' | 'off_market' | null;
+  locationName: string | null;
+  locationId: string | null;
+}
+
+interface ValidationStats {
+  total: number;
+  withPrice: number;
+  withAddress: number;
+  withLocation: number;
+  pricePercentage: number;
+  addressPercentage: number;
+  locationPercentage: number;
+}
+```
+
+**Key Features:**
+- React Query caching with real-time updates
+- Enriches properties with location names
+- Calculates data quality validation statistics
+- Groups properties by location for counts
+
+**File**: `src/hooks/useProperties.ts`
+
+---
+
+### useWordPressConnection
+
+Manages WordPress API connection, testing, and community synchronization.
+
+```tsx
+import { useWordPressConnection } from '@/hooks/useWordPressConnection';
+
+const {
+  siteUrl,             // string | null - Configured WordPress URL
+  communityEndpoint,   // string | null - Community API endpoint
+  homeEndpoint,        // string | null - Home API endpoint
+  isConnected,         // boolean - Whether WordPress is connected
+  syncInterval,        // SyncInterval - Current sync interval
+  homeSyncInterval,    // SyncInterval - Home sync interval
+  lastSynced,          // Date | null - Last sync timestamp
+  communityCount,      // number - Number of synced communities
+  homeCount,           // number - Number of synced homes
+  
+  // State
+  isTesting,           // boolean - Connection test in progress
+  isSyncing,           // boolean - Sync in progress
+  isSaving,            // boolean - Save in progress
+  isDiscovering,       // boolean - Endpoint discovery in progress
+  testResult,          // TestResult | null - Last test result
+  discoveredEndpoints, // DiscoveredEndpoints | null - Found endpoints
+  
+  // Actions
+  discoverEndpoints,   // (url: string) => Promise<DiscoveredEndpoints | null>
+  testConnection,      // (url: string, endpoint?: string) => Promise<TestResult>
+  saveUrl,             // (url: string) => Promise<boolean>
+  saveConfig,          // (url: string) => Promise<boolean>
+  importCommunities,   // (url?: string, endpoint?: string) => Promise<SyncResult>
+  updateEndpoint,      // (type: 'community' | 'home', endpoint: string) => Promise<boolean>
+  updateSyncInterval,  // (type: 'community' | 'home', interval: string) => Promise<boolean>
+  disconnect,          // (deleteLocations?: boolean) => Promise<boolean>
+  clearTestResult,     // () => void
+} = useWordPressConnection({ agent, onSyncComplete? });
+```
+
+**Key Features:**
+- Tests WordPress REST API connectivity
+- Discovers available community/home endpoints
+- Imports communities as locations
+- Configurable sync intervals
+- Stores config in agent's deployment_config
+
+**File**: `src/hooks/useWordPressConnection.ts`
+
+---
+
+### useWordPressHomes
+
+Manages WordPress home/property data synchronization.
+
+```tsx
+import { useWordPressHomes } from '@/hooks/useWordPressHomes';
+
+const {
+  siteUrl,              // string | null - Configured WordPress URL
+  homeEndpoint,         // string | null - Home API endpoint
+  isConnected,          // boolean - Whether WordPress homes are connected
+  
+  // State
+  isTesting,            // boolean - Test in progress
+  isSyncing,            // boolean - Sync in progress
+  testResult,           // TestResult | null - Last test result
+  
+  // Actions
+  testHomesEndpoint,    // (url: string, endpoint?: string) => Promise<TestResult>
+  syncHomes,            // (url?: string, useAiExtraction?: boolean, endpoint?: string) => Promise<SyncResult>
+  clearTestResult,      // () => void
+} = useWordPressHomes({ agent, onSyncComplete? });
+```
+
+**TestResult Interface:**
+```typescript
+interface TestResult {
+  success: boolean;
+  message: string;
+  homeCount?: number;
+  sampleData?: any;
+}
+```
+
+**SyncResult Interface:**
+```typescript
+interface SyncResult {
+  success: boolean;
+  message: string;
+  created?: number;
+  updated?: number;
+  failed?: number;
+}
+```
+
+**Key Features:**
+- Tests WordPress homes endpoint connectivity
+- Syncs home listings as properties
+- Optional AI extraction for complex data
+- Integrates with knowledge sources for RAG
+
+**File**: `src/hooks/useWordPressHomes.ts`
+
+---
+
 ### useWebhooks
 
 **Powered by React Query** - Webhook data is cached and real-time updates via Supabase subscription automatically invalidate the cache.

@@ -117,9 +117,6 @@ verify_jwt = false
 [functions.translate-messages]
 verify_jwt = true
 
-[functions.get-mapbox-token]
-verify_jwt = true
-
 # Phase 2 & 3: Calendar Webhook Functions
 # Added December 2025 - Real-time calendar sync for accurate booking analytics
 
