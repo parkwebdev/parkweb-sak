@@ -91,11 +91,12 @@ src/widget/
 ├── types.ts                    # TypeScript interfaces and types
 ├── constants.ts                # CSS vars, position classes, lazy imports
 ├── api.ts                      # Widget API functions (Supabase, edge calls)
-├── icons.tsx                   # Tree-shaken icon exports (individual imports)
-├── NavIcons.tsx                # Navigation icons with fill animation
-├── CSSAnimatedItem.tsx         # CSS-only animated list item
-├── CSSAnimatedList.tsx         # CSS-only animated list container
 ├── category-icons.tsx          # Help category icon mapping
+├── icons/                      # Consolidated icon exports
+│   ├── index.ts                # Central export (re-exports all icons)
+│   ├── untitled-ui.ts          # Tree-shaken UntitledUI icons
+│   ├── NavIcons.tsx            # Navigation icons with fill animation
+│   └── WidgetStarIcon.tsx      # Custom star/sparkle icon
 ├── ui/                         # Lightweight UI components (no heavy deps)
 │   ├── index.ts                # Barrel exports
 │   ├── WidgetButton.tsx        # Button (CSS active:scale, no motion/react)
@@ -103,7 +104,9 @@ src/widget/
 │   ├── WidgetSelect.tsx        # Select (React Context, no @radix-ui)
 │   ├── WidgetAvatar.tsx        # Avatar (pure React, no @radix-ui)
 │   ├── WidgetCard.tsx          # Card (native div, no motion/react)
-│   └── WidgetSpinner.tsx       # Spinner (SVG + CSS animation)
+│   ├── WidgetSpinner.tsx       # Spinner (SVG + CSS animation)
+│   ├── CSSAnimatedList.tsx     # CSS-only animated list container
+│   └── CSSAnimatedItem.tsx     # CSS-only animated list item
 ├── hooks/                      # 18 custom hooks for state management
 │   ├── index.ts                # Barrel exports with JSDoc
 │   ├── useWidgetConfig.ts      # Config fetching and state

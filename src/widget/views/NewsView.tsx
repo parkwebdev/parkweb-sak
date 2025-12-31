@@ -10,9 +10,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from '../icons';
-import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback, WidgetSkeletonArticleContent } from '../ui';
-import { CSSAnimatedList } from '../CSSAnimatedList';
-import { CSSAnimatedItem } from '../CSSAnimatedItem';
+import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback, WidgetSkeletonArticleContent, CSSAnimatedList, CSSAnimatedItem } from '../ui';
 import type { WidgetConfig } from '../api';
 
 // Lazy-load DOMPurify (~8KB savings from initial load)
