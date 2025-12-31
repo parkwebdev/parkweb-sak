@@ -70,12 +70,33 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
     }
   };
 
-  // Simulate dark mode email client by injecting forced dark mode styles
-  // This overrides the @media (prefers-color-scheme: dark) with explicit styles
-  const getDarkModeHtml = () => {
-    if (!darkMode) return html;
-    
-    // Inject forced dark mode styles that override the email's classes
+  // Force light or dark mode by injecting explicit styles that override
+  // the email's @media (prefers-color-scheme: dark) queries
+  const getPreviewHtml = () => {
+    // Light mode colors (from email-templates.ts)
+    const lightModeStyles = `
+      <style type="text/css">
+        /* Force light mode - disable prefers-color-scheme and set explicit colors */
+        @media (prefers-color-scheme: dark) {
+          .email-bg, .email-card, .email-text, .email-text-muted, 
+          .email-border, .email-btn, .email-btn-text, .email-detail-bg {
+            /* Reset dark mode overrides */
+          }
+        }
+        .email-bg { background-color: #f5f5f5 !important; }
+        .email-card { background-color: #ffffff !important; }
+        .email-text { color: #171717 !important; }
+        .email-text-muted { color: #737373 !important; }
+        .email-border { border-color: #e5e5e5 !important; }
+        .email-btn { background-color: #171717 !important; }
+        .email-btn-text { color: #ffffff !important; }
+        .email-detail-bg { background-color: #f5f5f5 !important; }
+        body { background-color: #f5f5f5 !important; }
+        table.email-bg { background-color: #f5f5f5 !important; }
+      </style>
+    `;
+
+    // Dark mode colors (from email-templates.ts)
     const darkModeStyles = `
       <style type="text/css">
         /* Force dark mode - override all email template classes */
@@ -91,11 +112,12 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
         table.email-bg { background-color: #0a0a0a !important; }
       </style>
     `;
-    
-    return html.replace('</head>', `${darkModeStyles}</head>`);
+
+    const stylesToInject = darkMode ? darkModeStyles : lightModeStyles;
+    return html.replace('</head>', `${stylesToInject}</head>`);
   };
 
-  const previewHtml = getDarkModeHtml();
+  const previewHtml = getPreviewHtml();
 
   return (
     <Card className="overflow-hidden">
