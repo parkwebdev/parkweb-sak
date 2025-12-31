@@ -102,7 +102,7 @@ export const CSATDistributionCard = React.memo(function CSATDistributionCard({
           contextSummary={`${totalRatings.toLocaleString()} total rating${totalRatings !== 1 ? 's' : ''}`}
           rightSlot={
             <div className="flex items-center gap-1.5">
-              <Star01 size={16} className="text-yellow-500 fill-yellow-500" aria-hidden="true" />
+              <Star01 size={16} className="text-rating fill-rating" aria-hidden="true" />
               <span className="text-lg font-semibold text-foreground tabular-nums">
                 {averageRating.toFixed(1)}
               </span>

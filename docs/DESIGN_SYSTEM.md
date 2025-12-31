@@ -162,6 +162,7 @@ All colors are defined as HSL values in CSS custom properties for theme flexibil
 | `--warning-foreground` | `48 96% 5%` | Text on warning |
 | `--info` | Light: `221 83% 53%` / Dark: `217 91% 60%` | Informational |
 | `--info-foreground` | Light: `210 40% 98%` / Dark: `222 84% 5%` | Text on info |
+| `--rating` | Light: `45 93% 47%` / Dark: `45 93% 50%` | Star ratings, review scores |
 
 ### Status Badge Colors
 
