@@ -8,6 +8,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useNavigate } from 'react-router-dom';
 import { generateBeautifulPDF } from '@/lib/pdf-generator';
 import { generateCSVReport } from '@/lib/report-export';
@@ -66,6 +68,7 @@ type Step = 'configure' | 'schedule';
 export default function ReportBuilder() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const { createExport } = useReportExports();
   const { createReport } = useScheduledReports();
 
@@ -431,413 +434,422 @@ export default function ReportBuilder() {
         </div>
         {/* Content */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain">
-          <div className="p-4 space-y-5">
-            {step === 'configure' ? (
-              <>
-                {/* Date Range Pills */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Date Range</Label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {DATE_PRESETS.map((preset) => (
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={step}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              className="p-4 space-y-5"
+            >
+              {step === 'configure' ? (
+                <>
+                  {/* Date Range Pills */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Date Range</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DATE_PRESETS.map((preset) => (
+                        <button
+                          key={preset.value}
+                          type="button"
+                          onClick={() => handlePresetChange(preset.value)}
+                          aria-pressed={datePreset === preset.value}
+                          className={cn(
+                            "px-2.5 py-1 text-xs rounded-full border transition-colors",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            datePreset === preset.value
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-foreground border-border hover:bg-muted"
+                          )}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Grouping */}
+                    <div className="space-y-1.5 pt-2">
+                      <Label className="text-sm font-medium">Group Data By</Label>
+                      <Select
+                        value={config.grouping}
+                        onValueChange={(v) => updateConfig('grouping', v as 'day' | 'week' | 'month')}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="day">Daily</SelectItem>
+                          <SelectItem value="week">Weekly</SelectItem>
+                          <SelectItem value="month">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Format Selection */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Report Format</Label>
+                    <div className="flex gap-2">
                       <button
-                        key={preset.value}
                         type="button"
-                        onClick={() => handlePresetChange(preset.value)}
-                        aria-pressed={datePreset === preset.value}
+                        onClick={() => updateConfig('format', 'pdf')}
+                        aria-pressed={config.format === 'pdf'}
                         className={cn(
-                          "px-2.5 py-1 text-xs rounded-full border transition-colors",
+                          "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors flex-1",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          datePreset === preset.value
-                            ? "bg-primary text-primary-foreground border-primary"
+                          config.format === 'pdf'
+                            ? "bg-primary/5 text-foreground border-primary"
                             : "bg-background text-foreground border-border hover:bg-muted"
                         )}
                       >
-                        {preset.label}
+                        <PdfIcon className="h-5 w-5" />
+                        <span className="text-sm font-medium">PDF</span>
                       </button>
-                    ))}
-                  </div>
-
-                  {/* Grouping */}
-                  <div className="space-y-1.5 pt-2">
-                    <Label className="text-sm font-medium">Group Data By</Label>
-                    <Select
-                      value={config.grouping}
-                      onValueChange={(v) => updateConfig('grouping', v as 'day' | 'week' | 'month')}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="day">Daily</SelectItem>
-                        <SelectItem value="week">Weekly</SelectItem>
-                        <SelectItem value="month">Monthly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Format Selection */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Report Format</Label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateConfig('format', 'pdf')}
-                      aria-pressed={config.format === 'pdf'}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors flex-1",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        config.format === 'pdf'
-                          ? "bg-primary/5 text-foreground border-primary"
-                          : "bg-background text-foreground border-border hover:bg-muted"
-                      )}
-                    >
-                      <PdfIcon className="h-5 w-5" />
-                      <span className="text-sm font-medium">PDF</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateConfig('format', 'csv')}
-                      aria-pressed={config.format === 'csv'}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors flex-1",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        config.format === 'csv'
-                          ? "bg-primary/5 text-foreground border-primary"
-                          : "bg-background text-foreground border-border hover:bg-muted"
-                      )}
-                    >
-                      <CsvIcon className="h-5 w-5" />
-                      <span className="text-sm font-medium">CSV</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Data Categories */}
-                <div className="space-y-0">
-                  {/* Core Metrics */}
-                  <div className="py-4 space-y-2">
-                    <div className="flex items-center justify-between pb-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Core Metrics</p>
                       <button
                         type="button"
-                        onClick={() => {
-                          const keys = ['includeConversations', 'includeConversationFunnel', 'includePeakActivity', 'includeLeads', 'includeUsageMetrics'];
-                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
-                          toggleSection(keys, !allSelected);
-                        }}
-                        className="text-xs text-primary hover:underline"
+                        onClick={() => updateConfig('format', 'csv')}
+                        aria-pressed={config.format === 'csv'}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors flex-1",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          config.format === 'csv'
+                            ? "bg-primary/5 text-foreground border-primary"
+                            : "bg-background text-foreground border-border hover:bg-muted"
+                        )}
                       >
-                        {['includeConversations', 'includeConversationFunnel', 'includePeakActivity', 'includeLeads', 'includeUsageMetrics'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                        <CsvIcon className="h-5 w-5" />
+                        <span className="text-sm font-medium">CSV</span>
                       </button>
-                    </div>
-                    <div className="space-y-1.5">
-                      {[
-                        { key: 'includeConversations', label: 'Conversations' },
-                        { key: 'includeConversationFunnel', label: 'Conversation Funnel' },
-                        { key: 'includePeakActivity', label: 'Peak Activity Heatmap' },
-                        { key: 'includeLeads', label: 'Leads' },
-                        { key: 'includeUsageMetrics', label: 'Usage Metrics' },
-                      ].map(item => (
-                        <div key={item.key} className="flex items-center gap-2">
-                          <Checkbox
-                            id={item.key}
-                            checked={config[item.key as keyof ReportConfig] as boolean}
-                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                          />
-                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                        </div>
-                      ))}
                     </div>
                   </div>
 
-                  <Separator />
-
-                  {/* Business Outcomes */}
-                  <div className="py-4 space-y-2">
-                    <div className="flex items-center justify-between pb-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Business Outcomes</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const keys = ['includeBookings', 'includeBookingTrend', 'includeSatisfaction', 'includeCSATDistribution', 'includeCustomerFeedback', 'includeAIPerformance', 'includeAIPerformanceTrend'];
-                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
-                          toggleSection(keys, !allSelected);
-                        }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        {['includeBookings', 'includeBookingTrend', 'includeSatisfaction', 'includeCSATDistribution', 'includeCustomerFeedback', 'includeAIPerformance', 'includeAIPerformanceTrend'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
-                      </button>
+                  {/* Data Categories */}
+                  <div className="space-y-0">
+                    {/* Core Metrics */}
+                    <div className="py-4 space-y-2">
+                      <div className="flex items-center justify-between pb-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Core Metrics</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const keys = ['includeConversations', 'includeConversationFunnel', 'includePeakActivity', 'includeLeads', 'includeUsageMetrics'];
+                            const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                            toggleSection(keys, !allSelected);
+                          }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {['includeConversations', 'includeConversationFunnel', 'includePeakActivity', 'includeLeads', 'includeUsageMetrics'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {[
+                          { key: 'includeConversations', label: 'Conversations' },
+                          { key: 'includeConversationFunnel', label: 'Conversation Funnel' },
+                          { key: 'includePeakActivity', label: 'Peak Activity Heatmap' },
+                          { key: 'includeLeads', label: 'Leads' },
+                          { key: 'includeUsageMetrics', label: 'Usage Metrics' },
+                        ].map(item => (
+                          <div key={item.key} className="flex items-center gap-2">
+                            <Checkbox
+                              id={item.key}
+                              checked={config[item.key as keyof ReportConfig] as boolean}
+                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                            />
+                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      {[
-                        { key: 'includeBookings', label: 'Bookings by Location' },
-                        { key: 'includeBookingTrend', label: 'Booking Trend' },
-                        { key: 'includeSatisfaction', label: 'Satisfaction Ratings' },
-                        { key: 'includeCSATDistribution', label: 'CSAT Distribution' },
-                        { key: 'includeCustomerFeedback', label: 'Customer Feedback' },
-                        { key: 'includeAIPerformance', label: 'Ari Performance' },
-                        { key: 'includeAIPerformanceTrend', label: 'Ari Performance Trend' },
-                      ].map(item => (
-                        <div key={item.key} className="flex items-center gap-2">
+
+                    <Separator />
+
+                    {/* Business Outcomes */}
+                    <div className="py-4 space-y-2">
+                      <div className="flex items-center justify-between pb-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Business Outcomes</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const keys = ['includeBookings', 'includeBookingTrend', 'includeSatisfaction', 'includeCSATDistribution', 'includeCustomerFeedback', 'includeAIPerformance', 'includeAIPerformanceTrend'];
+                            const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                            toggleSection(keys, !allSelected);
+                          }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {['includeBookings', 'includeBookingTrend', 'includeSatisfaction', 'includeCSATDistribution', 'includeCustomerFeedback', 'includeAIPerformance', 'includeAIPerformanceTrend'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {[
+                          { key: 'includeBookings', label: 'Bookings by Location' },
+                          { key: 'includeBookingTrend', label: 'Booking Trend' },
+                          { key: 'includeSatisfaction', label: 'Satisfaction Ratings' },
+                          { key: 'includeCSATDistribution', label: 'CSAT Distribution' },
+                          { key: 'includeCustomerFeedback', label: 'Customer Feedback' },
+                          { key: 'includeAIPerformance', label: 'Ari Performance' },
+                          { key: 'includeAIPerformanceTrend', label: 'Ari Performance Trend' },
+                        ].map(item => (
+                          <div key={item.key} className="flex items-center gap-2">
+                            <Checkbox
+                              id={item.key}
+                              checked={config[item.key as keyof ReportConfig] as boolean}
+                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                            />
+                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Traffic Analytics */}
+                    <div className="py-4 space-y-2">
+                      <div className="flex items-center justify-between pb-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Traffic Analytics</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const keys = ['includeTrafficSources', 'includeTrafficSourceTrend', 'includeTopPages', 'includePageEngagement', 'includePageDepth', 'includeVisitorLocations', 'includeVisitorCities'];
+                            const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                            toggleSection(keys, !allSelected);
+                          }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {['includeTrafficSources', 'includeTrafficSourceTrend', 'includeTopPages', 'includePageEngagement', 'includePageDepth', 'includeVisitorLocations', 'includeVisitorCities'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {[
+                          { key: 'includeTrafficSources', label: 'Traffic Sources' },
+                          { key: 'includeTrafficSourceTrend', label: 'Traffic Source Trend' },
+                          { key: 'includeTopPages', label: 'Top Pages' },
+                          { key: 'includePageEngagement', label: 'Page Engagement' },
+                          { key: 'includePageDepth', label: 'Page Depth' },
+                          { key: 'includeVisitorLocations', label: 'Visitor Locations' },
+                          { key: 'includeVisitorCities', label: 'Top Cities' },
+                        ].map(item => (
+                          <div key={item.key} className="flex items-center gap-2">
+                            <Checkbox
+                              id={item.key}
+                              checked={config[item.key as keyof ReportConfig] as boolean}
+                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                            />
+                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Leads Analytics */}
+                    <div className="py-4 space-y-2">
+                      <div className="flex items-center justify-between pb-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Leads Analytics</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const keys = ['includeLeadSourceBreakdown', 'includeLeadConversionTrend'];
+                            const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                            toggleSection(keys, !allSelected);
+                          }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {['includeLeadSourceBreakdown', 'includeLeadConversionTrend'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {[
+                          { key: 'includeLeadSourceBreakdown', label: 'Lead Source Breakdown' },
+                          { key: 'includeLeadConversionTrend', label: 'Lead Conversion Trend' },
+                        ].map(item => (
+                          <div key={item.key} className="flex items-center gap-2">
+                            <Checkbox
+                              id={item.key}
+                              checked={config[item.key as keyof ReportConfig] as boolean}
+                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                            />
+                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Agent Data */}
+                    <div className="py-4 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide pb-2">Agent Data</p>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
                           <Checkbox
-                            id={item.key}
-                            checked={config[item.key as keyof ReportConfig] as boolean}
-                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                            id="includeAgentPerformance"
+                            checked={config.includeAgentPerformance}
+                            onCheckedChange={(checked) => updateConfig('includeAgentPerformance', !!checked)}
                           />
-                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                          <Label htmlFor="includeAgentPerformance" className="text-sm font-normal cursor-pointer">Agent Performance</Label>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <Separator />
+                    <Separator />
 
-                  {/* Traffic Analytics */}
-                  <div className="py-4 space-y-2">
-                    <div className="flex items-center justify-between pb-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Traffic Analytics</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const keys = ['includeTrafficSources', 'includeTrafficSourceTrend', 'includeTopPages', 'includePageEngagement', 'includePageDepth', 'includeVisitorLocations', 'includeVisitorCities'];
-                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
-                          toggleSection(keys, !allSelected);
-                        }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        {['includeTrafficSources', 'includeTrafficSourceTrend', 'includeTopPages', 'includePageEngagement', 'includePageDepth', 'includeVisitorLocations', 'includeVisitorCities'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
-                      </button>
-                    </div>
-                    <div className="space-y-1.5">
-                      {[
-                        { key: 'includeTrafficSources', label: 'Traffic Sources' },
-                        { key: 'includeTrafficSourceTrend', label: 'Traffic Source Trend' },
-                        { key: 'includeTopPages', label: 'Top Pages' },
-                        { key: 'includePageEngagement', label: 'Page Engagement' },
-                        { key: 'includePageDepth', label: 'Page Depth' },
-                        { key: 'includeVisitorLocations', label: 'Visitor Locations' },
-                        { key: 'includeVisitorCities', label: 'Top Cities' },
-                      ].map(item => (
-                        <div key={item.key} className="flex items-center gap-2">
-                          <Checkbox
-                            id={item.key}
-                            checked={config[item.key as keyof ReportConfig] as boolean}
-                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                          />
-                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Leads Analytics */}
-                  <div className="py-4 space-y-2">
-                    <div className="flex items-center justify-between pb-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Leads Analytics</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const keys = ['includeLeadSourceBreakdown', 'includeLeadConversionTrend'];
-                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
-                          toggleSection(keys, !allSelected);
-                        }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        {['includeLeadSourceBreakdown', 'includeLeadConversionTrend'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
-                      </button>
-                    </div>
-                    <div className="space-y-1.5">
-                      {[
-                        { key: 'includeLeadSourceBreakdown', label: 'Lead Source Breakdown' },
-                        { key: 'includeLeadConversionTrend', label: 'Lead Conversion Trend' },
-                      ].map(item => (
-                        <div key={item.key} className="flex items-center gap-2">
-                          <Checkbox
-                            id={item.key}
-                            checked={config[item.key as keyof ReportConfig] as boolean}
-                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                          />
-                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Agent Data */}
-                  <div className="py-4 space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide pb-2">Agent Data</p>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="includeAgentPerformance"
-                          checked={config.includeAgentPerformance}
-                          onCheckedChange={(checked) => updateConfig('includeAgentPerformance', !!checked)}
-                        />
-                        <Label htmlFor="includeAgentPerformance" className="text-sm font-normal cursor-pointer">Agent Performance</Label>
+                    {/* Export Options */}
+                    <div className="py-4 space-y-2">
+                      <div className="flex items-center justify-between pb-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Export Options</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const keys = ['includeKPIs', 'includeCharts', 'includeTables'];
+                            const allSelected = keys.every(k => config[k as keyof ReportConfig]);
+                            toggleSection(keys, !allSelected);
+                          }}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          {['includeKPIs', 'includeCharts', 'includeTables'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {[
+                          { key: 'includeKPIs', label: 'KPI Summary' },
+                          { key: 'includeCharts', label: 'Charts' },
+                          { key: 'includeTables', label: 'Data Tables' },
+                        ].map(item => (
+                          <div key={item.key} className="flex items-center gap-2">
+                            <Checkbox
+                              id={item.key}
+                              checked={config[item.key as keyof ReportConfig] as boolean}
+                              onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
+                            />
+                            <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
 
-                  <Separator />
-
-                  {/* Export Options */}
-                  <div className="py-4 space-y-2">
-                    <div className="flex items-center justify-between pb-2">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Export Options</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const keys = ['includeKPIs', 'includeCharts', 'includeTables'];
-                          const allSelected = keys.every(k => config[k as keyof ReportConfig]);
-                          toggleSection(keys, !allSelected);
-                        }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        {['includeKPIs', 'includeCharts', 'includeTables'].every(k => config[k as keyof ReportConfig]) ? 'Deselect all' : 'Select all'}
-                      </button>
-                    </div>
-                    <div className="space-y-1.5">
-                      {[
-                        { key: 'includeKPIs', label: 'KPI Summary' },
-                        { key: 'includeCharts', label: 'Charts' },
-                        { key: 'includeTables', label: 'Data Tables' },
-                      ].map(item => (
-                        <div key={item.key} className="flex items-center gap-2">
-                          <Checkbox
-                            id={item.key}
-                            checked={config[item.key as keyof ReportConfig] as boolean}
-                            onCheckedChange={(checked) => updateConfig(item.key as keyof ReportConfig, !!checked)}
-                          />
-                          <Label htmlFor={item.key} className="text-sm font-normal cursor-pointer">{item.label}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-              </>
-            ) : (
-              /* Schedule Step */
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="schedule-name">Report Name</Label>
-                  <Input
-                    id="schedule-name"
-                    placeholder="e.g., Weekly Team Summary"
-                    value={scheduleName}
-                    onChange={(e) => setScheduleName(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Frequency</Label>
-                  <Select value={frequency} onValueChange={(v: 'daily' | 'weekly' | 'monthly') => setFrequency(v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {frequency === 'weekly' && (
+                </>
+              ) : (
+                /* Schedule Step */
+                <>
                   <div className="space-y-2">
-                    <Label>Day of Week</Label>
-                    <Select value={dayOfWeek.toString()} onValueChange={(v) => setDayOfWeek(parseInt(v))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, i) => (
-                          <SelectItem key={i} value={i.toString()}>{day}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {frequency === 'monthly' && (
-                  <div className="space-y-2">
-                    <Label>Day of Month</Label>
-                    <Select value={dayOfMonth.toString()} onValueChange={(v) => setDayOfMonth(parseInt(v))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                          <SelectItem key={day} value={day.toString()}>{day}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="schedule-time">Time of Day</Label>
-                  <Input
-                    id="schedule-time"
-                    type="time"
-                    value={timeOfDay}
-                    onChange={(e) => setTimeOfDay(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="schedule-recipient">Email Recipients</Label>
-                  <div className="flex gap-2">
+                    <Label htmlFor="schedule-name">Report Name</Label>
                     <Input
-                      id="schedule-recipient"
-                      type="email"
-                      placeholder="email@example.com"
-                      value={recipientInput}
-                      onChange={(e) => setRecipientInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddRecipient();
-                        }
-                      }}
+                      id="schedule-name"
+                      placeholder="e.g., Weekly Team Summary"
+                      value={scheduleName}
+                      onChange={(e) => setScheduleName(e.target.value)}
                     />
-                    <Button type="button" variant="outline" onClick={handleAddRecipient}>Add</Button>
                   </div>
-                  {recipients.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {recipients.map((email) => (
-                        <Badge key={email} variant="secondary" className="gap-1">
-                          {email}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveRecipient(email)}
-                            className="ml-1 hover:text-destructive"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
+
+                  <div className="space-y-2">
+                    <Label>Frequency</Label>
+                    <Select value={frequency} onValueChange={(v: 'daily' | 'weekly' | 'monthly') => setFrequency(v)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {frequency === 'weekly' && (
+                    <div className="space-y-2">
+                      <Label>Day of Week</Label>
+                      <Select value={dayOfWeek.toString()} onValueChange={(v) => setDayOfWeek(parseInt(v))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, i) => (
+                            <SelectItem key={i} value={i.toString()}>{day}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
-                </div>
 
-                {/* Config Summary */}
-                <div className="rounded-lg border bg-muted/50 p-3 space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Report Configuration</p>
-                  <div className="text-sm space-y-0.5">
-                    <p><span className="text-muted-foreground">Format:</span> {config.format.toUpperCase()}</p>
-                    <p><span className="text-muted-foreground">Style:</span> {config.type.charAt(0).toUpperCase() + config.type.slice(1)}</p>
-                    <p><span className="text-muted-foreground">Date Range:</span> {DATE_PRESETS.find(p => p.value === datePreset)?.label}</p>
+                  {frequency === 'monthly' && (
+                    <div className="space-y-2">
+                      <Label>Day of Month</Label>
+                      <Select value={dayOfMonth.toString()} onValueChange={(v) => setDayOfMonth(parseInt(v))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                            <SelectItem key={day} value={day.toString()}>{day}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="schedule-time">Time of Day</Label>
+                    <Input
+                      id="schedule-time"
+                      type="time"
+                      value={timeOfDay}
+                      onChange={(e) => setTimeOfDay(e.target.value)}
+                    />
                   </div>
-                </div>
-              </>
-            )}
-          </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="schedule-recipient">Email Recipients</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="schedule-recipient"
+                        type="email"
+                        placeholder="email@example.com"
+                        value={recipientInput}
+                        onChange={(e) => setRecipientInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddRecipient();
+                          }
+                        }}
+                      />
+                      <Button type="button" variant="outline" onClick={handleAddRecipient}>Add</Button>
+                    </div>
+                    {recipients.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {recipients.map((email) => (
+                          <Badge key={email} variant="secondary" className="gap-1">
+                            {email}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveRecipient(email)}
+                              className="ml-1 hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Config Summary */}
+                  <div className="rounded-lg border bg-muted/50 p-3 space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Report Configuration</p>
+                    <div className="text-sm space-y-0.5">
+                      <p><span className="text-muted-foreground">Format:</span> {config.format.toUpperCase()}</p>
+                      <p><span className="text-muted-foreground">Style:</span> {config.type.charAt(0).toUpperCase() + config.type.slice(1)}</p>
+                      <p><span className="text-muted-foreground">Date Range:</span> {DATE_PRESETS.find(p => p.value === datePreset)?.label}</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Footer Actions */}
@@ -884,60 +896,110 @@ export default function ReportBuilder() {
 
       {/* Preview Area */}
       <main className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
-        {config.format === 'csv' ? (
-          /* CSV Preview Placeholder */
-          <div className="flex-1 flex items-center justify-center bg-muted/20">
-            <div className="text-center space-y-3 max-w-sm px-4">
-              <CsvIcon className="h-16 w-16 mx-auto text-muted-foreground/50" />
-              <div>
-                <p className="text-sm font-medium text-foreground">CSV Preview Not Available</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  CSV exports will include all selected data categories as a spreadsheet. 
-                  Click "Export Now" to download.
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* PDF Preview */
-          <>
-            {isDataLoading && (
-              <div className="flex-1 flex items-center justify-center" role="status" aria-live="polite">
-                <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                  <Loading02 className="h-8 w-8 animate-spin" aria-hidden="true" />
-                  <p className="text-sm">Loading analytics data...</p>
+        <AnimatePresence mode="wait" initial={false}>
+          {config.format === 'csv' ? (
+            /* CSV Preview Placeholder */
+            <motion.div
+              key="csv-preview"
+              initial={prefersReducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex-1 flex items-center justify-center bg-muted/20"
+            >
+              <div className="text-center space-y-3 max-w-sm px-4">
+                <CsvIcon className="h-16 w-16 mx-auto text-muted-foreground/50" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">CSV Preview Not Available</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    CSV exports will include all selected data categories as a spreadsheet. 
+                    Click "Export Now" to download.
+                  </p>
                 </div>
               </div>
-            )}
+            </motion.div>
+          ) : (
+            /* PDF Preview */
+            <motion.div
+              key="pdf-preview"
+              initial={prefersReducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {isDataLoading && (
+                  <motion.div
+                    key="loading-data"
+                    initial={prefersReducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex-1 flex items-center justify-center"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                      <Loading02 className="h-8 w-8 animate-spin" aria-hidden="true" />
+                      <p className="text-sm">Loading analytics data...</p>
+                    </div>
+                  </motion.div>
+                )}
 
-            {!isDataLoading && isGenerating && (
-              <div className="flex-1 flex items-center justify-center" role="status" aria-live="polite">
-                <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                  <Loading02 className="h-8 w-8 animate-spin" aria-hidden="true" />
-                  <p className="text-sm">Generating PDF preview...</p>
-                </div>
-              </div>
-            )}
+                {!isDataLoading && isGenerating && (
+                  <motion.div
+                    key="generating-pdf"
+                    initial={prefersReducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex-1 flex items-center justify-center"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                      <Loading02 className="h-8 w-8 animate-spin" aria-hidden="true" />
+                      <p className="text-sm">Generating PDF preview...</p>
+                    </div>
+                  </motion.div>
+                )}
 
-            {!isDataLoading && previewError && !isGenerating && (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3 text-destructive max-w-md text-center p-4">
-                  <p className="text-sm font-medium">Failed to generate preview</p>
-                  <p className="text-xs text-muted-foreground">{previewError}</p>
-                  <Button onClick={() => setRefreshKey(k => k + 1)} variant="outline" size="sm">
-                    Try Again
-                  </Button>
-                </div>
-              </div>
-            )}
+                {!isDataLoading && previewError && !isGenerating && (
+                  <motion.div
+                    key="error"
+                    initial={prefersReducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex-1 flex items-center justify-center"
+                  >
+                    <div className="flex flex-col items-center gap-3 text-destructive max-w-md text-center p-4">
+                      <p className="text-sm font-medium">Failed to generate preview</p>
+                      <p className="text-xs text-muted-foreground">{previewError}</p>
+                      <Button onClick={() => setRefreshKey(k => k + 1)} variant="outline" size="sm">
+                        Try Again
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
 
-            {!isDataLoading && pdfArrayBuffer && !isGenerating && !previewError && (
-              <div className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden">
-                <PdfJsViewer data={pdfArrayBuffer} initialScale={1.0} mode="all" />
-              </div>
-            )}
-          </>
-        )}
+                {!isDataLoading && pdfArrayBuffer && !isGenerating && !previewError && (
+                  <motion.div
+                    key="pdf-viewer"
+                    initial={prefersReducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden"
+                  >
+                    <PdfJsViewer data={pdfArrayBuffer} initialScale={1.0} mode="all" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
