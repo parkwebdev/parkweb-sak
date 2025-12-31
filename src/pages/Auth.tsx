@@ -54,6 +54,12 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [currentStep, setCurrentStep] = useState(0);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
+  // New state for password reset flow
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  
   const navigate = useNavigate();
   const { logAuthEvent } = useSecurityLog();
 
@@ -70,6 +76,8 @@ const Auth = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const emailParam = urlParams.get('email');
     const tabParam = urlParams.get('tab');
+    const typeParam = urlParams.get('type');
+    const hashFragment = window.location.hash;
     
     if (emailParam) {
       setEmail(emailParam);
@@ -78,7 +86,40 @@ const Auth = () => {
     if (tabParam === 'signup') {
       setActiveTab('signup');
     }
-  }, [navigate]);
+    
+    // Handle password reset callback (tab=reset)
+    if (tabParam === 'reset') {
+      setShowResetPassword(true);
+      setActiveTab('signin');
+    }
+    
+    // Handle email verification callback
+    if (typeParam === 'signup' || hashFragment.includes('access_token')) {
+      toast.success("Email verified!", { 
+        description: "Your account is now active. Please sign in." 
+      });
+    }
+
+    // Listen for PASSWORD_RECOVERY event from Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setShowResetPassword(true);
+        setShowForgotPassword(false);
+      }
+      
+      // If user is now signed in after PASSWORD_RECOVERY and password update
+      if (event === 'SIGNED_IN' && session && showResetPassword) {
+        // Password was successfully reset and user is now logged in
+        toast.success("Password updated!", { 
+          description: "You're now signed in with your new password." 
+        });
+        setShowResetPassword(false);
+        navigate('/');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, showResetPassword]);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -287,6 +328,55 @@ const Auth = () => {
     }
   };
 
+  // New handler for setting new password
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newPassword || !confirmNewPassword) {
+      toast.error("Error", { description: "Please fill in all fields" });
+      return;
+    }
+    
+    if (newPassword !== confirmNewPassword) {
+      toast.error("Error", { description: "Passwords do not match" });
+      return;
+    }
+    
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.isValid) {
+      toast.error("Password too weak", { description: passwordValidation.errors[0] });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      
+      if (error) {
+        toast.error("Failed to update password", { description: error.message });
+        return;
+      }
+      
+      toast.success("Password updated!", { 
+        description: "You can now sign in with your new password" 
+      });
+      
+      // Clear the reset state and password fields
+      setShowResetPassword(false);
+      setNewPassword('');
+      setConfirmNewPassword('');
+      
+      // Clear the URL parameter
+      window.history.replaceState({}, document.title, '/auth');
+      
+      // Navigate to home (user should now be logged in)
+      navigate('/');
+    } catch (error: unknown) {
+      toast.error("Error", { description: "An unexpected error occurred" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const CurrentStepIcon = activeTab === 'signup' ? stepIcons[currentStep] : Key01;
 
@@ -543,6 +633,89 @@ const Auth = () => {
     }
   };
 
+  // Render reset password form
+  const renderResetPasswordForm = () => (
+    <motion.div
+      key="reset-password"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
+    >
+      <div className="flex flex-col items-center gap-6 text-center">
+        <FeaturedIcon color="success" theme="modern" size="xl">
+          <Key01 />
+        </FeaturedIcon>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-semibold text-foreground">Set new password</h2>
+          <p className="text-sm text-muted-foreground">
+            Your new password must be different from previously used passwords
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSetNewPassword} className="flex flex-col gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="new-password">New password</Label>
+          <div className="relative">
+            <Input
+              id="new-password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={isLoading}
+              className="h-10 pr-10"
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+            </button>
+          </div>
+          {newPassword && <PasswordStrengthIndicator password={newPassword} className="mt-2" />}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirm-new-password">Confirm new password</Label>
+          <Input
+            id="confirm-new-password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Confirm new password"
+            value={confirmNewPassword}
+            onChange={(e) => setConfirmNewPassword(e.target.value)}
+            disabled={isLoading}
+            className="h-10"
+            autoComplete="new-password"
+          />
+        </div>
+
+        <Button type="submit" size="lg" className="w-full" loading={isLoading}>
+          Reset password
+        </Button>
+
+        <button 
+          type="button"
+          onClick={() => {
+            setShowResetPassword(false);
+            setNewPassword('');
+            setConfirmNewPassword('');
+            window.history.replaceState({}, document.title, '/auth');
+          }}
+          className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to sign in
+        </button>
+      </form>
+    </motion.div>
+  );
+
   return (
     <section className="grid min-h-screen grid-cols-1 bg-background lg:grid-cols-[400px_1fr]">
       {/* Left Sidebar - Progress (hidden on mobile) */}
@@ -554,16 +727,26 @@ const Auth = () => {
           </div>
           
           {/* Step Progress (only for signup) */}
-          {activeTab === 'signup' && (
+          {activeTab === 'signup' && !showResetPassword && (
             <StepProgress steps={signupSteps} currentStep={currentStep} className="pr-4" />
           )}
 
           {/* Sign in sidebar content */}
-          {activeTab === 'signin' && (
+          {activeTab === 'signin' && !showResetPassword && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-foreground">Welcome back</h2>
               <p className="text-sm text-muted-foreground">
                 Sign in to your account to continue where you left off.
+              </p>
+            </div>
+          )}
+
+          {/* Reset password sidebar content */}
+          {showResetPassword && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-foreground">Reset password</h2>
+              <p className="text-sm text-muted-foreground">
+                Create a new secure password for your account.
               </p>
             </div>
           )}
@@ -589,7 +772,9 @@ const Auth = () => {
 
           <div className="flex w-full max-w-sm flex-col gap-8 flex-1 justify-center">
             <AnimatePresence mode="wait">
-              {showForgotPassword ? (
+              {showResetPassword ? (
+                renderResetPasswordForm()
+              ) : showForgotPassword ? (
                 <motion.div
                   key="forgot-password"
                   initial={{ opacity: 0, x: 20 }}
@@ -766,14 +951,14 @@ const Auth = () => {
             </AnimatePresence>
 
             {/* Pagination Dots (signup only) */}
-            {activeTab === 'signup' && (
+            {activeTab === 'signup' && !showResetPassword && (
               <div className="flex justify-center mt-auto">
                 <PaginationDots total={4} current={currentStep} size="md" />
               </div>
             )}
 
             {/* Back to Sign In (signup only, except completion) */}
-            {activeTab === 'signup' && currentStep < 3 && (
+            {activeTab === 'signup' && currentStep < 3 && !showResetPassword && (
               <div className="text-center">
                 <span className="text-sm text-muted-foreground">Already have an account? </span>
                 <button 

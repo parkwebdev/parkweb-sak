@@ -132,3 +132,7 @@ schedule = "0 2 * * *"
 
 [functions.send-test-email]
 verify_jwt = true
+
+# Auth Emails - Custom branded templates for password reset, verification, welcome
+[functions.send-auth-email]
+verify_jwt = false
