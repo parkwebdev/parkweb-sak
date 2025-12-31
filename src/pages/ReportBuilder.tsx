@@ -32,7 +32,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -40,12 +39,11 @@ import { PdfJsViewer } from '@/components/pdf/PdfJsViewer';
 import { PdfIcon, CsvIcon } from '@/components/analytics/ExportIcons';
 import { cn } from '@/lib/utils';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
-import type { DateRange } from 'react-day-picker';
+
 
 import { 
   ArrowLeft, 
-  Calendar as CalendarIcon, 
-  X, 
+  X,
   Loading02,
   RefreshCcw01,
   Download02,
@@ -85,18 +83,19 @@ export interface ReportConfig {
   includeTables: boolean;
 }
 
-type DatePreset = 'today' | 'last7' | 'last30' | 'thisMonth' | 'lastMonth' | 'custom';
+type DatePreset = 'today' | 'last7' | 'last30' | 'last60' | 'last90' | 'thisMonth' | 'lastMonth';
 type Step = 'configure' | 'schedule';
 
 // === Constants ===
 
 const DATE_PRESETS: { value: DatePreset; label: string }[] = [
   { value: 'today', label: 'Today' },
-  { value: 'last7', label: 'Last 7 days' },
-  { value: 'last30', label: 'Last 30 days' },
-  { value: 'thisMonth', label: 'This month' },
-  { value: 'lastMonth', label: 'Last month' },
-  { value: 'custom', label: 'Custom' },
+  { value: 'last7', label: 'Last 7 Days' },
+  { value: 'last30', label: 'Last 30 Days' },
+  { value: 'last60', label: 'Last 60 Days' },
+  { value: 'last90', label: 'Last 90 Days' },
+  { value: 'thisMonth', label: 'This Month' },
+  { value: 'lastMonth', label: 'Last Month' },
 ];
 
 const DEFAULT_CONFIG: ReportConfig = {
@@ -139,6 +138,10 @@ const getDateRangeFromPreset = (preset: DatePreset): { start: Date; end: Date } 
       return { start: subDays(today, 7), end: today };
     case 'last30':
       return { start: subDays(today, 30), end: today };
+    case 'last60':
+      return { start: subDays(today, 60), end: today };
+    case 'last90':
+      return { start: subDays(today, 90), end: today };
     case 'thisMonth':
       return { start: startOfMonth(today), end: today };
     case 'lastMonth': {
@@ -191,21 +194,9 @@ export default function ReportBuilder() {
   // === Handle Preset Change (updates stable date state) ===
   const handlePresetChange = useCallback((preset: DatePreset) => {
     setDatePreset(preset);
-    if (preset !== 'custom') {
-      const { start, end } = getDateRangeFromPreset(preset);
-      setStartDate(start);
-      setEndDate(end);
-    }
-  }, []);
-
-  // === Handle Custom Date Range Change ===
-  const handleCustomDateChange = useCallback((range: DateRange | undefined) => {
-    if (range?.from) {
-      setStartDate(range.from);
-      if (range.to) {
-        setEndDate(range.to);
-      }
-    }
+    const { start, end } = getDateRangeFromPreset(preset);
+    setStartDate(start);
+    setEndDate(end);
   }, []);
 
   // === Toggle all items in a section ===
@@ -555,27 +546,6 @@ export default function ReportBuilder() {
                       </button>
                     ))}
                   </div>
-
-                  {datePreset === 'custom' && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="w-full justify-start text-left font-normal">
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {format(startDate, "LLL dd, y")} - {format(endDate, "LLL dd, y")}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="range"
-                          defaultMonth={startDate}
-                          selected={{ from: startDate, to: endDate }}
-                          onSelect={handleCustomDateChange}
-                          numberOfMonths={2}
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  )}
 
                   {/* Grouping */}
                   <div className="space-y-1.5 pt-2">
@@ -950,7 +920,7 @@ export default function ReportBuilder() {
                   <div className="text-sm space-y-0.5">
                     <p><span className="text-muted-foreground">Format:</span> {config.format.toUpperCase()}</p>
                     <p><span className="text-muted-foreground">Style:</span> {config.type.charAt(0).toUpperCase() + config.type.slice(1)}</p>
-                    <p><span className="text-muted-foreground">Date Range:</span> {datePreset === 'custom' ? 'Custom' : DATE_PRESETS.find(p => p.value === datePreset)?.label}</p>
+                    <p><span className="text-muted-foreground">Date Range:</span> {DATE_PRESETS.find(p => p.value === datePreset)?.label}</p>
                   </div>
                 </div>
               </>
