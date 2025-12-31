@@ -78,8 +78,9 @@ export function NotificationCenter({ onNotificationClick }: NotificationCenterPr
   const setupRealtimeSubscription = () => {
     if (!user) return;
 
+    // User-scoped channel name prevents cross-user collisions
     const channel = supabase
-      .channel('notifications')
+      .channel(`notifications-${user.id}`)
       .on(
         'postgres_changes',
         {

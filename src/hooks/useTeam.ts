@@ -111,9 +111,8 @@ export const useTeam = () => {
         };
       });
     },
-    realtime: {
-      table: 'profiles',
-    },
+    // NOTE: Realtime removed - profiles table has no filter for team membership
+    // so it was subscribing to ALL profile changes globally. React Query cache is sufficient.
     enabled: !!user,
     staleTime: 30000, // 30 seconds
   });

@@ -126,10 +126,8 @@ export const useSatisfactionAnalytics = (startDate: Date, endDate: Date, enabled
 
       return (data || []) as RawRating[];
     },
-    realtime: enabled && conversationIds.length > 0 ? {
-      table: 'conversation_ratings',
-      // Realtime will update on any rating change
-    } : undefined,
+    // NOTE: Realtime removed - conversation_ratings has no user_id column
+    // so we can't filter effectively. React Query cache + manual refetch is sufficient.
     enabled: enabled && !!user?.id && conversationIds.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
