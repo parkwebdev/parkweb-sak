@@ -34,6 +34,7 @@ export function DataTableColumnHeader<TData, TValue>({
   if (!column.getCanSort()) {
     return (
       <div className={cn(
+        'text-xs font-medium',
         isRightAligned && 'text-right',
         isCenterAligned && 'text-center',
         className
