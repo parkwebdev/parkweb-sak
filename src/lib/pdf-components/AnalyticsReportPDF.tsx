@@ -5,14 +5,15 @@
  * Uses PDF-native chart components for reliable vector rendering.
  */
 
-import { Document, Page, View, Text } from '@react-pdf/renderer';
+import { Document, Page, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
-import { styles, colors } from './styles';
+import { styles } from './styles';
 import { PDFHeader } from './PDFHeader';
 import { PDFFooter } from './PDFFooter';
 import { PDFKPICards } from './PDFKPICards';
 import { PDFTable } from './PDFTable';
 import { PDFSection } from './PDFSection';
+import { PDFExecutiveSummary } from './PDFExecutiveSummary';
 import { 
   PDFLineChart, 
   PDFBarChart, 
@@ -80,6 +81,9 @@ export function AnalyticsReportPDF({
         />
         
         <View style={styles.content} wrap>
+          {/* Executive Summary */}
+          <PDFExecutiveSummary data={data} />
+
           {/* KPIs */}
           {config.includeKPIs && (
             <PDFKPICards kpis={kpis} />
@@ -87,7 +91,10 @@ export function AnalyticsReportPDF({
 
           {/* Conversations */}
           {config.includeConversations && data.conversationStats?.length && (
-            <PDFSection title="Conversations">
+            <PDFSection 
+              title="Conversations"
+              description="Breakdown of conversation volume showing total, active, and closed conversations over the selected period."
+            >
               {config.includeCharts && (
                 <PDFLineChart
                   data={data.conversationStats}
@@ -114,7 +121,10 @@ export function AnalyticsReportPDF({
 
           {/* Conversation Funnel */}
           {config.includeConversationFunnel && data.conversationFunnel?.length && (
-            <PDFSection title="Conversation Funnel">
+            <PDFSection 
+              title="Conversation Funnel"
+              description="Visitor journey from initial engagement to lead conversion, showing drop-off at each stage."
+            >
               {config.includeCharts && (
                 <PDFHorizontalBarChart
                   data={data.conversationFunnel.map(s => ({ label: s.name, value: s.count }))}
@@ -142,7 +152,10 @@ export function AnalyticsReportPDF({
 
           {/* Peak Activity */}
           {config.includePeakActivity && data.peakActivity && (
-            <PDFSection title="Peak Activity">
+            <PDFSection 
+              title="Peak Activity"
+              description="Highest engagement periods showing when visitors are most active on your site."
+            >
               <PDFTable
                 columns={[
                   { key: 'metric', header: 'Metric' },
@@ -159,7 +172,10 @@ export function AnalyticsReportPDF({
 
           {/* Lead Activity */}
           {config.includeLeads && data.leadStats?.length && (
-            <PDFSection title="Lead Activity">
+            <PDFSection 
+              title="Lead Activity"
+              description="Lead generation trends showing how many new leads were captured over time."
+            >
               {config.includeCharts && (
                 <PDFLineChart
                   data={data.leadStats}
@@ -182,7 +198,10 @@ export function AnalyticsReportPDF({
 
           {/* Lead Source Breakdown */}
           {config.includeLeadSourceBreakdown && data.leadSourceBreakdown?.length && (
-            <PDFSection title="Lead Source Breakdown">
+            <PDFSection 
+              title="Lead Source Breakdown"
+              description="Distribution of leads by acquisition channel with conversion rates for each source."
+            >
               {config.includeCharts && (
                 <PDFPieChart
                   data={data.leadSourceBreakdown.map(s => ({ label: s.source, value: s.leads }))}
@@ -210,7 +229,10 @@ export function AnalyticsReportPDF({
 
           {/* Bookings */}
           {config.includeBookings && data.bookingStats?.length && (
-            <PDFSection title="Bookings">
+            <PDFSection 
+              title="Bookings"
+              description="Booking metrics by location showing confirmed, completed, and no-show appointments."
+            >
               {config.includeCharts && (
                 <PDFBarChart
                   data={data.bookingStats.map(s => ({ label: s.location, value: s.total }))}
@@ -239,7 +261,10 @@ export function AnalyticsReportPDF({
 
           {/* Booking Trend */}
           {config.includeBookingTrend && data.bookingTrend?.length && (
-            <PDFSection title="Booking Trend">
+            <PDFSection 
+              title="Booking Trend"
+              description="Booking activity over time showing confirmation, completion, and cancellation patterns."
+            >
               {config.includeCharts && (
                 <PDFBookingTrendChart data={data.bookingTrend} />
               )}
@@ -260,7 +285,10 @@ export function AnalyticsReportPDF({
 
           {/* Customer Satisfaction */}
           {config.includeSatisfaction && data.satisfactionStats && (
-            <PDFSection title="Customer Satisfaction">
+            <PDFSection 
+              title="Customer Satisfaction"
+              description="CSAT ratings distribution and average score from customer feedback surveys."
+            >
               {config.includeCharts && data.satisfactionStats.distribution?.length && (
                 <PDFPieChart
                   data={data.satisfactionStats.distribution.map(d => ({
@@ -286,7 +314,10 @@ export function AnalyticsReportPDF({
 
           {/* Recent Feedback */}
           {config.includeCustomerFeedback && data.recentFeedback?.length && (
-            <PDFSection title="Recent Feedback">
+            <PDFSection 
+              title="Recent Feedback"
+              description="Latest customer comments and ratings to identify trends in customer sentiment."
+            >
               <PDFTable
                 columns={[
                   { key: 'dateFormatted', header: 'Date' },
@@ -307,7 +338,10 @@ export function AnalyticsReportPDF({
 
           {/* AI Performance */}
           {config.includeAIPerformance && data.aiPerformanceStats && (
-            <PDFSection title="Ari Performance">
+            <PDFSection 
+              title="Ari Performance"
+              description="AI assistant metrics showing containment rate, resolution rate, and human escalation frequency."
+            >
               <PDFTable
                 columns={[
                   { key: 'metric', header: 'Metric' },
@@ -326,7 +360,10 @@ export function AnalyticsReportPDF({
 
           {/* Traffic Sources */}
           {config.includeTrafficSources && data.trafficSources?.length && (
-            <PDFSection title="Traffic Sources">
+            <PDFSection 
+              title="Traffic Sources"
+              description="Breakdown of website visitors by referral source showing where your traffic originates."
+            >
               {config.includeCharts && (
                 <PDFPieChart
                   data={data.trafficSources.slice(0, 8).map(s => ({ label: s.source, value: s.visitors }))}
@@ -353,14 +390,20 @@ export function AnalyticsReportPDF({
 
           {/* Traffic Source Trend */}
           {config.includeTrafficSourceTrend && data.trafficSourceTrend?.length && (
-            <PDFSection title="Traffic Source Trend">
+            <PDFSection 
+              title="Traffic Source Trend"
+              description="How traffic from different sources has changed over the selected time period."
+            >
               <PDFTrafficTrendChart data={data.trafficSourceTrend} />
             </PDFSection>
           )}
 
           {/* Top Pages */}
           {config.includeTopPages && data.topPages?.length && (
-            <PDFSection title="Top Pages">
+            <PDFSection 
+              title="Top Pages"
+              description="Most visited pages on your site with bounce rates and conversion metrics."
+            >
               {config.includeCharts && (
                 <PDFHorizontalBarChart
                   data={data.topPages.slice(0, 8).map(p => ({ 
@@ -391,7 +434,10 @@ export function AnalyticsReportPDF({
 
           {/* Page Engagement */}
           {config.includePageEngagement && data.pageEngagement && (
-            <PDFSection title="Page Engagement">
+            <PDFSection 
+              title="Page Engagement"
+              description="Overall site engagement metrics including bounce rate and average pages per session."
+            >
               <PDFTable
                 columns={[
                   { key: 'metric', header: 'Metric' },
@@ -409,7 +455,10 @@ export function AnalyticsReportPDF({
 
           {/* Page Depth */}
           {config.includePageDepth && data.pageDepthDistribution?.length && (
-            <PDFSection title="Page Depth Distribution">
+            <PDFSection 
+              title="Page Depth Distribution"
+              description="How many pages visitors view per session, indicating engagement depth."
+            >
               {config.includeCharts && (
                 <PDFBarChart
                   data={data.pageDepthDistribution.map(d => ({ label: d.depth, value: d.count }))}
@@ -435,7 +484,10 @@ export function AnalyticsReportPDF({
 
           {/* Visitor Locations */}
           {config.includeVisitorLocations && data.visitorLocations?.length && (
-            <PDFSection title="Visitor Locations">
+            <PDFSection 
+              title="Visitor Locations"
+              description="Geographic distribution of website visitors by country."
+            >
               {config.includeCharts && (
                 <PDFHorizontalBarChart
                   data={data.visitorLocations.slice(0, 10).map(l => ({ label: l.country, value: l.visitors }))}
@@ -461,7 +513,10 @@ export function AnalyticsReportPDF({
 
           {/* Visitor Cities */}
           {config.includeVisitorCities && data.visitorCities?.length && (
-            <PDFSection title="Top Cities">
+            <PDFSection 
+              title="Top Cities"
+              description="Most common cities your visitors are located in."
+            >
               {config.includeTables && (
                 <PDFTable
                   columns={[
@@ -477,7 +532,10 @@ export function AnalyticsReportPDF({
 
           {/* Lead Conversion Trend */}
           {config.includeLeadConversionTrend && data.leadConversionTrend?.length && (
-            <PDFSection title="Lead Conversion Trend">
+            <PDFSection 
+              title="Lead Conversion Trend"
+              description="Lead status progression over time showing how leads move through your pipeline."
+            >
               {config.includeTables && (
                 <PDFTable
                   columns={[
@@ -497,7 +555,10 @@ export function AnalyticsReportPDF({
 
           {/* CSAT Distribution */}
           {config.includeCSATDistribution && data.csatDistribution?.length && (
-            <PDFSection title="CSAT Rating Distribution">
+            <PDFSection 
+              title="CSAT Rating Distribution"
+              description="Breakdown of customer satisfaction scores by rating level."
+            >
               {config.includeCharts && (
                 <PDFBarChart
                   data={data.csatDistribution.map(d => ({ label: `${d.rating} Star`, value: d.count }))}
@@ -524,7 +585,10 @@ export function AnalyticsReportPDF({
 
           {/* AI Performance Trend */}
           {config.includeAIPerformanceTrend && data.aiPerformanceTrend?.length && (
-            <PDFSection title="AI Performance Trend">
+            <PDFSection 
+              title="AI Performance Trend"
+              description="How Ari's containment and resolution rates have changed over time."
+            >
               {config.includeCharts && (
                 <PDFLineChart
                   data={data.aiPerformanceTrend}
@@ -553,7 +617,10 @@ export function AnalyticsReportPDF({
 
           {/* Usage Metrics */}
           {config.includeUsageMetrics && data.usageMetrics?.length && (
-            <PDFSection title="Usage Metrics">
+            <PDFSection 
+              title="Usage Metrics"
+              description="Platform usage statistics including conversations, messages, and API activity."
+            >
               {config.includeCharts && (
                 <PDFLineChart
                   data={data.usageMetrics}
@@ -580,7 +647,10 @@ export function AnalyticsReportPDF({
 
           {/* Agent Performance */}
           {config.includeAgentPerformance && data.agentPerformance?.length && (
-            <PDFSection title="Agent Performance">
+            <PDFSection 
+              title="Agent Performance"
+              description="Ari's performance metrics including handled conversations and resolution capabilities."
+            >
               {config.includeTables && (
                 <PDFTable
                   columns={[
