@@ -39,7 +39,7 @@ import { useRef } from 'react';
  *   fetchData(options);
  * }, [options]); // Won't cause infinite loops
  */
-export function useStableObject<T extends Record<string, unknown>>(obj: T): T {
+export function useStableObject<T extends object>(obj: T): T {
   const ref = useRef<T>(obj);
   const prevKeyRef = useRef<string>('');
   
