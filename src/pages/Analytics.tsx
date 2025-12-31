@@ -137,7 +137,7 @@ function Analytics() {
               bookingsByLocation={data.bookingStats?.byLocation ?? []}
               bookingTrendData={data.bookingStats?.trend ?? []}
               bookingTrendValue={data.bookingTrendValue}
-              bookingLoading={data.bookingLoading}
+              loading={data.bookingLoading}
             />
           )}
 

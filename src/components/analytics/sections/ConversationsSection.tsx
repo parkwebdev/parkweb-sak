@@ -67,6 +67,7 @@ export function ConversationsSection({
           >
             <ConversationChart 
               data={conversationStats.map(s => ({ date: s.date, total: s.total, active: s.active, closed: s.closed }))} 
+              loading={loading}
               trendValue={conversationTrendValue} 
               trendPeriod="this month" 
             />
