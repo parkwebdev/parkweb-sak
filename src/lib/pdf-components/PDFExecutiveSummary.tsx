@@ -31,14 +31,15 @@ const summaryStyles = StyleSheet.create({
     marginBottom: SPACING.MD,
   },
   
-  insightsGrid: {
+  metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: SPACING.SM,
+    marginBottom: SPACING.MD,
   },
 
-  insightCard: {
-    width: '48%',
+  metricCard: {
+    width: '31%',
     backgroundColor: colors.white,
     borderRadius: 6,
     padding: SPACING.MD,
@@ -47,7 +48,7 @@ const summaryStyles = StyleSheet.create({
     marginBottom: SPACING.SM,
   },
 
-  insightLabel: {
+  metricLabel: {
     fontSize: FONT_SIZE.XS,
     color: colors.muted,
     marginBottom: SPACING.XS,
@@ -55,15 +56,27 @@ const summaryStyles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  insightValue: {
-    fontSize: FONT_SIZE.MD,
-    fontWeight: 600,
+  metricValue: {
+    fontSize: FONT_SIZE.XXL,
+    fontWeight: 700,
     color: colors.primary,
   },
 
-  insightSubtext: {
+  metricSubtext: {
     fontSize: FONT_SIZE.XS,
     color: colors.secondary,
+    marginTop: SPACING.XS,
+  },
+
+  metricChangePositive: {
+    fontSize: FONT_SIZE.XS,
+    color: colors.success,
+    marginTop: SPACING.XS,
+  },
+
+  metricChangeNegative: {
+    fontSize: FONT_SIZE.XS,
+    color: colors.danger,
     marginTop: SPACING.XS,
   },
 
@@ -112,6 +125,8 @@ export function PDFExecutiveSummary({ data }: PDFExecutiveSummaryProps) {
   // AI Performance
   const containmentRate = data.aiPerformanceStats?.containment_rate ?? 0;
   const resolutionRate = data.aiPerformanceStats?.resolution_rate ?? 0;
+  const aiHandled = data.aiPerformanceStats?.ai_handled ?? 0;
+  const humanTakeover = data.aiPerformanceStats?.human_takeover ?? 0;
   
   // Satisfaction
   const avgRating = data.satisfactionStats?.average_rating ?? 0;
@@ -119,33 +134,68 @@ export function PDFExecutiveSummary({ data }: PDFExecutiveSummaryProps) {
 
   // Traffic
   const topSource = data.trafficSources?.[0];
+  const totalVisitors = data.trafficSources?.reduce((sum, s) => sum + s.visitors, 0) ?? 0;
   
   // Top page
   const topPage = data.topPages?.[0];
 
+  // Bookings
+  const totalBookings = data.bookingStats?.reduce((sum, s) => sum + s.total, 0) ?? 0;
+  const avgShowRate = data.bookingStats?.length 
+    ? Math.round(data.bookingStats.reduce((sum, s) => sum + s.show_rate, 0) / data.bookingStats.length)
+    : 0;
+
+  // Page engagement
+  const bounceRate = data.pageEngagement?.bounceRate ?? 0;
+  const avgPagesPerSession = data.pageEngagement?.avgPagesPerSession ?? 0;
+
   // Build highlights based on available data
   const highlights: string[] = [];
   
-  if (totalConversations > 0) {
-    highlights.push(`${totalConversations.toLocaleString()} total conversations with a ${conversionRate.toFixed(1)}% lead conversion rate.`);
+  if (totalConversations > 0 && totalLeads > 0) {
+    highlights.push(`Generated ${totalLeads.toLocaleString()} leads from ${totalConversations.toLocaleString()} conversations (${conversionRate.toFixed(1)}% conversion rate).`);
   }
   
   if (containmentRate > 0) {
-    highlights.push(`Ari handled ${containmentRate}% of conversations autonomously with ${resolutionRate}% resolution rate.`);
+    highlights.push(`Ari autonomously handled ${containmentRate}% of conversations with a ${resolutionRate}% resolution rate.`);
+  }
+
+  if (humanTakeover > 0 && aiHandled > 0) {
+    const escalationRate = ((humanTakeover / (aiHandled + humanTakeover)) * 100).toFixed(1);
+    highlights.push(`Human escalation rate was ${escalationRate}% (${humanTakeover.toLocaleString()} conversations required human intervention).`);
   }
   
   if (avgRating > 0 && totalRatings > 0) {
-    highlights.push(`Customer satisfaction averaged ${avgRating.toFixed(1)}/5 across ${totalRatings.toLocaleString()} ratings.`);
+    highlights.push(`Customer satisfaction score: ${avgRating.toFixed(1)}/5 based on ${totalRatings.toLocaleString()} feedback submissions.`);
   }
   
-  if (topSource) {
-    highlights.push(`${topSource.source} was the top traffic source with ${topSource.percentage}% of visitors.`);
+  if (topSource && totalVisitors > 0) {
+    highlights.push(`Top traffic source: ${topSource.source} drove ${topSource.percentage}% of ${totalVisitors.toLocaleString()} total visitors.`);
   }
   
   if (topPage && topPage.visits > 0) {
-    const pageName = topPage.page.length > 40 ? topPage.page.substring(0, 37) + '...' : topPage.page;
-    highlights.push(`Most visited page: "${pageName}" with ${topPage.visits.toLocaleString()} visits.`);
+    const pageName = topPage.page.length > 35 ? topPage.page.substring(0, 32) + '...' : topPage.page;
+    highlights.push(`Best performing page: "${pageName}" with ${topPage.visits.toLocaleString()} visits and ${topPage.bounce_rate}% bounce rate.`);
   }
+
+  if (totalBookings > 0) {
+    highlights.push(`${totalBookings.toLocaleString()} total bookings with ${avgShowRate}% average show rate.`);
+  }
+
+  if (bounceRate > 0) {
+    highlights.push(`Site engagement: ${bounceRate.toFixed(1)}% bounce rate with ${avgPagesPerSession.toFixed(1)} avg pages per session.`);
+  }
+
+  const formatChange = (change: number | null | undefined) => {
+    if (change === null || change === undefined) return null;
+    return {
+      text: `${change > 0 ? '+' : ''}${change.toFixed(1)}% vs prev`,
+      isPositive: change >= 0,
+    };
+  };
+
+  const conversationsChange = formatChange(data.conversationsChange);
+  const leadsChange = formatChange(data.leadsChange);
 
   return (
     <View style={summaryStyles.container} wrap={false}>
@@ -154,38 +204,56 @@ export function PDFExecutiveSummary({ data }: PDFExecutiveSummaryProps) {
         Key performance highlights from the selected period
       </Text>
       
-      <View style={summaryStyles.insightsGrid}>
-        <View style={summaryStyles.insightCard}>
-          <Text style={summaryStyles.insightLabel}>Conversations</Text>
-          <Text style={summaryStyles.insightValue}>{totalConversations.toLocaleString()}</Text>
-          {data.conversationsChange !== undefined && data.conversationsChange !== null && (
-            <Text style={summaryStyles.insightSubtext}>
-              {data.conversationsChange > 0 ? '+' : ''}{data.conversationsChange.toFixed(1)}% vs previous period
+      {/* Primary Metrics Row */}
+      <View style={summaryStyles.metricsGrid}>
+        <View style={summaryStyles.metricCard}>
+          <Text style={summaryStyles.metricLabel}>Conversations</Text>
+          <Text style={summaryStyles.metricValue}>{totalConversations.toLocaleString()}</Text>
+          {conversationsChange && (
+            <Text style={conversationsChange.isPositive ? summaryStyles.metricChangePositive : summaryStyles.metricChangeNegative}>
+              {conversationsChange.text}
             </Text>
           )}
         </View>
 
-        <View style={summaryStyles.insightCard}>
-          <Text style={summaryStyles.insightLabel}>Leads Generated</Text>
-          <Text style={summaryStyles.insightValue}>{totalLeads.toLocaleString()}</Text>
-          {data.leadsChange !== undefined && data.leadsChange !== null && (
-            <Text style={summaryStyles.insightSubtext}>
-              {data.leadsChange > 0 ? '+' : ''}{data.leadsChange.toFixed(1)}% vs previous period
+        <View style={summaryStyles.metricCard}>
+          <Text style={summaryStyles.metricLabel}>Leads Generated</Text>
+          <Text style={summaryStyles.metricValue}>{totalLeads.toLocaleString()}</Text>
+          {leadsChange && (
+            <Text style={leadsChange.isPositive ? summaryStyles.metricChangePositive : summaryStyles.metricChangeNegative}>
+              {leadsChange.text}
             </Text>
           )}
         </View>
 
-        <View style={summaryStyles.insightCard}>
-          <Text style={summaryStyles.insightLabel}>Conversion Rate</Text>
-          <Text style={summaryStyles.insightValue}>{conversionRate.toFixed(1)}%</Text>
-          <Text style={summaryStyles.insightSubtext}>Visitor to lead conversion</Text>
+        <View style={summaryStyles.metricCard}>
+          <Text style={summaryStyles.metricLabel}>Conversion Rate</Text>
+          <Text style={summaryStyles.metricValue}>{conversionRate.toFixed(1)}%</Text>
+          <Text style={summaryStyles.metricSubtext}>Visitor → Lead</Text>
         </View>
+      </View>
 
-        <View style={summaryStyles.insightCard}>
-          <Text style={summaryStyles.insightLabel}>Customer Satisfaction</Text>
-          <Text style={summaryStyles.insightValue}>{avgRating > 0 ? `${avgRating.toFixed(1)}/5` : 'N/A'}</Text>
+      {/* Secondary Metrics Row */}
+      <View style={summaryStyles.metricsGrid}>
+        <View style={summaryStyles.metricCard}>
+          <Text style={summaryStyles.metricLabel}>Customer Satisfaction</Text>
+          <Text style={summaryStyles.metricValue}>{avgRating > 0 ? `${avgRating.toFixed(1)}` : 'N/A'}</Text>
           {totalRatings > 0 && (
-            <Text style={summaryStyles.insightSubtext}>Based on {totalRatings.toLocaleString()} ratings</Text>
+            <Text style={summaryStyles.metricSubtext}>{totalRatings.toLocaleString()} ratings</Text>
+          )}
+        </View>
+
+        <View style={summaryStyles.metricCard}>
+          <Text style={summaryStyles.metricLabel}>AI Containment</Text>
+          <Text style={summaryStyles.metricValue}>{containmentRate > 0 ? `${containmentRate}%` : 'N/A'}</Text>
+          <Text style={summaryStyles.metricSubtext}>Handled by Ari</Text>
+        </View>
+
+        <View style={summaryStyles.metricCard}>
+          <Text style={summaryStyles.metricLabel}>Total Visitors</Text>
+          <Text style={summaryStyles.metricValue}>{totalVisitors.toLocaleString()}</Text>
+          {topSource && (
+            <Text style={summaryStyles.metricSubtext}>Top: {topSource.source}</Text>
           )}
         </View>
       </View>
@@ -193,7 +261,7 @@ export function PDFExecutiveSummary({ data }: PDFExecutiveSummaryProps) {
       {highlights.length > 0 && (
         <View style={summaryStyles.highlightsSection}>
           <Text style={summaryStyles.highlightsTitle}>Key Insights</Text>
-          {highlights.slice(0, 5).map((highlight, index) => (
+          {highlights.slice(0, 6).map((highlight, index) => (
             <View style={summaryStyles.highlight} key={index}>
               <Text style={summaryStyles.bullet}>•</Text>
               <Text style={summaryStyles.highlightText}>{highlight}</Text>
