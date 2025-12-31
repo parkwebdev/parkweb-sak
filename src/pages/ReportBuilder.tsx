@@ -417,9 +417,9 @@ export default function ReportBuilder() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/analytics')}
+            onClick={() => navigate('/analytics?tab=reports')}
             className="h-8 w-8"
-            aria-label="Back to analytics"
+            aria-label="Back to reports"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
