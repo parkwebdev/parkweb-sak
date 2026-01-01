@@ -18,6 +18,7 @@ import { Users01 } from '@untitledui/icons';
 interface TeamMembersTableProps {
   teamMembers: TeamMember[];
   currentUserId?: string;
+  currentUserRole?: string;
   canManageRoles: boolean;
   onEditRole: (member: TeamMember) => void;
   onEditProfile?: (member: TeamMember) => void;
@@ -28,6 +29,7 @@ interface TeamMembersTableProps {
 export const TeamMembersTable = React.memo(function TeamMembersTable({
   teamMembers,
   currentUserId,
+  currentUserRole,
   canManageRoles,
   onEditRole,
   onEditProfile,
@@ -38,12 +40,13 @@ export const TeamMembersTable = React.memo(function TeamMembersTable({
     () =>
       createTeamColumns({
         currentUserId,
+        currentUserRole,
         canManageRoles,
         onEditRole,
         onEditProfile,
         onRemove,
       }),
-    [currentUserId, canManageRoles, onEditRole, onEditProfile, onRemove]
+    [currentUserId, currentUserRole, canManageRoles, onEditRole, onEditProfile, onRemove]
   );
 
   const table = useReactTable({
