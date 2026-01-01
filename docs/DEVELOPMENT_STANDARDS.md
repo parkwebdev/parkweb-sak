@@ -58,6 +58,48 @@ export function useMyFeature() {
 | User Data | `user.id` | Profile, preferences, notification settings |
 | Agent Data | `agentId` (inherits) | Tools, calendars, properties, help articles |
 
+### Common Mistakes
+
+```typescript
+// ❌ WRONG: Using user.id for account data
+const { user } = useAuth();
+await supabase.from('leads').insert({ user_id: user.id, ... });
+// Creates data under team member, not account owner!
+
+// ✅ CORRECT: Using accountOwnerId
+const { accountOwnerId } = useAccountOwnerId();
+await supabase.from('leads').insert({ user_id: accountOwnerId, ... });
+
+// ❌ WRONG: Missing accountOwnerId in query key
+queryKey: ['leads', status]
+// Cache won't update properly when switching accounts
+
+// ✅ CORRECT: Include accountOwnerId
+queryKey: ['leads', accountOwnerId, status]
+```
+
+### Adding New Hooks Checklist
+
+- [ ] Import `useAccountOwnerId` hook
+- [ ] Use `accountOwnerId` for all SELECT queries
+- [ ] Use `accountOwnerId` for INSERT operations
+- [ ] Include `accountOwnerId` in query keys
+- [ ] Set `enabled: !!accountOwnerId`
+- [ ] Combine loading states (`isLoading || ownerLoading`)
+- [ ] Add `onSuccess` invalidation with correct query key
+
+### RLS Policies
+
+Database RLS uses `has_account_access()` to verify access:
+
+```sql
+CREATE POLICY "Users can view accessible leads"
+ON public.leads FOR SELECT
+USING (has_account_access(user_id));
+```
+
+The function checks if current user is the account owner OR a team member. RLS is a safety net—always use `accountOwnerId` in queries for clarity and performance.
+
 ---
 
 ## 2. Permission Guards
@@ -179,6 +221,52 @@ fi
 | `manage_team` | - | Invite, role management |
 | `view_billing` | /settings | Billing tabs |
 | `manage_billing` | - | Upgrade, manage subscription |
+
+### Adding Permission Guards Checklist
+
+- [ ] Identify the permission required (or create new one)
+- [ ] Guard routes in `App.tsx` with `PermissionGuard`
+- [ ] Hide/disable buttons without permission
+- [ ] Disable drag-and-drop without permission
+- [ ] Disable form edits without permission
+- [ ] Hide sidebar items without view permission
+- [ ] Pass `canManage` prop to reusable components
+- [ ] Test as team member with limited permissions
+
+---
+
+## 6. Implemented Guards
+
+### Routes (`App.tsx`)
+All protected routes wrapped with `PermissionGuard` using `getGuardProps()`.
+
+### Sidebar (`Sidebar.tsx`)
+Nav items filtered based on `view_*` permissions.
+
+### Settings (`SettingsLayout.tsx`)
+Tabs filtered by permission; invite button requires `manage_team`.
+
+### Conversations (`ChatHeader.tsx`)
+Takeover/close/reopen require `manage_conversations`; input disabled without permission.
+
+### Leads (`Leads.tsx`, `LeadsKanbanBoard.tsx`, `LeadsTable.tsx`)
+- Create/delete require `manage_leads`
+- Stage dropdowns disabled without permission
+- Kanban drag-drop disabled without permission
+- Row selection disabled without permission
+- Bulk actions hidden without permission
+
+### Planner (`Planner.tsx`, `EventDetailDialog.tsx`)
+Add event requires `manage_bookings`; drag/resize disabled without permission.
+
+### Ari (`AriSectionMenu.tsx`, `AgentApiKeyManager.tsx`)
+Sections filtered by permission; API key actions require `manage_ari`.
+
+### Role Management (`RoleManagementDialog.tsx`)
+- Role dropdown only visible for admins editing others
+- Users editing themselves see read-only display
+- Backend checks `canManageRoles` before database calls
+- RLS on `user_roles`: SELECT (own/admin), UPDATE (admin), INSERT (super_admin)
 
 ---
 
