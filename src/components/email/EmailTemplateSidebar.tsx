@@ -138,7 +138,7 @@ export function EmailTemplateSidebar({
       </div>
 
       {/* Preview Controls */}
-      <div className="px-3 py-4 space-y-3">
+      <div className="p-3 space-y-3">
         {/* Width Toggle */}
         <div className="space-y-1.5">
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Device</span>
@@ -251,7 +251,7 @@ export function EmailTemplateSidebar({
 
           return (
             <div key={group}>
-              <h3 className="px-2 py-1 text-2xs font-medium text-muted-foreground uppercase tracking-wider">
+              <h3 className="px-2 py-1 text-2xs font-medium text-muted-foreground dark:text-foreground/70 uppercase tracking-wider">
                 {group}
               </h3>
               <div className="mt-1 space-y-0.5">
