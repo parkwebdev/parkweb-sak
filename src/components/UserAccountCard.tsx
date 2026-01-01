@@ -16,12 +16,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SkeletonUserCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { Badge } from '@/components/ui/badge';
 import { useSidebar } from '@/hooks/use-sidebar';
+import type { AppPermission } from '@/types/team';
 
 /** User profile data from database */
 interface UserProfile {
@@ -70,12 +72,16 @@ const formatShortcut = (shortcut: KeyboardShortcut) => {
 
 export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
   const { user, signOut } = useAuth();
+  const { hasPermission, isAdmin } = useRoleAuthorization();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const { setLocked } = useSidebar();
+  
+  // Permission helper
+  const canView = (permission: AppPermission) => isAdmin || hasPermission(permission);
 
   // Lock sidebar when dropdown opens, unlock when it closes
   const handleDropdownOpenChange = (open: boolean) => {
@@ -181,24 +187,30 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
                 Profile
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings?tab=team" className="w-full flex items-center gap-2">
-                <Users01 size={16} />
-                Team
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings?tab=usage" className="w-full flex items-center gap-2">
-                <PieChart01 size={16} />
-                Usage
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
-                <CreditCard01 size={16} />
-                Billing
-              </Link>
-            </DropdownMenuItem>
+            {canView('view_team') && (
+              <DropdownMenuItem asChild>
+                <Link to="/settings?tab=team" className="w-full flex items-center gap-2">
+                  <Users01 size={16} />
+                  Team
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {canView('view_billing') && (
+              <DropdownMenuItem asChild>
+                <Link to="/settings?tab=usage" className="w-full flex items-center gap-2">
+                  <PieChart01 size={16} />
+                  Usage
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {canView('view_billing') && (
+              <DropdownMenuItem asChild>
+                <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
+                  <CreditCard01 size={16} />
+                  Billing
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild>
               <Link to="/settings" className="w-full flex items-center gap-2">
                 <Settings size={16} />
