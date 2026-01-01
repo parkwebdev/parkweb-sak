@@ -607,13 +607,13 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
           <p class="email-text" style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: ${colors.text};">Get started in 3 steps:</p>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
-              <td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">1. Set up your AI agent</td>
+              <td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">1. Set up your AI agent</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">2. Add your knowledge base</td>
+              <td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">2. Add your knowledge base</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">3. Install the widget on your site</td>
+              <td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">3. Install the widget on your site</td>
             </tr>
           </table>
         </td>
