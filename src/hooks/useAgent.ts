@@ -3,6 +3,7 @@
  * 
  * Hook for managing the single Ari agent.
  * Each user has exactly one agent (Ari) - this hook provides access to it.
+ * Scoped by accountOwnerId to enable team member access.
  * 
  * Uses React Query for:
  * - Automatic caching across all 7+ components that use this hook
@@ -14,7 +15,7 @@
 
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { queryKeys } from '@/lib/query-keys';
@@ -26,13 +27,13 @@ type Agent = Tables<'agents'>;
 type AgentUpdate = TablesUpdate<'agents'>;
 
 /**
- * Fetches the agent for the given user ID
+ * Fetches the agent for the given user ID (account owner)
  */
-async function fetchAgent(userId: string): Promise<Agent | null> {
+async function fetchAgent(accountOwnerId: string): Promise<Agent | null> {
   const { data, error } = await supabase
     .from('agents')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', accountOwnerId)
     .maybeSingle();
 
   if (error) {
@@ -46,6 +47,7 @@ async function fetchAgent(userId: string): Promise<Agent | null> {
 /**
  * Hook for managing the single Ari agent.
  * Each user has exactly one agent (Ari) - this hook provides access to it.
+ * Scoped by accountOwnerId so team members access the owner's agent.
  * 
  * Now powered by React Query - the agent data is cached and shared
  * across all components that use this hook (7+ places in the codebase).
@@ -59,23 +61,24 @@ async function fetchAgent(userId: string): Promise<Agent | null> {
  * @returns {Function} refetch - Manually refresh agent (triggers background refetch)
  */
 export const useAgent = () => {
-  const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
   // Query for agent data with real-time subscription
+  // Scoped by accountOwnerId so team members access owner's agent
   const {
     data: agent = null,
     isLoading,
     refetch,
   } = useSupabaseQuery<Agent | null>({
-    queryKey: queryKeys.agent.detail(user?.id),
-    queryFn: () => fetchAgent(user!.id),
-    enabled: !!user?.id,
+    queryKey: queryKeys.agent.detail(accountOwnerId),
+    queryFn: () => fetchAgent(accountOwnerId!),
+    enabled: !!accountOwnerId && !ownerLoading,
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
-    realtime: user?.id ? {
+    realtime: accountOwnerId ? {
       table: 'agents',
-      filter: `user_id=eq.${user.id}`,
+      filter: `user_id=eq.${accountOwnerId}`,
     } : undefined,
   });
 
@@ -96,7 +99,7 @@ export const useAgent = () => {
     },
     onSuccess: (data) => {
       // Update the cache immediately with the new data
-      queryClient.setQueryData(queryKeys.agent.detail(user?.id), data);
+      queryClient.setQueryData(queryKeys.agent.detail(accountOwnerId), data);
     },
     onError: (error) => {
       logger.error('Error updating agent:', error);
