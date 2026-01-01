@@ -1,33 +1,28 @@
 import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { 
-  Mail01, Bell01, Calendar, File02, Key01, CheckCircle, Phone01, Monitor01, Moon01, Sun,
-  XCircle, Clock, Users01, MessageCircle01, BarChart01, UserPlus01, RefreshCw01,
-  ArrowRight, AlertTriangle, Link01, UserMinus01, AlertCircle, Announcement01
+  Mail01, Calendar, File02, Key01, CheckCircle, Phone01, Monitor01, Moon01, Sun,
+  XCircle, Clock, Users01, MessageCircle01, UserPlus01, RefreshCw01,
+  ArrowRight, AlertTriangle, UserMinus01, Announcement01
 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 export type EmailTemplateType = 
   | 'invitation' 
-  | 'notification' 
   | 'booking' 
   | 'report' 
   | 'password-reset' 
   | 'email-verification'
-  // New templates
   | 'booking-cancellation'
   | 'booking-reminder'
   | 'new-lead'
   | 'human-takeover'
-  | 'conversation-summary'
   | 'welcome'
   | 'booking-rescheduled'
   | 'lead-status-change'
   | 'webhook-failure'
-  | 'calendar-integration'
   | 'team-member-removed'
-  | 'account-inactivity'
   | 'feature-announcement';
 
 export type PreviewWidth = 'mobile' | 'desktop';
@@ -60,15 +55,9 @@ const TEMPLATES: TemplateItem[] = [
   { id: 'new-lead', label: 'New Lead', icon: Users01, group: 'Leads' },
   { id: 'lead-status-change', label: 'Lead Status Change', icon: ArrowRight, group: 'Leads' },
   { id: 'human-takeover', label: 'Human Takeover', icon: MessageCircle01, group: 'Leads' },
-  { id: 'conversation-summary', label: 'Conversation Summary', icon: BarChart01, group: 'Leads' },
   
-  // Notifications & Alerts
-  { id: 'notification', label: 'Notification', icon: Bell01, group: 'Alerts' },
+  // Alerts
   { id: 'webhook-failure', label: 'Webhook Failure', icon: AlertTriangle, group: 'Alerts' },
-  { id: 'account-inactivity', label: 'Account Inactivity', icon: AlertCircle, group: 'Alerts' },
-  
-  // Integrations
-  { id: 'calendar-integration', label: 'Calendar Connected', icon: Link01, group: 'Integrations' },
   
   // Reports & Product
   { id: 'report', label: 'Scheduled Report', icon: File02, group: 'Reports' },
@@ -103,7 +92,7 @@ export function EmailTemplateSidebar({
     return acc;
   }, {} as Record<string, TemplateItem[]>);
 
-  const groupOrder = ['Auth', 'Team', 'Bookings', 'Leads', 'Alerts', 'Integrations', 'Reports', 'Product'];
+  const groupOrder = ['Auth', 'Team', 'Bookings', 'Leads', 'Alerts', 'Reports', 'Product'];
 
   return (
     <aside className="w-60 shrink-0 border-r border-border bg-card overflow-y-auto flex flex-col">

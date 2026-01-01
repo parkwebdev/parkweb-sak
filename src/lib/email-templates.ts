@@ -20,14 +20,6 @@ export interface TeamInvitationData {
   signupUrl: string;
 }
 
-export interface NotificationData {
-  title: string;
-  message: string;
-  actionUrl?: string;
-  actionLabel?: string;
-  type?: 'scope_work' | 'onboarding' | 'system' | 'team' | 'security';
-}
-
 export interface BookingConfirmationData {
   visitorName: string;
   eventType: string;
@@ -102,18 +94,6 @@ export interface HumanTakeoverAlertData {
   takeoverUrl: string;
 }
 
-/**
- * Conversation summary data for periodic reports.
- * Note: topTopics removed - not currently extracted by the app.
- */
-export interface ConversationSummaryData {
-  period: string; // e.g., "Dec 25-31, 2024"
-  totalConversations: number;
-  leadsGenerated: number;
-  avgResponseTime: string;
-  viewDetailsUrl: string;
-}
-
 export interface WelcomeEmailData {
   userName: string;
   companyName?: string;
@@ -152,13 +132,6 @@ export interface WebhookFailureAlertData {
   configureUrl: string;
 }
 
-export interface CalendarIntegrationSuccessData {
-  userName: string;
-  calendarType: 'Google Calendar' | 'Outlook Calendar';
-  email: string;
-  connectedAt: string;
-}
-
 /**
  * Team member removal notification data.
  * Note: reason removed - not captured in the app.
@@ -167,13 +140,6 @@ export interface TeamMemberRemovedData {
   memberName: string;
   removedBy: string;
   teamName: string;
-}
-
-export interface AccountInactivityWarningData {
-  userName: string;
-  lastActiveDate: string;
-  daysInactive: number;
-  loginUrl: string;
 }
 
 export interface FeatureAnnouncementData {
@@ -408,19 +374,6 @@ export function generateTeamInvitationEmail(data: TeamInvitationData): string {
   
   return generateWrapper({
     preheaderText: `${data.invitedBy} invited you to join ${data.companyName} on Pilot`,
-    content,
-  });
-}
-
-export function generateNotificationEmail(data: NotificationData): string {
-  const content = `
-    ${heading(data.title)}
-    ${paragraph(data.message)}
-    ${data.actionUrl && data.actionLabel ? `${spacer(8)}${button(data.actionLabel, data.actionUrl)}` : ''}
-  `;
-  
-  return generateWrapper({
-    preheaderText: data.message.substring(0, 100),
     content,
   });
 }
@@ -662,39 +615,6 @@ export function generateHumanTakeoverAlertEmail(data: HumanTakeoverAlertData): s
   });
 }
 
-export function generateConversationSummaryEmail(data: ConversationSummaryData): string {
-  const content = `
-    ${heading('Conversation Summary')}
-    ${paragraph(`Here's your summary for <strong>${data.period}</strong>.`)}
-    
-    <!-- Metrics Grid -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>
-        <td style="padding: 16px; text-align: center; vertical-align: top; width: 33%;">
-          <p class="email-text" style="margin: 0 0 4px 0; font-size: 28px; font-weight: 600; color: ${colors.text};">${data.totalConversations}</p>
-          <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">Conversations</p>
-        </td>
-        <td style="padding: 16px; text-align: center; vertical-align: top; width: 33%;">
-          <p class="email-text" style="margin: 0 0 4px 0; font-size: 28px; font-weight: 600; color: ${colors.success};">${data.leadsGenerated}</p>
-          <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">Leads Generated</p>
-        </td>
-        <td style="padding: 16px; text-align: center; vertical-align: top; width: 33%;">
-          <p class="email-text" style="margin: 0 0 4px 0; font-size: 28px; font-weight: 600; color: ${colors.text};">${data.avgResponseTime}</p>
-          <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">Avg Response</p>
-        </td>
-      </tr>
-    </table>
-    
-    ${spacer(24)}
-    ${button('View Details', data.viewDetailsUrl)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `${data.totalConversations} conversations, ${data.leadsGenerated} leads - ${data.period}`,
-    content,
-  });
-}
-
 // =============================================================================
 // NEW TEMPLATES - MEDIUM PRIORITY
 // =============================================================================
@@ -844,34 +764,6 @@ export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData):
   });
 }
 
-export function generateCalendarIntegrationSuccessEmail(data: CalendarIntegrationSuccessData): string {
-  const content = `
-    ${heading('Calendar connected successfully')}
-    ${paragraph(`Hi <strong>${data.userName}</strong>, your calendar has been connected to Pilot.`)}
-    
-    <!-- Connection Details -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>
-        <td style="padding: 20px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            ${detailRow('Provider', data.calendarType)}
-            ${detailRow('Account', data.email)}
-            ${detailRow('Connected', data.connectedAt)}
-          </table>
-        </td>
-      </tr>
-    </table>
-    
-    ${spacer(16)}
-    ${paragraph('Your bookings will now sync automatically. Visitors can schedule appointments based on your real-time availability.', true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `${data.calendarType} connected to Pilot`,
-    content,
-  });
-}
-
 // =============================================================================
 // NEW TEMPLATES - LOWER PRIORITY
 // =============================================================================
@@ -886,25 +778,6 @@ export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): str
   
   return generateWrapper({
     preheaderText: `You've been removed from ${data.teamName}`,
-    content,
-  });
-}
-
-export function generateAccountInactivityWarningEmail(data: AccountInactivityWarningData): string {
-  const content = `
-    ${heading('We miss you!')}
-    ${paragraph(`Hi <strong>${data.userName}</strong>, we noticed you haven't logged in for a while.`)}
-    ${alertBox(`Your account has been inactive for ${data.daysInactive} days. Last activity: ${data.lastActiveDate}`, 'warning')}
-    ${spacer(16)}
-    ${paragraph('Your conversations and leads are waiting for you. Log in to stay connected with your customers.', true)}
-    ${spacer(8)}
-    ${button('Log In Now', data.loginUrl)}
-    ${spacer(24)}
-    ${paragraph('If you no longer wish to use Pilot, you can delete your account in settings.', true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `We miss you! Your account has been inactive for ${data.daysInactive} days`,
     content,
   });
 }
