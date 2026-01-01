@@ -134,11 +134,9 @@ export interface WebhookFailureAlertData {
 
 /**
  * Team member removal notification data.
- * Note: reason removed - not captured in the app.
  */
 export interface TeamMemberRemovedData {
   memberName: string;
-  removedBy: string;
   teamName: string;
 }
 
@@ -227,10 +225,15 @@ const getBaseStyles = (): string => `
 interface WrapperOptions {
   preheaderText?: string;
   content: string;
+  unsubscribeUrl?: string;
 }
 
-const generateWrapper = ({ preheaderText, content }: WrapperOptions): string => {
+const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOptions): string => {
   const year = new Date().getFullYear();
+  
+  const unsubscribeSection = unsubscribeUrl 
+    ? `<p class="email-text-muted" style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};"><a href="${unsubscribeUrl}" style="color: ${colors.textMuted}; text-decoration: underline;">Manage notification preferences</a></p>`
+    : '';
   
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -278,7 +281,9 @@ const generateWrapper = ({ preheaderText, content }: WrapperOptions): string => 
           <!-- Footer -->
           <tr>
             <td class="email-content email-border" style="padding: 24px 40px; border-top: 1px solid ${colors.border};">
-              <p class="email-text-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot. All rights reserved.</p>
+              <p class="email-text-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot</p>
+              <p class="email-text-muted" style="margin: 4px 0 0 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">1020 William Blount Dr. Ste 213, Maryville, TN 37804</p>
+              ${unsubscribeSection}
             </td>
           </tr>
           
@@ -375,6 +380,7 @@ export function generateTeamInvitationEmail(data: TeamInvitationData): string {
   return generateWrapper({
     preheaderText: `${data.invitedBy} invited you to join ${data.companyName} on Pilot`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#team-emails',
   });
 }
 
@@ -404,6 +410,7 @@ export function generateBookingConfirmationEmail(data: BookingConfirmationData):
   return generateWrapper({
     preheaderText: `Your ${data.eventType} is confirmed for ${data.date} at ${data.time}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
   });
 }
 
@@ -438,6 +445,7 @@ export function generateScheduledReportEmail(data: ScheduledReportData): string 
   return generateWrapper({
     preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#report-emails',
   });
 }
 
@@ -519,6 +527,7 @@ export function generateBookingCancellationEmail(data: BookingCancellationData):
   return generateWrapper({
     preheaderText: `Your ${data.eventType} on ${data.date} has been cancelled`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
   });
 }
 
@@ -547,6 +556,7 @@ export function generateBookingReminderEmail(data: BookingReminderData): string 
   return generateWrapper({
     preheaderText: `Reminder: ${data.eventType} on ${data.date} at ${data.time}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
   });
 }
 
@@ -580,6 +590,7 @@ export function generateNewLeadNotificationEmail(data: NewLeadNotificationData):
   return generateWrapper({
     preheaderText: `New lead: ${data.leadName} from ${data.source}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#lead-emails',
   });
 }
 
@@ -612,6 +623,7 @@ export function generateHumanTakeoverAlertEmail(data: HumanTakeoverAlertData): s
   return generateWrapper({
     preheaderText: `Urgent: Human takeover requested${data.visitorName ? ` by ${data.visitorName}` : ''}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#lead-emails',
   });
 }
 
@@ -698,6 +710,7 @@ export function generateBookingRescheduledEmail(data: BookingRescheduledData): s
   return generateWrapper({
     preheaderText: `Your ${data.eventType} has been rescheduled to ${data.newDate} at ${data.newTime}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
   });
 }
 
@@ -728,6 +741,7 @@ export function generateLeadStatusChangeEmail(data: LeadStatusChangeData): strin
   return generateWrapper({
     preheaderText: `${data.leadName} moved from ${data.previousStage} to ${data.newStage}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#lead-emails',
   });
 }
 
@@ -761,6 +775,7 @@ export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData):
   return generateWrapper({
     preheaderText: `Webhook failed: ${data.webhookName} - Error ${data.errorCode}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#agent-emails',
   });
 }
 
@@ -771,7 +786,7 @@ export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData):
 export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): string {
   const content = `
     ${heading('Removed from team')}
-    ${paragraph(`Hi <strong>${data.memberName}</strong>, you have been removed from <strong>${data.teamName}</strong> by ${data.removedBy}.`)}
+    ${paragraph(`Hi <strong>${data.memberName}</strong>, you have been removed from <strong>${data.teamName}</strong>.`)}
     ${spacer(8)}
     ${paragraph('You no longer have access to this team\'s resources. If you believe this was a mistake, please contact your team administrator.', true)}
   `;
@@ -779,6 +794,7 @@ export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): str
   return generateWrapper({
     preheaderText: `You've been removed from ${data.teamName}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#team-emails',
   });
 }
 
@@ -802,5 +818,6 @@ export function generateFeatureAnnouncementEmail(data: FeatureAnnouncementData):
   return generateWrapper({
     preheaderText: `New in Pilot: ${data.featureTitle}`,
     content,
+    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#product-emails',
   });
 }
