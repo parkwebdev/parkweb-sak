@@ -13,6 +13,7 @@ import { TeamMember } from '@/types/team';
 
 interface TeamColumnsProps {
   currentUserId?: string;
+  currentUserRole?: string;
   canManageRoles: boolean;
   onEditRole: (member: TeamMember) => void;
   onEditProfile?: (member: TeamMember) => void;
@@ -54,6 +55,7 @@ const getInitials = (displayName: string | null, email: string | null) => {
 
 export const createTeamColumns = ({
   currentUserId,
+  currentUserRole,
   canManageRoles,
   onEditRole,
   onEditProfile,
@@ -112,6 +114,11 @@ export const createTeamColumns = ({
     header: () => <span className="w-24">Actions</span>,
     cell: ({ row }) => {
       const member = row.original;
+      const isOwnRow = member.user_id === currentUserId;
+      const isAdmin = currentUserRole === 'admin';
+      // Hide "Manage Role" for admins viewing their own row
+      const showManageRole = canManageRoles && !(isOwnRow && isAdmin);
+      
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -120,7 +127,7 @@ export const createTeamColumns = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {canManageRoles && (
+            {showManageRole && (
               <DropdownMenuItem onClick={() => onEditRole(member)}>
                 <Settings01 className="mr-2 h-4 w-4" />
                 Manage Role
