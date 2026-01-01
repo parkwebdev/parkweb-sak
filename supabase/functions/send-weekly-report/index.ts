@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
+import { 
+  colors, 
+  fonts,
+  LOGO_URL,
+  LINKEDIN_ICON_URL,
+  FACEBOOK_ICON_URL,
+  getBaseStyles
+} from '../_shared/email-template.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -13,24 +21,8 @@ const corsHeaders = {
 };
 
 // =============================================================================
-// EMAIL TEMPLATE (matches preview exactly)
+// EMAIL TEMPLATE (weekly report uses custom layout for metrics grid)
 // =============================================================================
-
-const colors = {
-  background: '#f5f5f5',
-  card: '#ffffff',
-  text: '#171717',
-  textMuted: '#737373',
-  border: '#e5e5e5',
-  buttonBg: '#171717',
-  buttonText: '#ffffff',
-  success: '#22c55e',
-  error: '#ef4444',
-};
-
-const fonts = {
-  stack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-};
 
 function generateWeeklyReportEmail(data: {
   reportName: string;
@@ -77,6 +69,7 @@ function generateWeeklyReportEmail(data: {
   <meta name="x-apple-disable-message-reformatting">
   <meta name="color-scheme" content="light dark">
   <title>Weekly Report</title>
+  <style type="text/css">${getBaseStyles()}</style>
 </head>
 <body style="margin: 0; padding: 0; width: 100%; background-color: ${colors.background}; font-family: ${fonts.stack};">
   <div style="display: none; font-size: 1px; color: ${colors.background}; line-height: 1px; max-height: 0; max-width: 0; opacity: 0; overflow: hidden;">Your weekly analytics report for ${data.dateRange}</div>
@@ -92,7 +85,7 @@ function generateWeeklyReportEmail(data: {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="vertical-align: middle;">
-                    <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Pilot%20Email%20Logo%20%40%20481px.png" alt="Pilot" width="20" height="20" style="display: block; width: 20px; height: 20px;" />
+                    <img src="${LOGO_URL}" alt="Pilot" width="20" height="20" style="display: block; width: 20px; height: 20px;" />
                   </td>
                   <td style="vertical-align: middle; padding-left: 6px;">
                     <span style="font-size: 18px; font-weight: 700; color: ${colors.text};">Pilot</span>
@@ -142,12 +135,12 @@ function generateWeeklyReportEmail(data: {
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
                       <td style="padding-right: 8px;">
                         <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: block; line-height: 0;">
-                          <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" height="14" style="display: block; height: 14px; width: auto;" />
+                          <img src="${LINKEDIN_ICON_URL}" alt="LinkedIn" height="14" style="display: block; height: 14px; width: auto;" />
                         </a>
                       </td>
                       <td>
                         <a href="https://www.facebook.com/getpilot" target="_blank" style="display: block; line-height: 0;">
-                          <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" height="14" style="display: block; height: 14px; width: auto;" />
+                          <img src="${FACEBOOK_ICON_URL}" alt="Facebook" height="14" style="display: block; height: 14px; width: auto;" />
                         </a>
                       </td>
                     </tr></table>
