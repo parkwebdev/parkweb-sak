@@ -267,7 +267,7 @@ const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOpti
           <!-- Header -->
           <tr>
             <td class="email-content" style="padding: 32px 40px 0 40px;">
-              <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/widget/66b72b29-fce5-4029-b9ab-8bb8e2adc482/Pilot%20Email%20Logo%20@%20481px.png" alt="Pilot" width="40" height="40" style="display: block; width: 40px; height: 40px;" />
+              <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Pilot%20Email%20Logo%20%40%20481px.png" alt="Pilot" width="40" height="40" style="display: block; width: 40px; height: 40px;" />
             </td>
           </tr>
           
