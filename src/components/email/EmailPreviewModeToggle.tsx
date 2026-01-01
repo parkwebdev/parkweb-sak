@@ -7,11 +7,6 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Eye, Code01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 export type EmailPreviewMode = 'preview' | 'source' | 'supabase';
 
@@ -95,32 +90,28 @@ export const EmailPreviewModeToggle = React.memo(function EmailPreviewModeToggle
         const isActive = mode === option.id;
         
         return (
-          <Tooltip key={option.id}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => onModeChange(option.id)}
-                onMouseEnter={() => setHoveredMode(option.id)}
-                className={cn(
-                  'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm',
-                  isActive
-                    ? 'text-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-                style={{ width: `${itemWidth}%` }}
-                aria-label={option.label}
-                aria-pressed={isActive}
-              >
-                {option.id === 'supabase' ? (
-                  <SupabaseIcon className="h-[14px] w-[14px]" />
-                ) : Icon ? (
-                  <Icon size={14} />
-                ) : null}
-                <span className="hidden sm:inline">{option.label}</span>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">{option.label}</TooltipContent>
-          </Tooltip>
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => onModeChange(option.id)}
+            onMouseEnter={() => setHoveredMode(option.id)}
+            className={cn(
+              'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm',
+              isActive
+                ? 'text-foreground font-medium'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            style={{ width: `${itemWidth}%` }}
+            aria-label={option.label}
+            aria-pressed={isActive}
+          >
+            {option.id === 'supabase' ? (
+              <SupabaseIcon className="h-4 w-4" />
+            ) : Icon ? (
+              <Icon size={16} />
+            ) : null}
+            <span className="hidden sm:inline">{option.label}</span>
+          </button>
         );
       })}
     </div>
