@@ -132,8 +132,22 @@ function generateWeeklyReportEmail(data: {
           <!-- Footer -->
           <tr>
             <td style="padding: 24px 40px; border-top: 1px solid ${colors.border};">
-              <p style="margin: 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot</p>
-              <p style="margin: 4px 0 0 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">1020 William Blount Dr. Ste 213, Maryville, TN 37804</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot</td>
+                  <td style="padding: 0 12px;">
+                    <div style="width: 1px; height: 16px; background-color: ${colors.border};"></div>
+                  </td>
+                  <td>
+                    <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: inline-block; margin-right: 8px;">
+                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" width="20" height="20" style="display: block;" />
+                    </a>
+                    <a href="https://www.facebook.com/getpilot" target="_blank" style="display: inline-block;">
+                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" width="20" height="20" style="display: block;" />
+                    </a>
+                  </td>
+                </tr>
+              </table>
               <p style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};"><a href="${appUrl}/settings?tab=notifications#report-emails" style="color: ${colors.textMuted}; text-decoration: underline;">Manage notification preferences</a></p>
             </td>
           </tr>
