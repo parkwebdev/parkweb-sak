@@ -1,3 +1,9 @@
+/**
+ * Notification Email Edge Function
+ * 
+ * Sends notification emails using the professional Pilot template.
+ */
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
 
@@ -5,14 +11,13 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 // Rate limiting storage
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 10; // 10 emails per minute per IP
+const RATE_LIMIT_WINDOW = 60000;
+const RATE_LIMIT_MAX_REQUESTS = 10;
 
 interface EmailRequest {
   to: string;
@@ -22,7 +27,160 @@ interface EmailRequest {
   data?: any;
 }
 
-// Input validation functions
+// =============================================================================
+// DESIGN TOKENS & TEMPLATE COMPONENTS
+// =============================================================================
+
+const LOGO_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/widget/66b72b29-fce5-4029-b9ab-8bb8e2adc482/Pilot%20Email%20Logo%20@%20481px.png';
+
+const colors = {
+  background: '#f5f5f5',
+  card: '#ffffff',
+  text: '#171717',
+  textMuted: '#737373',
+  border: '#e5e5e5',
+  buttonBg: '#171717',
+  buttonText: '#ffffff',
+  dark: {
+    background: '#0a0a0a',
+    card: '#171717',
+    text: '#fafafa',
+    textMuted: '#a3a3a3',
+    border: '#262626',
+    buttonBg: '#fafafa',
+    buttonText: '#171717',
+  },
+};
+
+const fonts = {
+  stack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+};
+
+const getBaseStyles = (): string => `
+  body, table, td, p, a, li, blockquote {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  table, td {
+    mso-table-lspace: 0pt;
+    mso-table-rspace: 0pt;
+  }
+  img {
+    -ms-interpolation-mode: bicubic;
+    border: 0;
+    height: auto;
+    line-height: 100%;
+    outline: none;
+    text-decoration: none;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .email-bg { background-color: ${colors.dark.background} !important; }
+    .email-card { background-color: ${colors.dark.card} !important; }
+    .email-text { color: ${colors.dark.text} !important; }
+    .email-text-muted { color: ${colors.dark.textMuted} !important; }
+    .email-border { border-color: ${colors.dark.border} !important; }
+    .email-btn { background-color: ${colors.dark.buttonBg} !important; }
+    .email-btn-text { color: ${colors.dark.buttonText} !important; }
+  }
+  
+  @media only screen and (max-width: 600px) {
+    .email-container { width: 100% !important; }
+    .email-content { padding: 24px !important; }
+  }
+`;
+
+const generateWrapper = (preheaderText: string, content: string): string => {
+  const year = new Date().getFullYear();
+  
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Pilot</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style type="text/css">${getBaseStyles()}</style>
+</head>
+<body class="email-bg" style="margin: 0; padding: 0; width: 100%; background-color: ${colors.background}; font-family: ${fonts.stack};">
+  ${preheaderText ? `<div style="display: none; font-size: 1px; color: ${colors.background}; line-height: 1px; max-height: 0; max-width: 0; opacity: 0; overflow: hidden;">${preheaderText}${'&nbsp;'.repeat(50)}</div>` : ''}
+  
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-bg" style="background-color: ${colors.background};">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="email-container email-card" style="max-width: 600px; width: 100%; background-color: ${colors.card}; border-radius: 8px;">
+          
+          <!-- Header -->
+          <tr>
+            <td class="email-content" style="padding: 32px 40px 0 40px;">
+              <img src="${LOGO_URL}" alt="Pilot" width="40" height="40" style="display: block; width: 40px; height: 40px;" />
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td class="email-content" style="padding: 32px 40px;">
+              ${content}
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td class="email-content email-border" style="padding: 24px 40px; border-top: 1px solid ${colors.border};">
+              <p class="email-text-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot</p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+};
+
+const heading = (text: string): string => `
+  <h1 class="email-text" style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; line-height: 1.3; color: ${colors.text};">${text}</h1>
+`;
+
+const paragraph = (text: string, muted = false): string => {
+  const color = muted ? colors.textMuted : colors.text;
+  const className = muted ? 'email-text-muted' : 'email-text';
+  return `<p class="${className}" style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: ${color};">${text}</p>`;
+};
+
+const button = (text: string, url: string): string => `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="email-btn" style="border-radius: 6px; background-color: ${colors.buttonBg};">
+        <a href="${url}" target="_blank" class="email-btn-text" style="display: inline-block; font-family: ${fonts.stack}; font-size: 14px; font-weight: 600; color: ${colors.buttonText}; text-decoration: none; padding: 12px 24px; border-radius: 6px;">${text}</a>
+      </td>
+    </tr>
+  </table>
+`;
+
+const spacer = (height = 24): string => `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr><td style="height: ${height}px; font-size: 0; line-height: 0;">&nbsp;</td></tr>
+  </table>
+`;
+
+// =============================================================================
+// VALIDATION HELPERS
+// =============================================================================
+
 const validateEmail = (email: string): { isValid: boolean; error?: string } => {
   if (!email || typeof email !== 'string') {
     return { isValid: false, error: 'Email is required' };
@@ -55,7 +213,6 @@ const validateText = (text: string, fieldName: string, maxLength = 500): { isVal
     return { isValid: false, sanitized: '', error: `${fieldName} too long (max ${maxLength} characters)` };
   }
   
-  // Basic sanitization - remove potential HTML tags
   const sanitized = trimmed.replace(/<[^>]*>/g, '');
   
   return { isValid: true, sanitized };
@@ -108,19 +265,91 @@ const sanitizeData = (data: any): any => {
   return data;
 };
 
+// =============================================================================
+// EMAIL GENERATOR
+// =============================================================================
+
+function generateEmailContent(
+  type: string,
+  title: string,
+  message: string,
+  data?: any
+): { subject: string; html: string } {
+  const baseUrl = Deno.env.get('APP_URL') || 'https://getpilot.io';
+  
+  let subject = `Pilot: ${title}`;
+  let actionUrl = baseUrl;
+  let actionText = "View Dashboard";
+
+  switch (type) {
+    case 'scope_work':
+      actionUrl = `${baseUrl}/scope-of-works`;
+      actionText = "View Scope of Works";
+      if (data?.sowId) {
+        actionUrl += `?id=${data.sowId}`;
+      }
+      break;
+    case 'onboarding':
+      actionUrl = `${baseUrl}/onboarding`;
+      actionText = "View Onboarding";
+      break;
+    case 'team':
+      actionUrl = `${baseUrl}/team`;
+      actionText = "View Team";
+      break;
+    case 'system':
+    case 'security':
+      actionUrl = `${baseUrl}/settings`;
+      actionText = "View Settings";
+      break;
+  }
+
+  const additionalDetails = data?.additionalInfo 
+    ? `
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-bg" style="background-color: ${colors.background}; border-radius: 8px; margin-bottom: 16px;">
+        <tr>
+          <td style="padding: 16px;">
+            <p class="email-text" style="margin: 0; font-size: 14px; line-height: 1.6; color: ${colors.text};">${data.additionalInfo}</p>
+          </td>
+        </tr>
+      </table>
+    `
+    : '';
+
+  const content = `
+    ${heading(title)}
+    ${paragraph(message)}
+    ${additionalDetails}
+    ${spacer(8)}
+    ${button(actionText, actionUrl)}
+    ${spacer(16)}
+    ${paragraph(`Sent on ${new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric'
+    })}`, true)}
+  `;
+
+  const html = generateWrapper(title, content);
+
+  return { subject, html };
+}
+
+// =============================================================================
+// HANDLER
+// =============================================================================
+
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get client IP for rate limiting
     const clientIP = req.headers.get('x-forwarded-for') || 
                      req.headers.get('x-real-ip') || 
                      'unknown';
 
-    // Check rate limit
     if (!checkRateLimit(clientIP)) {
       console.warn(`Rate limit exceeded for IP: ${clientIP}`);
       return new Response(
@@ -132,7 +361,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Validate request method
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),
@@ -143,7 +371,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Parse and validate request body
     let emailRequest: EmailRequest;
     try {
       emailRequest = await req.json();
@@ -162,7 +389,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { to, type, title, message, data } = emailRequest;
 
-    // Validate all required fields
     const emailValidation = validateEmail(to);
     if (!emailValidation.isValid) {
       return new Response(
@@ -207,17 +433,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Sanitize input data
     const sanitizedTo = to.trim().toLowerCase();
     const sanitizedTitle = titleValidation.sanitized;
     const sanitizedMessage = messageValidation.sanitized;
     const sanitizedData = sanitizeData(data);
 
-    // Generate email content based on notification type
     const emailContent = generateEmailContent(type, sanitizedTitle, sanitizedMessage, sanitizedData);
 
     const emailResponse = await resend.emails.send({
-      from: "Pilot Team <team@getpilot.io>",
+      from: "Pilot <team@getpilot.io>",
       to: [sanitizedTo],
       reply_to: "team@getpilot.io",
       subject: emailContent.subject,
@@ -258,102 +482,5 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
-
-function generateEmailContent(
-  type: string,
-  title: string,
-  message: string,
-  data?: any
-): { subject: string; html: string } {
-  const baseUrl = Deno.env.get('SITE_URL') || 'https://lovable.app';
-  
-  let subject = `Agency Notification: ${title}`;
-  let actionUrl = baseUrl;
-  let actionText = "View Dashboard";
-
-  // Customize based on notification type
-  switch (type) {
-    case 'scope_work':
-      actionUrl = `${baseUrl}/scope-of-works`;
-      actionText = "View Scope of Works";
-      if (data?.sowId) {
-        actionUrl += `?id=${data.sowId}`;
-      }
-      break;
-    case 'onboarding':
-      actionUrl = `${baseUrl}/onboarding`;
-      actionText = "View Onboarding";
-      break;
-    case 'team':
-      actionUrl = `${baseUrl}/team`;
-      actionText = "View Team";
-      break;
-    case 'system':
-    case 'security':
-      actionUrl = `${baseUrl}/settings`;
-      actionText = "View Settings";
-      break;
-  }
-
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${subject}</title>
-    </head>
-    <body style="font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 40px 20px; background-color: #f5f5f5;">
-      <div style="background-color: #ffffff; max-width: 600px; margin: 0 auto; border-radius: 8px; overflow: hidden;">
-        
-        <!-- Header with Logo -->
-        <div style="background-color: #ffffff; padding: 40px 20px; text-align: center; border-bottom: 1px solid #e0e0e0;">
-          <div style="text-align: center;">
-            <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/email-assets/pilot-logo.png" alt="Pilot Logo" style="width: 60px; height: 60px; border-radius: 8px;" />
-          </div>
-        </div>
-        
-        <!-- Content -->
-        <div style="padding: 40px 30px;">
-          <p style="font-size: 14px; margin-bottom: 20px; color: #333333;"><strong>${title}</strong></p>
-          
-          <p style="font-size: 14px; margin-bottom: 24px; color: #333333; line-height: 1.6;">${message}</p>
-          
-          ${data?.additionalInfo ? `
-            <p style="font-size: 14px; margin-bottom: 24px; color: #333333; line-height: 1.6;"><strong>Additional Details:</strong><br>${data.additionalInfo}</p>
-          ` : ''}
-
-          <p style="font-size: 14px; margin-bottom: 30px; color: #333333; line-height: 1.6;">Click the button below to view more details or take action on this notification.</p>
-          
-          <!-- Action Button - Left Aligned -->
-          <div style="text-align: left; margin: 30px 0;">
-            <a href="${actionUrl}" style="background-color: #000000; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; display: inline-block;">${actionText}</a>
-          </div>
-          
-          <p style="font-size: 14px; color: #333333; line-height: 1.6;">If you have any questions, feel free to reach out to us directly.</p>
-          
-          <!-- Timestamp -->
-          <div style="border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
-            <p style="color: #666666; font-size: 12px; margin: 0;">
-              Sent on ${new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </p>
-          </div>
-        </div>
-        
-      </div>
-    </body>
-    </html>
-  `;
-
-  return { subject, html };
-}
-
 
 serve(handler);

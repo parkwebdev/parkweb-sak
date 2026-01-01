@@ -3,9 +3,6 @@
  * 
  * Sends custom authentication-related emails using our branded templates.
  * Supports: password-reset, email-verification, welcome
- * 
- * Note: For full Supabase Auth integration, configure Auth Hooks in the
- * Supabase dashboard to point to this function.
  */
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -19,8 +16,10 @@ const corsHeaders = {
 };
 
 // =============================================================================
-// EMAIL TEMPLATE COMPONENTS (duplicated from src/lib/email-templates.ts for edge)
+// DESIGN TOKENS & TEMPLATE COMPONENTS
 // =============================================================================
+
+const LOGO_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/widget/66b72b29-fce5-4029-b9ab-8bb8e2adc482/Pilot%20Email%20Logo%20@%20481px.png';
 
 const colors = {
   background: '#f5f5f5',
@@ -30,7 +29,6 @@ const colors = {
   border: '#e5e5e5',
   buttonBg: '#171717',
   buttonText: '#ffffff',
-  success: '#22c55e',
   dark: {
     background: '#0a0a0a',
     card: '#171717',
@@ -84,7 +82,7 @@ const generateWrapper = (preheaderText: string, content: string): string => {
   const year = new Date().getFullYear();
   
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -93,6 +91,15 @@ const generateWrapper = (preheaderText: string, content: string): string => {
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
   <title>Pilot</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
   <style type="text/css">${getBaseStyles()}</style>
 </head>
 <body class="email-bg" style="margin: 0; padding: 0; width: 100%; background-color: ${colors.background}; font-family: ${fonts.stack};">
@@ -106,7 +113,7 @@ const generateWrapper = (preheaderText: string, content: string): string => {
           <!-- Header -->
           <tr>
             <td class="email-content" style="padding: 32px 40px 0 40px;">
-              <p class="email-text" style="margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: ${colors.text};">Pilot</p>
+              <img src="${LOGO_URL}" alt="Pilot" width="40" height="40" style="display: block; width: 40px; height: 40px;" />
             </td>
           </tr>
           
@@ -120,7 +127,7 @@ const generateWrapper = (preheaderText: string, content: string): string => {
           <!-- Footer -->
           <tr>
             <td class="email-content email-border" style="padding: 24px 40px; border-top: 1px solid ${colors.border};">
-              <p class="email-text-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot. All rights reserved.</p>
+              <p class="email-text-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot</p>
             </td>
           </tr>
           
@@ -204,14 +211,14 @@ function generateWelcomeEmail(userName: string, companyName: string | undefined,
     ${paragraph('Pilot helps you manage conversations, capture leads, and provide AI-powered customer support—all in one place.', true)}
     
     <!-- Quick Start -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${colors.background}; border-radius: 8px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
       <tr>
         <td style="padding: 20px;">
           <p class="email-text" style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: ${colors.text};">Get started in 3 steps:</p>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr><td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">1. Set up your AI agent</td></tr>
-            <tr><td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">2. Add your knowledge base</td></tr>
-            <tr><td style="padding: 8px 0; font-size: 14px; color: ${colors.text};">3. Install the widget on your site</td></tr>
+            <tr><td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">1. Set up your AI agent</td></tr>
+            <tr><td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">2. Add your knowledge base</td></tr>
+            <tr><td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">3. Install the widget on your site</td></tr>
           </table>
         </td>
       </tr>
@@ -227,7 +234,7 @@ function generateWelcomeEmail(userName: string, companyName: string | undefined,
 }
 
 // =============================================================================
-// REQUEST TYPES
+// REQUEST TYPES & HANDLER
 // =============================================================================
 
 interface AuthEmailRequest {
@@ -239,12 +246,7 @@ interface AuthEmailRequest {
   expiresIn?: string;
 }
 
-// =============================================================================
-// HANDLER
-// =============================================================================
-
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -255,7 +257,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`[send-auth-email] Sending ${type} email to ${to}`);
 
-    // Validate required fields
     if (!type || !to || !actionUrl) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: type, to, actionUrl" }),
@@ -263,7 +264,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Generate email content based on type
     let html: string;
     let subject: string;
 
@@ -287,7 +287,6 @@ const handler = async (req: Request): Promise<Response> => {
         );
     }
 
-    // Send email via Resend
     const emailResponse = await resend.emails.send({
       from: "Pilot <team@getpilot.io>",
       to: [to],

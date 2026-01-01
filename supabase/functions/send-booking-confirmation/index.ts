@@ -1,3 +1,9 @@
+/**
+ * Booking Confirmation Email Edge Function
+ * 
+ * Sends booking confirmation emails with calendar invites using the professional Pilot template.
+ */
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
 
@@ -12,23 +18,169 @@ interface BookingEmailRequest {
   location_name: string;
   location_address?: string;
   location_phone?: string;
-  start_time: string;      // ISO datetime
-  end_time: string;        // ISO datetime
+  start_time: string;
+  end_time: string;
   timezone: string;
   confirmation_id: string;
   organizer_email?: string;
 }
 
-/**
- * Format date for .ics file (YYYYMMDDTHHmmssZ)
- */
+// =============================================================================
+// DESIGN TOKENS & TEMPLATE COMPONENTS
+// =============================================================================
+
+const LOGO_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/widget/66b72b29-fce5-4029-b9ab-8bb8e2adc482/Pilot%20Email%20Logo%20@%20481px.png';
+
+const colors = {
+  background: '#f5f5f5',
+  card: '#ffffff',
+  text: '#171717',
+  textMuted: '#737373',
+  border: '#e5e5e5',
+  buttonBg: '#171717',
+  buttonText: '#ffffff',
+  dark: {
+    background: '#0a0a0a',
+    card: '#171717',
+    text: '#fafafa',
+    textMuted: '#a3a3a3',
+    border: '#262626',
+    buttonBg: '#fafafa',
+    buttonText: '#171717',
+  },
+};
+
+const fonts = {
+  stack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+};
+
+const getBaseStyles = (): string => `
+  body, table, td, p, a, li, blockquote {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  table, td {
+    mso-table-lspace: 0pt;
+    mso-table-rspace: 0pt;
+  }
+  img {
+    -ms-interpolation-mode: bicubic;
+    border: 0;
+    height: auto;
+    line-height: 100%;
+    outline: none;
+    text-decoration: none;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .email-bg { background-color: ${colors.dark.background} !important; }
+    .email-card { background-color: ${colors.dark.card} !important; }
+    .email-text { color: ${colors.dark.text} !important; }
+    .email-text-muted { color: ${colors.dark.textMuted} !important; }
+    .email-border { border-color: ${colors.dark.border} !important; }
+    .email-btn { background-color: ${colors.dark.buttonBg} !important; }
+    .email-btn-text { color: ${colors.dark.buttonText} !important; }
+    .email-detail-bg { background-color: ${colors.dark.background} !important; }
+  }
+  
+  @media only screen and (max-width: 600px) {
+    .email-container { width: 100% !important; }
+    .email-content { padding: 24px !important; }
+  }
+`;
+
+const generateWrapper = (preheaderText: string, content: string): string => {
+  const year = new Date().getFullYear();
+  
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Pilot</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style type="text/css">${getBaseStyles()}</style>
+</head>
+<body class="email-bg" style="margin: 0; padding: 0; width: 100%; background-color: ${colors.background}; font-family: ${fonts.stack};">
+  ${preheaderText ? `<div style="display: none; font-size: 1px; color: ${colors.background}; line-height: 1px; max-height: 0; max-width: 0; opacity: 0; overflow: hidden;">${preheaderText}${'&nbsp;'.repeat(50)}</div>` : ''}
+  
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-bg" style="background-color: ${colors.background};">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="email-container email-card" style="max-width: 600px; width: 100%; background-color: ${colors.card}; border-radius: 8px;">
+          
+          <!-- Header -->
+          <tr>
+            <td class="email-content" style="padding: 32px 40px 0 40px;">
+              <img src="${LOGO_URL}" alt="Pilot" width="40" height="40" style="display: block; width: 40px; height: 40px;" />
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td class="email-content" style="padding: 32px 40px;">
+              ${content}
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td class="email-content email-border" style="padding: 24px 40px; border-top: 1px solid ${colors.border};">
+              <p class="email-text-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot</p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+};
+
+const heading = (text: string): string => `
+  <h1 class="email-text" style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; line-height: 1.3; color: ${colors.text};">${text}</h1>
+`;
+
+const paragraph = (text: string, muted = false): string => {
+  const color = muted ? colors.textMuted : colors.text;
+  const className = muted ? 'email-text-muted' : 'email-text';
+  return `<p class="${className}" style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: ${color};">${text}</p>`;
+};
+
+const spacer = (height = 24): string => `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr><td style="height: ${height}px; font-size: 0; line-height: 0;">&nbsp;</td></tr>
+  </table>
+`;
+
+const detailRow = (label: string, value: string): string => `
+  <tr>
+    <td class="email-text-muted" style="padding: 8px 0; font-size: 14px; color: ${colors.textMuted}; width: 120px; vertical-align: top;">${label}</td>
+    <td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text}; font-weight: 500;">${value}</td>
+  </tr>
+`;
+
+// =============================================================================
+// CALENDAR HELPERS
+// =============================================================================
+
 function formatIcsDate(date: Date): string {
   return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 }
 
-/**
- * Generate .ics content with METHOD:REQUEST for Accept/Decline in email clients
- */
 function generateCalendarInvite(data: BookingEmailRequest): string {
   const uid = `${data.confirmation_id}@getpilot.io`;
   const now = new Date();
@@ -47,7 +199,7 @@ function generateCalendarInvite(data: BookingEmailRequest): string {
     'VERSION:2.0',
     'PRODID:-//Pilot//Booking//EN',
     'CALSCALE:GREGORIAN',
-    'METHOD:REQUEST',  // Enables Accept/Decline in email clients
+    'METHOD:REQUEST',
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${formatIcsDate(now)}`,
@@ -65,9 +217,6 @@ function generateCalendarInvite(data: BookingEmailRequest): string {
   ].join('\r\n');
 }
 
-/**
- * Format datetime for display in email
- */
 function formatDisplayDateTime(isoString: string, timezone: string): string {
   const date = new Date(isoString);
   return date.toLocaleString('en-US', {
@@ -82,9 +231,6 @@ function formatDisplayDateTime(isoString: string, timezone: string): string {
   });
 }
 
-/**
- * Get timezone abbreviation
- */
 function getTimezoneAbbr(date: Date, timezone: string): string {
   try {
     return new Intl.DateTimeFormat('en-US', {
@@ -96,92 +242,43 @@ function getTimezoneAbbr(date: Date, timezone: string): string {
   }
 }
 
-/**
- * Generate HTML email template
- */
+// =============================================================================
+// EMAIL GENERATOR
+// =============================================================================
+
 function generateEmailHtml(data: BookingEmailRequest): string {
   const displayDateTime = formatDisplayDateTime(data.start_time, data.timezone);
   const tzAbbr = getTimezoneAbbr(new Date(data.start_time), data.timezone);
   
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tour Confirmation</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          <!-- Header -->
-          <tr>
-            <td style="background-color: #18181b; padding: 24px 32px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">Tour Confirmed ✓</h1>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding: 32px;">
-              <p style="margin: 0 0 24px; color: #3f3f46; font-size: 16px; line-height: 1.5;">
-                Hi ${data.visitor_name},
-              </p>
-              <p style="margin: 0 0 24px; color: #3f3f46; font-size: 16px; line-height: 1.5;">
-                Your tour has been scheduled. We're looking forward to meeting you!
-              </p>
-              
-              <!-- Details Card -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
-                <tr>
-                  <td>
-                    <p style="margin: 0 0 8px; color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Location</p>
-                    <p style="margin: 0 0 16px; color: #18181b; font-size: 16px; font-weight: 600;">${data.location_name}</p>
-                    
-                    ${data.location_address ? `
-                    <p style="margin: 0 0 8px; color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Address</p>
-                    <p style="margin: 0 0 16px; color: #3f3f46; font-size: 14px;">${data.location_address}</p>
-                    ` : ''}
-                    
-                    <p style="margin: 0 0 8px; color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Date & Time</p>
-                    <p style="margin: 0 0 16px; color: #18181b; font-size: 16px; font-weight: 600;">${displayDateTime} ${tzAbbr}</p>
-                    
-                    <p style="margin: 0 0 8px; color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Confirmation</p>
-                    <p style="margin: 0; color: #3f3f46; font-size: 14px; font-family: monospace;">${data.confirmation_id}</p>
-                  </td>
-                </tr>
-              </table>
-              
-              ${data.location_phone ? `
-              <p style="margin: 0 0 24px; color: #3f3f46; font-size: 14px;">
-                Questions? Call us at <a href="tel:${data.location_phone}" style="color: #8b5cf6; text-decoration: none; font-weight: 500;">${data.location_phone}</a>
-              </p>
-              ` : ''}
-              
-              <p style="margin: 0; color: #71717a; font-size: 14px; line-height: 1.5;">
-                Need to reschedule? Just reply to this email or start a new chat with us.
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 24px 32px; border-top: 1px solid #e4e4e7; text-align: center;">
-              <p style="margin: 0; color: #a1a1aa; font-size: 12px;">
-                Powered by Pilot
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-  `.trim();
+  const content = `
+    ${heading('Your booking is confirmed')}
+    ${paragraph(`Hi <strong>${data.visitor_name}</strong>, your tour has been scheduled. We're looking forward to meeting you!`)}
+    
+    <!-- Event Card -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+      <tr>
+        <td style="padding: 20px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${detailRow('Location', data.location_name)}
+            ${data.location_address ? detailRow('Address', data.location_address) : ''}
+            ${detailRow('Date & Time', `${displayDateTime} ${tzAbbr}`)}
+            ${detailRow('Confirmation', data.confirmation_id)}
+          </table>
+        </td>
+      </tr>
+    </table>
+    
+    ${data.location_phone ? `${spacer(16)}${paragraph(`Questions? Call us at <a href="tel:${data.location_phone}" style="color: ${colors.text}; text-decoration: underline; font-weight: 500;">${data.location_phone}</a>`, true)}` : ''}
+    ${spacer(8)}
+    ${paragraph('Need to reschedule? Just reply to this email or start a new chat with us.', true)}
+  `;
+  
+  return generateWrapper(`Your tour at ${data.location_name} is confirmed for ${displayDateTime}`, content);
 }
+
+// =============================================================================
+// HANDLER
+// =============================================================================
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -189,7 +286,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify internal secret for security
     const internalSecret = req.headers.get('x-internal-secret');
     const expectedSecret = Deno.env.get('INTERNAL_WEBHOOK_SECRET');
     
@@ -208,7 +304,6 @@ serve(async (req) => {
       confirmation_id: data.confirmation_id 
     });
 
-    // Validate required fields
     if (!data.to || !data.visitor_name || !data.location_name || !data.start_time || !data.end_time) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
@@ -227,11 +322,9 @@ serve(async (req) => {
 
     const resend = new Resend(resendApiKey);
 
-    // Generate calendar invite
     const icsContent = generateCalendarInvite(data);
     const icsBase64 = btoa(icsContent);
 
-    // Send email with .ics attachment
     const emailResponse = await resend.emails.send({
       from: `${data.location_name} <bookings@getpilot.io>`,
       to: [data.to],
