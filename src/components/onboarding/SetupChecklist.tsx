@@ -7,7 +7,7 @@
  * @module components/onboarding/SetupChecklist
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowUpRight } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { PlayIcon } from '@/components/icons/PlayIcon';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
@@ -37,13 +38,31 @@ export function SetupChecklist({
   totalCount,
   onStepAction,
 }: SetupChecklistProps) {
-  const allComplete = completedCount === totalCount;
   const prefersReducedMotion = useReducedMotion();
   const { user } = useAuth();
+  const { hasPermission, isAdmin } = useRoleAuthorization();
   const [hasRated, setHasRated] = useState(false);
   
+  // Check if user can manage Ari
+  const canManageAri = isAdmin || hasPermission('manage_ari');
+  
+  // Filter steps based on permissions - hide Ari-related steps if user lacks manage_ari
+  const visibleSteps = useMemo(() => {
+    return steps.filter(step => {
+      // If step navigates to /ari, check permission
+      if (step.action.route.startsWith('/ari') || step.action.section) {
+        return canManageAri;
+      }
+      return true;
+    });
+  }, [steps, canManageAri]);
+  
+  const visibleCompletedCount = visibleSteps.filter(s => s.isComplete).length;
+  const visibleTotalCount = visibleSteps.length;
+  const allComplete = visibleCompletedCount === visibleTotalCount;
+  
   // Default to first incomplete step
-  const defaultStep = steps.find(s => !s.isComplete)?.id || steps[0]?.id || '';
+  const defaultStep = visibleSteps.find(s => !s.isComplete)?.id || visibleSteps[0]?.id || '';
   const [expandedStepId, setExpandedStepId] = useState<string>(defaultStep);
 
   // Check if user has already rated
@@ -191,8 +210,8 @@ export function SetupChecklist({
         transition={{ type: 'spring', stiffness: 300, damping: 24 }}
       >
         <SetupProgress
-          completedCount={completedCount}
-          totalCount={totalCount}
+          completedCount={visibleCompletedCount}
+          totalCount={visibleTotalCount}
         />
       </motion.div>
 
@@ -214,7 +233,7 @@ export function SetupChecklist({
               onValueChange={(value) => setExpandedStepId(value || '')}
               className="bg-transparent border-0 px-0"
             >
-              {steps.map((step, index) => (
+              {visibleSteps.map((step, index) => (
                 <motion.div
                   key={step.id}
                   initial={prefersReducedMotion ? false : { opacity: 0, x: -10 }}
@@ -297,7 +316,7 @@ export function SetupChecklist({
             transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.3 }}
             className="hidden sm:flex w-72 md:w-96 lg:w-[28rem] flex-shrink-0"
           >
-            <VideoPlaceholder stepId={expandedStepId || steps[0]?.id} />
+            <VideoPlaceholder stepId={expandedStepId || visibleSteps[0]?.id} />
           </motion.div>
         </div>
       </motion.div>

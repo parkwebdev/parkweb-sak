@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { useLocations } from '@/hooks/useLocations';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { KnowledgeDetailsSheet } from '@/components/agents/knowledge';
 import { AriSectionHeader } from './AriSectionHeader';
@@ -83,6 +84,9 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
   } = useKnowledgeSources(agentId);
   
   const { locations } = useLocations(agentId);
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageKnowledge = isAdmin || hasPermission('manage_knowledge');
+  
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [isRetraining, setIsRetraining] = useState(false);
   const [retrainProgress, setRetrainProgress] = useState({ completed: 0, total: 0 });
@@ -278,7 +282,8 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
     onDelete: handleSetDeleteSource,
     onReprocess: handleReprocessSource,
     isOutdated: checkIsOutdated,
-  }), [handleViewSource, handleSetDeleteSource, handleReprocessSource, checkIsOutdated]);
+    canManage: canManageKnowledge,
+  }), [handleViewSource, handleSetDeleteSource, handleReprocessSource, checkIsOutdated, canManageKnowledge]);
 
   // Create table instance
   const table = useReactTable({
@@ -509,7 +514,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
         description="Add URLs, sitemaps, or documents to train Ari"
         extra={
           <div className="flex items-center gap-2">
-            {sources.length > 0 && (
+            {canManageKnowledge && sources.length > 0 && (
               <Button
                 size="sm"
                 variant="outline"
@@ -525,9 +530,11 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
                 }
               </Button>
             )}
-            <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-              Add Source
-            </Button>
+            {canManageKnowledge && (
+              <Button size="sm" onClick={() => setAddDialogOpen(true)}>
+                Add Source
+              </Button>
+            )}
           </div>
         }
       />
@@ -538,12 +545,12 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
             icon={<Database01 className="h-5 w-5 text-muted-foreground/50" />}
             title="No knowledge sources yet"
             description="Add documents, URLs, or sitemaps to enhance Ari's knowledge"
-            action={<Button onClick={() => setAddDialogOpen(true)} size="sm">Add Your First Source</Button>}
+            action={canManageKnowledge ? <Button onClick={() => setAddDialogOpen(true)} size="sm">Add Your First Source</Button> : undefined}
           />
         ) : (
           <>
-            {/* Bulk selection action bar */}
-            {selectedCount > 0 && (
+            {/* Bulk selection action bar - only show if user can manage */}
+            {canManageKnowledge && selectedCount > 0 && (
               <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
                 <span className="text-sm text-muted-foreground">
                   {selectedCount} source{selectedCount > 1 ? 's' : ''} selected
