@@ -375,6 +375,41 @@ serve(async (req) => {
     }).then(() => console.log('Conversation notification created'))
       .catch(err => console.error('Failed to create conversation notification:', err));
 
+    // Send new lead email notification (fire and forget)
+    (async () => {
+      try {
+        // Get owner's email from profiles
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('user_id', agent.user_id)
+          .single();
+
+        if (profile?.email) {
+          const appUrl = Deno.env.get('APP_URL') || 'https://getpilot.io';
+          
+          await fetch(`${supabaseUrl}/functions/v1/send-new-lead-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+            },
+            body: JSON.stringify({
+              recipientEmail: profile.email,
+              leadName,
+              leadEmail: sanitizedEmail,
+              leadPhone: extractedPhone,
+              leadId: lead.id,
+              conversationId,
+            }),
+          });
+          console.log('New lead email sent to:', profile.email);
+        }
+      } catch (emailError) {
+        console.error('Failed to send new lead email:', emailError);
+      }
+    })();
+
     return new Response(
       JSON.stringify({ leadId: lead.id, conversationId }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

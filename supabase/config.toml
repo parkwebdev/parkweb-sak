@@ -139,3 +139,7 @@ verify_jwt = false
 
 [functions.send-member-removed-email]
 verify_jwt = true
+
+# New Lead Email - Notification when lead captured via Ari Agent
+[functions.send-new-lead-email]
+verify_jwt = false
