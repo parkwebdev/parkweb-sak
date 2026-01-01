@@ -833,6 +833,35 @@ if (hasDataPermission('conversations')) {
 | `settings` | `/settings` | `view_settings` | No |
 | `report-builder` | `/report-builder` | `view_dashboard` | No |
 
+### Settings Tabs Configuration
+
+Settings tabs are also centralized in `src/config/routes.ts` via `SETTINGS_TABS`. Used by:
+- **SettingsLayout** (`src/components/settings/SettingsLayout.tsx`) - Sidebar/tab rendering
+- **Settings page** (`src/pages/Settings.tsx`) - Tab validation
+- **Global search** (`src/hooks/useSearchData.ts`) - Settings search results
+
+| Tab ID | Tab Param | Permission | Description |
+|--------|-----------|------------|-------------|
+| `settings-general` | `general` | - | Organization settings |
+| `settings-profile` | `profile` | - | User profile |
+| `settings-team` | `team` | `view_team` | Team management |
+| `settings-billing` | `billing` | `view_billing` | Subscription & billing |
+| `settings-usage` | `usage` | `view_billing` | Usage metrics |
+| `settings-notifications` | `notifications` | - | Notification preferences |
+
+```typescript
+// Usage in SettingsLayout.tsx
+import { SETTINGS_TABS, type SettingsTabParam } from '@/config/routes';
+
+// Filter tabs by user permissions
+const menuItems = useMemo(() => {
+  return SETTINGS_TABS.filter(tab => {
+    if (!tab.requiredPermission) return true;
+    return isAdmin || hasPermission(tab.requiredPermission);
+  });
+}, [hasPermission, isAdmin]);
+```
+
 ---
 
 ## Key Components

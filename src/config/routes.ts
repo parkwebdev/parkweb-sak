@@ -130,10 +130,23 @@ export interface SettingsTabConfig {
   description?: string;
 }
 
+/**
+ * Centralized settings tab configuration.
+ * Used by SettingsLayout for sidebar/tabs and useSearchData for global search.
+ * Order determines display order in the UI.
+ */
 export const SETTINGS_TABS: readonly SettingsTabConfig[] = [
   {
+    id: 'settings-general',
+    label: 'General',
+    tabParam: 'general',
+    iconName: 'Settings01',
+    description: 'Organization settings',
+    // No permission - always visible
+  },
+  {
     id: 'settings-profile',
-    label: 'Profile Settings',
+    label: 'Profile',
     tabParam: 'profile',
     iconName: 'User01',
     description: 'Manage your profile',
@@ -141,24 +154,16 @@ export const SETTINGS_TABS: readonly SettingsTabConfig[] = [
   },
   {
     id: 'settings-team',
-    label: 'Team Settings',
+    label: 'Team',
     tabParam: 'team',
     requiredPermission: 'view_team',
     iconName: 'Users01',
     description: 'Manage team members',
   },
   {
-    id: 'settings-notifications',
-    label: 'Notification Settings',
-    tabParam: 'notifications',
-    iconName: 'Bell01',
-    description: 'Manage notification preferences',
-    // No permission - always visible
-  },
-  {
-    id: 'settings-subscription',
-    label: 'Subscription & Billing',
-    tabParam: 'subscription',
+    id: 'settings-billing',
+    label: 'Billing',
+    tabParam: 'billing',
     requiredPermission: 'view_billing',
     iconName: 'CreditCard01',
     description: 'Manage subscription and invoices',
@@ -171,7 +176,18 @@ export const SETTINGS_TABS: readonly SettingsTabConfig[] = [
     iconName: 'BarChart01',
     description: 'View usage metrics',
   },
+  {
+    id: 'settings-notifications',
+    label: 'Notifications',
+    tabParam: 'notifications',
+    iconName: 'Bell01',
+    description: 'Manage notification preferences',
+    // No permission - always visible
+  },
 ] as const;
+
+/** Type for settings tab param values */
+export type SettingsTabParam = typeof SETTINGS_TABS[number]['tabParam'];
 
 /** Helper to get route by ID */
 export function getRouteById(id: string): RouteConfig | undefined {

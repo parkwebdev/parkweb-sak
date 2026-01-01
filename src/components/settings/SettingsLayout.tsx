@@ -1,7 +1,7 @@
 /**
  * @fileoverview Settings page layout with sidebar navigation.
  * Provides responsive tabs for mobile and sidebar for desktop.
- * Filters tabs based on user permissions.
+ * Filters tabs based on user permissions using centralized SETTINGS_TABS config.
  */
 
 import React, { useMemo } from 'react';
@@ -11,19 +11,14 @@ import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
-import type { AppPermission } from '@/types/team';
+import { SETTINGS_TABS, type SettingsTabParam } from '@/config/routes';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'billing' | 'usage';
-
-interface SettingsMenuItem {
-  id: SettingsTab;
-  label: string;
-  requiredPermission?: AppPermission;
-}
+/** Settings tab type derived from centralized config */
+export type SettingsTab = SettingsTabParam;
 
 interface SettingsMenuItemProps {
   id: SettingsTab;
@@ -67,16 +62,10 @@ interface SettingsLayoutContentProps {
   onMenuClick?: () => void;
 }
 
-// Menu items with their required permissions
-const ALL_MENU_ITEMS: SettingsMenuItem[] = [
-  { id: 'general', label: 'General' },
-  { id: 'profile', label: 'Profile' },
-  { id: 'team', label: 'Team', requiredPermission: 'view_team' },
-  { id: 'billing', label: 'Billing', requiredPermission: 'view_billing' },
-  { id: 'usage', label: 'Usage', requiredPermission: 'view_billing' },
-  { id: 'notifications', label: 'Notifications' },
-];
-
+/**
+ * Settings layout component with responsive sidebar/tabs.
+ * Uses centralized SETTINGS_TABS from routes.ts for configuration.
+ */
 export function SettingsLayout({
   activeTab,
   onTabChange,
@@ -85,13 +74,13 @@ export function SettingsLayout({
 }: SettingsLayoutContentProps) {
   const { hasPermission, isAdmin, loading } = useRoleAuthorization();
   
-  // Filter menu items based on permissions
+  // Filter menu items based on permissions using centralized config
   const menuItems = useMemo(() => {
-    if (loading) return ALL_MENU_ITEMS; // Show all while loading to prevent flash
+    if (loading) return SETTINGS_TABS; // Show all while loading to prevent flash
     
-    return ALL_MENU_ITEMS.filter(item => {
-      if (!item.requiredPermission) return true;
-      return isAdmin || hasPermission(item.requiredPermission);
+    return SETTINGS_TABS.filter(tab => {
+      if (!tab.requiredPermission) return true;
+      return isAdmin || hasPermission(tab.requiredPermission);
     });
   }, [hasPermission, isAdmin, loading]);
 
@@ -116,18 +105,18 @@ export function SettingsLayout({
         
         {/* Mobile tab navigation */}
         <div className="flex overflow-x-auto gap-1 mb-6 pb-2">
-          {menuItems.map((item) => (
+          {menuItems.map((tab) => (
             <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
+              key={tab.id}
+              onClick={() => onTabChange(tab.tabParam as SettingsTab)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap",
-                activeTab === item.id
+                activeTab === tab.tabParam
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               )}
             >
-              {item.label}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -143,12 +132,12 @@ export function SettingsLayout({
             </p>
           </div>
           <nav className="space-y-1">
-            {menuItems.map((item, index) => (
+            {menuItems.map((tab, index) => (
               <SettingsMenuItemButton
-                key={item.id}
-                id={item.id}
-                label={item.label}
-                active={activeTab === item.id}
+                key={tab.id}
+                id={tab.tabParam as SettingsTab}
+                label={tab.label}
+                active={activeTab === tab.tabParam}
                 onClick={onTabChange}
                 index={index}
               />
