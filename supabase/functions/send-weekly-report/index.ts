@@ -5,7 +5,7 @@ import { Resend } from "npm:resend@2.0.0";
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const appUrl = Deno.env.get("APP_URL") || "https://getpilot.io";
+const appUrl = Deno.env.get("APP_URL") || "https://app.getpilot.io";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
