@@ -37,7 +37,6 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
     fetchTeamMembers
   } = useTeam();
 
-  const isSuperAdmin = currentUserRole === 'super_admin';
   const canManageTeam = isAdmin || hasPermission('manage_team');
 
   // Handle auto-opening a team member from URL parameter
@@ -100,7 +99,7 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
         currentUserId={user?.id}
         canManageRoles={canManageRoles}
         onEditRole={handleEditRole}
-        onEditProfile={isSuperAdmin ? handleEditProfile : undefined}
+        onEditProfile={isAdmin ? handleEditProfile : undefined}
         onRemove={handleRemoveMember}
         loading={loading}
       />

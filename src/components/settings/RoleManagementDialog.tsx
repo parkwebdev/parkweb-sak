@@ -187,7 +187,7 @@ export function RoleManagementDialog({
 
   if (!member) return null;
 
-  const canEditPermissions = !isEditingSelf || ['admin', 'super_admin'].includes(currentUserRole);
+  const canEditPermissions = !isEditingSelf || currentUserRole === 'admin';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -206,7 +206,7 @@ export function RoleManagementDialog({
 
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
           {/* Role Selection - Only show for admins managing others */}
-          {!isEditingSelf && ['admin', 'super_admin'].includes(currentUserRole) && (
+          {!isEditingSelf && currentUserRole === 'admin' && (
             <div className="space-y-2">
               <Label className="text-sm font-medium">Role</Label>
               <Select value={role} onValueChange={(v) => handleRoleChange(v as UserRole)}>
@@ -214,13 +214,9 @@ export function RoleManagementDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {currentUserRole === 'super_admin' && (
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                  )}
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="client">Client</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">

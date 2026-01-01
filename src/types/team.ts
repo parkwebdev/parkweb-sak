@@ -47,10 +47,16 @@ export interface InviteMemberData {
 }
 
 /**
- * Available user roles in the system.
+ * Available user roles in the system (customer-facing).
  * Ordered from highest to lowest privilege.
  */
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'client';
+export type UserRole = 'admin' | 'manager' | 'member';
+
+/**
+ * All possible roles including internal platform role.
+ * Used for database compatibility where super_admin may exist.
+ */
+export type DatabaseRole = UserRole | 'super_admin';
 
 /**
  * Granular app permissions matching the database enum.
@@ -155,7 +161,6 @@ export const ALL_PERMISSIONS: AppPermission[] = Object.keys(PERMISSION_LABELS) a
  * Used when assigning a new role to auto-populate permissions.
  */
 export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
-  super_admin: ALL_PERMISSIONS,
   admin: ALL_PERMISSIONS,
   manager: [
     'view_dashboard',
@@ -188,10 +193,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     'view_help_articles',
     'view_team',
     'view_settings',
-  ],
-  client: [
-    'view_dashboard',
-    'view_bookings',
   ],
 };
 

@@ -2,10 +2,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/utils/logger';
-import type { UserRole, AppPermission } from '@/types/team';
+import type { DatabaseRole, AppPermission } from '@/types/team';
 
 interface RoleAuthData {
-  role: UserRole | null;
+  role: DatabaseRole | null;
   permissions: AppPermission[];
   loading: boolean;
   
@@ -73,7 +73,7 @@ interface RoleAuthData {
  */
 export const useRoleAuthorization = (): RoleAuthData => {
   const { user } = useAuth();
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [role, setRole] = useState<DatabaseRole | null>(null);
   const [permissions, setPermissions] = useState<AppPermission[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -98,7 +98,7 @@ export const useRoleAuthorization = (): RoleAuthData => {
           setRole('member');
           setPermissions([]);
         } else {
-          setRole(data.role as UserRole);
+          setRole(data.role as DatabaseRole);
           setPermissions((data.permissions as AppPermission[]) || []);
         }
       } catch (error: unknown) {

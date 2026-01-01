@@ -118,7 +118,7 @@ export const useTeam = () => {
   });
 
   const canManageRoles = useMemo(() => 
-    ['admin', 'super_admin'].includes(currentUserRole), 
+    currentUserRole === 'admin', 
     [currentUserRole]
   );
 
