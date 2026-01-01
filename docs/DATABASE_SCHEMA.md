@@ -1,6 +1,6 @@
 # Pilot Database Schema
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
 > **Related**: [Security](./SECURITY.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Architecture](./ARCHITECTURE.md)
 
@@ -1361,5 +1361,5 @@ import { ConversationMetadata, ReportData, getErrorMessage } from '@/types';
 
 - [Security](./SECURITY.md) - RLS policies and authentication patterns
 - [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side database operations
-- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - React Query hooks and patterns
+- [Hooks Reference](./HOOKS_REFERENCE.md) - React Query hooks and patterns
 - [AI Architecture](./AI_ARCHITECTURE.md) - Vector embeddings and RAG tables

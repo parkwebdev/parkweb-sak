@@ -1,6 +1,6 @@
 # Social Channel Integrations Architecture
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Planned  
 > **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Native Booking System](./NATIVE_BOOKING_SYSTEM.md)
 

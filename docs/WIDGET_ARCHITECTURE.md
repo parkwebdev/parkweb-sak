@@ -1,6 +1,6 @@
 # Pilot Widget Architecture
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
 > **Related**: [Security](./SECURITY.md), [Edge Functions](./EDGE_FUNCTIONS.md), [AI Architecture](./AI_ARCHITECTURE.md)
 

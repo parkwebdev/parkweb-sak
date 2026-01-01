@@ -1,6 +1,6 @@
 # Pilot Edge Functions
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
 > **Calendar Webhook Integration**: ✅ Phases 1-5, 7 Complete (December 2025)
 > **Analytics Phase 6**: ✅ Complete (December 2025) - BookingTrendChart, RecentBookingsTable, ChartCardHeader integration
@@ -1476,7 +1476,7 @@ View logs at: `https://supabase.com/dashboard/project/{project_id}/functions/{fu
 
 ## Related Documentation
 
-- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - Client-side Supabase patterns
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Client-side Supabase patterns
 - [Security](./SECURITY.md) - Authentication and RLS policies
 - [AI Architecture](./AI_ARCHITECTURE.md) - AI-related edge function details
 - [Database Schema](./DATABASE_SCHEMA.md) - Table structures and relationships

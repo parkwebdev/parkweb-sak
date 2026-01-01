@@ -1,6 +1,6 @@
 # Pilot Hooks Reference
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
 > **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md)
 
@@ -2637,7 +2637,7 @@ const {
 
 ## Related Documentation
 
-- [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md) - Data fetching patterns
-- [Application Overview](./APPLICATION_OVERVIEW.md) - Project structure
+- [Database Schema](./DATABASE_SCHEMA.md) - Data fetching patterns
+- [Architecture](./ARCHITECTURE.md) - Project structure
 - [Design System](./DESIGN_SYSTEM.md) - UI guidelines
 - [PDF Generator](./PDF_GENERATOR.md) - PDF report generation

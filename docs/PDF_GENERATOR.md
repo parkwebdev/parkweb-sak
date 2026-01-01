@@ -1,5 +1,9 @@
 # PDF Generator Architecture
 
+> **Last Updated**: January 2026  
+> **Status**: Active  
+> **Related**: [Architecture](./ARCHITECTURE.md), [Hooks Reference](./HOOKS_REFERENCE.md), [Design System](./DESIGN_SYSTEM.md)
+
 ## Overview
 
 The Pilot PDF generator creates analytics reports using `@react-pdf/renderer` with native vector chart components. This provides crisp, scalable graphics that render identically across all PDF viewers.
@@ -876,3 +880,11 @@ Test PDF generation with various data states:
 ### Colors look off
 - Ensure using colors from design system, not hex literals
 - Check for transparency issues in PDF viewers
+
+---
+
+## Related Documentation
+
+- [Architecture](./ARCHITECTURE.md) - System architecture
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Analytics hooks
+- [Design System](./DESIGN_SYSTEM.md) - Color tokens for charts
