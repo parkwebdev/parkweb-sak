@@ -692,6 +692,149 @@ pilot/
 
 ---
 
+## Centralized Route Configuration
+
+> **Status**: ✅ Verified Complete (January 2026)  
+> **Files**: `src/config/routes.ts`, `src/types/search.ts`
+
+### Overview
+
+All route definitions, permissions, and metadata are centralized in `src/config/routes.ts`. This provides a **single source of truth** for:
+
+- **Sidebar navigation** (`src/components/Sidebar.tsx`)
+- **Route protection** (`src/App.tsx` via `PermissionGuard`)
+- **Global search** (`src/hooks/useSearchData.ts`)
+- **Settings tabs** configuration
+
+### Route Configuration (`src/config/routes.ts`)
+
+```typescript
+import { getRouteById, getMainNavRoutes, getBottomNavRoutes, ROUTE_CONFIG, SETTINGS_TABS } from '@/config/routes';
+
+// RouteConfig interface
+interface RouteConfig {
+  id: string;                          // Unique route identifier
+  label: string;                       // Display label
+  path: string;                        // URL path
+  requiredPermission?: AppPermission;  // Permission required (undefined = no permission)
+  adminOnly?: boolean;                 // If true, admin-only access
+  iconName?: string;                   // UntitledUI icon name
+  shortcut?: string;                   // Keyboard shortcut
+  description?: string;                // Search description
+  showInNav?: boolean;                 // Show in main nav
+  showInBottomNav?: boolean;           // Show in bottom nav
+}
+
+// Helper functions
+getRouteById('ari');           // Get specific route config
+getMainNavRoutes();            // Routes with showInNav: true
+getBottomNavRoutes();          // Routes with showInBottomNav: true
+```
+
+### Usage in App.tsx
+
+```typescript
+import { getRouteById } from '@/config/routes';
+
+// Helper to get PermissionGuard props from route config
+function getGuardProps(routeId: string) {
+  const route = getRouteById(routeId);
+  return {
+    permission: route?.requiredPermission,
+    adminOnly: route?.adminOnly,
+  };
+}
+
+// Usage in routes
+<Route 
+  path="/ari" 
+  element={
+    <PermissionGuard {...getGuardProps('ari')}>
+      <AriConfiguratorWrapper />
+    </PermissionGuard>
+  } 
+/>
+```
+
+### Usage in Sidebar.tsx
+
+```typescript
+import { getMainNavRoutes, getBottomNavRoutes } from '@/config/routes';
+
+// Map route config to navigation items
+const ICON_MAP = { AriLogo: AriAgentsIcon, ... };
+const mainNavItems = getMainNavRoutes().map(route => ({
+  ...route,
+  icon: ICON_MAP[route.iconName ?? ''],
+}));
+```
+
+### Type-Safe Search Data (`src/types/search.ts`)
+
+```typescript
+import type { SearchDataMap } from '@/types/search';
+import { DATA_PERMISSION_MAP } from '@/types/search';
+
+// Strongly-typed data map for search results
+interface SearchDataMap {
+  conversations?: ConversationWithAgent[];
+  leads?: LeadRecord[];
+  helpArticles?: HelpArticleWithRelations[];
+  // ... all data types with proper database entity types
+}
+
+// Permission mapping for each data type
+const DATA_PERMISSION_MAP: Record<keyof SearchDataMap, AppPermission> = {
+  conversations: 'view_conversations',
+  leads: 'view_leads',
+  helpArticles: 'view_help_articles',
+  // ... maps data types to required permissions
+};
+```
+
+### Usage in useSearchData.ts
+
+```typescript
+import { DATA_PERMISSION_MAP } from '@/types/search';
+
+// Type-safe permission check
+const hasDataPermission = (dataKey: keyof SearchDataMap): boolean => {
+  if (isAdmin) return true;
+  const permission = DATA_PERMISSION_MAP[dataKey];
+  return hasPermission(permission);
+};
+
+// Use in data fetching
+if (hasDataPermission('conversations')) {
+  // Fetch conversations...
+}
+```
+
+### Benefits
+
+| Benefit | Description |
+|---------|-------------|
+| **Single Source of Truth** | Route permissions defined once, used everywhere |
+| **Full Type Safety** | No `unknown[]` or unsafe type assertions |
+| **Compile-Time Errors** | Typos in permission names caught by TypeScript |
+| **Easier Maintenance** | Add a route in one place, appears in nav/search/guards |
+| **Reduced Duplication** | ~100 lines of duplicated config eliminated |
+
+### Defined Routes
+
+| Route ID | Path | Permission | Admin Only |
+|----------|------|------------|------------|
+| `ari` | `/ari` | `manage_ari` | No |
+| `conversations` | `/conversations` | `view_conversations` | No |
+| `planner` | `/planner` | `view_bookings` | No |
+| `leads` | `/leads` | `view_leads` | No |
+| `analytics` | `/analytics` | `view_dashboard` | No |
+| `get-set-up` | `/` | - | Yes |
+| `settings` | `/settings` | `view_settings` | No |
+| `report-builder` | `/report-builder` | `view_dashboard` | No |
+
+---
+
 ## Key Components
 
 ### Layout Components
