@@ -37,13 +37,14 @@ interface TemplateItem {
   label: string;
   icon: typeof Mail01;
   group: string;
+  status?: 'integrated' | 'ready';
 }
 
 const TEMPLATES: TemplateItem[] = [
-  // Auth
-  { id: 'password-reset', label: 'Password Reset', icon: Key01, group: 'Auth' },
-  { id: 'email-verification', label: 'Email Verification', icon: CheckCircle, group: 'Auth' },
-  { id: 'welcome', label: 'Welcome', icon: UserPlus01, group: 'Auth' },
+  // Auth - Integrated with send-auth-email edge function
+  { id: 'password-reset', label: 'Password Reset', icon: Key01, group: 'Auth', status: 'integrated' },
+  { id: 'email-verification', label: 'Email Verification', icon: CheckCircle, group: 'Auth', status: 'integrated' },
+  { id: 'welcome', label: 'Welcome', icon: UserPlus01, group: 'Auth', status: 'integrated' },
   
   // Transactional - Invitations
   { id: 'invitation', label: 'Team Invitation', icon: Mail01, group: 'Team' },
@@ -183,29 +184,34 @@ export function EmailTemplateSidebar({
                   const isActive = activeTemplate === template.id;
                   const Icon = template.icon;
 
-                  return (
-                    <motion.button
-                      key={template.id}
-                      onClick={() => onTemplateChange(template.id)}
-                      initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        duration: 0.2,
-                        delay: prefersReducedMotion ? 0 : groupIndex * 0.05 + itemIndex * 0.03,
-                      }}
-                      className={`
-                        w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm
-                        transition-colors duration-150
-                        ${isActive 
-                          ? 'bg-primary/10 text-primary font-medium' 
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                        }
-                      `}
-                    >
-                      <Icon size={16} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
-                      <span>{template.label}</span>
-                    </motion.button>
-                  );
+                    return (
+                      <motion.button
+                        key={template.id}
+                        onClick={() => onTemplateChange(template.id)}
+                        initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          duration: 0.2,
+                          delay: prefersReducedMotion ? 0 : groupIndex * 0.05 + itemIndex * 0.03,
+                        }}
+                        className={`
+                          w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm
+                          transition-colors duration-150
+                          ${isActive 
+                            ? 'bg-primary/10 text-primary font-medium' 
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          }
+                        `}
+                      >
+                        <Icon size={16} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
+                        <span className="flex-1 text-left">{template.label}</span>
+                        {template.status === 'integrated' && (
+                          <span className="text-2xs px-1.5 py-0.5 rounded bg-status-active/10 text-status-active font-medium">
+                            Live
+                          </span>
+                        )}
+                      </motion.button>
+                    );
                 })}
               </div>
             </div>

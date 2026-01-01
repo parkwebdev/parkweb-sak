@@ -293,7 +293,6 @@ export default function EmailTemplatesTest() {
     totalConversations: 156,
     leadsGenerated: 23,
     avgResponseTime: '1.4s',
-    topTopics: ['Pricing', 'Features', 'Integration', 'Support'],
     viewDetailsUrl: 'https://getpilot.io/analytics',
   });
 
@@ -318,7 +317,6 @@ export default function EmailTemplatesTest() {
     leadName: 'Sarah Johnson',
     previousStage: 'New',
     newStage: 'Qualified',
-    changedBy: 'John Smith',
     viewLeadUrl: 'https://getpilot.io/leads/123',
   });
 
@@ -343,7 +341,6 @@ export default function EmailTemplatesTest() {
     memberName: 'Jane Doe',
     removedBy: 'John Smith',
     teamName: 'Acme Corporation',
-    reason: 'Role change',
   });
 
   const [accountInactivityData, setAccountInactivityData] = useState<AccountInactivityWarningData>({
@@ -901,14 +898,6 @@ export default function EmailTemplatesTest() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs">Changed By</Label>
-              <Input
-                value={leadStatusChangeData.changedBy}
-                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, changedBy: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
               <Label className="text-xs">Previous Stage</Label>
               <Input
                 value={leadStatusChangeData.previousStage}
@@ -921,6 +910,14 @@ export default function EmailTemplatesTest() {
               <Input
                 value={leadStatusChangeData.newStage}
                 onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, newStage: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">View Lead URL</Label>
+              <Input
+                value={leadStatusChangeData.viewLeadUrl}
+                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, viewLeadUrl: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
@@ -1014,7 +1011,7 @@ export default function EmailTemplatesTest() {
 
       case 'team-member-removed':
         return (
-          <div className="p-4 grid grid-cols-2 gap-4">
+          <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Member Name</Label>
               <Input
@@ -1036,14 +1033,6 @@ export default function EmailTemplatesTest() {
               <Input
                 value={teamMemberRemovedData.teamName}
                 onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, teamName: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Reason</Label>
-              <Input
-                value={teamMemberRemovedData.reason || ''}
-                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, reason: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
