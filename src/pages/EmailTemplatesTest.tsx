@@ -25,6 +25,7 @@ import {
   generateSignupConfirmationEmail,
   generateSupabasePasswordResetEmail,
   generateSupabaseSignupConfirmationEmail,
+  generateSupabaseTeamInvitationEmail,
   generateBookingCancellationEmail,
   generateBookingReminderEmail,
   generateNewLeadNotificationEmail,
@@ -197,7 +198,7 @@ export default function EmailTemplatesTest() {
   const [supabaseExportMode, setSupabaseExportMode] = useState(false);
 
   // Check if current template supports Supabase export
-  const supportsSupabaseExport = activeTemplate === 'password-reset' || activeTemplate === 'signup-confirmation';
+  const supportsSupabaseExport = activeTemplate === 'password-reset' || activeTemplate === 'signup-confirmation' || activeTemplate === 'invitation';
 
   // Existing template data
   const [invitationData, setInvitationData] = useState<TeamInvitationData>({
@@ -324,6 +325,7 @@ export default function EmailTemplatesTest() {
       switch (activeTemplate) {
         case 'password-reset': return generateSupabasePasswordResetEmail();
         case 'signup-confirmation': return generateSupabaseSignupConfirmationEmail();
+        case 'invitation': return generateSupabaseTeamInvitationEmail();
         default: break;
       }
     }
