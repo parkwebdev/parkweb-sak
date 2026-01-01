@@ -7,6 +7,7 @@
  * - Authentication context
  * - Routing configuration
  * - Global error boundaries
+ * - Permission-based route protection
  * 
  * @module App
  */
@@ -19,6 +20,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GlobalSearchProvider } from "@/contexts/GlobalSearchContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PermissionGuard } from "@/components/PermissionGuard";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { AppLayout } from "@/components/layout/AppLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -74,14 +76,79 @@ const App = () => (
                   
                   {/* Protected routes with shared layout */}
                   <Route element={<ProtectedLayout />}>
+                    {/* Dashboard - always accessible for authenticated users */}
                     <Route path="/" element={<GetStartedWrapper />} />
-                    <Route path="/ari" element={<AriConfiguratorWrapper />} />
-                    <Route path="/conversations" element={<ConversationsWrapper />} />
-                    <Route path="/planner" element={<PlannerWrapper />} />
-                    <Route path="/leads" element={<LeadsWrapper />} />
-                    <Route path="/analytics" element={<AnalyticsWrapper />} />
-                    <Route path="/settings" element={<SettingsWrapper />} />
-                    <Route path="/report-builder" element={<ReportBuilder />} />
+                    
+                    {/* Ari Configuration - requires manage_ari permission */}
+                    <Route 
+                      path="/ari" 
+                      element={
+                        <PermissionGuard permission="manage_ari">
+                          <AriConfiguratorWrapper />
+                        </PermissionGuard>
+                      } 
+                    />
+                    
+                    {/* Conversations - requires view_conversations permission */}
+                    <Route 
+                      path="/conversations" 
+                      element={
+                        <PermissionGuard permission="view_conversations">
+                          <ConversationsWrapper />
+                        </PermissionGuard>
+                      } 
+                    />
+                    
+                    {/* Planner/Bookings - requires view_bookings permission */}
+                    <Route 
+                      path="/planner" 
+                      element={
+                        <PermissionGuard permission="view_bookings">
+                          <PlannerWrapper />
+                        </PermissionGuard>
+                      } 
+                    />
+                    
+                    {/* Leads - requires view_leads permission */}
+                    <Route 
+                      path="/leads" 
+                      element={
+                        <PermissionGuard permission="view_leads">
+                          <LeadsWrapper />
+                        </PermissionGuard>
+                      } 
+                    />
+                    
+                    {/* Analytics - requires view_dashboard permission */}
+                    <Route 
+                      path="/analytics" 
+                      element={
+                        <PermissionGuard permission="view_dashboard">
+                          <AnalyticsWrapper />
+                        </PermissionGuard>
+                      } 
+                    />
+                    
+                    {/* Settings - requires view_settings permission */}
+                    <Route 
+                      path="/settings" 
+                      element={
+                        <PermissionGuard permission="view_settings">
+                          <SettingsWrapper />
+                        </PermissionGuard>
+                      } 
+                    />
+                    
+                    {/* Report Builder - requires view_dashboard permission */}
+                    <Route 
+                      path="/report-builder" 
+                      element={
+                        <PermissionGuard permission="view_dashboard">
+                          <ReportBuilder />
+                        </PermissionGuard>
+                      } 
+                    />
+                    
                     <Route path="/email-templates-test" element={<EmailTemplatesTest />} />
                     
                     {/* Dev-only routes inside layout */}

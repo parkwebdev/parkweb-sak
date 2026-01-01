@@ -3,11 +3,12 @@
  * 
  * Main navigation sidebar with collapsible behavior.
  * Expands on hover and shows unread conversation badges.
+ * Filters navigation items based on user permissions.
  * 
  * @module components/Sidebar
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
@@ -19,10 +20,12 @@ import { useConversations } from '@/hooks/useConversations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
 import type { ConversationMetadata } from '@/types/metadata';
+import type { AppPermission } from '@/types/team';
 
 /**
  * Navigation item configuration
@@ -41,21 +44,23 @@ interface NavigationItem {
   path: string;
   /** Optional badge text */
   badge?: string;
+  /** Required permission to view this item (optional - if not set, always visible) */
+  requiredPermission?: AppPermission;
 }
 
-/** Main navigation items */
+/** Main navigation items with permission requirements */
 const navigationItems: NavigationItem[] = [
-  { id: 'ari', label: 'Ari', icon: AriAgentsIcon, path: '/ari' },
-  { id: 'conversations', label: 'Inbox', icon: InboxOutline, activeIcon: InboxFilled, path: '/conversations' },
-  { id: 'planner', label: 'Planner', icon: Calendar, activeIcon: PlannerFilled, path: '/planner' },
-  { id: 'leads', label: 'Leads', icon: User03, activeIcon: LeadsFilled, path: '/leads' },
-  { id: 'analytics', label: 'Analytics', icon: PieChart01, activeIcon: AnalyticsFilled, path: '/analytics' }
+  { id: 'ari', label: 'Ari', icon: AriAgentsIcon, path: '/ari', requiredPermission: 'manage_ari' },
+  { id: 'conversations', label: 'Inbox', icon: InboxOutline, activeIcon: InboxFilled, path: '/conversations', requiredPermission: 'view_conversations' },
+  { id: 'planner', label: 'Planner', icon: Calendar, activeIcon: PlannerFilled, path: '/planner', requiredPermission: 'view_bookings' },
+  { id: 'leads', label: 'Leads', icon: User03, activeIcon: LeadsFilled, path: '/leads', requiredPermission: 'view_leads' },
+  { id: 'analytics', label: 'Analytics', icon: PieChart01, activeIcon: AnalyticsFilled, path: '/analytics', requiredPermission: 'view_dashboard' }
 ];
 
 /** Bottom navigation items (settings, etc.) */
 const bottomItems: NavigationItem[] = [
   { id: 'get-set-up', label: 'Get set up', icon: Circle, path: '/' },
-  { id: 'settings', label: 'Settings', icon: Settings, activeIcon: SettingsFilled, path: '/settings' }
+  { id: 'settings', label: 'Settings', icon: Settings, activeIcon: SettingsFilled, path: '/settings', requiredPermission: 'view_settings' }
 ];
 
 /**
@@ -69,6 +74,7 @@ interface SidebarProps {
 /**
  * Application sidebar with navigation links.
  * Features hover-to-expand behavior and unread message badges.
+ * Filters navigation based on user permissions.
  * 
  * @example
  * <Sidebar />
@@ -84,6 +90,26 @@ function SidebarComponent({ onClose }: SidebarProps) {
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
   const { setOpen: setSearchOpen } = useGlobalSearch();
+  const { hasPermission, isAdmin, loading: permissionsLoading } = useRoleAuthorization();
+  
+  // Filter navigation items based on permissions
+  const filteredNavigationItems = useMemo(() => {
+    if (permissionsLoading) return navigationItems; // Show all while loading
+    return navigationItems.filter(item => {
+      if (!item.requiredPermission) return true;
+      if (isAdmin) return true;
+      return hasPermission(item.requiredPermission);
+    });
+  }, [hasPermission, isAdmin, permissionsLoading]);
+
+  const filteredBottomItems = useMemo(() => {
+    if (permissionsLoading) return bottomItems;
+    return bottomItems.filter(item => {
+      if (!item.requiredPermission) return true;
+      if (isAdmin) return true;
+      return hasPermission(item.requiredPermission);
+    });
+  }, [hasPermission, isAdmin, permissionsLoading]);
   
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -129,7 +155,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
         <div className="flex-1 overflow-auto">
           {/* Main navigation */}
           <section className="w-full">
-            {navigationItems.map((item, index) => {
+            {filteredNavigationItems.map((item, index) => {
               const isActive = location.pathname === item.path || 
                 (item.path !== '/' && location.pathname.startsWith(item.path));
               
@@ -204,7 +230,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
         {/* Footer with get set up, search, settings and user account */}
         <div className="pt-4">
           {/* Bottom navigation (get set up, search, settings) */}
-          {bottomItems.map((item, index) => {
+          {filteredBottomItems.map((item, index) => {
             const isActive = location.pathname === item.path;
             const isGetSetUp = item.id === 'get-set-up';
             
@@ -270,7 +296,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
                   className="items-center flex w-full py-0.5"
                   initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (navigationItems.length + index) * 0.03, ...springs.smooth }}
+                  transition={{ delay: (filteredNavigationItems.length + index) * 0.03, ...springs.smooth }}
                 >
                   <Link 
                     to={item.path}
@@ -309,7 +335,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
                       className="items-center flex w-full py-0.5"
                       initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: (navigationItems.length + index + 0.5) * 0.03, ...springs.smooth }}
+                      transition={{ delay: (filteredNavigationItems.length + index + 0.5) * 0.03, ...springs.smooth }}
                     >
                       <button
                         onClick={() => setSearchOpen(true)}
@@ -345,7 +371,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
                       className="items-center flex w-full py-0.5"
                       initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: (navigationItems.length + index + 0.6) * 0.03, ...springs.smooth }}
+                      transition={{ delay: (filteredNavigationItems.length + index + 0.6) * 0.03, ...springs.smooth }}
                     >
                       <ThemeToggle isCollapsed={isCollapsed} isSidebarItem />
                     </motion.div>
