@@ -1,0 +1,1 @@
+DELETE FROM pending_invitations WHERE email = 'aaron.chacha@gmail.com';
