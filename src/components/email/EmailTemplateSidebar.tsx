@@ -138,7 +138,7 @@ export function EmailTemplateSidebar({
       </div>
 
       {/* Preview Controls */}
-      <div className="p-3 space-y-3">
+      <div className="px-3 py-4 space-y-3">
         {/* Width Toggle */}
         <div className="space-y-1.5">
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Device</span>
