@@ -261,16 +261,25 @@ export function RoleManagementDialog({
             </div>
           )}
 
-          {/* Permissions Section - Two Columns */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">
-              {isEditingSelf ? 'Your Permissions' : 'Permissions'}
-            </Label>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Object.entries(PERMISSION_GROUPS).map(renderPermissionGroup)}
+          {/* Permissions Section */}
+          {role === 'admin' ? (
+            <div className="p-6 border border-border rounded-lg bg-muted/50 text-center">
+              <p className="text-sm font-medium text-foreground">Full Access</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Admins have unrestricted access to all features and settings.
+              </p>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">
+                {isEditingSelf ? 'Your Permissions' : 'Permissions'}
+              </Label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {Object.entries(PERMISSION_GROUPS).map(renderPermissionGroup)}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
