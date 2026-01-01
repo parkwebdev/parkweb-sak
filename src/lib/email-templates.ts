@@ -81,7 +81,7 @@ export interface NewLeadNotificationData {
   leadName: string;
   leadEmail?: string;
   leadPhone?: string;
-  source: string;
+  source?: string; // Defaults to 'Ari Agent'
   message?: string;
   viewLeadUrl: string;
 }
@@ -570,9 +570,11 @@ export function generateBookingReminderEmail(data: BookingReminderData): string 
 }
 
 export function generateNewLeadNotificationEmail(data: NewLeadNotificationData): string {
+  const source = data.source || 'Ari Agent';
+  
   const content = `
     ${heading('New lead captured')}
-    ${paragraph(`A new lead has been captured from <strong>${data.source}</strong>.`)}
+    ${paragraph(`A new lead has been captured from <strong>${source}</strong>.`)}
     
     <!-- Lead Card -->
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
@@ -582,7 +584,7 @@ export function generateNewLeadNotificationEmail(data: NewLeadNotificationData):
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
             ${data.leadEmail ? detailRow('Email', data.leadEmail) : ''}
             ${data.leadPhone ? detailRow('Phone', data.leadPhone) : ''}
-            ${detailRow('Source', data.source)}
+            ${detailRow('Source', source)}
           </table>
           ${data.message ? `
             ${spacer(12)}
@@ -597,7 +599,7 @@ export function generateNewLeadNotificationEmail(data: NewLeadNotificationData):
   `;
   
   return generateWrapper({
-    preheaderText: `New lead: ${data.leadName} from ${data.source}`,
+    preheaderText: `New lead: ${data.leadName} from ${source}`,
     content,
     unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#lead-emails',
   });
