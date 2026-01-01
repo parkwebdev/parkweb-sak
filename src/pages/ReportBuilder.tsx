@@ -802,13 +802,27 @@ export default function ReportBuilder() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="schedule-time">Time of Day</Label>
-                    <Input
-                      id="schedule-time"
-                      type="time"
-                      value={timeOfDay}
-                      onChange={(e) => setTimeOfDay(e.target.value)}
-                    />
+                    <Label>Time of Day</Label>
+                    <Select value={timeOfDay} onValueChange={setTimeOfDay}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const hour24 = i.toString().padStart(2, '0');
+                          const hour12 = i % 12 || 12;
+                          const period = i >= 12 ? 'PM' : 'AM';
+                          return (
+                            <SelectItem key={hour24} value={`${hour24}:00`}>
+                              {hour12}:00 {period}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Reports are sent at the start of the selected hour ({timezone.replace('_', ' ')})
+                    </p>
                   </div>
 
                   <div className="space-y-2">
