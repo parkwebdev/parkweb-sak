@@ -14,9 +14,10 @@ Complete reference for all custom React hooks in the Pilot application.
 2. [Error Handling Convention](#error-handling-convention)
 3. [Data Hooks](#data-hooks)
 4. [UI & State Hooks](#ui--state-hooks)
-4. [Authentication & Security Hooks](#authentication--security-hooks)
-5. [Widget Hooks](#widget-hooks)
-6. [Usage Patterns](#usage-patterns)
+5. [Permission Hooks](#permission-hooks)
+6. [Authentication & Security Hooks](#authentication--security-hooks)
+7. [Widget Hooks](#widget-hooks)
+8. [Usage Patterns](#usage-patterns)
 
 ---
 
@@ -1505,6 +1506,76 @@ const {
 ```
 
 **File**: `src/hooks/useEmbeddedChatConfig.ts`
+
+---
+
+## Permission Hooks
+
+Simplified hooks for permission checking. These hooks abstract the common pattern of `isAdmin || hasPermission()`.
+
+### useCanManage (`src/hooks/useCanManage.ts`)
+
+Simplified permission check that combines admin check with specific permission check.
+Replaces the common pattern: `isAdmin || hasPermission('permission_name')`.
+
+**Functions:**
+
+#### useCanManage
+```typescript
+function useCanManage(permission: AppPermission): boolean
+```
+
+Single permission check. Returns true if user is admin OR has the specified permission.
+
+```tsx
+import { useCanManage } from '@/hooks/useCanManage';
+
+// Before (verbose - 3 lines)
+const { hasPermission, isAdmin } = useRoleAuthorization();
+const canManageLeads = isAdmin || hasPermission('manage_leads');
+
+// After (clean - 1 line)
+const canManageLeads = useCanManage('manage_leads');
+```
+
+#### useCanManageMultiple
+```typescript
+function useCanManageMultiple<T extends AppPermission>(
+  permissions: readonly T[]
+): Record<T, boolean>
+```
+
+Check multiple permissions at once. Returns an object with each permission as a key.
+
+```tsx
+import { useCanManageMultiple } from '@/hooks/useCanManage';
+
+const perms = useCanManageMultiple(['manage_leads', 'manage_ari', 'view_billing']);
+if (perms.manage_leads) { /* ... */ }
+if (perms.manage_ari) { /* ... */ }
+```
+
+#### useCanManageChecker
+```typescript
+function useCanManageChecker(): (permission: AppPermission) => boolean
+```
+
+Returns a function to check permissions dynamically. Use when permission is passed as a prop or determined at runtime.
+
+```tsx
+import { useCanManageChecker } from '@/hooks/useCanManage';
+
+// In components that receive permission as prop
+const canManage = useCanManageChecker();
+const hasAccess = canManage(props.permission);
+
+// In components that check multiple permissions dynamically
+const canView = useCanManageChecker();
+const showTeam = canView('view_team');
+const showBilling = canView('view_billing');
+```
+
+**File**: `src/hooks/useCanManage.ts`
 
 ---
 

@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { useLocations } from '@/hooks/useLocations';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { KnowledgeDetailsSheet } from '@/components/agents/knowledge';
 import { AriSectionHeader } from './AriSectionHeader';
@@ -84,8 +84,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
   } = useKnowledgeSources(agentId);
   
   const { locations } = useLocations(agentId);
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageKnowledge = isAdmin || hasPermission('manage_knowledge');
+  const canManageKnowledge = useCanManage('manage_knowledge');
   
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [isRetraining, setIsRetraining] = useState(false);

@@ -8,9 +8,9 @@
  * @component
  */
 
-import React, { memo, useCallback } from 'react';
+import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
 
@@ -35,8 +35,7 @@ export const ChatHeader = memo(function ChatHeader({
   onClose,
   onReopen,
 }: ChatHeaderProps) {
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageConversations = isAdmin || hasPermission('manage_conversations');
+  const canManageConversations = useCanManage('manage_conversations');
   
   const metadata = (conversation.metadata || {}) as ConversationMetadata;
   const displayName = metadata.lead_name || metadata.lead_email || 'Anonymous';
