@@ -36,6 +36,10 @@ export interface TeamMember {
  * Data required to invite a new team member.
  */
 export interface InviteMemberData {
+  /** First name of the invitee */
+  firstName: string;
+  /** Last name of the invitee */
+  lastName: string;
   /** Email address to send invitation */
   email: string;
   /** Initial role for the invited member */

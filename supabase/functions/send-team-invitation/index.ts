@@ -14,6 +14,8 @@ const corsHeaders = {
 };
 
 interface TeamInvitationRequest {
+  firstName: string;
+  lastName?: string;
   email: string;
   invitedBy: string;
   companyName?: string;
@@ -214,11 +216,21 @@ const spacer = (height = 24): string => `
 // EMAIL GENERATOR
 // =============================================================================
 
-function generateTeamInvitationEmail(data: { invitedBy: string; companyName: string; signupUrl: string; unsubscribeUrl: string }): { html: string; text: string } {
-  const { invitedBy, companyName, signupUrl, unsubscribeUrl } = data;
+function generateTeamInvitationEmail(data: { 
+  inviteeName: string; 
+  invitedBy: string; 
+  companyName: string; 
+  signupUrl: string; 
+  unsubscribeUrl: string; 
+}): { html: string; text: string } {
+  const { inviteeName, invitedBy, companyName, signupUrl, unsubscribeUrl } = data;
+
+  // Personalize greeting with invitee's name
+  const greeting = inviteeName ? `Hi ${inviteeName},` : 'Hi there,';
 
   const content = `
     ${heading(`You're invited to join ${companyName}`)}
+    ${paragraph(greeting)}
     ${paragraph(`<strong>${invitedBy}</strong> has invited you to collaborate on Pilot as part of ${companyName}.`)}
     ${paragraph('Pilot helps teams manage conversations, leads, and customer interactions with AI-powered assistance.', true)}
     ${spacer(8)}
@@ -234,6 +246,8 @@ function generateTeamInvitationEmail(data: { invitedBy: string; companyName: str
   });
 
   const text = `You're invited to join ${companyName}
+
+${greeting}
 
 ${invitedBy} has invited you to collaborate on Pilot as part of ${companyName}.
 
@@ -268,14 +282,19 @@ const handler = async (req: Request): Promise<Response> => {
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     const appUrl = Deno.env.get("APP_URL") || "https://getpilot.io";
 
-    const { email, invitedBy, companyName }: TeamInvitationRequest = await req.json();
+    const { firstName, lastName, email, invitedBy, companyName }: TeamInvitationRequest = await req.json();
 
-    console.log(`Sending team invitation to: ${email}, invited by: ${invitedBy}`);
+    console.log(`Sending team invitation to: ${email} (${firstName} ${lastName || ''}), invited by: ${invitedBy}`);
 
-    const signupUrl = `${appUrl}/login?tab=signup&email=${encodeURIComponent(email)}`;
+    // Build the invitee's full name for display
+    const inviteeName = firstName + (lastName ? ` ${lastName}` : '');
+
+    // Include first and last name in the signup URL for pre-filling
+    const signupUrl = `${appUrl}/login?tab=signup&email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}${lastName ? `&lastName=${encodeURIComponent(lastName)}` : ''}`;
     const unsubscribeUrl = `${appUrl}/settings?tab=notifications#team-emails`;
 
     const { html, text } = generateTeamInvitationEmail({
+      inviteeName: firstName, // Use first name for greeting
       invitedBy,
       companyName: companyName || 'your team',
       signupUrl,
@@ -307,6 +326,8 @@ const handler = async (req: Request): Promise<Response> => {
             invited_by: user.id,
             invited_by_name: invitedBy,
             company_name: companyName,
+            invited_first_name: firstName,
+            invited_last_name: lastName || null,
             status: 'pending'
           });
 
@@ -318,8 +339,8 @@ const handler = async (req: Request): Promise<Response> => {
           user_id: user.id,
           type: 'team',
           title: 'Team Invitation Sent',
-          message: `Invitation sent to ${email}`,
-          data: { invited_email: email },
+          message: `Invitation sent to ${inviteeName} (${email})`,
+          data: { invited_email: email, invited_name: inviteeName },
           read: false
         });
         console.log('Invitation sent notification created');
@@ -332,6 +353,7 @@ const handler = async (req: Request): Promise<Response> => {
           p_success: true,
           p_details: {
             email: email,
+            invited_name: inviteeName,
             invited_by: invitedBy,
             company_name: companyName
           }

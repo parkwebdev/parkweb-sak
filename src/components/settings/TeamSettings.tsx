@@ -67,8 +67,8 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
     await removeMember(member);
   };
 
-  const handleInviteMember = async (email: string): Promise<boolean> => {
-    return await inviteMember({ email });
+  const handleInviteMember = async (data: { firstName: string; lastName: string; email: string }): Promise<boolean> => {
+    return await inviteMember(data);
   };
 
   if (loading) {

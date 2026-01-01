@@ -149,6 +149,8 @@ export const useTeam = () => {
 
       const { error } = await supabase.functions.invoke('send-team-invitation', {
         body: {
+          firstName: inviteData.firstName,
+          lastName: inviteData.lastName,
           email: inviteData.email,
           invitedBy: inviterName,
           companyName
@@ -162,8 +164,9 @@ export const useTeam = () => {
         return false;
       }
 
+      const inviteeName = inviteData.firstName + (inviteData.lastName ? ` ${inviteData.lastName}` : '');
       toast.success("Invitation sent", {
-        description: `Team invitation sent to ${inviteData.email}`,
+        description: `Team invitation sent to ${inviteeName} (${inviteData.email})`,
       });
       
       return true;

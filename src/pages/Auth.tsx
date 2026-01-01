@@ -69,7 +69,8 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [teamEmails, setTeamEmails] = useState('');
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [currentStep, setCurrentStep] = useState(0);
@@ -98,6 +99,8 @@ const Auth = () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const emailParam = urlParams.get('email');
+    const firstNameParam = urlParams.get('firstName');
+    const lastNameParam = urlParams.get('lastName');
     const tabParam = urlParams.get('tab');
     const typeParam = urlParams.get('type');
     const hashFragment = window.location.hash;
@@ -106,6 +109,14 @@ const Auth = () => {
       setEmail(emailParam);
       // If coming from invitation link, mark as invited user
       setIsInvitedUser(true);
+    }
+    
+    // Pre-fill name fields from URL params (for invited users)
+    if (firstNameParam) {
+      setFirstName(firstNameParam);
+    }
+    if (lastNameParam) {
+      setLastName(lastNameParam);
     }
     
     if (tabParam === 'signup') {
@@ -223,8 +234,8 @@ const Auth = () => {
 
   const handleNextStep = () => {
     if (currentStep === 0) {
-      if (!displayName || !email) {
-        toast.error("Error", { description: "Please fill in all fields" });
+      if (!firstName.trim() || !email) {
+        toast.error("Error", { description: "Please fill in all required fields" });
         return;
       }
       // Basic email validation
@@ -284,12 +295,19 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
+      // Build display name from first and last name
+      const displayName = `${firstName.trim()}${lastName.trim() ? ' ' + lastName.trim() : ''}`;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: { display_name: displayName }
+          data: { 
+            display_name: displayName,
+            first_name: firstName.trim(),
+            last_name: lastName.trim() || null
+          }
         }
       });
 
@@ -330,6 +348,7 @@ const Auth = () => {
     setPassword('');
     setConfirmPassword('');
     setTeamEmails('');
+    // Don't clear firstName/lastName/email in case user needs to sign in
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -436,21 +455,41 @@ const Auth = () => {
             </div>
 
             <div className="z-10 flex flex-col gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Name</Label>
-                <Input
-                  id="signup-name"
-                  type="text"
-                  placeholder="Enter your name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="h-10"
-                  disabled={isLoading}
-                  autoComplete="name"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-firstname">First name <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="signup-firstname"
+                    type="text"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="h-10"
+                    disabled={isLoading || isInvitedUser}
+                    readOnly={isInvitedUser}
+                    autoComplete="given-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-lastname">Last name</Label>
+                  <Input
+                    id="signup-lastname"
+                    type="text"
+                    placeholder="Smith"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="h-10"
+                    disabled={isLoading || isInvitedUser}
+                    readOnly={isInvitedUser}
+                    autoComplete="family-name"
+                  />
+                </div>
               </div>
+              {isInvitedUser && (
+                <FormHint>Your name was provided in your invitation</FormHint>
+              )}
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-email">Email <span className="text-destructive">*</span></Label>
                 <Input
                   id="signup-email"
                   type="email"
