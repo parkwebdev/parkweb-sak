@@ -126,7 +126,7 @@ export function InviteMemberDialog({
             <Input
               id="email"
               type="email"
-              placeholder="coworker@park-web.com"
+              placeholder="coworker@acme.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
