@@ -235,8 +235,8 @@ function generateNewLeadEmail(data: {
     : '';
 
   const content = `
-    ${heading('New lead captured')}
-    ${paragraph(`A new lead has been captured from <strong>${source}</strong>.`)}
+    ${heading('You have a new lead')}
+    ${paragraph('View the lead to see more details.')}
     
     <!-- Lead Card -->
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
@@ -259,9 +259,9 @@ function generateNewLeadEmail(data: {
     unsubscribeUrl,
   });
 
-  const text = `New lead captured
+  const text = `You have a new lead
 
-A new lead has been captured from ${source}.
+View the lead to see more details.
 
 Name: ${leadName}
 ${leadEmail ? `Email: ${leadEmail}` : ''}
