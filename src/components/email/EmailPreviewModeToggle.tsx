@@ -63,23 +63,23 @@ export const EmailPreviewModeToggle = React.memo(function EmailPreviewModeToggle
   
   const indicatorPosition = hoveredMode ?? mode;
   const currentIndex = visibleOptions.findIndex(opt => opt.id === indicatorPosition);
-  const itemWidth = 100 / visibleOptions.length;
+  const optionCount = visibleOptions.length;
 
   return (
     <div
       className={cn(
-        'relative flex rounded-lg border bg-muted/30 overflow-hidden py-1 px-1',
+        'relative flex rounded-lg border bg-muted/30 p-1 gap-1',
         className
       )}
       onMouseLeave={() => setHoveredMode(null)}
     >
       {/* Sliding indicator */}
       <motion.div
-        className="absolute inset-y-1 bg-background border rounded-md shadow-sm"
-        style={{ width: `calc(${itemWidth}% - 4px)`, marginLeft: 2 }}
+        className="absolute inset-y-1 bg-background border rounded-md shadow-sm pointer-events-none"
         initial={false}
         animate={{
-          x: `calc(${currentIndex * 100}% + ${currentIndex * 4}px)`,
+          left: `calc(${currentIndex} * (100% - 8px) / ${optionCount} + 4px + ${currentIndex} * 4px)`,
+          width: `calc((100% - 8px - ${(optionCount - 1) * 4}px) / ${optionCount})`,
         }}
         transition={{
           type: 'spring',
@@ -100,17 +100,16 @@ export const EmailPreviewModeToggle = React.memo(function EmailPreviewModeToggle
                 onClick={() => onModeChange(option.id)}
                 onMouseEnter={() => setHoveredMode(option.id)}
                 className={cn(
-                  'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 rounded-md transition-colors text-sm',
+                  'relative z-10 flex h-8 flex-1 items-center justify-center gap-1.5 px-3 rounded-md transition-colors text-sm',
                   isActive
                     ? 'text-foreground font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
-                style={{ width: `${itemWidth}%` }}
                 aria-label={option.label}
                 aria-pressed={isActive}
               >
                 {option.id === 'supabase' ? (
-                  <SupabaseIcon className="h-5 w-5" />
+                  <SupabaseIcon className="h-[14px] w-[14px]" />
                 ) : Icon ? (
                   <Icon size={14} />
                 ) : null}
