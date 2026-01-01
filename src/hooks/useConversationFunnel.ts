@@ -9,7 +9,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { supabase } from '@/integrations/supabase/client';
 import type { FunnelStage } from '@/types/analytics';
 
@@ -32,52 +32,55 @@ export function useConversationFunnel(
   endDate: Date,
   enabled: boolean = true
 ): ConversationFunnelData {
-  const { user } = useAuth();
+  const { accountOwnerId } = useAccountOwnerId();
 
   const conversationsQuery = useQuery({
-    queryKey: ['conversation-funnel', 'conversations', startDate.toISOString(), endDate.toISOString()],
+    queryKey: ['conversation-funnel', 'conversations', accountOwnerId, startDate.toISOString(), endDate.toISOString()],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conversations')
         .select('id, status, created_at, messages:messages(count)')
+        .eq('user_id', accountOwnerId!)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
       if (error) throw error;
       return data || [];
     },
-    enabled: enabled && !!user?.id,
+    enabled: enabled && !!accountOwnerId,
     staleTime: 1000 * 60 * 5,
   });
 
   const leadsQuery = useQuery({
-    queryKey: ['conversation-funnel', 'leads', startDate.toISOString(), endDate.toISOString()],
+    queryKey: ['conversation-funnel', 'leads', accountOwnerId, startDate.toISOString(), endDate.toISOString()],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('leads')
         .select('id, conversation_id, created_at')
+        .eq('user_id', accountOwnerId!)
         .not('conversation_id', 'is', null)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
       if (error) throw error;
       return data || [];
     },
-    enabled: enabled && !!user?.id,
+    enabled: enabled && !!accountOwnerId,
     staleTime: 1000 * 60 * 5,
   });
 
   const bookingsQuery = useQuery({
-    queryKey: ['conversation-funnel', 'bookings', startDate.toISOString(), endDate.toISOString()],
+    queryKey: ['conversation-funnel', 'bookings', accountOwnerId, startDate.toISOString(), endDate.toISOString()],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('calendar_events')
-        .select('id, conversation_id, created_at')
+        .select('id, conversation_id, created_at, connected_account:connected_accounts!inner(user_id)')
+        .eq('connected_accounts.user_id', accountOwnerId!)
         .not('conversation_id', 'is', null)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
       if (error) throw error;
       return data || [];
     },
-    enabled: enabled && !!user?.id,
+    enabled: enabled && !!accountOwnerId,
     staleTime: 1000 * 60 * 5,
   });
 
