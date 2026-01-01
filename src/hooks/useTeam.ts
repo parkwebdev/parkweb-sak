@@ -179,6 +179,14 @@ export const useTeam = () => {
   };
 
   const removeMember = async (member: TeamMember): Promise<boolean> => {
+    // Guard: Check permission before attempting removal
+    if (!canManageRoles) {
+      toast.error("Permission denied", {
+        description: "You don't have permission to remove team members.",
+      });
+      return false;
+    }
+
     try {
       // Remove from user_roles table
       const { error: roleError } = await supabase
@@ -218,6 +226,14 @@ export const useTeam = () => {
   };
 
   const updateMemberRole = async (member: TeamMember, role: UserRole, permissions: string[]): Promise<boolean> => {
+    // Guard: Check permission before attempting update
+    if (!canManageRoles) {
+      toast.error("Permission denied", {
+        description: "You don't have permission to update team member roles.",
+      });
+      return false;
+    }
+
     try {
       logger.debug('Attempting to update role for user', {
         userId: member.user_id,
