@@ -67,6 +67,8 @@ interface LeadsKanbanBoardProps {
   onViewLead: (lead: Tables<"leads">) => void;
   onOrderChange?: (updates: { id: string; kanban_order: number; stage_id?: string }[]) => void;
   visibleFields?: Set<CardFieldKey>;
+  /** Whether the user can manage (edit, drag) leads. Controls DnD and stage editing. */
+  canManage?: boolean;
 }
 
 // Inline editable column header
@@ -99,13 +101,16 @@ function InlineStageHeader({
     setIsEditing(false);
   }, [editName, stage.id, stage.name, onUpdate]);
 
+  // Check if onUpdate was provided (means user can manage)
+  const canEdit = !!onUpdate;
+
   return (
     <div className="flex items-center gap-2">
       <div
         className="h-2 w-2 rounded-full"
         style={{ backgroundColor: stage.color }}
       />
-      {isEditing ? (
+      {isEditing && canEdit ? (
         <Input
           ref={inputRef}
           value={editName}
@@ -120,13 +125,15 @@ function InlineStageHeader({
           }}
           className="h-6 w-24 text-sm font-medium px-1"
         />
-      ) : (
+      ) : canEdit ? (
         <button
           onClick={() => setIsEditing(true)}
           className="text-sm font-medium hover:text-primary transition-colors"
         >
           {stage.name}
         </button>
+      ) : (
+        <span className="text-sm font-medium">{stage.name}</span>
       )}
       <Badge variant="secondary" className="h-5 px-1.5 text-xs">
         {count}
@@ -285,6 +292,7 @@ export function LeadsKanbanBoard({
   onViewLead,
   onOrderChange,
   visibleFields = getDefaultVisibleFields(),
+  canManage = true,
 }: LeadsKanbanBoardProps) {
   const { stages, loading: stagesLoading, updateStage } = useLeadStages();
 
@@ -470,7 +478,7 @@ export function LeadsKanbanBoard({
         <KanbanProvider
           columns={columns}
           data={kanbanLeads}
-          onDataChange={handleDataChange}
+          onDataChange={canManage ? handleDataChange : undefined}
           renderOverlay={renderCardOverlay}
         >
           {(column) => {
@@ -483,7 +491,7 @@ export function LeadsKanbanBoard({
                   <InlineStageHeader
                     stage={stage}
                     count={getColumnCount(column.id)}
-                    onUpdate={handleStageUpdate}
+                    onUpdate={canManage ? handleStageUpdate : undefined as unknown as typeof handleStageUpdate}
                   />
                 </KanbanHeader>
                 <KanbanCards id={column.id}>

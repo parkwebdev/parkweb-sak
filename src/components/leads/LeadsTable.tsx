@@ -52,6 +52,8 @@ interface LeadsTableProps {
   columnOrder: string[];
   // Default sorting
   defaultSort: SortOption | null;
+  /** Whether the user can manage leads (select for bulk actions, etc.) */
+  canManage?: boolean;
 }
 
 export const LeadsTable = React.memo(function LeadsTable({
@@ -71,6 +73,7 @@ export const LeadsTable = React.memo(function LeadsTable({
   onColumnVisibilityChange,
   columnOrder,
   defaultSort,
+  canManage = true,
 }: LeadsTableProps) {
   // Initialize sorting from defaultSort
   const [sorting, setSorting] = useState<SortingState>(() => {
@@ -158,13 +161,13 @@ export const LeadsTable = React.memo(function LeadsTable({
     columns: orderedColumns,
     state: {
       sorting,
-      rowSelection,
+      rowSelection: canManage ? rowSelection : {},
       columnFilters,
       columnVisibility,
     },
-    enableRowSelection: true,
+    enableRowSelection: canManage,
     onSortingChange: setSorting,
-    onRowSelectionChange: handleRowSelectionChange,
+    onRowSelectionChange: canManage ? handleRowSelectionChange : undefined,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: (updater) => {
       const newVisibility = typeof updater === 'function' ? updater(columnVisibility) : updater;
@@ -228,21 +231,23 @@ export const LeadsTable = React.memo(function LeadsTable({
         emptyMessage="No leads found"
       />
       {leads.length > 10 && (
-        <DataTablePagination table={table} showSelectedCount />
+        <DataTablePagination table={table} showSelectedCount={canManage} />
       )}
-      <DataTableFloatingBar table={table}>
-        {onBulkDelete && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleBulkDelete}
-            className="h-7"
-          >
-            <Trash01 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
-        )}
-      </DataTableFloatingBar>
+      {canManage && (
+        <DataTableFloatingBar table={table}>
+          {onBulkDelete && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="h-7"
+            >
+              <Trash01 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          )}
+        </DataTableFloatingBar>
+      )}
     </div>
   );
 });

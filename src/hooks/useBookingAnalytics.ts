@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useAgent } from '@/hooks/useAgent';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { logger } from '@/utils/logger';
@@ -46,12 +47,13 @@ const BOOKING_ANALYTICS_KEY = ['analytics', 'bookings'] as const;
 /**
  * Build query key for booking analytics with date range
  */
-const buildQueryKey = (startDate: Date, endDate: Date, agentId: string | null) => [
+const buildQueryKey = (startDate: Date, endDate: Date, agentId: string | null, accountOwnerId: string | null) => [
   ...BOOKING_ANALYTICS_KEY,
   {
     startDate: format(startDate, 'yyyy-MM-dd'),
     endDate: format(endDate, 'yyyy-MM-dd'),
     agentId,
+    accountOwnerId,
   },
 ] as const;
 
@@ -78,14 +80,15 @@ const buildQueryKey = (startDate: Date, endDate: Date, agentId: string | null) =
  */
 export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boolean = true) => {
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const { agentId } = useAgent();
   const queryClient = useQueryClient();
 
   // Fetch connected account IDs for the user's agent
   const { data: connectedAccountIds = [] } = useSupabaseQuery<string[]>({
-    queryKey: ['connected-accounts', 'ids', agentId],
+    queryKey: ['connected-accounts', 'ids', agentId, accountOwnerId],
     queryFn: async () => {
-      if (!agentId || !user?.id) return [];
+      if (!agentId || !accountOwnerId) return [];
 
       const { data, error } = await supabase
         .from('connected_accounts')
@@ -100,7 +103,7 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boo
 
       return (data || []).map((account) => account.id);
     },
-    enabled: enabled && !!agentId && !!user?.id,
+    enabled: enabled && !!agentId && !!accountOwnerId && !ownerLoading,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -110,9 +113,9 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boo
     isLoading,
     refetch,
   } = useSupabaseQuery<RawCalendarEvent[]>({
-    queryKey: buildQueryKey(startDate, endDate, agentId),
+    queryKey: buildQueryKey(startDate, endDate, agentId, accountOwnerId),
     queryFn: async () => {
-      if (!agentId || !user?.id || connectedAccountIds.length === 0) {
+      if (!agentId || !accountOwnerId || connectedAccountIds.length === 0) {
         return [];
       }
 
@@ -144,7 +147,7 @@ export const useBookingAnalytics = (startDate: Date, endDate: Date, enabled: boo
     },
     // NOTE: Realtime removed - was subscribing to ALL calendar_events globally
     // which caused ERR_INSUFFICIENT_RESOURCES. React Query cache + manual refetch is sufficient.
-    enabled: enabled && !!agentId && !!user?.id && connectedAccountIds.length > 0,
+    enabled: enabled && !!agentId && !!accountOwnerId && !ownerLoading && connectedAccountIds.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
