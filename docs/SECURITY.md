@@ -304,9 +304,9 @@ type AppPermission =
   | 'view_billing' | 'manage_billing' | 'view_integrations' | 'manage_integrations'
   | 'view_webhooks' | 'manage_webhooks' | 'view_api_keys' | 'manage_api_keys';
 
-// Check permission in components
-const { hasPermission, isAdmin } = useRoleAuthorization();
-const canManageLeads = isAdmin || hasPermission('manage_leads');
+// Check permission in components using useCanManage hooks
+import { useCanManage } from '@/hooks/useCanManage';
+const canManageLeads = useCanManage('manage_leads');
 ```
 
 ### Client-Side Permission Guards

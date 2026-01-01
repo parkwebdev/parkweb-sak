@@ -263,14 +263,16 @@ import { PermissionGuard } from '@/components/auth/PermissionGuard';
 </PermissionGuard>
 ```
 
-### Using `useRoleAuthorization` Hook
+### Using `useCanManage` Hooks (REQUIRED)
+
+> **Important:** Always use `useCanManage` hooks instead of the raw `isAdmin || hasPermission()` pattern.
 
 ```typescript
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 
 function MyComponent() {
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageLeads = isAdmin || hasPermission('manage_leads');
+  // Single permission check
+  const canManageLeads = useCanManage('manage_leads');
   
   return (
     <Button disabled={!canManageLeads} onClick={handleDelete}>
@@ -280,13 +282,42 @@ function MyComponent() {
 }
 ```
 
+For multiple permissions:
+
+```typescript
+import { useCanManageMultiple } from '@/hooks/useCanManage';
+
+function MyComponent() {
+  const perms = useCanManageMultiple(['manage_leads', 'manage_team', 'view_billing']);
+  
+  return (
+    <>
+      {perms.manage_leads && <DeleteButton />}
+      {perms.manage_team && <InviteButton />}
+    </>
+  );
+}
+```
+
+For dynamic permissions (e.g., permission passed as prop):
+
+```typescript
+import { useCanManageChecker } from '@/hooks/useCanManage';
+
+function PermissionButton({ permission }: { permission: AppPermission }) {
+  const canManage = useCanManageChecker();
+  const hasAccess = canManage(permission);
+  // ...
+}
+```
+
 ### Passing `canManage` Props
 
-For reusable components, pass permission as a prop:
+For reusable components, pass permission result as a prop:
 
 ```typescript
 // Parent component
-const canManageLeads = isAdmin || hasPermission('manage_leads');
+const canManageLeads = useCanManage('manage_leads');
 <LeadsTable canManage={canManageLeads} ... />
 
 // Child component
@@ -296,6 +327,23 @@ interface LeadsTableProps {
 function LeadsTable({ canManage = false }: LeadsTableProps) {
   // Disable actions if canManage is false
 }
+```
+
+### ❌ Forbidden Pattern
+
+Do NOT use the raw pattern in components:
+
+```typescript
+// WRONG - creates inconsistency and harder to maintain
+const { hasPermission, isAdmin } = useRoleAuthorization();
+const canManage = isAdmin || hasPermission('manage_leads');
+```
+
+### ✅ Correct Pattern
+
+```typescript
+// CORRECT - centralized, consistent, less code
+const canManage = useCanManage('manage_leads');
 ```
 
 ---

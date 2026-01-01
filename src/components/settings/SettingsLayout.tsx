@@ -9,6 +9,7 @@ import { motion } from 'motion/react';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useCanManageChecker } from '@/hooks/useCanManage';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
 import { SETTINGS_TABS, type SettingsTabParam } from '@/config/routes';
@@ -72,7 +73,8 @@ export function SettingsLayout({
   children,
   onMenuClick,
 }: SettingsLayoutContentProps) {
-  const { hasPermission, isAdmin, loading } = useRoleAuthorization();
+  const { loading } = useRoleAuthorization();
+  const canManage = useCanManageChecker();
   
   // Filter menu items based on permissions using centralized config
   const menuItems = useMemo(() => {
@@ -80,9 +82,9 @@ export function SettingsLayout({
     
     return SETTINGS_TABS.filter(tab => {
       if (!tab.requiredPermission) return true;
-      return isAdmin || hasPermission(tab.requiredPermission);
+      return canManage(tab.requiredPermission);
     });
-  }, [hasPermission, isAdmin, loading]);
+  }, [canManage, loading]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">

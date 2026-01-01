@@ -176,11 +176,12 @@ const App = () => (
                       } 
                     />
                     
-                    <Route path="/email-templates-test" element={<EmailTemplatesTest />} />
-                    
-                    {/* Dev-only routes inside layout */}
+                    {/* Dev-only test routes */}
                     {import.meta.env.DEV && (
-                      <Route path="/booking-test" element={<BookingComponentsTest />} />
+                      <>
+                        <Route path="/email-templates-test" element={<EmailTemplatesTest />} />
+                        <Route path="/booking-test" element={<BookingComponentsTest />} />
+                      </>
                     )}
                   </Route>
                   
