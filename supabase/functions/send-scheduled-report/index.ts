@@ -653,26 +653,9 @@ function generateReportEmail(
     </table>
   `;
   
-  // Generated timestamp
-  const generatedAt = new Date().toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-  
-  const generatedTimestamp = `
-    <p class="email-text-muted" style="margin: 0 0 20px 0; font-size: 13px; color: ${colors.textMuted};">
-      Generated on ${generatedAt}
-    </p>
-  `;
-  
   const content = `
     ${heading('Your Report is Ready')}
     ${formatBadge}
-    ${generatedTimestamp}
     ${paragraph(`Your <strong>${report.name}</strong> covering <strong>${dateRange}</strong> has been generated and is ready to download.`)}
     ${spacer(8)}
     ${button('Download Report', downloadUrl)}
