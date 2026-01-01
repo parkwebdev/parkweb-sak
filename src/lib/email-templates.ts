@@ -210,18 +210,71 @@ const getBaseStyles = (): string => `
 // EMAIL WRAPPER
 // =============================================================================
 
+const LOGO_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Pilot%20Email%20Logo%20%40%20481px.png';
+const LINKEDIN_ICON_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png';
+const FACEBOOK_ICON_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png';
+
+type FooterType = 'simple' | 'social' | 'social-unsubscribe';
+
+const generateFooterSimple = (year: number): string => `
+  <p class="email-text-muted" style="margin: 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};">© ${year} Pilot</p>
+`;
+
+const generateFooterSocial = (year: number): string => `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="line-height: 1;">
+    <tr>
+      <td class="email-text-muted" style="font-size: 13px; color: ${colors.textMuted}; vertical-align: middle;">© ${year} Pilot</td>
+      <td style="padding: 0 12px; vertical-align: middle;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="width: 1px; height: 13px; background-color: ${colors.border};"></td></tr></table>
+      </td>
+      <td style="vertical-align: middle;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="padding-right: 8px;">
+            <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: block; line-height: 0;">
+              <img src="${LINKEDIN_ICON_URL}" alt="LinkedIn" height="14" style="display: block; height: 14px; width: auto;" />
+            </a>
+          </td>
+          <td>
+            <a href="https://www.facebook.com/getpilot" target="_blank" style="display: block; line-height: 0;">
+              <img src="${FACEBOOK_ICON_URL}" alt="Facebook" height="14" style="display: block; height: 14px; width: auto;" />
+            </a>
+          </td>
+        </tr></table>
+      </td>
+    </tr>
+  </table>
+`;
+
+const generateFooterSocialUnsubscribe = (year: number, unsubscribeUrl: string): string => `
+  ${generateFooterSocial(year)}
+  <p class="email-text-muted" style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};"><a href="${unsubscribeUrl}" style="color: ${colors.textMuted}; text-decoration: underline;">Manage notification preferences</a></p>
+`;
+
 interface WrapperOptions {
   preheaderText?: string;
   content: string;
+  footer?: FooterType;
   unsubscribeUrl?: string;
 }
 
-const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOptions): string => {
+const generateWrapper = ({ preheaderText, content, footer = 'social', unsubscribeUrl }: WrapperOptions): string => {
   const year = new Date().getFullYear();
   
-  const unsubscribeSection = unsubscribeUrl 
-    ? `<p class="email-text-muted" style="margin: 8px 0 0 0; font-size: 13px; line-height: 1.5; color: ${colors.textMuted};"><a href="${unsubscribeUrl}" style="color: ${colors.textMuted}; text-decoration: underline;">Manage notification preferences</a></p>`
-    : '';
+  let footerHtml: string;
+  switch (footer) {
+    case 'simple':
+      footerHtml = generateFooterSimple(year);
+      break;
+    case 'social-unsubscribe':
+      footerHtml = unsubscribeUrl 
+        ? generateFooterSocialUnsubscribe(year, unsubscribeUrl)
+        : generateFooterSocial(year);
+      break;
+    case 'social':
+    default:
+      footerHtml = generateFooterSocial(year);
+      break;
+  }
   
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -258,7 +311,7 @@ const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOpti
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="vertical-align: middle;">
-                    <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Pilot%20Email%20Logo%20%40%20481px.png" alt="Pilot" width="20" height="20" style="display: block; width: 20px; height: 20px;" />
+                    <img src="${LOGO_URL}" alt="Pilot" width="20" height="20" style="display: block; width: 20px; height: 20px;" />
                   </td>
                   <td style="vertical-align: middle; padding-left: 6px;">
                     <span class="email-text" style="font-size: 18px; font-weight: 700; color: ${colors.text};">Pilot</span>
@@ -278,29 +331,7 @@ const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOpti
           <!-- Footer -->
           <tr>
             <td class="email-content email-border" style="padding: 24px 40px; border-top: 1px solid ${colors.border};">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="line-height: 1;">
-                <tr>
-                  <td class="email-text-muted" style="font-size: 13px; color: ${colors.textMuted}; vertical-align: middle;">© ${year} Pilot</td>
-                  <td style="padding: 0 12px; vertical-align: middle;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="width: 1px; height: 13px; background-color: ${colors.border};"></td></tr></table>
-                  </td>
-                  <td style="vertical-align: middle;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-                      <td style="padding-right: 8px;">
-                        <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: block; line-height: 0;">
-                          <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" height="14" style="display: block; height: 14px; width: auto;" />
-                        </a>
-                      </td>
-                      <td>
-                        <a href="https://www.facebook.com/getpilot" target="_blank" style="display: block; line-height: 0;">
-                          <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" height="14" style="display: block; height: 14px; width: auto;" />
-                        </a>
-                      </td>
-                    </tr></table>
-                  </td>
-                </tr>
-              </table>
-              ${unsubscribeSection}
+              ${footerHtml}
             </td>
           </tr>
           
@@ -397,6 +428,7 @@ export function generateTeamInvitationEmail(data: TeamInvitationData): string {
   return generateWrapper({
     preheaderText: `${data.invitedBy} invited you to join ${data.companyName} on Pilot`,
     content,
+    footer: 'social-unsubscribe',
     unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#team-emails',
   });
 }
@@ -427,7 +459,7 @@ export function generateBookingConfirmationEmail(data: BookingConfirmationData):
   return generateWrapper({
     preheaderText: `Your ${data.eventType} is confirmed for ${data.date} at ${data.time}`,
     content,
-    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#booking-emails',
+    footer: 'simple',
   });
 }
 
@@ -455,6 +487,7 @@ export function generateScheduledReportEmail(data: ScheduledReportData): string 
   return generateWrapper({
     preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready to download`,
     content,
+    footer: 'social-unsubscribe',
     unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#report-emails',
   });
 }
@@ -504,6 +537,7 @@ export function generateWeeklyReportEmail(data: WeeklyReportData): string {
   return generateWrapper({
     preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready`,
     content,
+    footer: 'social-unsubscribe',
     unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#report-emails',
   });
 }
@@ -528,6 +562,7 @@ export function generatePasswordResetEmail(data: PasswordResetData): string {
   return generateWrapper({
     preheaderText: 'Reset your Pilot password',
     content,
+    footer: 'social',
   });
 }
 
@@ -550,6 +585,7 @@ export function generateSignupConfirmationEmail(data: SignupConfirmationData): s
   return generateWrapper({
     preheaderText: 'Confirm your email to activate your Pilot account',
     content,
+    footer: 'social',
   });
 }
 
@@ -698,6 +734,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
   return generateWrapper({
     preheaderText: `Welcome to Pilot, ${data.userName}! Let's get you set up.`,
     content,
+    footer: 'social',
   });
 }
 
