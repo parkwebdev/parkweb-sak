@@ -190,8 +190,6 @@ export function EmailTemplateSidebar({
           </div>
         </div>
 
-        <Separator />
-
         {/* Dark Mode Toggle */}
         <div className="space-y-1.5">
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Theme</span>
