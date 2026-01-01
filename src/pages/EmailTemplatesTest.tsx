@@ -313,7 +313,8 @@ export default function EmailTemplatesTest() {
   });
 
   const [teamMemberRemovedData, setTeamMemberRemovedData] = useState<TeamMemberRemovedData>({
-    memberName: 'Jane Doe',
+    adminFirstName: 'John',
+    memberFullName: 'Jane Doe',
     companyName: 'Acme Corporation',
   });
 
@@ -368,7 +369,7 @@ export default function EmailTemplatesTest() {
       case 'welcome': return `Welcome to Pilot, ${welcomeData.userName}!`;
       case 'booking-rescheduled': return `Rescheduled: ${bookingRescheduledData.eventType}`;
       case 'webhook-failure': return `Webhook failed: ${webhookFailureData.webhookName}`;
-      case 'team-member-removed': return `Removed from ${teamMemberRemovedData.companyName}`;
+      case 'team-member-removed': return `${teamMemberRemovedData.memberFullName} has been removed from ${teamMemberRemovedData.companyName}`;
       case 'feature-announcement': return `New: ${featureAnnouncementData.featureTitle}`;
       default: return '';
     }
@@ -389,7 +390,7 @@ export default function EmailTemplatesTest() {
       case 'welcome': return `${welcomeData.userName}, ${welcomeData.companyName}`;
       case 'booking-rescheduled': return `${bookingRescheduledData.visitorName}, ${bookingRescheduledData.newDate}`;
       case 'webhook-failure': return `${webhookFailureData.webhookName}, ${webhookFailureData.endpoint}`;
-      case 'team-member-removed': return `${teamMemberRemovedData.memberName}, ${teamMemberRemovedData.companyName}`;
+      case 'team-member-removed': return `${teamMemberRemovedData.adminFirstName}, ${teamMemberRemovedData.memberFullName}, ${teamMemberRemovedData.companyName}`;
       case 'feature-announcement': return featureAnnouncementData.featureTitle;
       default: return '';
     }
@@ -843,12 +844,20 @@ export default function EmailTemplatesTest() {
 
       case 'team-member-removed':
         return (
-          <div className="p-4 grid grid-cols-2 gap-4">
+          <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs">Member Name</Label>
+              <Label className="text-xs">Admin First Name</Label>
               <Input
-                value={teamMemberRemovedData.memberName}
-                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, memberName: e.target.value })}
+                value={teamMemberRemovedData.adminFirstName}
+                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, adminFirstName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Member Full Name</Label>
+              <Input
+                value={teamMemberRemovedData.memberFullName}
+                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, memberFullName: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
