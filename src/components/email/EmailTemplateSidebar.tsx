@@ -43,7 +43,7 @@ const TEMPLATES: TemplateItem[] = [
   
   // Transactional - Invitations
   { id: 'invitation', label: 'Team Invitation', icon: Mail01, group: 'Team', status: 'integrated' },
-  { id: 'team-member-removed', label: 'Member Removed', icon: UserMinus01, group: 'Team' },
+  { id: 'team-member-removed', label: 'Member Removed', icon: UserMinus01, group: 'Team', status: 'integrated' },
   
   // Transactional - Bookings
   { id: 'booking', label: 'Booking Confirmation', icon: Calendar, group: 'Bookings' },
