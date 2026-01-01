@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { logger } from '@/utils/logger';
 import { format, eachDayOfInterval } from 'date-fns';
@@ -73,6 +74,7 @@ const buildQueryKey = (startDate: Date, endDate: Date, userId: string | null) =>
  */
 export const useAIPerformanceAnalytics = (startDate: Date, endDate: Date, enabled: boolean = true) => {
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
   // Fetch all conversations in the date range
@@ -80,14 +82,14 @@ export const useAIPerformanceAnalytics = (startDate: Date, endDate: Date, enable
     data: rawConversations = [],
     isLoading: loadingConversations,
   } = useSupabaseQuery<RawConversation[]>({
-    queryKey: ['conversations', 'for-ai-analytics', user?.id, format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')],
+    queryKey: ['conversations', 'for-ai-analytics', accountOwnerId, format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!accountOwnerId) return [];
 
       const { data, error } = await supabase
         .from('conversations')
         .select('id, status, created_at')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -98,11 +100,11 @@ export const useAIPerformanceAnalytics = (startDate: Date, endDate: Date, enable
 
       return (data || []) as RawConversation[];
     },
-    realtime: enabled ? {
+    realtime: enabled && accountOwnerId ? {
       table: 'conversations',
-      filter: `user_id=eq.${user?.id}`,
+      filter: `user_id=eq.${accountOwnerId}`,
     } : undefined,
-    enabled: enabled && !!user?.id,
+    enabled: enabled && !!accountOwnerId && !ownerLoading,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 

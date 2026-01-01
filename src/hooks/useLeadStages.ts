@@ -6,6 +6,7 @@
 import { useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
 import { useQueryClient } from '@tanstack/react-query';
@@ -25,39 +26,41 @@ export interface LeadStage {
 
 export function useLeadStages() {
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
-  // Fetch stages for current account
+  // Fetch stages for current account (scoped by accountOwnerId)
   const { data: stages = [], isLoading: loading, refetch } = useSupabaseQuery<LeadStage[]>({
-    queryKey: queryKeys.leadStages,
+    queryKey: [...queryKeys.leadStages, accountOwnerId],
     queryFn: async () => {
-      if (!user) return [];
+      if (!accountOwnerId) return [];
       
       const { data, error } = await supabase
         .from('lead_stages')
         .select('*')
+        .eq('user_id', accountOwnerId)
         .order('order_index', { ascending: true });
 
       if (error) throw error;
       return (data || []) as LeadStage[];
     },
-    realtime: user ? {
+    realtime: accountOwnerId ? {
       table: 'lead_stages',
       schema: 'public',
-      filter: `user_id=eq.${user.id}`,
+      filter: `user_id=eq.${accountOwnerId}`,
     } : undefined,
-    enabled: !!user,
+    enabled: !!accountOwnerId && !ownerLoading,
   });
 
-  // Seed default stages if none exist
+  // Seed default stages if none exist (only for account owner)
   useEffect(() => {
     const seedIfNeeded = async () => {
-      if (!user || loading) return;
+      if (!accountOwnerId || ownerLoading || loading) return;
       
       // Check if stages exist
       if (stages.length === 0) {
         const { error } = await supabase.rpc('seed_default_lead_stages', {
-          p_user_id: user.id,
+          p_user_id: accountOwnerId,
         });
         
         if (error) {
@@ -69,18 +72,18 @@ export function useLeadStages() {
     };
 
     seedIfNeeded();
-  }, [user, loading, stages.length, refetch]);
+  }, [accountOwnerId, ownerLoading, loading, stages.length, refetch]);
 
   // Create a new stage
   const createStage = useCallback(async (name: string, color: string = '#3b82f6') => {
-    if (!user) return;
+    if (!accountOwnerId) return;
 
     const maxOrder = stages.reduce((max, s) => Math.max(max, s.order_index), -1);
 
     const { data, error } = await supabase
       .from('lead_stages')
       .insert({
-        user_id: user.id,
+        user_id: accountOwnerId,
         name,
         color,
         order_index: maxOrder + 1,
@@ -97,7 +100,7 @@ export function useLeadStages() {
     queryClient.invalidateQueries({ queryKey: queryKeys.leadStages });
     toast.success('Stage created');
     return data as LeadStage;
-  }, [user, stages, queryClient]);
+  }, [accountOwnerId, stages, queryClient]);
 
   // Update an existing stage
   const updateStage = useCallback(async (id: string, updates: Partial<Pick<LeadStage, 'name' | 'color' | 'is_default'>>) => {
