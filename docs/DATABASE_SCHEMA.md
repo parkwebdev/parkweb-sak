@@ -669,6 +669,10 @@ Widget announcement banners.
 | `created_at` | timestamptz | Yes | `now()` | Creation timestamp |
 | `updated_at` | timestamptz | Yes | `now()` | Last update timestamp |
 
+**RLS Policies:**
+- SELECT/UPDATE/DELETE: `has_account_access(user_id)` - Team members can view and manage announcements
+- INSERT: `has_account_access(user_id) AND agent belongs to accessible account`
+
 ---
 
 #### `news_items`
@@ -688,6 +692,10 @@ Widget news/updates feed.
 | `order_index` | integer | Yes | `0` | Display order |
 | `created_at` | timestamptz | Yes | `now()` | Creation timestamp |
 | `updated_at` | timestamptz | Yes | `now()` | Last update timestamp |
+
+**RLS Policies:**
+- SELECT/UPDATE/DELETE: `has_account_access(user_id)` - Team members can view and manage news items
+- INSERT: `has_account_access(user_id) AND agent belongs to accessible account`
 
 ---
 
