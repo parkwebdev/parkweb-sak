@@ -377,7 +377,7 @@ export function generateTeamInvitationEmail(data: TeamInvitationData): string {
   return generateWrapper({
     preheaderText: `${data.invitedBy} invited you to join ${data.companyName} on Pilot`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#team-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#team-emails',
   });
 }
 
@@ -407,7 +407,7 @@ export function generateBookingConfirmationEmail(data: BookingConfirmationData):
   return generateWrapper({
     preheaderText: `Your ${data.eventType} is confirmed for ${data.date} at ${data.time}`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#booking-emails',
   });
 }
 
@@ -435,7 +435,7 @@ export function generateScheduledReportEmail(data: ScheduledReportData): string 
   return generateWrapper({
     preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready to download`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#report-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#report-emails',
   });
 }
 
@@ -484,7 +484,7 @@ export function generateWeeklyReportEmail(data: WeeklyReportData): string {
   return generateWrapper({
     preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#report-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#report-emails',
   });
 }
 
@@ -566,7 +566,7 @@ export function generateBookingCancellationEmail(data: BookingCancellationData):
   return generateWrapper({
     preheaderText: `Your ${data.eventType} on ${data.date} has been cancelled`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#booking-emails',
   });
 }
 
@@ -595,7 +595,7 @@ export function generateBookingReminderEmail(data: BookingReminderData): string 
   return generateWrapper({
     preheaderText: `Reminder: ${data.eventType} on ${data.date} at ${data.time}`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#booking-emails',
   });
 }
 
@@ -631,7 +631,7 @@ export function generateNewLeadNotificationEmail(data: NewLeadNotificationData):
   return generateWrapper({
     preheaderText: `New lead: ${data.leadName} from ${source}`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#lead-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#lead-emails',
   });
 }
 
@@ -718,7 +718,7 @@ export function generateBookingRescheduledEmail(data: BookingRescheduledData): s
   return generateWrapper({
     preheaderText: `Your ${data.eventType} has been rescheduled to ${data.newDate} at ${data.newTime}`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#booking-emails',
   });
 }
 
@@ -752,7 +752,7 @@ export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData):
   return generateWrapper({
     preheaderText: `Webhook failed: ${data.webhookName} - Error ${data.errorCode}`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#agent-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#agent-emails',
   });
 }
 
@@ -771,7 +771,7 @@ export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): str
   return generateWrapper({
     preheaderText: `You've been removed from ${data.companyName}`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#team-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#team-emails',
   });
 }
 
@@ -795,6 +795,6 @@ export function generateFeatureAnnouncementEmail(data: FeatureAnnouncementData):
   return generateWrapper({
     preheaderText: `New in Pilot: ${data.featureTitle}`,
     content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#product-emails',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#product-emails',
   });
 }

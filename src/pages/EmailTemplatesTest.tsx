@@ -197,7 +197,7 @@ export default function EmailTemplatesTest() {
   const [invitationData, setInvitationData] = useState<TeamInvitationData>({
     invitedBy: 'John Smith',
     companyName: 'Acme Corporation',
-    signupUrl: 'https://getpilot.io/signup?token=abc123',
+    signupUrl: 'https://app.getpilot.io/signup?token=abc123',
   });
 
   const [bookingData, setBookingData] = useState<BookingConfirmationData>({
@@ -215,7 +215,7 @@ export default function EmailTemplatesTest() {
     reportName: 'scheduled report',
     dateRange: 'Dec 1 - Dec 31, 2025',
     format: 'pdf',
-    viewReportUrl: 'https://getpilot.io/analytics',
+    viewReportUrl: 'https://app.getpilot.io/analytics',
   });
 
   const [weeklyReportData, setWeeklyReportData] = useState<WeeklyReportData>({
@@ -227,18 +227,18 @@ export default function EmailTemplatesTest() {
       { label: 'Conversion Rate', value: '7.1%', change: '+2.1%' },
       { label: 'Satisfaction', value: '4.6/5', change: '+0.3' },
     ],
-    viewReportUrl: 'https://getpilot.io/analytics',
+    viewReportUrl: 'https://app.getpilot.io/analytics',
   });
 
   const [passwordResetData, setPasswordResetData] = useState<PasswordResetData>({
     userName: 'Alex',
-    resetUrl: 'https://getpilot.io/reset-password?token=abc123',
+    resetUrl: 'https://app.getpilot.io/reset-password?token=abc123',
     expiresIn: '1 hour',
   });
 
   const [emailVerificationData, setEmailVerificationData] = useState<EmailVerificationData>({
     userName: 'Alex',
-    verificationUrl: 'https://getpilot.io/verify-email?token=xyz789',
+    verificationUrl: 'https://app.getpilot.io/verify-email?token=xyz789',
     expiresIn: '24 hours',
   });
 
@@ -250,7 +250,7 @@ export default function EmailTemplatesTest() {
     time: '2:00 PM',
     timezone: 'EST',
     reason: 'Scheduling conflict',
-    rescheduleUrl: 'https://getpilot.io/book',
+    rescheduleUrl: 'https://app.getpilot.io/book',
   });
 
   const [bookingReminderData, setBookingReminderData] = useState<BookingReminderData>({
@@ -270,13 +270,13 @@ export default function EmailTemplatesTest() {
     leadPhone: '+1 (555) 123-4567',
     source: 'Ari Agent',
     message: 'Interested in the Enterprise plan. Need a demo.',
-    viewLeadUrl: 'https://getpilot.io/leads/123',
+    viewLeadUrl: 'https://app.getpilot.io/leads/123',
   });
 
   const [welcomeData, setWelcomeData] = useState<WelcomeEmailData>({
     userName: 'Alex',
     companyName: 'Acme Inc',
-    getStartedUrl: 'https://getpilot.io/onboarding',
+    getStartedUrl: 'https://app.getpilot.io/onboarding',
   });
 
   const [bookingRescheduledData, setBookingRescheduledData] = useState<BookingRescheduledData>({
@@ -297,7 +297,7 @@ export default function EmailTemplatesTest() {
     errorMessage: 'Internal Server Error: Connection timeout after 30s',
     failedAt: 'Jan 10, 2025 at 3:45 PM',
     retryCount: 3,
-    configureUrl: 'https://getpilot.io/settings/webhooks',
+    configureUrl: 'https://app.getpilot.io/settings/webhooks',
   });
 
   const [teamMemberRemovedData, setTeamMemberRemovedData] = useState<TeamMemberRemovedData>({
@@ -309,7 +309,7 @@ export default function EmailTemplatesTest() {
     featureTitle: 'Introducing AI-Powered Lead Scoring',
     description: 'Our new AI-powered lead scoring automatically prioritizes your most promising leads based on conversation context, engagement patterns, and buying signals. Focus on what matters most.',
     imageUrl: 'https://placehold.co/520x260/171717/fafafa?text=AI+Lead+Scoring',
-    learnMoreUrl: 'https://getpilot.io/features/lead-scoring',
+    learnMoreUrl: 'https://app.getpilot.io/features/lead-scoring',
   });
 
   const getTemplateHtml = (): string => {
