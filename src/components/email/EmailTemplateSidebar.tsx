@@ -9,6 +9,33 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
+/** Supabase brand icon */
+function SupabaseIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 109 113" fill="none" className={className}>
+      <path d="M63.7076 110.284C60.8481 113.885 55.0502 111.912 54.9813 107.314L53.9738 40.0627L99.1935 40.0627C107.384 40.0627 111.952 49.5228 106.859 55.9374L63.7076 110.284Z" fill="url(#sb_paint0)"/>
+      <path d="M63.7076 110.284C60.8481 113.885 55.0502 111.912 54.9813 107.314L53.9738 40.0627L99.1935 40.0627C107.384 40.0627 111.952 49.5228 106.859 55.9374L63.7076 110.284Z" fill="url(#sb_paint1)" fillOpacity="0.2"/>
+      <path d="M45.317 2.07103C48.1765 -1.53037 53.9745 0.442937 54.0434 5.041L54.4849 72.2922H9.83113C1.64038 72.2922 -2.92775 62.8321 2.1655 56.4175L45.317 2.07103Z" fill="#3ECF8E"/>
+      <defs>
+        <linearGradient id="sb_paint0" x1="53.9738" y1="54.974" x2="94.1635" y2="71.8295" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#249361"/><stop offset="1" stopColor="#3ECF8E"/>
+        </linearGradient>
+        <linearGradient id="sb_paint1" x1="36.1558" y1="30.578" x2="54.4844" y2="65.0806" gradientUnits="userSpaceOnUse">
+          <stop/><stop offset="1" stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+/** Resend brand icon */
+function ResendIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 600 600" fill="none" className={className}>
+      <path d="M186 447.471V154H318.062C336.788 154 353.697 158.053 368.79 166.158C384.163 174.263 396.181 185.443 404.845 199.698C413.51 213.672 417.842 229.604 417.842 247.491C417.842 265.938 413.51 282.568 404.845 297.381C396.181 311.915 384.302 323.375 369.209 331.759C354.117 340.144 337.067 344.337 318.062 344.337H253.917V447.471H186ZM348.667 447.471L274.041 314.99L346.99 304.509L430 447.471H348.667ZM253.917 289.835H311.773C319.04 289.835 325.329 288.298 330.639 285.223C336.229 281.869 340.421 277.258 343.216 271.388C346.291 265.519 347.828 258.811 347.828 251.265C347.828 243.718 346.151 237.15 342.797 231.56C339.443 225.691 334.552 221.219 328.124 218.144C321.975 215.07 314.428 213.533 305.484 213.533H253.917V289.835Z" fill="currentColor"/>
+    </svg>
+  );
+}
 export type EmailTemplateType = 
   | 'invitation' 
   | 'booking' 
@@ -201,13 +228,17 @@ export function EmailTemplateSidebar({
                         <Icon size={16} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
                         <span className="flex-1 text-left truncate">{template.label}</span>
                         <div className="flex items-center gap-1 shrink-0">
-                          {/* Delivery method badge */}
-                          <span className={`text-2xs px-1.5 py-0.5 rounded font-medium ${
+                          {/* Delivery method badge with brand icon */}
+                          <span className={`flex items-center gap-1 text-2xs px-1.5 py-0.5 rounded font-medium ${
                             template.delivery === 'supabase'
-                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400'
                           }`}>
-                            {template.delivery === 'supabase' ? 'Supabase' : 'Resend'}
+                            {template.delivery === 'supabase' ? (
+                              <SupabaseIcon className="h-3 w-3" />
+                            ) : (
+                              <ResendIcon className="h-3 w-3" />
+                            )}
                           </span>
                           {/* Live status badge */}
                           {template.status === 'integrated' && (
@@ -235,16 +266,12 @@ export function EmailTemplateSidebar({
         </CollapsibleTrigger>
         <CollapsibleContent className="px-3 pb-3">
           <div className="space-y-2 text-2xs text-muted-foreground">
-            <div className="flex items-start gap-2">
-              <span className="px-1.5 py-0.5 rounded font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
-                Supabase
-              </span>
+            <div className="flex items-center gap-2">
+              <SupabaseIcon className="h-4 w-4 shrink-0" />
               <span>Configured in Supabase Dashboard → Auth → Email Templates</span>
             </div>
-            <div className="flex items-start gap-2">
-              <span className="px-1.5 py-0.5 rounded font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
-                Resend
-              </span>
+            <div className="flex items-center gap-2">
+              <ResendIcon className="h-4 w-4 shrink-0" />
               <span>Sent via Edge Functions using Resend API</span>
             </div>
           </div>
