@@ -22,6 +22,7 @@ export interface LocationWithCounts extends Location {
 interface LocationsColumnsProps {
   onView: (location: LocationWithCounts) => void;
   onDelete: (location: LocationWithCounts) => void;
+  canManage?: boolean;
 }
 
 const getTimezoneLabel = (tzValue: string | null): string => {
@@ -46,6 +47,7 @@ const WordPressIcon = ({ className }: { className?: string }) => (
 export const createLocationsColumns = ({
   onView,
   onDelete,
+  canManage = true,
 }: LocationsColumnsProps): ColumnDef<LocationWithCounts>[] => [
   {
     id: 'select',
@@ -135,15 +137,17 @@ export const createLocationsColumns = ({
     maxSize: 90,
     header: () => <span>Actions</span>,
     cell: ({ row }) => (
-      <div className="flex items-center justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDelete(row.original)}
-        >
-          <Trash01 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-        </Button>
-      </div>
+      canManage ? (
+        <div className="flex items-center justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(row.original)}
+          >
+            <Trash01 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+          </Button>
+        </div>
+      ) : null
     ),
   },
 ];

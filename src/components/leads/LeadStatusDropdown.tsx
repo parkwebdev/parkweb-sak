@@ -15,6 +15,7 @@ import { ChevronDown } from '@untitledui/icons';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 
 interface LeadStatusDropdownProps {
   stageId: string | null;
@@ -23,6 +24,8 @@ interface LeadStatusDropdownProps {
 
 export const LeadStatusDropdown = ({ stageId, onStageChange }: LeadStatusDropdownProps) => {
   const { stages, loading } = useLeadStages();
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageLeads = isAdmin || hasPermission('manage_leads');
   const [showSaved, setShowSaved] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout>();
 
@@ -45,6 +48,23 @@ export const LeadStatusDropdown = ({ stageId, onStageChange }: LeadStatusDropdow
 
   if (loading || !currentStage) {
     return <Skeleton className="h-6 w-20" />;
+  }
+
+  // Read-only mode: just show the badge without dropdown
+  if (!canManageLeads) {
+    return (
+      <Badge 
+        variant="outline" 
+        className="border-current"
+        style={{ 
+          backgroundColor: `${currentStage.color}15`,
+          color: currentStage.color,
+          borderColor: `${currentStage.color}30`,
+        }}
+      >
+        {currentStage.name}
+      </Badge>
+    );
   }
 
   return (

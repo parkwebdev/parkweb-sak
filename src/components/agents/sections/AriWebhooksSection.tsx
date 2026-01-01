@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { Link03, Trash01, Eye, Edit03, PlayCircle, Plus, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useWebhooks } from '@/hooks/useWebhooks';
@@ -35,6 +36,8 @@ interface AriWebhooksSectionProps {
 
 export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
   const { webhooks, loading, createWebhook, updateWebhook, deleteWebhook, testWebhook, fetchLogs } = useWebhooks(agentId);
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageWebhooks = isAdmin || hasPermission('manage_webhooks');
   
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -142,9 +145,11 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
       <div className="space-y-4">
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          <Button onClick={() => setShowCreateDialog(true)} size="sm">
-            Add Webhook
-          </Button>
+          {canManageWebhooks && (
+            <Button onClick={() => setShowCreateDialog(true)} size="sm">
+              Add Webhook
+            </Button>
+          )}
           <div className="flex-1" />
           <Button
             variant={debugMode ? 'secondary' : 'ghost'}
@@ -188,32 +193,40 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="flex items-center gap-2 mr-2">
-                      <Switch
-                        checked={webhook.active ?? true}
-                        onCheckedChange={(checked) => handleToggle(webhook.id, checked)}
-                      />
-                      {savedWebhookId === webhook.id && (
-                        <SavedIndicator show={true} />
-                      )}
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleTest(webhook.id)}
-                      disabled={testingWebhookId === webhook.id}
-                    >
-                      <PlayCircle size={14} className={testingWebhookId === webhook.id ? 'animate-spin' : ''} />
-                    </Button>
+                    {canManageWebhooks && (
+                      <div className="flex items-center gap-2 mr-2">
+                        <Switch
+                          checked={webhook.active ?? true}
+                          onCheckedChange={(checked) => handleToggle(webhook.id, checked)}
+                        />
+                        {savedWebhookId === webhook.id && (
+                          <SavedIndicator show={true} />
+                        )}
+                      </div>
+                    )}
+                    {canManageWebhooks && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleTest(webhook.id)}
+                        disabled={testingWebhookId === webhook.id}
+                      >
+                        <PlayCircle size={14} className={testingWebhookId === webhook.id ? 'animate-spin' : ''} />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="sm" onClick={() => handleViewLogs(webhook.id)}>
                       <Eye size={14} />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setEditingWebhook(webhook)}>
-                      <Edit03 size={14} />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleteWebhookId(webhook.id)}>
-                      <Trash01 size={14} className="text-destructive" />
-                    </Button>
+                    {canManageWebhooks && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingWebhook(webhook)}>
+                          <Edit03 size={14} />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeleteWebhookId(webhook.id)}>
+                          <Trash01 size={14} className="text-destructive" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
