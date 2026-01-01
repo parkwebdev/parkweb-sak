@@ -22,7 +22,6 @@ import {
   generateScheduledReportEmail,
   generateWeeklyReportEmail,
   generatePasswordResetEmail,
-  generateEmailVerificationEmail,
   generateSignupConfirmationEmail,
   generateBookingCancellationEmail,
   generateBookingReminderEmail,
@@ -39,7 +38,6 @@ import {
   type ScheduledReportData,
   type WeeklyReportData,
   type PasswordResetData,
-  type EmailVerificationData,
   type SignupConfirmationData,
   type BookingCancellationData,
   type BookingReminderData,
@@ -238,12 +236,6 @@ export default function EmailTemplatesTest() {
     expiresIn: '1 hour',
   });
 
-  const [emailVerificationData, setEmailVerificationData] = useState<EmailVerificationData>({
-    userName: 'Alex',
-    verificationUrl: 'https://app.getpilot.io/verify-email?token=xyz789',
-    expiresIn: '24 hours',
-  });
-
   const [signupConfirmationData, setSignupConfirmationData] = useState<SignupConfirmationData>({
     userName: 'Alex',
     confirmationUrl: 'https://app.getpilot.io/auth/confirm?token=abc123',
@@ -327,7 +319,6 @@ export default function EmailTemplatesTest() {
       case 'report': return generateScheduledReportEmail(reportData);
       case 'weekly-report': return generateWeeklyReportEmail(weeklyReportData);
       case 'password-reset': return generatePasswordResetEmail(passwordResetData);
-      case 'email-verification': return generateEmailVerificationEmail(emailVerificationData);
       case 'signup-confirmation': return generateSignupConfirmationEmail(signupConfirmationData);
       case 'booking-cancellation': return generateBookingCancellationEmail(bookingCancellationData);
       case 'booking-reminder': return generateBookingReminderEmail(bookingReminderData);
@@ -348,7 +339,6 @@ export default function EmailTemplatesTest() {
       case 'report': return `${reportData.reportName} — ${reportData.dateRange}`;
       case 'weekly-report': return `${weeklyReportData.reportName} — ${weeklyReportData.dateRange}`;
       case 'password-reset': return 'Reset your password';
-      case 'email-verification': return 'Verify your email address';
       case 'signup-confirmation': return 'Confirm your email address';
       case 'booking-cancellation': return `Cancelled: ${bookingCancellationData.eventType} on ${bookingCancellationData.date}`;
       case 'booking-reminder': return `Reminder: ${bookingReminderData.eventType} in ${bookingReminderData.reminderTime}`;
@@ -534,36 +524,6 @@ export default function EmailTemplatesTest() {
               <Input
                 value={passwordResetData.expiresIn || ''}
                 onChange={(e) => setPasswordResetData({ ...passwordResetData, expiresIn: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
-        );
-
-      case 'email-verification':
-        return (
-          <div className="p-4 grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs">User Name</Label>
-              <Input
-                value={emailVerificationData.userName || ''}
-                onChange={(e) => setEmailVerificationData({ ...emailVerificationData, userName: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Verification URL</Label>
-              <Input
-                value={emailVerificationData.verificationUrl}
-                onChange={(e) => setEmailVerificationData({ ...emailVerificationData, verificationUrl: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Expires In</Label>
-              <Input
-                value={emailVerificationData.expiresIn || ''}
-                onChange={(e) => setEmailVerificationData({ ...emailVerificationData, expiresIn: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>

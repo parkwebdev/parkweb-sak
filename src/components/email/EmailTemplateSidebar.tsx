@@ -14,7 +14,6 @@ export type EmailTemplateType =
   | 'report' 
   | 'weekly-report'
   | 'password-reset' 
-  | 'email-verification'
   | 'signup-confirmation'
   | 'booking-cancellation'
   | 'booking-reminder'
@@ -40,7 +39,6 @@ interface TemplateItem {
 const TEMPLATES: TemplateItem[] = [
   // Auth - Integrated with send-auth-email edge function
   { id: 'password-reset', label: 'Password Reset', icon: Key01, group: 'Auth', status: 'integrated' },
-  { id: 'email-verification', label: 'Email Verification', icon: CheckCircle, group: 'Auth', status: 'integrated' },
   { id: 'signup-confirmation', label: 'Signup Confirmation', icon: Mail01, group: 'Auth', status: 'integrated' },
   { id: 'welcome', label: 'Welcome', icon: UserPlus01, group: 'Auth', status: 'integrated' },
   
