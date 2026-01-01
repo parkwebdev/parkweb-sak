@@ -139,12 +139,12 @@ export function EmailTemplateSidebar({
         {/* Width Toggle */}
         <div className="space-y-1.5">
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Device</span>
-          <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5">
+          <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onPreviewWidthChange('mobile')}
-              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'mobile' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'hover:bg-muted hover:text-foreground'}`}
+              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'mobile' ? 'bg-background text-foreground shadow-sm border border-border hover:bg-background' : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'}`}
             >
               <Phone01 size={14} className="mr-1.5" />
               Mobile
@@ -153,7 +153,7 @@ export function EmailTemplateSidebar({
               variant="ghost"
               size="sm"
               onClick={() => onPreviewWidthChange('desktop')}
-              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'desktop' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'hover:bg-muted hover:text-foreground'}`}
+              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'desktop' ? 'bg-background text-foreground shadow-sm border border-border hover:bg-background' : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'}`}
             >
               <Monitor01 size={14} className="mr-1.5" />
               Desktop
@@ -166,12 +166,12 @@ export function EmailTemplateSidebar({
         {/* Dark Mode Toggle */}
         <div className="space-y-1.5">
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Theme</span>
-          <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5">
+          <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onDarkModeChange(false)}
-              className={`h-7 text-xs px-3 flex-1 ${!darkMode ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'hover:bg-muted hover:text-foreground'}`}
+              className={`h-7 text-xs px-3 flex-1 ${!darkMode ? 'bg-background text-foreground shadow-sm border border-border hover:bg-background' : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'}`}
             >
               <Sun size={14} className="mr-1.5" />
               Light
@@ -180,7 +180,7 @@ export function EmailTemplateSidebar({
               variant="ghost"
               size="sm"
               onClick={() => onDarkModeChange(true)}
-              className={`h-7 text-xs px-3 flex-1 ${darkMode ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'hover:bg-muted hover:text-foreground'}`}
+              className={`h-7 text-xs px-3 flex-1 ${darkMode ? 'bg-background text-foreground shadow-sm border border-border hover:bg-background' : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'}`}
             >
               <Moon01 size={14} className="mr-1.5" />
               Dark
