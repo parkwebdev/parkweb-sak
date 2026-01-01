@@ -102,12 +102,15 @@ export interface HumanTakeoverAlertData {
   takeoverUrl: string;
 }
 
+/**
+ * Conversation summary data for periodic reports.
+ * Note: topTopics removed - not currently extracted by the app.
+ */
 export interface ConversationSummaryData {
   period: string; // e.g., "Dec 25-31, 2024"
   totalConversations: number;
   leadsGenerated: number;
   avgResponseTime: string;
-  topTopics: string[];
   viewDetailsUrl: string;
 }
 
@@ -128,11 +131,14 @@ export interface BookingRescheduledData {
   calendarLink?: string;
 }
 
+/**
+ * Lead status change notification data.
+ * Note: changedBy removed - not tracked in the app.
+ */
 export interface LeadStatusChangeData {
   leadName: string;
   previousStage: string;
   newStage: string;
-  changedBy: string;
   viewLeadUrl: string;
 }
 
@@ -153,11 +159,14 @@ export interface CalendarIntegrationSuccessData {
   connectedAt: string;
 }
 
+/**
+ * Team member removal notification data.
+ * Note: reason removed - not captured in the app.
+ */
 export interface TeamMemberRemovedData {
   memberName: string;
   removedBy: string;
   teamName: string;
-  reason?: string;
 }
 
 export interface AccountInactivityWarningData {
@@ -654,10 +663,6 @@ export function generateHumanTakeoverAlertEmail(data: HumanTakeoverAlertData): s
 }
 
 export function generateConversationSummaryEmail(data: ConversationSummaryData): string {
-  const topicsHtml = data.topTopics.map(topic => 
-    `<span style="display: inline-block; padding: 4px 12px; margin: 4px 4px 4px 0; font-size: 13px; color: ${colors.text}; background-color: ${colors.background}; border-radius: 4px;">${topic}</span>`
-  ).join('');
-  
   const content = `
     ${heading('Conversation Summary')}
     ${paragraph(`Here's your summary for <strong>${data.period}</strong>.`)}
@@ -679,12 +684,6 @@ export function generateConversationSummaryEmail(data: ConversationSummaryData):
         </td>
       </tr>
     </table>
-    
-    ${data.topTopics.length > 0 ? `
-      ${spacer(24)}
-      <p class="email-text-muted" style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: ${colors.textMuted};">Top Topics</p>
-      <div>${topicsHtml}</div>
-    ` : ''}
     
     ${spacer(24)}
     ${button('View Details', data.viewDetailsUrl)}
@@ -798,8 +797,6 @@ export function generateLeadStatusChangeEmail(data: LeadStatusChangeData): strin
               <td style="padding: 8px 16px; font-size: 14px; font-weight: 600; color: ${colors.buttonText}; background-color: ${colors.buttonBg}; border-radius: 4px;">${data.newStage}</td>
             </tr>
           </table>
-          ${spacer(16)}
-          <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">Changed by ${data.changedBy}</p>
         </td>
       </tr>
     </table>
@@ -883,7 +880,6 @@ export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): str
   const content = `
     ${heading('Removed from team')}
     ${paragraph(`Hi <strong>${data.memberName}</strong>, you have been removed from <strong>${data.teamName}</strong> by ${data.removedBy}.`)}
-    ${data.reason ? paragraph(`Reason: ${data.reason}`, true) : ''}
     ${spacer(8)}
     ${paragraph('You no longer have access to this team\'s resources. If you believe this was a mistake, please contact your team administrator.', true)}
   `;
