@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { useLeads } from '@/hooks/useLeads';
 import { useLeadStages } from '@/hooks/useLeadStages';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
@@ -50,8 +51,12 @@ interface LeadsProps {
 function Leads({ onMenuClick }: LeadsProps) {
   const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const { stages } = useLeadStages();
+  const { hasPermission, isAdmin } = useRoleAuthorization();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  
+  // Check if user can manage leads (delete, edit stage, etc.)
+  const canManageLeads = isAdmin || hasPermission('manage_leads');
   
   // Initialize view mode from localStorage
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>(() => {
@@ -384,9 +389,9 @@ function Leads({ onMenuClick }: LeadsProps) {
                 </div>
                 <LeadsKanbanBoard
                   leads={filteredLeads}
-                  onStatusChange={(leadId, stageId) => updateLead(leadId, { stage_id: stageId })}
+                  onStatusChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
                   onViewLead={handleViewLead}
-                  onOrderChange={updateLeadOrders}
+                  onOrderChange={canManageLeads ? updateLeadOrders : undefined}
                   visibleFields={visibleCardFields}
                 />
               </motion.div>
@@ -402,13 +407,13 @@ function Leads({ onMenuClick }: LeadsProps) {
                   leads={filteredLeads}
                   selectedIds={selectedLeadIds}
                   onView={handleViewLead}
-                  onStageChange={(leadId, stageId) => updateLead(leadId, { stage_id: stageId })}
-                  onSelectionChange={handleSelectLead}
-                  onSelectAll={handleSelectAll}
-                  onBulkDelete={(ids) => {
+                  onStageChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
+                  onSelectionChange={canManageLeads ? handleSelectLead : undefined}
+                  onSelectAll={canManageLeads ? handleSelectAll : undefined}
+                  onBulkDelete={canManageLeads ? (ids) => {
                     setSelectedLeadIds(new Set(ids));
                     setIsDeleteDialogOpen(true);
-                  }}
+                  } : undefined}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                   searchQuery={searchQuery}
@@ -437,7 +442,7 @@ function Leads({ onMenuClick }: LeadsProps) {
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
         onUpdate={updateLead}
-        onDelete={handleSingleDelete}
+        onDelete={canManageLeads ? handleSingleDelete : undefined}
       />
 
       <DeleteLeadDialog

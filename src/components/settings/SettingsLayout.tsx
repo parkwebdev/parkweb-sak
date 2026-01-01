@@ -1,20 +1,29 @@
 /**
  * @fileoverview Settings page layout with sidebar navigation.
  * Provides responsive tabs for mobile and sidebar for desktop.
+ * Filters tabs based on user permissions.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
+import type { AppPermission } from '@/types/team';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
 export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'billing' | 'usage';
+
+interface SettingsMenuItem {
+  id: SettingsTab;
+  label: string;
+  requiredPermission?: AppPermission;
+}
 
 interface SettingsMenuItemProps {
   id: SettingsTab;
@@ -24,7 +33,7 @@ interface SettingsMenuItemProps {
   index: number;
 }
 
-function SettingsMenuItem({
+function SettingsMenuItemButton({
   id,
   label,
   active,
@@ -58,20 +67,33 @@ interface SettingsLayoutContentProps {
   onMenuClick?: () => void;
 }
 
+// Menu items with their required permissions
+const ALL_MENU_ITEMS: SettingsMenuItem[] = [
+  { id: 'general', label: 'General' },
+  { id: 'profile', label: 'Profile' },
+  { id: 'team', label: 'Team', requiredPermission: 'view_team' },
+  { id: 'billing', label: 'Billing', requiredPermission: 'view_billing' },
+  { id: 'usage', label: 'Usage', requiredPermission: 'view_billing' },
+  { id: 'notifications', label: 'Notifications' },
+];
+
 export function SettingsLayout({
   activeTab,
   onTabChange,
   children,
   onMenuClick,
 }: SettingsLayoutContentProps) {
-  const menuItems = [
-    { id: 'general' as SettingsTab, label: 'General' },
-    { id: 'profile' as SettingsTab, label: 'Profile' },
-    { id: 'team' as SettingsTab, label: 'Team' },
-    { id: 'billing' as SettingsTab, label: 'Billing' },
-    { id: 'usage' as SettingsTab, label: 'Usage' },
-    { id: 'notifications' as SettingsTab, label: 'Notifications' },
-  ];
+  const { hasPermission, isAdmin, loading } = useRoleAuthorization();
+  
+  // Filter menu items based on permissions
+  const menuItems = useMemo(() => {
+    if (loading) return ALL_MENU_ITEMS; // Show all while loading to prevent flash
+    
+    return ALL_MENU_ITEMS.filter(item => {
+      if (!item.requiredPermission) return true;
+      return isAdmin || hasPermission(item.requiredPermission);
+    });
+  }, [hasPermission, isAdmin, loading]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
@@ -122,7 +144,7 @@ export function SettingsLayout({
           </div>
           <nav className="space-y-1">
             {menuItems.map((item, index) => (
-              <SettingsMenuItem
+              <SettingsMenuItemButton
                 key={item.id}
                 id={item.id}
                 label={item.label}

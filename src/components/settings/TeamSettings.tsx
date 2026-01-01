@@ -1,6 +1,7 @@
 /**
  * @fileoverview Team settings page with member management.
  * Handles member invitations, role editing, and profile management.
+ * Respects manage_team permission for invite functionality.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -25,7 +26,7 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const { user } = useAuth();
-  const { role: currentUserRole } = useRoleAuthorization();
+  const { role: currentUserRole, hasPermission, isAdmin } = useRoleAuthorization();
   const { 
     teamMembers, 
     loading, 
@@ -37,6 +38,7 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   } = useTeam();
 
   const isSuperAdmin = currentUserRole === 'super_admin';
+  const canManageTeam = isAdmin || hasPermission('manage_team');
 
   // Handle auto-opening a team member from URL parameter
   useEffect(() => {
@@ -74,9 +76,11 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-end mb-6">
-          <InviteMemberDialog onInvite={handleInviteMember} />
-        </div>
+        {canManageTeam && (
+          <div className="flex justify-end mb-6">
+            <InviteMemberDialog onInvite={handleInviteMember} />
+          </div>
+        )}
         <SkeletonTableSection rows={3} />
       </div>
     );
@@ -84,9 +88,11 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end mb-6">
-        <InviteMemberDialog onInvite={handleInviteMember} />
-      </div>
+      {canManageTeam && (
+        <div className="flex justify-end mb-6">
+          <InviteMemberDialog onInvite={handleInviteMember} />
+        </div>
+      )}
 
       {/* Team Members Table */}
       <TeamMembersTable
