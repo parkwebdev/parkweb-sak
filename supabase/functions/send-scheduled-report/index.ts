@@ -592,17 +592,26 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log('Checking for scheduled reports at:', currentTime);
 
+    // Fetch active scheduled reports
     const { data: reports, error } = await supabase
       .from('scheduled_reports')
-      .select(`
-        *,
-        profiles!scheduled_reports_user_id_fkey(display_name, company_name)
-      `)
+      .select('*')
       .eq('active', true);
 
     if (error) {
       console.error('Error fetching scheduled reports:', error);
       throw error;
+    }
+
+    // Enrich with profile data (no FK exists, so we fetch separately)
+    for (const report of reports || []) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, company_name')
+        .eq('user_id', report.user_id)
+        .maybeSingle();
+      
+      report.profiles = profile;
     }
 
     console.log(`Found ${reports?.length || 0} active scheduled reports`);

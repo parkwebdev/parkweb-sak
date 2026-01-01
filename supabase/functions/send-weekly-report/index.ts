@@ -312,24 +312,29 @@ const handler = async (req: Request): Promise<Response> => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Get all account owners (users with agents)
-    const { data: accountOwners, error: ownersError } = await supabase
+    // Get all profiles with email
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select(`
-        user_id,
-        email,
-        display_name,
-        notification_preferences!inner(report_email_notifications)
-      `)
+      .select('user_id, email, display_name')
       .not('email', 'is', null);
     
-    if (ownersError) {
-      console.error("Error fetching account owners:", ownersError);
-      throw ownersError;
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      throw profilesError;
     }
 
-    // Filter to only users who have report email notifications enabled
-    const eligibleUsers = accountOwners?.filter(owner => 
+    // Get notification preferences for these users (no FK exists, fetch separately)
+    const userIds = profiles?.map(p => p.user_id) || [];
+    const { data: notifPrefs } = await supabase
+      .from('notification_preferences')
+      .select('user_id, report_email_notifications')
+      .in('user_id', userIds);
+
+    // Merge data and filter to users with report notifications enabled
+    const eligibleUsers = profiles?.map(profile => ({
+      ...profile,
+      notification_preferences: notifPrefs?.find(np => np.user_id === profile.user_id)
+    })).filter(owner => 
       owner.notification_preferences?.report_email_notifications !== false
     ) || [];
 
