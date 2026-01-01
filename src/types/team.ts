@@ -2,7 +2,7 @@
  * Team Type Definitions
  * 
  * Type-safe interfaces for team member management,
- * roles, and permissions.
+ * roles, and granular permissions.
  * 
  * @module types/team
  */
@@ -52,40 +52,149 @@ export interface InviteMemberData {
  */
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'client';
 
-/** App permissions matching the database enum */
+/**
+ * Granular app permissions matching the database enum.
+ * Organized by feature area with view/manage pairs.
+ */
 export type AppPermission = 
-  | 'manage_team'
+  // Dashboard & Analytics
+  | 'view_dashboard'
+  // Ari Agent
+  | 'manage_ari'
+  // Conversations
+  | 'view_conversations'
+  | 'manage_conversations'
+  // Leads
+  | 'view_leads'
+  | 'manage_leads'
+  // Bookings
+  | 'view_bookings'
+  | 'manage_bookings'
+  // Knowledge Base
+  | 'view_knowledge'
+  | 'manage_knowledge'
+  // Help Center
+  | 'view_help_articles'
+  | 'manage_help_articles'
+  // Team
   | 'view_team'
-  | 'manage_projects'
-  | 'view_projects'
-  | 'manage_onboarding'
-  | 'view_onboarding'
-  | 'manage_scope_works'
-  | 'view_scope_works'
+  | 'manage_team'
+  // Settings
+  | 'view_settings'
   | 'manage_settings'
-  | 'view_settings';
+  // Billing
+  | 'view_billing'
+  | 'manage_billing'
+  // Integrations
+  | 'view_integrations'
+  | 'manage_integrations'
+  // Webhooks
+  | 'view_webhooks'
+  | 'manage_webhooks'
+  // API Keys
+  | 'view_api_keys'
+  | 'manage_api_keys';
+
+/**
+ * Permission groups for UI organization.
+ * Each group contains related permissions.
+ */
+export const PERMISSION_GROUPS: Record<string, readonly AppPermission[]> = {
+  'Dashboard & Analytics': ['view_dashboard'],
+  'Ari Agent': ['manage_ari'],
+  'Conversations': ['view_conversations', 'manage_conversations'],
+  'Leads': ['view_leads', 'manage_leads'],
+  'Bookings': ['view_bookings', 'manage_bookings'],
+  'Knowledge Base': ['view_knowledge', 'manage_knowledge'],
+  'Help Center': ['view_help_articles', 'manage_help_articles'],
+  'Team': ['view_team', 'manage_team'],
+  'Settings': ['view_settings', 'manage_settings'],
+  'Billing': ['view_billing', 'manage_billing'],
+  'Integrations': ['view_integrations', 'manage_integrations'],
+  'Webhooks': ['view_webhooks', 'manage_webhooks'],
+  'API Keys': ['view_api_keys', 'manage_api_keys'],
+} as const;
+
+/**
+ * Human-readable labels for each permission.
+ */
+export const PERMISSION_LABELS: Record<AppPermission, string> = {
+  'view_dashboard': 'View Dashboard & Analytics',
+  'manage_ari': 'Configure Ari Agent',
+  'view_conversations': 'View Conversations',
+  'manage_conversations': 'Manage Conversations (takeover, close)',
+  'view_leads': 'View Leads',
+  'manage_leads': 'Manage Leads (edit, delete, move)',
+  'view_bookings': 'View Bookings',
+  'manage_bookings': 'Manage Bookings (cancel, reschedule)',
+  'view_knowledge': 'View Knowledge Sources',
+  'manage_knowledge': 'Manage Knowledge Sources',
+  'view_help_articles': 'View Help Articles',
+  'manage_help_articles': 'Manage Help Articles',
+  'view_team': 'View Team Members',
+  'manage_team': 'Manage Team (invite, remove, roles)',
+  'view_settings': 'View Settings',
+  'manage_settings': 'Manage Settings',
+  'view_billing': 'View Billing & Usage',
+  'manage_billing': 'Manage Billing & Subscription',
+  'view_integrations': 'View Integrations',
+  'manage_integrations': 'Manage Integrations',
+  'view_webhooks': 'View Webhooks',
+  'manage_webhooks': 'Manage Webhooks',
+  'view_api_keys': 'View API Keys',
+  'manage_api_keys': 'Manage API Keys',
+};
+
+/**
+ * All available permissions as an array.
+ */
+export const ALL_PERMISSIONS: AppPermission[] = Object.keys(PERMISSION_LABELS) as AppPermission[];
+
+/**
+ * Default permissions for each role.
+ * Used when assigning a new role to auto-populate permissions.
+ */
+export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
+  super_admin: ALL_PERMISSIONS,
+  admin: ALL_PERMISSIONS,
+  manager: [
+    'view_dashboard',
+    'manage_ari',
+    'view_conversations',
+    'manage_conversations',
+    'view_leads',
+    'manage_leads',
+    'view_bookings',
+    'manage_bookings',
+    'view_knowledge',
+    'manage_knowledge',
+    'view_help_articles',
+    'manage_help_articles',
+    'view_team',
+    'view_settings',
+    'view_billing',
+    'view_integrations',
+    'view_webhooks',
+    'view_api_keys',
+  ],
+  member: [
+    'view_dashboard',
+    'view_conversations',
+    'manage_conversations',
+    'view_leads',
+    'manage_leads',
+    'view_bookings',
+    'view_knowledge',
+    'view_help_articles',
+    'view_team',
+    'view_settings',
+  ],
+  client: [
+    'view_dashboard',
+    'view_bookings',
+  ],
+};
 
 export interface RolePermissions {
   [key: string]: string[];
 }
-
-export const PERMISSION_GROUPS = {
-  'Team Management': ['manage_team', 'view_team'],
-  'Projects': ['manage_projects', 'view_projects'],
-  'Onboarding': ['manage_onboarding', 'view_onboarding'],
-  'Scope of Works': ['manage_scope_works', 'view_scope_works'],
-  'Settings': ['manage_settings', 'view_settings'],
-} as const;
-
-export const PERMISSION_LABELS = {
-  'manage_team': 'Manage Team Members',
-  'view_team': 'View Team Members',
-  'manage_projects': 'Manage Projects',
-  'view_projects': 'View Projects',
-  'manage_onboarding': 'Manage Client Onboarding',
-  'view_onboarding': 'View Client Onboarding',
-  'manage_scope_works': 'Manage Scope of Works',
-  'view_scope_works': 'View Scope of Works',
-  'manage_settings': 'Manage Settings',
-  'view_settings': 'View Settings',
-} as const;
