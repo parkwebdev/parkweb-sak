@@ -31,11 +31,11 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
   const getFrequencyDisplay = (report: typeof reports[number]) => {
     const timeStr = report.time_of_day?.substring(0, 5) || '09:00';
     
-    // Convert 24h to 12h format
-    const [hours, minutes] = timeStr.split(':').map(Number);
+    // Convert 24h to 12h format (hour only since cron runs hourly)
+    const hours = parseInt(timeStr.split(':')[0]);
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours % 12 || 12;
-    const formattedTime = `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    const formattedTime = `${displayHours}:00 ${period}`;
     
     switch (report.frequency) {
       case 'daily':
