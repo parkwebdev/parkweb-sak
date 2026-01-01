@@ -205,10 +205,10 @@ const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOpti
                   </td>
                   <td>
                     <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
-                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" height="18" style="display: block; height: 18px; width: auto;" />
+                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" height="16" style="display: block; height: 16px; width: auto;" />
                     </a>
                     <a href="https://www.facebook.com/getpilot" target="_blank" style="display: inline-block; vertical-align: middle;">
-                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" height="18" style="display: block; height: 18px; width: auto;" />
+                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" height="16" style="display: block; height: 16px; width: auto;" />
                     </a>
                   </td>
                 </tr>
