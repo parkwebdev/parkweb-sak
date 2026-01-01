@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
 import type { Tables, Enums } from '@/integrations/supabase/types';
@@ -15,6 +16,7 @@ type Lead = Tables<'leads'> & {
 /**
  * Hook for managing leads captured from widget contact forms.
  * Uses React Query for caching and real-time Supabase subscriptions.
+ * Scoped by accountOwnerId to enable team member access.
  * 
  * @returns {Object} Lead management methods and state
  * @returns {Lead[]} leads - List of user's leads with linked conversations
@@ -29,22 +31,24 @@ type Lead = Tables<'leads'> & {
  */
 export const useLeads = () => {
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
   // Fetch leads using React Query with real-time updates
+  // Scoped by accountOwnerId so team members see owner's leads
   const { 
     data: leads = [], 
     isLoading: loading,
     refetch,
   } = useSupabaseQuery<Lead[]>({
-    queryKey: queryKeys.leads.list(),
+    queryKey: queryKeys.leads.list({ ownerId: accountOwnerId }),
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!accountOwnerId) return [];
       
       const { data, error } = await supabase
         .from('leads')
         .select('*, conversations!fk_leads_conversation(id, created_at, metadata)')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .order('status')
         .order('kanban_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
@@ -52,21 +56,21 @@ export const useLeads = () => {
       if (error) throw error;
       return data || [];
     },
-    realtime: user?.id ? {
+    realtime: accountOwnerId ? {
       table: 'leads',
-      filter: `user_id=eq.${user.id}`,
+      filter: `user_id=eq.${accountOwnerId}`,
     } : undefined,
-    enabled: !!user?.id,
+    enabled: !!accountOwnerId && !ownerLoading,
     staleTime: 30_000, // Consider data fresh for 30 seconds
   });
 
   const createLead = async (leadData: Partial<Tables<'leads'>>) => {
-    if (!user?.id) return;
+    if (!accountOwnerId) return;
 
     try {
       const { data, error } = await supabase
         .from('leads')
-        .insert([{ ...leadData, user_id: user.id }])
+        .insert([{ ...leadData, user_id: accountOwnerId }])
         .select()
         .single();
 

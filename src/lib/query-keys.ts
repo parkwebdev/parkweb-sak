@@ -30,10 +30,16 @@
  * - `detail(id)`: Specific detail by ID
  */
 export const queryKeys = {
+  // Account scoping
+  account: {
+    all: ['account'] as const,
+    ownerId: (userId?: string) => ['account', 'owner-id', userId] as const,
+  },
+
   // Agent keys
   agent: {
     all: ['agent'] as const,
-    detail: (userId: string) => ['agent', 'detail', userId] as const,
+    detail: (userId?: string) => ['agent', 'detail', userId] as const,
   },
 
   // Profile keys
@@ -88,7 +94,7 @@ export const queryKeys = {
   conversations: {
     all: ['conversations'] as const,
     lists: () => [...queryKeys.conversations.all, 'list'] as const,
-    list: (filters?: { status?: string }) =>
+    list: (filters?: { status?: string; ownerId?: string | null }) =>
       [...queryKeys.conversations.lists(), filters] as const,
     details: () => [...queryKeys.conversations.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.conversations.details(), id] as const,
@@ -100,7 +106,7 @@ export const queryKeys = {
   leads: {
     all: ['leads'] as const,
     lists: () => [...queryKeys.leads.all, 'list'] as const,
-    list: (filters?: { status?: string }) => [...queryKeys.leads.lists(), filters] as const,
+    list: (filters?: { status?: string; ownerId?: string | null }) => [...queryKeys.leads.lists(), filters] as const,
     details: () => [...queryKeys.leads.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.leads.details(), id] as const,
   },

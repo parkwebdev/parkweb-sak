@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { playNotificationSound } from '@/lib/notification-sound';
@@ -20,6 +21,7 @@ type Message = Tables<'messages'>;
 /**
  * Hook for managing chat conversations.
  * Uses React Query for caching with real-time Supabase subscriptions.
+ * Scoped by accountOwnerId to enable team member access.
  * Handles conversation CRUD, messages, human takeover, and notification sounds.
  * 
  * @returns {Object} Conversation management methods and state
@@ -36,18 +38,20 @@ type Message = Tables<'messages'>;
  */
 export const useConversations = () => {
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
   const soundEnabledRef = useRef<boolean>(true);
 
   // Fetch conversations using React Query with real-time updates
+  // Scoped by accountOwnerId so team members see owner's conversations
   const { 
     data: conversations = [], 
     isLoading: loading,
     refetch,
   } = useSupabaseQuery<Conversation[]>({
-    queryKey: queryKeys.conversations.lists(),
+    queryKey: queryKeys.conversations.list({ ownerId: accountOwnerId }),
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!accountOwnerId) return [];
       
       const { data, error } = await supabase
         .from('conversations')
@@ -55,17 +59,17 @@ export const useConversations = () => {
           *,
           agents!fk_conversations_agent(name)
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
     },
-    realtime: user?.id ? {
+    realtime: accountOwnerId ? {
       table: 'conversations',
-      filter: `user_id=eq.${user.id}`,
+      filter: `user_id=eq.${accountOwnerId}`,
     } : undefined,
-    enabled: !!user?.id,
+    enabled: !!accountOwnerId && !ownerLoading,
     staleTime: 30_000, // Consider data fresh for 30 seconds
   });
 

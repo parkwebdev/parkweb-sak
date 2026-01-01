@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useAgent } from '@/hooks/useAgent';
 import { format, eachDayOfInterval } from 'date-fns';
 import { logger } from '@/utils/logger';
@@ -125,16 +126,17 @@ export const useAnalytics = (
   const [leads, setLeads] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const { agentId } = useAgent();
 
   const fetchConversationStats = async () => {
-    if (!user) return;
+    if (!accountOwnerId) return;
 
     try {
       let query = supabase
         .from('conversations')
         .select('created_at, status, agent_id, metadata')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -172,7 +174,7 @@ export const useAnalytics = (
   };
 
   const fetchLeadStats = async () => {
-    if (!user) return;
+    if (!accountOwnerId) return;
 
     try {
       // First, fetch the user's lead stages
@@ -190,7 +192,7 @@ export const useAnalytics = (
       let query = supabase
         .from('leads')
         .select('created_at, stage_id, name, email, company')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -252,14 +254,14 @@ export const useAnalytics = (
   };
 
   const fetchAgentPerformance = async () => {
-    if (!user) return;
+    if (!accountOwnerId) return;
 
     try {
       // Single agent model: fetch only the user's Ari agent
       const { data: agent, error: agentError } = await supabase
         .from('agents')
         .select('id, name')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .single();
 
       if (agentError) {
@@ -279,7 +281,7 @@ export const useAnalytics = (
         .from('conversations')
         .select('*', { count: 'exact', head: true })
         .eq('agent_id', agent.id)
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -288,7 +290,7 @@ export const useAnalytics = (
         .from('conversations')
         .select('id')
         .eq('agent_id', agent.id)
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -360,13 +362,13 @@ export const useAnalytics = (
   };
 
   const fetchUsageMetrics = async () => {
-    if (!user) return;
+    if (!accountOwnerId) return;
 
     try {
       const { data, error } = await supabase
         .from('usage_metrics')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('period_start', startDate.toISOString())
         .lte('period_end', endDate.toISOString())
         .order('period_start', { ascending: true });
@@ -391,7 +393,7 @@ export const useAnalytics = (
    * Groups calendar_events by date and counts totals.
    */
   const fetchBookingTrend = async () => {
-    if (!user || !agentId) {
+    if (!accountOwnerId || !agentId) {
       setBookingTrendData([]);
       return;
     }
@@ -452,7 +454,7 @@ export const useAnalytics = (
    * Groups conversation_ratings by date and calculates daily average.
    */
   const fetchSatisfactionTrend = async () => {
-    if (!user) {
+    if (!accountOwnerId) {
       setSatisfactionTrendData([]);
       return;
     }
@@ -462,7 +464,7 @@ export const useAnalytics = (
       const { data: convos, error: convosError } = await supabase
         .from('conversations')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -521,7 +523,7 @@ export const useAnalytics = (
    * Groups conversations by date and calculates daily containment rate.
    */
   const fetchContainmentTrend = async () => {
-    if (!user) {
+    if (!accountOwnerId) {
       setContainmentTrendData([]);
       return;
     }
@@ -531,7 +533,7 @@ export const useAnalytics = (
       const { data: convos, error: convosError } = await supabase
         .from('conversations')
         .select('id, status, created_at')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -597,24 +599,24 @@ export const useAnalytics = (
   };
 
   useEffect(() => {
-    // Skip all fetching when disabled or no user (prevents channel leaks)
-    if (!enabled || !user?.id) {
+    // Skip all fetching when disabled or no accountOwnerId (prevents channel leaks)
+    if (!enabled || !accountOwnerId || ownerLoading) {
       setLoading(false);
       return;
     }
 
     fetchAllData();
 
-    // Subscribe to real-time updates with user-scoped channel names
+    // Subscribe to real-time updates with owner-scoped channel names
     const conversationsChannel = supabase
-      .channel(`analytics-conversations-${user.id}`)
+      .channel(`analytics-conversations-${accountOwnerId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'conversations',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${accountOwnerId}`,
         },
         () => {
           fetchConversationStats();
@@ -624,14 +626,14 @@ export const useAnalytics = (
       .subscribe();
 
     const leadsChannel = supabase
-      .channel(`analytics-leads-${user.id}`)
+      .channel(`analytics-leads-${accountOwnerId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'leads',
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${accountOwnerId}`,
         },
         () => {
           fetchLeadStats();
@@ -640,9 +642,8 @@ export const useAnalytics = (
       .subscribe();
 
     // Note: conversation_ratings doesn't have direct user_id column
-    // Using user-scoped channel name to prevent cross-user channel collisions
     const ratingsChannel = supabase
-      .channel(`analytics-ratings-${user.id}`)
+      .channel(`analytics-ratings-${accountOwnerId}`)
       .on(
         'postgres_changes',
         {
@@ -657,9 +658,8 @@ export const useAnalytics = (
       .subscribe();
 
     // Note: calendar_events uses connected_account_id, not user_id directly
-    // Using user-scoped channel name to prevent cross-user channel collisions
     const eventsChannel = supabase
-      .channel(`analytics-calendar-events-${user.id}`)
+      .channel(`analytics-calendar-events-${accountOwnerId}`)
       .on(
         'postgres_changes',
         {
@@ -680,8 +680,7 @@ export const useAnalytics = (
       supabase.removeChannel(eventsChannel);
     };
   // IMPORTANT: Use primitive filter values as dependencies, NOT the filters object.
-  // Passing the object directly causes infinite re-renders when callers pass inline object literals.
-  }, [enabled, user?.id, agentId, startDate, endDate, filters.leadStatus, filters.conversationStatus]);
+  }, [enabled, accountOwnerId, ownerLoading, agentId, startDate, endDate, filters.leadStatus, filters.conversationStatus]);
 
   // Transform trend data to SparklineDataPoint format for compatibility
   const bookingTrend: SparklineDataPoint[] = useMemo(() => 
