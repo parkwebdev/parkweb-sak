@@ -2,7 +2,8 @@
  * Global Search Data Hook
  * 
  * Fetches and aggregates data from various sources for global search.
- * Filters results based on user permissions using centralized route config.
+ * Filters results based on user permissions using centralized route config
+ * and DATA_PERMISSION_MAP for type-safe permission checks.
  * 
  * @module hooks/useSearchData
  */
@@ -24,7 +25,9 @@ import type {
   KnowledgeSourceWithAgent,
   ProfileRecord,
 } from '@/types/search';
+import { DATA_PERMISSION_MAP } from '@/types/search';
 import type { ConversationMetadata } from '@/types/metadata';
+import type { AppPermission } from '@/types/team';
 import { logger } from '@/utils/logger';
 
 export interface SearchResult {
@@ -40,7 +43,7 @@ export interface SearchResult {
 
 /**
  * Hook for global search across agents, conversations, leads, articles, and more.
- * Filters results based on user permissions.
+ * Uses DATA_PERMISSION_MAP for type-safe permission filtering.
  */
 export const useSearchData = () => {
   const navigate = useNavigate();
@@ -48,18 +51,21 @@ export const useSearchData = () => {
   const { 
     isAdmin, 
     hasPermission,
-    canViewConversations,
-    canViewLeads,
-    canViewHelpArticles,
-    canViewWebhooks,
-    canManageAri,
-    canViewKnowledge,
-    canViewTeam,
     loading: permissionsLoading
   } = useRoleAuthorization();
   
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+
+  /**
+   * Check if user has permission for a specific data type using DATA_PERMISSION_MAP.
+   * Admins always have access.
+   */
+  const hasDataPermission = useCallback((dataKey: keyof SearchDataMap): boolean => {
+    if (isAdmin) return true;
+    const permission = DATA_PERMISSION_MAP[dataKey];
+    return hasPermission(permission);
+  }, [isAdmin, hasPermission]);
 
   const fetchAllData = useCallback(async () => {
     if (!user || permissionsLoading) return;
@@ -69,8 +75,8 @@ export const useSearchData = () => {
       const dataMap: SearchDataMap = {};
       const fetchPromises: Promise<void>[] = [];
 
-      // Conversations - only if user has permission
-      if (canViewConversations) {
+      // Conversations - using DATA_PERMISSION_MAP
+      if (hasDataPermission('conversations')) {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('conversations')
@@ -81,8 +87,8 @@ export const useSearchData = () => {
         })());
       }
 
-      // Leads - only if user has permission
-      if (canViewLeads) {
+      // Leads - using DATA_PERMISSION_MAP
+      if (hasDataPermission('leads')) {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('leads')
@@ -93,8 +99,8 @@ export const useSearchData = () => {
         })());
       }
 
-      // Help Articles - only if user has permission
-      if (canViewHelpArticles) {
+      // Help Articles - using DATA_PERMISSION_MAP
+      if (hasDataPermission('helpArticles')) {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('help_articles')
@@ -104,6 +110,7 @@ export const useSearchData = () => {
           dataMap.helpArticles = (res.data ?? []) as HelpArticleWithRelations[];
         })());
 
+        // News Items share permission with Help Articles
         fetchPromises.push((async () => {
           const res = await supabase
             .from('news_items')
@@ -114,8 +121,8 @@ export const useSearchData = () => {
         })());
       }
 
-      // Webhooks - only if user has permission
-      if (canViewWebhooks) {
+      // Webhooks - using DATA_PERMISSION_MAP
+      if (hasDataPermission('webhooks')) {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('webhooks')
@@ -126,8 +133,8 @@ export const useSearchData = () => {
         })());
       }
 
-      // Tools - only if user can manage Ari
-      if (canManageAri) {
+      // Tools - using DATA_PERMISSION_MAP
+      if (hasDataPermission('tools')) {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('agent_tools')
@@ -138,8 +145,8 @@ export const useSearchData = () => {
         })());
       }
 
-      // Knowledge Sources - only if user has permission
-      if (canViewKnowledge) {
+      // Knowledge Sources - using DATA_PERMISSION_MAP
+      if (hasDataPermission('knowledgeSources')) {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('knowledge_sources')
@@ -151,8 +158,8 @@ export const useSearchData = () => {
         })());
       }
 
-      // Team Members - only if user has permission
-      if (canViewTeam) {
+      // Team Members - using DATA_PERMISSION_MAP
+      if (hasDataPermission('teamMembers')) {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('profiles')
@@ -325,13 +332,7 @@ export const useSearchData = () => {
     permissionsLoading,
     isAdmin,
     hasPermission,
-    canViewConversations,
-    canViewLeads,
-    canViewHelpArticles,
-    canViewWebhooks,
-    canManageAri,
-    canViewKnowledge,
-    canViewTeam,
+    hasDataPermission,
     navigate,
   ]);
 

@@ -7,7 +7,7 @@
  * - Authentication context
  * - Routing configuration
  * - Global error boundaries
- * - Permission-based route protection
+ * - Permission-based route protection using centralized route config
  * 
  * @module App
  */
@@ -25,6 +25,8 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { AppLayout } from "@/components/layout/AppLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import RouteErrorFallback from "@/components/RouteErrorFallback";
+import { getRouteById } from "@/config/routes";
+import type { AppPermission } from "@/types/team";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import WidgetPage from "./pages/WidgetPage";
@@ -38,6 +40,24 @@ import PlannerWrapper from "./pages/PlannerWrapper";
 import BookingComponentsTest from "./pages/BookingComponentsTest";
 import EmailTemplatesTest from "./pages/EmailTemplatesTest";
 import ReportBuilder from "./pages/ReportBuilder";
+
+/**
+ * Gets PermissionGuard props from centralized route configuration.
+ * Ensures consistency between routing, sidebar, and search.
+ * 
+ * @param routeId - The route ID from ROUTE_CONFIG
+ * @returns Object with permission and adminOnly props for PermissionGuard
+ */
+function getGuardProps(routeId: string): { 
+  permission?: AppPermission; 
+  adminOnly?: boolean;
+} {
+  const route = getRouteById(routeId);
+  return {
+    permission: route?.requiredPermission,
+    adminOnly: route?.adminOnly,
+  };
+}
 
 /** React Query client instance with default configuration */
 const queryClient = new QueryClient();
@@ -80,7 +100,7 @@ const App = () => (
                     <Route 
                       path="/" 
                       element={
-                        <PermissionGuard adminOnly redirectTo="/analytics">
+                        <PermissionGuard {...getGuardProps('get-set-up')} redirectTo="/analytics">
                           <GetStartedWrapper />
                         </PermissionGuard>
                       } 
@@ -90,7 +110,7 @@ const App = () => (
                     <Route 
                       path="/ari" 
                       element={
-                        <PermissionGuard permission="manage_ari">
+                        <PermissionGuard {...getGuardProps('ari')}>
                           <AriConfiguratorWrapper />
                         </PermissionGuard>
                       } 
@@ -100,7 +120,7 @@ const App = () => (
                     <Route 
                       path="/conversations" 
                       element={
-                        <PermissionGuard permission="view_conversations">
+                        <PermissionGuard {...getGuardProps('conversations')}>
                           <ConversationsWrapper />
                         </PermissionGuard>
                       } 
@@ -110,7 +130,7 @@ const App = () => (
                     <Route 
                       path="/planner" 
                       element={
-                        <PermissionGuard permission="view_bookings">
+                        <PermissionGuard {...getGuardProps('planner')}>
                           <PlannerWrapper />
                         </PermissionGuard>
                       } 
@@ -120,7 +140,7 @@ const App = () => (
                     <Route 
                       path="/leads" 
                       element={
-                        <PermissionGuard permission="view_leads">
+                        <PermissionGuard {...getGuardProps('leads')}>
                           <LeadsWrapper />
                         </PermissionGuard>
                       } 
@@ -130,7 +150,7 @@ const App = () => (
                     <Route 
                       path="/analytics" 
                       element={
-                        <PermissionGuard permission="view_dashboard">
+                        <PermissionGuard {...getGuardProps('analytics')}>
                           <AnalyticsWrapper />
                         </PermissionGuard>
                       } 
@@ -140,7 +160,7 @@ const App = () => (
                     <Route 
                       path="/settings" 
                       element={
-                        <PermissionGuard permission="view_settings">
+                        <PermissionGuard {...getGuardProps('settings')}>
                           <SettingsWrapper />
                         </PermissionGuard>
                       } 
@@ -150,7 +170,7 @@ const App = () => (
                     <Route 
                       path="/report-builder" 
                       element={
-                        <PermissionGuard permission="view_dashboard">
+                        <PermissionGuard {...getGuardProps('report-builder')}>
                           <ReportBuilder />
                         </PermissionGuard>
                       } 

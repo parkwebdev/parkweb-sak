@@ -2241,7 +2241,10 @@ interface OnboardingStep {
 
 ### useSearchData
 
-Fetches and aggregates data from various tables for unified search results.
+> **Status**: ✅ Refactored (January 2026)  
+> **Config**: Uses `src/config/routes.ts` and `src/types/search.ts`
+
+Fetches and aggregates data from various tables for unified search results. Uses centralized route configuration and type-safe `DATA_PERMISSION_MAP` for permission filtering.
 
 ```tsx
 import { useSearchData } from '@/hooks/useSearchData';
@@ -2271,6 +2274,91 @@ interface SearchResult {
 - Navigation links, Conversations, Leads, Help Articles
 - News Items, Webhooks, Tools, Knowledge Sources
 - Team Members, Settings sections
+
+**Type-Safe Data Fetching** (`src/types/search.ts`):
+```typescript
+import type { SearchDataMap } from '@/types/search';
+import { DATA_PERMISSION_MAP } from '@/types/search';
+
+// Strongly-typed search data with database entity types
+interface SearchDataMap {
+  conversations?: ConversationWithAgent[];
+  leads?: LeadRecord[];
+  helpArticles?: HelpArticleWithRelations[];
+  newsItems?: NewsItemWithAgent[];
+  webhooks?: WebhookWithAgent[];
+  tools?: AgentToolWithAgent[];
+  knowledgeSources?: KnowledgeSourceWithAgent[];
+  teamMembers?: ProfileRecord[];
+}
+
+// Maps data types to required permissions
+const DATA_PERMISSION_MAP: Record<keyof SearchDataMap, AppPermission> = {
+  conversations: 'view_conversations',
+  leads: 'view_leads',
+  helpArticles: 'view_help_articles',
+  newsItems: 'view_help_articles',
+  webhooks: 'view_webhooks',
+  tools: 'manage_ari',
+  knowledgeSources: 'view_knowledge',
+  teamMembers: 'view_team',
+};
+```
+
+**Internal Permission Check**:
+```typescript
+// Type-safe permission check using DATA_PERMISSION_MAP
+const hasDataPermission = (dataKey: keyof SearchDataMap): boolean => {
+  if (isAdmin) return true;
+  const permission = DATA_PERMISSION_MAP[dataKey];
+  return hasPermission(permission);
+};
+
+// Usage in data fetching
+if (hasDataPermission('conversations')) {
+  // Fetch conversations...
+}
+```
+
+**Navigation Items from Route Config** (`src/config/routes.ts`):
+```typescript
+import { ROUTE_CONFIG, SETTINGS_TABS } from '@/config/routes';
+
+// Navigation items from centralized config
+ROUTE_CONFIG.forEach(route => {
+  if (route.adminOnly && !isAdmin) return;
+  if (route.requiredPermission && !hasPermission(route.requiredPermission)) return;
+  
+  results.push({
+    id: `nav-${route.id}`,
+    title: route.label,
+    description: route.description,
+    category: 'Navigation',
+    iconName: route.iconName,
+    shortcut: route.shortcut,
+    action: () => navigate(route.path),
+  });
+});
+
+// Settings tabs from centralized config
+SETTINGS_TABS.forEach(tab => {
+  if (tab.requiredPermission && !hasPermission(tab.requiredPermission)) return;
+  
+  results.push({
+    id: tab.id,
+    title: tab.label,
+    description: tab.description,
+    category: 'Settings',
+    action: () => navigate(`/settings?tab=${tab.tabParam}`),
+  });
+});
+```
+
+**Key Benefits**:
+- **Single Source of Truth**: Route permissions from `ROUTE_CONFIG`, data permissions from `DATA_PERMISSION_MAP`
+- **Type Safety**: No `unknown[]` or unsafe type assertions - all data types are strongly typed
+- **Compile-Time Errors**: Typos in permission names caught by TypeScript
+- **Reduced Duplication**: Eliminates individual `canView*` boolean destructuring
 
 **File**: `src/hooks/useSearchData.ts`
 
