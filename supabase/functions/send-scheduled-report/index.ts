@@ -634,83 +634,54 @@ function generateCSV(report: ScheduledReport, data: AnalyticsData): string {
 
 function generateReportEmail(
   report: ScheduledReport, 
-  data: AnalyticsData, 
+  _data: AnalyticsData, 
   downloadUrl: string
 ): string {
   const config = report.report_config;
   const dateRange = formatDateRange(config.startDate, config.endDate);
+  const format = config.format || 'pdf';
   const unsubscribeUrl = `${appUrl}/settings?tab=notifications#report-emails`;
   
-  // Build the 4 metrics with changes
-  const metrics = [
-    { 
-      label: 'Conversations', 
-      value: data.totalConversations.toLocaleString(), 
-      change: calculateChange(data.totalConversations, data.previousPeriod?.totalConversations || 0)
-    },
-    { 
-      label: 'Leads', 
-      value: data.totalLeads.toLocaleString(), 
-      change: calculateChange(data.totalLeads, data.previousPeriod?.totalLeads || 0)
-    },
-    { 
-      label: 'Conversion Rate', 
-      value: `${data.conversionRate.toFixed(1)}%`, 
-      change: calculateChange(data.conversionRate, data.previousPeriod?.conversionRate || 0)
-    },
-    { 
-      label: 'Satisfaction', 
-      value: data.avgSatisfaction ? `${data.avgSatisfaction.toFixed(1)}/5` : 'N/A',
-      change: data.avgSatisfaction && data.previousPeriod?.avgSatisfaction 
-        ? `${(data.avgSatisfaction - data.previousPeriod.avgSatisfaction) >= 0 ? '+' : ''}${(data.avgSatisfaction - data.previousPeriod.avgSatisfaction).toFixed(1)}`
-        : undefined
-    },
-  ];
+  // Format badge
+  const formatBadge = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+      <tr>
+        <td style="padding: 4px 10px; font-size: 12px; font-weight: 600; color: ${colors.textMuted}; background-color: ${colors.background}; border-radius: 4px; text-transform: uppercase;">
+          ${format.toUpperCase()} Report
+        </td>
+      </tr>
+    </table>
+  `;
   
-  // Build the 2x2 metrics grid (matching generateScheduledReportEmail from email-templates.ts)
-  const metricsHtml = metrics.map(m => {
-    const changeColor = m.change?.startsWith('+') ? colors.success 
-      : m.change?.startsWith('-') ? colors.error 
-      : colors.textMuted;
-    
-    return `
-      <td width="50%" style="padding: 6px; vertical-align: top;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-          <tr>
-            <td style="padding: 16px; text-align: center;">
-              <p class="email-text" style="margin: 0 0 4px 0; font-size: 24px; font-weight: 600; color: ${colors.text};">${m.value}</p>
-              <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">${m.label}</p>
-              ${m.change ? `<p style="margin: 4px 0 0 0; font-size: 12px; color: ${changeColor};">${m.change}</p>` : ''}
-            </td>
-          </tr>
-        </table>
-      </td>
-    `;
+  // Generated timestamp
+  const generatedAt = new Date().toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
   });
   
-  // Build 2x2 grid rows
-  const rows: string[] = [];
-  for (let i = 0; i < metricsHtml.length; i += 2) {
-    const cell1 = metricsHtml[i] || '';
-    const cell2 = metricsHtml[i + 1] || '<td width="50%"></td>';
-    rows.push(`<tr>${cell1}${cell2}</tr>`);
-  }
+  const generatedTimestamp = `
+    <p class="email-text-muted" style="margin: 0 0 20px 0; font-size: 13px; color: ${colors.textMuted};">
+      Generated on ${generatedAt}
+    </p>
+  `;
   
   const content = `
-    ${heading(report.name)}
-    ${paragraph(`Here's your report for ${dateRange}.`)}
-    
-    <!-- Metrics Grid - 2 columns -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-      ${rows.join('')}
-    </table>
-    
+    ${heading('Your Report is Ready')}
+    ${formatBadge}
+    ${generatedTimestamp}
+    ${paragraph(`Your <strong>${report.name}</strong> covering <strong>${dateRange}</strong> has been generated and is ready to download.`)}
+    ${spacer(8)}
+    ${button('Download Report', downloadUrl)}
     ${spacer(24)}
-    ${button('View Full Report', downloadUrl)}
+    ${paragraph("This report was automatically generated based on your scheduled report settings.", true)}
   `;
   
   return generateWrapper({
-    preheaderText: `Your ${report.name} for ${dateRange} is ready`,
+    preheaderText: `Your ${report.name} for ${dateRange} is ready to download`,
     content,
     unsubscribeUrl,
   });
