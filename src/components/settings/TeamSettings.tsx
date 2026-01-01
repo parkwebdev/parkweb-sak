@@ -10,8 +10,7 @@ import { RoleManagementDialog } from './RoleManagementDialog';
 import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
 import { TeamMembersTable } from '@/components/team/TeamMembersTable';
 import { InviteMemberDialog } from '@/components/team/InviteMemberDialog';
-import { Button } from '@/components/ui/button';
-import { Users01 as Users } from '@untitledui/icons';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { useCanManage } from '@/hooks/useCanManage';
@@ -26,6 +25,10 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
   const { role: currentUserRole, hasPermission, isAdmin } = useRoleAuthorization();
   const { 
@@ -62,11 +65,24 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
     setIsProfileDialogOpen(true);
   };
 
-  const handleRemoveMember = async (member: TeamMember) => {
-    if (!confirm(`Are you sure you want to remove ${member.display_name || member.email} from the team?`)) {
-      return;
+  const handleRemoveMember = (member: TeamMember) => {
+    setMemberToDelete(member);
+    setDeleteConfirmText('');
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!memberToDelete) return;
+    
+    setIsDeleting(true);
+    const success = await removeMember(memberToDelete);
+    setIsDeleting(false);
+    
+    if (success) {
+      setIsDeleteDialogOpen(false);
+      setMemberToDelete(null);
+      setDeleteConfirmText('');
     }
-    await removeMember(member);
   };
 
   const handleInviteMember = async (data: { firstName: string; lastName: string; email: string }): Promise<boolean> => {
@@ -126,6 +142,24 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
           setSelectedMember(null);
         }}
         onUpdate={fetchTeamMembers}
+      />
+
+      <DeleteConfirmationDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open);
+          if (!open) {
+            setMemberToDelete(null);
+            setDeleteConfirmText('');
+          }
+        }}
+        title="Remove Team Member"
+        description={`This will permanently remove ${memberToDelete?.display_name || memberToDelete?.email || 'this member'} from your team. They will lose access to all team resources.`}
+        confirmationText="delete"
+        confirmationValue={deleteConfirmText}
+        onConfirmationValueChange={setDeleteConfirmText}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
       />
     </div>
   );
