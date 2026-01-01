@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
@@ -22,8 +23,6 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
 } from '@/types/team';
 import { logger } from '@/utils/logger';
-import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronRight } from '@untitledui/icons';
 
 interface RoleManagementDialogProps {
   member: TeamMember | null;
@@ -42,7 +41,6 @@ export function RoleManagementDialog({
   const [permissions, setPermissions] = useState<AppPermission[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const { logRoleChange } = useSecurityLog();
 
@@ -53,7 +51,7 @@ export function RoleManagementDialog({
   useEffect(() => {
     if (member) {
       fetchMemberRole();
-      fetchCurrentUserRole(); // Always fetch to enable role dropdown for admins
+      fetchCurrentUserRole();
     }
   }, [member]);
 
@@ -119,18 +117,6 @@ export function RoleManagementDialog({
     }
   };
 
-  const toggleGroup = (group: string) => {
-    setExpandedGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(group)) {
-        next.delete(group);
-      } else {
-        next.add(group);
-      }
-      return next;
-    });
-  };
-
   const isGroupFullySelected = (groupPermissions: readonly AppPermission[]) => {
     return groupPermissions.every(p => permissions.includes(p));
   };
@@ -142,10 +128,8 @@ export function RoleManagementDialog({
 
   const toggleGroupPermissions = (groupPermissions: readonly AppPermission[]) => {
     if (isGroupFullySelected(groupPermissions)) {
-      // Remove all group permissions
       setPermissions(prev => prev.filter(p => !groupPermissions.includes(p)));
     } else {
-      // Add all group permissions
       setPermissions(prev => {
         const newPerms = new Set(prev);
         groupPermissions.forEach(p => newPerms.add(p));
@@ -162,12 +146,10 @@ export function RoleManagementDialog({
     try {
       await onUpdate(member, role, permissions);
       
-      // Log the role change for security monitoring
       if (oldRole !== role) {
         logRoleChange(member.user_id, oldRole, role, true);
       }
       
-      // Show saved indicator briefly before closing
       setShowSaved(true);
       setTimeout(() => {
         setShowSaved(false);
@@ -176,7 +158,6 @@ export function RoleManagementDialog({
     } catch (error: unknown) {
       logger.error('Error in handleSave:', error);
       
-      // Log failed role change attempt
       if (oldRole !== role) {
         logRoleChange(member.user_id, oldRole, role, false);
       }
@@ -189,9 +170,64 @@ export function RoleManagementDialog({
 
   const canEditPermissions = !isEditingSelf || currentUserRole === 'admin';
 
+  // Split permission groups into two columns
+  const permissionGroupEntries = Object.entries(PERMISSION_GROUPS);
+  const midPoint = Math.ceil(permissionGroupEntries.length / 2);
+  const leftColumnGroups = permissionGroupEntries.slice(0, midPoint);
+  const rightColumnGroups = permissionGroupEntries.slice(midPoint);
+
+  const renderPermissionGroup = ([group, groupPermissions]: [string, readonly AppPermission[]]) => {
+    const fullySelected = isGroupFullySelected(groupPermissions);
+    const partiallySelected = isGroupPartiallySelected(groupPermissions);
+
+    return (
+      <AccordionItem key={group} value={group} className="border-b-0">
+        <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
+          <div className="flex items-center gap-3 w-full">
+            <Checkbox
+              checked={fullySelected}
+              ref={(el) => {
+                if (el) {
+                  (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = partiallySelected;
+                }
+              }}
+              onCheckedChange={() => toggleGroupPermissions(groupPermissions)}
+              onClick={(e) => e.stopPropagation()}
+              disabled={!canEditPermissions}
+              className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
+            />
+            <span>{group}</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="pb-3">
+          <div className="space-y-2 pl-7">
+            {groupPermissions.map((permission) => (
+              <div key={permission} className="flex items-center gap-3">
+                <Checkbox
+                  id={permission}
+                  checked={permissions.includes(permission)}
+                  onCheckedChange={(checked) => 
+                    handlePermissionChange(permission, checked as boolean)
+                  }
+                  disabled={!canEditPermissions}
+                />
+                <Label 
+                  htmlFor={permission}
+                  className="text-sm cursor-pointer text-foreground"
+                >
+                  {PERMISSION_LABELS[permission]}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {isEditingSelf ? 'Manage Your Settings' : 'Manage Role & Permissions'}
@@ -210,7 +246,7 @@ export function RoleManagementDialog({
             <div className="space-y-2">
               <Label className="text-sm font-medium">Role</Label>
               <Select value={role} onValueChange={(v) => handleRoleChange(v as UserRole)}>
-                <SelectTrigger>
+                <SelectTrigger className="w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -229,84 +265,28 @@ export function RoleManagementDialog({
           {isEditingSelf && (
             <div className="space-y-2">
               <Label className="text-sm font-medium">Your Role</Label>
-              <div className="px-3 py-2 bg-muted rounded-md text-sm text-muted-foreground capitalize">
+              <div className="px-3 py-2 bg-muted rounded-md text-sm text-muted-foreground capitalize w-48">
                 {role.replace('_', ' ')}
               </div>
             </div>
           )}
 
-          {/* Permissions Section */}
+          {/* Permissions Section - Two Columns */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">
               {isEditingSelf ? 'Your Permissions' : 'Permissions'}
             </Label>
             
-            <div className="space-y-1 border border-border rounded-lg overflow-hidden">
-              {Object.entries(PERMISSION_GROUPS).map(([group, groupPermissions]) => {
-                const isExpanded = expandedGroups.has(group);
-                const fullySelected = isGroupFullySelected(groupPermissions);
-                const partiallySelected = isGroupPartiallySelected(groupPermissions);
-                
-                return (
-                  <div key={group} className="border-b border-border last:border-b-0">
-                    {/* Group Header */}
-                    <div 
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors",
-                        isExpanded && "bg-accent/30"
-                      )}
-                      onClick={() => toggleGroup(group)}
-                    >
-                      <div className="flex items-center gap-2 flex-1">
-                        {isExpanded ? (
-                          <ChevronDown size={16} className="text-muted-foreground" />
-                        ) : (
-                          <ChevronRight size={16} className="text-muted-foreground" />
-                        )}
-                        <span className="text-sm font-medium">{group}</span>
-                      </div>
-                      
-                      {/* Group Toggle Checkbox */}
-                      <Checkbox
-                        checked={fullySelected}
-                        ref={(el) => {
-                          if (el) {
-                            (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = partiallySelected;
-                          }
-                        }}
-                        onCheckedChange={() => toggleGroupPermissions(groupPermissions)}
-                        onClick={(e) => e.stopPropagation()}
-                        disabled={!canEditPermissions}
-                        className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
-                      />
-                    </div>
-                    
-                    {/* Group Permissions */}
-                    {isExpanded && (
-                      <div className="px-3 py-2 bg-muted/30 space-y-2">
-                        {groupPermissions.map((permission) => (
-                          <div key={permission} className="flex items-center gap-3 pl-6">
-                            <Checkbox
-                              id={permission}
-                              checked={permissions.includes(permission)}
-                              onCheckedChange={(checked) => 
-                                handlePermissionChange(permission, checked as boolean)
-                              }
-                              disabled={!canEditPermissions}
-                            />
-                            <Label 
-                              htmlFor={permission}
-                              className="text-sm cursor-pointer flex-1"
-                            >
-                              {PERMISSION_LABELS[permission]}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Left Column */}
+              <Accordion type="multiple" className="border-0 px-0 bg-transparent">
+                {leftColumnGroups.map(renderPermissionGroup)}
+              </Accordion>
+
+              {/* Right Column */}
+              <Accordion type="multiple" className="border-0 px-0 bg-transparent">
+                {rightColumnGroups.map(renderPermissionGroup)}
+              </Accordion>
             </div>
           </div>
         </div>
