@@ -144,7 +144,7 @@ export function EmailTemplateSidebar({
               variant="ghost"
               size="sm"
               onClick={() => onPreviewWidthChange('mobile')}
-              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'mobile' ? 'bg-background text-foreground shadow-sm' : ''}`}
+              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'mobile' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'hover:bg-muted hover:text-foreground'}`}
             >
               <Phone01 size={14} className="mr-1.5" />
               Mobile
@@ -153,7 +153,7 @@ export function EmailTemplateSidebar({
               variant="ghost"
               size="sm"
               onClick={() => onPreviewWidthChange('desktop')}
-              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'desktop' ? 'bg-background text-foreground shadow-sm' : ''}`}
+              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'desktop' ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'hover:bg-muted hover:text-foreground'}`}
             >
               <Monitor01 size={14} className="mr-1.5" />
               Desktop
@@ -171,7 +171,7 @@ export function EmailTemplateSidebar({
               variant="ghost"
               size="sm"
               onClick={() => onDarkModeChange(false)}
-              className={`h-7 text-xs px-3 flex-1 ${!darkMode ? 'bg-background text-foreground shadow-sm' : ''}`}
+              className={`h-7 text-xs px-3 flex-1 ${!darkMode ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'hover:bg-muted hover:text-foreground'}`}
             >
               <Sun size={14} className="mr-1.5" />
               Light
@@ -180,7 +180,7 @@ export function EmailTemplateSidebar({
               variant="ghost"
               size="sm"
               onClick={() => onDarkModeChange(true)}
-              className={`h-7 text-xs px-3 flex-1 ${darkMode ? 'bg-background text-foreground shadow-sm' : ''}`}
+              className={`h-7 text-xs px-3 flex-1 ${darkMode ? 'bg-background text-foreground shadow-sm hover:bg-background' : 'hover:bg-muted hover:text-foreground'}`}
             >
               <Moon01 size={14} className="mr-1.5" />
               Dark
