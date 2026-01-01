@@ -128,11 +128,30 @@ export const useTeam = () => {
 
   const inviteMember = async (inviteData: InviteMemberData): Promise<boolean> => {
     try {
+      // Fetch user's company name and display name from profile
+      let companyName = 'our team';
+      let inviterName = user?.email || 'Team Admin';
+      
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('company_name, display_name')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (profileData?.company_name) {
+          companyName = profileData.company_name;
+        }
+        if (profileData?.display_name) {
+          inviterName = profileData.display_name;
+        }
+      }
+
       const { error } = await supabase.functions.invoke('send-team-invitation', {
         body: {
           email: inviteData.email,
-          invitedBy: user?.email || 'Team Admin',
-          companyName: 'our team'
+          invitedBy: inviterName,
+          companyName
         }
       });
 

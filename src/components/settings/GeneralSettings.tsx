@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -17,6 +18,7 @@ import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
+import { PhoneInputField } from '@/components/ui/phone-input';
 
 export function GeneralSettings() {
   const { user } = useAuth();
@@ -25,9 +27,17 @@ export function GeneralSettings() {
     compact_mode: false,
     default_project_view: 'dashboard',
   });
+  const [company, setCompany] = useState({
+    company_name: '',
+    company_address: '',
+    company_phone: '',
+  });
   const [showSaved, setShowSaved] = useState({
     compact_mode: false,
     default_project_view: false,
+    company_name: false,
+    company_address: false,
+    company_phone: false,
   });
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
@@ -42,6 +52,7 @@ export function GeneralSettings() {
     if (!user) return;
 
     try {
+      // Fetch user preferences
       const { data, error } = await supabase
         .from('user_preferences')
         .select('*')
@@ -50,13 +61,31 @@ export function GeneralSettings() {
 
       if (error && error.code !== 'PGRST116') {
         logger.error('Error fetching preferences:', error);
-        return;
       }
 
       if (data) {
         setPreferences({
           compact_mode: data.compact_mode ?? false,
           default_project_view: data.default_project_view ?? 'dashboard',
+        });
+      }
+
+      // Fetch company info from profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_name, company_address, company_phone')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        logger.error('Error fetching profile:', profileError);
+      }
+
+      if (profileData) {
+        setCompany({
+          company_name: profileData.company_name ?? '',
+          company_address: profileData.company_address ?? '',
+          company_phone: profileData.company_phone ?? '',
         });
       }
     } catch (error: unknown) {
@@ -161,6 +190,46 @@ export function GeneralSettings() {
     }
   }, [preferences.compact_mode]);
 
+  const updateCompanyField = async (key: keyof typeof company, value: string) => {
+    if (!user) return;
+
+    // Update local state immediately
+    const prevValue = company[key];
+    setCompany({ ...company, [key]: value });
+
+    // Clear existing timer for this field
+    if (saveTimers.current[key]) {
+      clearTimeout(saveTimers.current[key]);
+    }
+
+    // Debounce the save operation
+    saveTimers.current[key] = setTimeout(async () => {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ [key]: value || null })
+          .eq('user_id', user.id);
+
+        if (error) {
+          logger.error('Error updating company field:', error);
+          setCompany(prev => ({ ...prev, [key]: prevValue }));
+          toast.error("Update failed", {
+            description: "Failed to update company information.",
+          });
+          return;
+        }
+
+        setShowSaved(prev => ({ ...prev, [key]: true }));
+      } catch (error: unknown) {
+        logger.error('Error in updateCompanyField:', error);
+        setCompany(prev => ({ ...prev, [key]: prevValue }));
+        toast.error("Update failed", {
+          description: "Failed to update company information.",
+        });
+      }
+    }, 1000);
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -172,6 +241,55 @@ export function GeneralSettings() {
 
   return (
     <AnimatedList className="space-y-4" staggerDelay={0.1}>
+      <AnimatedItem>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-semibold">Company Details</CardTitle>
+            <CardDescription className="text-xs">Your company information for emails and branding</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="company_name" className="text-sm font-medium">Company Name</Label>
+                <SavedIndicator show={showSaved.company_name} />
+              </div>
+              <Input
+                id="company_name"
+                value={company.company_name}
+                onChange={(e) => updateCompanyField('company_name', e.target.value)}
+                placeholder="Acme Corporation"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="company_address" className="text-sm font-medium">Company Address</Label>
+                <SavedIndicator show={showSaved.company_address} />
+              </div>
+              <Input
+                id="company_address"
+                value={company.company_address}
+                onChange={(e) => updateCompanyField('company_address', e.target.value)}
+                placeholder="1020 William Blount Dr. Ste 213, Maryville, TN 37804"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="company_phone" className="text-sm font-medium">Company Phone</Label>
+                <SavedIndicator show={showSaved.company_phone} />
+              </div>
+              <PhoneInputField
+                name="company_phone"
+                value={company.company_phone}
+                onChange={(value) => updateCompanyField('company_phone', value)}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </AnimatedItem>
+
       <AnimatedItem>
         <Card>
         <CardHeader>
