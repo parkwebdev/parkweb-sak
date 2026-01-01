@@ -243,6 +243,100 @@ The `has_account_access()` function checks if the current user:
 
 ---
 
+---
+
+## Permission Guards
+
+All interactive UI elements that modify data **MUST** be protected by permission guards.
+
+### Using `PermissionGuard` Component
+
+```typescript
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+
+// Wrap UI elements that require permission
+<PermissionGuard permission="manage_leads">
+  <Button onClick={handleDelete}>Delete Lead</Button>
+</PermissionGuard>
+```
+
+### Using `useRoleAuthorization` Hook
+
+```typescript
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+
+function MyComponent() {
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageLeads = isAdmin || hasPermission('manage_leads');
+  
+  return (
+    <Button disabled={!canManageLeads} onClick={handleDelete}>
+      Delete
+    </Button>
+  );
+}
+```
+
+### Passing `canManage` Props
+
+For reusable components, pass permission as a prop:
+
+```typescript
+// Parent component
+const canManageLeads = isAdmin || hasPermission('manage_leads');
+<LeadsTable canManage={canManageLeads} ... />
+
+// Child component
+interface LeadsTableProps {
+  canManage?: boolean;
+}
+function LeadsTable({ canManage = false }: LeadsTableProps) {
+  // Disable actions if canManage is false
+}
+```
+
+---
+
+## Permission-to-Feature Mapping
+
+| Permission | Routes | UI Elements |
+|------------|--------|-------------|
+| `manage_ari` | /ari | All Ari configurator sections |
+| `view_conversations` | /conversations | Inbox sidebar item |
+| `manage_conversations` | - | Takeover, close, reopen, send message |
+| `view_leads` | /leads | Leads sidebar item |
+| `manage_leads` | - | Delete, stage change, drag-and-drop |
+| `view_bookings` | /planner | Planner sidebar item |
+| `manage_bookings` | - | Add event, drag/resize, delete |
+| `view_dashboard` | /analytics, /report-builder | Analytics sidebar item |
+| `view_team` | /settings (team tab) | Team tab in settings |
+| `manage_team` | - | Invite member button |
+| `view_billing` | /settings (billing/usage tabs) | Billing tabs in settings |
+| `manage_billing` | - | Upgrade, manage subscription buttons |
+| `view_settings` | /settings | Settings sidebar item |
+| `manage_knowledge` | - | Knowledge section in Ari |
+| `manage_help_articles` | - | Help Articles section in Ari |
+| `manage_webhooks` | - | Webhooks section in Ari |
+| `manage_integrations` | - | Integrations section, Connect Calendar |
+| `manage_api_keys` | - | API Access section in Ari |
+
+---
+
+## Adding Permission Guards Checklist
+
+When creating new features:
+
+- [ ] Identify the permission required (or create a new one)
+- [ ] Guard routes in `App.tsx` with `PermissionGuard`
+- [ ] Hide/disable buttons without permission
+- [ ] Disable drag-and-drop without permission
+- [ ] Disable form edits without permission
+- [ ] Hide sidebar items without view permission
+- [ ] Test as team member with limited permissions
+- [ ] **Update this documentation!**
+
+---
+
 ## Related Documentation
 
 - [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Table structures and RLS policies

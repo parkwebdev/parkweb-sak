@@ -393,6 +393,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   onViewLead={handleViewLead}
                   onOrderChange={canManageLeads ? updateLeadOrders : undefined}
                   visibleFields={visibleCardFields}
+                  canManage={canManageLeads}
                 />
               </motion.div>
             ) : (
