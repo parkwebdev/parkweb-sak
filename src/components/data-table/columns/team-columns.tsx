@@ -21,9 +21,9 @@ interface TeamColumnsProps {
 
 const getBadgeVariant = (role: string) => {
   switch (role) {
-    case 'super_admin':
-      return 'default' as const;
     case 'admin':
+      return 'default' as const;
+    case 'manager':
       return 'secondary' as const;
     default:
       return 'outline' as const;
@@ -31,7 +31,6 @@ const getBadgeVariant = (role: string) => {
 };
 
 const formatRole = (role: string) => {
-  if (role === 'super_admin') return 'Super Admin';
   return role
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -121,7 +120,7 @@ export const createTeamColumns = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {canManageRoles && member.role !== 'super_admin' && (
+            {canManageRoles && (
               <DropdownMenuItem onClick={() => onEditRole(member)}>
                 <Settings01 className="mr-2 h-4 w-4" />
                 Manage Role

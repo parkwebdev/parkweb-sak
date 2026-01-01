@@ -194,9 +194,6 @@ WITH CHECK (auth.uid() = user_id);
 ### Role Hierarchy
 
 ```
-super_admin
-    │
-    ▼
   admin ─────────┐
     │            │
     ▼            ▼
@@ -204,20 +201,17 @@ super_admin
     │
     ▼
  member
-    │
-    ▼
- client
 ```
 
 **Role Capabilities:**
 
 | Role | Capabilities |
 |------|-------------|
-| `super_admin` | Full platform access, manage plans |
-| `admin` | Manage team, all resource access |
-| `manager` | Manage agents, conversations, leads |
-| `member` | View and respond to conversations |
-| `client` | Limited view access |
+| `admin` | Account owner, full access, manage team & billing |
+| `manager` | Manage agents, conversations, leads, knowledge |
+| `member` | View and respond to conversations, basic access |
+
+> **Note:** `super_admin` exists in the database for internal platform operations only and is never shown in the UI.
 
 ### Real-time Architecture
 

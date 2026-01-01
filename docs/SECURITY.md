@@ -279,12 +279,14 @@ const { data: { session } } = await supabase.auth.getSession();
 Roles stored in separate `user_roles` table (not in profile):
 
 ```sql
--- Role hierarchy
-super_admin > admin > manager > member > client
+-- Role hierarchy (customer-facing)
+admin > manager > member
 
 -- Check role
 SELECT role FROM user_roles WHERE user_id = auth.uid();
 ```
+
+> **Note:** `super_admin` exists for internal platform operations only.
 
 **CRITICAL**: Never store roles in `profiles` table or client-side storage.
 
