@@ -212,10 +212,9 @@ export default function EmailTemplatesTest() {
   });
 
   const [reportData, setReportData] = useState<ScheduledReportData>({
-    reportName: 'Monthly Performance Report',
+    reportName: 'Your scheduled report',
     dateRange: 'Dec 1 - Dec 31, 2025',
     format: 'pdf',
-    generatedAt: 'January 1, 2026 at 9:00 AM',
     viewReportUrl: 'https://getpilot.io/analytics',
   });
 
@@ -444,7 +443,7 @@ export default function EmailTemplatesTest() {
 
       case 'report':
         return (
-          <div className="p-4 grid grid-cols-4 gap-4">
+          <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Report Name</Label>
               <Input
@@ -475,15 +474,6 @@ export default function EmailTemplatesTest() {
                   <SelectItem value="csv">CSV</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Generated At</Label>
-              <Input
-                value={reportData.generatedAt || ''}
-                onChange={(e) => setReportData({ ...reportData, generatedAt: e.target.value })}
-                className="h-8 text-sm"
-                placeholder="January 1, 2026 at 9:00 AM"
-              />
             </div>
           </div>
         );
