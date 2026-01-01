@@ -105,10 +105,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Track previous user for detecting actual login transitions
         previousUserRef.current = session?.user ?? null;
 
-        // Handle profile creation/updates after successful authentication
+        // Handle profile creation/updates and signup completion after successful authentication
         if (session?.user && event === 'SIGNED_IN') {
           setTimeout(async () => {
             await createOrUpdateProfile(session.user);
+            // Process signup completion (handles invitations, welcome notification, agent creation)
+            await processSignupCompletion(session);
           }, 0);
         }
       }
@@ -178,6 +180,47 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (error: unknown) {
       logger.error('Error in createOrUpdateProfile:', error);
+    }
+  };
+
+  /**
+   * Process signup completion by calling the handle-signup edge function.
+   * This handles team invitations, welcome notifications, and agent creation.
+   * Only runs once per user (checks if already processed).
+   * @internal
+   */
+  const processSignupCompletion = async (session: Session) => {
+    try {
+      // Check if this user was already processed (has an agent or is a team member)
+      const { data: existingAgent } = await supabase
+        .from('agents')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      const { data: existingTeamMember } = await supabase
+        .from('team_members')
+        .select('id')
+        .eq('member_id', session.user.id)
+        .maybeSingle();
+
+      // If user already has an agent or is a team member, skip signup processing
+      if (existingAgent || existingTeamMember) {
+        return;
+      }
+
+      // Call the handle-signup edge function
+      const { error } = await supabase.functions.invoke('handle-signup', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        logger.error('Error processing signup completion:', error);
+      }
+    } catch (error: unknown) {
+      logger.error('Error in processSignupCompletion:', error);
     }
   };
 
