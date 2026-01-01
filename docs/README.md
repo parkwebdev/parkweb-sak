@@ -1,6 +1,6 @@
 # Pilot Documentation
 
-> **Last Updated**: December 2025
+> **Last Updated**: January 2026
 
 Welcome to the Pilot documentation. This index provides quick access to all technical guides and architecture documentation.
 
@@ -25,6 +25,7 @@ Welcome to the Pilot documentation. This index provides quick access to all tech
 | [Database Schema](./DATABASE_SCHEMA.md) | Tables, relationships, RLS policies, and Supabase patterns |
 | [Edge Functions](./EDGE_FUNCTIONS.md) | Supabase Edge Functions reference |
 | [Security](./SECURITY.md) | Security practices and data protection |
+| [Security Testing](./SECURITY_TESTING.md) | Security testing procedures and checklists |
 
 ---
 
@@ -43,15 +44,17 @@ Welcome to the Pilot documentation. This index provides quick access to all tech
 | Guide | Description |
 |-------|-------------|
 | [Widget Architecture](./WIDGET_ARCHITECTURE.md) | Embedded chat widget technical docs |
+| [Widget Chat Refactoring](./WIDGET_CHAT_REFACTORING.md) | Widget chat refactoring history |
 | [Native Booking System](./NATIVE_BOOKING_SYSTEM.md) | Calendar and booking system architecture |
 | [Social Channel Integrations](./SOCIAL_CHANNEL_INTEGRATIONS.md) | Facebook, Instagram, X integrations |
 | [Stripe Payment Guide](./STRIPE_PAYMENT_GUIDE.md) | Payment integration and subscriptions |
 
-### Maintenance
+### Standards & Maintenance
 
 | Document | Description |
 |----------|-------------|
-| [Production Optimization Plan](./PRODUCTION_OPTIMIZATION_PLAN.md) | Remaining optimization tasks |
+| [Team Scoping Standard](./TEAM_SCOPING_STANDARD.md) | Multi-tenant data access patterns |
+| [Centralization Audit](./CENTRALIZATION_AUDIT.md) | Centralization verification and guardrails |
 
 ---
 
@@ -82,6 +85,7 @@ Welcome to the Pilot documentation. This index provides quick access to all tech
 | Widget source | `src/widget/` |
 | Database types | `src/integrations/supabase/types.ts` (read-only) |
 | Error utilities | `src/types/errors.ts` |
+| Route config | `src/config/routes.ts` |
 
 ### Common Commands
 
@@ -112,6 +116,7 @@ docs/
 ├── EDGE_FUNCTIONS.md              # Edge functions reference
 ├── AI_ARCHITECTURE.md             # AI/RAG documentation
 ├── SECURITY.md                    # Security documentation
+├── SECURITY_TESTING.md            # Security testing procedures
 │
 ├── # UI/UX
 ├── DESIGN_SYSTEM.md               # Design tokens and standards
@@ -121,10 +126,14 @@ docs/
 │
 ├── # Features
 ├── WIDGET_ARCHITECTURE.md         # Widget technical docs
+├── WIDGET_CHAT_REFACTORING.md     # Widget refactoring history
 ├── NATIVE_BOOKING_SYSTEM.md       # Calendar and booking
 ├── SOCIAL_CHANNEL_INTEGRATIONS.md # Social integrations
 ├── STRIPE_PAYMENT_GUIDE.md        # Payment integration
-└── ONBOARDING_GET_STARTED.md      # Onboarding flow
+│
+├── # Standards & Maintenance
+├── TEAM_SCOPING_STANDARD.md       # Multi-tenant data patterns
+└── CENTRALIZATION_AUDIT.md        # Centralization verification
 ```
 
 ---

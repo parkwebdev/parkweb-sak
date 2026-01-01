@@ -852,14 +852,16 @@ Settings tabs are also centralized in `src/config/routes.ts` via `SETTINGS_TABS`
 ```typescript
 // Usage in SettingsLayout.tsx
 import { SETTINGS_TABS, type SettingsTabParam } from '@/config/routes';
+import { useCanManageChecker } from '@/hooks/useCanManage';
 
 // Filter tabs by user permissions
+const canManage = useCanManageChecker();
 const menuItems = useMemo(() => {
   return SETTINGS_TABS.filter(tab => {
     if (!tab.requiredPermission) return true;
-    return isAdmin || hasPermission(tab.requiredPermission);
+    return canManage(tab.requiredPermission);
   });
-}, [hasPermission, isAdmin]);
+}, [canManage]);
 ```
 
 ### Ari Sections Configuration
