@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useAgent } from '@/hooks/useAgent';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
@@ -388,6 +389,7 @@ export const useTrafficAnalytics = (
   enabled: boolean = true
 ) => {
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const { agentId } = useAgent();
   const queryClient = useQueryClient();
 
@@ -396,14 +398,15 @@ export const useTrafficAnalytics = (
     queryKey: queryKeys.trafficAnalytics.data({
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
+      accountOwnerId: accountOwnerId || '',
     }),
     queryFn: async () => {
-      if (!user) return null;
+      if (!accountOwnerId) return null;
 
       const { data, error } = await supabase
         .from('conversations')
         .select('id, metadata, created_at')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -414,11 +417,11 @@ export const useTrafficAnalytics = (
 
       return data;
     },
-    realtime: user ? {
+    realtime: accountOwnerId ? {
       table: 'conversations',
-      filter: `user_id=eq.${user.id}`,
+      filter: `user_id=eq.${accountOwnerId}`,
     } : undefined,
-    enabled: enabled && !!user,
+    enabled: enabled && !!accountOwnerId && !ownerLoading,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

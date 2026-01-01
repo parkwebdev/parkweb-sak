@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { logger } from '@/utils/logger';
 import { format, eachDayOfInterval } from 'date-fns';
@@ -73,18 +74,19 @@ const buildQueryKey = (startDate: Date, endDate: Date, userId: string | null) =>
  */
 export const useSatisfactionAnalytics = (startDate: Date, endDate: Date, enabled: boolean = true) => {
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
-  // First get the user's conversation IDs for the date range
+  // First get the account's conversation IDs for the date range
   const { data: conversationIds = [] } = useSupabaseQuery<string[]>({
-    queryKey: ['conversations', 'ids-for-ratings', user?.id, format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')],
+    queryKey: ['conversations', 'ids-for-ratings', accountOwnerId, format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!accountOwnerId) return [];
 
       const { data, error } = await supabase
         .from('conversations')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -95,7 +97,7 @@ export const useSatisfactionAnalytics = (startDate: Date, endDate: Date, enabled
 
       return (data || []).map((c) => c.id);
     },
-    enabled: enabled && !!user?.id,
+    enabled: enabled && !!accountOwnerId && !ownerLoading,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
@@ -105,9 +107,9 @@ export const useSatisfactionAnalytics = (startDate: Date, endDate: Date, enabled
     isLoading,
     refetch,
   } = useSupabaseQuery<RawRating[]>({
-    queryKey: buildQueryKey(startDate, endDate, user?.id || null),
+    queryKey: buildQueryKey(startDate, endDate, accountOwnerId || null),
     queryFn: async () => {
-      if (!user?.id || conversationIds.length === 0) {
+      if (!accountOwnerId || conversationIds.length === 0) {
         return [];
       }
 
@@ -128,7 +130,7 @@ export const useSatisfactionAnalytics = (startDate: Date, endDate: Date, enabled
     },
     // NOTE: Realtime removed - conversation_ratings has no user_id column
     // so we can't filter effectively. React Query cache + manual refetch is sufficient.
-    enabled: enabled && !!user?.id && conversationIds.length > 0,
+    enabled: enabled && !!accountOwnerId && !ownerLoading && conversationIds.length > 0,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 

@@ -5,6 +5,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
@@ -21,18 +22,19 @@ type ScheduledReportInsert = TablesInsert<'scheduled_reports'>;
  */
 export const useScheduledReports = () => {
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
-  // Fetch reports with React Query
+  // Fetch reports with React Query (scoped to account owner)
   const { data: reports = [], isLoading: loading, refetch } = useSupabaseQuery<ScheduledReport[]>({
-    queryKey: queryKeys.scheduledReports.list(user?.id || ''),
+    queryKey: queryKeys.scheduledReports.list(accountOwnerId || ''),
     queryFn: async () => {
-      if (!user) return [];
+      if (!accountOwnerId) return [];
       
       const { data, error } = await supabase
         .from('scheduled_reports')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -40,9 +42,9 @@ export const useScheduledReports = () => {
     },
     realtime: {
       table: 'scheduled_reports',
-      filter: user ? `user_id=eq.${user.id}` : undefined,
+      filter: accountOwnerId ? `user_id=eq.${accountOwnerId}` : undefined,
     },
-    enabled: !!user,
+    enabled: !!accountOwnerId && !ownerLoading,
     staleTime: 60000, // 1 minute
   });
 
@@ -53,15 +55,15 @@ export const useScheduledReports = () => {
   const createReport = useCallback(async (
     report: Omit<ScheduledReportInsert, 'created_by' | 'user_id'>
   ) => {
-    if (!user) return;
+    if (!user || !accountOwnerId) return;
 
     try {
       const { data, error } = await supabase
         .from('scheduled_reports')
         .insert({
           ...report,
-          user_id: user.id,
-          created_by: user.id,
+          user_id: accountOwnerId, // Scope to account owner
+          created_by: user.id, // Track who actually created it
         })
         .select()
         .single();
@@ -80,7 +82,7 @@ export const useScheduledReports = () => {
         description: getErrorMessage(error),
       });
     }
-  }, [user, invalidateReports]);
+  }, [user, accountOwnerId, invalidateReports]);
 
   const updateReport = useCallback(async (
     id: string, 

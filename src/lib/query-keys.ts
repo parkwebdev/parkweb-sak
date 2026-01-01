@@ -204,7 +204,7 @@ export const queryKeys = {
   // Traffic analytics
   trafficAnalytics: {
     all: ['traffic-analytics'] as const,
-    data: (params: { startDate: string; endDate: string }) =>
+    data: (params: { startDate: string; endDate: string; accountOwnerId?: string }) =>
       [...queryKeys.trafficAnalytics.all, params] as const,
   },
 
