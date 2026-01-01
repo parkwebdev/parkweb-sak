@@ -3,6 +3,7 @@
  * 
  * Vertical section menu for the Ari configurator.
  * Displays all configuration sections in a flat, scannable list.
+ * Uses centralized ARI_SECTIONS config from routes.ts.
  * 
  * @module components/agents/AriSectionMenu
  */
@@ -11,9 +12,9 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManageChecker } from '@/hooks/useCanManage';
 import { springs } from '@/lib/motion-variants';
-import type { AppPermission } from '@/types/team';
+import { ARI_SECTIONS, type AriSectionConfig } from '@/config/routes';
 import {
   Atom01,
   File02,
@@ -27,61 +28,46 @@ import {
 } from '@untitledui/icons';
 import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled, UserFilled, DatabaseFilled, MarkerPin, MarkerPinFilled, BookOpenFilled, AnnouncementFilled, NewsFilled, CodeBrowser, CodeBrowserFilled, Webhook, WebhookFilled, DataFlow, DataFlowFilled, KeyFilled, Terminal, TerminalFilled } from '@/components/icons/AriMenuIcons';
 
-export type AriSection = 
-  | 'model-behavior'
-  | 'system-prompt'
-  | 'appearance'
-  | 'welcome-messages'
-  | 'lead-capture'
-  | 'knowledge'
-  | 'locations'
-  | 'help-articles'
-  | 'announcements'
-  | 'news'
-  | 'custom-tools'
-  | 'webhooks'
-  | 'integrations'
-  | 'api-access'
-  | 'installation';
+// Re-export the section type from routes.ts
+export type AriSection = typeof ARI_SECTIONS[number]['id'];
 
-interface SectionItem {
-  id: AriSection;
-  label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  activeIcon?: React.ComponentType<{ size?: number; className?: string }>;
-  group?: string;
-  /** Permission required to see this section. If not set, visible to all. */
-  requiredPermission?: AppPermission;
+// Icon mapping from string names to components
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  Atom01,
+  File02,
+  Palette,
+  User01,
+  Database01,
+  BookOpen01,
+  Announcement01,
+  File06,
+  Key01,
+  // Custom filled icons
+  FileFilled,
+  PaletteFilled,
+  MessageSquare,
+  MessageSquareFilled,
+  UserFilled,
+  DatabaseFilled,
+  MarkerPin,
+  MarkerPinFilled,
+  BookOpenFilled,
+  AnnouncementFilled,
+  NewsFilled,
+  CodeBrowser,
+  CodeBrowserFilled,
+  Webhook,
+  WebhookFilled,
+  DataFlow,
+  DataFlowFilled,
+  KeyFilled,
+  Terminal,
+  TerminalFilled,
+};
+
+function getIcon(iconName: string): React.ComponentType<{ size?: number; className?: string }> {
+  return ICON_MAP[iconName] || Atom01;
 }
-
-const SECTIONS: SectionItem[] = [
-  // AI Configuration
-  { id: 'model-behavior', label: 'Model & Behavior', icon: Atom01, group: 'AI', requiredPermission: 'manage_ari' },
-  { id: 'system-prompt', label: 'System Prompt', icon: File02, activeIcon: FileFilled, group: 'AI', requiredPermission: 'manage_ari' },
-  
-  // Widget Appearance
-  { id: 'appearance', label: 'Appearance', icon: Palette, activeIcon: PaletteFilled, group: 'Widget', requiredPermission: 'manage_ari' },
-  { id: 'welcome-messages', label: 'Welcome & Messages', icon: MessageSquare, activeIcon: MessageSquareFilled, group: 'Widget', requiredPermission: 'manage_ari' },
-  { id: 'lead-capture', label: 'Lead Capture', icon: User01, activeIcon: UserFilled, group: 'Widget', requiredPermission: 'manage_ari' },
-  
-  // Knowledge
-  { id: 'knowledge', label: 'Knowledge', icon: Database01, activeIcon: DatabaseFilled, group: 'Knowledge', requiredPermission: 'manage_knowledge' },
-  { id: 'locations', label: 'Locations', icon: MarkerPin, activeIcon: MarkerPinFilled, group: 'Knowledge', requiredPermission: 'manage_ari' },
-  { id: 'help-articles', label: 'Help Articles', icon: BookOpen01, activeIcon: BookOpenFilled, group: 'Knowledge', requiredPermission: 'manage_help_articles' },
-  
-  // Content
-  { id: 'announcements', label: 'Announcements', icon: Announcement01, activeIcon: AnnouncementFilled, group: 'Content', requiredPermission: 'manage_ari' },
-  { id: 'news', label: 'News', icon: File06, activeIcon: NewsFilled, group: 'Content', requiredPermission: 'manage_ari' },
-  
-  // Tools & API
-  { id: 'custom-tools', label: 'Custom Tools', icon: CodeBrowser, activeIcon: CodeBrowserFilled, group: 'Tools', requiredPermission: 'manage_ari' },
-  { id: 'webhooks', label: 'Webhooks', icon: Webhook, activeIcon: WebhookFilled, group: 'Tools', requiredPermission: 'manage_webhooks' },
-  { id: 'integrations', label: 'Integrations', icon: DataFlow, activeIcon: DataFlowFilled, group: 'Tools', requiredPermission: 'manage_integrations' },
-  { id: 'api-access', label: 'API Access', icon: Key01, activeIcon: KeyFilled, group: 'Tools', requiredPermission: 'manage_api_keys' },
-  
-  // Deploy
-  { id: 'installation', label: 'Installation', icon: Terminal, activeIcon: TerminalFilled, group: 'Deploy', requiredPermission: 'manage_ari' },
-];
 
 interface AriSectionMenuProps {
   activeSection: AriSection;
@@ -93,12 +79,12 @@ export function AriSectionMenu({
   onSectionChange,
 }: AriSectionMenuProps) {
   const prefersReducedMotion = useReducedMotion();
-  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManage = useCanManageChecker();
   
-  // Filter sections based on permissions
-  const visibleSections = SECTIONS.filter(section => {
+  // Filter sections based on permissions using centralized config
+  const visibleSections = ARI_SECTIONS.filter(section => {
     if (!section.requiredPermission) return true;
-    return isAdmin || hasPermission(section.requiredPermission);
+    return canManage(section.requiredPermission);
   });
   
   // Group sections for visual organization
@@ -107,7 +93,7 @@ export function AriSectionMenu({
     if (!acc[group]) acc[group] = [];
     acc[group].push(section);
     return acc;
-  }, {} as Record<string, SectionItem[]>);
+  }, {} as Record<string, AriSectionConfig[]>);
 
   return (
     <nav className="w-[240px] flex-shrink-0 border-r h-full overflow-y-auto py-4 px-3">
@@ -119,11 +105,13 @@ export function AriSectionMenu({
           <div className="space-y-0.5">
             {items.map((item, index) => {
               const isActive = activeSection === item.id;
+              const Icon = getIcon(item.iconName);
+              const ActiveIcon = item.activeIconName ? getIcon(item.activeIconName) : null;
               
               return (
                 <motion.button
                   key={item.id}
-                  onClick={() => onSectionChange(item.id)}
+                  onClick={() => onSectionChange(item.id as AriSection)}
                   className={cn(
                     'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors',
                     isActive
@@ -134,10 +122,10 @@ export function AriSectionMenu({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: (groupIndex * 4 + index) * 0.02, ...springs.smooth }}
                 >
-                  {isActive && item.activeIcon ? (
-                    <item.activeIcon size={15} className="flex-shrink-0" />
+                  {isActive && ActiveIcon ? (
+                    <ActiveIcon size={15} className="flex-shrink-0" />
                   ) : (
-                    <item.icon size={15} className="flex-shrink-0" />
+                    <Icon size={15} className="flex-shrink-0" />
                   )}
                   <span className="truncate">{item.label}</span>
                 </motion.button>

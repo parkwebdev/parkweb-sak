@@ -8,7 +8,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAnnouncements, type Announcement, type AnnouncementInsert } from '@/hooks/useAnnouncements';
 import { useAuth } from '@/hooks/useAuth';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -427,8 +427,7 @@ const AnnouncementDialog = ({
 
 export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSectionProps) {
   const { announcements, loading, addAnnouncement, updateAnnouncement, deleteAnnouncement, reorderAnnouncements } = useAnnouncements(agentId);
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageAnnouncements = isAdmin || hasPermission('manage_ari');
+  const canManageAnnouncements = useCanManage('manage_ari');
   
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);

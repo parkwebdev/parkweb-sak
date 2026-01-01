@@ -20,6 +20,7 @@ import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { logger } from '@/utils/logger';
 import { AriSectionMenu, type AriSection } from '@/components/agents/AriSectionMenu';
+import { getValidAriSectionIds } from '@/config/routes';
 import { AriPreviewColumn } from '@/components/agents/AriPreviewColumn';
 import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 import { SkeletonAriConfiguratorPage } from '@/components/ui/page-skeleton';
@@ -56,12 +57,8 @@ const loadingStates = [
 ];
 const MIN_DISPLAY_TIME = loadingStates.length * STEP_DURATION;
 
-// Valid sections for URL parameter
-const VALID_SECTIONS: AriSection[] = [
-  'model-behavior', 'system-prompt', 'appearance', 'welcome-messages', 
-  'lead-capture', 'knowledge', 'locations', 'help-articles', 'announcements',
-  'news', 'custom-tools', 'webhooks', 'integrations', 'api-access', 'installation'
-];
+// Get valid sections from centralized config
+const VALID_SECTIONS = getValidAriSectionIds();
 
 const AriConfigurator = () => {
   logger.debug('AriConfigurator: Component mounting');

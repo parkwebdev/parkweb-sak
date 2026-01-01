@@ -23,7 +23,7 @@ import { DeleteEventDialog } from '@/components/calendar/DeleteEventDialog';
 import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDialog';
 import { SkeletonCalendarPage } from '@/components/ui/page-skeleton';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManageMultiple } from '@/hooks/useCanManage';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
 import { logger } from '@/utils/logger';
@@ -41,9 +41,7 @@ function Planner() {
   const [activeTab, setActiveTab] = useState('all');
   
   // Permission checks
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageBookings = isAdmin || hasPermission('manage_bookings');
-  const canManageIntegrations = isAdmin || hasPermission('manage_integrations');
+  const { manage_bookings: canManageBookings, manage_integrations: canManageIntegrations } = useCanManageMultiple(['manage_bookings', 'manage_integrations'] as const);
   
   // Fetch real calendar events from database
   const { 

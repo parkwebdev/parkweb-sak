@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Users01 as Users } from '@untitledui/icons';
 import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { TeamMember, UserRole } from '@/types/team';
 import { SkeletonTableSection } from '@/components/ui/skeleton';
 
@@ -37,7 +38,7 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
     fetchTeamMembers
   } = useTeam();
 
-  const canManageTeam = isAdmin || hasPermission('manage_team');
+  const canManageTeam = useCanManage('manage_team');
 
   // Handle auto-opening a team member from URL parameter
   useEffect(() => {

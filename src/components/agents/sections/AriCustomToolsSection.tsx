@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trash01, Link03, Edit03, PlayCircle, ChevronDown, Plus, Lightbulb02, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -50,8 +50,7 @@ interface AriCustomToolsSectionProps {
 export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
   const [tools, setTools] = useState<AgentTool[]>([]);
   const [loading, setLoading] = useState(true);
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageTools = isAdmin || hasPermission('manage_ari');
+  const canManageTools = useCanManage('manage_ari');
   
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);

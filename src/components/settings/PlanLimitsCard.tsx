@@ -8,15 +8,14 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { useNavigate } from 'react-router-dom';
 
 export const PlanLimitsCard = () => {
   const { limits, usage, loading, planName } = usePlanLimits();
-  const { hasPermission, isAdmin } = useRoleAuthorization();
   const navigate = useNavigate();
   
-  const canViewBilling = isAdmin || hasPermission('view_billing');
+  const canViewBilling = useCanManage('view_billing');
 
   if (loading) {
     return (

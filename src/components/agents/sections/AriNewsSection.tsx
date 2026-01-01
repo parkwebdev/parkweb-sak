@@ -9,7 +9,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNewsItems, type NewsItem, type NewsItemInsert } from '@/hooks/useNewsItems';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeam } from '@/hooks/useTeam';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -504,8 +504,7 @@ const NewsDialog = ({
 
 export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
   const { newsItems, loading, addNewsItem, updateNewsItem, deleteNewsItem, reorderNewsItems } = useNewsItems(agentId);
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageNews = isAdmin || hasPermission('manage_ari');
+  const canManageNews = useCanManage('manage_ari');
   
   const [editingNewsItem, setEditingNewsItem] = useState<NewsItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);

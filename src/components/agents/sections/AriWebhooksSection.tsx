@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { Link03, Trash01, Eye, Edit03, PlayCircle, Plus, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useWebhooks } from '@/hooks/useWebhooks';
@@ -36,8 +36,7 @@ interface AriWebhooksSectionProps {
 
 export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
   const { webhooks, loading, createWebhook, updateWebhook, deleteWebhook, testWebhook, fetchLogs } = useWebhooks(agentId);
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageWebhooks = isAdmin || hasPermission('manage_webhooks');
+  const canManageWebhooks = useCanManage('manage_webhooks');
   
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
