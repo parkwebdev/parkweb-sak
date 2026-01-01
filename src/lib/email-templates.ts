@@ -55,12 +55,6 @@ export interface PasswordResetData {
   expiresIn?: string;
 }
 
-export interface EmailVerificationData {
-  userName?: string;
-  verificationUrl: string;
-  expiresIn?: string;
-}
-
 export interface SignupConfirmationData {
   userName?: string;
   confirmationUrl: string;
@@ -533,28 +527,6 @@ export function generatePasswordResetEmail(data: PasswordResetData): string {
   
   return generateWrapper({
     preheaderText: 'Reset your Pilot password',
-    content,
-  });
-}
-
-export function generateEmailVerificationEmail(data: EmailVerificationData): string {
-  const greeting = data.userName ? `Welcome ${data.userName}!` : 'Welcome!';
-  const expiryNote = data.expiresIn 
-    ? `This link will expire in ${data.expiresIn}.`
-    : 'This link will expire in 24 hours.';
-  
-  const content = `
-    ${heading('Verify your email')}
-    ${paragraph(`${greeting} Thanks for signing up for Pilot. Please verify your email address to get started.`)}
-    ${spacer(8)}
-    ${button('Verify Email', data.verificationUrl)}
-    ${spacer(24)}
-    ${paragraph(expiryNote, true)}
-    ${paragraph("If you didn't create a Pilot account, you can safely ignore this email.", true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: 'Verify your email to get started with Pilot',
     content,
   });
 }

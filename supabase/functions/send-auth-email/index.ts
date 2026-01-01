@@ -284,7 +284,7 @@ function generateWelcomeEmail(userName: string, companyName: string | undefined,
 // =============================================================================
 
 interface AuthEmailRequest {
-  type: 'password-reset' | 'email-verification' | 'signup-confirmation' | 'welcome';
+  type: 'password-reset' | 'signup-confirmation' | 'welcome';
   to: string;
   userName?: string;
   companyName?: string;
@@ -317,10 +317,6 @@ const handler = async (req: Request): Promise<Response> => {
       case 'password-reset':
         html = generatePasswordResetEmail(userName, actionUrl, expiresIn);
         subject = 'Reset your password';
-        break;
-      case 'email-verification':
-        html = generateEmailVerificationEmail(userName, actionUrl, expiresIn);
-        subject = 'Verify your email address';
         break;
       case 'signup-confirmation':
         html = generateSignupConfirmationEmail(userName, actionUrl, expiresIn);
