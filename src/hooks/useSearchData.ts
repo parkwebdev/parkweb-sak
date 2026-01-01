@@ -1,9 +1,29 @@
+/**
+ * Global Search Data Hook
+ * 
+ * Fetches and aggregates data from various sources for global search.
+ * Filters results based on user permissions using centralized route config.
+ * 
+ * @module hooks/useSearchData
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
-import type { Tables } from '@/integrations/supabase/types';
+import { ROUTE_CONFIG, SETTINGS_TABS } from '@/config/routes';
+import type { 
+  SearchDataMap, 
+  ConversationWithAgent, 
+  LeadRecord,
+  HelpArticleWithRelations,
+  NewsItemWithAgent,
+  WebhookWithAgent,
+  AgentToolWithAgent,
+  KnowledgeSourceWithAgent,
+  ProfileRecord,
+} from '@/types/search';
 import type { ConversationMetadata } from '@/types/metadata';
 import { logger } from '@/utils/logger';
 
@@ -17,15 +37,6 @@ export interface SearchResult {
   action?: () => void;
   shortcut?: string;
 }
-
-type Conversation = Tables<'conversations'>;
-type Lead = Tables<'leads'>;
-type HelpArticle = Tables<'help_articles'>;
-type NewsItem = Tables<'news_items'>;
-type Webhook = Tables<'webhooks'>;
-type AgentTool = Tables<'agent_tools'>;
-type KnowledgeSource = Tables<'knowledge_sources'>;
-type Profile = Tables<'profiles'>;
 
 /**
  * Hook for global search across agents, conversations, leads, articles, and more.
@@ -44,10 +55,6 @@ export const useSearchData = () => {
     canManageAri,
     canViewKnowledge,
     canViewTeam,
-    canViewBookings,
-    canViewSettings,
-    canViewBilling,
-    canViewDashboard,
     loading: permissionsLoading
   } = useRoleAuthorization();
   
@@ -59,9 +66,7 @@ export const useSearchData = () => {
 
     setLoading(true);
     try {
-      const dataMap: Record<string, unknown[]> = {};
-
-      // Fetch data in parallel based on permissions using async arrow functions
+      const dataMap: SearchDataMap = {};
       const fetchPromises: Promise<void>[] = [];
 
       // Conversations - only if user has permission
@@ -72,7 +77,7 @@ export const useSearchData = () => {
             .select('*, agents!fk_conversations_agent(name)')
             .order('updated_at', { ascending: false })
             .limit(50);
-          dataMap.conversations = res.data || [];
+          dataMap.conversations = (res.data ?? []) as ConversationWithAgent[];
         })());
       }
 
@@ -84,7 +89,7 @@ export const useSearchData = () => {
             .select('*')
             .order('created_at', { ascending: false })
             .limit(50);
-          dataMap.leads = res.data || [];
+          dataMap.leads = (res.data ?? []) as LeadRecord[];
         })());
       }
 
@@ -96,7 +101,7 @@ export const useSearchData = () => {
             .select('*, help_categories!fk_articles_category(name), agents!fk_articles_agent(name)')
             .order('title')
             .limit(50);
-          dataMap.helpArticles = res.data || [];
+          dataMap.helpArticles = (res.data ?? []) as HelpArticleWithRelations[];
         })());
 
         fetchPromises.push((async () => {
@@ -105,7 +110,7 @@ export const useSearchData = () => {
             .select('*, agents!fk_news_agent(name)')
             .order('created_at', { ascending: false })
             .limit(50);
-          dataMap.newsItems = res.data || [];
+          dataMap.newsItems = (res.data ?? []) as NewsItemWithAgent[];
         })());
       }
 
@@ -117,7 +122,7 @@ export const useSearchData = () => {
             .select('*, agents(name)')
             .order('name')
             .limit(50);
-          dataMap.webhooks = res.data || [];
+          dataMap.webhooks = (res.data ?? []) as WebhookWithAgent[];
         })());
       }
 
@@ -129,7 +134,7 @@ export const useSearchData = () => {
             .select('*, agents!fk_tools_agent(name)')
             .order('name')
             .limit(50);
-          dataMap.tools = res.data || [];
+          dataMap.tools = (res.data ?? []) as AgentToolWithAgent[];
         })());
       }
 
@@ -142,7 +147,7 @@ export const useSearchData = () => {
             .is('metadata->parent_source_id', null)
             .order('created_at', { ascending: false })
             .limit(50);
-          dataMap.knowledgeSources = res.data || [];
+          dataMap.knowledgeSources = (res.data ?? []) as KnowledgeSourceWithAgent[];
         })());
       }
 
@@ -154,7 +159,7 @@ export const useSearchData = () => {
             .select('*')
             .order('display_name')
             .limit(50);
-          dataMap.teamMembers = res.data || [];
+          dataMap.teamMembers = (res.data ?? []) as ProfileRecord[];
         })());
       }
 
@@ -163,269 +168,150 @@ export const useSearchData = () => {
 
       const results: SearchResult[] = [];
 
-      // Navigation items - filtered by permission
-      const navItems: { item: SearchResult; requiredPermission?: string; adminOnly?: boolean }[] = [
-        {
-          item: {
-            id: 'nav-dashboard',
-            title: 'Dashboard',
-            description: 'View overview and statistics',
-            category: 'Navigation',
-            iconName: 'LayoutGrid01',
-            action: () => navigate('/'),
-          },
-          adminOnly: true,
-        },
-        {
-          item: {
-            id: 'nav-ari',
-            title: 'Ari',
-            description: 'Configure your AI agent',
-            category: 'Navigation',
-            iconName: 'AriLogo',
-            shortcut: '⌥A',
-            action: () => navigate('/ari'),
-          },
-          requiredPermission: 'manage_ari',
-        },
-        {
-          item: {
-            id: 'nav-inbox',
-            title: 'Inbox',
-            description: 'View all conversations',
-            category: 'Navigation',
-            iconName: 'MessageChatSquare',
-            shortcut: '⌥C',
-            action: () => navigate('/conversations'),
-          },
-          requiredPermission: 'view_conversations',
-        },
-        {
-          item: {
-            id: 'nav-leads',
-            title: 'Leads',
-            description: 'Manage captured leads',
-            category: 'Navigation',
-            iconName: 'Users01',
-            shortcut: '⌥L',
-            action: () => navigate('/leads'),
-          },
-          requiredPermission: 'view_leads',
-        },
-        {
-          item: {
-            id: 'nav-analytics',
-            title: 'Analytics',
-            description: 'View insights and metrics',
-            category: 'Navigation',
-            iconName: 'TrendUp01',
-            shortcut: '⌥Y',
-            action: () => navigate('/analytics'),
-          },
-          requiredPermission: 'view_dashboard',
-        },
-        {
-          item: {
-            id: 'nav-planner',
-            title: 'Planner',
-            description: 'Manage calendar and events',
-            category: 'Navigation',
-            iconName: 'Calendar',
-            shortcut: '⌥P',
-            action: () => navigate('/planner'),
-          },
-          requiredPermission: 'view_bookings',
-        },
-        {
-          item: {
-            id: 'nav-settings',
-            title: 'Settings',
-            description: 'Manage organization settings',
-            category: 'Navigation',
-            iconName: 'Settings01',
-            shortcut: '⌥S',
-            action: () => navigate('/settings'),
-          },
-          requiredPermission: 'view_settings',
-        },
-      ];
+      // Navigation items from centralized route config
+      ROUTE_CONFIG.forEach(route => {
+        // Filter by permissions
+        if (route.adminOnly && !isAdmin) return;
+        if (route.requiredPermission && !isAdmin && !hasPermission(route.requiredPermission)) return;
+        // Skip routes not intended for search (no nav or bottom nav)
+        if (!route.showInNav && !route.showInBottomNav && route.id !== 'report-builder') return;
 
-      // Filter nav items by permission
-      navItems.forEach(({ item, requiredPermission, adminOnly }) => {
-        if (adminOnly && !isAdmin) return;
-        if (requiredPermission && !isAdmin && !hasPermission(requiredPermission as Parameters<typeof hasPermission>[0])) return;
-        results.push(item);
+        results.push({
+          id: `nav-${route.id}`,
+          title: route.label,
+          description: route.description,
+          category: 'Navigation',
+          iconName: route.iconName,
+          shortcut: route.shortcut,
+          action: () => navigate(route.path),
+        });
       });
 
       // Conversations
       if (dataMap.conversations) {
-        const conversationResults: SearchResult[] = (dataMap.conversations as (Conversation & { agents?: { name: string } })[]).map((conv) => {
+        dataMap.conversations.forEach((conv) => {
           const metadata = (conv.metadata || {}) as ConversationMetadata;
-          return {
+          results.push({
             id: `conversation-${conv.id}`,
             title: metadata.lead_name || metadata.lead_email || 'Anonymous',
             description: `via ${conv.agents?.name || 'Unknown Agent'} • ${conv.status}`,
             category: 'Conversations',
             iconName: 'MessageChatSquare',
             action: () => navigate('/conversations'),
-          };
+          });
         });
-        results.push(...conversationResults);
       }
 
       // Leads
       if (dataMap.leads) {
-        const leadResults: SearchResult[] = (dataMap.leads as Lead[]).map((lead) => ({
-          id: `lead-${lead.id}`,
-          title: lead.name || lead.email || 'Unnamed Lead',
-          description: `${lead.company || ''} • ${lead.status}`,
-          category: 'Leads',
-          iconName: 'User01',
-          action: () => navigate('/leads'),
-        }));
-        results.push(...leadResults);
+        dataMap.leads.forEach((lead) => {
+          results.push({
+            id: `lead-${lead.id}`,
+            title: lead.name || lead.email || 'Unnamed Lead',
+            description: `${lead.company || ''} • ${lead.status}`,
+            category: 'Leads',
+            iconName: 'User01',
+            action: () => navigate('/leads'),
+          });
+        });
       }
 
       // Help Articles
       if (dataMap.helpArticles) {
-        const articleResults: SearchResult[] = (dataMap.helpArticles as (HelpArticle & { help_categories?: { name: string }, agents?: { name: string } })[]).map((article) => ({
-          id: `article-${article.id}`,
-          title: article.title,
-          description: `${article.help_categories?.name || 'Uncategorized'}`,
-          category: 'Help Articles',
-          iconName: 'BookOpen01',
-          action: () => navigate('/ari/help-articles'),
-        }));
-        results.push(...articleResults);
+        dataMap.helpArticles.forEach((article) => {
+          results.push({
+            id: `article-${article.id}`,
+            title: article.title,
+            description: `${article.help_categories?.name || 'Uncategorized'}`,
+            category: 'Help Articles',
+            iconName: 'BookOpen01',
+            action: () => navigate('/ari/help-articles'),
+          });
+        });
       }
 
       // News Items
       if (dataMap.newsItems) {
-        const newsResults: SearchResult[] = (dataMap.newsItems as (NewsItem & { agents?: { name: string } })[]).map((news) => ({
-          id: `news-${news.id}`,
-          title: news.title,
-          description: news.is_published ? 'Published' : 'Draft',
-          category: 'News',
-          iconName: 'Announcement01',
-          action: () => navigate('/ari/news'),
-        }));
-        results.push(...newsResults);
+        dataMap.newsItems.forEach((news) => {
+          results.push({
+            id: `news-${news.id}`,
+            title: news.title,
+            description: news.is_published ? 'Published' : 'Draft',
+            category: 'News',
+            iconName: 'Announcement01',
+            action: () => navigate('/ari/news'),
+          });
+        });
       }
 
       // Webhooks
       if (dataMap.webhooks) {
-        const webhookResults: SearchResult[] = (dataMap.webhooks as (Webhook & { agents?: { name: string } })[]).map((webhook) => ({
-          id: `webhook-${webhook.id}`,
-          title: webhook.name,
-          description: webhook.active ? 'Active' : 'Inactive',
-          category: 'Webhooks',
-          iconName: 'Link01',
-          action: () => navigate('/ari/webhooks'),
-        }));
-        results.push(...webhookResults);
+        dataMap.webhooks.forEach((webhook) => {
+          results.push({
+            id: `webhook-${webhook.id}`,
+            title: webhook.name,
+            description: webhook.active ? 'Active' : 'Inactive',
+            category: 'Webhooks',
+            iconName: 'Link01',
+            action: () => navigate('/ari/webhooks'),
+          });
+        });
       }
 
       // Custom Tools
       if (dataMap.tools) {
-        const toolResults: SearchResult[] = (dataMap.tools as (AgentTool & { agents?: { name: string } })[]).map((tool) => ({
-          id: `tool-${tool.id}`,
-          title: tool.name,
-          description: tool.enabled ? 'Enabled' : 'Disabled',
-          category: 'Tools',
-          iconName: 'Tool02',
-          action: () => navigate('/ari/custom-tools'),
-        }));
-        results.push(...toolResults);
+        dataMap.tools.forEach((tool) => {
+          results.push({
+            id: `tool-${tool.id}`,
+            title: tool.name,
+            description: tool.enabled ? 'Enabled' : 'Disabled',
+            category: 'Tools',
+            iconName: 'Tool02',
+            action: () => navigate('/ari/custom-tools'),
+          });
+        });
       }
 
       // Knowledge Sources
       if (dataMap.knowledgeSources) {
-        const knowledgeResults: SearchResult[] = (dataMap.knowledgeSources as (KnowledgeSource & { agents?: { name: string } })[]).map((source) => ({
-          id: `knowledge-${source.id}`,
-          title: source.source,
-          description: `${source.type.toUpperCase()} • ${source.status}`,
-          category: 'Knowledge',
-          iconName: 'Database01',
-          action: () => navigate('/ari/knowledge'),
-        }));
-        results.push(...knowledgeResults);
+        dataMap.knowledgeSources.forEach((source) => {
+          results.push({
+            id: `knowledge-${source.id}`,
+            title: source.source,
+            description: `${source.type.toUpperCase()} • ${source.status}`,
+            category: 'Knowledge',
+            iconName: 'Database01',
+            action: () => navigate('/ari/knowledge'),
+          });
+        });
       }
 
       // Team Members
       if (dataMap.teamMembers) {
-        const teamResults: SearchResult[] = (dataMap.teamMembers as Profile[]).map((profile) => ({
-          id: `team-${profile.id}`,
-          title: profile.display_name || profile.email || 'Team Member',
-          description: profile.email || '',
-          category: 'Team',
-          iconName: 'User01',
-          action: () => navigate('/settings?tab=team'),
-        }));
-        results.push(...teamResults);
+        dataMap.teamMembers.forEach((profile) => {
+          results.push({
+            id: `team-${profile.id}`,
+            title: profile.display_name || profile.email || 'Team Member',
+            description: profile.email || '',
+            category: 'Team',
+            iconName: 'User01',
+            action: () => navigate('/settings?tab=team'),
+          });
+        });
       }
 
-      // Settings sections - filtered by permission
-      const settingsItems: { item: SearchResult; requiredPermission?: string }[] = [
-        {
-          item: {
-            id: 'settings-profile',
-            title: 'Profile Settings',
-            description: 'Manage your profile',
-            category: 'Settings',
-            iconName: 'User01',
-            action: () => navigate('/settings?tab=profile'),
-          },
-          // Always visible
-        },
-        {
-          item: {
-            id: 'settings-team',
-            title: 'Team Settings',
-            description: 'Manage team members',
-            category: 'Settings',
-            iconName: 'Users01',
-            action: () => navigate('/settings?tab=team'),
-          },
-          requiredPermission: 'view_team',
-        },
-        {
-          item: {
-            id: 'settings-notifications',
-            title: 'Notification Settings',
-            description: 'Manage notification preferences',
-            category: 'Settings',
-            iconName: 'Bell01',
-            action: () => navigate('/settings?tab=notifications'),
-          },
-          // Always visible
-        },
-        {
-          item: {
-            id: 'settings-subscription',
-            title: 'Subscription & Billing',
-            description: 'Manage subscription and invoices',
-            category: 'Settings',
-            iconName: 'CreditCard01',
-            action: () => navigate('/settings?tab=subscription'),
-          },
-          requiredPermission: 'view_billing',
-        },
-        {
-          item: {
-            id: 'settings-usage',
-            title: 'Usage',
-            description: 'View usage metrics',
-            category: 'Settings',
-            iconName: 'BarChart01',
-            action: () => navigate('/settings?tab=usage'),
-          },
-          requiredPermission: 'view_billing',
-        },
-      ];
-
-      settingsItems.forEach(({ item, requiredPermission }) => {
-        if (requiredPermission && !isAdmin && !hasPermission(requiredPermission as Parameters<typeof hasPermission>[0])) return;
-        results.push(item);
+      // Settings sections from centralized config
+      SETTINGS_TABS.forEach(tab => {
+        if (tab.requiredPermission && !isAdmin && !hasPermission(tab.requiredPermission)) return;
+        
+        results.push({
+          id: tab.id,
+          title: tab.label,
+          description: tab.description,
+          category: 'Settings',
+          iconName: tab.iconName,
+          action: () => navigate(`/settings?tab=${tab.tabParam}`),
+        });
       });
 
       setSearchResults(results);
