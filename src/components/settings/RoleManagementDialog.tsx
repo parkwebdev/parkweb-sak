@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
@@ -170,64 +170,54 @@ export function RoleManagementDialog({
 
   const canEditPermissions = !isEditingSelf || currentUserRole === 'admin';
 
-  // Split permission groups into two columns
-  const permissionGroupEntries = Object.entries(PERMISSION_GROUPS);
-  const midPoint = Math.ceil(permissionGroupEntries.length / 2);
-  const leftColumnGroups = permissionGroupEntries.slice(0, midPoint);
-  const rightColumnGroups = permissionGroupEntries.slice(midPoint);
-
   const renderPermissionGroup = ([group, groupPermissions]: [string, readonly AppPermission[]]) => {
     const fullySelected = isGroupFullySelected(groupPermissions);
     const partiallySelected = isGroupPartiallySelected(groupPermissions);
 
     return (
-      <AccordionItem key={group} value={group}>
-        <AccordionTrigger className="text-sm" showIcon={true}>
-          <div className="flex items-center gap-3">
-            <Checkbox
-              checked={fullySelected}
-              ref={(el) => {
-                if (el) {
-                  (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = partiallySelected;
+      <div key={group} className="p-4 border border-border rounded-lg bg-card space-y-3">
+        <div className="flex items-center gap-3">
+          <Checkbox
+            checked={fullySelected}
+            ref={(el) => {
+              if (el) {
+                (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = partiallySelected;
+              }
+            }}
+            onCheckedChange={() => toggleGroupPermissions(groupPermissions)}
+            disabled={!canEditPermissions}
+            className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
+          />
+          <span className="text-sm font-medium">{group}</span>
+        </div>
+        
+        <div className="space-y-2 pl-7">
+          {groupPermissions.map((permission) => (
+            <div key={permission} className="flex items-center gap-3">
+              <Checkbox
+                id={permission}
+                checked={permissions.includes(permission)}
+                onCheckedChange={(checked) => 
+                  handlePermissionChange(permission, checked as boolean)
                 }
-              }}
-              onCheckedChange={() => toggleGroupPermissions(groupPermissions)}
-              onClick={(e) => e.stopPropagation()}
-              disabled={!canEditPermissions}
-              className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
-            />
-            <span className="font-medium">{group}</span>
-          </div>
-        </AccordionTrigger>
-        <AccordionContent>
-          <div className="space-y-3 pl-7">
-            {groupPermissions.map((permission) => (
-              <div key={permission} className="flex items-center gap-3">
-                <Checkbox
-                  id={permission}
-                  checked={permissions.includes(permission)}
-                  onCheckedChange={(checked) => 
-                    handlePermissionChange(permission, checked as boolean)
-                  }
-                  disabled={!canEditPermissions}
-                />
-                <Label 
-                  htmlFor={permission}
-                  className="text-sm cursor-pointer font-normal"
-                >
-                  {PERMISSION_LABELS[permission]}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </AccordionContent>
-      </AccordionItem>
+                disabled={!canEditPermissions}
+              />
+              <Label 
+                htmlFor={permission}
+                className="text-sm cursor-pointer font-normal text-muted-foreground"
+              >
+                {PERMISSION_LABELS[permission]}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {isEditingSelf ? 'Manage Your Settings' : 'Manage Role & Permissions'}
@@ -277,16 +267,8 @@ export function RoleManagementDialog({
               {isEditingSelf ? 'Your Permissions' : 'Permissions'}
             </Label>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Left Column */}
-              <Accordion type="multiple">
-                {leftColumnGroups.map(renderPermissionGroup)}
-              </Accordion>
-
-              {/* Right Column */}
-              <Accordion type="multiple">
-                {rightColumnGroups.map(renderPermissionGroup)}
-              </Accordion>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {Object.entries(PERMISSION_GROUPS).map(renderPermissionGroup)}
             </div>
           </div>
         </div>
