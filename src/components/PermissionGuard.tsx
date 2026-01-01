@@ -14,14 +14,16 @@ import type { AppPermission } from '@/types/team';
 import { Lock01 } from '@untitledui/icons';
 
 interface PermissionGuardProps {
-  /** Required permission(s) to access this route */
-  permission: AppPermission | AppPermission[];
+  /** Required permission(s) to access this route (ignored if adminOnly is true) */
+  permission?: AppPermission | AppPermission[];
   /** Child components to render when authorized */
   children: React.ReactNode;
   /** Redirect path when unauthorized (default: show message) */
   redirectTo?: string;
   /** Whether to show access denied UI instead of redirecting */
   showAccessDenied?: boolean;
+  /** If true, only admins can access this route */
+  adminOnly?: boolean;
 }
 
 /**
@@ -43,6 +45,7 @@ export function PermissionGuard({
   children,
   redirectTo,
   showAccessDenied = true,
+  adminOnly = false,
 }: PermissionGuardProps) {
   const { hasPermission, loading, isAdmin } = useRoleAuthorization();
 
@@ -51,40 +54,48 @@ export function PermissionGuard({
     return null;
   }
 
-  // Admins always have access
-  if (isAdmin) {
-    return <>{children}</>;
-  }
-
-  // Check if user has any of the required permissions
-  const permissions = Array.isArray(permission) ? permission : [permission];
-  const hasAccess = permissions.some(p => hasPermission(p));
-
-  if (!hasAccess) {
-    // Redirect if redirectTo is specified
-    if (redirectTo) {
-      return <Navigate to={redirectTo} replace />;
+  // Admin-only routes require admin status
+  if (adminOnly) {
+    if (isAdmin) {
+      return <>{children}</>;
+    }
+    // Non-admins are denied access to admin-only routes
+  } else {
+    // Admins always have access to non-admin-only routes
+    if (isAdmin) {
+      return <>{children}</>;
     }
 
-    // Show access denied UI
-    if (showAccessDenied) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
-          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-            <Lock01 size={24} className="text-destructive" />
-          </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">
-            Access Restricted
-          </h2>
-          <p className="text-muted-foreground max-w-md">
-            You don't have permission to access this page. Contact your administrator if you believe this is an error.
-          </p>
+    // Check if user has any of the required permissions
+    const permissions = Array.isArray(permission) ? permission : [permission];
+    const hasAccess = permissions.some(p => hasPermission(p));
+    
+    if (hasAccess) {
+      return <>{children}</>;
+    }
+  }
+
+  // Redirect if redirectTo is specified
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  // Show access denied UI
+  if (showAccessDenied) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
+        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+          <Lock01 size={24} className="text-destructive" />
         </div>
-      );
-    }
-
-    return null;
+        <h2 className="text-xl font-semibold text-foreground mb-2">
+          Access Restricted
+        </h2>
+        <p className="text-muted-foreground max-w-md">
+          You don't have permission to access this page. Contact your administrator if you believe this is an error.
+        </p>
+      </div>
+    );
   }
 
-  return <>{children}</>;
+  return null;
 }
