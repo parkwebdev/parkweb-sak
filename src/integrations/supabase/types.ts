@@ -1373,6 +1373,8 @@ export type Database = {
           id: string
           invited_by: string
           invited_by_name: string
+          invited_first_name: string | null
+          invited_last_name: string | null
           status: string
           updated_at: string | null
         }
@@ -1384,6 +1386,8 @@ export type Database = {
           id?: string
           invited_by: string
           invited_by_name: string
+          invited_first_name?: string | null
+          invited_last_name?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -1395,6 +1399,8 @@ export type Database = {
           id?: string
           invited_by?: string
           invited_by_name?: string
+          invited_first_name?: string | null
+          invited_last_name?: string | null
           status?: string
           updated_at?: string | null
         }

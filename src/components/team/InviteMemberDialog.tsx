@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { isValidEmail } from '@/utils/validation';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { InviteMemberData } from '@/types/team';
 
 interface InviteMemberDialogProps {
-  onInvite: (email: string) => Promise<boolean>;
+  onInvite: (data: InviteMemberData) => Promise<boolean>;
   trigger?: React.ReactNode;
 }
 
@@ -18,12 +19,17 @@ export function InviteMemberDialog({
   trigger
 }: InviteMemberDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const { canAddTeamMember, showLimitWarning } = usePlanLimits();
   const limitCheck = canAddTeamMember();
 
   const handleInvite = async () => {
+    if (!firstName.trim()) {
+      return;
+    }
     if (!email || !isValidEmail(email)) {
       return;
     }
@@ -34,14 +40,22 @@ export function InviteMemberDialog({
     }
 
     setLoading(true);
-    const success = await onInvite(email);
+    const success = await onInvite({ 
+      firstName: firstName.trim(), 
+      lastName: lastName.trim(), 
+      email: email.trim() 
+    });
     setLoading(false);
 
     if (success) {
+      setFirstName('');
+      setLastName('');
       setEmail('');
       setIsOpen(false);
     }
   };
+
+  const isValid = firstName.trim() && email && isValidEmail(email);
 
   const defaultTrigger = (
     <Button size="sm" className="w-full sm:w-auto ml-auto">
@@ -81,8 +95,34 @@ export function InviteMemberDialog({
         )}
 
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="firstName">First name <span className="text-destructive">*</span></Label>
+              <Input
+                id="firstName"
+                type="text"
+                placeholder="John"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                disabled={loading}
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="lastName">Last name</Label>
+              <Input
+                id="lastName"
+                type="text"
+                placeholder="Smith"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                disabled={loading}
+                autoComplete="off"
+              />
+            </div>
+          </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>
+            <Label htmlFor="email">Email address <span className="text-destructive">*</span></Label>
             <Input
               id="email"
               type="email"
@@ -103,7 +143,7 @@ export function InviteMemberDialog({
             <Button 
               onClick={handleInvite}
               loading={loading}
-              disabled={!email || !isValidEmail(email)}
+              disabled={!isValid}
             >
               <Mail size={16} className="mr-2" />
               Send Invitation
