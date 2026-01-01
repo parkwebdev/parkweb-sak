@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNewsItems, type NewsItem, type NewsItemInsert } from '@/hooks/useNewsItems';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeam } from '@/hooks/useTeam';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,10 +68,11 @@ const stripHtml = (html: string): string => {
   return doc.body.textContent || '';
 };
 
-const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
+const SortableNewsCard = ({ newsItem, onEdit, onDelete, canManage = true }: {
   newsItem: NewsItem;
   onEdit: () => void;
   onDelete: () => void;
+  canManage?: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: newsItem.id });
 
@@ -138,30 +140,32 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
                   </div>
                 </div>
                 
-                <div className="flex gap-1 flex-shrink-0">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit();
-                    }}
-                    aria-label={`Edit news item: ${newsItem.title}`}
-                  >
-                    <Edit02 className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete();
-                    }}
-                    aria-label={`Delete news item: ${newsItem.title}`}
-                  >
-                    <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
-                  </Button>
-                </div>
+                {canManage && (
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit();
+                      }}
+                      aria-label={`Edit news item: ${newsItem.title}`}
+                    >
+                      <Edit02 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                      }}
+                      aria-label={`Delete news item: ${newsItem.title}`}
+                    >
+                      <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -500,6 +504,8 @@ const NewsDialog = ({
 
 export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
   const { newsItems, loading, addNewsItem, updateNewsItem, deleteNewsItem, reorderNewsItems } = useNewsItems(agentId);
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageNews = isAdmin || hasPermission('manage_ari');
   
   const [editingNewsItem, setEditingNewsItem] = useState<NewsItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -559,9 +565,11 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
         title="News"
         description="Blog-style updates and articles for your users"
         extra={
-          <Button onClick={() => setIsCreateOpen(true)} size="sm">
-            Add News Item
-          </Button>
+          canManageNews && (
+            <Button onClick={() => setIsCreateOpen(true)} size="sm">
+              Add News Item
+            </Button>
+          )
         }
       />
 
@@ -590,6 +598,7 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
                     newsItem={newsItem}
                     onEdit={() => setEditingNewsItem(newsItem)}
                     onDelete={() => setDeleteId(newsItem.id)}
+                    canManage={canManageNews}
                   />
                 ))}
               </div>

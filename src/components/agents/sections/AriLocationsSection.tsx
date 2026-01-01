@@ -10,6 +10,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { Trash01, XClose, X, FilterLines, AlertTriangle, Home01 } from '@untitledui/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -52,6 +53,8 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const { propertiesWithLocation, loading: propertiesLoading, validationStats, uniqueLocations, locationIdsByName, refetch: refetchProperties } = useProperties(agentId);
   const { agent, refetch: refetchAgent } = useAgent();
   const { accounts } = useConnectedAccounts(undefined, agentId);
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageLocations = isAdmin || hasPermission('manage_ari');
 
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>('communities');
@@ -352,7 +355,8 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const locationColumns = useMemo(() => createLocationsColumns({
     onView: handleViewLocation,
     onDelete: handleSetDeleteLocation,
-  }), [handleViewLocation, handleSetDeleteLocation]);
+    canManage: canManageLocations,
+  }), [handleViewLocation, handleSetDeleteLocation, canManageLocations]);
 
   // Property columns
   const propertyColumns = useMemo(() => createPropertiesColumns(), []);
@@ -602,7 +606,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
         title="Locations"
         description="Manage communities, properties, and business configuration"
         extra={
-          viewMode === 'communities' && (
+          viewMode === 'communities' && canManageLocations && (
             <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
               Add Location
             </Button>
@@ -634,7 +638,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
         )}
 
         {/* Bulk Actions Bar */}
-        {selectedCount > 0 && (
+        {selectedCount > 0 && canManageLocations && (
           <div className="flex items-center justify-between p-3 bg-muted rounded-lg border">
             <span className="text-sm">
               {selectedCount} {viewMode === 'communities' ? 'location' : 'propert'}{selectedCount > 1 ? (viewMode === 'communities' ? 's' : 'ies') : (viewMode === 'communities' ? '' : 'y')} selected
@@ -665,9 +669,11 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                 title="No locations yet"
                 description="Add locations to organize your business"
                 action={
-                  <Button onClick={() => setCreateDialogOpen(true)} size="sm">
-                    Add Location
-                  </Button>
+                  canManageLocations && (
+                    <Button onClick={() => setCreateDialogOpen(true)} size="sm">
+                      Add Location
+                    </Button>
+                  )
                 }
               />
             ) : (

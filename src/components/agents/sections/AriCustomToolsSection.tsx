@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trash01, Link03, Edit03, PlayCircle, ChevronDown, Plus, Lightbulb02, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -49,6 +50,8 @@ interface AriCustomToolsSectionProps {
 export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
   const [tools, setTools] = useState<AgentTool[]>([]);
   const [loading, setLoading] = useState(true);
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageTools = isAdmin || hasPermission('manage_ari');
   
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -278,9 +281,11 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
       <div className="space-y-4">
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          <Button onClick={() => setShowCreateDialog(true)} size="sm">
-            Add Tool
-          </Button>
+          {canManageTools && (
+            <Button onClick={() => setShowCreateDialog(true)} size="sm">
+              Add Tool
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setShowUseCasesModal(true)}>
             <Lightbulb02 size={14} className="mr-1.5" />
             View Use Cases
@@ -324,24 +329,32 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Switch
-                        checked={tool.enabled ?? true}
-                        onCheckedChange={(checked) => toggleTool(tool.id, checked)}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => testTool(tool)}
-                        disabled={testingToolId === tool.id}
-                      >
-                        <PlayCircle size={14} className={testingToolId === tool.id ? 'animate-spin' : ''} />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setEditingTool(tool)}>
-                        <Edit03 size={14} />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => deleteTool(tool.id)}>
-                        <Trash01 size={14} className="text-destructive" />
-                      </Button>
+                      {canManageTools && (
+                        <Switch
+                          checked={tool.enabled ?? true}
+                          onCheckedChange={(checked) => toggleTool(tool.id, checked)}
+                        />
+                      )}
+                      {canManageTools && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => testTool(tool)}
+                          disabled={testingToolId === tool.id}
+                        >
+                          <PlayCircle size={14} className={testingToolId === tool.id ? 'animate-spin' : ''} />
+                        </Button>
+                      )}
+                      {canManageTools && (
+                        <>
+                          <Button variant="ghost" size="sm" onClick={() => setEditingTool(tool)}>
+                            <Edit03 size={14} />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => deleteTool(tool.id)}>
+                            <Trash01 size={14} className="text-destructive" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

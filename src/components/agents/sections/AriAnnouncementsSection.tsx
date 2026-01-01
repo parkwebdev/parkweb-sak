@@ -8,6 +8,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAnnouncements, type Announcement, type AnnouncementInsert } from '@/hooks/useAnnouncements';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -47,10 +48,11 @@ interface AnnouncementFormData {
   is_active: boolean;
 }
 
-const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
+const SortableAnnouncementCard = ({ announcement, onEdit, onDelete, canManage = true }: {
   announcement: Announcement;
   onEdit: () => void;
   onDelete: () => void;
+  canManage?: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: announcement.id });
 
@@ -103,30 +105,32 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
                   </div>
                 </div>
                 
-                <div className="flex gap-1 flex-shrink-0">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit();
-                    }}
-                    aria-label={`Edit announcement: ${announcement.title}`}
-                  >
-                    <Edit02 className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete();
-                    }}
-                    aria-label={`Delete announcement: ${announcement.title}`}
-                  >
-                    <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
-                  </Button>
-                </div>
+                {canManage && (
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit();
+                      }}
+                      aria-label={`Edit announcement: ${announcement.title}`}
+                    >
+                      <Edit02 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                      }}
+                      aria-label={`Delete announcement: ${announcement.title}`}
+                    >
+                      <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -423,6 +427,8 @@ const AnnouncementDialog = ({
 
 export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSectionProps) {
   const { announcements, loading, addAnnouncement, updateAnnouncement, deleteAnnouncement, reorderAnnouncements } = useAnnouncements(agentId);
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageAnnouncements = isAdmin || hasPermission('manage_ari');
   
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -478,9 +484,11 @@ export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSec
         title="Announcements"
         description="Promotional banners displayed at the top of your chat widget"
         extra={
-          <Button onClick={() => setIsCreateOpen(true)} size="sm">
-            Add Announcement
-          </Button>
+          canManageAnnouncements && (
+            <Button onClick={() => setIsCreateOpen(true)} size="sm">
+              Add Announcement
+            </Button>
+          )
         }
       />
 
@@ -509,6 +517,7 @@ export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSec
                     announcement={announcement}
                     onEdit={() => setEditingAnnouncement(announcement)}
                     onDelete={() => setDeleteId(announcement.id)}
+                    canManage={canManageAnnouncements}
                   />
                 ))}
               </div>
