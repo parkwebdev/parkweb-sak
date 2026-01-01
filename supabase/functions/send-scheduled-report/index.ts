@@ -8,8 +8,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 import { Resend } from "npm:resend@2.0.0";
-import jsPDF from "npm:jspdf@2.5.1";
-import autoTable from "npm:jspdf-autotable@3.8.2";
+import { jsPDF } from "npm:jspdf@2.5.1";
+import "npm:jspdf-autotable@3.8.2";
 import { 
   colors, 
   heading, 
@@ -310,7 +310,7 @@ function generatePDF(report: ScheduledReport, data: AnalyticsData, companyName: 
     ],
   ];
   
-  autoTable(doc, {
+  (doc as any).autoTable({
     startY: 55,
     head: [kpiData[0]],
     body: kpiData.slice(1),
@@ -338,7 +338,7 @@ function generatePDF(report: ScheduledReport, data: AnalyticsData, companyName: 
       `${((count / data.totalConversations) * 100).toFixed(1)}%`
     ]);
     
-    autoTable(doc, {
+    (doc as any).autoTable({
       startY: currentY + 5,
       head: [["Status", "Count", "Percentage"]],
       body: convData,
@@ -372,7 +372,7 @@ function generatePDF(report: ScheduledReport, data: AnalyticsData, companyName: 
       `${((count / data.totalLeads) * 100).toFixed(1)}%`
     ]);
     
-    autoTable(doc, {
+    (doc as any).autoTable({
       startY: currentY + 5,
       head: [["Status", "Count", "Percentage"]],
       body: leadData,
