@@ -229,11 +229,7 @@ export function EmailTemplateSidebar({
                         <span className="flex-1 text-left truncate">{template.label}</span>
                         <div className="flex items-center gap-1 shrink-0">
                           {/* Delivery method badge with brand icon */}
-                          <span className={`flex items-center gap-1 text-2xs px-1.5 py-0.5 rounded font-medium ${
-                            template.delivery === 'supabase'
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                              : 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400'
-                          }`}>
+                          <span className="flex items-center gap-1 text-2xs px-1.5 py-0.5 rounded font-medium bg-neutral-500/10 text-neutral-600 dark:text-neutral-400">
                             {template.delivery === 'supabase' ? (
                               <SupabaseIcon className="h-3 w-3" />
                             ) : (

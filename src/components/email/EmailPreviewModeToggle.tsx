@@ -68,7 +68,7 @@ export const EmailPreviewModeToggle = React.memo(function EmailPreviewModeToggle
   return (
     <div
       className={cn(
-        'relative flex rounded-lg border bg-muted/30 overflow-hidden py-1 px-0.5',
+        'relative flex rounded-lg border bg-muted/30 overflow-hidden py-1 px-1',
         className
       )}
       onMouseLeave={() => setHoveredMode(null)}
@@ -110,7 +110,7 @@ export const EmailPreviewModeToggle = React.memo(function EmailPreviewModeToggle
                 aria-pressed={isActive}
               >
                 {option.id === 'supabase' ? (
-                  <SupabaseIcon className="h-4 w-4" />
+                  <SupabaseIcon className="h-5 w-5" />
                 ) : Icon ? (
                   <Icon size={14} />
                 ) : null}
