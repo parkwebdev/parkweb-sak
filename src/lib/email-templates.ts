@@ -137,7 +137,7 @@ export interface WebhookFailureAlertData {
  */
 export interface TeamMemberRemovedData {
   memberName: string;
-  teamName: string;
+  companyName: string;
 }
 
 export interface FeatureAnnouncementData {
@@ -795,13 +795,13 @@ export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData):
 export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): string {
   const content = `
     ${heading('Removed from team')}
-    ${paragraph(`Hi <strong>${data.memberName}</strong>, you have been removed from <strong>${data.teamName}</strong>.`)}
+    ${paragraph(`Hi <strong>${data.memberName}</strong>, you have been removed from <strong>${data.companyName}</strong>.`)}
     ${spacer(8)}
     ${paragraph('You no longer have access to this team\'s resources. If you believe this was a mistake, please contact your team administrator.', true)}
   `;
   
   return generateWrapper({
-    preheaderText: `You've been removed from ${data.teamName}`,
+    preheaderText: `You've been removed from ${data.companyName}`,
     content,
     unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#team-emails',
   });

@@ -136,3 +136,6 @@ verify_jwt = true
 # Auth Emails - Custom branded templates for password reset, verification, welcome
 [functions.send-auth-email]
 verify_jwt = false
+
+[functions.send-member-removed-email]
+verify_jwt = true

@@ -308,7 +308,7 @@ export default function EmailTemplatesTest() {
 
   const [teamMemberRemovedData, setTeamMemberRemovedData] = useState<TeamMemberRemovedData>({
     memberName: 'Jane Doe',
-    teamName: 'Acme Corporation',
+    companyName: 'Acme Corporation',
   });
 
   const [featureAnnouncementData, setFeatureAnnouncementData] = useState<FeatureAnnouncementData>({
@@ -355,7 +355,7 @@ export default function EmailTemplatesTest() {
       case 'booking-rescheduled': return `Rescheduled: ${bookingRescheduledData.eventType}`;
       case 'lead-status-change': return `${leadStatusChangeData.leadName} moved to ${leadStatusChangeData.newStage}`;
       case 'webhook-failure': return `Webhook failed: ${webhookFailureData.webhookName}`;
-      case 'team-member-removed': return `Removed from ${teamMemberRemovedData.teamName}`;
+      case 'team-member-removed': return `Removed from ${teamMemberRemovedData.companyName}`;
       case 'feature-announcement': return `New: ${featureAnnouncementData.featureTitle}`;
       case 'feature-announcement': return `New: ${featureAnnouncementData.featureTitle}`;
       default: return '';
@@ -851,10 +851,10 @@ export default function EmailTemplatesTest() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs">Team Name</Label>
+              <Label className="text-xs">Company Name</Label>
               <Input
-                value={teamMemberRemovedData.teamName}
-                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, teamName: e.target.value })}
+                value={teamMemberRemovedData.companyName}
+                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, companyName: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
