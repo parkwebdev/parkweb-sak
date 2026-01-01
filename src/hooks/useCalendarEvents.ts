@@ -11,6 +11,7 @@ import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { toast } from '@/lib/toast';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
@@ -27,12 +28,13 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
   // Stabilize options to prevent infinite loops from inline {} callers
   const stableOptions = useStableObject(options);
   const { user } = useAuth();
+  const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
   const { data: events = [], isLoading, refetch } = useSupabaseQuery<CalendarEvent[]>({
-    queryKey: queryKeys.calendarEvents.list({ locationId: stableOptions.locationId }),
+    queryKey: queryKeys.calendarEvents.list({ locationId: stableOptions.locationId, accountOwnerId }),
     queryFn: async () => {
-      if (!user) return [];
+      if (!user || !accountOwnerId) return [];
 
       // Build query to fetch calendar events
       let query = supabase
@@ -115,7 +117,7 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
       table: 'calendar_events',
       filter: `location_id=eq.${stableOptions.locationId}`,
     } : undefined,
-    enabled: !!user,
+    enabled: !!user && !!accountOwnerId && !ownerLoading,
     staleTime: 60000, // 1 minute
   });
 

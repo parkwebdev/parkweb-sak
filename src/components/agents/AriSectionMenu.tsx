@@ -11,7 +11,9 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
+import type { AppPermission } from '@/types/team';
 import {
   Atom01,
   File02,
@@ -48,35 +50,37 @@ interface SectionItem {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   activeIcon?: React.ComponentType<{ size?: number; className?: string }>;
   group?: string;
+  /** Permission required to see this section. If not set, visible to all. */
+  requiredPermission?: AppPermission;
 }
 
 const SECTIONS: SectionItem[] = [
   // AI Configuration
-  { id: 'model-behavior', label: 'Model & Behavior', icon: Atom01, group: 'AI' },
-  { id: 'system-prompt', label: 'System Prompt', icon: File02, activeIcon: FileFilled, group: 'AI' },
+  { id: 'model-behavior', label: 'Model & Behavior', icon: Atom01, group: 'AI', requiredPermission: 'manage_ari' },
+  { id: 'system-prompt', label: 'System Prompt', icon: File02, activeIcon: FileFilled, group: 'AI', requiredPermission: 'manage_ari' },
   
   // Widget Appearance
-  { id: 'appearance', label: 'Appearance', icon: Palette, activeIcon: PaletteFilled, group: 'Widget' },
-  { id: 'welcome-messages', label: 'Welcome & Messages', icon: MessageSquare, activeIcon: MessageSquareFilled, group: 'Widget' },
-  { id: 'lead-capture', label: 'Lead Capture', icon: User01, activeIcon: UserFilled, group: 'Widget' },
+  { id: 'appearance', label: 'Appearance', icon: Palette, activeIcon: PaletteFilled, group: 'Widget', requiredPermission: 'manage_ari' },
+  { id: 'welcome-messages', label: 'Welcome & Messages', icon: MessageSquare, activeIcon: MessageSquareFilled, group: 'Widget', requiredPermission: 'manage_ari' },
+  { id: 'lead-capture', label: 'Lead Capture', icon: User01, activeIcon: UserFilled, group: 'Widget', requiredPermission: 'manage_ari' },
   
   // Knowledge
-  { id: 'knowledge', label: 'Knowledge', icon: Database01, activeIcon: DatabaseFilled, group: 'Knowledge' },
-  { id: 'locations', label: 'Locations', icon: MarkerPin, activeIcon: MarkerPinFilled, group: 'Knowledge' },
-  { id: 'help-articles', label: 'Help Articles', icon: BookOpen01, activeIcon: BookOpenFilled, group: 'Knowledge' },
+  { id: 'knowledge', label: 'Knowledge', icon: Database01, activeIcon: DatabaseFilled, group: 'Knowledge', requiredPermission: 'manage_knowledge' },
+  { id: 'locations', label: 'Locations', icon: MarkerPin, activeIcon: MarkerPinFilled, group: 'Knowledge', requiredPermission: 'manage_ari' },
+  { id: 'help-articles', label: 'Help Articles', icon: BookOpen01, activeIcon: BookOpenFilled, group: 'Knowledge', requiredPermission: 'manage_help_articles' },
   
   // Content
-  { id: 'announcements', label: 'Announcements', icon: Announcement01, activeIcon: AnnouncementFilled, group: 'Content' },
-  { id: 'news', label: 'News', icon: File06, activeIcon: NewsFilled, group: 'Content' },
+  { id: 'announcements', label: 'Announcements', icon: Announcement01, activeIcon: AnnouncementFilled, group: 'Content', requiredPermission: 'manage_ari' },
+  { id: 'news', label: 'News', icon: File06, activeIcon: NewsFilled, group: 'Content', requiredPermission: 'manage_ari' },
   
   // Tools & API
-  { id: 'custom-tools', label: 'Custom Tools', icon: CodeBrowser, activeIcon: CodeBrowserFilled, group: 'Tools' },
-  { id: 'webhooks', label: 'Webhooks', icon: Webhook, activeIcon: WebhookFilled, group: 'Tools' },
-  { id: 'integrations', label: 'Integrations', icon: DataFlow, activeIcon: DataFlowFilled, group: 'Tools' },
-  { id: 'api-access', label: 'API Access', icon: Key01, activeIcon: KeyFilled, group: 'Tools' },
+  { id: 'custom-tools', label: 'Custom Tools', icon: CodeBrowser, activeIcon: CodeBrowserFilled, group: 'Tools', requiredPermission: 'manage_ari' },
+  { id: 'webhooks', label: 'Webhooks', icon: Webhook, activeIcon: WebhookFilled, group: 'Tools', requiredPermission: 'manage_webhooks' },
+  { id: 'integrations', label: 'Integrations', icon: DataFlow, activeIcon: DataFlowFilled, group: 'Tools', requiredPermission: 'manage_integrations' },
+  { id: 'api-access', label: 'API Access', icon: Key01, activeIcon: KeyFilled, group: 'Tools', requiredPermission: 'manage_api_keys' },
   
   // Deploy
-  { id: 'installation', label: 'Installation', icon: Terminal, activeIcon: TerminalFilled, group: 'Deploy' },
+  { id: 'installation', label: 'Installation', icon: Terminal, activeIcon: TerminalFilled, group: 'Deploy', requiredPermission: 'manage_ari' },
 ];
 
 interface AriSectionMenuProps {
@@ -89,9 +93,16 @@ export function AriSectionMenu({
   onSectionChange,
 }: AriSectionMenuProps) {
   const prefersReducedMotion = useReducedMotion();
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  
+  // Filter sections based on permissions
+  const visibleSections = SECTIONS.filter(section => {
+    if (!section.requiredPermission) return true;
+    return isAdmin || hasPermission(section.requiredPermission);
+  });
   
   // Group sections for visual organization
-  const groupedSections = SECTIONS.reduce((acc, section) => {
+  const groupedSections = visibleSections.reduce((acc, section) => {
     const group = section.group || 'Other';
     if (!acc[group]) acc[group] = [];
     acc[group].push(section);

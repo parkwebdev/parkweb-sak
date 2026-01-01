@@ -55,9 +55,11 @@ interface EventDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   event: CalendarEvent | null;
   onUpdateEvent: (event: CalendarEvent) => void;
-  onDelete: () => void;
-  onMarkComplete: () => void;
+  onDelete?: () => void;
+  onMarkComplete?: () => void;
   existingEvents?: CalendarEvent[];
+  /** Whether the user can manage (edit/delete) bookings */
+  canManage?: boolean;
 }
 
 const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
@@ -85,6 +87,7 @@ export function EventDetailDialog({
   onDelete,
   onMarkComplete,
   existingEvents = [],
+  canManage = true,
 }: EventDetailDialogProps) {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   
@@ -313,23 +316,29 @@ export function EventDetailDialog({
 
               {/* Actions */}
               <div className="flex items-center justify-between pt-4 border-t">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:text-destructive"
-                  onClick={onDelete}
-                >
-                  Delete
-                </Button>
+                {canManage && onDelete ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={onDelete}
+                  >
+                    Delete
+                  </Button>
+                ) : (
+                  <div />
+                )}
                 <div className="flex items-center gap-2">
-                  {event.status !== 'completed' && (
+                  {canManage && event.status !== 'completed' && onMarkComplete && (
                     <Button variant="outline" size="sm" onClick={onMarkComplete}>
                       Complete
                     </Button>
                   )}
-                  <Button size="sm" onClick={() => setMode('edit')}>
-                    Edit
-                  </Button>
+                  {canManage && (
+                    <Button size="sm" onClick={() => setMode('edit')}>
+                      Edit
+                    </Button>
+                  )}
                 </div>
               </div>
             </motion.div>

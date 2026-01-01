@@ -23,6 +23,7 @@ import { DeleteEventDialog } from '@/components/calendar/DeleteEventDialog';
 import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDialog';
 import { SkeletonCalendarPage } from '@/components/ui/page-skeleton';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
 import { logger } from '@/utils/logger';
@@ -38,6 +39,11 @@ interface PendingTimeChange {
 function Planner() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  
+  // Permission checks
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageBookings = isAdmin || hasPermission('manage_bookings');
+  const canManageIntegrations = isAdmin || hasPermission('manage_integrations');
   
   // Fetch real calendar events from database
   const { 
@@ -213,7 +219,8 @@ function Planner() {
         title="Planner"
         description="Manage your property showings and bookings"
       >
-      <DropdownMenu>
+      {canManageIntegrations && (
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">
               Connect Calendar
@@ -231,9 +238,12 @@ function Planner() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      )}
+      {canManageBookings && (
         <Button onClick={handleAddEvent}>
           Add event
         </Button>
+      )}
       </PageHeader>
 
       <div className="px-4 lg:px-8 mt-6 pb-8 space-y-6">
@@ -270,11 +280,11 @@ function Planner() {
         {/* Calendar */}
         <FullCalendar
           events={filteredEvents}
-          onDateClick={handleDateClick}
+          onDateClick={canManageBookings ? handleDateClick : undefined}
           onEventClick={handleEventClick}
-          onAddEvent={handleAddEvent}
-          onEventMove={handleEventMove}
-          onEventResize={handleEventResize}
+          onAddEvent={canManageBookings ? handleAddEvent : undefined}
+          onEventMove={canManageBookings ? handleEventMove : undefined}
+          onEventResize={canManageBookings ? handleEventResize : undefined}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
@@ -294,9 +304,10 @@ function Planner() {
         onOpenChange={setEventDetailOpen}
         event={selectedEvent}
         onUpdateEvent={handleUpdateEvent}
-        onDelete={handleDeleteFromDetail}
-        onMarkComplete={handleMarkComplete}
+        onDelete={canManageBookings ? handleDeleteFromDetail : undefined}
+        onMarkComplete={canManageBookings ? handleMarkComplete : undefined}
         existingEvents={dbEvents}
+        canManage={canManageBookings}
       />
 
       <DeleteEventDialog

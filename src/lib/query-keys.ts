@@ -158,7 +158,7 @@ export const queryKeys = {
   calendarEvents: {
     all: ['calendar-events'] as const,
     lists: () => [...queryKeys.calendarEvents.all, 'list'] as const,
-    list: (params?: { locationId?: string }) =>
+    list: (params?: { locationId?: string; accountOwnerId?: string | null }) =>
       [...queryKeys.calendarEvents.lists(), params] as const,
   },
 
