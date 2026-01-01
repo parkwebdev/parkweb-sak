@@ -1267,43 +1267,61 @@ export type Database = {
       }
       notification_preferences: {
         Row: {
+          agent_email_notifications: boolean | null
           agent_notifications: boolean | null
+          booking_email_notifications: boolean | null
           browser_notifications: boolean | null
           conversation_notifications: boolean | null
           created_at: string
           email_notifications: boolean | null
           id: string
+          lead_email_notifications: boolean | null
           lead_notifications: boolean | null
+          product_email_notifications: boolean | null
+          report_email_notifications: boolean | null
           report_notifications: boolean | null
           sound_notifications: boolean | null
+          team_email_notifications: boolean | null
           team_notifications: boolean | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          agent_email_notifications?: boolean | null
           agent_notifications?: boolean | null
+          booking_email_notifications?: boolean | null
           browser_notifications?: boolean | null
           conversation_notifications?: boolean | null
           created_at?: string
           email_notifications?: boolean | null
           id?: string
+          lead_email_notifications?: boolean | null
           lead_notifications?: boolean | null
+          product_email_notifications?: boolean | null
+          report_email_notifications?: boolean | null
           report_notifications?: boolean | null
           sound_notifications?: boolean | null
+          team_email_notifications?: boolean | null
           team_notifications?: boolean | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          agent_email_notifications?: boolean | null
           agent_notifications?: boolean | null
+          booking_email_notifications?: boolean | null
           browser_notifications?: boolean | null
           conversation_notifications?: boolean | null
           created_at?: string
           email_notifications?: boolean | null
           id?: string
+          lead_email_notifications?: boolean | null
           lead_notifications?: boolean | null
+          product_email_notifications?: boolean | null
+          report_email_notifications?: boolean | null
           report_notifications?: boolean | null
           sound_notifications?: boolean | null
+          team_email_notifications?: boolean | null
           team_notifications?: boolean | null
           updated_at?: string
           user_id?: string

@@ -308,7 +308,6 @@ export default function EmailTemplatesTest() {
 
   const [teamMemberRemovedData, setTeamMemberRemovedData] = useState<TeamMemberRemovedData>({
     memberName: 'Jane Doe',
-    removedBy: 'John Smith',
     teamName: 'Acme Corporation',
   });
 
@@ -842,20 +841,12 @@ export default function EmailTemplatesTest() {
 
       case 'team-member-removed':
         return (
-          <div className="p-4 grid grid-cols-3 gap-4">
+          <div className="p-4 grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Member Name</Label>
               <Input
                 value={teamMemberRemovedData.memberName}
                 onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, memberName: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Removed By</Label>
-              <Input
-                value={teamMemberRemovedData.removedBy}
-                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, removedBy: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
