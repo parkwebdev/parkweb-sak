@@ -1,8 +1,8 @@
 # Pilot Security Documentation
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
-> **Related**: [Database Schema](./DATABASE_SCHEMA.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
+> **Related**: [Database Schema](./DATABASE_SCHEMA.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md), [Team Scoping Standard](./TEAM_SCOPING_STANDARD.md)
 
 Security implementation details for the Pilot platform.
 
@@ -287,6 +287,44 @@ SELECT role FROM user_roles WHERE user_id = auth.uid();
 ```
 
 **CRITICAL**: Never store roles in `profiles` table or client-side storage.
+
+### Permission System
+
+Permissions are granular capabilities assigned to roles:
+
+```typescript
+// Available permissions
+type AppPermission = 
+  | 'view_dashboard' | 'manage_ari' | 'view_conversations' | 'manage_conversations'
+  | 'view_leads' | 'manage_leads' | 'view_bookings' | 'manage_bookings'
+  | 'view_knowledge' | 'manage_knowledge' | 'view_help_articles' | 'manage_help_articles'
+  | 'view_team' | 'manage_team' | 'view_settings' | 'manage_settings'
+  | 'view_billing' | 'manage_billing' | 'view_integrations' | 'manage_integrations'
+  | 'view_webhooks' | 'manage_webhooks' | 'view_api_keys' | 'manage_api_keys';
+
+// Check permission in components
+const { hasPermission, isAdmin } = useRoleAuthorization();
+const canManageLeads = isAdmin || hasPermission('manage_leads');
+```
+
+### Client-Side Permission Guards
+
+All mutation functions include client-side permission checks:
+
+```typescript
+// useTeam.ts example
+const updateMemberRole = async (member, role, permissions) => {
+  if (!canManageRoles) {
+    toast.error("Permission denied", {
+      description: "You don't have permission to update team member roles.",
+    });
+    return false;
+  }
+  // ... database operation
+};
+```
+
+This provides immediate user feedback and defense-in-depth alongside RLS policies.
 
 ---
 

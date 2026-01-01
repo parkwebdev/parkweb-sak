@@ -1,11 +1,14 @@
 # Team Scoping Standard
 
-> **MANDATORY READING** for all development on Pilot.
-> This document establishes the coding standard for account-scoped data access.
+> **MANDATORY READING** for all development on Pilot.  
+> **Last Updated**: January 2026  
+> This document establishes the coding standard for account-scoped data access and permission guards.
 
 ## Overview
 
 All data in Pilot is scoped to an **account owner**. Team members share access to the owner's data - they do **not** have their own separate data stores.
+
+Additionally, all interactive UI elements that modify data are protected by **permission guards** to ensure team members can only perform actions they're authorized for.
 
 ### Core Concept: `accountOwnerId`
 
@@ -305,12 +308,12 @@ function LeadsTable({ canManage = false }: LeadsTableProps) {
 | `view_conversations` | /conversations | Inbox sidebar item |
 | `manage_conversations` | - | Takeover, close, reopen, send message |
 | `view_leads` | /leads | Leads sidebar item |
-| `manage_leads` | - | Delete, stage change, drag-and-drop |
+| `manage_leads` | - | Delete, stage change, drag-and-drop, bulk actions, row selection |
 | `view_bookings` | /planner | Planner sidebar item |
 | `manage_bookings` | - | Add event, drag/resize, delete |
 | `view_dashboard` | /analytics, /report-builder | Analytics sidebar item |
 | `view_team` | /settings (team tab) | Team tab in settings |
-| `manage_team` | - | Invite member button |
+| `manage_team` | - | Invite member button, role management |
 | `view_billing` | /settings (billing/usage tabs) | Billing tabs in settings |
 | `manage_billing` | - | Upgrade, manage subscription buttons |
 | `view_settings` | /settings | Settings sidebar item |
@@ -319,6 +322,66 @@ function LeadsTable({ canManage = false }: LeadsTableProps) {
 | `manage_webhooks` | - | Webhooks section in Ari |
 | `manage_integrations` | - | Integrations section, Connect Calendar |
 | `manage_api_keys` | - | API Access section in Ari |
+
+---
+
+## Implemented Permission Guards (Complete)
+
+The following components have permission guards fully implemented:
+
+### Routes (`App.tsx`)
+- All protected routes wrapped with `PermissionGuard` component
+- Redirects to appropriate fallback when permission denied
+
+### Sidebar Navigation (`Sidebar.tsx`)
+- Nav items filtered based on `view_*` permissions
+- Team members only see items they're permitted to access
+
+### Settings (`SettingsLayout.tsx`, `TeamSettings.tsx`, `SubscriptionSettings.tsx`)
+- Settings tabs filtered by permission
+- Team/billing tabs hidden without respective view permissions
+- Invite button hidden without `manage_team`
+
+### Conversations (`ChatHeader.tsx`, `Conversations.tsx`)
+- Takeover/close/reopen buttons require `manage_conversations`
+- Message input disabled without permission
+
+### Leads (`Leads.tsx`, `LeadsKanbanBoard.tsx`, `LeadsTable.tsx`, `LeadDetailsSheet.tsx`)
+- Create/delete buttons require `manage_leads`
+- Stage change dropdowns disabled without permission
+- Kanban drag-and-drop disabled without permission
+- Row selection checkboxes disabled without permission
+- Floating bulk action bar hidden without permission
+- `canManage` prop passed to child components
+
+### Planner (`Planner.tsx`, `EventDetailDialog.tsx`)
+- Add event button requires `manage_bookings`
+- Event drag/resize disabled without permission
+- Delete/cancel buttons hidden without permission
+
+### Ari Configurator (`AriSectionMenu.tsx`)
+- Menu sections filtered by permission
+- Users only see sections they can access
+
+---
+
+## Role Management Dialog
+
+The `RoleManagementDialog` component allows admins to manage team member roles:
+
+### Security Features
+- Always fetches `currentUserRole` to determine if role dropdown should appear
+- Role dropdown only visible for admin/super_admin editing others
+- Users editing themselves see read-only role display
+- `canEditPermissions` derived from admin status
+
+### Backend Protection
+- `updateMemberRole` in `useTeam` checks `canManageRoles` before database call
+- `removeMember` in `useTeam` checks `canManageRoles` before database call
+- RLS policies on `user_roles` table enforce:
+  - SELECT: Own role or admin
+  - UPDATE: Admin only
+  - INSERT: Super admin only
 
 ---
 
@@ -332,6 +395,8 @@ When creating new features:
 - [ ] Disable drag-and-drop without permission
 - [ ] Disable form edits without permission
 - [ ] Hide sidebar items without view permission
+- [ ] Pass `canManage` prop to reusable components
+- [ ] Add client-side permission checks in mutation functions
 - [ ] Test as team member with limited permissions
 - [ ] **Update this documentation!**
 

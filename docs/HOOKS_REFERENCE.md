@@ -933,22 +933,49 @@ const {
 
 ### useTeam
 
-**Powered by React Query** - Team data is cached and real-time updates via Supabase subscription automatically invalidate the cache.
+Manages team members, roles, and invitations. **Powered by React Query** with real-time updates via Supabase subscription.
 
 ```tsx
 import { useTeam } from '@/hooks/useTeam';
 
 const {
-  teamMembers,       // TeamMember[] - All team members with roles
-  loading,           // boolean
-  currentUserRole,   // UserRole - Current user's role
-  canManageRoles,    // boolean - Whether user can manage roles
-  inviteMember,      // (data) => Promise<boolean>
-  updateMemberRole,  // (member, role, permissions) => Promise<boolean>
-  removeMember,      // (member) => Promise<boolean>
-  fetchTeamMembers,  // () => void - Alias for refetch
+  teamMembers,       // TeamMember[] - All team members with profiles and roles
+  loading,           // boolean - Loading state
+  currentUserRole,   // UserRole - Current user's role ('admin' | 'manager' | 'member' | etc.)
+  canManageRoles,    // boolean - Whether current user can manage roles (admin/super_admin)
+  inviteMember,      // (inviteData: InviteMemberData) => Promise<boolean> - Send team invitation
+  removeMember,      // (member: TeamMember) => Promise<boolean> - Remove team member (requires permission)
+  updateMemberRole,  // (member, role, permissions) => Promise<boolean> - Update role (requires permission)
+  fetchTeamMembers,  // () => void - Alias for refetch (backward compatibility)
 } = useTeam();
 ```
+
+**TeamMember Interface:**
+```typescript
+interface TeamMember {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  email: string | null;      // Only visible for own profile
+  avatar_url: string | null;
+  role: UserRole;
+  permissions: AppPermission[];
+  created_at: string;
+  updated_at: string;
+}
+```
+
+**Key Features:**
+- Uses `get_team_profiles` RPC for secure profile fetching
+- Client-side permission guards on `removeMember` and `updateMemberRole`
+- Integrates with `send-team-invitation` edge function
+- Role changes logged via `useSecurityLog`
+- 30-second stale time for caching
+
+**Security:**
+- `removeMember` and `updateMemberRole` check `canManageRoles` before attempting database operations
+- RLS policies on `user_roles` table restrict UPDATE to admins only
+- Non-admin team members can only see their own role via RLS
 
 **File**: `src/hooks/useTeam.ts`
 
