@@ -1,7 +1,7 @@
 /**
  * Member Removed Email Edge Function
  * 
- * Sends notification emails when a team member is removed using the Pilot template.
+ * Sends notification emails to the admin when a team member is removed using the Pilot template.
  */
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -21,7 +21,8 @@ const corsHeaders = {
 
 interface MemberRemovedRequest {
   email: string;
-  memberName: string;
+  adminFirstName: string;
+  memberFullName: string;
   companyName: string;
 }
 
@@ -29,28 +30,33 @@ interface MemberRemovedRequest {
 // EMAIL GENERATOR
 // =============================================================================
 
-function generateMemberRemovedEmail(data: { memberName: string; companyName: string; unsubscribeUrl: string }): { html: string; text: string } {
-  const { memberName, companyName, unsubscribeUrl } = data;
+function generateMemberRemovedEmail(data: { 
+  adminFirstName: string; 
+  memberFullName: string; 
+  companyName: string; 
+  unsubscribeUrl: string;
+}): { html: string; text: string } {
+  const { adminFirstName, memberFullName, companyName, unsubscribeUrl } = data;
 
   const content = `
-    ${heading('Removed from team')}
-    ${paragraph(`Hi <strong>${memberName}</strong>, you have been removed from <strong>${companyName}</strong>.`)}
+    ${heading('Team member removed')}
+    ${paragraph(`Hi <strong>${adminFirstName}</strong>, <strong>${memberFullName}</strong> has been removed from <strong>${companyName}</strong>.`)}
     ${spacer(8)}
-    ${paragraph('You no longer have access to this team\'s resources. If you believe this was a mistake, please contact your team administrator.', true)}
+    ${paragraph('This team member no longer has access to your team\\'s resources.', true)}
   `;
   
   const html = generateWrapper({
-    preheaderText: `You've been removed from ${companyName}`,
+    preheaderText: `${memberFullName} has been removed from ${companyName}`,
     content,
     footer: 'social-unsubscribe',
     unsubscribeUrl,
   });
 
-  const text = `Removed from team
+  const text = `Team member removed
 
-Hi ${memberName}, you have been removed from ${companyName}.
+Hi ${adminFirstName}, ${memberFullName} has been removed from ${companyName}.
 
-You no longer have access to this team's resources. If you believe this was a mistake, please contact your team administrator.
+This team member no longer has access to your team's resources.
 
 ---
 © ${new Date().getFullYear()} Pilot
@@ -77,14 +83,15 @@ const handler = async (req: Request): Promise<Response> => {
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     const appUrl = Deno.env.get("APP_URL") || "https://getpilot.io";
 
-    const { email, memberName, companyName }: MemberRemovedRequest = await req.json();
+    const { email, adminFirstName, memberFullName, companyName }: MemberRemovedRequest = await req.json();
 
-    console.log(`Sending member removed email to: ${email}, member: ${memberName}, company: ${companyName}`);
+    console.log(`Sending member removed email to: ${email}, admin: ${adminFirstName}, member: ${memberFullName}, company: ${companyName}`);
 
     const unsubscribeUrl = `${appUrl}/settings?tab=notifications#team-emails`;
 
     const { html, text } = generateMemberRemovedEmail({
-      memberName,
+      adminFirstName,
+      memberFullName,
       companyName,
       unsubscribeUrl,
     });
@@ -93,7 +100,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: "Pilot <team@getpilot.io>",
       to: [email],
       reply_to: "team@getpilot.io",
-      subject: `You've been removed from ${companyName}`,
+      subject: `${memberFullName} has been removed from ${companyName}`,
       html,
       text,
     });
@@ -115,7 +122,8 @@ const handler = async (req: Request): Promise<Response> => {
           p_success: true,
           p_details: {
             email: email,
-            member_name: memberName,
+            admin_first_name: adminFirstName,
+            member_full_name: memberFullName,
             company_name: companyName
           }
         });
