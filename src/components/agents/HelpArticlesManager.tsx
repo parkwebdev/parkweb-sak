@@ -35,6 +35,7 @@ import {
   BookOpen01, XClose, Image01, Plus, FilterLines, SearchSm, Trash01, RefreshCcw01, ChevronDown, X, Upload01 
 } from '@untitledui/icons';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { toast } from '@/lib/toast';
 import { uploadFeaturedImage } from '@/lib/article-image-upload';
 import { CATEGORY_ICON_OPTIONS, CategoryIcon, type CategoryIconName } from '@/widget/category-icons';
@@ -83,6 +84,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     bulkImport,
     embedAllArticles
   } = useHelpArticles(agentId);
+  
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageHelpArticles = isAdmin || hasPermission('manage_help_articles');
   
   // Table state
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -363,7 +367,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     onMoveDown: handleMoveDown,
     canMoveUp,
     canMoveDown,
-  }), [handleView, handleSetDeleteArticle, handleMoveUp, handleMoveDown, canMoveUp, canMoveDown]);
+    canManage: canManageHelpArticles,
+  }), [handleView, handleSetDeleteArticle, handleMoveUp, handleMoveDown, canMoveUp, canMoveDown, canManageHelpArticles]);
 
   // Table instance with displayed (paginated) articles
   const table = useReactTable({
@@ -708,7 +713,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           icon={<BookOpen01 className="h-5 w-5 text-muted-foreground/50" />}
           title="No help articles yet"
           description="Create help articles to display in your chat widget's help tab"
-          action={
+          action={canManageHelpArticles ? (
             <div className="flex items-center justify-center gap-2">
               <Button onClick={() => setDialogOpen(true)} size="sm">
                 Add Article
@@ -717,12 +722,12 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                 Import CSV
               </Button>
             </div>
-          }
+          ) : undefined}
         />
       ) : (
         <>
-          {/* Bulk selection action bar */}
-          {selectedCount > 0 && (
+          {/* Bulk selection action bar - only show if user can manage */}
+          {canManageHelpArticles && selectedCount > 0 && (
             <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
               <span className="text-sm text-muted-foreground">
                 {selectedCount} article{selectedCount > 1 ? 's' : ''} selected
@@ -762,97 +767,99 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
               {FilterPopover}
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 flex-wrap justify-start lg:justify-end">
-              {/* Embed All */}
-              {articles.some(a => !a.has_embedding) && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={handleEmbedAll}
-                  disabled={isEmbedding}
-                  className="max-w-xs"
-                >
-                  <RefreshCcw01 className={`h-4 w-4 mr-1 ${isEmbedding ? 'animate-spin' : ''}`} />
-                  <span className="truncate">
-                    {isEmbedding 
-                      ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
-                      : `Embed All (${articles.filter(a => !a.has_embedding).length})`
-                    }
-                  </span>
-                </Button>
-              )}
-              
-              <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
-                Import CSV
-              </Button>
-
-              {/* Category Management */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button size="sm" variant="outline" className="gap-1">
-                    Categories
-                    <ChevronDown className="h-3 w-3" />
+            {/* Actions - only show management actions if user can manage */}
+            {canManageHelpArticles && (
+              <div className="flex items-center gap-2 flex-wrap justify-start lg:justify-end">
+                {/* Embed All */}
+                {articles.some(a => !a.has_embedding) && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={handleEmbedAll}
+                    disabled={isEmbedding}
+                    className="max-w-xs"
+                  >
+                    <RefreshCcw01 className={`h-4 w-4 mr-1 ${isEmbedding ? 'animate-spin' : ''}`} />
+                    <span className="truncate">
+                      {isEmbedding 
+                        ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
+                        : `Embed All (${articles.filter(a => !a.has_embedding).length})`
+                      }
+                    </span>
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-64">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-muted-foreground">Manage Categories</Label>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="h-6 px-2"
-                        onClick={() => setNewCategoryDialogOpen(true)}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add
-                      </Button>
-                    </div>
-                    {categories.length === 0 ? (
-                      <p className="text-sm text-muted-foreground py-2">No categories yet</p>
-                    ) : (
-                      <div className="space-y-1 max-h-48 overflow-y-auto">
-                        {categories.map(cat => (
-                          <div key={cat.id} className="flex items-center justify-between p-2 rounded hover:bg-accent group">
-                            <div className="flex items-center gap-2">
-                              <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
-                              <span className="text-sm">{cat.name}</span>
-                              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                                {articles.filter(a => a.category === cat.name).length}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-6 w-6 p-0"
-                                onClick={() => handleEditCategory(cat.name)}
-                              >
-                                <span className="text-xs">Edit</span>
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                                onClick={() => handleDeleteCategoryClick(cat.name)}
-                              >
-                                <Trash01 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                )}
+                
+                <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
+                  Import CSV
+                </Button>
 
-              {/* Add Article */}
-              <Button size="sm" onClick={() => setDialogOpen(true)}>
-                Add Article
-              </Button>
-            </div>
+                {/* Category Management */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1">
+                      Categories
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-64">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs text-muted-foreground">Manage Categories</Label>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-6 px-2"
+                          onClick={() => setNewCategoryDialogOpen(true)}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add
+                        </Button>
+                      </div>
+                      {categories.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-2">No categories yet</p>
+                      ) : (
+                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                          {categories.map(cat => (
+                            <div key={cat.id} className="flex items-center justify-between p-2 rounded hover:bg-accent group">
+                              <div className="flex items-center gap-2">
+                                <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
+                                <span className="text-sm">{cat.name}</span>
+                                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                                  {articles.filter(a => a.category === cat.name).length}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => handleEditCategory(cat.name)}
+                                >
+                                  <span className="text-xs">Edit</span>
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                  onClick={() => handleDeleteCategoryClick(cat.name)}
+                                >
+                                  <Trash01 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Add Article */}
+                <Button size="sm" onClick={() => setDialogOpen(true)}>
+                  Add Article
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Active Filter Chips */}

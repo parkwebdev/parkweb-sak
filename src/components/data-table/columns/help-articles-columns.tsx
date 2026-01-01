@@ -54,6 +54,8 @@ export interface HelpArticlesColumnsProps {
   canMoveUp: (article: HelpArticleWithMeta) => boolean;
   /** Check if article can move down (not last in category) */
   canMoveDown: (article: HelpArticleWithMeta) => boolean;
+  /** Whether user has permission to manage help articles */
+  canManage?: boolean;
 }
 
 /**
@@ -123,6 +125,7 @@ export const createHelpArticlesColumns = ({
   onMoveDown,
   canMoveUp,
   canMoveDown,
+  canManage = true,
 }: HelpArticlesColumnsProps): ColumnDef<HelpArticleWithMeta>[] => [
   // Checkbox column for row selection
   {
@@ -296,14 +299,14 @@ export const createHelpArticlesColumns = ({
     },
   },
   
-  // Actions column with reorder arrows and delete
-  {
+  // Actions column with reorder arrows and delete - only show if user can manage
+  ...(canManage ? [{
     id: 'actions',
     size: 100,
     minSize: 80,
     maxSize: 120,
     header: () => null,
-    cell: ({ row }) => {
+    cell: ({ row }: { row: { original: HelpArticleWithMeta } }) => {
       const article = row.original;
       const canUp = canMoveUp(article);
       const canDown = canMoveDown(article);
@@ -367,5 +370,5 @@ export const createHelpArticlesColumns = ({
         </div>
       );
     },
-  },
+  }] as ColumnDef<HelpArticleWithMeta>[] : []),
 ];

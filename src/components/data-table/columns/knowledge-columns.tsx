@@ -51,6 +51,8 @@ export interface KnowledgeColumnsProps {
   onReprocess: (source: KnowledgeSourceWithMeta) => void;
   /** Function to check if a source is outdated */
   isOutdated: (source: KnowledgeSourceWithMeta) => boolean;
+  /** Whether user has permission to manage knowledge sources */
+  canManage?: boolean;
 }
 
 /**
@@ -195,6 +197,7 @@ export const createKnowledgeColumns = ({
   onDelete,
   onReprocess,
   isOutdated,
+  canManage = true,
 }: KnowledgeColumnsProps): ColumnDef<KnowledgeSourceWithMeta>[] => [
   // Checkbox column for row selection
   {
@@ -366,14 +369,14 @@ export const createKnowledgeColumns = ({
     },
   },
   
-  // Actions column
-  {
+  // Actions column - only show if user can manage
+  ...(canManage ? [{
     id: 'actions',
     size: 90,
     minSize: 70,
     maxSize: 100,
     header: () => <span>Actions</span>,
-    cell: ({ row }) => {
+    cell: ({ row }: { row: { original: KnowledgeSourceWithMeta } }) => {
       const source = row.original;
       const isProcessing = source.status === 'processing' || source.status === 'pending';
       
@@ -414,5 +417,5 @@ export const createKnowledgeColumns = ({
         </div>
       );
     },
-  },
+  }] as ColumnDef<KnowledgeSourceWithMeta>[] : []),
 ];
