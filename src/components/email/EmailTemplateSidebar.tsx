@@ -12,6 +12,7 @@ export type EmailTemplateType =
   | 'invitation' 
   | 'booking' 
   | 'report' 
+  | 'weekly-report'
   | 'password-reset' 
   | 'email-verification'
   | 'booking-cancellation'
@@ -59,6 +60,7 @@ const TEMPLATES: TemplateItem[] = [
   
   // Reports & Product
   { id: 'report', label: 'Scheduled Report', icon: File02, group: 'Reports' },
+  { id: 'weekly-report', label: 'Weekly Report', icon: File02, group: 'Reports' },
   { id: 'feature-announcement', label: 'Feature Announcement', icon: Announcement01, group: 'Product' },
 ];
 

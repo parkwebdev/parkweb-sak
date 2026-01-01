@@ -20,6 +20,7 @@ import {
   generateTeamInvitationEmail,
   generateBookingConfirmationEmail,
   generateScheduledReportEmail,
+  generateWeeklyReportEmail,
   generatePasswordResetEmail,
   generateEmailVerificationEmail,
   generateBookingCancellationEmail,
@@ -35,6 +36,7 @@ import {
   type TeamInvitationData,
   type BookingConfirmationData,
   type ScheduledReportData,
+  type WeeklyReportData,
   type PasswordResetData,
   type EmailVerificationData,
   type BookingCancellationData,
@@ -221,6 +223,18 @@ export default function EmailTemplatesTest() {
     viewReportUrl: 'https://getpilot.io/analytics',
   });
 
+  const [weeklyReportData, setWeeklyReportData] = useState<WeeklyReportData>({
+    reportName: 'Weekly Report',
+    dateRange: 'Jan 6 - Jan 12, 2025',
+    metrics: [
+      { label: 'Conversations', value: '1,247', change: '+12.5%' },
+      { label: 'Leads', value: '89', change: '+8.3%' },
+      { label: 'Conversion Rate', value: '7.1%', change: '+2.1%' },
+      { label: 'Satisfaction', value: '4.6/5', change: '+0.3' },
+    ],
+    viewReportUrl: 'https://getpilot.io/analytics',
+  });
+
   const [passwordResetData, setPasswordResetData] = useState<PasswordResetData>({
     userName: 'Alex',
     resetUrl: 'https://getpilot.io/reset-password?token=abc123',
@@ -308,6 +322,7 @@ export default function EmailTemplatesTest() {
       case 'invitation': return generateTeamInvitationEmail(invitationData);
       case 'booking': return generateBookingConfirmationEmail(bookingData);
       case 'report': return generateScheduledReportEmail(reportData);
+      case 'weekly-report': return generateWeeklyReportEmail(weeklyReportData);
       case 'password-reset': return generatePasswordResetEmail(passwordResetData);
       case 'email-verification': return generateEmailVerificationEmail(emailVerificationData);
       case 'booking-cancellation': return generateBookingCancellationEmail(bookingCancellationData);
@@ -318,7 +333,6 @@ export default function EmailTemplatesTest() {
       case 'webhook-failure': return generateWebhookFailureAlertEmail(webhookFailureData);
       case 'team-member-removed': return generateTeamMemberRemovedEmail(teamMemberRemovedData);
       case 'feature-announcement': return generateFeatureAnnouncementEmail(featureAnnouncementData);
-      case 'feature-announcement': return generateFeatureAnnouncementEmail(featureAnnouncementData);
       default: return '';
     }
   };
@@ -328,6 +342,7 @@ export default function EmailTemplatesTest() {
       case 'invitation': return `${invitationData.invitedBy} invited you to join ${invitationData.companyName} on Pilot`;
       case 'booking': return `Confirmed: ${bookingData.eventType} on ${bookingData.date}`;
       case 'report': return `${reportData.reportName} — ${reportData.dateRange}`;
+      case 'weekly-report': return `${weeklyReportData.reportName} — ${weeklyReportData.dateRange}`;
       case 'password-reset': return 'Reset your password';
       case 'email-verification': return 'Verify your email address';
       case 'booking-cancellation': return `Cancelled: ${bookingCancellationData.eventType} on ${bookingCancellationData.date}`;
@@ -337,7 +352,6 @@ export default function EmailTemplatesTest() {
       case 'booking-rescheduled': return `Rescheduled: ${bookingRescheduledData.eventType}`;
       case 'webhook-failure': return `Webhook failed: ${webhookFailureData.webhookName}`;
       case 'team-member-removed': return `Removed from ${teamMemberRemovedData.companyName}`;
-      case 'feature-announcement': return `New: ${featureAnnouncementData.featureTitle}`;
       case 'feature-announcement': return `New: ${featureAnnouncementData.featureTitle}`;
       default: return '';
     }
@@ -448,6 +462,28 @@ export default function EmailTemplatesTest() {
               <Input
                 value={reportData.dateRange}
                 onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'weekly-report':
+        return (
+          <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">Report Name</Label>
+              <Input
+                value={weeklyReportData.reportName}
+                onChange={(e) => setWeeklyReportData({ ...weeklyReportData, reportName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Date Range</Label>
+              <Input
+                value={weeklyReportData.dateRange}
+                onChange={(e) => setWeeklyReportData({ ...weeklyReportData, dateRange: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
