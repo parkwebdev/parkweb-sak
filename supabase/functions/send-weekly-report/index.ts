@@ -139,11 +139,11 @@ function generateWeeklyReportEmail(data: {
                     <div style="width: 1px; height: 16px; background-color: ${colors.border};"></div>
                   </td>
                   <td>
-                    <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: inline-block; margin-right: 8px;">
-                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" width="20" height="20" style="display: block;" />
+                    <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
+                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" width="20" height="20" style="display: block; width: 20px; height: 20px;" />
                     </a>
-                    <a href="https://www.facebook.com/getpilot" target="_blank" style="display: inline-block;">
-                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" width="20" height="20" style="display: block;" />
+                    <a href="https://www.facebook.com/getpilot" target="_blank" style="display: inline-block; vertical-align: middle;">
+                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" width="20" height="20" style="display: block; width: 20px; height: 20px;" />
                     </a>
                   </td>
                 </tr>
