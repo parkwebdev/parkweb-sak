@@ -272,8 +272,8 @@ const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOpti
                   <td style="vertical-align: middle;">
                     <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Pilot%20Email%20Logo%20%40%20481px.png" alt="Pilot" width="28" height="28" style="display: block; width: 28px; height: 28px;" />
                   </td>
-                  <td style="vertical-align: middle; padding-left: 10px;">
-                    <span class="email-text" style="font-size: 18px; font-weight: 600; color: ${colors.text};">Pilot</span>
+                  <td style="vertical-align: middle; padding-left: 6px;">
+                    <span class="email-text" style="font-size: 18px; font-weight: 700; color: ${colors.text};">Pilot</span>
                   </td>
                 </tr>
               </table>
