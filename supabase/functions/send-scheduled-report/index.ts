@@ -140,7 +140,16 @@ const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOpti
           <!-- Header -->
           <tr>
             <td class="email-content" style="padding: 32px 40px 0 40px;">
-              <img src="${LOGO_URL}" alt="Pilot" width="40" height="40" style="display: block; width: 40px; height: 40px;" />
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align: middle;">
+                    <img src="${LOGO_URL}" alt="Pilot" width="28" height="28" style="display: block; width: 28px; height: 28px;" />
+                  </td>
+                  <td style="vertical-align: middle; padding-left: 10px;">
+                    <span class="email-text" style="font-size: 18px; font-weight: 600; color: ${colors.text};">Pilot</span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           
