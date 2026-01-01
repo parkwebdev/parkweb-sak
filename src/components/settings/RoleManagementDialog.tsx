@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-
+import { Eye, Edit05 } from '@untitledui/icons';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
@@ -192,24 +192,33 @@ export function RoleManagementDialog({
         </div>
         
         <div className="space-y-2 pl-7">
-          {groupPermissions.map((permission) => (
-            <div key={permission} className="flex items-center gap-3">
-              <Checkbox
-                id={permission}
-                checked={permissions.includes(permission)}
-                onCheckedChange={(checked) => 
-                  handlePermissionChange(permission, checked as boolean)
-                }
-                disabled={!canEditPermissions}
-              />
-              <Label 
-                htmlFor={permission}
-                className="text-sm cursor-pointer font-normal text-muted-foreground"
-              >
-                {PERMISSION_LABELS[permission]}
-              </Label>
-            </div>
-          ))}
+          {groupPermissions.map((permission) => {
+            const isViewPermission = permission.startsWith('view_');
+            const PermissionIcon = isViewPermission ? Eye : Edit05;
+            
+            return (
+              <div key={permission} className="flex items-center gap-3">
+                <Checkbox
+                  id={permission}
+                  checked={permissions.includes(permission)}
+                  onCheckedChange={(checked) => 
+                    handlePermissionChange(permission, checked as boolean)
+                  }
+                  disabled={!canEditPermissions}
+                />
+                <PermissionIcon 
+                  size={14} 
+                  className={isViewPermission ? 'text-muted-foreground' : 'text-primary'}
+                />
+                <Label 
+                  htmlFor={permission}
+                  className="text-sm cursor-pointer font-normal text-muted-foreground"
+                >
+                  {PERMISSION_LABELS[permission]}
+                </Label>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
