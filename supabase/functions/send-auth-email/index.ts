@@ -232,6 +232,22 @@ function generateEmailVerificationEmail(userName: string | undefined, verificati
   return generateWrapper('Verify your email to get started with Pilot', content);
 }
 
+function generateSignupConfirmationEmail(userName: string | undefined, confirmationUrl: string, expiresIn = '24 hours'): string {
+  const greeting = userName ? `Welcome ${userName}!` : 'Welcome!';
+  
+  const content = `
+    ${heading('Confirm your email')}
+    ${paragraph(`${greeting} Thanks for signing up for Pilot. Please confirm your email address to activate your account.`)}
+    ${spacer(8)}
+    ${button('Confirm Email', confirmationUrl)}
+    ${spacer(24)}
+    ${paragraph(`This link will expire in ${expiresIn}.`, true)}
+    ${paragraph("If you didn't create a Pilot account, you can safely ignore this email.", true)}
+  `;
+  
+  return generateWrapper('Confirm your email to activate your Pilot account', content);
+}
+
 function generateWelcomeEmail(userName: string, companyName: string | undefined, getStartedUrl: string): string {
   const companyNote = companyName ? ` We're excited to have ${companyName} on board.` : '';
   
@@ -268,7 +284,7 @@ function generateWelcomeEmail(userName: string, companyName: string | undefined,
 // =============================================================================
 
 interface AuthEmailRequest {
-  type: 'password-reset' | 'email-verification' | 'welcome';
+  type: 'password-reset' | 'email-verification' | 'signup-confirmation' | 'welcome';
   to: string;
   userName?: string;
   companyName?: string;
@@ -305,6 +321,10 @@ const handler = async (req: Request): Promise<Response> => {
       case 'email-verification':
         html = generateEmailVerificationEmail(userName, actionUrl, expiresIn);
         subject = 'Verify your email address';
+        break;
+      case 'signup-confirmation':
+        html = generateSignupConfirmationEmail(userName, actionUrl, expiresIn);
+        subject = 'Confirm your email address';
         break;
       case 'welcome':
         html = generateWelcomeEmail(userName || 'there', companyName, actionUrl);

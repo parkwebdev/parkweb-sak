@@ -23,6 +23,7 @@ import {
   generateWeeklyReportEmail,
   generatePasswordResetEmail,
   generateEmailVerificationEmail,
+  generateSignupConfirmationEmail,
   generateBookingCancellationEmail,
   generateBookingReminderEmail,
   generateNewLeadNotificationEmail,
@@ -39,6 +40,7 @@ import {
   type WeeklyReportData,
   type PasswordResetData,
   type EmailVerificationData,
+  type SignupConfirmationData,
   type BookingCancellationData,
   type BookingReminderData,
   type NewLeadNotificationData,
@@ -242,6 +244,12 @@ export default function EmailTemplatesTest() {
     expiresIn: '24 hours',
   });
 
+  const [signupConfirmationData, setSignupConfirmationData] = useState<SignupConfirmationData>({
+    userName: 'Alex',
+    confirmationUrl: 'https://app.getpilot.io/auth/confirm?token=abc123',
+    expiresIn: '24 hours',
+  });
+
   // NEW template data
   const [bookingCancellationData, setBookingCancellationData] = useState<BookingCancellationData>({
     visitorName: 'Michael Chen',
@@ -320,6 +328,7 @@ export default function EmailTemplatesTest() {
       case 'weekly-report': return generateWeeklyReportEmail(weeklyReportData);
       case 'password-reset': return generatePasswordResetEmail(passwordResetData);
       case 'email-verification': return generateEmailVerificationEmail(emailVerificationData);
+      case 'signup-confirmation': return generateSignupConfirmationEmail(signupConfirmationData);
       case 'booking-cancellation': return generateBookingCancellationEmail(bookingCancellationData);
       case 'booking-reminder': return generateBookingReminderEmail(bookingReminderData);
       case 'new-lead': return generateNewLeadNotificationEmail(newLeadData);
@@ -340,6 +349,7 @@ export default function EmailTemplatesTest() {
       case 'weekly-report': return `${weeklyReportData.reportName} — ${weeklyReportData.dateRange}`;
       case 'password-reset': return 'Reset your password';
       case 'email-verification': return 'Verify your email address';
+      case 'signup-confirmation': return 'Confirm your email address';
       case 'booking-cancellation': return `Cancelled: ${bookingCancellationData.eventType} on ${bookingCancellationData.date}`;
       case 'booking-reminder': return `Reminder: ${bookingReminderData.eventType} in ${bookingReminderData.reminderTime}`;
       case 'new-lead': return `New lead: ${newLeadData.leadName}`;
@@ -554,6 +564,36 @@ export default function EmailTemplatesTest() {
               <Input
                 value={emailVerificationData.expiresIn || ''}
                 onChange={(e) => setEmailVerificationData({ ...emailVerificationData, expiresIn: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+        );
+
+      case 'signup-confirmation':
+        return (
+          <div className="p-4 grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs">User Name</Label>
+              <Input
+                value={signupConfirmationData.userName || ''}
+                onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, userName: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Confirmation URL</Label>
+              <Input
+                value={signupConfirmationData.confirmationUrl}
+                onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, confirmationUrl: e.target.value })}
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Expires In</Label>
+              <Input
+                value={signupConfirmationData.expiresIn || ''}
+                onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, expiresIn: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>

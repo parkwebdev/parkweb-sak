@@ -61,6 +61,12 @@ export interface EmailVerificationData {
   expiresIn?: string;
 }
 
+export interface SignupConfirmationData {
+  userName?: string;
+  confirmationUrl: string;
+  expiresIn?: string;
+}
+
 // NEW TEMPLATE DATA TYPES
 
 export interface BookingCancellationData {
@@ -549,6 +555,28 @@ export function generateEmailVerificationEmail(data: EmailVerificationData): str
   
   return generateWrapper({
     preheaderText: 'Verify your email to get started with Pilot',
+    content,
+  });
+}
+
+export function generateSignupConfirmationEmail(data: SignupConfirmationData): string {
+  const greeting = data.userName ? `Welcome ${data.userName}!` : 'Welcome!';
+  const expiryNote = data.expiresIn 
+    ? `This link will expire in ${data.expiresIn}.`
+    : 'This link will expire in 24 hours.';
+  
+  const content = `
+    ${heading('Confirm your email')}
+    ${paragraph(`${greeting} Thanks for signing up for Pilot. Please confirm your email address to activate your account.`)}
+    ${spacer(8)}
+    ${button('Confirm Email', data.confirmationUrl)}
+    ${spacer(24)}
+    ${paragraph(expiryNote, true)}
+    ${paragraph("If you didn't create a Pilot account, you can safely ignore this email.", true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: 'Confirm your email to activate your Pilot account',
     content,
   });
 }
