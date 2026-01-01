@@ -1,12 +1,13 @@
 import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { 
-  Mail01, Calendar, File02, Key01, CheckCircle, Phone01, Monitor01, Moon01, Sun,
-  XCircle, Clock, Users01, MessageCircle01, UserPlus01, RefreshCw01,
-  ArrowRight, AlertTriangle, UserMinus01, Announcement01
+  Mail01, Calendar, File02, Key01, Phone01, Monitor01, Moon01, Sun,
+  XCircle, Clock, Users01, UserPlus01, RefreshCw01,
+  AlertTriangle, UserMinus01, Announcement01, InfoCircle
 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export type EmailTemplateType = 
   | 'invitation' 
@@ -28,40 +29,45 @@ export type EmailTemplateType =
 
 export type PreviewWidth = 'mobile' | 'desktop';
 
+/** Delivery method for each email template */
+type DeliveryMethod = 'supabase' | 'resend';
+
 interface TemplateItem {
   id: EmailTemplateType;
   label: string;
   icon: typeof Mail01;
   group: string;
   status?: 'integrated' | 'ready';
+  /** How this email is sent - Supabase Auth or Resend edge function */
+  delivery: DeliveryMethod;
 }
 
 const TEMPLATES: TemplateItem[] = [
-  // Auth - Integrated with send-auth-email edge function
-  { id: 'password-reset', label: 'Password Reset', icon: Key01, group: 'Auth', status: 'integrated' },
-  { id: 'signup-confirmation', label: 'Signup Confirmation', icon: Mail01, group: 'Auth', status: 'integrated' },
-  { id: 'welcome', label: 'Welcome', icon: UserPlus01, group: 'Auth', status: 'integrated' },
+  // Auth - Supabase handles Password Reset and Signup Confirmation
+  { id: 'password-reset', label: 'Password Reset', icon: Key01, group: 'Auth', status: 'integrated', delivery: 'supabase' },
+  { id: 'signup-confirmation', label: 'Signup Confirmation', icon: Mail01, group: 'Auth', status: 'integrated', delivery: 'supabase' },
+  { id: 'welcome', label: 'Welcome', icon: UserPlus01, group: 'Auth', status: 'integrated', delivery: 'resend' },
   
-  // Transactional - Invitations
-  { id: 'invitation', label: 'Team Invitation', icon: Mail01, group: 'Team', status: 'integrated' },
-  { id: 'team-member-removed', label: 'Member Removed', icon: UserMinus01, group: 'Team', status: 'integrated' },
+  // Team - Invitation is Supabase Invite User, Member Removed is Resend
+  { id: 'invitation', label: 'Team Invitation', icon: Mail01, group: 'Team', status: 'integrated', delivery: 'supabase' },
+  { id: 'team-member-removed', label: 'Member Removed', icon: UserMinus01, group: 'Team', status: 'integrated', delivery: 'resend' },
   
-  // Transactional - Bookings
-  { id: 'booking', label: 'Booking Confirmation', icon: Calendar, group: 'Bookings' },
-  { id: 'booking-cancellation', label: 'Booking Cancelled', icon: XCircle, group: 'Bookings' },
-  { id: 'booking-rescheduled', label: 'Booking Rescheduled', icon: RefreshCw01, group: 'Bookings' },
-  { id: 'booking-reminder', label: 'Booking Reminder', icon: Clock, group: 'Bookings' },
+  // Transactional - Bookings (Resend)
+  { id: 'booking', label: 'Booking Confirmation', icon: Calendar, group: 'Bookings', delivery: 'resend' },
+  { id: 'booking-cancellation', label: 'Booking Cancelled', icon: XCircle, group: 'Bookings', delivery: 'resend' },
+  { id: 'booking-rescheduled', label: 'Booking Rescheduled', icon: RefreshCw01, group: 'Bookings', delivery: 'resend' },
+  { id: 'booking-reminder', label: 'Booking Reminder', icon: Clock, group: 'Bookings', delivery: 'resend' },
   
-  // Leads & Conversations
-  { id: 'new-lead', label: 'New Lead', icon: Users01, group: 'Leads', status: 'integrated' },
+  // Leads & Conversations (Resend)
+  { id: 'new-lead', label: 'New Lead', icon: Users01, group: 'Leads', status: 'integrated', delivery: 'resend' },
   
-  // Alerts
-  { id: 'webhook-failure', label: 'Webhook Failure', icon: AlertTriangle, group: 'Alerts' },
+  // Alerts (Resend)
+  { id: 'webhook-failure', label: 'Webhook Failure', icon: AlertTriangle, group: 'Alerts', delivery: 'resend' },
   
-  // Reports & Product
-  { id: 'report', label: 'Scheduled Report', icon: File02, group: 'Reports', status: 'integrated' },
-  { id: 'weekly-report', label: 'Weekly Report', icon: File02, group: 'Reports', status: 'integrated' },
-  { id: 'feature-announcement', label: 'Feature Announcement', icon: Announcement01, group: 'Product' },
+  // Reports & Product (Resend)
+  { id: 'report', label: 'Scheduled Report', icon: File02, group: 'Reports', status: 'integrated', delivery: 'resend' },
+  { id: 'weekly-report', label: 'Weekly Report', icon: File02, group: 'Reports', status: 'integrated', delivery: 'resend' },
+  { id: 'feature-announcement', label: 'Feature Announcement', icon: Announcement01, group: 'Product', delivery: 'resend' },
 ];
 
 interface EmailTemplateSidebarProps {
@@ -95,7 +101,7 @@ export function EmailTemplateSidebar({
   const groupOrder = ['Auth', 'Team', 'Bookings', 'Leads', 'Alerts', 'Reports', 'Product'];
 
   return (
-    <aside className="w-60 shrink-0 border-r border-border bg-card overflow-y-auto flex flex-col">
+    <aside className="w-64 shrink-0 border-r border-border bg-card overflow-y-auto flex flex-col">
       <div className="p-4 border-b border-border">
         <h2 className="text-sm font-semibold text-foreground">Templates</h2>
         <p className="text-xs text-muted-foreground mt-0.5">Select a template to preview</p>
@@ -184,7 +190,7 @@ export function EmailTemplateSidebar({
                           delay: prefersReducedMotion ? 0 : groupIndex * 0.05 + itemIndex * 0.03,
                         }}
                         className={`
-                          w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm
+                          w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-sm
                           transition-colors duration-150
                           ${isActive 
                             ? 'bg-primary/10 text-primary font-medium' 
@@ -193,12 +199,23 @@ export function EmailTemplateSidebar({
                         `}
                       >
                         <Icon size={16} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
-                        <span className="flex-1 text-left">{template.label}</span>
-                        {template.status === 'integrated' && (
-                          <span className="text-2xs px-1.5 py-0.5 rounded bg-status-active/10 text-status-active font-medium">
-                            Live
+                        <span className="flex-1 text-left truncate">{template.label}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {/* Delivery method badge */}
+                          <span className={`text-2xs px-1.5 py-0.5 rounded font-medium ${
+                            template.delivery === 'supabase'
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          }`}>
+                            {template.delivery === 'supabase' ? 'Supabase' : 'Resend'}
                           </span>
-                        )}
+                          {/* Live status badge */}
+                          {template.status === 'integrated' && (
+                            <span className="text-2xs px-1 py-0.5 rounded bg-status-active/10 text-status-active font-medium">
+                              Live
+                            </span>
+                          )}
+                        </div>
                       </motion.button>
                     );
                 })}
@@ -207,6 +224,32 @@ export function EmailTemplateSidebar({
           );
         })}
       </nav>
+
+      <Separator />
+
+      {/* Legend */}
+      <Collapsible defaultOpen={false}>
+        <CollapsibleTrigger className="w-full p-3 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <InfoCircle size={14} />
+          <span>Delivery Methods</span>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="px-3 pb-3">
+          <div className="space-y-2 text-2xs text-muted-foreground">
+            <div className="flex items-start gap-2">
+              <span className="px-1.5 py-0.5 rounded font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                Supabase
+              </span>
+              <span>Configured in Supabase Dashboard → Auth → Email Templates</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="px-1.5 py-0.5 rounded font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                Resend
+              </span>
+              <span>Sent via Edge Functions using Resend API</span>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </aside>
   );
 }

@@ -16,6 +16,7 @@ import { Copy01, Send01, Loading02, ChevronDown } from '@untitledui/icons';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
+import { EmailPreviewModeToggle, type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
 import {
   generateTeamInvitationEmail,
   generateBookingConfirmationEmail,
@@ -193,9 +194,13 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
 export default function EmailTemplatesTest() {
   const [activeTemplate, setActiveTemplate] = useState<EmailTemplateType>('invitation');
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>('desktop');
-  const [showSource, setShowSource] = useState(false);
+  const [previewMode, setPreviewMode] = useState<EmailPreviewMode>('preview');
   const [darkMode, setDarkMode] = useState(false);
-  const [supabaseExportMode, setSupabaseExportMode] = useState(false);
+  const [mockDataOpen, setMockDataOpen] = useState(false);
+
+  // Derive showSource and supabaseExportMode from previewMode
+  const showSource = previewMode === 'source';
+  const supabaseExportMode = previewMode === 'supabase';
 
   // Check if current template supports Supabase export
   const supportsSupabaseExport = activeTemplate === 'password-reset' || activeTemplate === 'signup-confirmation' || activeTemplate === 'invitation';
@@ -365,6 +370,27 @@ export default function EmailTemplatesTest() {
       case 'webhook-failure': return `Webhook failed: ${webhookFailureData.webhookName}`;
       case 'team-member-removed': return `Removed from ${teamMemberRemovedData.companyName}`;
       case 'feature-announcement': return `New: ${featureAnnouncementData.featureTitle}`;
+      default: return '';
+    }
+  };
+
+  /** Get a compact summary of mock data for the collapsed state */
+  const getMockDataSummary = (): string => {
+    switch (activeTemplate) {
+      case 'invitation': return `${invitationData.invitedBy}, ${invitationData.companyName}`;
+      case 'booking': return `${bookingData.visitorName}, ${bookingData.eventType}`;
+      case 'report': return `${reportData.reportName}, ${reportData.dateRange}`;
+      case 'weekly-report': return `${weeklyReportData.reportName}, ${weeklyReportData.dateRange}`;
+      case 'password-reset': return `${passwordResetData.userName}`;
+      case 'signup-confirmation': return `${signupConfirmationData.userName}`;
+      case 'booking-cancellation': return `${bookingCancellationData.visitorName}, ${bookingCancellationData.eventType}`;
+      case 'booking-reminder': return `${bookingReminderData.visitorName}, ${bookingReminderData.eventType}`;
+      case 'new-lead': return `${newLeadData.leadName}, ${newLeadData.source}`;
+      case 'welcome': return `${welcomeData.userName}, ${welcomeData.companyName}`;
+      case 'booking-rescheduled': return `${bookingRescheduledData.visitorName}, ${bookingRescheduledData.newDate}`;
+      case 'webhook-failure': return `${webhookFailureData.webhookName}, ${webhookFailureData.endpoint}`;
+      case 'team-member-removed': return `${teamMemberRemovedData.memberName}, ${teamMemberRemovedData.companyName}`;
+      case 'feature-announcement': return featureAnnouncementData.featureTitle;
       default: return '';
     }
   };
@@ -884,52 +910,55 @@ export default function EmailTemplatesTest() {
       />
 
       <main className="flex-1 min-w-0 overflow-y-auto">
-        <div className="p-6 space-y-6">
-          <div className="flex items-start justify-between">
+        <div className="p-6 space-y-4">
+          <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-xl font-semibold text-foreground">Email Templates</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Preview and test email templates with mock data</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Preview and test email templates</p>
             </div>
-            <div className="flex items-center gap-4">
-              {supportsSupabaseExport && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md">
-                  <Label htmlFor="supabase-export" className="text-xs text-muted-foreground">Supabase Export</Label>
-                  <Switch 
-                    id="supabase-export" 
-                    checked={supabaseExportMode} 
-                    onCheckedChange={setSupabaseExportMode}
-                  />
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Label htmlFor="show-source" className="text-xs text-muted-foreground">Source</Label>
-                <Switch id="show-source" checked={showSource} onCheckedChange={setShowSource} />
-              </div>
-            </div>
+            <EmailPreviewModeToggle
+              mode={previewMode}
+              onModeChange={setPreviewMode}
+              showSupabaseOption={supportsSupabaseExport}
+            />
           </div>
 
-          <Collapsible defaultOpen>
-            <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
-                    <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                {supabaseExportMode ? (
-                  <div className="p-4 text-sm text-muted-foreground">
-                    <p>Supabase Export Mode is enabled. The template uses Supabase variables like <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">{'{{ .ConfirmationURL }}'}</code> instead of mock data.</p>
-                    <p className="mt-2">Copy the HTML and paste it into your Supabase Dashboard → Authentication → Email Templates.</p>
-                  </div>
-                ) : (
-                  renderMockDataControls()
-                )}
-              </CollapsibleContent>
+          {/* Compact Mock Data Section */}
+          {!supabaseExportMode && (
+            <Collapsible open={mockDataOpen} onOpenChange={setMockDataOpen}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="py-2.5 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
+                        {!mockDataOpen && (
+                          <span className="text-xs text-muted-foreground truncate max-w-[300px]">
+                            {getMockDataSummary()}
+                          </span>
+                        )}
+                      </div>
+                      <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  {renderMockDataControls()}
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+
+          {/* Supabase Export Info */}
+          {supabaseExportMode && (
+            <Card className="border-blue-500/20 bg-blue-500/5">
+              <CardContent className="py-3 px-4">
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Supabase Export Mode:</span> Template uses variables like <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">{'{{ .ConfirmationURL }}'}</code>. Copy and paste into Supabase Dashboard → Auth → Email Templates.
+                </p>
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
 
           <EmailPreview
             html={getTemplateHtml()}
