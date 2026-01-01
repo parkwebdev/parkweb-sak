@@ -35,6 +35,7 @@ export interface ScheduledReportData {
   reportName: string;
   dateRange: string;
   format?: 'pdf' | 'csv';
+  generatedAt?: string;
   viewReportUrl: string;
 }
 
@@ -422,9 +423,16 @@ export function generateScheduledReportEmail(data: ScheduledReportData): string 
     </table>
   ` : '';
 
+  const generatedTimestamp = data.generatedAt ? `
+    <p class="email-text-muted" style="margin: 0 0 20px 0; font-size: 13px; color: ${colors.textMuted};">
+      Generated on ${data.generatedAt}
+    </p>
+  ` : '';
+
   const content = `
     ${heading('Your Report is Ready')}
     ${formatBadge}
+    ${generatedTimestamp}
     ${paragraph(`Your <strong>${data.reportName}</strong> covering <strong>${data.dateRange}</strong> has been generated and is ready to download.`)}
     ${spacer(8)}
     ${button('Download Report', data.viewReportUrl)}
