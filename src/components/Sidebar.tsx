@@ -231,9 +231,55 @@ function SidebarComponent({ onClose }: SidebarProps) {
 
         </div>
 
-        {/* Footer with get set up, search, settings and user account */}
+        {/* Footer with search, theme, nav items and user account */}
         <div className="pt-4">
-          {/* Bottom navigation (get set up, search, settings) */}
+          {/* Search button - always visible */}
+          <motion.div 
+            className="items-center flex w-full py-0.5"
+            initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: filteredNavigationItems.length * 0.03, ...springs.smooth }}
+          >
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+              title={isCollapsed ? 'Search' : ''}
+            >
+              <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
+                  <SearchMd size={14} className="self-stretch my-auto" />
+                </div>
+                <motion.div
+                  className="flex items-center justify-between flex-1 text-sm font-normal leading-4 my-auto whitespace-nowrap"
+                  initial={false}
+                  animate={{ opacity: isCollapsed ? 0 : 1 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
+                >
+                  <span>Search</span>
+                  <div className="flex items-center gap-0.5">
+                    <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
+                      <span className="text-xs">⌘</span>
+                    </kbd>
+                    <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
+                      K
+                    </kbd>
+                  </div>
+                </motion.div>
+              </div>
+            </button>
+          </motion.div>
+          
+          {/* Theme toggle - always visible */}
+          <motion.div 
+            className="items-center flex w-full py-0.5"
+            initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: (filteredNavigationItems.length + 0.5) * 0.03, ...springs.smooth }}
+          >
+            <ThemeToggle isCollapsed={isCollapsed} isSidebarItem />
+          </motion.div>
+
+          {/* Bottom navigation (get set up, settings) - permission filtered */}
           {filteredBottomItems.map((item, index) => {
             const isActive = location.pathname === item.path;
             const isGetSetUp = item.id === 'get-set-up';
@@ -295,93 +341,42 @@ function SidebarComponent({ onClose }: SidebarProps) {
             };
             
             return (
-              <React.Fragment key={item.id}>
-                <motion.div 
-                  className="items-center flex w-full py-0.5"
-                  initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (filteredNavigationItems.length + index) * 0.03, ...springs.smooth }}
+              <motion.div 
+                key={item.id}
+                className="items-center flex w-full py-0.5"
+                initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: (filteredNavigationItems.length + index + 1) * 0.03, ...springs.smooth }}
+              >
+                <Link 
+                  to={item.path}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                    isActive 
+                      ? 'bg-accent text-accent-foreground' 
+                      : isGetSetUp && !isCollapsed
+                        ? 'bg-background dark:bg-accent/40 border border-border text-muted-foreground hover:text-foreground hover:bg-accent/60'
+                        : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                  }`}
+                  title={isCollapsed ? item.label : ''}
                 >
-                  <Link 
-                    to={item.path}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                      isActive 
-                        ? 'bg-accent text-accent-foreground' 
-                        : isGetSetUp && !isCollapsed
-                          ? 'bg-background dark:bg-accent/40 border border-border text-muted-foreground hover:text-foreground hover:bg-accent/60'
-                          : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                    }`}
-                    title={isCollapsed ? item.label : ''}
-                  >
-                    <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
-                      <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
-                        {renderIcon()}
-                      </div>
-                      <motion.div
-                        className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
-                          isActive ? 'font-medium' : ''
-                        }`}
-                        initial={false}
-                        animate={{ opacity: isCollapsed ? 0 : 1 }}
-                        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
-                      >
-                        {item.label}
-                      </motion.div>
+                  <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                    <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
+                      {renderIcon()}
                     </div>
-                  </Link>
-                </motion.div>
-                
-                {/* Insert Search button after Get set up */}
-                {isGetSetUp && (
-                  <>
-                    <motion.div 
-                      className="items-center flex w-full py-0.5"
-                      initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: (filteredNavigationItems.length + index + 0.5) * 0.03, ...springs.smooth }}
+                    <motion.div
+                      className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
+                        isActive ? 'font-medium' : ''
+                      }`}
+                      initial={false}
+                      animate={{ opacity: isCollapsed ? 0 : 1 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
                     >
-                      <button
-                        onClick={() => setSearchOpen(true)}
-                        className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                        title={isCollapsed ? 'Search' : ''}
-                      >
-                        <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
-                          <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
-                            <SearchMd size={14} className="self-stretch my-auto" />
-                          </div>
-                          <motion.div
-                            className="flex items-center justify-between flex-1 text-sm font-normal leading-4 my-auto whitespace-nowrap"
-                            initial={false}
-                            animate={{ opacity: isCollapsed ? 0 : 1 }}
-                            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
-                          >
-                            <span>Search</span>
-                            <div className="flex items-center gap-0.5">
-                              <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
-                                <span className="text-xs">⌘</span>
-                              </kbd>
-                              <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
-                                K
-                              </kbd>
-                            </div>
-                          </motion.div>
-                        </div>
-                      </button>
+                      {item.label}
                     </motion.div>
-                    
-                    {/* Theme toggle after Search */}
-                    <motion.div 
-                      className="items-center flex w-full py-0.5"
-                      initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: (filteredNavigationItems.length + index + 0.6) * 0.03, ...springs.smooth }}
-                    >
-                      <ThemeToggle isCollapsed={isCollapsed} isSidebarItem />
-                    </motion.div>
-                  </>
-                )}
-              </React.Fragment>
+                  </div>
+                </Link>
+              </motion.div>
             );
           })}
           
