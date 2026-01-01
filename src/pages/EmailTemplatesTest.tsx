@@ -212,7 +212,7 @@ export default function EmailTemplatesTest() {
   });
 
   const [reportData, setReportData] = useState<ScheduledReportData>({
-    reportName: 'Your scheduled report',
+    reportName: 'scheduled report',
     dateRange: 'Dec 1 - Dec 31, 2025',
     format: 'pdf',
     viewReportUrl: 'https://getpilot.io/analytics',
