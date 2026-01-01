@@ -16,6 +16,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import { useSupabaseQuery } from './useSupabaseQuery';
+import { useAccountOwnerId } from './useAccountOwnerId';
 import { queryKeys } from '@/lib/query-keys';
 import type { Tables, TablesInsert, Json } from '@/integrations/supabase/types';
 import type { LocationFormData, BusinessHours } from '@/types/locations';
@@ -29,6 +30,7 @@ type Location = Tables<'locations'>;
  * @returns Location management methods and state
  */
 export const useLocations = (agentId?: string) => {
+  const { accountOwnerId } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
   // Fetch locations using React Query with real-time subscription
@@ -67,15 +69,14 @@ export const useLocations = (agentId?: string) => {
    * Create a new location
    */
   const createLocation = async (
-    formData: LocationFormData,
-    userId: string
+    formData: LocationFormData
   ): Promise<string | null> => {
-    if (!agentId) return null;
+    if (!agentId || !accountOwnerId) return null;
 
     try {
       const insertData: TablesInsert<'locations'> = {
         agent_id: agentId,
-        user_id: userId,
+        user_id: accountOwnerId,
         name: formData.name,
         address: formData.address || null,
         city: formData.city || null,

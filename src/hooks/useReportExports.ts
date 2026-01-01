@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgent } from '@/hooks/useAgent';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { queryKeys } from '@/lib/query-keys';
@@ -47,21 +48,23 @@ interface CreateExportParams {
 export const useReportExports = () => {
   const { user } = useAuth();
   const { agentId } = useAgent();
+  const { accountOwnerId } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
-  // Fetch all exports for the user
+  // Fetch all exports for the account owner
   const {
     data: exports = [],
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: queryKeys.reportExports.list(user?.id ?? ''),
+    queryKey: queryKeys.reportExports.list(accountOwnerId ?? ''),
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!accountOwnerId) return [];
 
       const { data, error } = await supabase
         .from('report_exports')
         .select('*')
+        .eq('user_id', accountOwnerId)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -71,20 +74,20 @@ export const useReportExports = () => {
 
       return (data || []) as ReportExport[];
     },
-    enabled: !!user?.id,
+    enabled: !!accountOwnerId,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 
   // Create export mutation
   const createMutation = useMutation({
     mutationFn: async ({ name, format, file, dateRangeStart, dateRangeEnd, reportConfig }: CreateExportParams) => {
-      if (!user?.id) throw new Error('User not authenticated');
+      if (!user?.id || !accountOwnerId) throw new Error('User not authenticated');
 
       // Generate unique filename
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const extension = format === 'csv' ? 'csv' : 'pdf';
       const fileName = `${name.replace(/[^a-zA-Z0-9-_]/g, '_')}_${timestamp}.${extension}`;
-      const filePath = `${user.id}/${fileName}`;
+      const filePath = `${accountOwnerId}/${fileName}`;
 
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
@@ -103,7 +106,7 @@ export const useReportExports = () => {
       const { data, error: insertError } = await supabase
         .from('report_exports')
         .insert({
-          user_id: user.id,
+          user_id: accountOwnerId,
           agent_id: agentId,
           name,
           format,
@@ -112,7 +115,7 @@ export const useReportExports = () => {
           date_range_start: dateRangeStart.toISOString(),
           date_range_end: dateRangeEnd.toISOString(),
           report_config: reportConfig as unknown as Json,
-          created_by: user.id,
+          created_by: user.id, // Track who actually created it
         })
         .select()
         .single();
@@ -127,7 +130,7 @@ export const useReportExports = () => {
       return data as ReportExport;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.reportExports.list(user?.id ?? '') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reportExports.list(accountOwnerId ?? '') });
     },
     onError: (error) => {
       logger.error('Error creating export:', error);
@@ -161,7 +164,7 @@ export const useReportExports = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.reportExports.list(user?.id ?? '') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.reportExports.list(accountOwnerId ?? '') });
       toast.success('Export deleted');
     },
     onError: (error) => {
