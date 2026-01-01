@@ -141,7 +141,7 @@ export function EmailTemplateSidebar({
       <div className="p-3 space-y-3">
         {/* Width Toggle */}
         <div className="space-y-1.5">
-          <span className="text-2xs font-medium text-muted-foreground dark:text-foreground/70 uppercase tracking-wider px-1">Device</span>
+          <span className="text-2xs font-medium text-muted-foreground dark:text-foreground uppercase tracking-wider px-1">Device</span>
           <div 
             className="relative flex rounded-lg border overflow-hidden"
             onMouseLeave={() => setHoveredDevice(null)}
@@ -192,7 +192,7 @@ export function EmailTemplateSidebar({
 
         {/* Dark Mode Toggle */}
         <div className="space-y-1.5">
-          <span className="text-2xs font-medium text-muted-foreground dark:text-foreground/70 uppercase tracking-wider px-1">Theme</span>
+          <span className="text-2xs font-medium text-muted-foreground dark:text-foreground uppercase tracking-wider px-1">Theme</span>
           <div 
             className="relative flex rounded-lg border overflow-hidden"
             onMouseLeave={() => setHoveredTheme(null)}
@@ -251,7 +251,7 @@ export function EmailTemplateSidebar({
 
           return (
             <div key={group}>
-              <h3 className="px-2 py-1 text-2xs font-medium text-muted-foreground dark:text-foreground/70 uppercase tracking-wider">
+              <h3 className="px-2 py-1 text-2xs font-medium text-muted-foreground dark:text-foreground uppercase tracking-wider">
                 {group}
               </h3>
               <div className="mt-1 space-y-0.5">
