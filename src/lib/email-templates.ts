@@ -411,21 +411,35 @@ export function generateScheduledReportEmail(data: ScheduledReportData): string 
       : colors.textMuted;
     
     return `
-      <td style="padding: 16px; text-align: center; vertical-align: top;">
-        <p class="email-text" style="margin: 0 0 4px 0; font-size: 24px; font-weight: 600; color: ${colors.text};">${m.value}</p>
-        <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">${m.label}</p>
-        ${m.change ? `<p style="margin: 4px 0 0 0; font-size: 12px; color: ${changeColor};">${m.change}</p>` : ''}
+      <td width="50%" style="padding: 6px; vertical-align: top;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
+          <tr>
+            <td style="padding: 16px; text-align: center;">
+              <p class="email-text" style="margin: 0 0 4px 0; font-size: 24px; font-weight: 600; color: ${colors.text};">${m.value}</p>
+              <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">${m.label}</p>
+              ${m.change ? `<p style="margin: 4px 0 0 0; font-size: 12px; color: ${changeColor};">${m.change}</p>` : ''}
+            </td>
+          </tr>
+        </table>
       </td>
     `;
-  }).join('');
+  });
+  
+  // Build 2x2 grid rows
+  const rows: string[] = [];
+  for (let i = 0; i < metricsHtml.length; i += 2) {
+    const cell1 = metricsHtml[i] || '';
+    const cell2 = metricsHtml[i + 1] || '<td width="50%"></td>';
+    rows.push(`<tr>${cell1}${cell2}</tr>`);
+  }
   
   const content = `
     ${heading(data.reportName)}
     ${paragraph(`Here's your report for ${data.dateRange}.`)}
     
-    <!-- Metrics Grid -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>${metricsHtml}</tr>
+    <!-- Metrics Grid - 2 columns -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      ${rows.join('')}
     </table>
     
     ${spacer(24)}
