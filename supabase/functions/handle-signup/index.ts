@@ -160,7 +160,52 @@ const handler = async (req: Request): Promise<Response> => {
     });
     console.log('Welcome notification created');
 
-    return new Response(JSON.stringify({ 
+    // Send welcome email
+    const userName = user.user_metadata?.display_name || 
+                     user.user_metadata?.full_name || 
+                     email?.split('@')[0] || 'there';
+
+    // Get companyName from inviter's profile (for team members)
+    let companyName: string | undefined;
+    if (invitation) {
+      const { data: inviterProfile } = await supabase
+        .from('profiles')
+        .select('company_name')
+        .eq('user_id', invitation.invited_by)
+        .single();
+      companyName = inviterProfile?.company_name || undefined;
+    }
+
+    // Send welcome email via send-auth-email function
+    const appUrl = Deno.env.get("APP_URL") || "https://getpilot.io";
+    try {
+      const emailResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-auth-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+        },
+        body: JSON.stringify({
+          type: 'welcome',
+          to: email,
+          userName,
+          companyName,
+          actionUrl: `${appUrl}/ari`,
+        }),
+      });
+      
+      if (emailResponse.ok) {
+        console.log('Welcome email sent successfully');
+      } else {
+        const errorText = await emailResponse.text();
+        console.error('Welcome email failed:', errorText);
+      }
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+      // Don't fail signup if email fails
+    }
+
+    return new Response(JSON.stringify({
       success: true,
       message: "Signup processed successfully",
       had_invitation: !!invitation
