@@ -78,13 +78,29 @@ interface AnalyticsData {
 
 function checkShouldRun(
   report: any,
-  currentDayOfWeek: number,
-  currentDayOfMonth: number,
-  currentTime: string
+  utcNow: Date
 ): boolean {
-  const reportTime = report.time_of_day.substring(0, 5);
+  const timezone = report.timezone || 'America/New_York';
   
-  const currentHour = parseInt(currentTime.split(':')[0]);
+  // Get current time components in user's timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    hour: 'numeric',
+    minute: 'numeric',
+    weekday: 'long',
+    day: 'numeric',
+    hour12: false,
+  });
+  
+  const parts = formatter.formatToParts(utcNow);
+  const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
+  
+  const currentHour = parseInt(getPart('hour'));
+  const currentDayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    .indexOf(getPart('weekday'));
+  const currentDayOfMonth = parseInt(getPart('day'));
+  
+  const reportTime = report.time_of_day.substring(0, 5);
   const reportHour = parseInt(reportTime.split(':')[0]);
   
   if (currentHour !== reportHour) {
@@ -586,11 +602,8 @@ serve(async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const now = new Date();
-    const currentDayOfWeek = now.getDay();
-    const currentDayOfMonth = now.getDate();
-    const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
 
-    console.log('Checking for scheduled reports at:', currentTime);
+    console.log('Checking for scheduled reports at:', now.toISOString());
 
     // Fetch active scheduled reports
     const { data: reports, error } = await supabase
@@ -619,7 +632,7 @@ serve(async (req: Request): Promise<Response> => {
     const processedReports: string[] = [];
 
     for (const report of reports || []) {
-      const shouldRun = checkShouldRun(report, currentDayOfWeek, currentDayOfMonth, currentTime);
+      const shouldRun = checkShouldRun(report, now);
       
       if (!shouldRun) {
         console.log(`Skipping report ${report.id} - not scheduled for this time`);

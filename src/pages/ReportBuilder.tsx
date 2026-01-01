@@ -101,6 +101,7 @@ export default function ReportBuilder() {
   const [recipientInput, setRecipientInput] = useState('');
   const [recipients, setRecipients] = useState<string[]>([]);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [timezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
 
   // === Handle Preset Change (updates stable date state) ===
   const handlePresetChange = useCallback((preset: DatePreset) => {
@@ -354,6 +355,7 @@ export default function ReportBuilder() {
         day_of_week: frequency === 'weekly' ? dayOfWeek : null,
         day_of_month: frequency === 'monthly' ? dayOfMonth : null,
         time_of_day: `${timeOfDay}:00`,
+        timezone,
         report_config: {
           format: config.format,
           type: config.type,
