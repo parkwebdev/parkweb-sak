@@ -278,19 +278,25 @@ const generateWrapper = ({ preheaderText, content, unsubscribeUrl }: WrapperOpti
           <!-- Footer -->
           <tr>
             <td class="email-content email-border" style="padding: 24px 40px; border-top: 1px solid ${colors.border};">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="line-height: 1;">
                 <tr>
-                  <td class="email-text-muted" style="font-size: 13px; line-height: 1; color: ${colors.textMuted}; vertical-align: middle;">© ${year} Pilot</td>
+                  <td class="email-text-muted" style="font-size: 13px; color: ${colors.textMuted}; vertical-align: middle;">© ${year} Pilot</td>
                   <td style="padding: 0 12px; vertical-align: middle;">
-                    <div style="width: 1px; height: 14px; background-color: ${colors.border};"></div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="width: 1px; height: 13px; background-color: ${colors.border};"></td></tr></table>
                   </td>
                   <td style="vertical-align: middle;">
-                    <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: inline-block; vertical-align: middle; margin-right: 8px;">
-                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" height="14" style="display: block; height: 14px; width: auto;" />
-                    </a>
-                    <a href="https://www.facebook.com/getpilot" target="_blank" style="display: inline-block; vertical-align: middle;">
-                      <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" height="14" style="display: block; height: 14px; width: auto;" />
-                    </a>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="padding-right: 8px;">
+                        <a href="https://www.linkedin.com/company/getpilot" target="_blank" style="display: block; line-height: 0;">
+                          <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png" alt="LinkedIn" height="14" style="display: block; height: 14px; width: auto;" />
+                        </a>
+                      </td>
+                      <td>
+                        <a href="https://www.facebook.com/getpilot" target="_blank" style="display: block; line-height: 0;">
+                          <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png" alt="Facebook" height="14" style="display: block; height: 14px; width: auto;" />
+                        </a>
+                      </td>
+                    </tr></table>
                   </td>
                 </tr>
               </table>
