@@ -214,12 +214,7 @@ export default function EmailTemplatesTest() {
   const [reportData, setReportData] = useState<ScheduledReportData>({
     reportName: 'Weekly Analytics Report',
     dateRange: 'Jan 6 - Jan 12, 2025',
-    metrics: [
-      { label: 'Conversations', value: '1,247', change: '+12.5%' },
-      { label: 'Leads', value: '89', change: '+8.3%' },
-      { label: 'Conversion Rate', value: '7.1%', change: '+2.1%' },
-      { label: 'Satisfaction', value: '4.6/5', change: '+0.3' },
-    ],
+    format: 'pdf',
     viewReportUrl: 'https://getpilot.io/analytics',
   });
 
@@ -448,7 +443,7 @@ export default function EmailTemplatesTest() {
 
       case 'report':
         return (
-          <div className="p-4 grid grid-cols-2 gap-4">
+          <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Report Name</Label>
               <Input
@@ -464,6 +459,21 @@ export default function EmailTemplatesTest() {
                 onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
                 className="h-8 text-sm"
               />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Format</Label>
+              <Select
+                value={reportData.format || 'pdf'}
+                onValueChange={(value: 'pdf' | 'csv') => setReportData({ ...reportData, format: value })}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                  <SelectItem value="csv">CSV</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         );
