@@ -1,6 +1,6 @@
 # Pilot Design System
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
 > **Related**: [Component Patterns](./COMPONENT_PATTERNS.md), [Architecture](./ARCHITECTURE.md)
 
@@ -1093,6 +1093,6 @@ try {
 
 ## Related Documentation
 
-- [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md) - Component patterns and motion
-- [Application Overview](./APPLICATION_OVERVIEW.md) - Project structure
+- [Component Patterns](./COMPONENT_PATTERNS.md) - Component patterns and motion
+- [Architecture](./ARCHITECTURE.md) - Project structure
 - [Hooks Reference](./HOOKS_REFERENCE.md) - Custom hook documentation

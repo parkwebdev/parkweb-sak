@@ -1,6 +1,6 @@
 # Pilot Architecture
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
 > **Related**: [AI Architecture](./AI_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Security](./SECURITY.md)
 

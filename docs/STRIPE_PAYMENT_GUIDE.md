@@ -1,6 +1,6 @@
 # Stripe + Payment Integration Specialist Guide
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
 > **Related**: [Edge Functions](./EDGE_FUNCTIONS.md), [Database Schema](./DATABASE_SCHEMA.md)
 
@@ -136,4 +136,3 @@ Reference existing patterns:
 - [Edge Functions](./EDGE_FUNCTIONS.md) - Supabase Edge Function patterns
 - [Database Schema](./DATABASE_SCHEMA.md) - Subscription and plans tables
 - [Security](./SECURITY.md) - API key management and security patterns
-- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - Full-stack patterns

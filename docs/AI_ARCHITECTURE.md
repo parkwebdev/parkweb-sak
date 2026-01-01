@@ -1,6 +1,6 @@
 # Pilot AI Architecture
 
-> **Last Updated**: December 2025  
+> **Last Updated**: January 2026  
 > **Status**: Active  
 > **Related**: [Edge Functions](./EDGE_FUNCTIONS.md), [Database Schema](./DATABASE_SCHEMA.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
 
@@ -832,4 +832,4 @@ The `OPENAI_API_KEY` is no longer used for embeddings but may still be configure
 - [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side function implementations
 - [Database Schema](./DATABASE_SCHEMA.md) - Knowledge tables and vector storage
 - [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget-side AI integration
-- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - Database patterns
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Database integration patterns

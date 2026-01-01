@@ -1,6 +1,6 @@
 # Security Testing Documentation
 
-> **Last Updated**: December 2025
+> **Last Updated**: January 2026
 > **Status**: Active
 > **Owner**: Security Team
 > **Related**: [SECURITY.md](./SECURITY.md)

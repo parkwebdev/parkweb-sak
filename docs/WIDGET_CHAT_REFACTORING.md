@@ -1968,3 +1968,11 @@ The refactoring is **COMPLETE** when ALL of the following are true:
 - Line-by-line extraction map
 - 42 snapshot test definitions
 - Full validation checklist
+
+---
+
+## Related Documentation
+
+- [Edge Functions](./EDGE_FUNCTIONS.md) - Widget-chat function reference
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget technical docs
+- [AI Architecture](./AI_ARCHITECTURE.md) - RAG and AI patterns

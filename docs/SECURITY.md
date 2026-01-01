@@ -1447,4 +1447,4 @@ API key manager displays age warnings:
 - [Database Schema](./DATABASE_SCHEMA.md) - RLS policies and table structures
 - [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side security implementation
 - [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget security patterns
-- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - Authentication patterns
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Authentication patterns
