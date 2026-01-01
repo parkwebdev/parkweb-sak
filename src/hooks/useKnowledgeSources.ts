@@ -5,6 +5,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import { useSupabaseQuery } from './useSupabaseQuery';
+import { useAccountOwnerId } from './useAccountOwnerId';
 import { queryKeys } from '@/lib/query-keys';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import type { KnowledgeSourceMetadata } from '@/types/metadata';
@@ -23,6 +24,7 @@ type KnowledgeType = 'pdf' | 'url' | 'api' | 'json' | 'xml' | 'csv';
  * @returns {Object} Knowledge source management methods and state
  */
 export const useKnowledgeSources = (agentId?: string) => {
+  const { accountOwnerId } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
   // Fetch sources using React Query with real-time subscription
@@ -85,9 +87,9 @@ export const useKnowledgeSources = (agentId?: string) => {
 
   const uploadDocument = async (
     file: File,
-    agentId: string,
-    userId: string
+    agentId: string
   ): Promise<string | null> => {
+    if (!accountOwnerId) return null;
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       toast.error('PDF upload not supported', {
         description: 'PDF processing is temporarily unavailable. Please add a URL or text content instead.',
@@ -111,7 +113,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         .from('knowledge_sources')
         .insert({
           agent_id: agentId,
-          user_id: userId,
+          user_id: accountOwnerId,
           type: 'pdf' as KnowledgeType,
           source: publicUrl,
           status: 'processing',
@@ -154,13 +156,13 @@ export const useKnowledgeSources = (agentId?: string) => {
   const addUrlSource = async (
     url: string,
     agentId: string,
-    userId: string,
     options?: { refreshStrategy?: string }
   ): Promise<string | null> => {
+    if (!accountOwnerId) return null;
     try {
       const insertData: Record<string, unknown> = {
         agent_id: agentId,
-        user_id: userId,
+        user_id: accountOwnerId,
         type: 'url' as KnowledgeType,
         source: url,
         status: 'processing',
@@ -207,13 +209,13 @@ export const useKnowledgeSources = (agentId?: string) => {
   const addPropertyListingSource = async (
     url: string,
     agentId: string,
-    userId: string,
     options?: { refreshStrategy?: string; locationId?: string }
   ): Promise<string | null> => {
+    if (!accountOwnerId) return null;
     try {
       const insertData: Record<string, unknown> = {
         agent_id: agentId,
-        user_id: userId,
+        user_id: accountOwnerId,
         type: 'url' as KnowledgeType,
         source: url,
         status: 'processing',
@@ -261,19 +263,19 @@ export const useKnowledgeSources = (agentId?: string) => {
   const addSitemapSource = async (
     url: string,
     agentId: string,
-    userId: string,
     options?: {
       excludePatterns?: string[];
       includePatterns?: string[];
       pageLimit?: number;
     }
   ): Promise<string | null> => {
+    if (!accountOwnerId) return null;
     try {
       const { data, error } = await supabase
         .from('knowledge_sources')
         .insert({
           agent_id: agentId,
-          user_id: userId,
+          user_id: accountOwnerId,
           type: 'url' as KnowledgeType,
           source: url,
           status: 'processing',
@@ -318,16 +320,16 @@ export const useKnowledgeSources = (agentId?: string) => {
   const addTextSource = async (
     content: string,
     agentId: string,
-    userId: string,
     type: KnowledgeType = 'api',
     metadata?: Record<string, unknown>
   ): Promise<string | null> => {
+    if (!accountOwnerId) return null;
     try {
       const { data, error } = await supabase
         .from('knowledge_sources')
         .insert({
           agent_id: agentId,
-          user_id: userId,
+          user_id: accountOwnerId,
           type,
           source: 'text',
           content,

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
 import type { Tables } from '@/integrations/supabase/types';
@@ -32,6 +33,7 @@ type WebhookLog = {
  */
 export const useWebhooks = (agentId: string) => {
   const { user } = useAuth();
+  const { accountOwnerId } = useAccountOwnerId();
   const queryClient = useQueryClient();
   const [logs, setLogs] = useState<WebhookLog[]>([]);
 
@@ -95,7 +97,7 @@ export const useWebhooks = (agentId: string) => {
     try {
       const { data, error } = await supabase
         .from('webhooks')
-        .insert([{ ...webhookData, user_id: user.id, agent_id: agentId || null }])
+        .insert([{ ...webhookData, user_id: accountOwnerId, agent_id: agentId || null }])
         .select()
         .single();
 
@@ -113,7 +115,7 @@ export const useWebhooks = (agentId: string) => {
       });
       throw error;
     }
-  }, [user, agentId, invalidateWebhooks]);
+  }, [user, accountOwnerId, agentId, invalidateWebhooks]);
 
   const updateWebhook = useCallback(async (
     id: string, 

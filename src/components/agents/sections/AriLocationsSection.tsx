@@ -266,7 +266,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   );
 
   const handleCreate = async (data: Parameters<typeof createLocation>[0]) => {
-    const id = await createLocation(data, userId);
+    const id = await createLocation(data);
     if (id) {
       setCreateDialogOpen(false);
       const newLocation = locationsWithCounts.find(l => l.id === id);

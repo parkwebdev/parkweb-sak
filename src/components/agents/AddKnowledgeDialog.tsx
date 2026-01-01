@@ -87,7 +87,7 @@ export function AddKnowledgeDialog({
 
     setUploading(true);
     try {
-      await uploadDocument(file, agentId, userId);
+      await uploadDocument(file, agentId);
       onOpenChange(false);
     } finally {
       setUploading(false);
@@ -105,7 +105,7 @@ export function AddKnowledgeDialog({
 
     setUploading(true);
     try {
-      await addUrlSource(url, agentId, userId, { refreshStrategy: urlRefreshStrategy });
+      await addUrlSource(url, agentId, { refreshStrategy: urlRefreshStrategy });
       setUrl('');
       setUrlRefreshStrategy('manual');
       onOpenChange(false);
@@ -135,7 +135,7 @@ export function AddKnowledgeDialog({
         .map(p => p.trim())
         .filter(p => p.length > 0);
 
-      await addSitemapSource(sitemapUrl, agentId, userId, {
+      await addSitemapSource(sitemapUrl, agentId, {
         excludePatterns: excludeArray,
         includePatterns: includeArray,
         pageLimit: pageLimit,
@@ -164,7 +164,7 @@ export function AddKnowledgeDialog({
 
     setUploading(true);
     try {
-      await addPropertyListingSource(propertyUrl, agentId, userId, {
+      await addPropertyListingSource(propertyUrl, agentId, {
         refreshStrategy: propertyRefreshStrategy,
         locationId: propertyLocationId === 'none' ? undefined : propertyLocationId,
       });
@@ -190,7 +190,7 @@ export function AddKnowledgeDialog({
 
     setUploading(true);
     try {
-      await addTextSource(textContent, agentId, userId, 'json' as KnowledgeType, {
+      await addTextSource(textContent, agentId, 'json' as KnowledgeType, {
         name: textName || 'Custom Text',
       });
       setTextContent('');
