@@ -97,7 +97,8 @@ export default function ReportBuilder() {
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [dayOfWeek, setDayOfWeek] = useState<number>(1);
   const [dayOfMonth, setDayOfMonth] = useState<number>(1);
-  const [timeOfDay, setTimeOfDay] = useState('09:00');
+  const [scheduleHour, setScheduleHour] = useState<number>(9);
+  const [schedulePeriod, setSchedulePeriod] = useState<'AM' | 'PM'>('AM');
   const [recipientInput, setRecipientInput] = useState('');
   const [recipients, setRecipients] = useState<string[]>([]);
   const [isScheduling, setIsScheduling] = useState(false);
@@ -347,6 +348,12 @@ export default function ReportBuilder() {
     if (!scheduleName || recipients.length === 0) return;
 
     setIsScheduling(true);
+    // Convert 12h to 24h format
+    const hour24 = schedulePeriod === 'AM' 
+      ? (scheduleHour === 12 ? 0 : scheduleHour)
+      : (scheduleHour === 12 ? 12 : scheduleHour + 12);
+    const timeOfDay = `${hour24.toString().padStart(2, '0')}:00`;
+    
     try {
       await createReport({
         name: scheduleName,
@@ -803,25 +810,31 @@ export default function ReportBuilder() {
 
                   <div className="space-y-2">
                     <Label>Time of Day</Label>
-                    <Select value={timeOfDay} onValueChange={setTimeOfDay}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 24 }, (_, i) => {
-                          const hour24 = i.toString().padStart(2, '0');
-                          const hour12 = i % 12 || 12;
-                          const period = i >= 12 ? 'PM' : 'AM';
-                          return (
-                            <SelectItem key={hour24} value={`${hour24}:00`}>
-                              {hour12}:00 {period}
+                    <div className="flex gap-2">
+                      <Select value={scheduleHour.toString()} onValueChange={(v) => setScheduleHour(parseInt(v))}>
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
+                            <SelectItem key={hour} value={hour.toString()}>
+                              {hour}:00
                             </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={schedulePeriod} onValueChange={(v: 'AM' | 'PM') => setSchedulePeriod(v)}>
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AM">AM</SelectItem>
+                          <SelectItem value="PM">PM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      Reports are sent at the start of the selected hour ({timezone.replace('_', ' ')})
+                      {timezone.replace(/_/g, ' ')}
                     </p>
                   </div>
 
