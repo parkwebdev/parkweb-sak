@@ -213,10 +213,10 @@ export default function EmailTemplatesTest() {
     reportName: 'Weekly Analytics Report',
     dateRange: 'Jan 6 - Jan 12, 2025',
     metrics: [
-      { label: 'Total Conversations', value: '1,247', change: '+12.5%' },
-      { label: 'Leads Captured', value: '89', change: '+8.3%' },
-      { label: 'Avg. Response Time', value: '1.2s', change: '-15%' },
-      { label: 'Satisfaction Rate', value: '94%', change: '+2.1%' },
+      { label: 'Conversations', value: '1,247', change: '+12.5%' },
+      { label: 'Leads', value: '89', change: '+8.3%' },
+      { label: 'Conversion Rate', value: '7.1%', change: '+2.1%' },
+      { label: 'Satisfaction', value: '4.6/5', change: '+0.3' },
     ],
     viewReportUrl: 'https://getpilot.io/analytics',
   });
