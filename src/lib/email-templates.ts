@@ -86,14 +86,6 @@ export interface NewLeadNotificationData {
   viewLeadUrl: string;
 }
 
-export interface HumanTakeoverAlertData {
-  conversationId: string;
-  visitorName?: string;
-  requestReason?: string;
-  conversationPreview: string;
-  takeoverUrl: string;
-}
-
 export interface WelcomeEmailData {
   userName: string;
   companyName?: string;
@@ -589,39 +581,6 @@ export function generateNewLeadNotificationEmail(data: NewLeadNotificationData):
   
   return generateWrapper({
     preheaderText: `New lead: ${data.leadName} from ${source}`,
-    content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#lead-emails',
-  });
-}
-
-export function generateHumanTakeoverAlertEmail(data: HumanTakeoverAlertData): string {
-  const content = `
-    ${heading('Human assistance requested')}
-    ${alertBox('A conversation requires your immediate attention.', 'warning')}
-    ${spacer(16)}
-    
-    <!-- Conversation Preview -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>
-        <td style="padding: 20px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            ${data.visitorName ? detailRow('Visitor', data.visitorName) : ''}
-            ${detailRow('Conversation', data.conversationId)}
-            ${data.requestReason ? detailRow('Reason', data.requestReason) : ''}
-          </table>
-          ${spacer(12)}
-          <p class="email-text-muted" style="margin: 0; font-size: 14px; color: ${colors.textMuted};">Preview:</p>
-          <p class="email-text" style="margin: 8px 0 0 0; font-size: 14px; line-height: 1.5; color: ${colors.text};">${data.conversationPreview}</p>
-        </td>
-      </tr>
-    </table>
-    
-    ${spacer(24)}
-    ${button('Take Over Conversation', data.takeoverUrl)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `Urgent: Human takeover requested${data.visitorName ? ` by ${data.visitorName}` : ''}`,
     content,
     unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#lead-emails',
   });
