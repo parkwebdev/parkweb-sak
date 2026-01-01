@@ -76,8 +76,15 @@ const App = () => (
                   
                   {/* Protected routes with shared layout */}
                   <Route element={<ProtectedLayout />}>
-                    {/* Dashboard - always accessible for authenticated users */}
-                    <Route path="/" element={<GetStartedWrapper />} />
+                    {/* Get Started - admin only onboarding page */}
+                    <Route 
+                      path="/" 
+                      element={
+                        <PermissionGuard adminOnly redirectTo="/analytics">
+                          <GetStartedWrapper />
+                        </PermissionGuard>
+                      } 
+                    />
                     
                     {/* Ari Configuration - requires manage_ari permission */}
                     <Route 

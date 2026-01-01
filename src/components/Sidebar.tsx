@@ -46,6 +46,8 @@ interface NavigationItem {
   badge?: string;
   /** Required permission to view this item (optional - if not set, always visible) */
   requiredPermission?: AppPermission;
+  /** If true, only admins can see this item */
+  adminOnly?: boolean;
 }
 
 /** Main navigation items with permission requirements */
@@ -59,7 +61,7 @@ const navigationItems: NavigationItem[] = [
 
 /** Bottom navigation items (settings, etc.) */
 const bottomItems: NavigationItem[] = [
-  { id: 'get-set-up', label: 'Get set up', icon: Circle, path: '/' },
+  { id: 'get-set-up', label: 'Get set up', icon: Circle, path: '/', adminOnly: true },
   { id: 'settings', label: 'Settings', icon: Settings, activeIcon: SettingsFilled, path: '/settings', requiredPermission: 'view_settings' }
 ];
 
@@ -105,6 +107,8 @@ function SidebarComponent({ onClose }: SidebarProps) {
   const filteredBottomItems = useMemo(() => {
     if (permissionsLoading) return bottomItems;
     return bottomItems.filter(item => {
+      // Admin-only items require admin status
+      if (item.adminOnly) return isAdmin;
       if (!item.requiredPermission) return true;
       if (isAdmin) return true;
       return hasPermission(item.requiredPermission);
