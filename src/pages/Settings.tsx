@@ -16,16 +16,14 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu01 as Menu } from '@untitledui/icons';
-import { SettingsLayout } from '@/components/settings/SettingsLayout';
+import { SettingsLayout, type SettingsTab } from '@/components/settings/SettingsLayout';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings';
 import { UsageSettings } from '@/components/settings/UsageSettings';
 import { TeamSettings } from '@/components/settings/TeamSettings';
-
-/** Available settings tabs */
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'billing' | 'usage';
+import { SETTINGS_TABS } from '@/config/routes';
 
 /** Props for the Settings page */
 interface SettingsProps {
@@ -41,7 +39,7 @@ function Settings({ onMenuClick }: SettingsProps) {
   const tabParam = searchParams.get('tab');
   const openMemberId = searchParams.get('open');
 
-  // Set active tab from URL parameter
+  // Set active tab from URL parameter using centralized config
   useEffect(() => {
     // Handle legacy subscription param
     if (tabParam === 'subscription') {
@@ -49,7 +47,9 @@ function Settings({ onMenuClick }: SettingsProps) {
       return;
     }
     
-    if (tabParam && ['general', 'profile', 'team', 'notifications', 'billing', 'usage'].includes(tabParam)) {
+    // Validate against centralized SETTINGS_TABS config
+    const validTabParams = SETTINGS_TABS.map(tab => tab.tabParam);
+    if (tabParam && validTabParams.includes(tabParam)) {
       setActiveTab(tabParam as SettingsTab);
     }
   }, [tabParam]);
