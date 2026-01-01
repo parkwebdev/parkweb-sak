@@ -143,3 +143,8 @@ verify_jwt = true
 # New Lead Email - Notification when lead captured via Ari Agent
 [functions.send-new-lead-email]
 verify_jwt = false
+
+# Weekly Report - Automatic weekly analytics report to account admins
+[functions.send-weekly-report]
+verify_jwt = false
+schedule = "0 8 * * 1"

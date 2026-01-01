@@ -59,8 +59,8 @@ const TEMPLATES: TemplateItem[] = [
   { id: 'webhook-failure', label: 'Webhook Failure', icon: AlertTriangle, group: 'Alerts' },
   
   // Reports & Product
-  { id: 'report', label: 'Scheduled Report', icon: File02, group: 'Reports' },
-  { id: 'weekly-report', label: 'Weekly Report', icon: File02, group: 'Reports' },
+  { id: 'report', label: 'Scheduled Report', icon: File02, group: 'Reports', status: 'integrated' },
+  { id: 'weekly-report', label: 'Weekly Report', icon: File02, group: 'Reports', status: 'integrated' },
   { id: 'feature-announcement', label: 'Feature Announcement', icon: Announcement01, group: 'Product' },
 ];
 
