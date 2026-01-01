@@ -862,6 +862,44 @@ const menuItems = useMemo(() => {
 }, [hasPermission, isAdmin]);
 ```
 
+### Ari Sections Configuration
+
+All Ari configurator sections are centralized in `src/config/routes.ts` via `ARI_SECTIONS`. Used by:
+- **AriSectionMenu** (`src/components/agents/AriSectionMenu.tsx`) - Section navigation
+- **AriConfigurator** (`src/pages/AriConfigurator.tsx`) - Section validation
+
+| Section ID | Label | Group | Permission |
+|------------|-------|-------|------------|
+| `model-behavior` | Model & Behavior | AI | `manage_ari` |
+| `system-prompt` | System Prompt | AI | `manage_ari` |
+| `appearance` | Appearance | Widget | `manage_ari` |
+| `welcome-messages` | Welcome & Messages | Widget | `manage_ari` |
+| `lead-capture` | Lead Capture | Widget | `manage_ari` |
+| `knowledge` | Knowledge | Knowledge | `manage_knowledge` |
+| `locations` | Locations | Knowledge | `manage_ari` |
+| `help-articles` | Help Articles | Knowledge | `manage_help_articles` |
+| `announcements` | Announcements | Content | `manage_ari` |
+| `news` | News | Content | `manage_ari` |
+| `custom-tools` | Custom Tools | Tools | `manage_ari` |
+| `webhooks` | Webhooks | Tools | `manage_webhooks` |
+| `integrations` | Integrations | Tools | `manage_integrations` |
+| `api-access` | API Access | Tools | `manage_api_keys` |
+| `installation` | Installation | Deploy | `manage_ari` |
+
+```typescript
+// Usage in AriSectionMenu.tsx
+import { ARI_SECTIONS, getValidAriSectionIds } from '@/config/routes';
+
+// Filter sections by permission
+const visibleSections = ARI_SECTIONS.filter(section => {
+  if (!section.requiredPermission) return true;
+  return canManage(section.requiredPermission);
+});
+
+// Validate section ID
+const validIds = getValidAriSectionIds(); // ['model-behavior', 'system-prompt', ...]
+```
+
 ---
 
 ## Key Components

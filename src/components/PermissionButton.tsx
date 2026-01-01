@@ -11,6 +11,7 @@ import React from 'react';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManageChecker } from '@/hooks/useCanManage';
 import type { AppPermission } from '@/types/team';
 
 export interface PermissionButtonProps extends ButtonProps {
@@ -30,7 +31,8 @@ export function PermissionButton({
   disabled,
   ...buttonProps
 }: PermissionButtonProps) {
-  const { hasPermission, isAdmin, loading } = useRoleAuthorization();
+  const { loading } = useRoleAuthorization();
+  const canManage = useCanManageChecker();
   
   // While loading, show button in a neutral state
   if (loading) {
@@ -41,7 +43,7 @@ export function PermissionButton({
     );
   }
   
-  const hasAccess = isAdmin || hasPermission(permission);
+  const hasAccess = canManage(permission);
   
   // If user doesn't have permission and we should hide the button
   if (!hasAccess && hideWhenDenied) {

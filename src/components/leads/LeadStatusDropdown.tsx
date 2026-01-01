@@ -15,7 +15,7 @@ import { ChevronDown } from '@untitledui/icons';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 
 interface LeadStatusDropdownProps {
   stageId: string | null;
@@ -24,8 +24,7 @@ interface LeadStatusDropdownProps {
 
 export const LeadStatusDropdown = ({ stageId, onStageChange }: LeadStatusDropdownProps) => {
   const { stages, loading } = useLeadStages();
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageLeads = isAdmin || hasPermission('manage_leads');
+  const canManageLeads = useCanManage('manage_leads');
   const [showSaved, setShowSaved] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout>();
 

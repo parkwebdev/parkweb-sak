@@ -16,7 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManageChecker } from '@/hooks/useCanManage';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { SkeletonUserCard } from '@/components/ui/skeleton';
@@ -72,16 +72,13 @@ const formatShortcut = (shortcut: KeyboardShortcut) => {
 
 export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
   const { user, signOut } = useAuth();
-  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canView = useCanManageChecker();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const { setLocked } = useSidebar();
-  
-  // Permission helper
-  const canView = (permission: AppPermission) => isAdmin || hasPermission(permission);
 
   // Lock sidebar when dropdown opens, unlock when it closes
   const handleDropdownOpenChange = (open: boolean) => {
