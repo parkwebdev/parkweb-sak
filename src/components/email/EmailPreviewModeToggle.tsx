@@ -110,7 +110,7 @@ export const EmailPreviewModeToggle = React.memo(function EmailPreviewModeToggle
                 aria-pressed={isActive}
               >
                 {option.id === 'supabase' ? (
-                  <SupabaseIcon className="h-3.5 w-3.5" />
+                  <SupabaseIcon className="h-4 w-4" />
                 ) : Icon ? (
                   <Icon size={14} />
                 ) : null}
