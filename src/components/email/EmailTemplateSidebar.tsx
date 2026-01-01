@@ -141,19 +141,19 @@ export function EmailTemplateSidebar({
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Device</span>
           <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5">
             <Button
-              variant={previewWidth === 'mobile' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onPreviewWidthChange('mobile')}
-              className="h-7 text-xs px-3 flex-1"
+              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'mobile' ? 'bg-background text-foreground shadow-sm' : ''}`}
             >
               <Phone01 size={14} className="mr-1.5" />
               Mobile
             </Button>
             <Button
-              variant={previewWidth === 'desktop' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onPreviewWidthChange('desktop')}
-              className="h-7 text-xs px-3 flex-1"
+              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'desktop' ? 'bg-background text-foreground shadow-sm' : ''}`}
             >
               <Monitor01 size={14} className="mr-1.5" />
               Desktop
@@ -168,19 +168,19 @@ export function EmailTemplateSidebar({
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Theme</span>
           <div className="flex items-center gap-1 bg-muted/50 rounded-md p-0.5">
             <Button
-              variant={!darkMode ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onDarkModeChange(false)}
-              className="h-7 text-xs px-3 flex-1"
+              className={`h-7 text-xs px-3 flex-1 ${!darkMode ? 'bg-background text-foreground shadow-sm' : ''}`}
             >
               <Sun size={14} className="mr-1.5" />
               Light
             </Button>
             <Button
-              variant={darkMode ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onDarkModeChange(true)}
-              className="h-7 text-xs px-3 flex-1"
+              className={`h-7 text-xs px-3 flex-1 ${darkMode ? 'bg-background text-foreground shadow-sm' : ''}`}
             >
               <Moon01 size={14} className="mr-1.5" />
               Dark
