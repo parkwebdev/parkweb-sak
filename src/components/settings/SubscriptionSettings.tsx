@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
 import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt, Zap, Calendar, CreditCard01, ArrowUpRight } from '@untitledui/icons';
@@ -42,7 +42,6 @@ type Invoice = {
 
 export const SubscriptionSettings = () => {
   const { user } = useAuth();
-  const { hasPermission, isAdmin } = useRoleAuthorization();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -50,7 +49,7 @@ export const SubscriptionSettings = () => {
   const hasFetchedInvoicesRef = useRef(false);
   
   // Check if user can manage billing (upgrade, update payment, etc.)
-  const canManageBilling = isAdmin || hasPermission('manage_billing');
+  const canManageBilling = useCanManage('manage_billing');
 
   useEffect(() => {
     const fetchSubscription = async () => {

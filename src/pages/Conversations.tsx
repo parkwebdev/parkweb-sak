@@ -16,7 +16,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { validateFiles } from '@/lib/file-validation';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 
 import { useConversations } from '@/hooks/useConversations';
 import { useAgent } from '@/hooks/useAgent';
@@ -52,11 +52,10 @@ type Message = Tables<'messages'>;
 // === MAIN COMPONENT ===
 function Conversations() {
   const { user } = useAuth();
-  const { hasPermission, isAdmin } = useRoleAuthorization();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Check if user can manage conversations (takeover, send messages, close/reopen)
-  const canManageConversations = isAdmin || hasPermission('manage_conversations');
+  const canManageConversations = useCanManage('manage_conversations');
   
   // === DATA HOOKS ===
   const {

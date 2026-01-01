@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { useLeads } from '@/hooks/useLeads';
 import { useLeadStages } from '@/hooks/useLeadStages';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
@@ -51,12 +51,11 @@ interface LeadsProps {
 function Leads({ onMenuClick }: LeadsProps) {
   const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const { stages } = useLeadStages();
-  const { hasPermission, isAdmin } = useRoleAuthorization();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
   // Check if user can manage leads (delete, edit stage, etc.)
-  const canManageLeads = isAdmin || hasPermission('manage_leads');
+  const canManageLeads = useCanManage('manage_leads');
   
   // Initialize view mode from localStorage
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>(() => {

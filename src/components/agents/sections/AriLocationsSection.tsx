@@ -10,7 +10,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { Trash01, XClose, X, FilterLines, AlertTriangle, Home01 } from '@untitledui/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -53,8 +53,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const { propertiesWithLocation, loading: propertiesLoading, validationStats, uniqueLocations, locationIdsByName, refetch: refetchProperties } = useProperties(agentId);
   const { agent, refetch: refetchAgent } = useAgent();
   const { accounts } = useConnectedAccounts(undefined, agentId);
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageLocations = isAdmin || hasPermission('manage_ari');
+  const canManageLocations = useCanManage('manage_ari');
 
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>('communities');

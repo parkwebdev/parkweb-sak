@@ -35,7 +35,7 @@ import {
   BookOpen01, XClose, Image01, Plus, FilterLines, SearchSm, Trash01, RefreshCcw01, ChevronDown, X, Upload01 
 } from '@untitledui/icons';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { toast } from '@/lib/toast';
 import { uploadFeaturedImage } from '@/lib/article-image-upload';
 import { CATEGORY_ICON_OPTIONS, CategoryIcon, type CategoryIconName } from '@/widget/category-icons';
@@ -85,8 +85,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     embedAllArticles
   } = useHelpArticles(agentId);
   
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageHelpArticles = isAdmin || hasPermission('manage_help_articles');
+  const canManageHelpArticles = useCanManage('manage_help_articles');
   
   // Table state
   const [sorting, setSorting] = useState<SortingState>([]);

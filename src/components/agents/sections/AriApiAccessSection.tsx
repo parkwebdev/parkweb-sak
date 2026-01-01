@@ -12,7 +12,7 @@ import { AgentApiKeyManager } from '@/components/agents/AgentApiKeyManager';
 import { ApiUseCasesModal } from '@/components/agents/ApiUseCasesModal';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Lightbulb02 } from '@untitledui/icons';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 
 interface AriApiAccessSectionProps {
   agentId: string;
@@ -20,8 +20,7 @@ interface AriApiAccessSectionProps {
 
 export function AriApiAccessSection({ agentId }: AriApiAccessSectionProps) {
   const [showUseCasesModal, setShowUseCasesModal] = useState(false);
-  const { hasPermission, isAdmin } = useRoleAuthorization();
-  const canManageApiAccess = isAdmin || hasPermission('manage_ari');
+  const canManageApiAccess = useCanManage('manage_ari');
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
 
   return (

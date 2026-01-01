@@ -208,3 +208,66 @@ export function getMainNavRoutes(): readonly RouteConfig[] {
 export function getBottomNavRoutes(): readonly RouteConfig[] {
   return ROUTE_CONFIG.filter(r => r.showInBottomNav);
 }
+
+/** Ari section configuration */
+export interface AriSectionConfig {
+  /** Unique section identifier */
+  id: string;
+  /** Display label */
+  label: string;
+  /** Section group for visual organization */
+  group: string;
+  /** Permission required to see this section */
+  requiredPermission?: AppPermission;
+  /** Icon name from UntitledUI (outline) */
+  iconName: string;
+  /** Icon name for active state (filled) */
+  activeIconName?: string;
+}
+
+/**
+ * Centralized Ari section configuration.
+ * Used by AriSectionMenu for navigation and AriConfigurator for validation.
+ * Order determines display order in the UI.
+ */
+export const ARI_SECTIONS: readonly AriSectionConfig[] = [
+  // AI Configuration
+  { id: 'model-behavior', label: 'Model & Behavior', group: 'AI', requiredPermission: 'manage_ari', iconName: 'Atom01' },
+  { id: 'system-prompt', label: 'System Prompt', group: 'AI', requiredPermission: 'manage_ari', iconName: 'File02', activeIconName: 'FileFilled' },
+  
+  // Widget Appearance
+  { id: 'appearance', label: 'Appearance', group: 'Widget', requiredPermission: 'manage_ari', iconName: 'Palette', activeIconName: 'PaletteFilled' },
+  { id: 'welcome-messages', label: 'Welcome & Messages', group: 'Widget', requiredPermission: 'manage_ari', iconName: 'MessageSquare', activeIconName: 'MessageSquareFilled' },
+  { id: 'lead-capture', label: 'Lead Capture', group: 'Widget', requiredPermission: 'manage_ari', iconName: 'User01', activeIconName: 'UserFilled' },
+  
+  // Knowledge
+  { id: 'knowledge', label: 'Knowledge', group: 'Knowledge', requiredPermission: 'manage_knowledge', iconName: 'Database01', activeIconName: 'DatabaseFilled' },
+  { id: 'locations', label: 'Locations', group: 'Knowledge', requiredPermission: 'manage_ari', iconName: 'MarkerPin', activeIconName: 'MarkerPinFilled' },
+  { id: 'help-articles', label: 'Help Articles', group: 'Knowledge', requiredPermission: 'manage_help_articles', iconName: 'BookOpen01', activeIconName: 'BookOpenFilled' },
+  
+  // Content
+  { id: 'announcements', label: 'Announcements', group: 'Content', requiredPermission: 'manage_ari', iconName: 'Announcement01', activeIconName: 'AnnouncementFilled' },
+  { id: 'news', label: 'News', group: 'Content', requiredPermission: 'manage_ari', iconName: 'File06', activeIconName: 'NewsFilled' },
+  
+  // Tools & API
+  { id: 'custom-tools', label: 'Custom Tools', group: 'Tools', requiredPermission: 'manage_ari', iconName: 'CodeBrowser', activeIconName: 'CodeBrowserFilled' },
+  { id: 'webhooks', label: 'Webhooks', group: 'Tools', requiredPermission: 'manage_webhooks', iconName: 'Webhook', activeIconName: 'WebhookFilled' },
+  { id: 'integrations', label: 'Integrations', group: 'Tools', requiredPermission: 'manage_integrations', iconName: 'DataFlow', activeIconName: 'DataFlowFilled' },
+  { id: 'api-access', label: 'API Access', group: 'Tools', requiredPermission: 'manage_api_keys', iconName: 'Key01', activeIconName: 'KeyFilled' },
+  
+  // Deploy
+  { id: 'installation', label: 'Installation', group: 'Deploy', requiredPermission: 'manage_ari', iconName: 'Terminal', activeIconName: 'TerminalFilled' },
+] as const;
+
+/** Type for valid Ari section IDs */
+export type AriSectionId = typeof ARI_SECTIONS[number]['id'];
+
+/** Get valid Ari section IDs for URL validation */
+export function getValidAriSectionIds(): readonly string[] {
+  return ARI_SECTIONS.map(s => s.id);
+}
+
+/** Get Ari section by ID */
+export function getAriSectionById(id: string): AriSectionConfig | undefined {
+  return ARI_SECTIONS.find(s => s.id === id);
+}

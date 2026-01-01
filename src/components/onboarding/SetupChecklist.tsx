@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { PlayIcon } from '@/components/icons/PlayIcon';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useCanManage } from '@/hooks/useCanManage';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
@@ -40,11 +40,10 @@ export function SetupChecklist({
 }: SetupChecklistProps) {
   const prefersReducedMotion = useReducedMotion();
   const { user } = useAuth();
-  const { hasPermission, isAdmin } = useRoleAuthorization();
   const [hasRated, setHasRated] = useState(false);
   
   // Check if user can manage Ari
-  const canManageAri = isAdmin || hasPermission('manage_ari');
+  const canManageAri = useCanManage('manage_ari');
   
   // Filter steps based on permissions - hide Ari-related steps if user lacks manage_ari
   const visibleSteps = useMemo(() => {
