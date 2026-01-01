@@ -272,7 +272,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending team invitation to: ${email}, invited by: ${invitedBy}`);
 
-    const signupUrl = `${appUrl}/auth?tab=signup&email=${encodeURIComponent(email)}`;
+    const signupUrl = `${appUrl}/login?tab=signup&email=${encodeURIComponent(email)}`;
     const unsubscribeUrl = `${appUrl}/settings?tab=notifications#team-emails`;
 
     const { html, text } = generateTeamInvitationEmail({
