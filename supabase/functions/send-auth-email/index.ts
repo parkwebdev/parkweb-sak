@@ -2,7 +2,9 @@
  * Auth Email Edge Function
  * 
  * Sends custom authentication-related emails using our branded templates.
- * Supports: password-reset, signup-confirmation, welcome
+ * 
+ * NOTE: Supabase handles password-reset and signup-confirmation emails natively.
+ * This function is only for the 'welcome' email sent after user confirms their account.
  */
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -24,49 +26,8 @@ const corsHeaders = {
 };
 
 // =============================================================================
-// EMAIL GENERATORS
+// EMAIL GENERATOR
 // =============================================================================
-
-function generatePasswordResetEmail(userName: string | undefined, resetUrl: string, expiresIn = '1 hour'): string {
-  const greeting = userName ? `Hi ${userName},` : 'Hi,';
-  
-  const content = `
-    ${heading('Reset your password')}
-    ${paragraph(`${greeting} we received a request to reset your password.`)}
-    ${paragraph('Click the button below to choose a new password:', true)}
-    ${spacer(8)}
-    ${button('Reset Password', resetUrl)}
-    ${spacer(24)}
-    ${paragraph(`This link will expire in ${expiresIn}.`, true)}
-    ${paragraph("If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.", true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: 'Reset your Pilot password',
-    content,
-    footer: 'social',
-  });
-}
-
-function generateSignupConfirmationEmail(userName: string | undefined, confirmationUrl: string, expiresIn = '24 hours'): string {
-  const greeting = userName ? `Welcome ${userName}!` : 'Welcome!';
-  
-  const content = `
-    ${heading('Confirm your email')}
-    ${paragraph(`${greeting} Thanks for signing up for Pilot. Please confirm your email address to activate your account.`)}
-    ${spacer(8)}
-    ${button('Confirm Email', confirmationUrl)}
-    ${spacer(24)}
-    ${paragraph(`This link will expire in ${expiresIn}.`, true)}
-    ${paragraph("If you didn't create a Pilot account, you can safely ignore this email.", true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: 'Confirm your email to activate your Pilot account',
-    content,
-    footer: 'social',
-  });
-}
 
 function generateWelcomeEmail(userName: string, companyName: string | undefined, getStartedUrl: string): string {
   const companyNote = companyName ? ` We're excited to have ${companyName} on board.` : '';
@@ -108,12 +69,11 @@ function generateWelcomeEmail(userName: string, companyName: string | undefined,
 // =============================================================================
 
 interface AuthEmailRequest {
-  type: 'password-reset' | 'signup-confirmation' | 'welcome';
+  type: 'welcome';
   to: string;
   userName?: string;
   companyName?: string;
   actionUrl: string;
-  expiresIn?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -123,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const body: AuthEmailRequest = await req.json();
-    const { type, to, userName, companyName, actionUrl, expiresIn } = body;
+    const { type, to, userName, companyName, actionUrl } = body;
 
     console.log(`[send-auth-email] Sending ${type} email to ${to}`);
 
@@ -138,21 +98,13 @@ const handler = async (req: Request): Promise<Response> => {
     let subject: string;
 
     switch (type) {
-      case 'password-reset':
-        html = generatePasswordResetEmail(userName, actionUrl, expiresIn);
-        subject = 'Reset your password';
-        break;
-      case 'signup-confirmation':
-        html = generateSignupConfirmationEmail(userName, actionUrl, expiresIn);
-        subject = 'Confirm your email address';
-        break;
       case 'welcome':
         html = generateWelcomeEmail(userName || 'there', companyName, actionUrl);
         subject = `Welcome to Pilot${userName ? `, ${userName}` : ''}!`;
         break;
       default:
         return new Response(
-          JSON.stringify({ error: `Unknown email type: ${type}` }),
+          JSON.stringify({ error: `Unknown email type: ${type}. Only 'welcome' is supported. Supabase handles password-reset and signup-confirmation.` }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }

@@ -23,6 +23,8 @@ import {
   generateWeeklyReportEmail,
   generatePasswordResetEmail,
   generateSignupConfirmationEmail,
+  generateSupabasePasswordResetEmail,
+  generateSupabaseSignupConfirmationEmail,
   generateBookingCancellationEmail,
   generateBookingReminderEmail,
   generateNewLeadNotificationEmail,
@@ -192,6 +194,10 @@ export default function EmailTemplatesTest() {
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>('desktop');
   const [showSource, setShowSource] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [supabaseExportMode, setSupabaseExportMode] = useState(false);
+
+  // Check if current template supports Supabase export
+  const supportsSupabaseExport = activeTemplate === 'password-reset' || activeTemplate === 'signup-confirmation';
 
   // Existing template data
   const [invitationData, setInvitationData] = useState<TeamInvitationData>({
@@ -313,6 +319,15 @@ export default function EmailTemplatesTest() {
   });
 
   const getTemplateHtml = (): string => {
+    // For Supabase export mode, return the template variable version
+    if (supabaseExportMode) {
+      switch (activeTemplate) {
+        case 'password-reset': return generateSupabasePasswordResetEmail();
+        case 'signup-confirmation': return generateSupabaseSignupConfirmationEmail();
+        default: break;
+      }
+    }
+    
     switch (activeTemplate) {
       case 'invitation': return generateTeamInvitationEmail(invitationData);
       case 'booking': return generateBookingConfirmationEmail(bookingData);
@@ -873,9 +888,21 @@ export default function EmailTemplatesTest() {
               <h1 className="text-xl font-semibold text-foreground">Email Templates</h1>
               <p className="text-sm text-muted-foreground mt-0.5">Preview and test email templates with mock data</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="show-source" className="text-xs text-muted-foreground">Source</Label>
-              <Switch id="show-source" checked={showSource} onCheckedChange={setShowSource} />
+            <div className="flex items-center gap-4">
+              {supportsSupabaseExport && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-md">
+                  <Label htmlFor="supabase-export" className="text-xs text-muted-foreground">Supabase Export</Label>
+                  <Switch 
+                    id="supabase-export" 
+                    checked={supabaseExportMode} 
+                    onCheckedChange={setSupabaseExportMode}
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Label htmlFor="show-source" className="text-xs text-muted-foreground">Source</Label>
+                <Switch id="show-source" checked={showSource} onCheckedChange={setShowSource} />
+              </div>
             </div>
           </div>
 
@@ -890,7 +917,14 @@ export default function EmailTemplatesTest() {
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                {renderMockDataControls()}
+                {supabaseExportMode ? (
+                  <div className="p-4 text-sm text-muted-foreground">
+                    <p>Supabase Export Mode is enabled. The template uses Supabase variables like <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">{'{{ .ConfirmationURL }}'}</code> instead of mock data.</p>
+                    <p className="mt-2">Copy the HTML and paste it into your Supabase Dashboard → Authentication → Email Templates.</p>
+                  </div>
+                ) : (
+                  renderMockDataControls()
+                )}
               </CollapsibleContent>
             </Card>
           </Collapsible>

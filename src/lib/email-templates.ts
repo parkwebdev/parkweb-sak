@@ -590,6 +590,56 @@ export function generateSignupConfirmationEmail(data: SignupConfirmationData): s
 }
 
 // =============================================================================
+// SUPABASE DASHBOARD EXPORT TEMPLATES
+// These use Supabase template variables for copy/paste into Auth settings
+// =============================================================================
+
+/**
+ * Password Reset email template for Supabase Dashboard.
+ * Uses Supabase template variables: {{ .ConfirmationURL }}
+ */
+export function generateSupabasePasswordResetEmail(): string {
+  const content = `
+    ${heading('Reset your password')}
+    ${paragraph('Hi, we received a request to reset your password.')}
+    ${paragraph('Click the button below to choose a new password:', true)}
+    ${spacer(8)}
+    ${button('Reset Password', '{{ .ConfirmationURL }}')}
+    ${spacer(24)}
+    ${paragraph('This link will expire in 1 hour.', true)}
+    ${paragraph("If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.", true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: 'Reset your Pilot password',
+    content,
+    footer: 'social',
+  });
+}
+
+/**
+ * Signup Confirmation email template for Supabase Dashboard.
+ * Uses Supabase template variables: {{ .ConfirmationURL }}
+ */
+export function generateSupabaseSignupConfirmationEmail(): string {
+  const content = `
+    ${heading('Confirm your email')}
+    ${paragraph('Welcome! Thanks for signing up for Pilot. Please confirm your email address to activate your account.')}
+    ${spacer(8)}
+    ${button('Confirm Email', '{{ .ConfirmationURL }}')}
+    ${spacer(24)}
+    ${paragraph('This link will expire in 24 hours.', true)}
+    ${paragraph("If you didn't create a Pilot account, you can safely ignore this email.", true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: 'Confirm your email to activate your Pilot account',
+    content,
+    footer: 'social',
+  });
+}
+
+// =============================================================================
 // NEW TEMPLATES - HIGH PRIORITY
 // =============================================================================
 
