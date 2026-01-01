@@ -365,7 +365,7 @@ export default function ReportBuilder() {
       });
 
       toast.success('Scheduled report created');
-      navigate('/analytics');
+      navigate('/analytics?tab=reports');
     } catch (error: unknown) {
       logger.error('Error creating scheduled report:', error);
       toast.error('Failed to create scheduled report');
