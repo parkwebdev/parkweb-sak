@@ -3,15 +3,15 @@
  * 
  * Main navigation sidebar with collapsible behavior.
  * Expands on hover and shows unread conversation badges.
- * Filters navigation items based on user permissions.
+ * Filters navigation items based on user permissions using centralized route config.
  * 
  * @module components/Sidebar
  */
 
 import React, { useMemo } from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle, SearchMd } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
-import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
+import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -24,6 +24,7 @@ import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
+import { getMainNavRoutes, getBottomNavRoutes, type RouteConfig } from '@/config/routes';
 import type { ConversationMetadata } from '@/types/metadata';
 import type { AppPermission } from '@/types/team';
 
@@ -50,20 +51,44 @@ interface NavigationItem {
   adminOnly?: boolean;
 }
 
-/** Main navigation items with permission requirements */
-const navigationItems: NavigationItem[] = [
-  { id: 'ari', label: 'Ari', icon: AriAgentsIcon, path: '/ari', requiredPermission: 'manage_ari' },
-  { id: 'conversations', label: 'Inbox', icon: InboxOutline, activeIcon: InboxFilled, path: '/conversations', requiredPermission: 'view_conversations' },
-  { id: 'planner', label: 'Planner', icon: Calendar, activeIcon: PlannerFilled, path: '/planner', requiredPermission: 'view_bookings' },
-  { id: 'leads', label: 'Leads', icon: User03, activeIcon: LeadsFilled, path: '/leads', requiredPermission: 'view_leads' },
-  { id: 'analytics', label: 'Analytics', icon: PieChart01, activeIcon: AnalyticsFilled, path: '/analytics', requiredPermission: 'view_dashboard' }
-];
+/** Icon mapping from route config iconName to component */
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  AriLogo: AriAgentsIcon,
+  MessageChatSquare: InboxOutline,
+  Calendar: Calendar,
+  Users01: User03,
+  TrendUp01: PieChart01,
+  Circle: Circle,
+  Settings01: Settings,
+};
 
-/** Bottom navigation items (settings, etc.) */
-const bottomItems: NavigationItem[] = [
-  { id: 'get-set-up', label: 'Get set up', icon: Circle, path: '/', adminOnly: true },
-  { id: 'settings', label: 'Settings', icon: Settings, activeIcon: SettingsFilled, path: '/settings', requiredPermission: 'view_settings' }
-];
+/** Active icon mapping from route config iconName to filled component */
+const ACTIVE_ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }> | undefined> = {
+  MessageChatSquare: InboxFilled,
+  Calendar: PlannerFilled,
+  Users01: LeadsFilled,
+  TrendUp01: AnalyticsFilled,
+  Settings01: SettingsFilled,
+};
+
+/** Convert RouteConfig to NavigationItem */
+function routeToNavItem(route: RouteConfig): NavigationItem {
+  return {
+    id: route.id,
+    label: route.label,
+    icon: ICON_MAP[route.iconName ?? ''] ?? Grid,
+    activeIcon: ACTIVE_ICON_MAP[route.iconName ?? ''],
+    path: route.path,
+    requiredPermission: route.requiredPermission,
+    adminOnly: route.adminOnly,
+  };
+}
+
+/** Main navigation items from centralized config */
+const navigationItems: NavigationItem[] = getMainNavRoutes().map(routeToNavItem);
+
+/** Bottom navigation items from centralized config */
+const bottomItems: NavigationItem[] = getBottomNavRoutes().map(routeToNavItem);
 
 /**
  * Props for the Sidebar component
@@ -346,7 +371,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
                 className="items-center flex w-full py-0.5"
                 initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: (filteredNavigationItems.length + index + 1) * 0.03, ...springs.smooth }}
+                transition={{ delay: (filteredNavigationItems.length + 1 + index) * 0.03, ...springs.smooth }}
               >
                 <Link 
                   to={item.path}
@@ -354,44 +379,43 @@ function SidebarComponent({ onClose }: SidebarProps) {
                   className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     isActive 
                       ? 'bg-accent text-accent-foreground' 
-                      : isGetSetUp && !isCollapsed
-                        ? 'bg-background dark:bg-accent/40 border border-border text-muted-foreground hover:text-foreground hover:bg-accent/60'
-                        : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                      : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                   }`}
                   title={isCollapsed ? item.label : ''}
                 >
-                  <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                  <div className="items-center flex gap-2 my-auto w-full">
                     <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
                       {renderIcon()}
                     </div>
-                    <motion.div
-                      className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
-                        isActive ? 'font-medium' : ''
-                      }`}
+                    <motion.div 
+                      className="flex items-center justify-between flex-1 overflow-hidden"
                       initial={false}
                       animate={{ opacity: isCollapsed ? 0 : 1 }}
                       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
                     >
-                      {item.label}
+                      <div className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
+                        isActive ? 'font-medium' : ''
+                      }`}>
+                        {item.label}
+                      </div>
                     </motion.div>
                   </div>
                 </Link>
               </motion.div>
             );
           })}
-          
+
           {/* User account card */}
-          <div className="pt-2">
+          <div className="mt-4">
             <UserAccountCard isCollapsed={isCollapsed} />
           </div>
         </div>
       </nav>
     </motion.aside>
   );
-};
+}
 
 /**
- * Memoized Sidebar component to prevent unnecessary re-renders on route changes.
- * The component only re-renders when its props change.
+ * Memoized Sidebar component to prevent unnecessary re-renders.
  */
 export const Sidebar = React.memo(SidebarComponent);
