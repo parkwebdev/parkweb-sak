@@ -53,11 +53,9 @@ export function RoleManagementDialog({
   useEffect(() => {
     if (member) {
       fetchMemberRole();
-      if (isEditingSelf) {
-        fetchCurrentUserRole();
-      }
+      fetchCurrentUserRole(); // Always fetch to enable role dropdown for admins
     }
-  }, [member, isEditingSelf]);
+  }, [member]);
 
   const fetchCurrentUserRole = async () => {
     if (!user) return;
