@@ -424,6 +424,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   onColumnVisibilityChange={handleColumnVisibilityChange}
                   columnOrder={columnOrder}
                   defaultSort={defaultSort}
+                  canManage={canManageLeads}
                 />
               </motion.div>
             )}
