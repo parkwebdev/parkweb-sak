@@ -2193,6 +2193,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      invoke_send_scheduled_report: { Args: never; Returns: undefined }
       is_account_admin: { Args: { account_owner_id: string }; Returns: boolean }
       is_admin: { Args: { target_user_id: string }; Returns: boolean }
       is_super_admin: { Args: { user_id: string }; Returns: boolean }
