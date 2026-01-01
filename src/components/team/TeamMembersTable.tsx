@@ -70,12 +70,10 @@ export const TeamMembersTable = React.memo(function TeamMembersTable({
   }
 
   return (
-    <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
-      <DataTable
-        table={table}
-        columns={columns}
-        emptyMessage="No team members found"
-      />
-    </div>
+    <DataTable
+      table={table}
+      columns={columns}
+      emptyMessage="No team members found"
+    />
   );
 });
