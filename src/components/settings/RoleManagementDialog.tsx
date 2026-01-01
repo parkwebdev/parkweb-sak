@@ -3,13 +3,13 @@
  * Allows admins to assign roles and granular permissions.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Edit05 } from '@untitledui/icons';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
@@ -19,7 +19,6 @@ import {
   UserRole,
   AppPermission,
   PERMISSION_GROUPS, 
-  PERMISSION_LABELS,
   DEFAULT_ROLE_PERMISSIONS,
 } from '@/types/team';
 import { logger } from '@/utils/logger';
@@ -30,6 +29,23 @@ interface RoleManagementDialogProps {
   onClose: () => void;
   onUpdate: (member: TeamMember, role: string, permissions: string[]) => Promise<void>;
 }
+
+// Feature labels for the matrix rows
+const FEATURE_LABELS: Record<string, string> = {
+  Dashboard: 'Dashboard',
+  Ari: 'Ari Agent',
+  Conversations: 'Conversations',
+  Leads: 'Leads',
+  Bookings: 'Bookings',
+  Knowledge: 'Knowledge Base',
+  'Help Articles': 'Help Articles',
+  Team: 'Team',
+  Settings: 'Settings',
+  Billing: 'Billing',
+  Integrations: 'Integrations',
+  Webhooks: 'Webhooks',
+  'API Keys': 'API Keys',
+};
 
 export function RoleManagementDialog({
   member,
@@ -47,6 +63,30 @@ export function RoleManagementDialog({
   // Check if user is editing their own settings vs admin managing others
   const isEditingSelf = member?.user_id === user?.id;
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>('member');
+
+  // Build matrix data: rows are features, columns are View/Manage
+  const matrixData = useMemo(() => {
+    return Object.entries(PERMISSION_GROUPS).map(([group, groupPermissions]) => {
+      const viewPerm = groupPermissions.find(p => p.startsWith('view_'));
+      const managePerm = groupPermissions.find(p => p.startsWith('manage_'));
+      return {
+        feature: group,
+        label: FEATURE_LABELS[group] || group,
+        viewPermission: viewPerm,
+        managePermission: managePerm,
+      };
+    });
+  }, []);
+
+  // Calculate column states for select-all
+  const allViewPermissions = matrixData.map(r => r.viewPermission).filter(Boolean) as AppPermission[];
+  const allManagePermissions = matrixData.map(r => r.managePermission).filter(Boolean) as AppPermission[];
+  
+  const allViewSelected = allViewPermissions.every(p => permissions.includes(p));
+  const someViewSelected = allViewPermissions.some(p => permissions.includes(p)) && !allViewSelected;
+  
+  const allManageSelected = allManagePermissions.every(p => permissions.includes(p));
+  const someManageSelected = allManagePermissions.some(p => permissions.includes(p)) && !allManageSelected;
 
   useEffect(() => {
     if (member) {
@@ -117,22 +157,13 @@ export function RoleManagementDialog({
     }
   };
 
-  const isGroupFullySelected = (groupPermissions: readonly AppPermission[]) => {
-    return groupPermissions.every(p => permissions.includes(p));
-  };
-
-  const isGroupPartiallySelected = (groupPermissions: readonly AppPermission[]) => {
-    const selectedCount = groupPermissions.filter(p => permissions.includes(p)).length;
-    return selectedCount > 0 && selectedCount < groupPermissions.length;
-  };
-
-  const toggleGroupPermissions = (groupPermissions: readonly AppPermission[]) => {
-    if (isGroupFullySelected(groupPermissions)) {
-      setPermissions(prev => prev.filter(p => !groupPermissions.includes(p)));
+  const toggleColumnPermissions = (columnPermissions: AppPermission[], allSelected: boolean) => {
+    if (allSelected) {
+      setPermissions(prev => prev.filter(p => !columnPermissions.includes(p)));
     } else {
       setPermissions(prev => {
         const newPerms = new Set(prev);
-        groupPermissions.forEach(p => newPerms.add(p));
+        columnPermissions.forEach(p => newPerms.add(p));
         return Array.from(newPerms);
       });
     }
@@ -170,63 +201,9 @@ export function RoleManagementDialog({
 
   const canEditPermissions = !isEditingSelf || currentUserRole === 'admin';
 
-  const renderPermissionGroup = ([group, groupPermissions]: [string, readonly AppPermission[]]) => {
-    const fullySelected = isGroupFullySelected(groupPermissions);
-    const partiallySelected = isGroupPartiallySelected(groupPermissions);
-
-    return (
-      <div key={group} className="p-4 border border-border rounded-lg bg-card space-y-3">
-        <div className="flex items-center gap-3">
-          <Checkbox
-            checked={fullySelected}
-            ref={(el) => {
-              if (el) {
-                (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = partiallySelected;
-              }
-            }}
-            onCheckedChange={() => toggleGroupPermissions(groupPermissions)}
-            disabled={!canEditPermissions}
-            className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
-          />
-          <span className="text-sm font-medium">{group}</span>
-        </div>
-        
-        <div className="space-y-2 pl-7">
-          {groupPermissions.map((permission) => {
-            const isViewPermission = permission.startsWith('view_');
-            const PermissionIcon = isViewPermission ? Eye : Edit05;
-            
-            return (
-              <div key={permission} className="flex items-center gap-3">
-                <Checkbox
-                  id={permission}
-                  checked={permissions.includes(permission)}
-                  onCheckedChange={(checked) => 
-                    handlePermissionChange(permission, checked as boolean)
-                  }
-                  disabled={!canEditPermissions}
-                />
-                <PermissionIcon 
-                  size={14} 
-                  className={isViewPermission ? 'text-muted-foreground' : 'text-primary'}
-                />
-                <Label 
-                  htmlFor={permission}
-                  className="text-sm cursor-pointer font-normal text-muted-foreground"
-                >
-                  {PERMISSION_LABELS[permission]}
-                </Label>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {isEditingSelf ? 'Manage Your Settings' : 'Manage Role & Permissions'}
@@ -284,8 +261,84 @@ export function RoleManagementDialog({
                 {isEditingSelf ? 'Your Permissions' : 'Permissions'}
               </Label>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {Object.entries(PERMISSION_GROUPS).map(renderPermissionGroup)}
+              <div className="border border-border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                      <TableHead className="w-[45%] font-medium">Feature</TableHead>
+                      <TableHead className="w-[27.5%] text-center font-medium">
+                        <div className="flex items-center justify-center gap-2">
+                          <Checkbox
+                            checked={allViewSelected}
+                            ref={(el) => {
+                              if (el) {
+                                (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = someViewSelected;
+                              }
+                            }}
+                            onCheckedChange={() => toggleColumnPermissions(allViewPermissions, allViewSelected)}
+                            disabled={!canEditPermissions}
+                            className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
+                          />
+                          <span>View</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="w-[27.5%] text-center font-medium">
+                        <div className="flex items-center justify-center gap-2">
+                          <Checkbox
+                            checked={allManageSelected}
+                            ref={(el) => {
+                              if (el) {
+                                (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = someManageSelected;
+                              }
+                            }}
+                            onCheckedChange={() => toggleColumnPermissions(allManagePermissions, allManageSelected)}
+                            disabled={!canEditPermissions}
+                            className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
+                          />
+                          <span>Manage</span>
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {matrixData.map((row) => (
+                      <TableRow 
+                        key={row.feature} 
+                        className="transition-colors hover:bg-muted/30"
+                      >
+                        <TableCell className="text-sm font-medium text-foreground">
+                          {row.label}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {row.viewPermission && (
+                            <div className="flex justify-center">
+                              <Checkbox
+                                checked={permissions.includes(row.viewPermission)}
+                                onCheckedChange={(checked) => 
+                                  handlePermissionChange(row.viewPermission!, checked as boolean)
+                                }
+                                disabled={!canEditPermissions}
+                              />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {row.managePermission && (
+                            <div className="flex justify-center">
+                              <Checkbox
+                                checked={permissions.includes(row.managePermission)}
+                                onCheckedChange={(checked) => 
+                                  handlePermissionChange(row.managePermission!, checked as boolean)
+                                }
+                                disabled={!canEditPermissions}
+                              />
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           )}
