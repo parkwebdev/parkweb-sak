@@ -322,6 +322,7 @@ function LeadsTable({ canManage = false }: LeadsTableProps) {
 | `manage_webhooks` | - | Webhooks section in Ari |
 | `manage_integrations` | - | Integrations section, Connect Calendar |
 | `manage_api_keys` | - | API Access section in Ari |
+| `manage_leads` | - | Lead stage management in ManageStagesDialog |
 
 ---
 
@@ -346,12 +347,13 @@ The following components have permission guards fully implemented:
 - Takeover/close/reopen buttons require `manage_conversations`
 - Message input disabled without permission
 
-### Leads (`Leads.tsx`, `LeadsKanbanBoard.tsx`, `LeadsTable.tsx`, `LeadDetailsSheet.tsx`)
+### Leads (`Leads.tsx`, `LeadsKanbanBoard.tsx`, `LeadsTable.tsx`, `LeadDetailsSheet.tsx`, `ManageStagesDialog.tsx`)
 - Create/delete buttons require `manage_leads`
 - Stage change dropdowns disabled without permission
 - Kanban drag-and-drop disabled without permission
 - Row selection checkboxes disabled without permission
 - Floating bulk action bar hidden without permission
+- Lead stage management (create, edit, delete, reorder) requires `manage_leads`
 - `canManage` prop passed to child components
 
 ### Planner (`Planner.tsx`, `EventDetailDialog.tsx`)
@@ -359,11 +361,11 @@ The following components have permission guards fully implemented:
 - Event drag/resize disabled without permission
 - Delete/cancel buttons hidden without permission
 
-### Ari Configurator (`AriSectionMenu.tsx`)
+### Ari Configurator (`AriSectionMenu.tsx`, `AriApiAccessSection.tsx`, `AgentApiKeyManager.tsx`)
 - Menu sections filtered by permission
 - Users only see sections they can access
-
----
+- API key create/edit/revoke buttons require `manage_ari` permission
+- `canManage` prop passed to `AgentApiKeyManager`
 
 ## Role Management Dialog
 

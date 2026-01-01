@@ -30,6 +30,7 @@ import {
 
 interface AgentApiKeyManagerProps {
   agentId: string;
+  canManage?: boolean;
 }
 
 interface ApiKeyForEdit {
@@ -39,7 +40,7 @@ interface ApiKeyForEdit {
   requests_per_day: number;
 }
 
-export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
+export const AgentApiKeyManager = ({ agentId, canManage = true }: AgentApiKeyManagerProps) => {
   const { apiKeys, loading, generating, createApiKey, revokeApiKey, updateApiKey } = useAgentApiKeys(agentId);
   const [keyToRevoke, setKeyToRevoke] = useState<string | null>(null);
   const [newKeyName, setNewKeyName] = useState('');
@@ -101,9 +102,11 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
         <p className="text-sm text-muted-foreground">
           API keys authenticate programmatic access to this agent.
         </p>
-        <Button onClick={() => setShowCreateDialog(true)} size="sm">
-          Create Key
-        </Button>
+        {canManage && (
+          <Button onClick={() => setShowCreateDialog(true)} size="sm">
+            Create Key
+          </Button>
+        )}
       </div>
 
       {apiKeys.length === 0 ? (
@@ -132,26 +135,28 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
                       <span>{key.requests_per_minute}/min • {key.requests_per_day}/day</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleEditKey(key)}
-                      aria-label={`Edit API key: ${key.name}`}
-                    >
-                      <Edit03 className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setKeyToRevoke(key.id)}
-                      aria-label={`Revoke API key: ${key.name}`}
-                    >
-                      <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
-                    </Button>
-                  </div>
+                  {canManage && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEditKey(key)}
+                        aria-label={`Edit API key: ${key.name}`}
+                      >
+                        <Edit03 className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => setKeyToRevoke(key.id)}
+                        aria-label={`Revoke API key: ${key.name}`}
+                      >
+                        <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </AnimatedItem>

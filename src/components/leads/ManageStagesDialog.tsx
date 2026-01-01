@@ -38,6 +38,7 @@ import { cn } from '@/lib/utils';
 interface ManageStagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  canManage?: boolean;
 }
 
 // Sortable stage item
@@ -46,11 +47,13 @@ function SortableStageItem({
   onUpdate,
   onDelete,
   isDeleting,
+  canManage = true,
 }: {
   stage: LeadStage;
   onUpdate: (id: string, updates: Partial<Pick<LeadStage, 'name' | 'color' | 'is_default'>>) => void;
   onDelete: (id: string) => void;
   isDeleting: boolean;
+  canManage?: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(stage.name);
@@ -89,15 +92,19 @@ function SortableStageItem({
         isDragging && 'opacity-50 shadow-lg'
       )}
     >
-      {/* Drag handle */}
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
-        aria-label="Drag to reorder stage"
-      >
-        <DotsGrid size={16} />
-      </button>
+      {/* Drag handle - only show if can manage */}
+      {canManage ? (
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
+          aria-label="Drag to reorder stage"
+        >
+          <DotsGrid size={16} />
+        </button>
+      ) : (
+        <div className="w-4" /> 
+      )}
 
       {/* Color picker using proper component */}
       <ColorPicker
@@ -109,7 +116,7 @@ function SortableStageItem({
 
       {/* Name input/display */}
       <div className="flex-1 min-w-0">
-        {isEditing ? (
+        {isEditing && canManage ? (
           <Input
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
@@ -124,13 +131,17 @@ function SortableStageItem({
             className="h-7 text-sm"
             autoFocus
           />
-        ) : (
+        ) : canManage ? (
           <button
             onClick={() => setIsEditing(true)}
             className="text-sm font-medium text-left w-full truncate hover:text-primary"
           >
             {stage.name}
           </button>
+        ) : (
+          <span className="text-sm font-medium truncate">
+            {stage.name}
+          </span>
         )}
       </div>
 
@@ -141,8 +152,8 @@ function SortableStageItem({
         </span>
       )}
 
-      {/* Set as default button */}
-      {!stage.is_default && (
+      {/* Set as default button - only show if can manage */}
+      {!stage.is_default && canManage && (
         <IconButton
           label="Set as default"
           variant="ghost"
@@ -153,22 +164,24 @@ function SortableStageItem({
         </IconButton>
       )}
 
-      {/* Delete button */}
-      <IconButton
-        label="Delete stage"
-        variant="ghost"
-        size="sm"
-        onClick={() => onDelete(stage.id)}
-        disabled={isDeleting}
-        className="text-muted-foreground hover:text-destructive"
-      >
-        <Trash01 size={14} />
-      </IconButton>
+      {/* Delete button - only show if can manage */}
+      {canManage && (
+        <IconButton
+          label="Delete stage"
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(stage.id)}
+          disabled={isDeleting}
+          className="text-muted-foreground hover:text-destructive"
+        >
+          <Trash01 size={14} />
+        </IconButton>
+      )}
     </div>
   );
 }
 
-export function ManageStagesDialog({ open, onOpenChange }: ManageStagesDialogProps) {
+export function ManageStagesDialog({ open, onOpenChange, canManage = true }: ManageStagesDialogProps) {
   const { stages, createStage, updateStage, deleteStage, reorderStages, loading } = useLeadStages();
   const [localStages, setLocalStages] = useState<LeadStage[]>([]);
   const [newStageName, setNewStageName] = useState('');
@@ -255,6 +268,7 @@ export function ManageStagesDialog({ open, onOpenChange }: ManageStagesDialogPro
                       onUpdate={updateStage}
                       onDelete={handleDeleteStage}
                       isDeleting={isDeleting}
+                      canManage={canManage}
                     />
                   ))}
                 </div>
@@ -263,26 +277,28 @@ export function ManageStagesDialog({ open, onOpenChange }: ManageStagesDialogPro
           )}
         </div>
 
-        {/* Add new stage */}
-        <div className="flex gap-2 pt-4 border-t">
-          <Input
-            value={newStageName}
-            onChange={(e) => setNewStageName(e.target.value)}
-            placeholder="New stage name..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleCreateStage();
-            }}
-            className="flex-1"
-          />
-          <Button
-            onClick={handleCreateStage}
-            disabled={!newStageName.trim() || isCreating}
-            size="sm"
-          >
-            <Plus size={16} className="mr-1" />
-            Add
-          </Button>
-        </div>
+        {/* Add new stage - only show if can manage */}
+        {canManage && (
+          <div className="flex gap-2 pt-4 border-t">
+            <Input
+              value={newStageName}
+              onChange={(e) => setNewStageName(e.target.value)}
+              placeholder="New stage name..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreateStage();
+              }}
+              className="flex-1"
+            />
+            <Button
+              onClick={handleCreateStage}
+              disabled={!newStageName.trim() || isCreating}
+              size="sm"
+            >
+              <Plus size={16} className="mr-1" />
+              Add
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
