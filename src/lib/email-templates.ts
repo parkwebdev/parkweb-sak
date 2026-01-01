@@ -895,9 +895,9 @@ export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData):
 export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): string {
   const content = `
     ${heading('Team member removed')}
-    ${paragraph(`Hi <strong>${data.adminFirstName}</strong>, <strong>${data.memberFullName}</strong> has been removed from <strong>${data.companyName}</strong>.`)}
+    ${paragraph(`Hi <strong>${data.adminFirstName}</strong>, your team member <strong>${data.memberFullName}</strong> has been removed from <strong>${data.companyName}</strong>.`)}
     ${spacer(8)}
-    ${paragraph('This team member no longer has access to your team\'s resources.', true)}
+    ${paragraph('This team member no longer has access to your Pilot account.', true)}
   `;
   
   return generateWrapper({

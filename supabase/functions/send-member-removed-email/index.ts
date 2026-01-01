@@ -40,9 +40,9 @@ function generateMemberRemovedEmail(data: {
 
   const content = `
     ${heading('Team member removed')}
-    ${paragraph(`Hi <strong>${adminFirstName}</strong>, <strong>${memberFullName}</strong> has been removed from <strong>${companyName}</strong>.`)}
+    ${paragraph(`Hi <strong>${adminFirstName}</strong>, your team member <strong>${memberFullName}</strong> has been removed from <strong>${companyName}</strong>.`)}
     ${spacer(8)}
-    ${paragraph('This team member no longer has access to your team\\'s resources.', true)}
+    ${paragraph('This team member no longer has access to your Pilot account.', true)}
   `;
   
   const html = generateWrapper({
@@ -54,9 +54,9 @@ function generateMemberRemovedEmail(data: {
 
   const text = `Team member removed
 
-Hi ${adminFirstName}, ${memberFullName} has been removed from ${companyName}.
+Hi ${adminFirstName}, your team member ${memberFullName} has been removed from ${companyName}.
 
-This team member no longer has access to your team's resources.
+This team member no longer has access to your Pilot account.
 
 ---
 © ${new Date().getFullYear()} Pilot
