@@ -188,7 +188,29 @@ export const useTeam = () => {
     }
 
     try {
-      // Remove from user_roles table
+      // Fetch admin profile info for email notification
+      let adminFirstName = 'Admin';
+      let companyName = 'your team';
+      let adminEmail = user?.email;
+
+      if (user) {
+        const { data: adminProfile } = await supabase
+          .from('profiles')
+          .select('display_name, company_name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (adminProfile?.display_name) {
+          adminFirstName = adminProfile.display_name.split(' ')[0];
+        }
+        if (adminProfile?.company_name) {
+          companyName = adminProfile.company_name;
+        }
+      }
+
+      const memberFullName = member.display_name || member.email || 'Team Member';
+
+      // Remove from user_roles table first
       const { error: roleError } = await supabase
         .from('user_roles')
         .delete()
@@ -196,6 +218,10 @@ export const useTeam = () => {
 
       if (roleError) {
         logger.error('Error removing user role', roleError);
+        toast.error("Remove failed", {
+          description: "Failed to remove team member role. You may not have permission.",
+        });
+        return false;
       }
 
       // Remove from profiles table
@@ -205,19 +231,36 @@ export const useTeam = () => {
         .eq('user_id', member.user_id);
 
       if (profileError) {
+        logger.error('Error removing profile', profileError);
         toast.error("Remove failed", {
-          description: "Failed to remove team member.",
+          description: "Failed to remove team member profile.",
         });
         return false;
       }
 
+      // Send notification email to admin
+      if (adminEmail) {
+        await supabase.functions.invoke('send-member-removed-email', {
+          body: {
+            email: adminEmail,
+            adminFirstName,
+            memberFullName,
+            companyName
+          }
+        }).catch((err) => {
+          // Don't fail the removal if email fails
+          logger.error('Failed to send member removed email', err);
+        });
+      }
+
       toast.success("Member removed", {
-        description: `${member.display_name || member.email} has been removed from the team.`,
+        description: `${memberFullName} has been removed from the team.`,
       });
 
       await invalidateTeamQueries();
       return true;
     } catch (error: unknown) {
+      logger.error('Unexpected error removing member', error);
       toast.error("Remove failed", {
         description: "An error occurred while removing the team member.",
       });
