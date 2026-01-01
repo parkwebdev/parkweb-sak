@@ -639,6 +639,29 @@ export function generateSupabaseSignupConfirmationEmail(): string {
   });
 }
 
+/**
+ * Team Invitation (Invite User) email template for Supabase Dashboard.
+ * Uses Supabase template variables: {{ .ConfirmationURL }}
+ */
+export function generateSupabaseTeamInvitationEmail(): string {
+  const content = `
+    ${heading("You're invited to join Pilot")}
+    ${paragraph('You have been invited to collaborate on Pilot.')}
+    ${paragraph('Pilot helps teams manage conversations, leads, and customer interactions with AI-powered assistance.', true)}
+    ${spacer(8)}
+    ${button('Accept Invitation', '{{ .ConfirmationURL }}')}
+    ${spacer(24)}
+    ${paragraph("If you weren't expecting this invitation, you can safely ignore this email.", true)}
+  `;
+  
+  return generateWrapper({
+    preheaderText: 'You have been invited to join Pilot',
+    content,
+    footer: 'social-unsubscribe',
+    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#team-emails',
+  });
+}
+
 // =============================================================================
 // NEW TEMPLATES - HIGH PRIORITY
 // =============================================================================
