@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { 
@@ -5,9 +6,9 @@ import {
   XCircle, Clock, Users01, UserPlus01, RefreshCw01,
   AlertTriangle, UserMinus01, Announcement01, InfoCircle
 } from '@untitledui/icons';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 /** Supabase brand icon */
 function SupabaseIcon({ className }: { className?: string }) {
@@ -115,6 +116,8 @@ export function EmailTemplateSidebar({
   onDarkModeChange,
 }: EmailTemplateSidebarProps) {
   const prefersReducedMotion = useReducedMotion();
+  const [hoveredDevice, setHoveredDevice] = useState<PreviewWidth | null>(null);
+  const [hoveredTheme, setHoveredTheme] = useState<'light' | 'dark' | null>(null);
 
   // Group templates by their group
   const groupedTemplates = TEMPLATES.reduce((acc, template) => {
@@ -139,25 +142,51 @@ export function EmailTemplateSidebar({
         {/* Width Toggle */}
         <div className="space-y-1.5">
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Device</span>
-          <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
-            <Button
-              variant="ghost"
-              size="sm"
+          <div 
+            className="relative flex rounded-lg border overflow-hidden"
+            onMouseLeave={() => setHoveredDevice(null)}
+          >
+            <motion.div
+              className="absolute inset-y-0 bg-muted"
+              style={{ width: '50%' }}
+              initial={false}
+              animate={{
+                x: (hoveredDevice ?? previewWidth) === 'desktop' ? '100%' : '0%',
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 500,
+                damping: 35,
+              }}
+            />
+            <button
+              type="button"
               onClick={() => onPreviewWidthChange('mobile')}
-              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'mobile' ? 'bg-background text-foreground shadow-sm border border-border hover:bg-background' : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'}`}
+              onMouseEnter={() => setHoveredDevice('mobile')}
+              className={cn(
+                'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm flex-1',
+                previewWidth === 'mobile'
+                  ? 'text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
             >
-              <Phone01 size={14} className="mr-1.5" />
-              Mobile
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
+              <Phone01 size={14} />
+              <span>Mobile</span>
+            </button>
+            <button
+              type="button"
               onClick={() => onPreviewWidthChange('desktop')}
-              className={`h-7 text-xs px-3 flex-1 ${previewWidth === 'desktop' ? 'bg-background text-foreground shadow-sm border border-border hover:bg-background' : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'}`}
+              onMouseEnter={() => setHoveredDevice('desktop')}
+              className={cn(
+                'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm flex-1',
+                previewWidth === 'desktop'
+                  ? 'text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
             >
-              <Monitor01 size={14} className="mr-1.5" />
-              Desktop
-            </Button>
+              <Monitor01 size={14} />
+              <span>Desktop</span>
+            </button>
           </div>
         </div>
 
@@ -166,25 +195,51 @@ export function EmailTemplateSidebar({
         {/* Dark Mode Toggle */}
         <div className="space-y-1.5">
           <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wider px-1">Theme</span>
-          <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
-            <Button
-              variant="ghost"
-              size="sm"
+          <div 
+            className="relative flex rounded-lg border overflow-hidden"
+            onMouseLeave={() => setHoveredTheme(null)}
+          >
+            <motion.div
+              className="absolute inset-y-0 bg-muted"
+              style={{ width: '50%' }}
+              initial={false}
+              animate={{
+                x: (hoveredTheme ?? (darkMode ? 'dark' : 'light')) === 'dark' ? '100%' : '0%',
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 500,
+                damping: 35,
+              }}
+            />
+            <button
+              type="button"
               onClick={() => onDarkModeChange(false)}
-              className={`h-7 text-xs px-3 flex-1 ${!darkMode ? 'bg-background text-foreground shadow-sm border border-border hover:bg-background' : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'}`}
+              onMouseEnter={() => setHoveredTheme('light')}
+              className={cn(
+                'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm flex-1',
+                !darkMode
+                  ? 'text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
             >
-              <Sun size={14} className="mr-1.5" />
-              Light
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
+              <Sun size={14} />
+              <span>Light</span>
+            </button>
+            <button
+              type="button"
               onClick={() => onDarkModeChange(true)}
-              className={`h-7 text-xs px-3 flex-1 ${darkMode ? 'bg-background text-foreground shadow-sm border border-border hover:bg-background' : 'text-muted-foreground hover:bg-background/50 hover:text-foreground'}`}
+              onMouseEnter={() => setHoveredTheme('dark')}
+              className={cn(
+                'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm flex-1',
+                darkMode
+                  ? 'text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
             >
-              <Moon01 size={14} className="mr-1.5" />
-              Dark
-            </Button>
+              <Moon01 size={14} />
+              <span>Dark</span>
+            </button>
           </div>
         </div>
       </div>
