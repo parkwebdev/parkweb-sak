@@ -16,7 +16,7 @@ import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicato
 import { Eye, EyeOff, User01, Key01, UsersPlus, CheckCircle, Mail01, ArrowLeft } from '@untitledui/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import PilotLogo from '@/components/PilotLogo';
-import { logger } from '@/utils/logger';
+
 
 const signupSteps: StepItem[] = [
   {
@@ -41,7 +41,27 @@ const signupSteps: StepItem[] = [
   },
 ];
 
+// Simplified steps for invited team members (no invite team step)
+const invitedUserSteps: StepItem[] = [
+  {
+    title: "Your details",
+    description: "Complete your profile",
+    icon: User01,
+  },
+  {
+    title: "Choose a password",
+    description: "Secure your account",
+    icon: Key01,
+  },
+  {
+    title: "Complete setup",
+    description: "You're all set to get started",
+    icon: CheckCircle,
+  },
+];
+
 const stepIcons = [User01, Key01, UsersPlus, CheckCircle];
+const invitedStepIcons = [User01, Key01, CheckCircle];
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +79,9 @@ const Auth = () => {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  
+  // Track if user is coming from a team invitation
+  const [isInvitedUser, setIsInvitedUser] = useState(false);
   
   const navigate = useNavigate();
   const { logAuthEvent } = useSecurityLog();
@@ -81,6 +104,8 @@ const Auth = () => {
     
     if (emailParam) {
       setEmail(emailParam);
+      // If coming from invitation link, mark as invited user
+      setIsInvitedUser(true);
     }
     
     if (tabParam === 'signup') {
@@ -225,13 +250,26 @@ const Auth = () => {
       }
     }
 
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    }
+    // For invited users: step 1 (password) triggers signup directly
+    if (isInvitedUser) {
+      if (currentStep < 2) {
+        if (currentStep === 1) {
+          // Trigger signup for invited user, then move to completion
+          handleSignUp();
+        } else {
+          setCurrentStep(currentStep + 1);
+        }
+      }
+    } else {
+      // Regular signup flow with invite team step
+      if (currentStep < 3) {
+        setCurrentStep(currentStep + 1);
+      }
 
-    // If moving to step 3 (Complete), trigger signup
-    if (currentStep === 2) {
-      handleSignUp();
+      // If moving to step 3 (Complete), trigger signup
+      if (currentStep === 2) {
+        handleSignUp();
+      }
     }
   };
 
@@ -246,7 +284,7 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -269,20 +307,15 @@ const Auth = () => {
 
       logAuthEvent('signup', true);
 
-      // Handle team invitations if provided
-      if (teamEmails.trim()) {
-        // Process pending invitations (would be handled by edge function)
-        try {
-          await supabase.functions.invoke('handle-signup', {
-            body: { email, user_id: 'pending' }
-          });
-        } catch (err: unknown) {
-          logger.error('Error processing signup completion:', err);
-        }
-      }
+      // Note: handle-signup is called automatically by AuthContext on SIGNED_IN event
+      // This happens after the user confirms their email and signs in
 
       // Move to completion step
-      setCurrentStep(3);
+      if (isInvitedUser) {
+        setCurrentStep(2); // Completion is step 2 for invited users
+      } else {
+        setCurrentStep(3); // Completion is step 3 for regular users
+      }
     } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
     } finally {
@@ -425,9 +458,13 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-10"
-                  disabled={isLoading}
+                  disabled={isLoading || isInvitedUser}
+                  readOnly={isInvitedUser}
                   autoComplete="email"
                 />
+                {isInvitedUser && (
+                  <FormHint>This email was provided in your invitation</FormHint>
+                )}
               </div>
               <Button onClick={handleNextStep} size="lg" className="w-full" disabled={isLoading}>
                 Continue
@@ -550,6 +587,43 @@ const Auth = () => {
         );
 
       case 2:
+        // For invited users, step 2 is the completion step
+        if (isInvitedUser) {
+          return (
+            <motion.div
+              key="step-2-complete"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-6"
+            >
+              <div className="flex flex-col items-center gap-6 text-center">
+                <FeaturedIcon color="success" theme="modern" size="xl">
+                  <CheckCircle />
+                </FeaturedIcon>
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-2xl font-semibold text-foreground">You're all set!</h2>
+                  <p className="text-sm text-muted-foreground">
+                    We've sent a confirmation email to <span className="font-medium text-foreground">{email}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Please check your inbox and click the confirmation link to activate your account.
+                  </p>
+                </div>
+                <Button onClick={handleCompleteSetup} size="lg" className="w-full">
+                  Go to Sign In
+                </Button>
+              </div>
+            </motion.div>
+          );
+        }
+        
+        // For regular users, step 2 is the invite team step
         return (
           <motion.div
             key="step-2"
@@ -595,6 +669,7 @@ const Auth = () => {
         );
 
       case 3:
+        // Only for regular users (invited users complete at step 2)
         return (
           <motion.div
             key="step-3"
@@ -728,7 +803,11 @@ const Auth = () => {
           
           {/* Step Progress (only for signup) */}
           {activeTab === 'signup' && !showResetPassword && (
-            <StepProgress steps={signupSteps} currentStep={currentStep} className="pr-4" />
+            <StepProgress 
+              steps={isInvitedUser ? invitedUserSteps : signupSteps} 
+              currentStep={currentStep} 
+              className="pr-4" 
+            />
           )}
 
           {/* Sign in sidebar content */}
