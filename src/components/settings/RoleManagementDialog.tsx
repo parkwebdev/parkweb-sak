@@ -181,9 +181,9 @@ export function RoleManagementDialog({
     const partiallySelected = isGroupPartiallySelected(groupPermissions);
 
     return (
-      <AccordionItem key={group} value={group} className="border-b-0">
-        <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-          <div className="flex items-center gap-3 w-full">
+      <AccordionItem key={group} value={group}>
+        <AccordionTrigger className="text-sm" showIcon={true}>
+          <div className="flex items-center gap-3">
             <Checkbox
               checked={fullySelected}
               ref={(el) => {
@@ -196,11 +196,11 @@ export function RoleManagementDialog({
               disabled={!canEditPermissions}
               className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
             />
-            <span>{group}</span>
+            <span className="font-medium">{group}</span>
           </div>
         </AccordionTrigger>
-        <AccordionContent className="pb-3">
-          <div className="space-y-2 pl-7">
+        <AccordionContent>
+          <div className="space-y-3 pl-7">
             {groupPermissions.map((permission) => (
               <div key={permission} className="flex items-center gap-3">
                 <Checkbox
@@ -213,7 +213,7 @@ export function RoleManagementDialog({
                 />
                 <Label 
                   htmlFor={permission}
-                  className="text-sm cursor-pointer text-foreground"
+                  className="text-sm cursor-pointer font-normal"
                 >
                   {PERMISSION_LABELS[permission]}
                 </Label>
@@ -279,12 +279,12 @@ export function RoleManagementDialog({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Left Column */}
-              <Accordion type="multiple" className="border-0 px-0 bg-transparent">
+              <Accordion type="multiple">
                 {leftColumnGroups.map(renderPermissionGroup)}
               </Accordion>
 
               {/* Right Column */}
-              <Accordion type="multiple" className="border-0 px-0 bg-transparent">
+              <Accordion type="multiple">
                 {rightColumnGroups.map(renderPermissionGroup)}
               </Accordion>
             </div>
