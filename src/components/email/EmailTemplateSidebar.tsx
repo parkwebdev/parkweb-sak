@@ -42,7 +42,7 @@ const TEMPLATES: TemplateItem[] = [
   { id: 'welcome', label: 'Welcome', icon: UserPlus01, group: 'Auth', status: 'integrated' },
   
   // Transactional - Invitations
-  { id: 'invitation', label: 'Team Invitation', icon: Mail01, group: 'Team' },
+  { id: 'invitation', label: 'Team Invitation', icon: Mail01, group: 'Team', status: 'integrated' },
   { id: 'team-member-removed', label: 'Member Removed', icon: UserMinus01, group: 'Team' },
   
   // Transactional - Bookings

@@ -13,8 +13,110 @@ interface TeamInvitationRequest {
   companyName?: string;
 }
 
+// Email design tokens
+const colors = {
+  primary: '#6366f1',
+  primaryDark: '#4f46e5',
+  background: '#ffffff',
+  surface: '#f8fafc',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  border: '#e2e8f0',
+};
+
+function generateTeamInvitationEmail(data: { invitedBy: string; companyName: string; signupUrl: string; unsubscribeUrl: string }): { html: string; text: string } {
+  const { invitedBy, companyName, signupUrl, unsubscribeUrl } = data;
+  const year = new Date().getFullYear();
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>You're invited to join ${companyName}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    body { margin: 0; padding: 0; background-color: ${colors.surface}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    .wrapper { width: 100%; background-color: ${colors.surface}; padding: 40px 20px; }
+    .container { max-width: 600px; margin: 0 auto; background-color: ${colors.background}; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .header { background: linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%); padding: 32px 40px; text-align: center; }
+    .logo { font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; }
+    .content { padding: 40px; }
+    .heading { font-size: 24px; font-weight: 600; color: ${colors.text}; margin: 0 0 16px 0; line-height: 1.3; }
+    .paragraph { font-size: 16px; line-height: 1.6; color: ${colors.textMuted}; margin: 0 0 24px 0; }
+    .button { display: inline-block; background: linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%); color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; }
+    .button-wrapper { text-align: center; margin: 32px 0; }
+    .disclaimer { font-size: 14px; color: ${colors.textMuted}; margin-top: 32px; padding-top: 24px; border-top: 1px solid ${colors.border}; }
+    .footer { background-color: ${colors.surface}; padding: 24px 40px; text-align: center; border-top: 1px solid ${colors.border}; }
+    .footer p { margin: 0 0 8px 0; font-size: 13px; color: ${colors.textMuted}; }
+    .footer a { color: ${colors.primary}; text-decoration: none; }
+    @media only screen and (max-width: 600px) {
+      .content { padding: 24px !important; }
+      .header { padding: 24px !important; }
+      .footer { padding: 20px 24px !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <div class="logo">Pilot</div>
+      </div>
+      <div class="content">
+        <h1 class="heading">You're invited to join ${companyName}</h1>
+        <p class="paragraph">
+          <strong>${invitedBy}</strong> has invited you to collaborate on Pilot as part of ${companyName}.
+        </p>
+        <p class="paragraph">
+          Pilot helps teams manage conversations, leads, and customer interactions with AI-powered assistance. Join your team to get started.
+        </p>
+        <div class="button-wrapper">
+          <a href="${signupUrl}" class="button">Accept Invitation</a>
+        </div>
+        <p class="disclaimer">
+          If you weren't expecting this invitation, you can safely ignore this email. The invitation link will remain valid for 7 days.
+        </p>
+      </div>
+      <div class="footer">
+        <p>&copy; ${year} Pilot</p>
+        <p>1020 William Blount Dr. Ste 213, Maryville, TN 37804</p>
+        <p><a href="${unsubscribeUrl}">Manage notification preferences</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const text = `You're invited to join ${companyName}
+
+${invitedBy} has invited you to collaborate on Pilot as part of ${companyName}.
+
+Pilot helps teams manage conversations, leads, and customer interactions with AI-powered assistance. Join your team to get started.
+
+Accept your invitation: ${signupUrl}
+
+If you weren't expecting this invitation, you can safely ignore this email. The invitation link will remain valid for 7 days.
+
+---
+© ${year} Pilot
+1020 William Blount Dr. Ste 213, Maryville, TN 37804
+Manage notification preferences: ${unsubscribeUrl}`;
+
+  return { html, text };
+}
+
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -26,50 +128,32 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    const appUrl = Deno.env.get("APP_URL") || "https://getpilot.io";
 
     const { email, invitedBy, companyName }: TeamInvitationRequest = await req.json();
 
     console.log(`Sending team invitation to: ${email}, invited by: ${invitedBy}`);
 
-    // Get the team invitation email template
-    const { data: template, error: templateError } = await supabase
-      .from('email_templates')
-      .select('*')
-      .eq('name', 'team_invitation')
-      .eq('active', true)
-      .maybeSingle();
-
-    if (templateError || !template) {
-      console.error('Error fetching email template:', templateError);
-      throw new Error('Email template not found');
-    }
-
     // Create signup URL that leads to auth page
-    const signupUrl = `${Deno.env.get('SUPABASE_URL')?.replace('//', '//').replace('supabase.co', 'lovable.dev')}/auth?tab=signup&email=${encodeURIComponent(email)}`;
-    
-    // Replace template variables
-    const subject = template.subject
-      .replace('{{company_name}}', companyName || 'our team')
-      .replace('{{invited_by}}', invitedBy);
+    const signupUrl = `${appUrl}/auth?tab=signup&email=${encodeURIComponent(email)}`;
+    const unsubscribeUrl = `${appUrl}/settings?tab=notifications#team-emails`;
 
-    const htmlContent = template.html_content
-      .replace(/\{\{invited_by\}\}/g, invitedBy)
-      .replace(/\{\{company_name\}\}/g, companyName || 'our team')
-      .replace(/\{\{signup_url\}\}/g, signupUrl);
-
-    const textContent = template.text_content
-      .replace(/\{\{invited_by\}\}/g, invitedBy)
-      .replace(/\{\{company_name\}\}/g, companyName || 'our team')
-      .replace(/\{\{signup_url\}\}/g, signupUrl);
+    // Generate the email content
+    const { html, text } = generateTeamInvitationEmail({
+      invitedBy,
+      companyName: companyName || 'your team',
+      signupUrl,
+      unsubscribeUrl,
+    });
 
     // Send email using Resend
     const emailResponse = await resend.emails.send({
-      from: "Pilot Team <team@getpilot.io>",
+      from: "Pilot <team@getpilot.io>",
       to: [email],
       reply_to: "team@getpilot.io",
-      subject: subject,
-      html: htmlContent,
-      text: textContent,
+      subject: `${invitedBy} invited you to join ${companyName || 'their team'} on Pilot`,
+      html,
+      text,
     });
 
     console.log("Team invitation email sent successfully:", emailResponse);
