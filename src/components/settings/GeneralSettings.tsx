@@ -270,7 +270,7 @@ export function GeneralSettings() {
                 id="company_address"
                 value={company.company_address}
                 onChange={(e) => updateCompanyField('company_address', e.target.value)}
-                placeholder="1020 William Blount Dr. Ste 213, Maryville, TN 37804"
+                placeholder="123 Main Street, Suite 100, City, State 12345"
               />
             </div>
 
