@@ -1,6 +1,7 @@
 /**
  * @fileoverview Subscription and billing settings with invoice history.
  * Displays current plan, payment method, and billing history table.
+ * Respects manage_billing permission for action buttons.
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
 import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt, Zap, Calendar, CreditCard01, ArrowUpRight } from '@untitledui/icons';
@@ -40,11 +42,15 @@ type Invoice = {
 
 export const SubscriptionSettings = () => {
   const { user } = useAuth();
+  const { hasPermission, isAdmin } = useRoleAuthorization();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
   const hasFetchedInvoicesRef = useRef(false);
+  
+  // Check if user can manage billing (upgrade, update payment, etc.)
+  const canManageBilling = isAdmin || hasPermission('manage_billing');
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -188,14 +194,18 @@ export const SubscriptionSettings = () => {
                 )}
 
                 <div className="flex gap-3 pt-2">
-                  <Button variant="outline" size="sm">
-                    <CreditCard01 className="h-4 w-4 mr-2" />
-                    Manage Subscription
-                  </Button>
-                  <Button size="sm">
-                    Upgrade Plan
-                    <ArrowUpRight className="h-4 w-4 ml-2" />
-                  </Button>
+                  {canManageBilling && (
+                    <>
+                      <Button variant="outline" size="sm">
+                        <CreditCard01 className="h-4 w-4 mr-2" />
+                        Manage Subscription
+                      </Button>
+                      <Button size="sm">
+                        Upgrade Plan
+                        <ArrowUpRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (
@@ -207,7 +217,7 @@ export const SubscriptionSettings = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Choose a plan to unlock all features
                 </p>
-                <Button>Choose a Plan</Button>
+                {canManageBilling && <Button>Choose a Plan</Button>}
               </div>
             )}
           </CardContent>
@@ -226,9 +236,11 @@ export const SubscriptionSettings = () => {
                 type="gray-dark" 
                 cardholderName={cardholderName}
               />
-              <Button variant="outline" size="sm" className="mt-4">
-                Update Payment Method
-              </Button>
+              {canManageBilling && (
+                <Button variant="outline" size="sm" className="mt-4">
+                  Update Payment Method
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

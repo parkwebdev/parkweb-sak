@@ -33,7 +33,8 @@ interface LeadDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (id: string, updates: Partial<Tables<'leads'>>) => void;
-  onDelete: (id: string) => void;
+  /** If undefined, delete button will be hidden (user lacks permission) */
+  onDelete?: (id: string) => void;
 }
 
 // Priority options with semantic colors
@@ -249,7 +250,7 @@ export const LeadDetailsSheet = ({
   }, [lead]);
   
   const handleDelete = () => {
-    if (!lead) return;
+    if (!lead || !onDelete) return;
     onDelete(lead.id);
   };
 
@@ -852,14 +853,16 @@ export const LeadDetailsSheet = ({
                     View Conversation
                   </Button>
                 )}
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={handleDelete}
-                  aria-label="Delete lead"
-                >
-                  <Trash02 className="h-4 w-4" aria-hidden="true" />
-                </Button>
+                {onDelete && (
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={handleDelete}
+                    aria-label="Delete lead"
+                  >
+                    <Trash02 className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                )}
               </div>
             </div>
           </>

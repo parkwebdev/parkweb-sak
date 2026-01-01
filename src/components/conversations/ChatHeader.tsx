@@ -3,12 +3,14 @@
  * 
  * Header bar for the chat area showing visitor name, active status indicator,
  * and action buttons (takeover, return to AI, close, reopen).
+ * Respects manage_conversations permission for action buttons.
  * 
  * @component
  */
 
 import React, { memo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
 
@@ -33,6 +35,9 @@ export const ChatHeader = memo(function ChatHeader({
   onClose,
   onReopen,
 }: ChatHeaderProps) {
+  const { hasPermission, isAdmin } = useRoleAuthorization();
+  const canManageConversations = isAdmin || hasPermission('manage_conversations');
+  
   const metadata = (conversation.metadata || {}) as ConversationMetadata;
   const displayName = metadata.lead_name || metadata.lead_email || 'Anonymous';
 
@@ -51,28 +56,30 @@ export const ChatHeader = memo(function ChatHeader({
         </p>
       </div>
       
-      <div className="flex items-center gap-2">
-        {conversation.status === 'active' && (
-          <Button size="sm" variant="outline" onClick={onTakeover}>
-            Take Over
-          </Button>
-        )}
-        {conversation.status === 'human_takeover' && (
-          <Button size="sm" variant="outline" onClick={onReturnToAI}>
-            Return to AI
-          </Button>
-        )}
-        {conversation.status !== 'closed' && (
-          <Button size="sm" variant="destructive" onClick={onClose}>
-            Close
-          </Button>
-        )}
-        {conversation.status === 'closed' && (
-          <Button size="sm" variant="outline" onClick={onReopen}>
-            Re-open
-          </Button>
-        )}
-      </div>
+      {canManageConversations && (
+        <div className="flex items-center gap-2">
+          {conversation.status === 'active' && (
+            <Button size="sm" variant="outline" onClick={onTakeover}>
+              Take Over
+            </Button>
+          )}
+          {conversation.status === 'human_takeover' && (
+            <Button size="sm" variant="outline" onClick={onReturnToAI}>
+              Return to AI
+            </Button>
+          )}
+          {conversation.status !== 'closed' && (
+            <Button size="sm" variant="destructive" onClick={onClose}>
+              Close
+            </Button>
+          )}
+          {conversation.status === 'closed' && (
+            <Button size="sm" variant="outline" onClick={onReopen}>
+              Re-open
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 });
