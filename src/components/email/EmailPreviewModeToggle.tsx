@@ -65,21 +65,23 @@ export const EmailPreviewModeToggle = React.memo(function EmailPreviewModeToggle
   const currentIndex = visibleOptions.findIndex(opt => opt.id === indicatorPosition);
   const optionCount = visibleOptions.length;
 
+  const itemWidth = 100 / optionCount;
+
   return (
     <div
       className={cn(
-        'relative flex rounded-lg border bg-muted/30 p-1 gap-1',
+        'relative flex rounded-lg border overflow-hidden',
         className
       )}
       onMouseLeave={() => setHoveredMode(null)}
     >
       {/* Sliding indicator */}
       <motion.div
-        className="absolute inset-y-1 bg-background border rounded-md shadow-sm pointer-events-none"
+        className="absolute inset-y-0 bg-muted"
+        style={{ width: `${itemWidth}%` }}
         initial={false}
         animate={{
-          left: `calc(${currentIndex} * (100% - 8px) / ${optionCount} + 4px + ${currentIndex} * 4px)`,
-          width: `calc((100% - 8px - ${(optionCount - 1) * 4}px) / ${optionCount})`,
+          x: `${currentIndex * 100}%`,
         }}
         transition={{
           type: 'spring',
@@ -100,11 +102,12 @@ export const EmailPreviewModeToggle = React.memo(function EmailPreviewModeToggle
                 onClick={() => onModeChange(option.id)}
                 onMouseEnter={() => setHoveredMode(option.id)}
                 className={cn(
-                  'relative z-10 flex h-8 flex-1 items-center justify-center gap-1.5 px-3 rounded-md transition-colors text-sm',
+                  'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm',
                   isActive
                     ? 'text-foreground font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
+                style={{ width: `${itemWidth}%` }}
                 aria-label={option.label}
                 aria-pressed={isActive}
               >
