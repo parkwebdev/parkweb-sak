@@ -259,7 +259,7 @@ export default function EmailTemplatesTest() {
     leadName: 'Sarah Johnson',
     leadEmail: 'sarah@example.com',
     leadPhone: '+1 (555) 123-4567',
-    source: 'Chat Widget',
+    source: 'Ari Agent',
     message: 'Interested in the Enterprise plan. Need a demo.',
     viewLeadUrl: 'https://getpilot.io/leads/123',
   });
