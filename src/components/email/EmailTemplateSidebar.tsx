@@ -76,8 +76,8 @@ const TEMPLATES: TemplateItem[] = [
   { id: 'signup-confirmation', label: 'Signup Confirmation', icon: Mail01, group: 'Auth', status: 'integrated', delivery: 'supabase' },
   { id: 'welcome', label: 'Welcome', icon: UserPlus01, group: 'Auth', status: 'integrated', delivery: 'resend' },
   
-  // Team - Invitation is Supabase Invite User, Member Removed is Resend
-  { id: 'invitation', label: 'Team Invitation', icon: Mail01, group: 'Team', status: 'integrated', delivery: 'supabase' },
+  // Team - Both use Resend (Invitation has optional Supabase export for reference)
+  { id: 'invitation', label: 'Team Invitation', icon: Mail01, group: 'Team', status: 'integrated', delivery: 'resend' },
   { id: 'team-member-removed', label: 'Member Removed', icon: UserMinus01, group: 'Team', status: 'integrated', delivery: 'resend' },
   
   // Transactional - Bookings (Resend)
