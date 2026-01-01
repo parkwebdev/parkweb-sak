@@ -608,14 +608,32 @@ serve(async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const now = new Date();
+    
+    // Parse request body for optional forceReportId
+    let forceReportId: string | null = null;
+    try {
+      const body = await req.json();
+      forceReportId = body.forceReportId || null;
+    } catch {
+      // No body or invalid JSON - that's fine
+    }
 
     console.log('Checking for scheduled reports at:', now.toISOString());
+    if (forceReportId) {
+      console.log(`Force sending specific report: ${forceReportId}`);
+    }
 
-    // Fetch active scheduled reports
-    const { data: reports, error } = await supabase
+    // Fetch active scheduled reports (or specific one if forcing)
+    let query = supabase
       .from('scheduled_reports')
       .select('*')
       .eq('active', true);
+    
+    if (forceReportId) {
+      query = query.eq('id', forceReportId);
+    }
+    
+    const { data: reports, error } = await query;
 
     if (error) {
       console.error('Error fetching scheduled reports:', error);
@@ -638,11 +656,14 @@ serve(async (req: Request): Promise<Response> => {
     const processedReports: string[] = [];
 
     for (const report of reports || []) {
-      const shouldRun = checkShouldRun(report, now);
-      
-      if (!shouldRun) {
-        console.log(`Skipping report ${report.id} - not scheduled for this time`);
-        continue;
+      // Skip schedule check if forcing a specific report
+      if (!forceReportId) {
+        const shouldRun = checkShouldRun(report, now);
+        
+        if (!shouldRun) {
+          console.log(`Skipping report ${report.id} - not scheduled for this time`);
+          continue;
+        }
       }
 
       const companyName = report.profiles?.company_name || 'Pilot';
