@@ -2302,16 +2302,30 @@ export type Database = {
     Enums: {
       agent_status: "draft" | "active" | "paused"
       app_permission:
-        | "manage_team"
+        | "view_dashboard"
+        | "manage_ari"
+        | "view_conversations"
+        | "manage_conversations"
+        | "view_leads"
+        | "manage_leads"
+        | "view_bookings"
+        | "manage_bookings"
+        | "view_knowledge"
+        | "manage_knowledge"
+        | "view_help_articles"
+        | "manage_help_articles"
         | "view_team"
-        | "manage_projects"
-        | "view_projects"
-        | "manage_onboarding"
-        | "view_onboarding"
-        | "manage_scope_works"
-        | "view_scope_works"
-        | "manage_settings"
+        | "manage_team"
         | "view_settings"
+        | "manage_settings"
+        | "view_billing"
+        | "manage_billing"
+        | "view_integrations"
+        | "manage_integrations"
+        | "view_webhooks"
+        | "manage_webhooks"
+        | "view_api_keys"
+        | "manage_api_keys"
       app_role: "admin" | "manager" | "member" | "super_admin" | "client"
       calendar_event_status: "confirmed" | "cancelled" | "completed" | "no_show"
       calendar_provider: "google_calendar" | "outlook_calendar"
@@ -2469,16 +2483,30 @@ export const Constants = {
     Enums: {
       agent_status: ["draft", "active", "paused"],
       app_permission: [
-        "manage_team",
+        "view_dashboard",
+        "manage_ari",
+        "view_conversations",
+        "manage_conversations",
+        "view_leads",
+        "manage_leads",
+        "view_bookings",
+        "manage_bookings",
+        "view_knowledge",
+        "manage_knowledge",
+        "view_help_articles",
+        "manage_help_articles",
         "view_team",
-        "manage_projects",
-        "view_projects",
-        "manage_onboarding",
-        "view_onboarding",
-        "manage_scope_works",
-        "view_scope_works",
-        "manage_settings",
+        "manage_team",
         "view_settings",
+        "manage_settings",
+        "view_billing",
+        "manage_billing",
+        "view_integrations",
+        "manage_integrations",
+        "view_webhooks",
+        "manage_webhooks",
+        "view_api_keys",
+        "manage_api_keys",
       ],
       app_role: ["admin", "manager", "member", "super_admin", "client"],
       calendar_event_status: ["confirmed", "cancelled", "completed", "no_show"],
