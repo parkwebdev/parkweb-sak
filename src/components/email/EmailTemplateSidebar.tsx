@@ -53,7 +53,6 @@ const TEMPLATES: TemplateItem[] = [
   
   // Leads & Conversations
   { id: 'new-lead', label: 'New Lead', icon: Users01, group: 'Leads', status: 'integrated' },
-  { id: 'human-takeover', label: 'Human Takeover', icon: MessageCircle01, group: 'Leads' },
   
   // Alerts
   { id: 'webhook-failure', label: 'Webhook Failure', icon: AlertTriangle, group: 'Alerts' },

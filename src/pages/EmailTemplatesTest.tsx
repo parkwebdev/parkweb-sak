@@ -25,7 +25,7 @@ import {
   generateBookingCancellationEmail,
   generateBookingReminderEmail,
   generateNewLeadNotificationEmail,
-  generateHumanTakeoverAlertEmail,
+  
   generateWelcomeEmail,
   generateBookingRescheduledEmail,
   
@@ -40,7 +40,7 @@ import {
   type BookingCancellationData,
   type BookingReminderData,
   type NewLeadNotificationData,
-  type HumanTakeoverAlertData,
+  
   type WelcomeEmailData,
   type BookingRescheduledData,
   
@@ -264,14 +264,6 @@ export default function EmailTemplatesTest() {
     viewLeadUrl: 'https://getpilot.io/leads/123',
   });
 
-  const [humanTakeoverData, setHumanTakeoverData] = useState<HumanTakeoverAlertData>({
-    conversationId: 'conv_abc123',
-    visitorName: 'John Doe',
-    requestReason: 'Complex billing question',
-    conversationPreview: 'I need help understanding my invoice. The charges don\'t seem right...',
-    takeoverUrl: 'https://getpilot.io/conversations/abc123',
-  });
-
   const [welcomeData, setWelcomeData] = useState<WelcomeEmailData>({
     userName: 'Alex',
     companyName: 'Acme Inc',
@@ -321,7 +313,6 @@ export default function EmailTemplatesTest() {
       case 'booking-cancellation': return generateBookingCancellationEmail(bookingCancellationData);
       case 'booking-reminder': return generateBookingReminderEmail(bookingReminderData);
       case 'new-lead': return generateNewLeadNotificationEmail(newLeadData);
-      case 'human-takeover': return generateHumanTakeoverAlertEmail(humanTakeoverData);
       case 'welcome': return generateWelcomeEmail(welcomeData);
       case 'booking-rescheduled': return generateBookingRescheduledEmail(bookingRescheduledData);
       case 'webhook-failure': return generateWebhookFailureAlertEmail(webhookFailureData);
@@ -342,7 +333,6 @@ export default function EmailTemplatesTest() {
       case 'booking-cancellation': return `Cancelled: ${bookingCancellationData.eventType} on ${bookingCancellationData.date}`;
       case 'booking-reminder': return `Reminder: ${bookingReminderData.eventType} in ${bookingReminderData.reminderTime}`;
       case 'new-lead': return `New lead: ${newLeadData.leadName}`;
-      case 'human-takeover': return 'Human assistance requested';
       case 'welcome': return `Welcome to Pilot, ${welcomeData.userName}!`;
       case 'booking-rescheduled': return `Rescheduled: ${bookingRescheduledData.eventType}`;
       case 'webhook-failure': return `Webhook failed: ${webhookFailureData.webhookName}`;
@@ -632,36 +622,6 @@ export default function EmailTemplatesTest() {
               <Input
                 value={newLeadData.message || ''}
                 onChange={(e) => setNewLeadData({ ...newLeadData, message: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
-        );
-
-      case 'human-takeover':
-        return (
-          <div className="p-4 grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs">Visitor Name</Label>
-              <Input
-                value={humanTakeoverData.visitorName || ''}
-                onChange={(e) => setHumanTakeoverData({ ...humanTakeoverData, visitorName: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Reason</Label>
-              <Input
-                value={humanTakeoverData.requestReason || ''}
-                onChange={(e) => setHumanTakeoverData({ ...humanTakeoverData, requestReason: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label className="text-xs">Preview</Label>
-              <Input
-                value={humanTakeoverData.conversationPreview}
-                onChange={(e) => setHumanTakeoverData({ ...humanTakeoverData, conversationPreview: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>
