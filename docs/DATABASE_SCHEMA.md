@@ -547,8 +547,8 @@ Custom pipeline stages for lead management (kanban columns).
 4. Converted (purple)
 
 **RLS Policies:**
-- Users can create their own lead stages (`auth.uid() = user_id`)
-- Users can view/update/delete accessible lead stages (`has_account_access(user_id)`)
+- INSERT: `has_account_access(user_id)` - Team members can create lead stages
+- SELECT/UPDATE/DELETE: `has_account_access(user_id)` - Team members can view and manage lead stages
 
 ---
 
@@ -609,7 +609,10 @@ Help article categories.
 **Available Icons:**
 `BookOpen01`, `HelpCircle`, `User01`, `CreditCard01`, `FileText01`, `Settings01`, `Bell01`, `Lock01`, `Target01`, `Zap01`, `Briefcase01`, `BarChart01`, `MessageCircle01`, `CheckCircle01`, `AlertCircle01`, `Calendar`, `Globe01`, `DownloadCloud01`, `Link01`, `PlayCircle`, `Gift01`, `Truck01`, `Clock`, `MessageChatCircle`, `Building07`
 
----
+**RLS Policies:**
+- INSERT: `has_account_access(user_id) AND agent belongs to accessible account` - Team members can create categories
+- SELECT: Anyone authenticated can view
+- UPDATE/DELETE: `has_account_access(user_id)` - Team members can manage categories
 
 #### `help_articles`
 Help center articles.
@@ -626,7 +629,10 @@ Help center articles.
 | `icon` | text | Yes | - | (Deprecated) |
 | `order_index` | integer | Yes | `0` | Display order |
 | `created_at` | timestamptz | Yes | `now()` | Creation timestamp |
-| `updated_at` | timestamptz | Yes | `now()` | Last update timestamp |
+**RLS Policies:**
+- INSERT: `has_account_access(user_id) AND agent belongs to accessible account` - Team members can create articles
+- SELECT: Anyone authenticated can view
+- UPDATE/DELETE: `has_account_access(user_id)` - Team members can manage articles
 
 ---
 
