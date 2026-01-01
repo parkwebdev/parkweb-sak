@@ -28,7 +28,7 @@ import {
   generateHumanTakeoverAlertEmail,
   generateWelcomeEmail,
   generateBookingRescheduledEmail,
-  generateLeadStatusChangeEmail,
+  
   generateWebhookFailureAlertEmail,
   generateTeamMemberRemovedEmail,
   generateFeatureAnnouncementEmail,
@@ -43,7 +43,7 @@ import {
   type HumanTakeoverAlertData,
   type WelcomeEmailData,
   type BookingRescheduledData,
-  type LeadStatusChangeData,
+  
   type WebhookFailureAlertData,
   type TeamMemberRemovedData,
   type FeatureAnnouncementData,
@@ -289,13 +289,6 @@ export default function EmailTemplatesTest() {
     calendarLink: 'https://calendar.google.com/event?id=abc123',
   });
 
-  const [leadStatusChangeData, setLeadStatusChangeData] = useState<LeadStatusChangeData>({
-    leadName: 'Sarah Johnson',
-    previousStage: 'New',
-    newStage: 'Qualified',
-    viewLeadUrl: 'https://getpilot.io/leads/123',
-  });
-
   const [webhookFailureData, setWebhookFailureData] = useState<WebhookFailureAlertData>({
     webhookName: 'CRM Sync',
     endpoint: 'https://api.example.com/webhook',
@@ -331,7 +324,6 @@ export default function EmailTemplatesTest() {
       case 'human-takeover': return generateHumanTakeoverAlertEmail(humanTakeoverData);
       case 'welcome': return generateWelcomeEmail(welcomeData);
       case 'booking-rescheduled': return generateBookingRescheduledEmail(bookingRescheduledData);
-      case 'lead-status-change': return generateLeadStatusChangeEmail(leadStatusChangeData);
       case 'webhook-failure': return generateWebhookFailureAlertEmail(webhookFailureData);
       case 'team-member-removed': return generateTeamMemberRemovedEmail(teamMemberRemovedData);
       case 'feature-announcement': return generateFeatureAnnouncementEmail(featureAnnouncementData);
@@ -353,7 +345,6 @@ export default function EmailTemplatesTest() {
       case 'human-takeover': return 'Human assistance requested';
       case 'welcome': return `Welcome to Pilot, ${welcomeData.userName}!`;
       case 'booking-rescheduled': return `Rescheduled: ${bookingRescheduledData.eventType}`;
-      case 'lead-status-change': return `${leadStatusChangeData.leadName} moved to ${leadStatusChangeData.newStage}`;
       case 'webhook-failure': return `Webhook failed: ${webhookFailureData.webhookName}`;
       case 'team-member-removed': return `Removed from ${teamMemberRemovedData.companyName}`;
       case 'feature-announcement': return `New: ${featureAnnouncementData.featureTitle}`;
@@ -755,44 +746,6 @@ export default function EmailTemplatesTest() {
               <Input
                 value={bookingRescheduledData.timezone}
                 onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, timezone: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
-        );
-
-      case 'lead-status-change':
-        return (
-          <div className="p-4 grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs">Lead Name</Label>
-              <Input
-                value={leadStatusChangeData.leadName}
-                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, leadName: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Previous Stage</Label>
-              <Input
-                value={leadStatusChangeData.previousStage}
-                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, previousStage: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">New Stage</Label>
-              <Input
-                value={leadStatusChangeData.newStage}
-                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, newStage: e.target.value })}
-                className="h-8 text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">View Lead URL</Label>
-              <Input
-                value={leadStatusChangeData.viewLeadUrl}
-                onChange={(e) => setLeadStatusChangeData({ ...leadStatusChangeData, viewLeadUrl: e.target.value })}
                 className="h-8 text-sm"
               />
             </div>

@@ -111,17 +111,6 @@ export interface BookingRescheduledData {
   calendarLink?: string;
 }
 
-/**
- * Lead status change notification data.
- * Note: changedBy removed - not tracked in the app.
- */
-export interface LeadStatusChangeData {
-  leadName: string;
-  previousStage: string;
-  newStage: string;
-  viewLeadUrl: string;
-}
-
 export interface WebhookFailureAlertData {
   webhookName: string;
   endpoint: string;
@@ -722,37 +711,6 @@ export function generateBookingRescheduledEmail(data: BookingRescheduledData): s
     preheaderText: `Your ${data.eventType} has been rescheduled to ${data.newDate} at ${data.newTime}`,
     content,
     unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#booking-emails',
-  });
-}
-
-export function generateLeadStatusChangeEmail(data: LeadStatusChangeData): string {
-  const content = `
-    ${heading('Lead status updated')}
-    ${paragraph(`<strong>${data.leadName}</strong> has been moved to a new stage.`)}
-    
-    <!-- Status Change -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>
-        <td style="padding: 20px; text-align: center;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">
-            <tr>
-              <td style="padding: 8px 16px; font-size: 14px; color: ${colors.textMuted}; background-color: ${colors.card}; border-radius: 4px;">${data.previousStage}</td>
-              <td style="padding: 0 16px; font-size: 18px; color: ${colors.textMuted};">→</td>
-              <td style="padding: 8px 16px; font-size: 14px; font-weight: 600; color: ${colors.buttonText}; background-color: ${colors.buttonBg}; border-radius: 4px;">${data.newStage}</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-    
-    ${spacer(24)}
-    ${button('View Lead', data.viewLeadUrl)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `${data.leadName} moved from ${data.previousStage} to ${data.newStage}`,
-    content,
-    unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#lead-emails',
   });
 }
 
