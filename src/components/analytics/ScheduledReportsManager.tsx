@@ -29,17 +29,23 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
   const [savedReportIds, setSavedReportIds] = useState<Set<string>>(new Set());
 
   const getFrequencyDisplay = (report: typeof reports[number]) => {
-    const time = report.time_of_day?.substring(0, 5) || '09:00';
+    const timeStr = report.time_of_day?.substring(0, 5) || '09:00';
+    
+    // Convert 24h to 12h format
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    const formattedTime = `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
     
     switch (report.frequency) {
       case 'daily':
-        return `Daily at ${time}`;
+        return `Daily at ${formattedTime}`;
       case 'weekly': {
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        return `Weekly on ${days[report.day_of_week ?? 0]} at ${time}`;
+        return `Weekly on ${days[report.day_of_week ?? 0]} at ${formattedTime}`;
       }
       case 'monthly':
-        return `Monthly on day ${report.day_of_month} at ${time}`;
+        return `Monthly on day ${report.day_of_month} at ${formattedTime}`;
       default:
         return report.frequency;
     }
