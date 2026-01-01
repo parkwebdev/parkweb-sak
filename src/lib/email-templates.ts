@@ -34,11 +34,7 @@ export interface BookingConfirmationData {
 export interface ScheduledReportData {
   reportName: string;
   dateRange: string;
-  metrics: {
-    label: string;
-    value: string;
-    change?: string;
-  }[];
+  format?: 'pdf' | 'csv';
   viewReportUrl: string;
 }
 
@@ -416,49 +412,28 @@ export function generateBookingConfirmationEmail(data: BookingConfirmationData):
 }
 
 export function generateScheduledReportEmail(data: ScheduledReportData): string {
-  const metricsHtml = data.metrics.map(m => {
-    const changeColor = m.change?.startsWith('+') || m.change?.startsWith('↑') ? '#22c55e' 
-      : m.change?.startsWith('-') || m.change?.startsWith('↓') ? '#ef4444' 
-      : colors.textMuted;
-    
-    return `
-      <td width="50%" style="padding: 6px; vertical-align: top;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-          <tr>
-            <td style="padding: 16px; text-align: center;">
-              <p class="email-text" style="margin: 0 0 4px 0; font-size: 24px; font-weight: 600; color: ${colors.text};">${m.value}</p>
-              <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">${m.label}</p>
-              ${m.change ? `<p style="margin: 4px 0 0 0; font-size: 12px; color: ${changeColor};">${m.change}</p>` : ''}
-            </td>
-          </tr>
-        </table>
-      </td>
-    `;
-  });
-  
-  // Build 2x2 grid rows
-  const rows: string[] = [];
-  for (let i = 0; i < metricsHtml.length; i += 2) {
-    const cell1 = metricsHtml[i] || '';
-    const cell2 = metricsHtml[i + 1] || '<td width="50%"></td>';
-    rows.push(`<tr>${cell1}${cell2}</tr>`);
-  }
-  
-  const content = `
-    ${heading(data.reportName)}
-    ${paragraph(`Here's your report for ${data.dateRange}.`)}
-    
-    <!-- Metrics Grid - 2 columns -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-      ${rows.join('')}
+  const formatBadge = data.format ? `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+      <tr>
+        <td style="padding: 4px 10px; font-size: 12px; font-weight: 600; color: ${colors.textMuted}; background-color: ${colors.background}; border-radius: 4px; text-transform: uppercase;">
+          ${data.format.toUpperCase()} Report
+        </td>
+      </tr>
     </table>
-    
+  ` : '';
+
+  const content = `
+    ${heading('Your Report is Ready')}
+    ${formatBadge}
+    ${paragraph(`Your <strong>${data.reportName}</strong> covering <strong>${data.dateRange}</strong> has been generated and is ready to download.`)}
+    ${spacer(8)}
+    ${button('Download Report', data.viewReportUrl)}
     ${spacer(24)}
-    ${button('View Full Report', data.viewReportUrl)}
+    ${paragraph("This report was automatically generated based on your scheduled report settings.", true)}
   `;
   
   return generateWrapper({
-    preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready`,
+    preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready to download`,
     content,
     unsubscribeUrl: 'https://getpilot.io/settings?tab=notifications#report-emails',
   });
