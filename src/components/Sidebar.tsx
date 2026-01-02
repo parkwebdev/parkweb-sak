@@ -11,6 +11,7 @@
 import React, { useMemo } from 'react';
 import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
+import { DashboardIcon, DashboardIconFilled } from './icons/DashboardIcon';
 import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -24,7 +25,7 @@ import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
-import { getMainNavRoutes, getBottomNavRoutes, type RouteConfig } from '@/config/routes';
+import { getMainNavRoutes, getBottomNavRoutes, getRouteById, type RouteConfig } from '@/config/routes';
 import type { ConversationMetadata } from '@/types/metadata';
 import type { AppPermission } from '@/types/team';
 
@@ -53,6 +54,7 @@ interface NavigationItem {
 
 /** Icon mapping from route config iconName to component */
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  Dashboard: DashboardIcon,
   AriLogo: AriAgentsIcon,
   MessageChatSquare: InboxOutline,
   Calendar: Calendar,
@@ -64,6 +66,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
 
 /** Active icon mapping from route config iconName to filled component */
 const ACTIVE_ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }> | undefined> = {
+  Dashboard: DashboardIconFilled,
   MessageChatSquare: InboxFilled,
   Calendar: PlannerFilled,
   Users01: LeadsFilled,
@@ -119,27 +122,45 @@ function SidebarComponent({ onClose }: SidebarProps) {
   const { setOpen: setSearchOpen } = useGlobalSearch();
   const { hasPermission, isAdmin, loading: permissionsLoading } = useRoleAuthorization();
   
-  // Filter navigation items based on permissions
+  // Filter navigation items based on permissions and add Dashboard dynamically
   const filteredNavigationItems = useMemo(() => {
     if (permissionsLoading) return navigationItems; // Show all while loading
-    return navigationItems.filter(item => {
+    
+    // Start with filtered main nav items
+    const baseItems = navigationItems.filter(item => {
       if (!item.requiredPermission) return true;
       if (isAdmin) return true;
       return hasPermission(item.requiredPermission);
     });
-  }, [hasPermission, isAdmin, permissionsLoading]);
+    
+    // Add Dashboard at the beginning if onboarding is complete (admin only)
+    if (allComplete && isAdmin) {
+      const dashboardRoute = getRouteById('dashboard');
+      if (dashboardRoute) {
+        const dashboardItem = routeToNavItem(dashboardRoute);
+        return [dashboardItem, ...baseItems];
+      }
+    }
+    
+    return baseItems;
+  }, [hasPermission, isAdmin, permissionsLoading, allComplete]);
 
+  // Filter bottom items - hide "Get set up" when onboarding is complete
   const filteredBottomItems = useMemo(() => {
     if (permissionsLoading) return bottomItems;
     return bottomItems.filter(item => {
+      // Hide "Get set up" when onboarding is complete
+      if (item.id === 'get-set-up' && allComplete) {
+        return false;
+      }
       // Admin-only items require admin status
       if (item.adminOnly) return isAdmin;
       if (!item.requiredPermission) return true;
       if (isAdmin) return true;
       return hasPermission(item.requiredPermission);
     });
-  }, [hasPermission, isAdmin, permissionsLoading]);
-  
+  }, [hasPermission, isAdmin, permissionsLoading, allComplete]);
+
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
     const metadata = (conv.metadata || {}) as ConversationMetadata;

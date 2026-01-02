@@ -31,6 +31,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import WidgetPage from "./pages/WidgetPage";
 import GetStartedWrapper from "./pages/GetStartedWrapper";
+import Dashboard from "./pages/Dashboard";
 import AriConfiguratorWrapper from "./pages/AriConfiguratorWrapper";
 import ConversationsWrapper from "./pages/ConversationsWrapper";
 import LeadsWrapper from "./pages/LeadsWrapper";
@@ -102,6 +103,16 @@ const App = () => (
                       element={
                         <PermissionGuard {...getGuardProps('get-set-up')} redirectTo="/analytics">
                           <GetStartedWrapper />
+                        </PermissionGuard>
+                      } 
+                    />
+                    
+                    {/* Dashboard - admin only, shown after onboarding complete */}
+                    <Route 
+                      path="/dashboard" 
+                      element={
+                        <PermissionGuard {...getGuardProps('dashboard')}>
+                          <Dashboard />
                         </PermissionGuard>
                       } 
                     />

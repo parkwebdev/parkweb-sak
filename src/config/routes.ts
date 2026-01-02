@@ -37,6 +37,16 @@ export interface RouteConfig {
 
 /** All application routes with permission requirements */
 export const ROUTE_CONFIG: readonly RouteConfig[] = [
+  // Dashboard - shown after onboarding complete (admin only)
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    path: '/dashboard',
+    adminOnly: true,
+    iconName: 'Dashboard',
+    description: 'Your command center after setup',
+    showInNav: false, // Controlled dynamically by Sidebar
+  },
   // Main navigation routes
   {
     id: 'ari',
