@@ -309,16 +309,6 @@ function Leads({ onMenuClick }: LeadsProps) {
     }
   }, [deleteLead, singleDeleteLeadId]);
 
-  // Calculate stats based on dynamic stages
-  const stageStats = useMemo(() => {
-    return stages.map(stage => ({
-      id: stage.id,
-      name: stage.name,
-      color: stage.color,
-      count: leads.filter(l => l.stage_id === stage.id).length,
-    }));
-  }, [stages, leads]);
-
   return (
     <div className="flex flex-col h-full w-full min-w-0 bg-muted/30 overflow-y-auto">
       <PageHeader
@@ -328,21 +318,6 @@ function Leads({ onMenuClick }: LeadsProps) {
       />
 
       <div className="px-4 lg:px-8 mt-6 space-y-6 min-w-0">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="p-4 border rounded-lg bg-card">
-            <div className="text-xl font-bold">{leads.length}</div>
-            <div className="text-xs text-muted-foreground">Total Leads</div>
-          </div>
-          {stageStats.slice(0, 4).map((stage) => (
-            <div key={stage.id} className="p-4 border rounded-lg bg-card">
-              <div className="text-xl font-bold" style={{ color: stage.color }}>
-                {stage.count}
-              </div>
-              <div className="text-xs text-muted-foreground">{stage.name}</div>
-            </div>
-          ))}
-        </div>
 
         {/* Content */}
         {loading ? (
