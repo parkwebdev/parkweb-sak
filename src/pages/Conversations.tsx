@@ -468,8 +468,6 @@ function Conversations() {
         activeFilterLabel={activeFilter.label}
         getVisitorPresence={getVisitorPresence}
         loading={loading}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
       />
 
       {/* Chat Area */}

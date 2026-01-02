@@ -7,13 +7,11 @@
  * @component
  */
 
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { MessageChatSquare, SwitchVertical01, ChevronDown, SearchMd } from '@untitledui/icons';
+import { MessageChatSquare, SwitchVertical01, ChevronDown } from '@untitledui/icons';
 
 // Panel icon with left divider (for conversations sidebar)
 const LayoutPanelLeft = ({ filled = false, className }: { filled?: boolean; className?: string }) => (
@@ -56,8 +54,6 @@ export interface ConversationsListProps {
   activeFilterLabel: string;
   getVisitorPresence: (conversation: Conversation) => VisitorPresenceData | null;
   loading: boolean;
-  searchQuery?: string;
-  onSearchChange?: (query: string) => void;
 }
 
 export const ConversationsList = memo(function ConversationsList({
@@ -72,11 +68,7 @@ export const ConversationsList = memo(function ConversationsList({
   activeFilterLabel,
   getVisitorPresence,
   loading,
-  searchQuery = '',
-  onSearchChange,
 }: ConversationsListProps) {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  
   const handleCycleSortOrder = useCallback(() => {
     if (sortBy === 'last_activity') onSortChange('newest');
     else if (sortBy === 'newest') onSortChange('oldest');
@@ -94,41 +86,27 @@ export const ConversationsList = memo(function ConversationsList({
   const openCount = allConversations.filter(c => c.status === 'active' || c.status === 'human_takeover').length;
 
   return (
-    <>
-      <div 
-        className={`hidden lg:flex border-r flex-col bg-background min-h-0 transition-all duration-200 ease-in-out overflow-x-hidden ${
-          isCollapsed ? 'w-12' : 'lg:w-80 xl:w-96'
-        }`}
-      >
-        {/* Header */}
-        <div className={`border-b shrink-0 ${isCollapsed ? 'h-14 px-2 flex items-center' : 'p-4 pb-3'}`}>
-          <div className="flex items-center justify-between">
-            {!isCollapsed && (
-              <h2 className="text-lg font-semibold text-foreground">{activeFilterLabel}</h2>
-            )}
-            <div className={`flex items-center gap-1 ${isCollapsed ? 'mx-auto' : ''}`}>
-              {!isCollapsed && onSearchChange && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 transition-colors duration-200"
-                  onClick={() => setIsSearchOpen(true)}
-                  aria-label="Search conversations"
-                >
-                  <SearchMd size={16} className={searchQuery ? 'text-primary' : ''} />
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 transition-colors duration-200"
-                onClick={onToggleCollapse}
-                aria-label={isCollapsed ? 'Expand conversations' : 'Collapse conversations'}
-              >
-                <LayoutPanelLeft filled={isCollapsed} className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+    <div 
+      className={`hidden lg:flex border-r flex-col bg-background min-h-0 transition-all duration-200 ease-in-out overflow-x-hidden ${
+        isCollapsed ? 'w-12' : 'lg:w-80 xl:w-96'
+      }`}
+    >
+      {/* Header */}
+      <div className={`border-b shrink-0 ${isCollapsed ? 'h-14 px-2 flex items-center' : 'p-4 pb-3'}`}>
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
+            <h2 className="text-lg font-semibold text-foreground">{activeFilterLabel}</h2>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-7 w-7 p-0 transition-colors duration-200 ${isCollapsed ? 'mx-auto' : ''}`}
+            onClick={onToggleCollapse}
+            aria-label={isCollapsed ? 'Expand conversations' : 'Collapse conversations'}
+          >
+            <LayoutPanelLeft filled={isCollapsed} className="h-4 w-4" />
+          </Button>
+        </div>
         
         {/* Filter badges row */}
         {!isCollapsed && (
@@ -206,31 +184,6 @@ export const ConversationsList = memo(function ConversationsList({
         </div>
       </div>
     </div>
-
-    {/* Search Modal */}
-    <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Search Conversations</DialogTitle>
-        </DialogHeader>
-        <div className="relative">
-          <SearchMd size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, email, or message..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            className="pl-9"
-            autoFocus
-          />
-        </div>
-        {searchQuery && (
-          <p className="text-xs text-muted-foreground">
-            Showing results for "{searchQuery}"
-          </p>
-        )}
-      </DialogContent>
-    </Dialog>
-  </>
   );
 });
 
