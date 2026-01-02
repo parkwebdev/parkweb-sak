@@ -250,6 +250,11 @@
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-kerning: normal;
+    font-feature-settings: "kern" 1;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   
   /* Fix placeholder text color */
