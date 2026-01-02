@@ -268,6 +268,21 @@ supabase.rpc('search_conversation_memories', { p_agent_id, p_lead_id, ... })
 
 ---
 
+## Existing `_shared/` Files (PRESERVE)
+
+> **IMPORTANT**: The following files already exist in `_shared/` and MUST be preserved during refactoring:
+
+| File | Purpose | Used By |
+|------|---------|---------|
+| `_shared/pdf/` | PDF generation utilities | Report functions |
+| `_shared/build-pdf-data.ts` | PDF data builder | Report functions |
+| `_shared/calendar-sync.ts` | Calendar synchronization | Calendar functions |
+| `_shared/email-template.ts` | Email templates | Email functions |
+
+Do NOT modify or overwrite these files. New modules should be added alongside them.
+
+---
+
 ## Phase 1: Target Architecture
 
 ### 1.1 New Directory Structure
@@ -276,6 +291,13 @@ supabase.rpc('search_conversation_memories', { p_agent_id, p_lead_id, ... })
 supabase/functions/
 ├── _shared/
 │   │
+│   ├── # EXISTING FILES (PRESERVE):
+│   ├── pdf/                              # EXISTING - PDF utilities
+│   ├── build-pdf-data.ts                 # EXISTING - PDF data builder
+│   ├── calendar-sync.ts                  # EXISTING - Calendar sync
+│   ├── email-template.ts                 # EXISTING - Email templates
+│   │
+│   ├── # NEW FILES (TO CREATE):
 │   ├── cors.ts                           # CORS headers (NEW)
 │   ├── logger.ts                         # Structured logging (NEW)
 │   ├── errors.ts                         # Error codes & responses (NEW)
@@ -324,6 +346,46 @@ supabase/functions/
 │   └── index.ts                          # SLIM orchestrator (~300-400 lines)
 │
 └── [other existing functions...]
+```
+
+### 1.2 Barrel Export Templates
+
+Each subdirectory should have an `index.ts` that re-exports all modules:
+
+```typescript
+// Example: _shared/security/index.ts
+export * from './guardrails.ts';
+export * from './moderation.ts';
+export * from './sanitization.ts';
+
+// Example: _shared/ai/index.ts
+export * from './embeddings.ts';
+export * from './model-routing.ts';
+export * from './model-capabilities.ts';
+export * from './rag.ts';
+export * from './summarization.ts';
+
+// Example: _shared/memory/index.ts
+export * from './semantic-memory.ts';
+export * from './conversation-history.ts';
+export * from './tool-cache.ts';
+
+// Example: _shared/tools/index.ts
+export * from './definitions.ts';
+export * from './property-tools.ts';
+export * from './calendar-tools.ts';
+export * from './custom-tools.ts';
+export * from './booking-ui.ts';
+
+// Example: _shared/utils/index.ts
+export * from './phone.ts';
+export * from './links.ts';
+export * from './hashing.ts';
+export * from './geo.ts';
+export * from './user-agent.ts';
+export * from './language.ts';
+export * from './state-mapping.ts';
+export * from './response-chunking.ts';
 ```
 
 ### 1.2 Module Responsibility Matrix
@@ -1716,11 +1778,20 @@ The refactoring is **COMPLETE** when ALL of the following are true:
 - [ ] All modules have JSDoc documentation
 - [ ] TypeScript compiles without errors
 
-### Testing
-- [ ] All 44 snapshot tests pass
-- [ ] All 8 integration tests pass
-- [ ] No console errors in logs
+### Manual Validation (Required - No Automated Tests)
+> **⚠️ Since Phase 0 was skipped, all validation must be done manually after each extraction step.**
+
 - [ ] Edge function deploys successfully
+- [ ] Widget opens in browser without errors
+- [ ] Send test message, receive valid response
+- [ ] Quick replies appear when expected
+- [ ] Day picker appears for booking requests
+- [ ] Time picker appears after date selection
+- [ ] Booking confirmation works
+- [ ] Link previews render correctly
+- [ ] Phone call actions appear when expected
+- [ ] No console errors in browser
+- [ ] No errors in edge function logs
 
 ### API Contract
 - [ ] Request schema unchanged
@@ -1728,13 +1799,13 @@ The refactoring is **COMPLETE** when ALL of the following are true:
 - [ ] Error format unchanged (with correct ErrorCodes)
 - [ ] All HTTP status codes unchanged
 
-### Performance
-- [ ] Cold start within 10% of baseline
-- [ ] Response time within 10% of baseline
-- [ ] Memory usage within 10% of baseline
+### Performance (Manual Observation)
+- [ ] Response time feels similar to before
+- [ ] No noticeable delays or hangs
+- [ ] Widget loads quickly
 
 ### Visual
-- [ ] All 9 visual elements match screenshots
+- [ ] All 9 visual elements render correctly
 - [ ] No UI regressions
 - [ ] No design changes
 
@@ -1884,13 +1955,7 @@ The refactoring is **COMPLETE** when ALL of the following are true:
    - Usage metrics check
    - Agent error notifications
 
-8. **Snapshot Tests** - Updated test count to 44, added:
-   - SNAP-038: Message too long
-   - SNAP-039: Too many files
-   - SNAP-043: Usage limit exceeded
-   - SNAP-044: mark_conversation_complete
-
-9. **Line Mappings** - Corrected all line ranges to match 4,678 line source
+8. **Line Mappings** - Corrected all line ranges to match 4,678 line source
 
 ---
 
