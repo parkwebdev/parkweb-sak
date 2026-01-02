@@ -1,169 +1,25 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 // ============================================
-// OBSERVABILITY: ERROR CODES & REQUEST LIMITS
+// SHARED MODULES (Phase 1 Extraction)
 // ============================================
-
-const ErrorCodes = {
-  MESSAGE_TOO_LONG: 'MESSAGE_TOO_LONG',
-  TOO_MANY_FILES: 'TOO_MANY_FILES',
-  INVALID_REQUEST: 'INVALID_REQUEST',
-  AGENT_NOT_FOUND: 'AGENT_NOT_FOUND',
-  RATE_LIMITED: 'RATE_LIMITED',
-  UNAUTHORIZED: 'UNAUTHORIZED',
-  AI_PROVIDER_ERROR: 'AI_PROVIDER_ERROR',
-  EMBEDDING_ERROR: 'EMBEDDING_ERROR',
-  TOOL_EXECUTION_ERROR: 'TOOL_EXECUTION_ERROR',
-  CONVERSATION_CLOSED: 'CONVERSATION_CLOSED',
-  INTERNAL_ERROR: 'INTERNAL_ERROR',
-} as const;
-
-type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
-
-// Request size limits
-const MAX_MESSAGE_LENGTH = 10000; // 10,000 characters
-const MAX_FILES_PER_MESSAGE = 5;
-
-// ============================================
-// OBSERVABILITY: STRUCTURED LOGGING
-// ============================================
-
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
-interface LogEntry {
-  timestamp: string;
-  requestId: string;
-  level: LogLevel;
-  message: string;
-  data?: Record<string, unknown>;
-  durationMs?: number;
-}
-
-/**
- * Create a structured logger bound to a specific requestId.
- * All logs are JSON-formatted for easy parsing in log aggregators.
- */
-function createLogger(requestId: string) {
-  const log = (level: LogLevel, message: string, data?: Record<string, unknown>) => {
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      requestId,
-      level,
-      message,
-      ...(data && { data }),
-    };
-    const logStr = JSON.stringify(entry);
-    
-    switch (level) {
-      case 'error':
-        console.error(logStr);
-        break;
-      case 'warn':
-        console.warn(logStr);
-        break;
-      case 'debug':
-        console.debug(logStr);
-        break;
-      default:
-        console.log(logStr);
-    }
-  };
-
-  return {
-    debug: (message: string, data?: Record<string, unknown>) => log('debug', message, data),
-    info: (message: string, data?: Record<string, unknown>) => log('info', message, data),
-    warn: (message: string, data?: Record<string, unknown>) => log('warn', message, data),
-    error: (message: string, data?: Record<string, unknown>) => log('error', message, data),
-  };
-}
-
-/**
- * Create an error response with consistent structure.
- */
-function createErrorResponse(
-  requestId: string,
-  code: ErrorCode,
-  message: string,
-  status: number,
-  durationMs?: number
-): Response {
-  return new Response(
-    JSON.stringify({ 
-      error: message,
-      code,
-      requestId,
-      ...(durationMs !== undefined && { durationMs: Math.round(durationMs) }),
-    }),
-    { 
-      status, 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-    }
-  );
-}
-
-// Local type for conversation metadata (edge functions can't import from src/)
-interface ShownProperty {
-  index: number;
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  beds: number | null;
-  baths: number | null;
-  price: number | null;
-  price_formatted: string;
-  community: string | null;
-  location_id: string | null; // For direct booking without location lookup
-}
-
-interface ConversationMetadata {
-  lead_name?: string;
-  lead_email?: string;
-  custom_fields?: Record<string, string | number | boolean>;
-  country?: string;
-  city?: string;
-  device_type?: string;
-  browser?: string;
-  os?: string;
-  referrer?: string;
-  landing_page?: string;
-  visited_pages?: string[];
-  session_id?: string;
-  ip_address?: string;
-  last_message_at?: string;
-  last_message_role?: string;
-  last_user_message_at?: string;
-  admin_last_read_at?: string;
-  lead_id?: string;
-  // Property context memory for multi-property scenarios
-  shown_properties?: ShownProperty[];
-  last_property_search_at?: string;
-  // PHASE 2: Conversation summarization for context continuity
-  conversation_summary?: string;
-  summary_generated_at?: string;
-  // Language detection for translation banner
-  detected_language_code?: string;  // ISO code: 'es', 'fr', 'pt', etc.
-  detected_language?: string;       // Full name: 'Spanish', 'French', etc.
-}
-
-// URL regex for extracting links from content
-const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
-
-// US Phone number regex (matches: (xxx) xxx-xxxx, xxx-xxx-xxxx, xxx.xxx.xxxx, +1 xxx xxx xxxx, etc.)
-const PHONE_REGEX = /\b(?:\+?1[-.\s]?)?\(?([2-9][0-9]{2})\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})\b/g;
-
-// Extract phone numbers from content and format for call buttons
-interface CallAction {
-  phoneNumber: string;      // For tel: href (E.164 or raw)
-  displayNumber: string;    // Human-readable format
-  locationName?: string;    // Context from location data
-}
+import { corsHeaders } from "../_shared/cors.ts";
+import { createLogger } from "../_shared/logger.ts";
+import { 
+  ErrorCodes, 
+  type ErrorCode, 
+  MAX_MESSAGE_LENGTH, 
+  MAX_FILES_PER_MESSAGE, 
+  createErrorResponse 
+} from "../_shared/errors.ts";
+import { 
+  type ShownProperty, 
+  type ConversationMetadata, 
+  type CallAction, 
+  URL_REGEX, 
+  PHONE_REGEX 
+} from "../_shared/types.ts";
 
 function extractPhoneNumbers(content: string, locationContext?: { name?: string; phone?: string }): CallAction[] {
   const matches: CallAction[] = [];
