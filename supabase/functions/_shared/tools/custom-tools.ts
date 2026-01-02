@@ -9,8 +9,9 @@
  * ```typescript
  * import { callToolEndpoint, isBlockedUrl } from "../_shared/tools/custom-tools.ts";
  * 
- * if (!isBlockedUrl(endpoint)) {
- *   const result = await callToolEndpoint(endpoint, 'POST', headers, args, 5000);
+ * const result = await callToolEndpoint(tool, args);
+ * if (result.success) {
+ *   console.log(result.result);
  * }
  * ```
  */
@@ -92,174 +93,187 @@ const SENSITIVE_HEADER_PATTERNS = [
 // ============================================
 
 /**
- * Mask sensitive headers for logging
+ * Mask sensitive header values for logging
  * 
  * @param headers - Headers object
  * @returns Headers with sensitive values masked
  */
-function maskSensitiveHeaders(headers: Record<string, string>): Record<string, string> {
+function maskHeadersForLogging(headers: Record<string, string>): Record<string, string> {
   const masked: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers)) {
     const isSensitive = SENSITIVE_HEADER_PATTERNS.some(pattern => pattern.test(key));
-    masked[key] = isSensitive ? '[REDACTED]' : value;
+    masked[key] = isSensitive ? `***${value.slice(-4)}` : value;
   }
   return masked;
 }
 
 /**
- * Sleep for specified milliseconds
+ * Delay helper for retry backoff
  * 
  * @param ms - Milliseconds to sleep
  */
-function sleep(ms: number): Promise<void> {
+function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ============================================
+// TYPES
+// ============================================
+
+/** Tool configuration for external endpoint calls */
+export interface ToolConfig {
+  name: string;
+  endpoint_url: string;
+  headers: Record<string, string> | null;
+  timeout_ms: number;
+}
+
+/** Result from calling a tool endpoint */
+export interface ToolEndpointResult {
+  success: boolean;
+  result?: any;
+  error?: string;
 }
 
 // ============================================
 // TOOL EXECUTION
 // ============================================
 
-export interface ToolEndpointResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-  statusCode?: number;
-  retries?: number;
-}
-
 /**
- * Call an external tool endpoint with SSRF protection and retry logic
+ * Call a tool endpoint with retry logic, SSRF protection, and response size limits
  * 
- * @param endpoint - Tool endpoint URL
- * @param method - HTTP method
- * @param headers - Request headers
- * @param body - Request body
- * @param timeoutMs - Request timeout in milliseconds
+ * @param tool - Tool configuration with endpoint details
+ * @param args - Arguments to pass to the tool
  * @returns Tool execution result
  */
 export async function callToolEndpoint(
-  endpoint: string,
-  method: string,
-  headers: Record<string, string>,
-  body: any,
-  timeoutMs: number = 10000
-): Promise<ToolEndpointResult> {
-  // SSRF Check
-  if (isBlockedUrl(endpoint)) {
-    console.error(`SSRF BLOCKED: Attempted call to blocked URL: ${endpoint}`);
-    return {
-      success: false,
-      error: 'This tool endpoint is not allowed for security reasons',
-      statusCode: 403,
-    };
+  tool: { name: string; endpoint_url: string; headers: any; timeout_ms: number },
+  args: any
+): Promise<{ success: boolean; result?: any; error?: string }> {
+  // SSRF Protection: Validate URL before making request
+  if (isBlockedUrl(tool.endpoint_url)) {
+    console.error(`Tool ${tool.name} blocked: URL fails SSRF validation`, { url: tool.endpoint_url });
+    return { success: false, error: 'Tool endpoint URL is not allowed (security restriction)' };
   }
 
-  const maskedHeaders = maskSensitiveHeaders(headers);
-  console.log(`Calling external tool: ${method} ${endpoint}`, { headers: maskedHeaders });
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(tool.headers || {}),
+  };
 
-  let lastError: Error | null = null;
-  let retries = 0;
+  // Log with masked headers for security
+  const maskedHeaders = maskHeadersForLogging(headers);
+  console.log(`Calling tool ${tool.name} at ${tool.endpoint_url}`, { 
+    args, 
+    headers: maskedHeaders,
+    timeout_ms: tool.timeout_ms 
+  });
 
+  let lastError: string = 'Unknown error';
+  
+  // Retry loop with exponential backoff
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      // Add backoff delay for retries
+      if (attempt > 0) {
+        const backoffMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+        console.log(`Tool ${tool.name} retry ${attempt}/${MAX_RETRIES} after ${backoffMs}ms`);
+        await delay(backoffMs);
+      }
 
-      const response = await fetch(endpoint, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...headers,
-        },
-        body: method !== 'GET' ? JSON.stringify(body) : undefined,
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), tool.timeout_ms || 10000);
+
+      const response = await fetch(tool.endpoint_url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(args),
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
-      // Check response size
+      // Check response size from Content-Length header first
       const contentLength = response.headers.get('content-length');
       if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_SIZE_BYTES) {
-        return {
-          success: false,
-          error: 'Response too large (exceeds 1MB limit)',
-          statusCode: response.status,
-          retries: attempt,
-        };
-      }
-
-      const text = await response.text();
-
-      // Check actual size after reading
-      if (text.length > MAX_RESPONSE_SIZE_BYTES) {
-        return {
-          success: false,
-          error: 'Response too large (exceeds 1MB limit)',
-          statusCode: response.status,
-          retries: attempt,
-        };
-      }
-
-      // Try to parse as JSON
-      let data: any;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = { raw_response: text };
+        console.error(`Tool ${tool.name} response too large: ${contentLength} bytes`);
+        return { success: false, error: `Response too large (max ${MAX_RESPONSE_SIZE_BYTES / 1024 / 1024}MB)` };
       }
 
       if (!response.ok) {
-        // Retry on 5xx errors
+        const errorText = await response.text();
+        lastError = `HTTP ${response.status}: ${errorText.substring(0, 200)}`;
+        
+        // Only retry on 5xx errors or network issues, not on 4xx client errors
         if (response.status >= 500 && attempt < MAX_RETRIES) {
-          retries++;
-          const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt);
-          console.log(`Tool call failed with ${response.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
-          await sleep(delay);
+          console.warn(`Tool ${tool.name} server error (attempt ${attempt + 1}):`, response.status);
           continue;
         }
-
-        return {
-          success: false,
-          error: data.error || data.message || `Tool returned status ${response.status}`,
-          statusCode: response.status,
-          data,
-          retries: attempt,
-        };
+        
+        console.error(`Tool ${tool.name} returned error:`, response.status, errorText.substring(0, 500));
+        return { success: false, error: lastError };
       }
 
-      console.log(`Tool call successful: ${response.status}`, { retries: attempt });
-      return {
-        success: true,
-        data,
-        statusCode: response.status,
-        retries: attempt,
-      };
+      // Read response with size limit
+      const reader = response.body?.getReader();
+      if (!reader) {
+        return { success: false, error: 'No response body' };
+      }
 
+      let totalBytes = 0;
+      const chunks: Uint8Array[] = [];
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        totalBytes += value.length;
+        if (totalBytes > MAX_RESPONSE_SIZE_BYTES) {
+          reader.cancel();
+          console.error(`Tool ${tool.name} response exceeded size limit during read`);
+          return { success: false, error: `Response too large (max ${MAX_RESPONSE_SIZE_BYTES / 1024 / 1024}MB)` };
+        }
+        
+        chunks.push(value);
+      }
+
+      // Combine chunks and parse JSON
+      const combined = new Uint8Array(totalBytes);
+      let offset = 0;
+      for (const chunk of chunks) {
+        combined.set(chunk, offset);
+        offset += chunk.length;
+      }
+      
+      const responseText = new TextDecoder().decode(combined);
+      const result = JSON.parse(responseText);
+      
+      console.log(`Tool ${tool.name} returned successfully`, { 
+        responseSize: totalBytes,
+        attempts: attempt + 1 
+      });
+      return { success: true, result };
+      
     } catch (error: any) {
-      lastError = error;
-
       if (error.name === 'AbortError') {
-        return {
-          success: false,
-          error: `Tool request timed out after ${timeoutMs}ms`,
-          retries: attempt,
-        };
-      }
-
-      // Retry on network errors
-      if (attempt < MAX_RETRIES) {
-        retries++;
-        const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt);
-        console.log(`Tool call error: ${error.message}, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
-        await sleep(delay);
-        continue;
+        lastError = 'Request timed out';
+        console.error(`Tool ${tool.name} timed out after ${tool.timeout_ms}ms (attempt ${attempt + 1})`);
+        // Retry on timeout
+        if (attempt < MAX_RETRIES) continue;
+      } else if (error instanceof SyntaxError) {
+        // JSON parse error - don't retry
+        console.error(`Tool ${tool.name} returned invalid JSON:`, error.message);
+        return { success: false, error: 'Invalid JSON response from tool' };
+      } else {
+        lastError = error.message || 'Unknown error';
+        console.error(`Tool ${tool.name} error (attempt ${attempt + 1}):`, error);
+        // Retry on network errors
+        if (attempt < MAX_RETRIES) continue;
       }
     }
   }
 
-  return {
-    success: false,
-    error: lastError?.message || 'Tool call failed after retries',
-    retries,
-  };
+  // All retries exhausted
+  console.error(`Tool ${tool.name} failed after ${MAX_RETRIES + 1} attempts:`, lastError);
+  return { success: false, error: lastError };
 }
