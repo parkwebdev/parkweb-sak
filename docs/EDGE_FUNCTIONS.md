@@ -177,17 +177,36 @@ try {
 }
 ```
 
+**Modular Architecture (Phase 4 Complete):**
+
+The widget-chat function has been refactored into modular components:
+
+| Directory | Purpose |
+|-----------|---------|
+| `_shared/handlers/` | High-level orchestration handlers |
+| `_shared/ai/` | AI, embeddings, RAG, summarization |
+| `_shared/tools/` | Tool definitions and execution |
+| `_shared/memory/` | Conversation history, semantic memory |
+| `_shared/security/` | Content moderation, sanitization |
+| `_shared/utils/` | Utility functions |
+
+**Handler Modules (`_shared/handlers/`):**
+- `conversation.ts` - Conversation lifecycle management
+- `context.ts` - RAG search & system prompt building
+- `tool-executor.ts` - Tool execution orchestration
+- `response-builder.ts` - Post-processing & response construction
+
 **Details:**
 - Creates conversation if not exists
 - Retrieves relevant knowledge via vector search
 - Augments system prompt with context
-- Calls AI model via Lovable AI Gateway
+- Calls AI model via OpenRouter
 - Stores both user and assistant messages
 - Skips AI response if conversation is in `human_takeover` status
 
 **RAG Flow:**
 1. Generate embedding for user message
-2. Search `knowledge_sources` for similar content
+2. Search `knowledge_chunks` and `help_articles` for similar content
 3. Inject top matches into system prompt
 4. Generate response with augmented context
 
