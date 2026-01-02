@@ -34,6 +34,13 @@ const XLogo = () => (
   </svg>
 );
 
+import type { Tables } from '@/integrations/supabase/types';
+import type { ConversationMetadata } from '@/types/metadata';
+
+type Conversation = Tables<'conversations'> & {
+  agents?: { name: string };
+};
+
 export type InboxFilter = {
   type: 'all' | 'status' | 'channel' | 'yours';
   value?: string;
@@ -54,6 +61,8 @@ interface InboxNavSidebarProps {
   };
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  filteredConversations: Conversation[];
+  onSelectConversation: (conversation: Conversation) => void;
 }
 
 interface NavItemProps {
@@ -94,7 +103,7 @@ const NavItem = React.memo(function NavItem({ icon, label, count, isActive, onCl
   );
 });
 
-export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQuery, onSearchChange }: InboxNavSidebarProps) {
+export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQuery, onSearchChange, filteredConversations, onSelectConversation }: InboxNavSidebarProps) {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const prefersReducedMotion = useReducedMotion();
@@ -143,11 +152,11 @@ export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilte
 
       {/* Search Modal */}
       <Dialog open={searchModalOpen} onOpenChange={setSearchModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-0">
             <DialogTitle>Search Conversations</DialogTitle>
           </DialogHeader>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-4 border-b">
             <Input
               ref={searchInputRef}
               placeholder="Search conversations..."
@@ -166,6 +175,47 @@ export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilte
               </button>
             )}
           </div>
+          
+          {/* Live Search Results */}
+          {searchQuery && (
+            <div className="max-h-80 overflow-y-auto">
+              {filteredConversations.length > 0 ? (
+                filteredConversations.slice(0, 10).map((conv) => {
+                  const metadata = (conv.metadata || {}) as ConversationMetadata;
+                  return (
+                    <button
+                      key={conv.id}
+                      onClick={() => {
+                        onSelectConversation(conv);
+                        setSearchModalOpen(false);
+                        onSearchChange('');
+                      }}
+                      className="w-full p-3 text-left hover:bg-accent flex items-start gap-3 border-b last:border-b-0 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate text-foreground">
+                          {metadata.lead_name || metadata.lead_email || 'Anonymous Visitor'}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate mt-0.5">
+                          {metadata.last_message_preview || 'No messages yet'}
+                        </div>
+                      </div>
+                      <div className={cn(
+                        "flex-shrink-0 w-2 h-2 rounded-full mt-1.5",
+                        conv.status === 'active' && "bg-status-active",
+                        conv.status === 'human_takeover' && "bg-status-warning",
+                        conv.status === 'closed' && "bg-muted-foreground"
+                      )} />
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="p-4 text-center text-muted-foreground text-sm">
+                  No conversations found
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
