@@ -8,15 +8,21 @@
  */
 
 import React, { memo } from 'react';
-import { User01 } from '@untitledui/icons';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
-import { getStatusColor, getPriorityIndicator, getUnreadCount } from '@/lib/conversation-utils';
+import { getStatusColor, getUnreadCount } from '@/lib/conversation-utils';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
+  active_takeover?: {
+    taken_over_by: string;
+    profiles: {
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  } | null;
 };
 
 export interface ConversationItemProps {
@@ -36,6 +42,10 @@ export const ConversationItem = memo(function ConversationItem({
   const priority = metadata.priority;
   const unreadCount = getUnreadCount(conversation);
 
+  // Get first name from display_name for human takeover badge
+  const takeoverFirstName = conversation.active_takeover?.profiles?.display_name?.split(' ')[0];
+  const takeoverAvatarUrl = conversation.active_takeover?.profiles?.avatar_url;
+
   return (
     <button
       onClick={onClick}
@@ -43,44 +53,49 @@ export const ConversationItem = memo(function ConversationItem({
         isSelected ? 'bg-accent/50' : ''
       }`}
     >
-      <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
-          <User01 size={16} className="text-primary" />
-          {/* Unread messages indicator */}
+      <div className="flex flex-col gap-1">
+        {/* Lead name with activity indicators */}
+        <div className="flex items-center gap-2">
+          <p className="font-medium text-sm truncate text-foreground flex-1">
+            {metadata.lead_name || metadata.lead_email || 'Anonymous'}
+          </p>
+          {/* Unread indicator */}
           {unreadCount > 0 && !isVisitorActive && (
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
+            <span className="w-2 h-2 bg-destructive rounded-full flex-shrink-0" />
           )}
           {/* Active visitor indicator */}
           {isVisitorActive && (
-            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
-          )}
-          {getPriorityIndicator(priority) && !isVisitorActive && !unreadCount && (
-            <div className="absolute -top-0.5 -right-0.5">
-              {getPriorityIndicator(priority)}
-            </div>
+            <span className="w-2 h-2 bg-success rounded-full flex-shrink-0" />
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate text-foreground mb-0.5">
-            {metadata.lead_name || metadata.lead_email || 'Anonymous'}
+        
+        {/* Message preview */}
+        {metadata.last_message_preview && (
+          <p className="text-xs text-muted-foreground/70 truncate">
+            {metadata.last_message_preview}
+            {metadata.last_message_preview.length >= 60 && '...'}
           </p>
-          <p className="text-xs text-muted-foreground truncate mb-1">
-            via {conversation.agents?.name || 'Ari'}
-          </p>
-          {metadata.last_message_preview && (
-            <p className="text-xs text-muted-foreground/70 truncate mb-1.5">
-              {metadata.last_message_preview}
-              {metadata.last_message_preview.length >= 60 && '...'}
-            </p>
-          )}
-          <div className="flex items-center gap-1.5">
-            <Badge variant="outline" size="sm" className={`${getStatusColor(conversation.status)} px-2 py-0.5`}>
-              {conversation.status === 'human_takeover' ? 'Human' : conversation.status === 'active' ? 'AI' : conversation.status}
-            </Badge>
-            <span className="text-2xs text-muted-foreground">
-              • {formatDistanceToNow(new Date(conversation.updated_at), { addSuffix: true })}
-            </span>
-          </div>
+        )}
+        
+        {/* Status badge and timestamp */}
+        <div className="flex items-center gap-1.5">
+          <Badge variant="outline" size="sm" className={`${getStatusColor(conversation.status)} px-2 py-0.5`}>
+            {conversation.status === 'human_takeover' ? (
+              <span className="flex items-center gap-1">
+                {takeoverAvatarUrl && (
+                  <img 
+                    src={takeoverAvatarUrl} 
+                    alt="" 
+                    className="w-3.5 h-3.5 rounded-full object-cover"
+                  />
+                )}
+                {takeoverFirstName || 'Human'}
+              </span>
+            ) : conversation.status === 'active' ? 'Ari' : conversation.status}
+          </Badge>
+          <span className="text-2xs text-muted-foreground">
+            • {formatDistanceToNow(new Date(conversation.updated_at), { addSuffix: true })}
+          </span>
         </div>
       </div>
     </button>
