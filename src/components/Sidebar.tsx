@@ -22,7 +22,6 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
 import { getMainNavRoutes, getBottomNavRoutes, getRouteById, type RouteConfig } from '@/config/routes';
@@ -313,16 +312,6 @@ function SidebarComponent({ onClose }: SidebarProps) {
                 </motion.div>
               </div>
             </button>
-          </motion.div>
-          
-          {/* Theme toggle - always visible */}
-          <motion.div 
-            className="items-center flex w-full py-0.5"
-            initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: (filteredNavigationItems.length + 0.5) * 0.03, ...springs.smooth }}
-          >
-            <ThemeToggle isCollapsed={isCollapsed} isSidebarItem />
           </motion.div>
 
           {/* Bottom navigation (get set up, settings) - permission filtered */}
