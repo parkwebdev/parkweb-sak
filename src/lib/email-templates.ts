@@ -196,6 +196,7 @@ const getBaseStyles = (): string => `
     .email-card { background-color: ${colors.dark.card} !important; }
     .email-text { color: ${colors.dark.text} !important; }
     .email-text-muted { color: ${colors.dark.textMuted} !important; }
+    .email-text-error { color: #f87171 !important; }
     .email-border { border-color: ${colors.dark.border} !important; }
     .email-btn { background-color: ${colors.dark.buttonBg} !important; }
     .email-btn-text { color: ${colors.dark.buttonText} !important; }
@@ -405,7 +406,7 @@ const alertBox = (text: string, type: 'warning' | 'error' | 'success' = 'warning
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${bgColor}10; border-left: 4px solid ${bgColor}; border-radius: 4px;">
     <tr>
       <td style="padding: 16px;">
-        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: ${colors.text};">${text}</p>
+        <p class="email-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: ${colors.text};">${text}</p>
       </td>
     </tr>
   </table>
@@ -872,7 +873,7 @@ export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData):
           </table>
           ${spacer(12)}
           <p class="email-text-muted" style="margin: 0 0 4px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: ${colors.textMuted};">Error Message</p>
-          <p class="email-text" style="margin: 0; font-size: 13px; font-family: monospace; padding: 8px; background-color: ${colors.card}; border-radius: 4px; color: ${colors.error};">${data.errorMessage}</p>
+          <p class="email-text-error" style="margin: 0; font-size: 13px; font-family: monospace; padding: 8px; background-color: ${colors.card}; border-radius: 4px; color: ${colors.error};">${data.errorMessage}</p>
         </td>
       </tr>
     </table>
