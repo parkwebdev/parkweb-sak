@@ -546,12 +546,35 @@ Deno.serve(async (req: Request) => {
   }
 });
 
+/**
+ * Check if an error is a DNS/connection error and return a user-friendly message
+ */
+function getConnectionErrorMessage(error: Error): string | null {
+  const msg = error.message?.toLowerCase() || '';
+  
+  if (msg.includes('dns error') || msg.includes('failed to lookup address')) {
+    return 'Domain not found. Please verify the URL is correct and the site is accessible.';
+  }
+  if (msg.includes('client error (connect)') || msg.includes('connection refused')) {
+    return 'Could not connect to the server. Please check the URL and try again.';
+  }
+  if (msg.includes('timed out') || msg.includes('timeout')) {
+    return 'Connection timed out. The server may be slow or unreachable.';
+  }
+  if (msg.includes('ssl') || msg.includes('certificate')) {
+    return 'SSL/Certificate error. The site may have an invalid or expired certificate.';
+  }
+  
+  return null;
+}
+
 async function testWordPressConnection(
   siteUrl: string, 
   endpoint: string
-): Promise<{ success: boolean; message: string; communityCount?: number }> {
+): Promise<{ success: boolean; message: string; communityCount?: number; normalizedUrl?: string; hint?: string }> {
+  const normalizedUrl = siteUrl.replace(/\/$/, '');
+  
   try {
-    const normalizedUrl = siteUrl.replace(/\/$/, '');
     const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=1`;
 
     console.log(`Testing WordPress connection: ${apiUrl}`);
@@ -567,27 +590,54 @@ async function testWordPressConnection(
       if (response.status === 404) {
         return { 
           success: false, 
-          message: `Endpoint "/${endpoint}" not found. Try a different custom post type slug or use auto-detect.` 
+          message: `Endpoint "/${endpoint}" not found. Try a different custom post type slug or use auto-detect.`,
+          normalizedUrl,
+          hint: `Try opening ${normalizedUrl}/wp-json in your browser to verify the REST API is available.`,
         };
       }
-      return { success: false, message: `WordPress API returned status ${response.status}` };
+      return { 
+        success: false, 
+        message: `WordPress API returned status ${response.status}`,
+        normalizedUrl,
+      };
     }
 
     const totalCount = parseInt(response.headers.get('X-WP-Total') || '0', 10);
 
     const data = await response.json();
     if (!Array.isArray(data)) {
-      return { success: false, message: 'Invalid response format from WordPress API' };
+      return { 
+        success: false, 
+        message: 'Invalid response format from WordPress API',
+        normalizedUrl,
+      };
     }
 
     return { 
       success: true, 
       message: `Found ${totalCount} items at /${endpoint}`,
       communityCount: totalCount,
+      normalizedUrl,
     };
   } catch (error) {
     console.error('WordPress connection test error:', error);
-    return { success: false, message: `Connection failed: ${error.message}` };
+    
+    // Provide user-friendly error messages for common connection issues
+    const friendlyMessage = getConnectionErrorMessage(error);
+    if (friendlyMessage) {
+      return { 
+        success: false, 
+        message: friendlyMessage,
+        normalizedUrl,
+        hint: `Try opening ${normalizedUrl} in your browser to verify the site is accessible.`,
+      };
+    }
+    
+    return { 
+      success: false, 
+      message: `Connection failed: ${error.message}`,
+      normalizedUrl,
+    };
   }
 }
 
