@@ -774,7 +774,7 @@ const Auth = () => {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
+      className="w-full space-y-6"
     >
 
       <form onSubmit={handleSetNewPassword} className="flex flex-col gap-4">
@@ -890,15 +890,15 @@ const Auth = () => {
       </div>
 
       {/* Right Content Area */}
-      <div className="flex h-full w-full flex-1 overflow-hidden py-8 md:py-12">
-        <div className="flex h-full w-full flex-col items-center px-4 md:px-8">
+      <div className="flex min-h-screen w-full flex-1 overflow-auto py-8 md:py-12">
+        <div className="mx-auto flex h-full w-full flex-col items-center px-4 md:px-8">
           {/* Mobile Logo with text */}
           <div className="lg:hidden flex items-center mb-8">
             <PilotLogo className="h-8 w-8 text-foreground" />
           </div>
 
-          <div className="flex w-full max-w-sm flex-col flex-1">
-            <div className="flex flex-1 items-center justify-center">
+          <div className="flex w-full max-w-md flex-col flex-1">
+            <div className="flex w-full flex-1 items-center justify-center">
               <AnimatePresence mode="wait">
                 {showResetPassword ? (
                   renderResetPasswordForm()
@@ -908,7 +908,7 @@ const Auth = () => {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className="w-full space-y-6"
                   >
 
                     <form onSubmit={handleForgotPassword} className="flex flex-col gap-4">
@@ -953,7 +953,7 @@ const Auth = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="space-y-6"
+                    className="w-full space-y-6"
                   >
 
                     <form onSubmit={handleSignIn} className="flex flex-col gap-4">
