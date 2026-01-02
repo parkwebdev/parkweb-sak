@@ -118,6 +118,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // Check if this was a temporary session (Remember Me unchecked)
+      // If browser was closed and reopened, sessionStorage would be cleared
+      // but localStorage session would remain - we should sign out
+      const wasTemporarySession = sessionStorage.getItem('pilot_session_temporary') === null && 
+                                   localStorage.getItem('pilot_session_temporary_flag') === 'true';
+      
+      if (session && wasTemporarySession) {
+        // User didn't want to be remembered, sign them out
+        localStorage.removeItem('pilot_session_temporary_flag');
+        supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        initialCheckCompleteRef.current = true;
+        return;
+      }
+      
+      // Sync the flag to localStorage so we can detect browser restart
+      if (sessionStorage.getItem('pilot_session_temporary') === 'true') {
+        localStorage.setItem('pilot_session_temporary_flag', 'true');
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       previousUserRef.current = session?.user ?? null;
@@ -226,9 +248,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   /**
    * Sign out the current user.
+   * Clears session persistence flags.
    * @throws Error if sign out fails
    */
   const signOut = async () => {
+    // Clear session persistence flags
+    sessionStorage.removeItem('pilot_session_temporary');
+    localStorage.removeItem('pilot_session_temporary_flag');
+    
     const { error } = await supabase.auth.signOut();
     if (error) {
       logger.error('Error signing out:', error);
