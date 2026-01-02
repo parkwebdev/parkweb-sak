@@ -60,11 +60,14 @@ export const getBaseStyles = (): string => `
     text-decoration: none;
   }
   
+  .email-text-error { color: #ef4444 !important; }
+  
   @media (prefers-color-scheme: dark) {
     .email-bg { background-color: ${colors.dark.background} !important; }
     .email-card { background-color: ${colors.dark.card} !important; }
     .email-text { color: ${colors.dark.text} !important; }
     .email-text-muted { color: ${colors.dark.textMuted} !important; }
+    .email-text-error { color: #f87171 !important; }
     .email-border { border-color: ${colors.dark.border} !important; }
     .email-btn { background-color: ${colors.dark.buttonBg} !important; }
     .email-btn-text { color: ${colors.dark.buttonText} !important; }
@@ -113,6 +116,19 @@ export const detailRow = (label: string, value: string, labelWidth = 120): strin
     <td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text}; font-weight: 500;">${value}</td>
   </tr>
 `;
+
+export const alertBox = (text: string, type: 'warning' | 'error' | 'success' = 'warning'): string => {
+  const colorMap = { warning: '#f59e0b', error: colors.error, success: colors.success };
+  const bgColor = colorMap[type];
+  return `
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${bgColor}10; border-left: 4px solid ${bgColor}; border-radius: 4px;">
+    <tr>
+      <td style="padding: 16px;">
+        <p class="email-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: ${colors.text};">${text}</p>
+      </td>
+    </tr>
+  </table>`;
+};
 
 // =============================================================================
 // FOOTER VARIANTS
