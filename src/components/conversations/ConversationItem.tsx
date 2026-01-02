@@ -8,6 +8,7 @@
  */
 
 import React, { memo } from 'react';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { getStatusColor, getUnreadCount } from '@/lib/conversation-utils';
@@ -91,7 +92,12 @@ export const ConversationItem = memo(function ConversationItem({
                 )}
                 {takeoverFirstName || 'Human'}
               </span>
-            ) : conversation.status === 'active' ? 'Ari' : conversation.status}
+            ) : conversation.status === 'active' ? (
+              <span className="flex items-center gap-1">
+                <AriAgentsIcon className="w-3 h-3" />
+                Ari
+              </span>
+            ) : conversation.status}
           </Badge>
           <span className="text-2xs text-muted-foreground">
             • {formatDistanceToNow(new Date(conversation.updated_at), { addSuffix: true })}
