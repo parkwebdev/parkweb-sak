@@ -92,14 +92,14 @@ The following secrets are managed in Supabase:
 ```
 ├── docs/                    # Documentation
 │   ├── README.md            # Documentation index
+│   ├── ARCHITECTURE.md      # System architecture
 │   ├── DESIGN_SYSTEM.md     # Design tokens & standards
 │   ├── HOOKS_REFERENCE.md   # Custom hooks reference
-│   ├── APPLICATION_OVERVIEW.md
-│   ├── ARCHITECTURE.md
-│   ├── AI_ARCHITECTURE.md
-│   ├── DATABASE_SCHEMA.md
-│   ├── EDGE_FUNCTIONS.md
-│   ├── WIDGET_ARCHITECTURE.md
+│   ├── AI_ARCHITECTURE.md   # RAG and model routing
+│   ├── DATABASE_SCHEMA.md   # Tables and RLS policies
+│   ├── EDGE_FUNCTIONS.md    # Edge functions reference
+│   ├── DEVELOPMENT_STANDARDS.md # Code standards
+│   ├── WIDGET_ARCHITECTURE.md # Widget development
 │   └── ...
 │
 ├── src/
@@ -132,19 +132,18 @@ The following secrets are managed in Supabase:
 Comprehensive documentation is available in the `/docs` directory:
 
 ### Quick Start
-- [Application Overview](docs/APPLICATION_OVERVIEW.md) - Features and architecture
+- [Architecture](docs/ARCHITECTURE.md) - Features, architecture, and data flow
 - [Design System](docs/DESIGN_SYSTEM.md) - Typography, colors, spacing
 - [Hooks Reference](docs/HOOKS_REFERENCE.md) - Custom hooks documentation
 
 ### Architecture
-- [System Architecture](docs/ARCHITECTURE.md) - Architecture and data flow
 - [AI Architecture](docs/AI_ARCHITECTURE.md) - RAG and model routing
 - [Database Schema](docs/DATABASE_SCHEMA.md) - Tables and RLS policies
 - [Edge Functions](docs/EDGE_FUNCTIONS.md) - API reference
 
 ### Development
-- [Supabase Integration](docs/SUPABASE_INTEGRATION_GUIDE.md) - Full-stack patterns
-- [shadcn Components](docs/SHADCN_COMPONENT_GUIDE.md) - Component guide
+- [Development Standards](docs/DEVELOPMENT_STANDARDS.md) - Code standards and patterns
+- [Component Patterns](docs/COMPONENT_PATTERNS.md) - React component guide
 - [Widget Architecture](docs/WIDGET_ARCHITECTURE.md) - Widget development
 
 ---

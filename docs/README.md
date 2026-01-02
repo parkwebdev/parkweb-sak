@@ -52,8 +52,8 @@ Welcome to the Pilot documentation. This index provides quick access to all tech
 
 | Document | Description |
 |----------|-------------|
-| [Team Scoping Standard](./TEAM_SCOPING_STANDARD.md) | Multi-tenant data access patterns |
-| [Centralization Audit](./CENTRALIZATION_AUDIT.md) | Centralization verification and guardrails |
+| [Development Standards](./DEVELOPMENT_STANDARDS.md) | Data scoping, permissions, centralization patterns |
+| [Security Testing](./SECURITY_TESTING.md) | Security testing procedures |
 
 ---
 
@@ -130,8 +130,8 @@ docs/
 ├── STRIPE_PAYMENT_GUIDE.md        # Payment integration
 │
 ├── # Standards & Maintenance
-├── TEAM_SCOPING_STANDARD.md       # Multi-tenant data patterns
-└── CENTRALIZATION_AUDIT.md        # Centralization verification
+├── DEVELOPMENT_STANDARDS.md       # Data scoping, permissions, patterns
+└── SECURITY_TESTING.md            # Security testing procedures
 ```
 
 ---
