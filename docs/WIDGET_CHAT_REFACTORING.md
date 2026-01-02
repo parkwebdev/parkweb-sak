@@ -1,10 +1,10 @@
 # Widget-Chat Edge Function Refactoring Plan
 
-> **Document Version**: 2.2.0  
+> **Document Version**: 2.3.0  
 > **Created**: 2025-01-01  
 > **Updated**: 2025-01-02  
-> **Status**: Phase 2 Complete  
-> **Target File**: `supabase/functions/widget-chat/index.ts` (4,146 lines, reduced from 4,678)
+> **Status**: Phase 3 Complete  
+> **Target File**: `supabase/functions/widget-chat/index.ts` (2,256 lines, reduced from 4,678)
 
 ---
 
@@ -15,7 +15,7 @@
 | ~~Phase 0~~ | ~~Pre-Refactoring Validation~~ | ⛔ Skipped (no Deno test runner) |
 | **Phase 1** | Core Module Extraction | ✅ **COMPLETE** (2025-01-02) |
 | **Phase 2** | Utility & Security Extraction | ✅ **COMPLETE** (2025-01-02) |
-| Phase 3 | Extraction Order & Procedures | ⏳ Ready to Start |
+| **Phase 3** | Tools, AI, Memory Extraction | ✅ **COMPLETE** (2025-01-02) |
 | Phase 4 | Refactored Main Handler | ⏳ Pending |
 
 ### Phase 1 Completion Summary
@@ -42,14 +42,41 @@
 | Sanitization | `_shared/security/sanitization.ts` | 45 lines | ✅ Verified |
 | Content Moderation | `_shared/security/moderation.ts` | 90 lines | ✅ Verified |
 
-**Total Lines Extracted in Phase 2**: ~515 lines  
-**Main Handler Reduction**: 4,534 → 4,146 lines (-388 lines)
+### Phase 3 Completion Summary
+
+| Module | File | Lines Extracted | Status |
+|--------|------|-----------------|--------|
+| Geo Utils | `_shared/utils/geo.ts` | 35 lines | ✅ Verified |
+| User Agent Utils | `_shared/utils/user-agent.ts` | 45 lines | ✅ Verified |
+| Response Chunking | `_shared/utils/response-chunking.ts` | 30 lines | ✅ Verified |
+| AI Embeddings | `_shared/ai/embeddings.ts` | 85 lines | ✅ Verified |
+| RAG Module | `_shared/ai/rag.ts` | 140 lines | ✅ Verified |
+| Summarization | `_shared/ai/summarization.ts` | 120 lines | ✅ Verified |
+| Model Capabilities | `_shared/ai/model-capabilities.ts` | 80 lines | ✅ Verified |
+| Booking UI | `_shared/tools/booking-ui.ts` | 160 lines | ✅ Verified |
+| Tool Definitions | `_shared/tools/definitions.ts` | 180 lines | ✅ Verified |
+| Property Tools | `_shared/tools/property-tools.ts` | 220 lines | ✅ Verified |
+| Calendar Tools | `_shared/tools/calendar-tools.ts` | 95 lines | ✅ Verified |
+| Custom Tools | `_shared/tools/custom-tools.ts` | 140 lines | ✅ Verified |
+| Conversation History | `_shared/memory/conversation-history.ts` | 130 lines | ✅ Verified |
+| Tool Cache | `_shared/memory/tool-cache.ts` | 110 lines | ✅ Verified |
+| Semantic Memory | `_shared/memory/semantic-memory.ts` | 180 lines | ✅ Verified |
+
+**Total Lines Extracted in Phase 3**: ~1,750 lines  
+**Main Handler Reduction**: 4,146 → 2,256 lines (-1,890 lines)
 
 **Validation Performed:**
 - ✅ Edge function deployed successfully
 - ✅ All imports resolved correctly
 - ✅ TypeScript compilation passed
-- ✅ Barrel exports created for utils/, ai/, security/
+- ✅ Barrel exports created for tools/, memory/
+
+**Cumulative Progress:**
+- **Original file**: 4,678 lines
+- **After Phase 1**: 4,534 lines (-144 lines)
+- **After Phase 2**: 4,146 lines (-388 lines, cumulative: -532 lines)
+- **After Phase 3**: 2,256 lines (-1,890 lines, cumulative: -2,422 lines)
+- **Reduction**: 51.8% of original file size removed
 
 ---
 
