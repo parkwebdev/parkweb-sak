@@ -27,13 +27,10 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
     {
       key: 't',
       altKey: true,
-      description: 'Toggle Theme',
+      description: 'Cycle Theme',
       action: () => {
-        // Trigger the sidebar theme toggle button to get the View Transitions animation
-        const themeToggle = document.querySelector('[data-theme-toggle]') as HTMLButtonElement;
-        if (themeToggle) {
-          themeToggle.click();
-        }
+        // Dispatch custom event to cycle theme - handled by ThemeProvider
+        window.dispatchEvent(new CustomEvent('cycle-theme'));
       }
     },
     {

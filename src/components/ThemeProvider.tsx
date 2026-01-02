@@ -7,10 +7,11 @@
  * @module components/ThemeProvider
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 
 /** Available theme options */
-type Theme = 'dark' | 'light' | 'system';
+export type Theme = 'dark' | 'light' | 'system';
 
 /**
  * Props for the ThemeProvider component
@@ -88,6 +89,57 @@ export function ThemeProvider({
 
     root.classList.add(theme);
   }, [theme]);
+
+  // Cycle theme with View Transitions API for keyboard shortcut
+  const cycleTheme = useCallback(async () => {
+    const themeOrder: Theme[] = ['system', 'light', 'dark'];
+    const currentIndex = themeOrder.indexOf(theme);
+    const nextTheme = themeOrder[(currentIndex + 1) % themeOrder.length];
+
+    // Check for View Transitions API support
+    if (!document.startViewTransition) {
+      localStorage.setItem(storageKey, nextTheme);
+      setThemeState(nextTheme);
+      return;
+    }
+
+    // Get center of viewport for animation origin
+    const x = window.innerWidth / 2;
+    const y = window.innerHeight / 2;
+    const maxRadius = Math.hypot(x, y);
+
+    // Start view transition
+    const transition = document.startViewTransition(() => {
+      flushSync(() => {
+        localStorage.setItem(storageKey, nextTheme);
+        setThemeState(nextTheme);
+      });
+    });
+
+    await transition.ready;
+
+    // Animate the circle expansion from center
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${maxRadius}px at ${x}px ${y}px)`,
+        ],
+      },
+      {
+        duration: 500,
+        easing: 'ease-out',
+        pseudoElement: '::view-transition-new(root)',
+      }
+    );
+  }, [theme, storageKey]);
+
+  // Listen for cycle-theme event from keyboard shortcut
+  useEffect(() => {
+    const handleCycleTheme = () => cycleTheme();
+    window.addEventListener('cycle-theme', handleCycleTheme);
+    return () => window.removeEventListener('cycle-theme', handleCycleTheme);
+  }, [cycleTheme]);
 
   const value = {
     theme,

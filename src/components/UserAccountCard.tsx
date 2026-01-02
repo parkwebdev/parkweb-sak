@@ -23,6 +23,7 @@ import { SkeletonUserCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { Badge } from '@/components/ui/badge';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { ThemeSwitcher } from '@/components/ui/theme-switcher';
 import type { AppPermission } from '@/types/team';
 
 /** User profile data from database */
@@ -222,6 +223,11 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
               <Keyboard01 size={16} />
               Shortcuts
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <div className="px-2 py-2">
+              <div className="text-xs text-muted-foreground mb-2">Theme</div>
+              <ThemeSwitcher />
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
               <LogOut size={16} className="mr-2" />
