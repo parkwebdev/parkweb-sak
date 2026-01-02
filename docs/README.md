@@ -44,7 +44,6 @@ Welcome to the Pilot documentation. This index provides quick access to all tech
 | Guide | Description |
 |-------|-------------|
 | [Widget Architecture](./WIDGET_ARCHITECTURE.md) | Embedded chat widget technical docs |
-| [Widget Chat Refactoring](./WIDGET_CHAT_REFACTORING.md) | Widget chat refactoring history |
 | [Native Booking System](./NATIVE_BOOKING_SYSTEM.md) | Calendar and booking system architecture |
 | [Social Channel Integrations](./SOCIAL_CHANNEL_INTEGRATIONS.md) | Facebook, Instagram, X integrations |
 | [Stripe Payment Guide](./STRIPE_PAYMENT_GUIDE.md) | Payment integration and subscriptions |
@@ -126,7 +125,6 @@ docs/
 │
 ├── # Features
 ├── WIDGET_ARCHITECTURE.md         # Widget technical docs
-├── WIDGET_CHAT_REFACTORING.md     # Widget refactoring history
 ├── NATIVE_BOOKING_SYSTEM.md       # Calendar and booking
 ├── SOCIAL_CHANNEL_INTEGRATIONS.md # Social integrations
 ├── STRIPE_PAYMENT_GUIDE.md        # Payment integration

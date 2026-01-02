@@ -159,56 +159,193 @@ try {
 
 **Method:** `POST`
 
-**Request Body:**
+**Current Size:** ~1,026 lines (reduced from 4,678 via modular refactoring)
+
+---
+
+#### Request Schema
+
 ```typescript
-{
-  agentId: string;
-  conversationId: string;
-  message: string;
-  sessionId?: string;
+interface WidgetChatRequest {
+  agentId: string;                          // Required - Agent UUID
+  conversationId?: string;                  // Optional - Existing conversation
+  messages: Array<{                         // Required - Message history
+    role: 'user' | 'assistant';
+    content: string;
+    files?: FileAttachment[];
+  }>;
+  leadId?: string;                          // Optional - Known lead UUID
+  pageVisits?: PageVisit[];                 // Optional - Page history
+  referrerJourney?: ReferrerJourney;        // Optional - Traffic source
+  visitorId?: string;                       // Optional - Browser fingerprint
+  previewMode?: boolean;                    // Optional - Skip persistence
+  browserLanguage?: string;                 // Optional - Browser locale
+  turnstileToken?: string;                  // Optional - CAPTCHA token
 }
 ```
 
-**Response:**
+---
+
+#### Response Schema
+
 ```typescript
-{
-  response: string;
-  conversationId: string;
+interface WidgetChatResponse {
+  conversationId: string | null;            // Session ID (null in preview)
+  requestId: string;                        // Trace ID
+  messages: Array<{                         // Chunked response
+    id: string;
+    content: string;
+    chunkIndex: number;
+  }>;
+  response: string;                         // Legacy: Full response text
+  userMessageId?: string;                   // Persisted user message ID
+  assistantMessageId?: string;              // Persisted assistant message ID
+  sources?: KnowledgeSource[];              // RAG sources used
+  toolsUsed?: ToolUsed[];                   // Tools executed
+  linkPreviews?: LinkPreview[];             // Extracted link metadata
+  quickReplies?: string[];                  // Suggested follow-ups
+  callActions?: CallAction[];               // Phone number actions
+  dayPicker?: DayPickerData;                // Calendar availability UI
+  timePicker?: TimePickerData;              // Time slot selection UI
+  bookingConfirmed?: BookingConfirmationData; // Booking success state
+  aiMarkedComplete?: boolean;               // Conversation complete flag
+  durationMs: number;                       // Request duration
+  cached?: boolean;                         // Response cache hit
+  similarity?: number;                      // Cache similarity score
+  status?: 'active' | 'closed' | 'human_takeover'; // Special states
+  takenOverBy?: string;                     // Human agent name
 }
 ```
 
-**Modular Architecture (Phase 4 Complete):**
+---
 
-The widget-chat function has been refactored into modular components:
+#### Error Codes
 
-| Directory | Purpose |
-|-----------|---------|
-| `_shared/handlers/` | High-level orchestration handlers |
-| `_shared/ai/` | AI, embeddings, RAG, summarization |
-| `_shared/tools/` | Tool definitions and execution |
-| `_shared/memory/` | Conversation history, semantic memory |
-| `_shared/security/` | Content moderation, sanitization |
-| `_shared/utils/` | Utility functions |
+```typescript
+const ErrorCodes = {
+  MESSAGE_TOO_LONG: 'MESSAGE_TOO_LONG',
+  TOO_MANY_FILES: 'TOO_MANY_FILES',
+  INVALID_REQUEST: 'INVALID_REQUEST',
+  AGENT_NOT_FOUND: 'AGENT_NOT_FOUND',
+  RATE_LIMITED: 'RATE_LIMITED',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  AI_PROVIDER_ERROR: 'AI_PROVIDER_ERROR',
+  EMBEDDING_ERROR: 'EMBEDDING_ERROR',
+  TOOL_EXECUTION_ERROR: 'TOOL_EXECUTION_ERROR',
+  CONVERSATION_CLOSED: 'CONVERSATION_CLOSED',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const;
+```
 
-**Handler Modules (`_shared/handlers/`):**
-- `conversation.ts` - Conversation lifecycle management
-- `context.ts` - RAG search & system prompt building
-- `tool-executor.ts` - Tool execution orchestration
-- `response-builder.ts` - Post-processing & response construction
+---
 
-**Details:**
-- Creates conversation if not exists
-- Retrieves relevant knowledge via vector search
-- Augments system prompt with context
-- Calls AI model via OpenRouter
-- Stores both user and assistant messages
-- Skips AI response if conversation is in `human_takeover` status
+#### Request Limits
 
-**RAG Flow:**
-1. Generate embedding for user message
-2. Search `knowledge_chunks` and `help_articles` for similar content
-3. Inject top matches into system prompt
-4. Generate response with augmented context
+```typescript
+const MAX_MESSAGE_LENGTH = 10000;     // 10,000 characters max per message
+const MAX_FILES_PER_MESSAGE = 5;      // Maximum file attachments per message
+const MAX_CONVERSATION_HISTORY = 10;  // Limit to last 10 messages for AI context
+const MAX_RAG_CHUNKS = 3;             // Top 3 most relevant RAG chunks
+const SUMMARIZATION_THRESHOLD = 15;   // Summarize if over 15 messages
+```
+
+---
+
+#### Modular Architecture
+
+The widget-chat function uses shared modules from `supabase/functions/_shared/`:
+
+```
+supabase/functions/_shared/
+├── cors.ts                    # CORS headers
+├── logger.ts                  # Structured logging with requestId
+├── errors.ts                  # Error handling utilities
+├── types.ts                   # Shared TypeScript types
+│
+├── ai/
+│   ├── index.ts               # Barrel export
+│   ├── config.ts              # Embedding model, context limits
+│   ├── model-routing.ts       # Model tier selection (lite/standard/premium)
+│   ├── model-capabilities.ts  # Model parameter support map
+│   ├── embeddings.ts          # Embedding generation & caching
+│   ├── rag.ts                 # Knowledge search & response caching
+│   └── summarization.ts       # Conversation summarization
+│
+├── handlers/
+│   ├── index.ts               # Barrel export
+│   ├── conversation.ts        # Conversation lifecycle management
+│   ├── context.ts             # RAG search & system prompt building
+│   ├── tool-executor.ts       # Tool execution orchestration
+│   └── response-builder.ts    # Post-processing & response construction
+│
+├── memory/
+│   ├── index.ts               # Barrel export
+│   ├── conversation-history.ts # Message history management
+│   ├── tool-cache.ts          # Tool result caching (prevents redundant calls)
+│   └── semantic-memory.ts     # Memory extraction & search
+│
+├── security/
+│   ├── index.ts               # Barrel export
+│   ├── guardrails.ts          # Prompt injection defense
+│   ├── sanitization.ts        # Output sanitization (redacts secrets)
+│   └── moderation.ts          # OpenAI content moderation
+│
+├── tools/
+│   ├── index.ts               # Barrel export
+│   ├── definitions.ts         # Tool schema definitions
+│   ├── booking-ui.ts          # DayPicker/TimePicker components
+│   ├── property-tools.ts      # Property search tools
+│   ├── calendar-tools.ts      # Calendar integration
+│   └── custom-tools.ts        # Custom tool execution (SSRF protected)
+│
+└── utils/
+    ├── index.ts               # Barrel export
+    ├── phone.ts               # Phone number extraction
+    ├── hashing.ts             # API key hashing
+    ├── links.ts               # URL/link utilities
+    ├── state-mapping.ts       # US state normalization
+    ├── language.ts            # Language detection
+    ├── geo.ts                 # IP geolocation
+    ├── user-agent.ts          # Browser/device parsing
+    └── response-chunking.ts   # Response splitting for chat UI
+```
+
+---
+
+#### Handler Module Exports
+
+| Module | Exports |
+|--------|---------|
+| `conversation.ts` | `getOrCreateConversation`, `checkConversationStatus`, `saveUserMessage` |
+| `context.ts` | `buildContext` (RAG search, embedding, system prompt, user context) |
+| `tool-executor.ts` | `executeToolCalls` (built-in + custom tools, caching, AI follow-up) |
+| `response-builder.ts` | `postProcessResponse`, `addTypingDelay`, `saveResponseChunks`, `updateConversationMetadata`, `trackUsage`, `extractMemories`, `buildFinalResponse` |
+
+---
+
+#### Processing Flow
+
+1. Validate request (message length, file count)
+2. Get or create conversation
+3. Check conversation status (closed/takeover)
+4. Build context (RAG search, memories, user info)
+5. Call AI model via OpenRouter
+6. Execute tool calls if present
+7. Post-process response (moderation, sanitization)
+8. Save messages and update metadata
+9. Extract memories (async)
+10. Build final response with UI components
+
+---
+
+#### RAG Flow
+
+1. Generate embedding for user message (with caching)
+2. Search `knowledge_chunks` for similar content
+3. Fallback to `knowledge_sources` if no chunks
+4. Search `help_articles` for additional context
+5. Inject top 3 matches into system prompt
+6. Generate response with augmented context
 
 ---
 
