@@ -105,9 +105,11 @@ src/widget/
 │   ├── WidgetAvatar.tsx        # Avatar (pure React, no @radix-ui)
 │   ├── WidgetCard.tsx          # Card (native div, no motion/react)
 │   ├── WidgetSpinner.tsx       # Spinner (SVG + CSS animation)
+│   ├── WidgetCheckbox.tsx      # Checkbox (native, DOMPurify rich text)
+│   ├── WidgetSkeleton.tsx      # Loading skeletons (CSS pulse animation)
 │   ├── CSSAnimatedList.tsx     # CSS-only animated list container
 │   └── CSSAnimatedItem.tsx     # CSS-only animated list item
-├── hooks/                      # 18 custom hooks for state management
+├── hooks/                      # 19 custom hooks for state management
 │   ├── index.ts                # Barrel exports with JSDoc
 │   ├── useWidgetConfig.ts      # Config fetching and state
 │   ├── useWidgetMessaging.ts   # Message sending, input, files, form submit (Phase 1)
@@ -149,6 +151,7 @@ src/widget/
 │   ├── WidgetMessageReactions.tsx # Emoji reaction picker
 │   ├── WidgetEmojiPicker.tsx   # Full emoji picker
 │   ├── WidgetPhoneInput.tsx    # Phone input with US/CA formatting
+│   ├── TurnstileWidget.tsx     # Cloudflare Turnstile bot protection
 │   └── booking/
 │       ├── index.ts            # Barrel exports
 │       ├── DayPicker.tsx       # Date selection grid
@@ -611,7 +614,7 @@ const iconModules: Record<string, () => Promise<{ default: ComponentType }>> = {
 
 ## Widget Hooks Reference
 
-The widget uses 18 custom hooks organized by concern. These were refactored in the ChatWidget Refactoring Plan (Phases 1-7).
+The widget uses 19 custom hooks organized by concern. These were refactored in the ChatWidget Refactoring Plan (Phases 1-7).
 
 ### Hooks Summary Table
 
