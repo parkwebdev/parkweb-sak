@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormHint } from '@/components/ui/form-hint';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicato
 import { Eye, EyeOff, User01, Key01, UsersPlus, CheckCircle, Mail01, ArrowLeft } from '@untitledui/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import PilotLogo from '@/components/PilotLogo';
+import { AuthTurnstile, AuthTurnstileRef } from '@/components/AuthTurnstile';
 
 
 const signupSteps: StepItem[] = [
@@ -86,6 +87,28 @@ const Auth = () => {
   
   const navigate = useNavigate();
   const { logAuthEvent } = useSecurityLog();
+  
+  // Turnstile CAPTCHA state
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<AuthTurnstileRef>(null);
+  
+  const resetCaptcha = useCallback(() => {
+    setCaptchaToken(null);
+    turnstileRef.current?.reset();
+  }, []);
+  
+  const handleCaptchaVerify = useCallback((token: string) => {
+    setCaptchaToken(token);
+  }, []);
+  
+  const handleCaptchaError = useCallback(() => {
+    setCaptchaToken(null);
+    toast.error("Verification failed", { description: "Please try again" });
+  }, []);
+  
+  const handleCaptchaExpire = useCallback(() => {
+    setCaptchaToken(null);
+  }, []);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -157,6 +180,11 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate, showResetPassword]);
 
+  // Reset captcha when switching tabs/forms
+  useEffect(() => {
+    resetCaptcha();
+  }, [activeTab, showForgotPassword, currentStep, resetCaptcha]);
+
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
@@ -209,9 +237,14 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password,
+        options: { captchaToken: captchaToken || undefined }
+      });
 
       if (error) {
+        resetCaptcha();
         logAuthEvent('login', false, { error: error.message });
         if (error.message.includes('Invalid login credentials')) {
           toast.error("Invalid credentials", { description: "Please check your email and password and try again." });
@@ -303,6 +336,7 @@ const Auth = () => {
         password,
         options: {
           emailRedirectTo: redirectUrl,
+          captchaToken: captchaToken || undefined,
           data: { 
             display_name: displayName,
             first_name: firstName.trim(),
@@ -312,6 +346,7 @@ const Auth = () => {
       });
 
       if (error) {
+        resetCaptcha();
         logAuthEvent('signup', false, { error: error.message });
         if (error.message.includes('User already registered')) {
           toast.error("Account exists", { description: "An account with this email already exists. Please sign in instead." });
@@ -362,6 +397,7 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth?tab=reset`,
+        captchaToken: captchaToken || undefined,
       });
 
       if (error) {
@@ -372,8 +408,10 @@ const Auth = () => {
       toast.success("Check your email", { 
         description: "We've sent you a password reset link" 
       });
+      resetCaptcha();
       setShowForgotPassword(false);
     } catch (error: unknown) {
+      resetCaptcha();
       toast.error("Error", { description: "An unexpected error occurred" });
     } finally {
       setIsLoading(false);
@@ -613,11 +651,19 @@ const Auth = () => {
                   autoComplete="new-password"
                 />
               </div>
+              
+              <AuthTurnstile
+                ref={turnstileRef}
+                onVerify={handleCaptchaVerify}
+                onError={handleCaptchaError}
+                onExpire={handleCaptchaExpire}
+              />
+              
               <div className="flex gap-3">
                 <Button variant="outline" size="lg" onClick={handlePrevStep}>
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleNextStep} size="lg" className="flex-1" disabled={isLoading}>
+                <Button onClick={handleNextStep} size="lg" className="flex-1" disabled={isLoading || !captchaToken}>
                   Continue
                 </Button>
               </div>
@@ -925,7 +971,14 @@ const Auth = () => {
                       />
                     </div>
 
-                    <Button type="submit" size="lg" className="w-full" loading={isLoading}>
+                    <AuthTurnstile
+                      ref={turnstileRef}
+                      onVerify={handleCaptchaVerify}
+                      onError={handleCaptchaError}
+                      onExpire={handleCaptchaExpire}
+                    />
+
+                    <Button type="submit" size="lg" className="w-full" loading={isLoading} disabled={!captchaToken}>
                       Send reset link
                     </Button>
 
@@ -1010,11 +1063,18 @@ const Auth = () => {
                         onClick={() => setShowForgotPassword(true)}
                         className="text-sm text-primary hover:text-primary/80"
                       >
-                        Forgot password
+                      Forgot password
                       </button>
                     </div>
 
-                    <Button type="submit" size="lg" className="w-full" loading={isLoading}>
+                    <AuthTurnstile
+                      ref={turnstileRef}
+                      onVerify={handleCaptchaVerify}
+                      onError={handleCaptchaError}
+                      onExpire={handleCaptchaExpire}
+                    />
+
+                    <Button type="submit" size="lg" className="w-full" loading={isLoading} disabled={!captchaToken}>
                       Sign in
                     </Button>
 
