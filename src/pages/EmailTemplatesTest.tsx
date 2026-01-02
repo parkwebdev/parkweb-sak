@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Copy01, Send01, Loading02, ChevronDown } from '@untitledui/icons';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
 import { EmailPreviewModeToggle, type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';

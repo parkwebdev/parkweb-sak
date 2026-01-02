@@ -19,8 +19,6 @@ import { useTheme } from '@/components/ThemeProvider';
 interface ThemeToggleProps {
   /** Whether the sidebar is collapsed (affects size) */
   isCollapsed?: boolean;
-  /** Whether to render as a sidebar menu item */
-  isSidebarItem?: boolean;
 }
 
 /**
@@ -28,14 +26,10 @@ interface ThemeToggleProps {
  * Uses View Transitions API for a circular reveal effect.
  * 
  * @example
- * // In sidebar
- * <ThemeToggle isCollapsed={sidebarCollapsed} />
- * 
- * @example
  * // Standalone
  * <ThemeToggle />
  */
-export function ThemeToggle({ isCollapsed = false, isSidebarItem = false }: ThemeToggleProps) {
+export function ThemeToggle({ isCollapsed = false }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const ref = useRef<HTMLButtonElement>(null);
   
@@ -87,35 +81,6 @@ export function ThemeToggle({ isCollapsed = false, isSidebarItem = false }: Them
       }
     );
   };
-
-  // Render as sidebar menu item
-  if (isSidebarItem) {
-    return (
-      <button
-        ref={ref}
-        onClick={handleToggle}
-        data-theme-toggle
-        className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-        title={isCollapsed ? (isDarkMode ? 'Light mode' : 'Dark mode') : ''}
-        aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
-          <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
-            {isDarkMode ? (
-              <Sun size={14} className="self-stretch my-auto" />
-            ) : (
-              <Moon size={14} className="self-stretch my-auto" />
-            )}
-          </div>
-          {!isCollapsed && (
-            <span className="text-sm font-normal leading-4 my-auto whitespace-nowrap">
-              {isDarkMode ? 'Light mode' : 'Dark mode'}
-            </span>
-          )}
-        </div>
-      </button>
-    );
-  }
 
   return (
     <Button 
