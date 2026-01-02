@@ -11,6 +11,7 @@ import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { CheckCircle, Globe01, Inbox01, SearchMd, XClose, Ticket01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 
@@ -94,37 +95,33 @@ const NavItem = React.memo(function NavItem({ icon, label, count, isActive, onCl
 });
 
 export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQuery, onSearchChange }: InboxNavSidebarProps) {
-  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const prefersReducedMotion = useReducedMotion();
   
   const isActive = useCallback((type: string, value?: string) => 
     activeFilter.type === type && activeFilter.value === value, [activeFilter]);
 
-  // Focus input when search expands
+  // Focus input when modal opens
   useEffect(() => {
-    if (searchExpanded && searchInputRef.current) {
+    if (searchModalOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
-  }, [searchExpanded]);
-
-  // Close search when clicking outside or pressing Escape
-  const handleSearchBlur = useCallback(() => {
-    if (!searchQuery) {
-      setSearchExpanded(false);
-    }
-  }, [searchQuery]);
+  }, [searchModalOpen]);
 
   const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       onSearchChange('');
-      setSearchExpanded(false);
+      setSearchModalOpen(false);
+    }
+    if (e.key === 'Enter') {
+      setSearchModalOpen(false);
     }
   }, [onSearchChange]);
 
   const handleClearSearch = useCallback(() => {
     onSearchChange('');
-    setSearchExpanded(false);
+    searchInputRef.current?.focus();
   }, [onSearchChange]);
 
   // Track animation index across all sections
@@ -133,40 +130,44 @@ export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilte
   return (
     <div className="w-48 border-r bg-background flex flex-col">
       {/* Header with Inbox title and search */}
-      <div className="h-14 border-b flex items-center">
-        <div className="flex items-center justify-between px-3">
-          {searchExpanded ? (
-            <div className="flex-1 flex items-center gap-2">
-              <Input
-                ref={searchInputRef}
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                onBlur={handleSearchBlur}
-                onKeyDown={handleSearchKeyDown}
-                className="h-7 text-sm bg-muted/50 border-0"
-              />
+      <div className="h-14 border-b flex items-center justify-between px-3">
+        <h2 className="text-sm font-semibold text-foreground">Inbox</h2>
+        <button
+          onClick={() => setSearchModalOpen(true)}
+          className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Search conversations"
+        >
+          <SearchMd size={16} />
+        </button>
+      </div>
+
+      {/* Search Modal */}
+      <Dialog open={searchModalOpen} onOpenChange={setSearchModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Search Conversations</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center gap-2">
+            <Input
+              ref={searchInputRef}
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              className="flex-1"
+              autoFocus
+            />
+            {searchQuery && (
               <button
                 onClick={handleClearSearch}
-                className="p-1 hover:bg-accent rounded"
+                className="p-2 hover:bg-accent rounded"
               >
-                <XClose size={14} className="text-muted-foreground" />
+                <XClose size={16} className="text-muted-foreground" />
               </button>
-            </div>
-          ) : (
-            <>
-              <h2 className="text-sm font-semibold text-foreground">Inbox</h2>
-              <button
-                onClick={() => setSearchExpanded(true)}
-                className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Search conversations"
-              >
-                <SearchMd size={16} />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Ari Section */}
       <div className="p-3">
