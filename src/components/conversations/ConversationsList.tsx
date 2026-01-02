@@ -100,7 +100,7 @@ export const ConversationsList = memo(function ConversationsList({
           <Button
             variant="ghost"
             size="sm"
-            className={`h-7 w-7 p-0 hover:w-9 transition-all ${isCollapsed ? 'mx-auto' : ''}`}
+            className={`h-7 w-7 p-0 transition-colors duration-200 ${isCollapsed ? 'mx-auto' : ''}`}
             onClick={onToggleCollapse}
             aria-label={isCollapsed ? 'Expand conversations' : 'Collapse conversations'}
           >

@@ -356,7 +356,7 @@ export function ConversationMetadataPanel({
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-7 w-7 p-0 hover:w-9 transition-all", isCollapsed && "mx-auto")}
+            className={cn("h-7 w-7 p-0 transition-colors duration-200", isCollapsed && "mx-auto")}
             onClick={onToggleCollapse}
           >
             <LayoutPanelRight filled={isCollapsed} className="h-4 w-4" />
