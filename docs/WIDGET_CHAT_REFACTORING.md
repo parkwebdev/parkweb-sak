@@ -1,10 +1,10 @@
 # Widget-Chat Edge Function Refactoring Plan
 
-> **Document Version**: 2.0.0  
+> **Document Version**: 2.1.0  
 > **Created**: 2025-01-01  
 > **Updated**: 2025-01-02  
-> **Status**: Ready for Phase 1  
-> **Target File**: `supabase/functions/widget-chat/index.ts` (4,678 lines)
+> **Status**: Phase 1 Complete  
+> **Target File**: `supabase/functions/widget-chat/index.ts` (4,534 lines, reduced from 4,678)
 
 ---
 
@@ -13,10 +13,25 @@
 | Phase | Description | Status |
 |-------|-------------|--------|
 | ~~Phase 0~~ | ~~Pre-Refactoring Validation~~ | ⛔ Skipped (no Deno test runner) |
-| **Phase 1** | Target Architecture | ⏳ Ready to Start |
-| Phase 2 | Line-by-Line Extraction Map | ⏳ Pending |
+| **Phase 1** | Core Module Extraction | ✅ **COMPLETE** (2025-01-02) |
+| Phase 2 | Line-by-Line Extraction Map | ⏳ Ready to Start |
 | Phase 3 | Extraction Order & Procedures | ⏳ Pending |
 | Phase 4 | Refactored Main Handler | ⏳ Pending |
+
+### Phase 1 Completion Summary
+
+| Module | File | Lines Extracted | Status |
+|--------|------|-----------------|--------|
+| CORS Headers | `_shared/cors.ts` | 4 lines | ✅ Verified |
+| Logger | `_shared/logger.ts` | 52 lines | ✅ Verified |
+| Errors | `_shared/errors.ts` | 100 lines | ✅ Verified |
+| Types | `_shared/types.ts` | 57 lines | ✅ Verified |
+
+**Validation Performed:**
+- ✅ Edge function deployed successfully
+- ✅ All imports resolved correctly
+- ✅ TypeScript compilation passed
+- ✅ Main handler reduced by 144 lines (4,678 → 4,534)
 
 > **⚠️ NO AUTOMATED TESTS AVAILABLE**  
 > Without Deno test runner, we must validate each extraction step manually:
@@ -425,28 +440,28 @@ export * from './response-chunking.ts';
 
 ## Phase 2: Line-by-Line Extraction Map
 
-### Complete Line Mapping (4,678 lines)
+### Complete Line Mapping (4,534 lines after Phase 1)
 
-#### Lines 1-108: Core Infrastructure
+#### Lines 1-22: Core Infrastructure ✅ PHASE 1 COMPLETE
 
-| Lines | Content | Target | Action |
+| Lines | Content | Target | Status |
 |-------|---------|--------|--------|
-| 1-2 | Import statements | `widget-chat/index.ts` | KEEP |
-| 4-7 | `corsHeaders` constant | `_shared/cors.ts` | MOVE |
-| 9-25 | `ErrorCodes` constant | `_shared/errors.ts` | MOVE |
-| 27-31 | `MAX_MESSAGE_LENGTH`, `MAX_FILES_PER_MESSAGE` | `_shared/errors.ts` | MOVE |
-| 33-46 | `LogLevel`, `LogEntry` types | `_shared/logger.ts` | MOVE |
-| 48-84 | `createLogger` function | `_shared/logger.ts` | MOVE |
-| 86-108 | `createErrorResponse` function | `_shared/errors.ts` | MOVE |
+| 1-2 | Import statements | `widget-chat/index.ts` | ✅ KEPT |
+| 4-7 | `corsHeaders` constant | `_shared/cors.ts` | ✅ EXTRACTED |
+| 9-25 | `ErrorCodes` constant | `_shared/errors.ts` | ✅ EXTRACTED |
+| 27-31 | `MAX_MESSAGE_LENGTH`, `MAX_FILES_PER_MESSAGE` | `_shared/errors.ts` | ✅ EXTRACTED |
+| 33-46 | `LogLevel`, `LogEntry` types | `_shared/logger.ts` | ✅ EXTRACTED |
+| 48-84 | `createLogger` function | `_shared/logger.ts` | ✅ EXTRACTED |
+| 86-108 | `createErrorResponse` function | `_shared/errors.ts` | ✅ EXTRACTED |
 
-#### Lines 110-166: Type Definitions
+#### Lines 110-166: Type Definitions ✅ PHASE 1 COMPLETE
 
-| Lines | Content | Target | Action |
+| Lines | Content | Target | Status |
 |-------|---------|--------|--------|
-| 110-123 | `ShownProperty` interface | `_shared/types.ts` | MOVE |
-| 125-153 | `ConversationMetadata` interface | `_shared/types.ts` | MOVE |
-| 155-159 | `URL_REGEX`, `PHONE_REGEX` patterns | `_shared/types.ts` | MOVE |
-| 161-166 | `CallAction` interface | `_shared/types.ts` | MOVE |
+| 110-123 | `ShownProperty` interface | `_shared/types.ts` | ✅ EXTRACTED |
+| 125-153 | `ConversationMetadata` interface | `_shared/types.ts` | ✅ EXTRACTED |
+| 155-159 | `URL_REGEX`, `PHONE_REGEX` patterns | `_shared/types.ts` | ✅ EXTRACTED |
+| 161-166 | `CallAction` interface | `_shared/types.ts` | ✅ EXTRACTED |
 
 #### Lines 168-262: Utility Functions
 
