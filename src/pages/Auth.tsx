@@ -180,10 +180,11 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate, showResetPassword]);
 
-  // Reset captcha when switching tabs/forms
+  // Reset captcha only when switching between sign-in/sign-up or forgot password
   useEffect(() => {
-    resetCaptcha();
-  }, [activeTab, showForgotPassword, currentStep, resetCaptcha]);
+    setCaptchaToken(null);
+    turnstileRef.current?.reset();
+  }, [activeTab, showForgotPassword]);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
