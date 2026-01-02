@@ -1,41 +1,29 @@
 # Widget-Chat Edge Function Refactoring Plan
 
-> **Document Version**: 1.3.0  
+> **Document Version**: 2.0.0  
 > **Created**: 2025-01-01  
 > **Updated**: 2025-01-02  
-> **Status**: Phase 0 Complete ✅ | Phase 1+ Pending  
+> **Status**: Ready for Phase 1  
 > **Target File**: `supabase/functions/widget-chat/index.ts` (4,678 lines)
 
 ---
 
 ## Implementation Status
 
-| Phase | Description | Status | Verified |
-|-------|-------------|--------|----------|
-| **Phase 0** | Pre-Refactoring Validation | ✅ **COMPLETE** | 2025-01-02 |
-| Phase 1 | Target Architecture | ⏳ Pending | - |
-| Phase 2 | Line-by-Line Extraction Map | ⏳ Pending | - |
-| Phase 3 | Extraction Order & Procedures | ⏳ Pending | - |
-| Phase 4 | Refactored Main Handler | ⏳ Pending | - |
-| Phase 5 | Validation Checklist | ⏳ Pending | - |
-| Phase 6 | Rollback Plan | ⏳ Pending | - |
-| Phase 7 | Documentation Updates | ⏳ Pending | - |
+| Phase | Description | Status |
+|-------|-------------|--------|
+| ~~Phase 0~~ | ~~Pre-Refactoring Validation~~ | ⛔ Skipped (no Deno test runner) |
+| **Phase 1** | Target Architecture | ⏳ Ready to Start |
+| Phase 2 | Line-by-Line Extraction Map | ⏳ Pending |
+| Phase 3 | Extraction Order & Procedures | ⏳ Pending |
+| Phase 4 | Refactored Main Handler | ⏳ Pending |
 
-### Phase 0 Completion Details
-
-**Implemented Files:**
-- `supabase/functions/widget-chat/__tests__/types.ts` - Type definitions
-- `supabase/functions/widget-chat/__tests__/fixtures.ts` - Test fixtures
-- `supabase/functions/widget-chat/__tests__/test-utils.ts` - Test utilities
-- `supabase/functions/widget-chat/__tests__/snapshot.test.ts` - 44 snapshot tests
-- `supabase/functions/widget-chat/__tests__/integration.test.ts` - 8 integration tests
-- `supabase/functions/widget-chat/__tests__/baseline-metrics.ts` - Performance baseline tool
-- `supabase/functions/widget-chat/__tests__/README.md` - Test documentation
-
-**Test Coverage:**
-- ✅ 44 Snapshot Tests (SNAP-001 to SNAP-044)
-- ✅ 8 Integration Tests (INT-001 to INT-008)
-- ✅ Performance Baseline Tool
+> **⚠️ NO AUTOMATED TESTS AVAILABLE**  
+> Without Deno test runner, we must validate each extraction step manually:
+> 1. Deploy the edge function after each change
+> 2. Test the widget UI in browser
+> 3. Verify all response fields are correct
+> 4. Check edge function logs for errors
 
 ---
 
@@ -44,25 +32,18 @@
 1. [Executive Summary](#executive-summary)
 2. [Critical Constraints](#critical-constraints)
 3. [Current State Analysis](#current-state-analysis)
-4. [Phase 0: Pre-Refactoring Validation](#phase-0-pre-refactoring-validation) ✅
-5. [Phase 1: Target Architecture](#phase-1-target-architecture)
-6. [Phase 2: Line-by-Line Extraction Map](#phase-2-line-by-line-extraction-map)
-7. [Phase 3: Extraction Order & Procedures](#phase-3-extraction-order--procedures)
-8. [Phase 4: Refactored Main Handler](#phase-4-refactored-main-handler)
-9. [Phase 5: Validation Checklist](#phase-5-validation-checklist)
-10. [Phase 6: Rollback Plan](#phase-6-rollback-plan)
-11. [Phase 7: Documentation Updates](#phase-7-documentation-updates)
-12. [Migration Timeline](#migration-timeline)
-13. [Success Criteria](#success-criteria)
-14. [Appendix: Complete Line Mapping](#appendix-complete-line-mapping)
+4. [Phase 1: Target Architecture](#phase-1-target-architecture)
+5. [Phase 2: Line-by-Line Extraction Map](#phase-2-line-by-line-extraction-map)
+6. [Phase 3: Extraction Order & Procedures](#phase-3-extraction-order--procedures)
+7. [Phase 4: Refactored Main Handler](#phase-4-refactored-main-handler)
+8. [Manual Validation Checklist](#manual-validation-checklist)
+9. [Rollback Plan](#rollback-plan)
 
 ---
 
 ## Executive Summary
 
-> **Phase 0 is COMPLETE.** The test suite is implemented and ready to validate all extraction steps. Proceed to Phase 1 when ready to begin extraction.
-
-This document provides a **comprehensive, line-by-line refactoring plan** for `supabase/functions/widget-chat/index.ts` (4,678 lines) into modular, maintainable components following industry best practices.
+This document provides a **comprehensive, line-by-line refactoring plan** for `supabase/functions/widget-chat/index.ts` (4,678 lines) into modular, maintainable components.
 
 ### Current State
 - **Single monolithic file**: 4,678 lines
@@ -76,12 +57,12 @@ This document provides a **comprehensive, line-by-line refactoring plan** for `s
 
 ### Critical Constraints
 
-| Constraint | Description | Enforcement |
-|------------|-------------|-------------|
-| **ZERO Visual Regression** | Widget UI must be pixel-perfect identical | Screenshot comparison |
-| **ZERO Functionality Changes** | All features must work exactly as before | Snapshot tests |
-| **ZERO Broken Behavior** | No new bugs, no edge cases broken | Integration tests |
-| **API Contract Immutable** | Request/Response schemas unchanged | TypeScript validation |
+| Constraint | Description | Validation |
+|------------|-------------|------------|
+| **ZERO Visual Regression** | Widget UI must be pixel-perfect identical | Manual browser testing |
+| **ZERO Functionality Changes** | All features must work exactly as before | Manual feature testing |
+| **ZERO Broken Behavior** | No new bugs, no edge cases broken | Edge function logs |
+| **API Contract Immutable** | Request/Response schemas unchanged | TypeScript compilation |
 
 ---
 
@@ -93,11 +74,11 @@ The following widget UI elements MUST remain visually identical:
 
 | Element | Current Behavior | Validation Method |
 |---------|------------------|-------------------|
-| Chat bubble layout | Messages render with correct styling | Visual screenshot |
-| Quick reply chips | Horizontal scrollable chips below messages | Visual screenshot |
-| Day picker | Calendar grid with available dates highlighted | Visual screenshot |
-| Time picker | Time slot buttons in grid layout | Visual screenshot |
-| Booking confirmation | Success state with booking details | Visual screenshot |
+| Chat bubble layout | Messages render with correct styling | Manual browser test |
+| Quick reply chips | Horizontal scrollable chips below messages | Manual browser test |
+| Day picker | Calendar grid with available dates highlighted | Manual browser test |
+| Time picker | Time slot buttons in grid layout | Manual browser test |
+| Booking confirmation | Success state with booking details | Manual browser test |
 | Link preview cards | OpenGraph-style cards with image/title | Visual screenshot |
 | Call action buttons | Phone buttons with location context | Visual screenshot |
 | Loading states | Typing indicator animation | Visual inspection |
@@ -283,97 +264,6 @@ supabase.rpc('search_knowledge_chunks', { p_agent_id, p_query_embedding, ... })
 supabase.rpc('search_knowledge_sources', { p_agent_id, p_query_embedding, ... })  // fallback
 supabase.rpc('search_help_articles', { p_agent_id, p_query_embedding, ... })
 supabase.rpc('search_conversation_memories', { p_agent_id, p_lead_id, ... })
-```
-
----
-
-## Phase 0: Pre-Refactoring Validation ✅ COMPLETE
-
-> **Status**: ✅ VERIFIED AND COMPLETE (2025-01-02)
-> 
-> All test files have been implemented and are ready for use. Run the tests before proceeding to Phase 1.
-
-### 0.1 Snapshot Test Suite ✅
-
-**File**: `supabase/functions/widget-chat/__tests__/snapshot.test.ts`
-
-| Test ID | Test Case | Input | Expected Response Fields | Priority |
-|---------|-----------|-------|-------------------------|----------|
-| SNAP-001 | Greeting request | `messages: [{ role: 'user', content: '__GREETING_REQUEST__' }]` | `response`, `conversationId`, `messages` | Critical |
-| SNAP-002 | Basic user query | `messages: [{ role: 'user', content: 'Hello' }]` | `response`, `conversationId`, `messages` | Critical |
-| SNAP-003 | RAG query (knowledge hit) | Query matching knowledge base | `response`, `sources`, `messages` | Critical |
-| SNAP-004 | RAG query (no match) | Query with no KB match | `response`, `messages` (no sources) | High |
-| SNAP-005 | Property search | `'Show me 3 bedroom homes'` | `response`, `toolsUsed: ['searchProperties']` | Critical |
-| SNAP-006 | Property lookup | `'Tell me about lot 123'` | `response`, `toolsUsed: ['lookupProperty']` | High |
-| SNAP-007 | Location list | `'What communities do you have?'` | `response`, `toolsUsed: ['getLocations']` | High |
-| SNAP-008 | Calendar availability | `'When can I schedule a tour?'` | `response`, `dayPicker` | Critical |
-| SNAP-009 | Time selection | `'I want to visit on Monday'` | `response`, `timePicker` | Critical |
-| SNAP-010 | Booking confirmation | `'Book me for 2pm'` | `response`, `bookingConfirmed` | Critical |
-| SNAP-011 | Human takeover state | Conversation with takeover | `status: 'human_takeover'`, `takenOverBy` | High |
-| SNAP-012 | Closed conversation | Closed conversation | `status: 'closed'`, message | High |
-| SNAP-013 | Content moderation (block) | Harmful user message | Polite rejection, no AI response | Critical |
-| SNAP-014 | Content moderation (warn) | Borderline content | Response with potential warning | Medium |
-| SNAP-015 | API key validation (valid) | Valid X-API-Key header | 200 status, normal response | Critical |
-| SNAP-016 | API key validation (invalid) | Invalid X-API-Key header | 401 status, error response | Critical |
-| SNAP-017 | API key validation (revoked) | Revoked API key | 401 status, error response | High |
-| SNAP-018 | Rate limiting (minute) | Exceed per-minute limit | 429 status, error response | High |
-| SNAP-019 | Rate limiting (day) | Exceed per-day limit | 429 status, error response | High |
-| SNAP-020 | Preview mode | `previewMode: true` | `conversationId: null`, no DB writes | High |
-| SNAP-021 | Quick replies | Standard query | `quickReplies` array with suggestions | Medium |
-| SNAP-022 | Link previews | Message containing URLs | `linkPreviews` array | Medium |
-| SNAP-023 | Call actions | Message with phone numbers | `callActions` array | Medium |
-| SNAP-024 | Message chunking | Long response (>500 chars) | `messages` array with multiple chunks | High |
-| SNAP-025 | Response cache hit | Repeated identical query | `cached: true`, `similarity` | Medium |
-| SNAP-026 | Embedding cache hit | Repeated query embedding | Faster response, cache logged | Low |
-| SNAP-027 | Multi-language (Spanish) | Spanish user message | Response in Spanish | Medium |
-| SNAP-028 | Multi-language (French) | French user message | Response in French | Medium |
-| SNAP-029 | Semantic memory (recall) | Query about previous info | Memory context in response | High |
-| SNAP-030 | Semantic memory (store) | User provides new info | Memory stored for future | High |
-| SNAP-031 | Tool cache (skip redundant) | Same property search twice | Second skips tool call | Medium |
-| SNAP-032 | Conversation summary | Long conversation (>15 msgs) | Summary generated | Medium |
-| SNAP-033 | Custom tool (success) | Custom tool trigger | Tool executed, result in response | High |
-| SNAP-034 | Custom tool (SSRF blocked) | Internal URL attempt | Tool blocked, error logged | Critical |
-| SNAP-035 | Custom tool (timeout) | Slow external endpoint | Timeout handled gracefully | Medium |
-| SNAP-036 | Agent not found | Invalid agentId | `code: 'AGENT_NOT_FOUND'`, 404 | Critical |
-| SNAP-037 | Missing messages | Empty messages array | `code: 'INVALID_REQUEST'`, 400 | Critical |
-| SNAP-038 | Message too long | >10,000 char message | `code: 'MESSAGE_TOO_LONG'`, 400 | High |
-| SNAP-039 | Too many files | >5 files attached | `code: 'TOO_MANY_FILES'`, 400 | High |
-| SNAP-040 | AI error (OpenRouter) | OpenRouter failure | `code: 'AI_PROVIDER_ERROR'`, fallback | High |
-| SNAP-041 | Tool error (property) | Property DB error | Graceful degradation | Medium |
-| SNAP-042 | Tool error (calendar) | Calendar API error | Graceful degradation | Medium |
-| SNAP-043 | Usage limit exceeded | Over monthly API call limit | 429 status with limit_reached flag | High |
-| SNAP-044 | mark_conversation_complete | AI signals completion | `aiMarkedComplete: true` | Medium |
-
-### 0.2 Integration Test Suite ✅
-
-**File**: `supabase/functions/widget-chat/__tests__/integration.test.ts`
-
-| Test ID | Test Case | Validation Method |
-|---------|-----------|-------------------|
-| INT-001 | Full greeting flow | E2E with real agent |
-| INT-002 | Full property search flow | E2E with real properties |
-| INT-003 | Full booking flow (day → time → confirm) | E2E with real calendar |
-| INT-004 | Multi-turn conversation | State maintained across messages |
-| INT-005 | Lead capture flow | Lead created/updated in DB |
-| INT-006 | Memory persistence | Memory survives conversation restart |
-| INT-007 | Cache warming | Cache populated after queries |
-| INT-008 | Usage metrics increment | API calls counted correctly |
-
-### 0.3 Baseline Performance Metrics ✅
-
-**File**: `supabase/functions/widget-chat/__tests__/baseline-metrics.ts`
-
-| Metric | Measurement Method | Baseline Target |
-|--------|-------------------|-----------------|
-| Cold start time | First request after deploy | Record value |
-| Warm request (cache miss) | Average of 10 requests | Record value |
-| Warm request (cache hit) | Average of 10 cached requests | Record value |
-| Memory usage | Deno memory metrics | Record value |
-| Bundle size | Deployed function size | Record value |
-
-**Run before Phase 1:**
-```bash
-deno run --allow-all supabase/functions/widget-chat/__tests__/baseline-metrics.ts
 ```
 
 ---
