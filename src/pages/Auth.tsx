@@ -565,7 +565,7 @@ const Auth = () => {
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
               >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <svg className="size-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -582,7 +582,7 @@ const Auth = () => {
                 onClick={handleMicrosoftSignIn}
                 disabled={isLoading}
               >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 21 21">
+                <svg className="size-5" viewBox="0 0 21 21">
                   <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
                   <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
                   <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
@@ -618,15 +618,17 @@ const Auth = () => {
                     disabled={isLoading}
                     autoComplete="new-password"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     aria-pressed={showPassword}
                   >
                     {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-                  </button>
+                  </Button>
                 </div>
                 {password && <PasswordStrengthIndicator password={password} className="mt-2" />}
               </div>
@@ -653,7 +655,7 @@ const Auth = () => {
               
               <div className="flex gap-3">
                 <Button variant="outline" size="lg" onClick={handlePrevStep}>
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft />
                 </Button>
                 <Button onClick={handleNextStep} size="lg" className="flex-1" disabled={isLoading}>
                   Continue
@@ -726,7 +728,7 @@ const Auth = () => {
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" size="lg" onClick={handlePrevStep}>
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft />
                 </Button>
                 <Button onClick={handleNextStep} size="lg" className="flex-1" loading={isLoading}>
                   {teamEmails.trim() ? 'Send invites & continue' : 'Skip for now'}
@@ -800,15 +802,17 @@ const Auth = () => {
               className="h-10 pr-10"
               autoComplete="new-password"
             />
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7"
               aria-label={showPassword ? "Hide password" : "Show password"}
               aria-pressed={showPassword}
             >
               {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-            </button>
+            </Button>
           </div>
           {newPassword && <PasswordStrengthIndicator password={newPassword} className="mt-2" />}
         </div>
@@ -831,19 +835,21 @@ const Auth = () => {
           Reset password
         </Button>
 
-        <button 
+        <Button 
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => {
             setShowResetPassword(false);
             setNewPassword('');
             setConfirmNewPassword('');
             window.history.replaceState({}, document.title, '/auth');
           }}
-          className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="mx-auto"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft />
           Back to sign in
-        </button>
+        </Button>
       </form>
     </motion.div>
   );
@@ -946,14 +952,16 @@ const Auth = () => {
                         Send reset link
                       </Button>
 
-                      <button 
+                      <Button 
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setShowForgotPassword(false)}
-                        className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                        className="mx-auto"
                       >
-                        <ArrowLeft className="w-4 h-4" />
+                        <ArrowLeft />
                         Back to sign in
-                      </button>
+                      </Button>
                     </form>
                   </motion.div>
                 ) : activeTab === 'signin' ? (
@@ -993,16 +1001,18 @@ const Auth = () => {
                             disabled={isLoading}
                             autoComplete="current-password"
                           />
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7"
                             disabled={isLoading}
                             aria-label={showPassword ? "Hide password" : "Show password"}
                             aria-pressed={showPassword}
                           >
                             {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-                          </button>
+                          </Button>
                         </div>
                       </div>
 
@@ -1013,13 +1023,15 @@ const Auth = () => {
                             Remember for 30 days
                           </Label>
                         </div>
-                        <button 
+                        <Button 
                           type="button" 
+                          variant="link"
+                          size="sm"
                           onClick={() => setShowForgotPassword(true)}
-                          className="text-sm text-primary hover:text-primary/80"
+                          className="h-auto p-0"
                         >
-                        Forgot password
-                        </button>
+                          Forgot password
+                        </Button>
                       </div>
 
                       <AuthTurnstile
@@ -1041,7 +1053,7 @@ const Auth = () => {
                         disabled={isLoading}
                         onClick={handleGoogleSignIn}
                       >
-                        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                        <svg className="size-5" viewBox="0 0 24 24">
                           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -1058,7 +1070,7 @@ const Auth = () => {
                         disabled={isLoading}
                         onClick={handleMicrosoftSignIn}
                       >
-                        <svg className="w-5 h-5 mr-2" viewBox="0 0 21 21">
+                        <svg className="size-5" viewBox="0 0 21 21">
                           <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
                           <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
                           <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
@@ -1070,12 +1082,14 @@ const Auth = () => {
 
                     <div className="text-center">
                       <span className="text-sm text-muted-foreground">Don't have an account? </span>
-                      <button 
+                      <Button 
+                        variant="link"
+                        size="sm"
                         onClick={() => { setActiveTab('signup'); setCurrentStep(0); }}
-                        className="text-sm text-primary hover:text-primary/80 font-medium"
+                        className="h-auto p-0 font-medium"
                       >
                         Sign up
-                      </button>
+                      </Button>
                     </div>
                   </motion.div>
                 ) : (
@@ -1095,12 +1109,14 @@ const Auth = () => {
             {activeTab === 'signup' && currentStep < 3 && !showResetPassword && (
               <div className="text-center pb-2">
                 <span className="text-sm text-muted-foreground">Already have an account? </span>
-                <button 
+                <Button 
+                  variant="link"
+                  size="sm"
                   onClick={() => { setActiveTab('signin'); setCurrentStep(0); }}
-                  className="text-sm text-primary hover:text-primary/80 font-medium"
+                  className="h-auto p-0 font-medium"
                 >
                   Sign in
-                </button>
+                </Button>
               </div>
             )}
           </div>
