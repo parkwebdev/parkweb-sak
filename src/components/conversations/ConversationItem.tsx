@@ -8,7 +8,7 @@
  */
 
 import React, { memo } from 'react';
-import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+import { WidgetStarIcon } from '@/widget/icons/WidgetStarIcon';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { getStatusColor, getUnreadCount } from '@/lib/conversation-utils';
@@ -80,21 +80,21 @@ export const ConversationItem = memo(function ConversationItem({
         
         {/* Status badge and timestamp */}
         <div className="flex items-center gap-1.5">
-          <Badge variant="outline" size="sm" className={`${getStatusColor(conversation.status)} px-2 py-0.5`}>
+          <Badge variant="outline" className={`${getStatusColor(conversation.status)} text-xs px-2 py-0.5`}>
             {conversation.status === 'human_takeover' ? (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 pl-0">
                 {takeoverAvatarUrl && (
                   <img 
                     src={takeoverAvatarUrl} 
                     alt="" 
-                    className="w-3.5 h-3.5 rounded-full object-cover"
+                    className="w-4 h-4 rounded-full object-cover -ml-0.5"
                   />
                 )}
                 {takeoverFirstName || 'Human'}
               </span>
             ) : conversation.status === 'active' ? (
-              <span className="flex items-center gap-1">
-                <AriAgentsIcon className="w-3 h-3" />
+              <span className="flex items-center gap-1 pl-0">
+                <WidgetStarIcon className="w-3 h-3 -ml-0.5" />
                 Ari
               </span>
             ) : conversation.status}
