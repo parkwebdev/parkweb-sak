@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormHint } from '@/components/ui/form-hint';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength } from '@/utils/input-validation';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
-import { AuthTurnstile, type AuthTurnstileRef } from '@/components/AuthTurnstile';
 import { Eye, EyeOff, User01, Key01, UsersPlus, CheckCircle, Mail01, ArrowLeft } from '@untitledui/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import PilotLogo from '@/components/PilotLogo';
@@ -85,38 +84,8 @@ const Auth = () => {
   // Track if user is coming from a team invitation
   const [isInvitedUser, setIsInvitedUser] = useState(false);
   
-  // CAPTCHA state
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const turnstileRef = useRef<AuthTurnstileRef>(null);
-  
   const navigate = useNavigate();
   const { logAuthEvent } = useSecurityLog();
-  
-  // CAPTCHA handlers - wrapped in useCallback to prevent re-renders
-  const handleCaptchaVerify = useCallback((token: string) => {
-    setCaptchaToken(token);
-  }, []);
-
-  const handleCaptchaError = useCallback(() => {
-    setCaptchaToken(null);
-    toast.error("CAPTCHA verification failed", { 
-      description: "Please try again" 
-    });
-  }, []);
-
-  const handleCaptchaExpire = useCallback(() => {
-    setCaptchaToken(null);
-  }, []);
-
-  const resetCaptcha = useCallback(() => {
-    setCaptchaToken(null);
-    turnstileRef.current?.reset();
-  }, []);
-  
-  // Reset captcha when switching forms
-  useEffect(() => {
-    resetCaptcha();
-  }, [activeTab, showForgotPassword]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -237,25 +206,12 @@ const Auth = () => {
       toast.error("Error", { description: "Please fill in all fields" });
       return;
     }
-    
-    // Check CAPTCHA token - show friendly message if still loading
-    if (!captchaToken) {
-      toast.error("Please wait", { 
-        description: "Security verification is still loading. Please try again in a moment." 
-      });
-      return;
-    }
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password,
-        options: { captchaToken }
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        resetCaptcha(); // Reset captcha on error so user can retry
         logAuthEvent('login', false, { error: error.message });
         if (error.message.includes('Invalid login credentials')) {
           toast.error("Invalid credentials", { description: "Please check your email and password and try again." });
@@ -270,7 +226,6 @@ const Auth = () => {
       logAuthEvent('login', true);
       navigate('/');
     } catch (error: unknown) {
-      resetCaptcha();
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
@@ -336,14 +291,6 @@ const Auth = () => {
   };
 
   const handleSignUp = async () => {
-    // Check CAPTCHA token - show friendly message if still loading
-    if (!captchaToken) {
-      toast.error("Please wait", { 
-        description: "Security verification is still loading. Please try again in a moment." 
-      });
-      return;
-    }
-    
     setIsLoading(true);
     try {
       const redirectUrl = `${window.location.origin}/`;
@@ -356,7 +303,6 @@ const Auth = () => {
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          captchaToken,
           data: { 
             display_name: displayName,
             first_name: firstName.trim(),
@@ -366,7 +312,6 @@ const Auth = () => {
       });
 
       if (error) {
-        resetCaptcha(); // Reset captcha on error so user can retry
         logAuthEvent('signup', false, { error: error.message });
         if (error.message.includes('User already registered')) {
           toast.error("Account exists", { description: "An account with this email already exists. Please sign in instead." });
@@ -390,7 +335,6 @@ const Auth = () => {
         setCurrentStep(3); // Completion is step 3 for regular users
       }
     } catch (error: unknown) {
-      resetCaptcha();
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
@@ -413,24 +357,14 @@ const Auth = () => {
       toast.error("Error", { description: "Please enter your email address" });
       return;
     }
-    
-    // Check CAPTCHA token - show friendly message if still loading
-    if (!captchaToken) {
-      toast.error("Please wait", { 
-        description: "Security verification is still loading. Please try again in a moment." 
-      });
-      return;
-    }
 
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth?tab=reset`,
-        captchaToken,
       });
 
       if (error) {
-        resetCaptcha();
         toast.error("Reset failed", { description: error.message });
         return;
       }
@@ -440,10 +374,8 @@ const Auth = () => {
       });
       setShowForgotPassword(false);
     } catch (error: unknown) {
-      resetCaptcha();
       toast.error("Error", { description: "An unexpected error occurred" });
     } finally {
-      resetCaptcha(); // Always reset after forgot password attempt
       setIsLoading(false);
     }
   };
@@ -681,15 +613,6 @@ const Auth = () => {
                   autoComplete="new-password"
                 />
               </div>
-              
-              {/* Cloudflare Turnstile CAPTCHA */}
-              <AuthTurnstile
-                ref={turnstileRef}
-                onVerify={handleCaptchaVerify}
-                onError={handleCaptchaError}
-                onExpire={handleCaptchaExpire}
-              />
-              
               <div className="flex gap-3">
                 <Button variant="outline" size="lg" onClick={handlePrevStep}>
                   <ArrowLeft className="w-4 h-4" />
@@ -1002,14 +925,6 @@ const Auth = () => {
                       />
                     </div>
 
-                    {/* Cloudflare Turnstile CAPTCHA */}
-                    <AuthTurnstile
-                      ref={turnstileRef}
-                      onVerify={handleCaptchaVerify}
-                      onError={handleCaptchaError}
-                      onExpire={handleCaptchaExpire}
-                    />
-
                     <Button type="submit" size="lg" className="w-full" loading={isLoading}>
                       Send reset link
                     </Button>
@@ -1098,14 +1013,6 @@ const Auth = () => {
                         Forgot password
                       </button>
                     </div>
-
-                    {/* Cloudflare Turnstile CAPTCHA */}
-                    <AuthTurnstile
-                      ref={turnstileRef}
-                      onVerify={handleCaptchaVerify}
-                      onError={handleCaptchaError}
-                      onExpire={handleCaptchaExpire}
-                    />
 
                     <Button type="submit" size="lg" className="w-full" loading={isLoading}>
                       Sign in
