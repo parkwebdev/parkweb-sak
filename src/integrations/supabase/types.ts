@@ -1069,6 +1069,7 @@ export type Database = {
           agent_id: string
           business_hours: Json | null
           city: string | null
+          content_hash: string | null
           country: string | null
           created_at: string
           email: string | null
@@ -1092,6 +1093,7 @@ export type Database = {
           agent_id: string
           business_hours?: Json | null
           city?: string | null
+          content_hash?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
@@ -1115,6 +1117,7 @@ export type Database = {
           agent_id?: string
           business_hours?: Json | null
           city?: string | null
+          content_hash?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
@@ -1497,6 +1500,7 @@ export type Database = {
           baths: number | null
           beds: number | null
           city: string | null
+          content_hash: string | null
           created_at: string
           description: string | null
           external_id: string | null
@@ -1524,6 +1528,7 @@ export type Database = {
           baths?: number | null
           beds?: number | null
           city?: string | null
+          content_hash?: string | null
           created_at?: string
           description?: string | null
           external_id?: string | null
@@ -1551,6 +1556,7 @@ export type Database = {
           baths?: number | null
           beds?: number | null
           city?: string | null
+          content_hash?: string | null
           created_at?: string
           description?: string | null
           external_id?: string | null

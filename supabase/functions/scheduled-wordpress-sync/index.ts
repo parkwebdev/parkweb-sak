@@ -114,8 +114,9 @@ Deno.serve(async (req: Request) => {
               action: 'sync',
               agentId: agent.id,
               siteUrl: wpConfig.site_url,
-              // Pass stored endpoint configuration
               communityEndpoint: wpConfig.community_endpoint,
+              // Pass last sync time for incremental sync
+              modifiedAfter: wpConfig.last_community_sync,
             },
             headers: {
               'x-scheduled-sync': 'true',
@@ -148,8 +149,9 @@ Deno.serve(async (req: Request) => {
               action: 'sync',
               agentId: agent.id,
               siteUrl: wpConfig.site_url,
-              // Pass stored endpoint configuration
               homeEndpoint: wpConfig.home_endpoint,
+              // Pass last sync time for incremental sync
+              modifiedAfter: wpConfig.last_home_sync,
             },
             headers: {
               'x-scheduled-sync': 'true',

@@ -4,6 +4,11 @@
  * Fetches communities from a WordPress REST API and upserts them as locations.
  * Supports both testing connection and full sync operations.
  * 
+ * Optimizations:
+ * - Content hashing to skip unchanged records
+ * - Batch database queries to reduce N+1 patterns
+ * - Incremental sync using modified_after parameter
+ * 
  * @module functions/sync-wordpress-communities
  */
 
@@ -35,6 +40,30 @@ interface DiscoveredEndpoint {
   slug: string;
   name: string;
   rest_base: string;
+}
+
+interface SyncResult {
+  created: number;
+  updated: number;
+  deleted: number;
+  unchanged: number;
+  errors: string[];
+  sync_type: 'full' | 'incremental';
+}
+
+/**
+ * Generate a content hash for change detection
+ * Uses a simple but effective string-based hash
+ */
+function generateContentHash(data: Record<string, unknown>): string {
+  const normalized = JSON.stringify(data, Object.keys(data).sort());
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    const char = normalized.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
 }
 
 /**
@@ -173,13 +202,6 @@ function extractZipFromAddress(address: string | null): string | null {
   if (!address) return null;
   const match = address.match(/\b(\d{5})(-\d{4})?\b/);
   return match ? match[1] : null;
-}
-
-interface SyncResult {
-  created: number;
-  updated: number;
-  deleted: number;
-  errors: string[];
 }
 
 /**
@@ -332,7 +354,7 @@ Deno.serve(async (req: Request) => {
       userId = user.id;
     }
 
-    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations } = await req.json();
+    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter } = await req.json();
 
     // Verify user has access to this agent
     const { data: agent, error: agentError } = await supabase
@@ -409,12 +431,17 @@ Deno.serve(async (req: Request) => {
 
     // Handle sync action
     if (action === 'sync') {
+      const startTime = Date.now();
       const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
       const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
       
       const urlToSync = normalizeSiteUrl(siteUrl || wpConfig?.site_url || '');
       // Use provided endpoint, or stored config, or default to 'community'
       const endpoint = communityEndpoint || wpConfig?.community_endpoint || 'community';
+      
+      // Determine if this is an incremental sync
+      const lastSync = modifiedAfter || wpConfig?.last_community_sync;
+      const isIncremental = !!lastSync;
       
       if (!urlToSync) {
         return new Response(
@@ -423,23 +450,24 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      console.log(`Starting WordPress community sync for agent ${agentId} from ${urlToSync} using endpoint /${endpoint}`);
+      console.log(`Starting WordPress community sync for agent ${agentId} from ${urlToSync} using endpoint /${endpoint} (${isIncremental ? 'incremental' : 'full'})`);
 
       // Fetch communities from WordPress using the configured endpoint
-      const communities = await fetchWordPressCommunities(urlToSync, endpoint);
+      const communities = await fetchWordPressCommunities(urlToSync, endpoint, isIncremental ? lastSync : undefined);
       console.log(`Fetched ${communities.length} communities from WordPress`);
 
       // Fetch taxonomy terms (try endpoint-based name first, then common names)
       const taxonomyTerms = await fetchTaxonomyTerms(urlToSync, endpoint);
       console.log(`Fetched ${taxonomyTerms.size} taxonomy terms`);
 
-      // Sync communities to locations (hard delete approach)
+      // Sync communities to locations with optimizations
       const result = await syncCommunitiesToLocations(
         supabase,
         agentId,
         agent.user_id,
         communities,
-        taxonomyTerms
+        taxonomyTerms,
+        isIncremental
       );
 
       // Update agent's deployment_config with sync info
@@ -459,13 +487,15 @@ Deno.serve(async (req: Request) => {
         .update({ deployment_config: updatedConfig })
         .eq('id', agentId);
 
-      console.log(`Sync complete: ${result.created} created, ${result.updated} updated, ${result.deleted} deleted`);
+      const duration = Date.now() - startTime;
+      console.log(`Sync complete in ${duration}ms: ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged, ${result.deleted} deleted`);
 
       return new Response(
         JSON.stringify({
           success: true,
           ...result,
           total: communities.length,
+          duration_ms: duration,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -641,9 +671,13 @@ async function testWordPressConnection(
   }
 }
 
+/**
+ * Fetch communities from WordPress with optional incremental sync
+ */
 async function fetchWordPressCommunities(
   siteUrl: string, 
-  endpoint: string
+  endpoint: string,
+  modifiedAfter?: string
 ): Promise<WordPressCommunity[]> {
   const normalizedUrl = siteUrl.replace(/\/$/, '');
   const communities: WordPressCommunity[] = [];
@@ -651,7 +685,13 @@ async function fetchWordPressCommunities(
   const perPage = 100;
 
   while (true) {
-    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}&_embed`;
+    let apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}&_embed`;
+    
+    // Add modified_after for incremental sync
+    if (modifiedAfter) {
+      apiUrl += `&modified_after=${encodeURIComponent(modifiedAfter)}`;
+    }
+    
     console.log(`Fetching WordPress communities page ${page}: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
@@ -763,38 +803,57 @@ async function fetchTaxonomyTerms(
   return slugToTermId;
 }
 
+/**
+ * Sync communities to locations with batching and content hashing
+ */
 async function syncCommunitiesToLocations(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   userId: string,
   communities: WordPressCommunity[],
-  taxonomyTerms: Map<string, number>
+  taxonomyTerms: Map<string, number>,
+  isIncremental: boolean
 ): Promise<SyncResult> {
-  const result: SyncResult = { created: 0, updated: 0, deleted: 0, errors: [] };
+  const result: SyncResult = { 
+    created: 0, 
+    updated: 0, 
+    deleted: 0, 
+    unchanged: 0, 
+    errors: [],
+    sync_type: isIncremental ? 'incremental' : 'full'
+  };
   
   // Get IDs of communities from WordPress
-  const wpCommunityIds = new Set(communities.map(c => c.id));
+  const wpCommunityIds = communities.map(c => c.id);
   
-  // Get existing WordPress locations for this agent
+  // OPTIMIZATION: Batch fetch all existing WordPress locations for this agent
   const { data: existingLocations } = await supabase
     .from('locations')
-    .select('id, wordpress_community_id')
+    .select('id, wordpress_community_id, content_hash')
     .eq('agent_id', agentId)
     .not('wordpress_community_id', 'is', null);
   
-  // Delete locations that no longer exist in WordPress (hard delete)
-  for (const loc of existingLocations || []) {
-    if (!wpCommunityIds.has(loc.wordpress_community_id)) {
-      const { error: deleteError } = await supabase
-        .from('locations')
-        .delete()
-        .eq('id', loc.id);
-      
-      if (deleteError) {
-        result.errors.push(`Failed to delete orphan location ${loc.id}: ${deleteError.message}`);
-      } else {
-        result.deleted++;
-        console.log(`🗑️ Deleted orphaned location (WP ID ${loc.wordpress_community_id} no longer exists)`);
+  // Build lookup map for O(1) access
+  const existingMap = new Map(
+    (existingLocations || []).map(loc => [loc.wordpress_community_id, loc])
+  );
+  
+  // Delete locations that no longer exist in WordPress (only for full sync)
+  if (!isIncremental) {
+    const wpCommunityIdSet = new Set(wpCommunityIds);
+    for (const loc of existingLocations || []) {
+      if (!wpCommunityIdSet.has(loc.wordpress_community_id)) {
+        const { error: deleteError } = await supabase
+          .from('locations')
+          .delete()
+          .eq('id', loc.id);
+        
+        if (deleteError) {
+          result.errors.push(`Failed to delete orphan location ${loc.id}: ${deleteError.message}`);
+        } else {
+          result.deleted++;
+          console.log(`🗑️ Deleted orphaned location (WP ID ${loc.wordpress_community_id} no longer exists)`);
+        }
       }
     }
   }
@@ -823,6 +882,23 @@ async function syncCommunitiesToLocations(
       if (communityType) metadata.community_type = communityType;
 
       const termId = findMatchingTermId(taxonomyTerms, community.slug);
+      
+      // Data to be hashed for change detection
+      const hashableData = {
+        name: decodeHtmlEntities(community.title.rendered),
+        address,
+        city,
+        state,
+        zip,
+        phone,
+        email,
+        timezone,
+        metadata,
+        wordpress_slug: community.slug,
+        wordpress_community_term_id: termId,
+      };
+      
+      const contentHash = generateContentHash(hashableData);
 
       const locationData = {
         agent_id: agentId,
@@ -839,18 +915,20 @@ async function syncCommunitiesToLocations(
         email,
         timezone,
         metadata: Object.keys(metadata).length > 0 ? metadata : null,
+        content_hash: contentHash,
         updated_at: new Date().toISOString(),
       };
 
-      // Check if location already exists
-      const { data: existing } = await supabase
-        .from('locations')
-        .select('id')
-        .eq('agent_id', agentId)
-        .eq('wordpress_community_id', community.id)
-        .maybeSingle();
+      // Check if location already exists using our lookup map
+      const existing = existingMap.get(community.id);
 
       if (existing) {
+        // OPTIMIZATION: Skip update if content hash matches
+        if (existing.content_hash === contentHash) {
+          result.unchanged++;
+          continue;
+        }
+        
         // Update existing location
         const { error: updateError } = await supabase
           .from('locations')
