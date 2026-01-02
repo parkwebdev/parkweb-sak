@@ -31,7 +31,7 @@ export function Spinner({ size = "md", className, label = "Loading" }: SpinnerPr
   return (
     <div role="status" aria-label={label}>
       <svg
-        className={cn("animate-spin text-primary", sizeClasses[size], className)}
+        className={cn("animate-spin text-current", sizeClasses[size], className)}
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden="true"
