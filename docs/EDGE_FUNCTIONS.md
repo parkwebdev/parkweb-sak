@@ -910,25 +910,96 @@ Microsoft sends GET with `?validationToken=...` - must echo back as plain text.
 
 ### `send-scheduled-report`
 
-**Purpose:** Generates and emails scheduled analytics reports.
+**Purpose:** Generates and emails scheduled analytics reports with full visual parity to the Report Builder.
 
-**Auth:** Service Role (called by cron)
+**Auth:** Service Role (called by cron or manually via POST)
 
 **Method:** `POST`
 
-**Request Body:**
+**Request Body (Optional - for manual trigger):**
 ```typescript
 {
-  reportId: string;
+  forceReportId?: string;  // Force send a specific report immediately
 }
 ```
 
-**Details:**
-- Fetches report configuration
-- Queries analytics data for period
-- Generates report content
-- Sends email to all recipients via Resend
-- Updates `last_sent_at`
+**Architecture:**
+
+Uses `@react-pdf/renderer` with ported PDF components for visual parity:
+
+```
+supabase/functions/_shared/
+├── build-pdf-data.ts        # Server-side data builder (24 data sections)
+└── pdf/
+    ├── AnalyticsReportPDF.tsx   # Main document (matches frontend)
+    ├── PDFHeader.tsx
+    ├── PDFFooter.tsx
+    ├── PDFSection.tsx
+    ├── PDFTable.tsx
+    ├── PDFExecutiveSummary.tsx
+    ├── PDFLogo.tsx
+    ├── charts.tsx               # All chart components
+    ├── chart-utils.ts           # Scaling, colors, formatting
+    ├── pdf-utils.ts             # sanitizePDFData, normalizePDFConfig
+    ├── styles.ts                # Design tokens
+    ├── fonts.ts                 # Inter font registration
+    ├── types.ts                 # PDFData, PDFConfig types
+    └── index.ts                 # Exports
+```
+
+**Data Builder (`build-pdf-data.ts`):**
+
+Fetches all 24 data sections matching the frontend builder:
+- KPI metrics (conversations, leads, conversion rate)
+- Conversation stats, funnel, peak activity
+- Lead stats, lead by source, lead conversion trend
+- Booking stats, booking trend
+- Satisfaction stats, recent feedback
+- AI performance stats, AI performance trend
+- Traffic sources, traffic source trend
+- Top pages, page engagement, page depth distribution
+- Visitor locations, visitor cities
+- Usage metrics, agent performance
+
+**PDF Generation Flow:**
+
+1. Fetch scheduled report config from `scheduled_reports` table
+2. Build `PDFData` using `buildPDFDataFromSupabase()`
+3. Normalize config with `normalizePDFConfig()` (same defaults as frontend)
+4. Sanitize data with `sanitizePDFData()` (same limits as frontend)
+5. Render PDF using `AnalyticsReportPDF` component
+6. Upload to `report-exports` storage bucket
+7. Generate signed URL (7 days expiry)
+8. Send email via Resend with download link
+9. Create record in `report_exports` table
+10. Update `last_sent_at` on scheduled report
+
+**Config Parity:**
+
+The edge function reads all 24 configuration flags from `report_config`:
+- `includeKPIs`, `includeCharts`, `includeTables`
+- `includeConversations`, `includeConversationFunnel`, `includePeakActivity`
+- `includeLeads`, `includeLeadSourceBreakdown`, `includeLeadConversionTrend`
+- `includeBookings`, `includeBookingTrend`
+- `includeSatisfaction`, `includeCustomerFeedback`
+- `includeAIPerformance`, `includeAIPerformanceTrend`
+- `includeTrafficSources`, `includeTrafficSourceTrend`
+- `includeTopPages`, `includePageEngagement`, `includePageDepth`
+- `includeVisitorLocations`, `includeVisitorCities`
+- `includeUsageMetrics`, `includeAgentPerformance`
+
+**Manual Testing:**
+
+```bash
+# Trigger a specific report immediately
+curl -X POST \
+  'https://[project].supabase.co/functions/v1/send-scheduled-report' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer [anon-key]' \
+  -d '{"forceReportId": "uuid-here"}'
+```
+
+**Related:** [PDF Generator - Server-Side Generation](./PDF_GENERATOR.md#server-side-generation-scheduled-reports)
 
 ---
 
