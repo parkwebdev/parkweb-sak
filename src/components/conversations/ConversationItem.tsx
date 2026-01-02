@@ -80,21 +80,21 @@ export const ConversationItem = memo(function ConversationItem({
         
         {/* Status badge and timestamp */}
         <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className={`${getStatusColor(conversation.status)} text-xs px-2 py-0.5`}>
+          <Badge variant="outline" className={`${getStatusColor(conversation.status)} text-xs pl-1 pr-2 py-0.5`}>
             {conversation.status === 'human_takeover' ? (
-              <span className="flex items-center gap-1 pl-0">
+              <span className="flex items-center gap-1">
                 {takeoverAvatarUrl && (
                   <img 
                     src={takeoverAvatarUrl} 
                     alt="" 
-                    className="w-4 h-4 rounded-full object-cover -ml-0.5"
+                    className="w-4 h-4 rounded-full object-cover"
                   />
                 )}
                 {takeoverFirstName || 'Human'}
               </span>
             ) : conversation.status === 'active' ? (
-              <span className="flex items-center gap-1 pl-0">
-                <WidgetStarIcon className="w-3 h-3 -ml-0.5" />
+              <span className="flex items-center gap-1">
+                <WidgetStarIcon className="w-3 h-3" />
                 Ari
               </span>
             ) : conversation.status}
