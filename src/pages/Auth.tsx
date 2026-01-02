@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormHint } from '@/components/ui/form-hint';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -92,26 +92,26 @@ const Auth = () => {
   const navigate = useNavigate();
   const { logAuthEvent } = useSecurityLog();
   
-  // CAPTCHA handlers
-  const handleCaptchaVerify = (token: string) => {
+  // CAPTCHA handlers - wrapped in useCallback to prevent re-renders
+  const handleCaptchaVerify = useCallback((token: string) => {
     setCaptchaToken(token);
-  };
+  }, []);
 
-  const handleCaptchaError = () => {
+  const handleCaptchaError = useCallback(() => {
     setCaptchaToken(null);
     toast.error("CAPTCHA verification failed", { 
       description: "Please try again" 
     });
-  };
+  }, []);
 
-  const handleCaptchaExpire = () => {
+  const handleCaptchaExpire = useCallback(() => {
     setCaptchaToken(null);
-  };
+  }, []);
 
-  const resetCaptcha = () => {
+  const resetCaptcha = useCallback(() => {
     setCaptchaToken(null);
     turnstileRef.current?.reset();
-  };
+  }, []);
   
   // Reset captcha when switching forms
   useEffect(() => {
@@ -238,10 +238,10 @@ const Auth = () => {
       return;
     }
     
-    // Require CAPTCHA token if Turnstile is configured
+    // Check CAPTCHA token - show friendly message if still loading
     if (!captchaToken) {
-      toast.error("Verification required", { 
-        description: "Please complete the security verification" 
+      toast.error("Please wait", { 
+        description: "Security verification is still loading. Please try again in a moment." 
       });
       return;
     }
@@ -336,10 +336,10 @@ const Auth = () => {
   };
 
   const handleSignUp = async () => {
-    // Require CAPTCHA token if Turnstile is configured
+    // Check CAPTCHA token - show friendly message if still loading
     if (!captchaToken) {
-      toast.error("Verification required", { 
-        description: "Please complete the security verification" 
+      toast.error("Please wait", { 
+        description: "Security verification is still loading. Please try again in a moment." 
       });
       return;
     }
@@ -414,10 +414,10 @@ const Auth = () => {
       return;
     }
     
-    // Require CAPTCHA token if Turnstile is configured
+    // Check CAPTCHA token - show friendly message if still loading
     if (!captchaToken) {
-      toast.error("Verification required", { 
-        description: "Please complete the security verification" 
+      toast.error("Please wait", { 
+        description: "Security verification is still loading. Please try again in a moment." 
       });
       return;
     }
@@ -694,7 +694,7 @@ const Auth = () => {
                 <Button variant="outline" size="lg" onClick={handlePrevStep}>
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleNextStep} size="lg" className="flex-1" disabled={isLoading || !captchaToken}>
+                <Button onClick={handleNextStep} size="lg" className="flex-1" disabled={isLoading}>
                   Continue
                 </Button>
               </div>
@@ -1010,7 +1010,7 @@ const Auth = () => {
                       onExpire={handleCaptchaExpire}
                     />
 
-                    <Button type="submit" size="lg" className="w-full" loading={isLoading} disabled={!captchaToken}>
+                    <Button type="submit" size="lg" className="w-full" loading={isLoading}>
                       Send reset link
                     </Button>
 
@@ -1107,7 +1107,7 @@ const Auth = () => {
                       onExpire={handleCaptchaExpire}
                     />
 
-                    <Button type="submit" size="lg" className="w-full" loading={isLoading} disabled={!captchaToken}>
+                    <Button type="submit" size="lg" className="w-full" loading={isLoading}>
                       Sign in
                     </Button>
 
