@@ -161,13 +161,11 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     }
   }, [agent?.id, onSyncComplete]);
 
-  // Test WordPress connection
+  // Test WordPress connection - only saves URL if test succeeds
   const testConnection = useCallback(async (url: string, endpoint?: string): Promise<TestResult> => {
     if (!agent?.id) {
       return { success: false, message: 'No agent selected' };
     }
-
-    await saveUrl(url);
 
     setIsTesting(true);
     setTestResult(null);
@@ -197,7 +195,9 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
 
       setTestResult(result);
       
+      // Only save URL after successful test
       if (result.success) {
+        await saveUrl(url);
         toast.success('WordPress site connected');
       }
       
