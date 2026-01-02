@@ -261,6 +261,9 @@ supabase/functions/_shared/
 ├── logger.ts                  # Structured logging with requestId
 ├── errors.ts                  # Error handling utilities
 ├── types.ts                   # Shared TypeScript types
+├── build-pdf-data.ts          # Transforms analytics data to PDF format
+├── calendar-sync.ts           # Calendar webhook sync utilities
+├── email-template.ts          # Email HTML template utilities
 │
 ├── ai/
 │   ├── index.ts               # Barrel export
@@ -283,6 +286,22 @@ supabase/functions/_shared/
 │   ├── conversation-history.ts # Message history management
 │   ├── tool-cache.ts          # Tool result caching (prevents redundant calls)
 │   └── semantic-memory.ts     # Memory extraction & search
+│
+├── pdf/
+│   ├── index.ts               # Barrel export
+│   ├── AnalyticsReportPDF.tsx # Main PDF document component
+│   ├── PDFExecutiveSummary.tsx # Executive summary section
+│   ├── PDFFooter.tsx          # Page footer with pagination
+│   ├── PDFHeader.tsx          # Report header with branding
+│   ├── PDFLogo.tsx            # Logo rendering
+│   ├── PDFSection.tsx         # Section containers
+│   ├── PDFTable.tsx           # Data table rendering
+│   ├── chart-utils.ts         # Chart scaling utilities
+│   ├── charts.tsx             # Native vector charts
+│   ├── fonts.ts               # Font registration
+│   ├── pdf-utils.ts           # PDF generation utilities
+│   ├── styles.ts              # Design tokens for PDF
+│   └── types.ts               # PDF-specific types
 │
 ├── security/
 │   ├── index.ts               # Barrel export
