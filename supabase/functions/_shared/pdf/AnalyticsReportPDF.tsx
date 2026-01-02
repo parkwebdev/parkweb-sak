@@ -3,6 +3,8 @@
  * 
  * Main PDF document component that assembles all sections.
  * Ported from src/lib/pdf-components/AnalyticsReportPDF.tsx
+ * 
+ * COMPLETE VISUAL PARITY with frontend builder output.
  */
 
 // @ts-ignore
@@ -47,10 +49,13 @@ export function AnalyticsReportPDF({
   // Executive Summary (always included)
   sections.push(React.createElement(PDFExecutiveSummary, { key: 'exec-summary', data }));
 
-  // Conversations
+  // =========================================================================
+  // CONVERSATIONS
+  // =========================================================================
+  
   if (config.includeConversations && data.conversationStats?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'conversations', title: 'Conversations', description: 'Breakdown of conversation volume over the selected period.' },
+      React.createElement(PDFSection, { key: 'conversations', title: 'Conversations', description: 'Breakdown of conversation volume showing total, active, and closed conversations over the selected period.' },
         config.includeCharts && React.createElement(PDFLineChart, {
           data: data.conversationStats,
           series: [
@@ -72,10 +77,64 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Lead Activity
+  // =========================================================================
+  // CONVERSATION FUNNEL
+  // =========================================================================
+  
+  if (config.includeConversationFunnel && data.conversationFunnel?.length) {
+    sections.push(
+      React.createElement(PDFSection, { key: 'funnel', title: 'Conversation Funnel', description: 'Visitor journey from initial engagement to lead conversion, showing drop-off at each stage.' },
+        config.includeCharts && React.createElement(PDFHorizontalBarChart, {
+          data: data.conversationFunnel.map(s => ({ label: s.name, value: s.count })),
+          valueKey: 'value',
+          color: CHART_COLORS.primary
+        }),
+        config.includeTables && React.createElement(PDFTable, {
+          columns: [
+            { key: 'name', header: 'Stage' },
+            { key: 'count', header: 'Count', align: 'right' },
+            { key: 'percentageFormatted', header: 'Percentage', align: 'right' },
+            { key: 'dropOffFormatted', header: 'Drop-off', align: 'right' },
+          ],
+          data: data.conversationFunnel.map(s => ({
+            ...s,
+            percentageFormatted: `${s.percentage.toFixed(1)}%`,
+            dropOffFormatted: `${s.dropOffPercent.toFixed(1)}%`,
+          }))
+        })
+      )
+    );
+  }
+
+  // =========================================================================
+  // PEAK ACTIVITY
+  // =========================================================================
+  
+  if (config.includePeakActivity && data.peakActivity) {
+    sections.push(
+      React.createElement(PDFSection, { key: 'peak-activity', title: 'Peak Activity', description: 'Highest engagement periods showing when visitors are most active on your site.' },
+        React.createElement(PDFTable, {
+          columns: [
+            { key: 'metric', header: 'Metric' },
+            { key: 'value', header: 'Value', align: 'right' },
+          ],
+          data: [
+            { metric: 'Peak Day', value: data.peakActivity.peakDay },
+            { metric: 'Peak Time', value: data.peakActivity.peakTime },
+            { metric: 'Peak Value', value: data.peakActivity.peakValue },
+          ]
+        })
+      )
+    );
+  }
+
+  // =========================================================================
+  // LEAD ACTIVITY
+  // =========================================================================
+  
   if (config.includeLeads && data.leadStats?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'leads', title: 'Lead Activity', description: 'Lead generation trends over time.' },
+      React.createElement(PDFSection, { key: 'leads', title: 'Lead Activity', description: 'Lead generation trends showing how many new leads were captured over time.' },
         config.includeCharts && React.createElement(PDFLineChart, {
           data: data.leadStats,
           series: [{ key: 'total', color: CHART_COLORS.primary, label: 'Total Leads' }]
@@ -91,10 +150,13 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Lead Source Breakdown
+  // =========================================================================
+  // LEAD SOURCE BREAKDOWN
+  // =========================================================================
+  
   if (config.includeLeadSourceBreakdown && data.leadSourceBreakdown?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'lead-sources', title: 'Lead Source Breakdown', description: 'Distribution of leads by acquisition channel.' },
+      React.createElement(PDFSection, { key: 'lead-sources', title: 'Lead Source Breakdown', description: 'Distribution of leads by acquisition channel with conversion rates for each source.' },
         config.includeCharts && React.createElement(PDFPieChart, {
           data: data.leadSourceBreakdown.map(s => ({ label: s.source, value: s.leads })),
           width: 240,
@@ -114,10 +176,13 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Bookings
+  // =========================================================================
+  // BOOKINGS
+  // =========================================================================
+  
   if (config.includeBookings && data.bookingStats?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'bookings', title: 'Bookings', description: 'Booking metrics by location.' },
+      React.createElement(PDFSection, { key: 'bookings', title: 'Bookings', description: 'Booking metrics by location showing confirmed, completed, and no-show appointments.' },
         config.includeCharts && React.createElement(PDFBarChart, {
           data: data.bookingStats.map(s => ({ label: s.location, value: s.total })),
           valueKey: 'value',
@@ -138,10 +203,13 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Booking Trend
+  // =========================================================================
+  // BOOKING TREND
+  // =========================================================================
+  
   if (config.includeBookingTrend && data.bookingTrend?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'booking-trend', title: 'Booking Trend', description: 'Booking activity over time.' },
+      React.createElement(PDFSection, { key: 'booking-trend', title: 'Booking Trend', description: 'Booking activity over time showing confirmation, completion, and cancellation patterns.' },
         config.includeCharts && React.createElement(PDFBookingTrendChart, { data: data.bookingTrend }),
         config.includeTables && React.createElement(PDFTable, {
           columns: [
@@ -157,10 +225,13 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Customer Satisfaction
+  // =========================================================================
+  // CUSTOMER SATISFACTION
+  // =========================================================================
+  
   if (config.includeSatisfaction && data.satisfactionStats) {
     sections.push(
-      React.createElement(PDFSection, { key: 'satisfaction', title: 'Customer Satisfaction', description: 'CSAT ratings distribution.' },
+      React.createElement(PDFSection, { key: 'satisfaction', title: 'Customer Satisfaction', description: 'CSAT ratings distribution and average score from customer feedback surveys.' },
         config.includeCharts && data.satisfactionStats.distribution?.length && React.createElement(PDFPieChart, {
           data: data.satisfactionStats.distribution.map(d => ({ label: `${d.rating} Star`, value: d.count })),
           width: 200,
@@ -180,10 +251,13 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Recent Feedback
+  // =========================================================================
+  // RECENT FEEDBACK
+  // =========================================================================
+  
   if (config.includeCustomerFeedback && data.recentFeedback?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'feedback', title: 'Recent Feedback', description: 'Latest customer comments and ratings.' },
+      React.createElement(PDFSection, { key: 'feedback', title: 'Recent Feedback', description: 'Latest customer comments and ratings to identify trends in customer sentiment.' },
         React.createElement(PDFTable, {
           columns: [
             { key: 'dateFormatted', header: 'Date' },
@@ -203,10 +277,13 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // AI Performance
+  // =========================================================================
+  // AI PERFORMANCE
+  // =========================================================================
+  
   if (config.includeAIPerformance && data.aiPerformanceStats) {
     sections.push(
-      React.createElement(PDFSection, { key: 'ai-performance', title: 'Ari Performance', description: 'AI assistant metrics.' },
+      React.createElement(PDFSection, { key: 'ai-performance', title: 'Ari Performance', description: 'AI assistant metrics showing containment rate, resolution rate, and human escalation frequency.' },
         React.createElement(PDFTable, {
           columns: [
             { key: 'metric', header: 'Metric' },
@@ -224,10 +301,43 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Traffic Sources
+  // =========================================================================
+  // AI PERFORMANCE TREND
+  // =========================================================================
+  
+  if (config.includeAIPerformanceTrend && data.aiPerformanceTrend?.length) {
+    sections.push(
+      React.createElement(PDFSection, { key: 'ai-trend', title: 'AI Performance Trend', description: 'How Ari\'s containment and resolution rates have changed over time.' },
+        config.includeCharts && React.createElement(PDFLineChart, {
+          data: data.aiPerformanceTrend,
+          series: [
+            { key: 'containment_rate', color: CHART_COLORS.primary, label: 'Containment' },
+            { key: 'resolution_rate', color: CHART_COLORS.success, label: 'Resolution' },
+          ]
+        }),
+        config.includeTables && React.createElement(PDFTable, {
+          columns: [
+            { key: 'date', header: 'Date' },
+            { key: 'containmentFormatted', header: 'Containment Rate', align: 'right' },
+            { key: 'resolutionFormatted', header: 'Resolution Rate', align: 'right' },
+          ],
+          data: data.aiPerformanceTrend.slice(0, 20).map(t => ({
+            ...t,
+            containmentFormatted: `${t.containment_rate}%`,
+            resolutionFormatted: `${t.resolution_rate}%`,
+          }))
+        })
+      )
+    );
+  }
+
+  // =========================================================================
+  // TRAFFIC SOURCES
+  // =========================================================================
+  
   if (config.includeTrafficSources && data.trafficSources?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'traffic', title: 'Traffic Sources', description: 'Breakdown of website visitors by referral source.' },
+      React.createElement(PDFSection, { key: 'traffic', title: 'Traffic Sources', description: 'Breakdown of website visitors by referral source showing where your traffic originates.' },
         config.includeCharts && React.createElement(PDFPieChart, {
           data: data.trafficSources.slice(0, 8).map(s => ({ label: s.source, value: s.visitors })),
           width: 240,
@@ -246,19 +356,25 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Traffic Source Trend
+  // =========================================================================
+  // TRAFFIC SOURCE TREND
+  // =========================================================================
+  
   if (config.includeTrafficSourceTrend && data.trafficSourceTrend?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'traffic-trend', title: 'Traffic Source Trend', description: 'How traffic from different sources has changed.' },
+      React.createElement(PDFSection, { key: 'traffic-trend', title: 'Traffic Source Trend', description: 'How traffic from different sources has changed over the selected time period.' },
         React.createElement(PDFTrafficTrendChart, { data: data.trafficSourceTrend })
       )
     );
   }
 
-  // Top Pages
+  // =========================================================================
+  // TOP PAGES
+  // =========================================================================
+  
   if (config.includeTopPages && data.topPages?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'top-pages', title: 'Top Pages', description: 'Most visited pages on your site.' },
+      React.createElement(PDFSection, { key: 'top-pages', title: 'Top Pages', description: 'Most visited pages on your site with bounce rates and conversion metrics.' },
         config.includeCharts && React.createElement(PDFHorizontalBarChart, {
           data: data.topPages.slice(0, 8).map(p => ({ label: p.page.length > 30 ? p.page.slice(0, 28) + '…' : p.page, value: p.visits })),
           valueKey: 'value',
@@ -281,10 +397,13 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Page Engagement
+  // =========================================================================
+  // PAGE ENGAGEMENT
+  // =========================================================================
+  
   if (config.includePageEngagement && data.pageEngagement) {
     sections.push(
-      React.createElement(PDFSection, { key: 'page-engagement', title: 'Page Engagement', description: 'Overall site engagement metrics.' },
+      React.createElement(PDFSection, { key: 'page-engagement', title: 'Page Engagement', description: 'Overall site engagement metrics including bounce rate and average pages per session.' },
         React.createElement(PDFTable, {
           columns: [
             { key: 'metric', header: 'Metric' },
@@ -301,10 +420,40 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Visitor Locations
+  // =========================================================================
+  // PAGE DEPTH DISTRIBUTION
+  // =========================================================================
+  
+  if (config.includePageDepth && data.pageDepthDistribution?.length) {
+    sections.push(
+      React.createElement(PDFSection, { key: 'page-depth', title: 'Page Depth Distribution', description: 'How many pages visitors view per session, indicating engagement depth.' },
+        config.includeCharts && React.createElement(PDFBarChart, {
+          data: data.pageDepthDistribution.map(d => ({ label: d.depth, value: d.count })),
+          valueKey: 'value',
+          color: CHART_COLORS.purple
+        }),
+        config.includeTables && React.createElement(PDFTable, {
+          columns: [
+            { key: 'depth', header: 'Depth' },
+            { key: 'count', header: 'Count', align: 'right' },
+            { key: 'percentageFormatted', header: 'Percentage', align: 'right' },
+          ],
+          data: data.pageDepthDistribution.map(d => ({
+            ...d,
+            percentageFormatted: `${d.percentage.toFixed(1)}%`,
+          }))
+        })
+      )
+    );
+  }
+
+  // =========================================================================
+  // VISITOR LOCATIONS
+  // =========================================================================
+  
   if (config.includeVisitorLocations && data.visitorLocations?.length) {
     sections.push(
-      React.createElement(PDFSection, { key: 'locations', title: 'Visitor Locations', description: 'Geographic distribution of website visitors.' },
+      React.createElement(PDFSection, { key: 'locations', title: 'Visitor Locations', description: 'Geographic distribution of website visitors by country.' },
         config.includeCharts && React.createElement(PDFHorizontalBarChart, {
           data: data.visitorLocations.slice(0, 10).map(l => ({ label: l.country, value: l.visitors })),
           valueKey: 'value',
@@ -322,7 +471,10 @@ export function AnalyticsReportPDF({
     );
   }
 
-  // Visitor Cities
+  // =========================================================================
+  // VISITOR CITIES
+  // =========================================================================
+  
   if (config.includeVisitorCities && data.visitorCities?.length) {
     sections.push(
       React.createElement(PDFSection, { key: 'cities', title: 'Top Cities', description: 'Most common cities your visitors are located in.' },
@@ -333,6 +485,109 @@ export function AnalyticsReportPDF({
             { key: 'visitors', header: 'Visitors', align: 'right' },
           ],
           data: data.visitorCities.slice(0, 15)
+        })
+      )
+    );
+  }
+
+  // =========================================================================
+  // LEAD CONVERSION TREND
+  // =========================================================================
+  
+  if (config.includeLeadConversionTrend && data.leadConversionTrend?.length) {
+    sections.push(
+      React.createElement(PDFSection, { key: 'lead-trend', title: 'Lead Conversion Trend', description: 'Lead status progression over time showing how leads move through your pipeline.' },
+        config.includeTables && React.createElement(PDFTable, {
+          columns: [
+            { key: 'date', header: 'Date' },
+            { key: 'total', header: 'Total', align: 'right' },
+            { key: 'new', header: 'New', align: 'right' },
+            { key: 'contacted', header: 'Contacted', align: 'right' },
+            { key: 'qualified', header: 'Qualified', align: 'right' },
+            { key: 'won', header: 'Won', align: 'right' },
+            { key: 'lost', header: 'Lost', align: 'right' },
+          ],
+          data: data.leadConversionTrend.slice(0, 20)
+        })
+      )
+    );
+  }
+
+  // =========================================================================
+  // CSAT DISTRIBUTION
+  // =========================================================================
+  
+  if (config.includeCSATDistribution && data.csatDistribution?.length) {
+    sections.push(
+      React.createElement(PDFSection, { key: 'csat-dist', title: 'CSAT Rating Distribution', description: 'Breakdown of customer satisfaction scores by rating level.' },
+        config.includeCharts && React.createElement(PDFBarChart, {
+          data: data.csatDistribution.map(d => ({ label: `${d.rating} Star`, value: d.count })),
+          valueKey: 'value',
+          color: CHART_COLORS.warning
+        }),
+        config.includeTables && React.createElement(PDFTable, {
+          columns: [
+            { key: 'ratingFormatted', header: 'Rating' },
+            { key: 'count', header: 'Count', align: 'right' },
+            { key: 'percentageFormatted', header: 'Percentage', align: 'right' },
+          ],
+          data: data.csatDistribution.map(d => ({
+            ...d,
+            ratingFormatted: `${d.rating} ★`,
+            percentageFormatted: `${d.percentage}%`,
+          }))
+        })
+      )
+    );
+  }
+
+  // =========================================================================
+  // USAGE METRICS
+  // =========================================================================
+  
+  if (config.includeUsageMetrics && data.usageMetrics?.length) {
+    sections.push(
+      React.createElement(PDFSection, { key: 'usage', title: 'Usage Metrics', description: 'Platform usage statistics including conversations, messages, and API activity.' },
+        config.includeCharts && React.createElement(PDFLineChart, {
+          data: data.usageMetrics,
+          series: [
+            { key: 'conversations', color: CHART_COLORS.primary, label: 'Conversations' },
+            { key: 'messages', color: CHART_COLORS.success, label: 'Messages' },
+            { key: 'api_calls', color: CHART_COLORS.secondary, label: 'API Calls' },
+          ]
+        }),
+        config.includeTables && React.createElement(PDFTable, {
+          columns: [
+            { key: 'date', header: 'Date' },
+            { key: 'conversations', header: 'Conversations', align: 'right' },
+            { key: 'messages', header: 'Messages', align: 'right' },
+            { key: 'api_calls', header: 'API Calls', align: 'right' },
+          ],
+          data: data.usageMetrics.slice(0, 20)
+        })
+      )
+    );
+  }
+
+  // =========================================================================
+  // AGENT PERFORMANCE
+  // =========================================================================
+  
+  if (config.includeAgentPerformance && data.agentPerformance?.length) {
+    sections.push(
+      React.createElement(PDFSection, { key: 'agent-perf', title: 'Agent Performance', description: 'Ari\'s performance metrics including handled conversations and resolution capabilities.' },
+        config.includeTables && React.createElement(PDFTable, {
+          columns: [
+            { key: 'agent_name', header: 'Agent' },
+            { key: 'total_conversations', header: 'Conversations', align: 'right' },
+            { key: 'avgResponseFormatted', header: 'Avg Response (s)', align: 'right' },
+            { key: 'satisfactionFormatted', header: 'CSAT', align: 'right' },
+          ],
+          data: data.agentPerformance.map(a => ({
+            ...a,
+            avgResponseFormatted: a.avg_response_time.toFixed(1),
+            satisfactionFormatted: a.satisfaction_score.toFixed(1),
+          }))
         })
       )
     );
