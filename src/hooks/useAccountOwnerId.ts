@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { queryKeys } from '@/lib/query-keys';
+import { logger } from '@/utils/logger';
 
 /**
  * Hook that returns the account owner ID for data scoping.
@@ -38,7 +39,7 @@ export const useAccountOwnerId = () => {
 
       if (error) {
         // If RPC fails, fall back to user's own ID
-        console.error('Error fetching account owner ID:', error);
+        logger.error('Error fetching account owner ID:', error);
         return user.id;
       }
 

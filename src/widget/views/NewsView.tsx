@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from '../icons';
 import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback, WidgetSkeletonArticleContent, CSSAnimatedList, CSSAnimatedItem } from '../ui';
 import type { WidgetConfig } from '../api';
+import { formatDate as formatDateUtil } from '@/lib/formatting';
 
 // Lazy-load DOMPurify (~8KB savings from initial load)
 let DOMPurify: typeof import('isomorphic-dompurify').default | null = null;
@@ -78,12 +79,7 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    });
+    return formatDateUtil(dateStr);
   };
 
   const stripHtml = (html: string) => {

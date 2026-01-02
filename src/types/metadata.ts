@@ -423,21 +423,6 @@ export interface UserPreferencesData {
 }
 
 /**
- * Report frequency type.
- */
-export type ReportFrequency = 'daily' | 'weekly' | 'monthly';
-
-/**
- * Report type configuration.
- */
-export type ReportType = 'summary' | 'detailed' | 'comparison';
-
-/**
- * Data grouping for reports.
- */
-export type ReportGrouping = 'day' | 'week' | 'month';
-
-/**
  * Knowledge source type enum.
  */
 export type KnowledgeType = 'pdf' | 'url' | 'api' | 'json' | 'xml' | 'csv';
