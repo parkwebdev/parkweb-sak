@@ -23,7 +23,7 @@ type Conversation = Tables<'conversations'>;
 export function getStatusColor(status: string): string {
   switch (status) {
     case 'active':
-      return 'bg-foreground text-background';
+      return 'bg-foreground text-background border-foreground';
     default:
       return 'bg-muted text-muted-foreground';
   }
