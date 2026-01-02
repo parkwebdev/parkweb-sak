@@ -76,6 +76,18 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
     const widgetIdRef = useRef<string | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
+    // Store callbacks in refs to avoid re-render issues
+    const onVerifyRef = useRef(onVerify);
+    const onErrorRef = useRef(onError);
+    const onExpireRef = useRef(onExpire);
+
+    // Keep refs updated
+    useEffect(() => {
+      onVerifyRef.current = onVerify;
+      onErrorRef.current = onError;
+      onExpireRef.current = onExpire;
+    }, [onVerify, onError, onExpire]);
+
     // Expose reset method via ref
     useImperativeHandle(ref, () => ({
       reset: () => {
@@ -101,9 +113,9 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
           try {
             const id = window.turnstile.render(containerRef.current, {
               sitekey: TURNSTILE_SITE_KEY,
-              callback: onVerify,
-              'error-callback': onError,
-              'expired-callback': onExpire,
+              callback: (token: string) => onVerifyRef.current(token),
+              'error-callback': () => onErrorRef.current?.(),
+              'expired-callback': () => onExpireRef.current?.(),
               appearance: 'interaction-only', // Invisible unless suspicious
               theme: 'auto',
               size: 'normal',
@@ -113,7 +125,7 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
             console.debug('AuthTurnstile: Widget rendered successfully');
           } catch (err) {
             console.error('AuthTurnstile: Failed to render widget', err);
-            onError?.();
+            onErrorRef.current?.();
           }
         }
       };
@@ -150,7 +162,7 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
           }
         }
       };
-    }, [onVerify, onError, onExpire]);
+    }, []); // Empty dependency array - only initialize once
 
     // Don't render anything if no site key
     if (!TURNSTILE_SITE_KEY) {
