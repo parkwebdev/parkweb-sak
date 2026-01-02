@@ -253,15 +253,29 @@ export const useEmbeddedChatConfig = (agentId: string) => {
         })),
       };
 
+      // Fetch current deployment_config to merge (preserve wordpress, api settings, etc.)
+      const { data: agent, error: fetchError } = await supabase
+        .from('agents')
+        .select('deployment_config')
+        .eq('id', agentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const existingDeploymentConfig = (agent?.deployment_config as Record<string, unknown>) || {};
+
+      // Merge: preserve existing keys (like wordpress), update embedded_chat keys
+      const mergedDeploymentConfig = {
+        ...existingDeploymentConfig,
+        embedded_chat_enabled: true,
+        embedded_chat: configForStorage,
+        enable_quick_replies: configForStorage.enableQuickReplies,
+      };
+
       const { error } = await supabase
         .from('agents')
         .update({
-          deployment_config: {
-            embedded_chat_enabled: true,
-            embedded_chat: configForStorage,
-            // Map camelCase to snake_case for backend compatibility
-            enable_quick_replies: configForStorage.enableQuickReplies,
-          } as unknown as Json,
+          deployment_config: mergedDeploymentConfig as unknown as Json,
         })
         .eq('id', agentId);
 
