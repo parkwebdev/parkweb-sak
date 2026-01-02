@@ -479,6 +479,22 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error(`Failed to fetch URL: ${response.status}`);
+      
+      // For 404s and other client errors, return a minimal fallback preview
+      // This prevents UI errors for dead/moved links
+      if (response.status >= 400 && response.status < 500) {
+        console.log(`URL returned ${response.status}, returning fallback preview`);
+        const fallbackPreview: LinkPreviewData = {
+          url,
+          domain: getDomain(url),
+        };
+        return new Response(
+          JSON.stringify(fallbackPreview),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // For server errors (5xx), return error response
       return new Response(
         JSON.stringify({ error: `Failed to fetch URL: ${response.status}` }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
