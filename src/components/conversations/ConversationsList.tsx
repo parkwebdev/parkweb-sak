@@ -11,7 +11,26 @@ import React, { memo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MessageChatSquare, ChevronLeft, ChevronRight, SwitchVertical01, ChevronDown } from '@untitledui/icons';
+import { MessageChatSquare, SwitchVertical01, ChevronDown } from '@untitledui/icons';
+
+// Panel icon with left divider (for conversations sidebar)
+const LayoutPanelLeft = ({ filled = false, className }: { filled?: boolean; className?: string }) => (
+  <svg width={24} height={24} viewBox="0 0 24 24" fill="none" className={className}>
+    {filled && (
+      <path
+        d="M7.8 3C6.11984 3 5.27976 3 4.63803 3.32698C4.07354 3.6146 3.6146 4.07354 3.32698 4.63803C3 5.27976 3 6.11984 3 7.8V16.2C3 17.8802 3 18.7202 3.32698 19.362C3.6146 19.9265 4.07354 20.3854 4.63803 20.673C5.27976 21 6.11984 21 7.8 21H9V3H7.8Z"
+        fill="currentColor"
+      />
+    )}
+    <path
+      d="M9 3V21M7.8 3H16.2C17.8802 3 18.7202 3 19.362 3.32698C19.9265 3.6146 20.3854 4.07354 20.673 4.63803C21 5.27976 21 6.11984 21 7.8V16.2C21 17.8802 21 18.7202 20.673 19.362C20.3854 19.9265 19.9265 20.3854 19.362 20.673C18.7202 21 17.8802 21 16.2 21H7.8C6.11984 21 5.27976 21 4.63803 20.673C4.07354 20.3854 3.6146 19.9265 3.32698 19.362C3 18.7202 3 17.8802 3 16.2V7.8C3 6.11984 3 5.27976 3.32698 4.63803C3.6146 4.07354 4.07354 3.6146 4.63803 3.32698C5.27976 3 6.11984 3 7.8 3Z"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 import { ConversationItem } from './ConversationItem';
 import { SkeletonConversationList } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -85,11 +104,7 @@ export const ConversationsList = memo(function ConversationsList({
             onClick={onToggleCollapse}
             aria-label={isCollapsed ? 'Expand conversations' : 'Collapse conversations'}
           >
-            {isCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
+            <LayoutPanelLeft filled={isCollapsed} className="h-4 w-4" />
           </Button>
         </div>
         
