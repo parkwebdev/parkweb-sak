@@ -21,8 +21,12 @@ type Conversation = Tables<'conversations'>;
  * @returns CSS class string for the status badge
  */
 export function getStatusColor(status: string): string {
-  // All statuses use the same muted style for consistency
-  return 'bg-muted text-muted-foreground';
+  switch (status) {
+    case 'active':
+      return 'bg-foreground text-background';
+    default:
+      return 'bg-muted text-muted-foreground';
+  }
 }
 
 /**
