@@ -4,6 +4,11 @@
  * Fetches homes from a WordPress REST API and upserts them as properties.
  * Supports configurable endpoints and AI extraction fallback.
  * 
+ * Optimizations:
+ * - Content hashing to skip unchanged records
+ * - Batch database queries to reduce N+1 patterns
+ * - Incremental sync using modified_after parameter
+ * 
  * @module functions/sync-wordpress-homes
  */
 
@@ -36,6 +41,34 @@ interface WordPressHome {
     'wp:featuredmedia'?: Array<{ source_url: string; alt_text?: string }>;
   };
   acf?: Record<string, unknown>;
+}
+
+interface SyncResult {
+  created: number;
+  updated: number;
+  deleted: number;
+  unchanged: number;
+  errors: string[];
+  sync_type: 'full' | 'incremental';
+}
+
+interface LocationMaps {
+  termIdMap: Map<number, string>;
+}
+
+/**
+ * Generate a content hash for change detection
+ * Uses a simple but effective string-based hash
+ */
+function generateContentHash(data: Record<string, unknown>): string {
+  const normalized = JSON.stringify(data, Object.keys(data).sort());
+  let hash = 0;
+  for (let i = 0; i < normalized.length; i++) {
+    const char = normalized.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
 }
 
 /**
@@ -102,17 +135,6 @@ function extractZipFromAddress(address: string | null): string | null {
   if (!address) return null;
   const match = address.match(/\b(\d{5})(-\d{4})?\b/);
   return match ? match[1] : null;
-}
-
-interface SyncResult {
-  created: number;
-  updated: number;
-  deleted: number;
-  errors: string[];
-}
-
-interface LocationMaps {
-  termIdMap: Map<number, string>;
 }
 
 function normalizeSiteUrl(url: string): string {
@@ -182,7 +204,7 @@ Deno.serve(async (req: Request) => {
       userId = user.id;
     }
 
-    const { action, agentId, siteUrl, homeEndpoint, useAiExtraction } = await req.json();
+    const { action, agentId, siteUrl, homeEndpoint, useAiExtraction, modifiedAfter } = await req.json();
 
     const { data: agent, error: agentError } = await supabase
       .from('agents')
@@ -243,11 +265,16 @@ Deno.serve(async (req: Request) => {
 
     // Handle sync action
     if (action === 'sync') {
+      const startTime = Date.now();
       const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
       const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
       
       const urlToSync = normalizeSiteUrl(siteUrl || wpConfig?.site_url || '');
       const endpoint = homeEndpoint || wpConfig?.home_endpoint;
+      
+      // Determine if this is an incremental sync
+      const lastSync = modifiedAfter || wpConfig?.last_home_sync;
+      const isIncremental = !!lastSync;
       
       if (!urlToSync) {
         return new Response(
@@ -256,7 +283,7 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      console.log(`Starting WordPress homes sync for agent ${agentId} from ${urlToSync}${endpoint ? ` using endpoint /${endpoint}` : ''}`);
+      console.log(`Starting WordPress homes sync for agent ${agentId} from ${urlToSync}${endpoint ? ` using endpoint /${endpoint}` : ''} (${isIncremental ? 'incremental' : 'full'})`);
 
       // Get or create WordPress knowledge source
       const knowledgeSourceId = await getOrCreateWordPressSource(
@@ -284,16 +311,17 @@ Deno.serve(async (req: Request) => {
       console.log(`Built location map with ${termIdMap.size} WordPress taxonomy term IDs`);
 
       // Fetch homes from WordPress using configured endpoint
-      const homes = await fetchWordPressHomes(urlToSync, endpoint);
+      const homes = await fetchWordPressHomes(urlToSync, endpoint, isIncremental ? lastSync : undefined);
       console.log(`Fetched ${homes.length} homes from WordPress`);
 
-      // Sync homes to properties
+      // Sync homes to properties with optimizations
       const result = await syncHomesToProperties(
         supabase,
         agentId,
         knowledgeSourceId,
         locationMaps,
-        homes
+        homes,
+        isIncremental
       );
 
       // Update agent's deployment_config with sync info
@@ -313,13 +341,15 @@ Deno.serve(async (req: Request) => {
         .update({ deployment_config: updatedConfig })
         .eq('id', agentId);
 
-      console.log(`WordPress homes sync completed: ${JSON.stringify(result)}`);
+      const duration = Date.now() - startTime;
+      console.log(`WordPress homes sync completed in ${duration}ms: ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged, ${result.deleted} deleted`);
 
       return new Response(
         JSON.stringify({
           success: true,
           ...result,
           total: homes.length,
+          duration_ms: duration,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -417,11 +447,12 @@ async function testWordPressHomesEndpoint(
 }
 
 /**
- * Fetch homes from WordPress
+ * Fetch homes from WordPress with optional incremental sync
  */
 async function fetchWordPressHomes(
   siteUrl: string, 
-  endpoint?: string
+  endpoint?: string,
+  modifiedAfter?: string
 ): Promise<WordPressHome[]> {
   let formattedUrl = siteUrl.trim();
   if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
@@ -463,7 +494,13 @@ async function fetchWordPressHomes(
   const perPage = 100;
 
   while (true) {
-    const apiUrl = `${formattedUrl}/wp-json/wp/v2/${activeEndpoint}?per_page=${perPage}&page=${page}&_embed`;
+    let apiUrl = `${formattedUrl}/wp-json/wp/v2/${activeEndpoint}?per_page=${perPage}&page=${page}&_embed`;
+    
+    // Add modified_after for incremental sync
+    if (modifiedAfter) {
+      apiUrl += `&modified_after=${encodeURIComponent(modifiedAfter)}`;
+    }
+    
     console.log(`Fetching WordPress homes page ${page}: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
@@ -536,38 +573,57 @@ async function getOrCreateWordPressSource(
   return newSource.id;
 }
 
+/**
+ * Sync homes to properties with batching and content hashing
+ */
 async function syncHomesToProperties(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   knowledgeSourceId: string,
   locationMaps: LocationMaps,
-  homes: WordPressHome[]
+  homes: WordPressHome[],
+  isIncremental: boolean
 ): Promise<SyncResult> {
-  const result: SyncResult = { created: 0, updated: 0, deleted: 0, errors: [] };
+  const result: SyncResult = { 
+    created: 0, 
+    updated: 0, 
+    deleted: 0, 
+    unchanged: 0, 
+    errors: [],
+    sync_type: isIncremental ? 'incremental' : 'full'
+  };
   
   // Get IDs of homes from WordPress
-  const wpHomeIds = new Set(homes.map(h => String(h.id)));
+  const wpHomeIds = homes.map(h => String(h.id));
   
-  // Get existing WordPress properties for this agent
+  // OPTIMIZATION: Batch fetch all existing WordPress properties for this agent
   const { data: existingProperties } = await supabase
     .from('properties')
-    .select('id, external_id')
+    .select('id, external_id, content_hash')
     .eq('agent_id', agentId)
     .eq('knowledge_source_id', knowledgeSourceId);
   
-  // Delete properties that no longer exist in WordPress (hard delete)
-  for (const prop of existingProperties || []) {
-    if (prop.external_id && !wpHomeIds.has(prop.external_id)) {
-      const { error: deleteError } = await supabase
-        .from('properties')
-        .delete()
-        .eq('id', prop.id);
-      
-      if (deleteError) {
-        result.errors.push(`Failed to delete orphan property ${prop.id}: ${deleteError.message}`);
-      } else {
-        result.deleted++;
-        console.log(`🗑️ Deleted orphaned property (WP ID ${prop.external_id} no longer exists)`);
+  // Build lookup map for O(1) access
+  const existingMap = new Map(
+    (existingProperties || []).map(prop => [prop.external_id, prop])
+  );
+  
+  // Delete properties that no longer exist in WordPress (only for full sync)
+  if (!isIncremental) {
+    const wpHomeIdSet = new Set(wpHomeIds);
+    for (const prop of existingProperties || []) {
+      if (prop.external_id && !wpHomeIdSet.has(prop.external_id)) {
+        const { error: deleteError } = await supabase
+          .from('properties')
+          .delete()
+          .eq('id', prop.id);
+        
+        if (deleteError) {
+          result.errors.push(`Failed to delete orphan property ${prop.id}: ${deleteError.message}`);
+        } else {
+          result.deleted++;
+          console.log(`🗑️ Deleted orphaned property (WP ID ${prop.external_id} no longer exists)`);
+        }
       }
     }
   }
@@ -616,6 +672,29 @@ async function syncHomesToProperties(
         const termId = home.home_community[0];
         locationId = locationMaps.termIdMap.get(termId) || null;
       }
+      
+      // Data to be hashed for change detection
+      const hashableData = {
+        listing_url: home.link,
+        address,
+        lot_number: lotNumber,
+        city,
+        state,
+        zip,
+        price,
+        price_type: priceType,
+        beds,
+        baths,
+        sqft,
+        year_built: yearBuilt,
+        status,
+        description,
+        features,
+        images,
+        location_id: locationId,
+      };
+      
+      const contentHash = generateContentHash(hashableData);
 
       const propertyData = {
         agent_id: agentId,
@@ -638,19 +717,21 @@ async function syncHomesToProperties(
         features: features.length > 0 ? features : null,
         images: images.length > 0 ? images : null,
         location_id: locationId,
+        content_hash: contentHash,
         last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
-      // Check if property already exists
-      const { data: existing } = await supabase
-        .from('properties')
-        .select('id')
-        .eq('agent_id', agentId)
-        .eq('external_id', String(home.id))
-        .maybeSingle();
+      // Check if property already exists using our lookup map
+      const existing = existingMap.get(String(home.id));
 
       if (existing) {
+        // OPTIMIZATION: Skip update if content hash matches
+        if (existing.content_hash === contentHash) {
+          result.unchanged++;
+          continue;
+        }
+        
         const { error: updateError } = await supabase
           .from('properties')
           .update(propertyData)
