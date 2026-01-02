@@ -1,15 +1,18 @@
 /**
  * Scheduled Report Email Edge Function
  * 
- * Generates PDF/CSV reports based on user configuration and sends them via email
- * with a professional template matching the Pilot design system.
+ * Generates PDF/CSV reports using @react-pdf/renderer (matching the builder)
+ * and sends them via email with a professional template.
  */
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 import { Resend } from "npm:resend@2.0.0";
-import { jsPDF } from "npm:jspdf@2.5.1";
-import "npm:jspdf-autotable@3.8.2";
+// @ts-ignore
+import React from 'npm:react@18.3.1';
+// @ts-ignore
+import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.0';
+
 import { 
   colors, 
   heading, 
@@ -18,6 +21,9 @@ import {
   spacer, 
   generateWrapper 
 } from '../_shared/email-template.ts';
+import { AnalyticsReportPDF, sanitizePDFData, normalizePDFConfig } from '../_shared/pdf/index.ts';
+import { buildPDFDataFromSupabase } from '../_shared/build-pdf-data.ts';
+import type { PDFData, PDFConfig } from '../_shared/pdf/types.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -35,18 +41,46 @@ interface ScheduledReport {
   name: string;
   recipients: string[];
   frequency: string;
+  timezone?: string;
+  time_of_day: string;
+  day_of_week?: number;
+  day_of_month?: number;
   report_config: {
     format: 'csv' | 'pdf';
     startDate: string;
     endDate: string;
+    type?: 'summary' | 'detailed' | 'comparison';
+    grouping?: 'day' | 'week' | 'month';
     filters?: {
       agentId?: string;
       leadStatus?: string;
     };
+    // Section toggles
+    includeKPIs?: boolean;
+    includeCharts?: boolean;
+    includeTables?: boolean;
     includeConversations?: boolean;
+    includeConversationFunnel?: boolean;
+    includePeakActivity?: boolean;
     includeLeads?: boolean;
+    includeLeadSourceBreakdown?: boolean;
+    includeLeadConversionTrend?: boolean;
+    includeBookings?: boolean;
+    includeBookingTrend?: boolean;
     includeSatisfaction?: boolean;
+    includeCSATDistribution?: boolean;
+    includeCustomerFeedback?: boolean;
     includeAIPerformance?: boolean;
+    includeAIPerformanceTrend?: boolean;
+    includeTrafficSources?: boolean;
+    includeTrafficSourceTrend?: boolean;
+    includeTopPages?: boolean;
+    includePageEngagement?: boolean;
+    includePageDepth?: boolean;
+    includeVisitorLocations?: boolean;
+    includeVisitorCities?: boolean;
+    includeUsageMetrics?: boolean;
+    includeAgentPerformance?: boolean;
   };
   profiles?: {
     display_name: string | null;
@@ -54,35 +88,13 @@ interface ScheduledReport {
   };
 }
 
-interface AnalyticsData {
-  conversations: any[];
-  leads: any[];
-  ratings: any[];
-  totalConversations: number;
-  totalLeads: number;
-  convertedLeads: number;
-  conversionRate: number;
-  avgSatisfaction: number | null;
-  previousPeriod?: {
-    totalConversations: number;
-    totalLeads: number;
-    conversionRate: number;
-    avgSatisfaction: number | null;
-  };
-}
-
-
 // =============================================================================
-// REPORT HELPERS
+// SCHEDULE HELPERS
 // =============================================================================
 
-function checkShouldRun(
-  report: any,
-  utcNow: Date
-): boolean {
+function checkShouldRun(report: any, utcNow: Date): boolean {
   const timezone = report.timezone || 'America/New_York';
   
-  // Get current time components in user's timezone
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     hour: 'numeric',
@@ -132,282 +144,54 @@ function formatDateRange(startDate: string, endDate: string): string {
   return `${formatDate(start)} - ${formatDate(end)}`;
 }
 
-function calculateChange(current: number, previous: number): string {
-  if (previous === 0) {
-    return current > 0 ? '+100%' : '0%';
-  }
-  const change = ((current - previous) / previous) * 100;
-  const sign = change >= 0 ? '+' : '';
-  return `${sign}${change.toFixed(1)}%`;
-}
-
-async function fetchAnalyticsData(supabase: any, report: ScheduledReport): Promise<AnalyticsData> {
-  const config = report.report_config;
-  const { startDate, endDate, filters } = config;
-
-  // Calculate previous period for comparison
-  const startMs = new Date(startDate).getTime();
-  const endMs = new Date(endDate).getTime();
-  const periodLength = endMs - startMs;
-  const prevStartDate = new Date(startMs - periodLength).toISOString();
-  const prevEndDate = startDate;
-
-  // Current period - Conversations
-  let convQuery = supabase
-    .from('conversations')
-    .select('created_at, status')
-    .eq('user_id', report.user_id)
-    .gte('created_at', startDate)
-    .lte('created_at', endDate);
-
-  if (filters?.agentId && filters.agentId !== 'all') {
-    convQuery = convQuery.eq('agent_id', filters.agentId);
-  }
-
-  const { data: conversations } = await convQuery;
-
-  // Previous period - Conversations
-  let prevConvQuery = supabase
-    .from('conversations')
-    .select('id')
-    .eq('user_id', report.user_id)
-    .gte('created_at', prevStartDate)
-    .lt('created_at', prevEndDate);
-
-  if (filters?.agentId && filters.agentId !== 'all') {
-    prevConvQuery = prevConvQuery.eq('agent_id', filters.agentId);
-  }
-
-  const { data: prevConversations } = await prevConvQuery;
-
-  // Current period - Leads
-  let leadQuery = supabase
-    .from('leads')
-    .select('created_at, status')
-    .eq('user_id', report.user_id)
-    .gte('created_at', startDate)
-    .lte('created_at', endDate);
-
-  if (filters?.leadStatus && filters.leadStatus !== 'all') {
-    leadQuery = leadQuery.eq('status', filters.leadStatus);
-  }
-
-  const { data: leads } = await leadQuery;
-
-  // Previous period - Leads
-  let prevLeadQuery = supabase
-    .from('leads')
-    .select('status')
-    .eq('user_id', report.user_id)
-    .gte('created_at', prevStartDate)
-    .lt('created_at', prevEndDate);
-
-  const { data: prevLeads } = await prevLeadQuery;
-
-  // Current period - Satisfaction ratings
-  const conversationIds = (conversations || []).map((c: any) => c.id).filter(Boolean);
-  let ratings: any[] = [];
-  
-  if (conversationIds.length > 0) {
-    const { data: ratingData } = await supabase
-      .from('conversation_ratings')
-      .select('rating, conversation_id')
-      .in('conversation_id', conversationIds);
-    ratings = ratingData || [];
-  }
-
-  // Also get ratings by date range for conversations we might have missed
-  const { data: dateRangeRatings } = await supabase
-    .from('conversation_ratings')
-    .select('rating')
-    .gte('created_at', startDate)
-    .lte('created_at', endDate);
-  
-  const allRatings = [...ratings, ...(dateRangeRatings || [])];
-  const uniqueRatings = allRatings.filter((r, i, arr) => 
-    arr.findIndex(x => x.rating === r.rating && x.conversation_id === r.conversation_id) === i
-  );
-
-  // Previous period - Satisfaction
-  const { data: prevRatings } = await supabase
-    .from('conversation_ratings')
-    .select('rating')
-    .gte('created_at', prevStartDate)
-    .lt('created_at', prevEndDate);
-
-  // Calculate metrics
-  const totalConversations = conversations?.length || 0;
-  const totalLeads = leads?.length || 0;
-  const convertedLeads = leads?.filter((l: any) => l.status === 'converted').length || 0;
-  const conversionRate = totalConversations > 0 ? (totalLeads / totalConversations) * 100 : 0;
-  
-  const avgSatisfaction = uniqueRatings.length > 0
-    ? uniqueRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / uniqueRatings.length
-    : null;
-
-  // Previous period metrics
-  const prevTotalConversations = prevConversations?.length || 0;
-  const prevTotalLeads = prevLeads?.length || 0;
-  const prevConvertedLeads = prevLeads?.filter((l: any) => l.status === 'converted').length || 0;
-  const prevConversionRate = prevTotalConversations > 0 ? (prevTotalLeads / prevTotalConversations) * 100 : 0;
-  const prevAvgSatisfaction = (prevRatings?.length || 0) > 0
-    ? prevRatings!.reduce((sum: number, r: any) => sum + r.rating, 0) / prevRatings!.length
-    : null;
-
-  return {
-    conversations: conversations || [],
-    leads: leads || [],
-    ratings: uniqueRatings,
-    totalConversations,
-    totalLeads,
-    convertedLeads,
-    conversionRate,
-    avgSatisfaction,
-    previousPeriod: {
-      totalConversations: prevTotalConversations,
-      totalLeads: prevTotalLeads,
-      conversionRate: prevConversionRate,
-      avgSatisfaction: prevAvgSatisfaction,
-    },
-  };
-}
-
 // =============================================================================
-// PDF GENERATION
+// PDF GENERATION (using @react-pdf/renderer - matches builder exactly)
 // =============================================================================
 
-function generatePDF(report: ScheduledReport, data: AnalyticsData, companyName: string): Uint8Array {
-  const doc = new jsPDF();
+async function generatePDF(
+  report: ScheduledReport, 
+  data: PDFData, 
+  companyName: string
+): Promise<Uint8Array> {
   const config = report.report_config;
-  const dateRange = formatDateRange(config.startDate, config.endDate);
   
-  // Header
-  doc.setFontSize(20);
-  doc.setFont("helvetica", "bold");
-  doc.text(report.name, 20, 25);
+  // Normalize config to ensure all boolean flags have defaults
+  const normalizedConfig = normalizePDFConfig(config as Partial<PDFConfig>);
   
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(100);
-  doc.text(`${dateRange} | ${companyName || 'Pilot'}`, 20, 33);
+  // Sanitize data to prevent NaN, Infinity, oversized arrays
+  const sanitizedData = sanitizePDFData(data);
   
-  doc.setTextColor(0);
+  const startDate = new Date(config.startDate);
+  const endDate = new Date(config.endDate);
   
-  // KPIs Section
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("Key Performance Indicators", 20, 50);
+  console.log(`[generatePDF] Creating PDF with @react-pdf/renderer for ${companyName}`);
+  console.log(`[generatePDF] Config: type=${normalizedConfig.type}, charts=${normalizedConfig.includeCharts}, tables=${normalizedConfig.includeTables}`);
   
-  const kpiData = [
-    ["Metric", "Value", "Change"],
-    ["Conversations", data.totalConversations.toLocaleString(), calculateChange(data.totalConversations, data.previousPeriod?.totalConversations || 0)],
-    ["Leads", data.totalLeads.toLocaleString(), calculateChange(data.totalLeads, data.previousPeriod?.totalLeads || 0)],
-    ["Conversion Rate", `${data.conversionRate.toFixed(1)}%`, calculateChange(data.conversionRate, data.previousPeriod?.conversionRate || 0)],
-    ["Satisfaction", data.avgSatisfaction ? `${data.avgSatisfaction.toFixed(1)}/5` : "N/A", 
-      data.avgSatisfaction && data.previousPeriod?.avgSatisfaction 
-        ? `${(data.avgSatisfaction - data.previousPeriod.avgSatisfaction) >= 0 ? '+' : ''}${(data.avgSatisfaction - data.previousPeriod.avgSatisfaction).toFixed(1)}`
-        : "—"
-    ],
-  ];
-  
-  (doc as any).autoTable({
-    startY: 55,
-    head: [kpiData[0]],
-    body: kpiData.slice(1),
-    theme: 'striped',
-    headStyles: { fillColor: [23, 23, 23] },
-    styles: { fontSize: 10 },
+  // Create the PDF document
+  const doc = React.createElement(AnalyticsReportPDF, {
+    data: sanitizedData,
+    config: normalizedConfig,
+    startDate,
+    endDate,
+    orgName: companyName,
   });
-  
-  let currentY = (doc as any).lastAutoTable.finalY + 15;
-  
-  // Conversations breakdown (if enabled)
-  if (config.includeConversations !== false && data.conversations.length > 0) {
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Conversation Statistics", 20, currentY);
-    
-    const statusCounts: Record<string, number> = {};
-    data.conversations.forEach((c: any) => {
-      statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
-    });
-    
-    const convData = Object.entries(statusCounts).map(([status, count]) => [
-      status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
-      count.toString(),
-      `${((count / data.totalConversations) * 100).toFixed(1)}%`
-    ]);
-    
-    (doc as any).autoTable({
-      startY: currentY + 5,
-      head: [["Status", "Count", "Percentage"]],
-      body: convData,
-      theme: 'striped',
-      headStyles: { fillColor: [23, 23, 23] },
-      styles: { fontSize: 10 },
-    });
-    
-    currentY = (doc as any).lastAutoTable.finalY + 15;
+
+  try {
+    // Render to buffer
+    const buffer = await renderToBuffer(doc);
+    console.log(`[generatePDF] Successfully generated PDF, size: ${buffer.byteLength} bytes`);
+    return new Uint8Array(buffer);
+  } catch (error) {
+    console.error('[generatePDF] Error rendering PDF:', error);
+    throw error;
   }
-  
-  // Leads breakdown (if enabled)
-  if (config.includeLeads !== false && data.leads.length > 0) {
-    if (currentY > 240) {
-      doc.addPage();
-      currentY = 25;
-    }
-    
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Lead Statistics", 20, currentY);
-    
-    const leadStatusCounts: Record<string, number> = {};
-    data.leads.forEach((l: any) => {
-      leadStatusCounts[l.status] = (leadStatusCounts[l.status] || 0) + 1;
-    });
-    
-    const leadData = Object.entries(leadStatusCounts).map(([status, count]) => [
-      status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
-      count.toString(),
-      `${((count / data.totalLeads) * 100).toFixed(1)}%`
-    ]);
-    
-    (doc as any).autoTable({
-      startY: currentY + 5,
-      head: [["Status", "Count", "Percentage"]],
-      body: leadData,
-      theme: 'striped',
-      headStyles: { fillColor: [23, 23, 23] },
-      styles: { fontSize: 10 },
-    });
-  }
-  
-  // Footer
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(10);
-    doc.setTextColor(150);
-    doc.text(
-      `Generated by Pilot on ${new Date().toLocaleDateString('en-US', { 
-        month: 'long', 
-        day: 'numeric', 
-        year: 'numeric' 
-      })}`,
-      20,
-      285
-    );
-    doc.text(`Page ${i} of ${pageCount}`, 180, 285);
-  }
-  
-  return doc.output('arraybuffer') as unknown as Uint8Array;
 }
 
 // =============================================================================
-// CSV GENERATION
+// CSV GENERATION (unchanged)
 // =============================================================================
 
-function generateCSV(report: ScheduledReport, data: AnalyticsData): string {
+function generateCSV(report: ScheduledReport, data: PDFData): string {
   const config = report.report_config;
   const dateRange = formatDateRange(config.startDate, config.endDate);
   
@@ -422,57 +206,79 @@ function generateCSV(report: ScheduledReport, data: AnalyticsData): string {
   
   const rows: string[] = [];
   
-  // Header
   rows.push(`${report.name}`);
   rows.push(`Date Range,${dateRange}`);
   rows.push('');
   
   // KPIs
   rows.push('Key Performance Indicators');
-  rows.push('Metric,Value,Change');
-  rows.push(`Conversations,${data.totalConversations},${calculateChange(data.totalConversations, data.previousPeriod?.totalConversations || 0)}`);
-  rows.push(`Leads,${data.totalLeads},${calculateChange(data.totalLeads, data.previousPeriod?.totalLeads || 0)}`);
-  rows.push(`Conversion Rate,${data.conversionRate.toFixed(1)}%,${calculateChange(data.conversionRate, data.previousPeriod?.conversionRate || 0)}`);
-  rows.push(`Satisfaction,${data.avgSatisfaction ? `${data.avgSatisfaction.toFixed(1)}/5` : 'N/A'},${
-    data.avgSatisfaction && data.previousPeriod?.avgSatisfaction 
-      ? `${(data.avgSatisfaction - data.previousPeriod.avgSatisfaction) >= 0 ? '+' : ''}${(data.avgSatisfaction - data.previousPeriod.avgSatisfaction).toFixed(1)}`
-      : '—'
-  }`);
+  rows.push('Metric,Value');
+  rows.push(`Conversations,${data.totalConversations || 0}`);
+  rows.push(`Leads,${data.totalLeads || 0}`);
+  rows.push(`Conversion Rate,${(data.conversionRate || 0).toFixed(1)}%`);
+  rows.push(`Satisfaction,${data.satisfactionStats?.average_rating ? `${data.satisfactionStats.average_rating.toFixed(1)}/5` : 'N/A'}`);
   rows.push('');
   
-  // Conversations breakdown
-  if (config.includeConversations !== false && data.conversations.length > 0) {
+  // Conversations by date
+  if (data.conversationStats?.length) {
     rows.push('Conversation Statistics');
-    rows.push('Status,Count,Percentage');
-    
-    const statusCounts: Record<string, number> = {};
-    data.conversations.forEach((c: any) => {
-      statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
-    });
-    
-    Object.entries(statusCounts).forEach(([status, count]) => {
-      rows.push(`${escapeCSV(status)},${count},${((count / data.totalConversations) * 100).toFixed(1)}%`);
-    });
+    rows.push('Date,Total,Active,Closed');
+    for (const stat of data.conversationStats) {
+      rows.push(`${stat.date},${stat.total},${stat.active},${stat.closed}`);
+    }
     rows.push('');
   }
   
-  // Leads breakdown
-  if (config.includeLeads !== false && data.leads.length > 0) {
+  // Leads by date
+  if (data.leadStats?.length) {
     rows.push('Lead Statistics');
-    rows.push('Status,Count,Percentage');
-    
-    const leadStatusCounts: Record<string, number> = {};
-    data.leads.forEach((l: any) => {
-      leadStatusCounts[l.status] = (leadStatusCounts[l.status] || 0) + 1;
-    });
-    
-    Object.entries(leadStatusCounts).forEach(([status, count]) => {
-      rows.push(`${escapeCSV(status)},${count},${((count / data.totalLeads) * 100).toFixed(1)}%`);
-    });
+    rows.push('Date,Total');
+    for (const stat of data.leadStats) {
+      rows.push(`${stat.date},${stat.total}`);
+    }
+    rows.push('');
+  }
+
+  // Lead sources
+  if (data.leadSourceBreakdown?.length) {
+    rows.push('Lead Sources');
+    rows.push('Source,Leads,CVR');
+    for (const source of data.leadSourceBreakdown) {
+      rows.push(`${escapeCSV(source.source)},${source.leads},${source.cvr.toFixed(1)}%`);
+    }
+    rows.push('');
+  }
+
+  // Bookings
+  if (data.bookingStats?.length) {
+    rows.push('Booking Statistics');
+    rows.push('Location,Total,Confirmed,Completed,No-Show,Show Rate');
+    for (const stat of data.bookingStats) {
+      rows.push(`${escapeCSV(stat.location)},${stat.total},${stat.confirmed},${stat.completed},${stat.no_show},${stat.show_rate}%`);
+    }
+    rows.push('');
+  }
+
+  // Traffic sources
+  if (data.trafficSources?.length) {
+    rows.push('Traffic Sources');
+    rows.push('Source,Visitors,Percentage');
+    for (const source of data.trafficSources) {
+      rows.push(`${escapeCSV(source.source)},${source.visitors},${source.percentage}%`);
+    }
+    rows.push('');
+  }
+
+  // Top pages
+  if (data.topPages?.length) {
+    rows.push('Top Pages');
+    rows.push('Page,Visits,Bounce Rate,Conversions');
+    for (const page of data.topPages.slice(0, 20)) {
+      rows.push(`${escapeCSV(page.page)},${page.visits},${page.bounce_rate}%,${page.conversations}`);
+    }
     rows.push('');
   }
   
-  // Footer
   rows.push('');
   rows.push(`Generated by Pilot on ${new Date().toISOString()}`);
   
@@ -480,12 +286,11 @@ function generateCSV(report: ScheduledReport, data: AnalyticsData): string {
 }
 
 // =============================================================================
-// EMAIL GENERATION (matching the preview template exactly)
+// EMAIL GENERATION
 // =============================================================================
 
 function generateReportEmail(
   report: ScheduledReport, 
-  _data: AnalyticsData, 
   downloadUrl: string
 ): string {
   const config = report.report_config;
@@ -493,7 +298,6 @@ function generateReportEmail(
   const format = config.format || 'pdf';
   const unsubscribeUrl = `${appUrl}/settings?tab=notifications#report-emails`;
   
-  // Format badge
   const formatBadge = `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
       <tr>
@@ -538,7 +342,7 @@ async function uploadReportToStorage(
   const contentType = format === 'pdf' ? 'application/pdf' : 'text/csv';
   const data = format === 'pdf' ? fileData : new TextEncoder().encode(fileData as string);
   
-  console.log(`Uploading ${format} to ${fileName}...`);
+  console.log(`[uploadReportToStorage] Uploading ${format} to ${fileName}...`);
   
   const { error: uploadError } = await supabase.storage
     .from('report-exports')
@@ -548,17 +352,16 @@ async function uploadReportToStorage(
     });
   
   if (uploadError) {
-    console.error('Error uploading report:', uploadError);
+    console.error('[uploadReportToStorage] Error uploading report:', uploadError);
     return null;
   }
   
-  // Create signed URL (7 days)
   const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from('report-exports')
-    .createSignedUrl(fileName, 60 * 60 * 24 * 7);
+    .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
   
   if (signedUrlError) {
-    console.error('Error creating signed URL:', signedUrlError);
+    console.error('[uploadReportToStorage] Error creating signed URL:', signedUrlError);
     return null;
   }
   
@@ -598,15 +401,8 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Note: This function is called by pg_cron with the anon key.
-  // Security is maintained because:
-  // 1. We use the service role key internally to access data
-  // 2. The function only processes reports that are due based on schedule
-  // 3. Rate limiting is enforced via last_sent_at checks
-
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     const now = new Date();
     
     // Parse request body for optional forceReportId
@@ -615,15 +411,15 @@ serve(async (req: Request): Promise<Response> => {
       const body = await req.json();
       forceReportId = body.forceReportId || null;
     } catch {
-      // No body or invalid JSON - that's fine
+      // No body or invalid JSON
     }
 
-    console.log('Checking for scheduled reports at:', now.toISOString());
+    console.log('[send-scheduled-report] Checking for scheduled reports at:', now.toISOString());
     if (forceReportId) {
-      console.log(`Force sending specific report: ${forceReportId}`);
+      console.log(`[send-scheduled-report] Force sending specific report: ${forceReportId}`);
     }
 
-    // Fetch active scheduled reports (or specific one if forcing)
+    // Fetch active scheduled reports
     let query = supabase
       .from('scheduled_reports')
       .select('*')
@@ -636,11 +432,11 @@ serve(async (req: Request): Promise<Response> => {
     const { data: reports, error } = await query;
 
     if (error) {
-      console.error('Error fetching scheduled reports:', error);
+      console.error('[send-scheduled-report] Error fetching scheduled reports:', error);
       throw error;
     }
 
-    // Enrich with profile data (no FK exists, so we fetch separately)
+    // Enrich with profile data
     for (const report of reports || []) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -651,59 +447,57 @@ serve(async (req: Request): Promise<Response> => {
       report.profiles = profile;
     }
 
-    console.log(`Found ${reports?.length || 0} active scheduled reports`);
+    console.log(`[send-scheduled-report] Found ${reports?.length || 0} active scheduled reports`);
 
     const processedReports: string[] = [];
 
     for (const report of reports || []) {
-      // Skip schedule check if forcing a specific report
+      // Skip schedule check if forcing
       if (!forceReportId) {
         const shouldRun = checkShouldRun(report, now);
-        
         if (!shouldRun) {
-          console.log(`Skipping report ${report.id} - not scheduled for this time`);
+          console.log(`[send-scheduled-report] Skipping report ${report.id} - not scheduled for this time`);
           continue;
         }
       }
 
       const companyName = report.profiles?.company_name || 'Pilot';
-      console.log(`Processing report: ${report.name} for company: ${companyName}`);
+      console.log(`[send-scheduled-report] Processing report: ${report.name} for company: ${companyName}`);
 
       try {
-        // Fetch analytics data with comparison period
-        const analyticsData = await fetchAnalyticsData(supabase, report);
-        console.log(`Analytics data fetched: ${analyticsData.totalConversations} convos, ${analyticsData.totalLeads} leads`);
+        // Fetch comprehensive analytics data using new builder
+        const pdfData = await buildPDFDataFromSupabase(supabase, report.user_id, report.report_config);
+        console.log(`[send-scheduled-report] Data fetched: ${pdfData.totalConversations} convos, ${pdfData.totalLeads} leads`);
         
-        // Generate the report file based on format
+        // Generate the report file
         const format = report.report_config?.format || 'pdf';
         let fileData: Uint8Array | string;
         
         if (format === 'pdf') {
-          fileData = generatePDF(report, analyticsData, companyName);
+          fileData = await generatePDF(report, pdfData, companyName);
         } else {
-          fileData = generateCSV(report, analyticsData);
+          fileData = generateCSV(report, pdfData);
         }
         
         // Upload to storage
         const uploadResult = await uploadReportToStorage(supabase, report, fileData, format);
         
         if (!uploadResult) {
-          console.error(`Failed to upload report ${report.id}, skipping...`);
+          console.error(`[send-scheduled-report] Failed to upload report ${report.id}, skipping...`);
           continue;
         }
         
-        console.log(`Report uploaded to ${uploadResult.filePath}`);
+        console.log(`[send-scheduled-report] Report uploaded to ${uploadResult.filePath}`);
         
         // Create export record
         const fileSize = typeof fileData === 'string' ? fileData.length : fileData.byteLength;
         await createExportRecord(supabase, report, uploadResult.filePath, fileSize);
         
-        // Generate email with download link
-        const emailContent = generateReportEmail(report, analyticsData, uploadResult.signedUrl);
+        // Generate and send email
+        const emailContent = generateReportEmail(report, uploadResult.signedUrl);
 
-        // Send to all recipients
         for (const recipient of report.recipients) {
-          console.log(`Sending report to ${recipient}...`);
+          console.log(`[send-scheduled-report] Sending report to ${recipient}...`);
           
           await resend.emails.send({
             from: "Pilot Analytics <reports@getpilot.io>",
@@ -720,9 +514,9 @@ serve(async (req: Request): Promise<Response> => {
           .eq('id', report.id);
 
         processedReports.push(report.id);
-        console.log(`Successfully sent report ${report.id}`);
+        console.log(`[send-scheduled-report] Successfully sent report ${report.id}`);
       } catch (error) {
-        console.error(`Error processing report ${report.id}:`, error);
+        console.error(`[send-scheduled-report] Error processing report ${report.id}:`, error);
       }
     }
 
@@ -738,7 +532,7 @@ serve(async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-scheduled-report function:", error);
+    console.error("[send-scheduled-report] Error in function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
