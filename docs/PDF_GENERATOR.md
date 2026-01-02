@@ -767,6 +767,80 @@ export {
 
 ---
 
+## Server-Side Generation (Scheduled Reports)
+
+Scheduled reports generate PDFs server-side using the same `@react-pdf/renderer` components as the frontend, ensuring **exact visual parity**.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Report Builder (Frontend)                 │
+│  src/lib/pdf-components/     →  generateBeautifulPDF()      │
+└─────────────────────────────────────────────────────────────┘
+                              ║
+                    (Same Output)
+                              ║
+┌─────────────────────────────────────────────────────────────┐
+│                 Scheduled Reports (Edge Function)            │
+│  supabase/functions/_shared/pdf/  →  send-scheduled-report  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Ported Components
+
+All frontend PDF components are ported to `supabase/functions/_shared/pdf/`:
+
+| Frontend (`src/lib/pdf-components/`) | Edge Function (`supabase/functions/_shared/pdf/`) |
+|--------------------------------------|--------------------------------------------------|
+| `AnalyticsReportPDF.tsx` | `AnalyticsReportPDF.tsx` |
+| `PDFHeader.tsx` | `PDFHeader.tsx` |
+| `PDFFooter.tsx` | `PDFFooter.tsx` |
+| `PDFSection.tsx` | `PDFSection.tsx` |
+| `PDFTable.tsx` | `PDFTable.tsx` |
+| `PDFKPICards.tsx` | (inline in AnalyticsReportPDF) |
+| `PDFExecutiveSummary.tsx` | `PDFExecutiveSummary.tsx` |
+| `charts/*.tsx` | `charts.tsx` (consolidated) |
+| `pdf-chart-utils.ts` | `chart-utils.ts` |
+| `styles.ts` | `styles.ts` |
+| `fonts.ts` | `fonts.ts` |
+
+### Data Builder
+
+`supabase/functions/_shared/build-pdf-data.ts` fetches all 24 data sections:
+
+```typescript
+export async function buildPDFDataFromSupabase(
+  supabase: SupabaseClient,
+  userId: string,
+  config: ReportConfig
+): Promise<PDFData>
+```
+
+The builder queries the same tables and applies the same transformations as the frontend analytics hooks.
+
+### Why Ported (Not Imported)?
+
+Edge functions run in Deno and cannot import from the Vite/React app source tree (`src/`). The components are **ported** (copied with minimal changes) to maintain:
+
+1. **Visual parity** - Same layout, colors, typography
+2. **Config parity** - Same 24 toggle flags honored
+3. **Data parity** - Same limits, downsampling, formatting
+
+### Keeping Components in Sync
+
+When updating frontend PDF components:
+
+1. Make changes in `src/lib/pdf-components/`
+2. Port changes to `supabase/functions/_shared/pdf/`
+3. Test both frontend export and scheduled email
+
+### Related
+
+- [Edge Functions: send-scheduled-report](./EDGE_FUNCTIONS.md#send-scheduled-report)
+
+---
+
 ## Adding New Charts
 
 1. Create component in `src/lib/pdf-components/charts/`
