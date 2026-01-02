@@ -59,12 +59,12 @@ const sheetVariants = cva(
   {
     variants: {
       side: {
-        top: "left-[14px] right-[14px] top-[14px] w-[calc(100vw-28px)] data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        top: "left-[18px] right-[18px] top-[18px] w-[calc(100vw-36px)] data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
-          "left-[14px] right-[14px] bottom-[14px] w-[calc(100vw-28px)] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "top-[14px] bottom-[14px] left-[14px] h-[calc(100vh-28px)] w-3/4 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+          "left-[18px] right-[18px] bottom-[18px] w-[calc(100vw-36px)] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+        left: "top-[18px] bottom-[18px] left-[18px] h-[calc(100vh-36px)] w-3/4 data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
         right:
-          "top-[14px] bottom-[14px] right-[14px] h-[calc(100vh-28px)] w-3/4 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+          "top-[18px] bottom-[18px] right-[18px] h-[calc(100vh-36px)] w-3/4 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
       },
     },
     defaultVariants: {
