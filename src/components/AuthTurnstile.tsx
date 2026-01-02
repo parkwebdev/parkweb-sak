@@ -2,7 +2,7 @@
  * AuthTurnstile Component
  * 
  * Cloudflare Turnstile bot protection widget for authentication forms.
- * Uses 'interaction-only' mode for invisible verification unless suspicious.
+ * Uses 'always' mode for visible verification on auth pages.
  * Separate from widget TurnstileWidget to maintain bundle isolation.
  * 
  * @module components/AuthTurnstile
@@ -59,6 +59,18 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
+    
+    // Store callbacks in refs to avoid re-renders causing widget re-initialization
+    const onVerifyRef = useRef(onVerify);
+    const onErrorRef = useRef(onError);
+    const onExpireRef = useRef(onExpire);
+    
+    // Keep refs updated with latest callbacks
+    useEffect(() => {
+      onVerifyRef.current = onVerify;
+      onErrorRef.current = onError;
+      onExpireRef.current = onExpire;
+    });
 
     // Expose reset method to parent
     useImperativeHandle(ref, () => ({
@@ -79,10 +91,10 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
           try {
             const id = window.turnstile.render(containerRef.current, {
               sitekey: TURNSTILE_SITE_KEY,
-              callback: onVerify,
-              'error-callback': onError,
-              'expired-callback': onExpire,
-              appearance: 'interaction-only',
+              callback: (token: string) => onVerifyRef.current(token),
+              'error-callback': () => onErrorRef.current?.(),
+              'expired-callback': () => onExpireRef.current?.(),
+              appearance: 'always',
               theme: 'auto',
               size: 'normal',
             });
@@ -91,7 +103,7 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
             console.debug('AuthTurnstile: Widget rendered successfully');
           } catch (err) {
             console.error('AuthTurnstile: Failed to render widget', err);
-            onError?.();
+            onErrorRef.current?.();
           }
         }
       };
@@ -128,7 +140,7 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
           }
         }
       };
-    }, [onVerify, onError, onExpire]);
+    }, []); // Empty dependency array - only run once on mount
 
     return (
       <div 
