@@ -891,13 +891,13 @@ const Auth = () => {
 
       {/* Right Content Area */}
       <div className="flex h-full w-full flex-1 overflow-hidden py-8 md:py-12">
-        <div className="flex h-full w-full flex-col items-center gap-8 px-4 md:px-8">
+        <div className="flex h-full w-full flex-col items-center px-4 md:px-8">
           {/* Mobile Logo with text */}
-          <div className="lg:hidden flex items-center">
+          <div className="lg:hidden flex items-center mb-8">
             <PilotLogo className="h-8 w-8 text-foreground" />
           </div>
 
-          <div className="flex w-full max-w-sm flex-col gap-8 flex-1 justify-center">
+          <div className="flex w-full max-w-sm flex-col gap-8 flex-1 items-center justify-center">
             <AnimatePresence mode="wait">
               {showResetPassword ? (
                 renderResetPasswordForm()
