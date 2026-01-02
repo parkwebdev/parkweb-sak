@@ -979,7 +979,7 @@ const Auth = () => {
                       onExpire={handleCaptchaExpire}
                     />
 
-                    <Button type="submit" size="lg" className="w-full" loading={isLoading} disabled={!captchaToken}>
+                    <Button type="submit" size="lg" className="w-full" loading={isLoading}>
                       Send reset link
                     </Button>
 
@@ -1075,7 +1075,7 @@ const Auth = () => {
                       onExpire={handleCaptchaExpire}
                     />
 
-                    <Button type="submit" size="lg" className="w-full" loading={isLoading} disabled={!captchaToken}>
+                    <Button type="submit" size="lg" className="w-full" loading={isLoading}>
                       Sign in
                     </Button>
 
