@@ -480,7 +480,7 @@ const Auth = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
+            className="w-full space-y-6"
           >
             <h1 className="sr-only">Authentication</h1>
 
@@ -592,7 +592,7 @@ const Auth = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
+            className="w-full space-y-6"
           >
 
             <div className="flex flex-col gap-4">
@@ -663,7 +663,7 @@ const Auth = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              className="space-y-6"
+              className="w-full space-y-6"
             >
               <div className="flex flex-col items-center gap-6 text-center">
                 <FeaturedIcon color="success" theme="modern" size="xl">
@@ -698,7 +698,7 @@ const Auth = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
+            className="w-full space-y-6"
           >
 
             <div className="flex flex-col gap-4">
@@ -735,7 +735,7 @@ const Auth = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="space-y-6"
+            className="w-full space-y-6"
           >
             <div className="flex flex-col items-center gap-6 text-center">
               <FeaturedIcon color="success" theme="modern" size="xl">
