@@ -117,9 +117,6 @@ verify_jwt = false
 [functions.translate-messages]
 verify_jwt = true
 
-# Phase 2 & 3: Calendar Webhook Functions
-# Added December 2025 - Real-time calendar sync for accurate booking analytics
-
 [functions.google-calendar-webhook]
 verify_jwt = false
 
@@ -133,18 +130,18 @@ schedule = "0 2 * * *"
 [functions.send-test-email]
 verify_jwt = true
 
-# Auth Emails - Custom branded templates for password reset, verification, welcome
 [functions.send-auth-email]
 verify_jwt = false
 
 [functions.send-member-removed-email]
 verify_jwt = true
 
-# New Lead Email - Notification when lead captured via Ari Agent
 [functions.send-new-lead-email]
 verify_jwt = false
 
-# Weekly Report - Automatic weekly analytics report to account admins
 [functions.send-weekly-report]
 verify_jwt = false
 schedule = "0 8 * * 1"
+
+[functions.send-webhook-failure-email]
+verify_jwt = true

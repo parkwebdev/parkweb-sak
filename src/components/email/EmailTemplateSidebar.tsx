@@ -90,7 +90,7 @@ const TEMPLATES: TemplateItem[] = [
   { id: 'new-lead', label: 'New Lead', icon: Users01, group: 'Leads', status: 'integrated', delivery: 'resend' },
   
   // Alerts (Resend)
-  { id: 'webhook-failure', label: 'Webhook Failure', icon: AlertTriangle, group: 'Alerts', delivery: 'resend' },
+  { id: 'webhook-failure', label: 'Webhook Failure', icon: AlertTriangle, group: 'Alerts', status: 'integrated', delivery: 'resend' },
   
   // Reports & Product (Resend)
   { id: 'report', label: 'Scheduled Report', icon: File02, group: 'Reports', status: 'integrated', delivery: 'resend' },

@@ -280,6 +280,39 @@ Deno.serve(async (req) => {
       console.error('Error logging webhook delivery:', logError);
     }
 
+    // Send failure notification email if webhook failed after all retries and not in test mode
+    if (!success && !testMode) {
+      try {
+        // Get webhook owner's email
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('user_id', webhook.user_id)
+          .single();
+
+        if (profile?.email && !profileError) {
+          console.log(`Sending webhook failure notification to ${profile.email}`);
+          
+          await supabase.functions.invoke('send-webhook-failure-email', {
+            body: {
+              recipientEmail: profile.email,
+              webhookId: webhookId,
+              webhookName: webhook.name,
+              endpoint: webhook.url,
+              errorCode: responseStatus || 0,
+              errorMessage: lastError || 'Unknown error',
+              retryCount: attempt,
+            },
+          });
+        } else {
+          console.warn('Could not find owner email for webhook failure notification');
+        }
+      } catch (emailError) {
+        // Don't fail the webhook response if email fails
+        console.error('Failed to send webhook failure email:', emailError);
+      }
+    }
+
     // Handle response actions if webhook was successful
     if (success && !testMode && webhook.response_actions) {
       const responseActions = webhook.response_actions as { 
