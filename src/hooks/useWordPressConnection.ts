@@ -45,7 +45,9 @@ interface SyncResult {
   created: number;
   updated: number;
   deleted: number;
+  unchanged: number;
   total: number;
+  sync_type?: 'full' | 'incremental';
   errors?: string[];
 }
 
@@ -276,17 +278,20 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
         created: data.created,
         updated: data.updated,
         deleted: data.deleted || 0,
+        unchanged: data.unchanged || 0,
         total: data.total,
+        sync_type: data.sync_type,
         errors: data.errors,
       };
 
       if (result.success) {
         const parts = [];
-        if (result.created > 0) parts.push(`${result.created} created`);
+        if (result.created > 0) parts.push(`${result.created} new`);
         if (result.updated > 0) parts.push(`${result.updated} updated`);
+        if (result.unchanged > 0) parts.push(`${result.unchanged} unchanged`);
         if (result.deleted > 0) parts.push(`${result.deleted} removed`);
         
-        toast.success('Communities imported', {
+        toast.success('Communities synced', {
           description: parts.length > 0 ? parts.join(', ') : 'No changes',
         });
         onSyncComplete?.();
