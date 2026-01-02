@@ -67,9 +67,9 @@ export function SettingsSectionMenu({
 
   return (
     <nav className="w-[240px] flex-shrink-0 border-r h-full overflow-y-auto py-4 px-3 hidden lg:block">
-      <div className="mb-4 px-2">
-        <h2 className="text-sm font-semibold text-foreground mb-1">Settings</h2>
-        <p className="text-2xs text-muted-foreground">
+      <div className="mb-4 px-2.5">
+        <h2 className="text-lg font-semibold text-foreground">Settings</h2>
+        <p className="text-xs text-muted-foreground">
           Manage your account and preferences
         </p>
       </div>
