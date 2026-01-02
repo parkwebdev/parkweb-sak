@@ -14,6 +14,13 @@ import type { NotificationPreferencesData, ConversationMetadata } from '@/types/
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
   message_count?: number;
+  active_takeover?: {
+    taken_over_by: string;
+    profiles: {
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  } | null;
 };
 
 type Message = Tables<'messages'>;
@@ -53,17 +60,69 @@ export const useConversations = () => {
     queryFn: async () => {
       if (!accountOwnerId) return [];
       
-      const { data, error } = await supabase
+      // First fetch conversations with takeovers
+      const { data: convData, error } = await supabase
         .from('conversations')
         .select(`
           *,
-          agents!fk_conversations_agent(name)
+          agents!fk_conversations_agent(name),
+          conversation_takeovers(
+            taken_over_by,
+            returned_to_ai_at
+          )
         `)
         .eq('user_id', accountOwnerId)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      if (!convData) return [];
+      
+      // Get unique user IDs from active takeovers to fetch profiles
+      const activeTakeoverUserIds = new Set<string>();
+      convData.forEach(conv => {
+        const takeovers = conv.conversation_takeovers as Array<{
+          taken_over_by: string;
+          returned_to_ai_at: string | null;
+        }> | null;
+        const active = takeovers?.find(t => t.returned_to_ai_at === null);
+        if (active) {
+          activeTakeoverUserIds.add(active.taken_over_by);
+        }
+      });
+      
+      // Fetch profiles for takeover users
+      let profilesMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {};
+      if (activeTakeoverUserIds.size > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, display_name, avatar_url')
+          .in('user_id', Array.from(activeTakeoverUserIds));
+        
+        if (profiles) {
+          profilesMap = Object.fromEntries(
+            profiles.map(p => [p.user_id, { display_name: p.display_name, avatar_url: p.avatar_url }])
+          );
+        }
+      }
+      
+      // Process to extract active takeover with profile info
+      return convData.map(conv => {
+        const takeovers = conv.conversation_takeovers as Array<{
+          taken_over_by: string;
+          returned_to_ai_at: string | null;
+        }> | null;
+        
+        const activeTakeover = takeovers?.find(t => t.returned_to_ai_at === null);
+        
+        return {
+          ...conv,
+          active_takeover: activeTakeover ? {
+            taken_over_by: activeTakeover.taken_over_by,
+            profiles: profilesMap[activeTakeover.taken_over_by] || null,
+          } : null,
+          conversation_takeovers: undefined,
+        };
+      });
     },
     realtime: accountOwnerId ? {
       table: 'conversations',

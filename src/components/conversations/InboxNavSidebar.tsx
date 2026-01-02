@@ -39,6 +39,13 @@ import type { ConversationMetadata } from '@/types/metadata';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
+  active_takeover?: {
+    taken_over_by: string;
+    profiles: {
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  } | null;
 };
 
 export type InboxFilter = {
