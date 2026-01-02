@@ -10,6 +10,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders } from "../cors.ts";
 import type { ConversationMetadata } from "../types.ts";
+import { moderateContent } from "../security/moderation.ts";
 
 /** Conversation state after checks */
 export interface ConversationState {
@@ -302,12 +303,11 @@ export async function saveUserMessage(
   supabase: ReturnType<typeof createClient>,
   options: {
     conversationId: string;
-    message: { role: string; content: string; files?: any[] };
+    message: { role: string; content: string; files?: any[] } | undefined;
     isGreetingRequest: boolean;
     previewMode: boolean;
     requestId: string;
     agentId: string;
-    moderateContent: (content: string) => Promise<{ action: string; categories: string[]; severity: string }>;
     conversationMetadata: any;
   }
 ): Promise<{
@@ -322,7 +322,6 @@ export async function saveUserMessage(
     previewMode,
     requestId,
     agentId,
-    moderateContent,
     conversationMetadata,
   } = options;
 

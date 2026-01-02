@@ -36,7 +36,7 @@ interface ToolCall {
 }
 
 /** Enabled tool configuration */
-interface EnabledTool {
+export interface EnabledTool {
   id: string;
   name: string;
   description: string;
