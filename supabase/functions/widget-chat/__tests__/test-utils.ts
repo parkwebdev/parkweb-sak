@@ -39,9 +39,14 @@ export function getTestContext(): TestContext {
 // ============================================
 
 export interface RequestOptions {
+  /** Additional headers to include in the request */
   headers?: Record<string, string>;
+  /** API key for external API access (uses X-API-Key header) */
   apiKey?: string;
+  /** Whether to expect an error response */
   expectError?: boolean;
+  /** If true, treats request as external API (not widget) */
+  asExternalApi?: boolean;
 }
 
 /**
@@ -56,14 +61,18 @@ export async function makeRequest(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'apikey': ctx.supabaseKey,
-    // Simulate widget origin
-    'origin': 'https://example.com',
-    'x-client-info': 'pilot-widget/1.0',
     ...options.headers,
   };
 
+  // Widget mode: simulate widget origin
+  if (!options.asExternalApi) {
+    headers['origin'] = 'https://example.com';
+    headers['x-client-info'] = 'pilot-widget/1.0';
+  }
+
+  // API key for external API access
   if (options.apiKey) {
-    headers['authorization'] = `Bearer ${options.apiKey}`;
+    headers['x-api-key'] = options.apiKey;
   }
 
   const response = await fetch(ctx.functionUrl, {
