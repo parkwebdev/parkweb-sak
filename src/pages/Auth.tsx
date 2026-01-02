@@ -75,6 +75,7 @@ const Auth = () => {
   const [lastName, setLastName] = useState('');
   const [teamEmails, setTeamEmails] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  const [rememberMe, setRememberMe] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   
@@ -239,6 +240,15 @@ const Auth = () => {
 
     setIsLoading(true);
     try {
+      // Set session persistence flag based on Remember Me checkbox
+      // When unchecked, session will be cleared when browser closes
+      if (!rememberMe) {
+        sessionStorage.setItem('pilot_session_temporary', 'true');
+      } else {
+        sessionStorage.removeItem('pilot_session_temporary');
+        localStorage.removeItem('pilot_session_temporary_flag');
+      }
+
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password,
@@ -1016,8 +1026,12 @@ const Auth = () => {
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <Checkbox id="remember" />
-                          <Label htmlFor="remember" className="text-sm text-muted-foreground font-normal">
+                          <Checkbox 
+                            id="remember" 
+                            checked={rememberMe}
+                            onCheckedChange={(checked) => setRememberMe(checked === true)}
+                          />
+                          <Label htmlFor="remember" className="text-sm text-muted-foreground font-normal cursor-pointer">
                             Remember for 30 days
                           </Label>
                         </div>
