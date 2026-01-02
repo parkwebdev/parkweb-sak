@@ -482,16 +482,7 @@ const Auth = () => {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            <div className="flex flex-col items-center gap-6 text-center">
-              <FeaturedIcon color="gray" theme="modern" size="xl">
-                <User01 />
-              </FeaturedIcon>
-              <div className="z-10 flex flex-col gap-2">
-                <h1 className="sr-only">Authentication</h1>
-                <h2 className="text-2xl font-semibold text-foreground">Your details</h2>
-                <p className="text-sm text-muted-foreground">Please provide your name and email</p>
-              </div>
-            </div>
+            <h1 className="sr-only">Authentication</h1>
 
             <div className="z-10 flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-4">
@@ -603,15 +594,6 @@ const Auth = () => {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            <div className="flex flex-col items-center gap-6 text-center">
-              <FeaturedIcon color="gray" theme="modern" size="xl">
-                <Key01 />
-              </FeaturedIcon>
-              <div className="flex flex-col gap-2">
-                <h2 className="text-2xl font-semibold text-foreground">Choose a password</h2>
-                <p className="text-sm text-muted-foreground">Must be at least 8 characters</p>
-              </div>
-            </div>
 
             <div className="flex flex-col gap-4">
               <div className="space-y-2">
@@ -718,15 +700,6 @@ const Auth = () => {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            <div className="flex flex-col items-center gap-6 text-center">
-              <FeaturedIcon color="gray" theme="modern" size="xl">
-                <UsersPlus />
-              </FeaturedIcon>
-              <div className="flex flex-col gap-2">
-                <h2 className="text-2xl font-semibold text-foreground">Invite your team</h2>
-                <p className="text-sm text-muted-foreground">Start collaborating with your team members</p>
-              </div>
-            </div>
 
             <div className="flex flex-col gap-4">
               <div className="space-y-2">
@@ -803,17 +776,6 @@ const Auth = () => {
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6"
     >
-      <div className="flex flex-col items-center gap-6 text-center">
-        <FeaturedIcon color="success" theme="modern" size="xl">
-          <Key01 />
-        </FeaturedIcon>
-        <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold text-foreground">Set new password</h2>
-          <p className="text-sm text-muted-foreground">
-            Your new password must be different from previously used passwords
-          </p>
-        </div>
-      </div>
 
       <form onSubmit={handleSetNewPassword} className="flex flex-col gap-4">
         <div className="space-y-2">
@@ -947,15 +909,6 @@ const Auth = () => {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <div className="flex flex-col items-center gap-6 text-center">
-                    <FeaturedIcon color="gray" theme="modern" size="xl">
-                      <Mail01 />
-                    </FeaturedIcon>
-                    <div className="flex flex-col gap-2">
-                      <h2 className="text-2xl font-semibold text-foreground">Forgot password?</h2>
-                      <p className="text-sm text-muted-foreground">No worries, we'll send you reset instructions.</p>
-                    </div>
-                  </div>
 
                   <form onSubmit={handleForgotPassword} className="flex flex-col gap-4">
                     <div className="space-y-2">
@@ -1001,15 +954,6 @@ const Auth = () => {
                   exit={{ opacity: 0, x: 20 }}
                   className="space-y-6"
                 >
-                  <div className="flex flex-col items-center gap-6 text-center">
-                    <FeaturedIcon color="gray" theme="modern" size="xl">
-                      <Key01 />
-                    </FeaturedIcon>
-                    <div className="flex flex-col gap-2">
-                      <h2 className="text-2xl font-semibold text-foreground">Welcome back</h2>
-                      <p className="text-sm text-muted-foreground">Welcome back! Please enter your details.</p>
-                    </div>
-                  </div>
 
                   <form onSubmit={handleSignIn} className="flex flex-col gap-4">
                     <div className="space-y-2">
