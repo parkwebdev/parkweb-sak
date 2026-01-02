@@ -35,14 +35,16 @@ export interface ReferrerJourney {
   utm_content?: string;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  files?: FileAttachment[];
+}
+
 export interface WidgetChatRequest {
   agentId: string;
   conversationId?: string;
-  messages: Array<{
-    role: 'user' | 'assistant';
-    content: string;
-    files?: FileAttachment[];
-  }>;
+  messages: ChatMessage[];
   leadId?: string;
   pageVisits?: PageVisit[];
   referrerJourney?: ReferrerJourney;
