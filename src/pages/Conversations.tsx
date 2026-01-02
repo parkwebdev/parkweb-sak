@@ -453,6 +453,8 @@ function Conversations() {
         counts={filterCounts}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        filteredConversations={filteredConversations}
+        onSelectConversation={setSelectedConversation}
       />
       
       {/* Conversations List Sidebar */}
