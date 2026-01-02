@@ -293,8 +293,8 @@ export function ProfileSettings() {
       <AnimatedItem>
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Personal Information</CardTitle>
-          <CardDescription className="text-xs">
+          <CardTitle className="text-base font-semibold">Personal Information</CardTitle>
+          <CardDescription className="text-sm">
             Update your personal details and contact information
           </CardDescription>
         </CardHeader>
@@ -370,8 +370,8 @@ export function ProfileSettings() {
       <AnimatedItem>
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Account Security</CardTitle>
-          <CardDescription className="text-xs">
+          <CardTitle className="text-base font-semibold">Account Security</CardTitle>
+          <CardDescription className="text-sm">
             Manage your account security settings
           </CardDescription>
         </CardHeader>

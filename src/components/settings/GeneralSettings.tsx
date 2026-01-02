@@ -243,9 +243,9 @@ export function GeneralSettings() {
     <AnimatedList className="space-y-4" staggerDelay={0.1}>
       <AnimatedItem>
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold">Company Details</CardTitle>
-            <CardDescription className="text-xs">Your company information for emails and branding</CardDescription>
+        <CardHeader>
+            <CardTitle className="text-base font-semibold">Company Details</CardTitle>
+            <CardDescription className="text-sm">Your company information for emails and branding</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -293,8 +293,8 @@ export function GeneralSettings() {
       <AnimatedItem>
         <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Application Preferences</CardTitle>
-          <CardDescription className="text-xs">Customize your application experience</CardDescription>
+          <CardTitle className="text-base font-semibold">Application Preferences</CardTitle>
+          <CardDescription className="text-sm">Customize your application experience</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
@@ -327,8 +327,8 @@ export function GeneralSettings() {
       <AnimatedItem>
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Default Views</CardTitle>
-          <CardDescription className="text-xs">Set your preferred starting views</CardDescription>
+          <CardTitle className="text-base font-semibold">Default Views</CardTitle>
+          <CardDescription className="text-sm">Set your preferred starting views</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
