@@ -66,7 +66,7 @@ export const createTeamColumns = ({
     size: 280,
     minSize: 200,
     maxSize: 350,
-    header: 'Team Member',
+    header: () => <span className="text-xs font-medium">Team Member</span>,
     cell: ({ row }) => {
       const member = row.original;
       const displayName = member.display_name || 'No name provided';
@@ -96,7 +96,7 @@ export const createTeamColumns = ({
     size: 120,
     minSize: 80,
     maxSize: 150,
-    header: 'Role',
+    header: () => <span className="text-xs font-medium">Role</span>,
     cell: ({ row }) => (
       <Badge
         variant={getBadgeVariant(row.original.role || 'member')}
@@ -111,7 +111,7 @@ export const createTeamColumns = ({
     size: 80,
     minSize: 60,
     maxSize: 100,
-    header: () => <span className="w-24">Actions</span>,
+    header: () => <span className="text-xs font-medium">Actions</span>,
     cell: ({ row }) => {
       const member = row.original;
       const isOwnRow = member.user_id === currentUserId;
