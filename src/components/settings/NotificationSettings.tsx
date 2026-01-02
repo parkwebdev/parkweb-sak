@@ -285,10 +285,10 @@ export function NotificationSettings() {
       <AnimatedItem>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">
+            <CardTitle className="text-base font-semibold">
               Email Notifications
             </CardTitle>
-            <CardDescription className="text-xs">
+            <CardDescription className="text-sm">
               Control which types of emails you receive from Pilot
             </CardDescription>
           </CardHeader>
@@ -379,8 +379,8 @@ export function NotificationSettings() {
       <AnimatedItem>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">Browser & Sound</CardTitle>
-            <CardDescription className="text-xs">
+            <CardTitle className="text-base font-semibold">Browser & Sound</CardTitle>
+            <CardDescription className="text-sm">
               Configure browser notifications and audio alerts
             </CardDescription>
           </CardHeader>
@@ -410,8 +410,8 @@ export function NotificationSettings() {
       <AnimatedItem>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">In-App Notifications</CardTitle>
-            <CardDescription className="text-xs">
+            <CardTitle className="text-base font-semibold">In-App Notifications</CardTitle>
+            <CardDescription className="text-sm">
               Choose which types of activities trigger in-app and browser notifications
             </CardDescription>
           </CardHeader>
@@ -468,7 +468,7 @@ export function NotificationSettings() {
       <AnimatedItem>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">Browser Permission Status</CardTitle>
+            <CardTitle className="text-base font-semibold">Browser Permission Status</CardTitle>
             <CardDescription className="text-xs">
               Current browser notification permission
             </CardDescription>

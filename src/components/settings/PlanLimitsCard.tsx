@@ -61,8 +61,8 @@ export const PlanLimitsCard = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Plan Usage</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-base font-semibold">Plan Usage</CardTitle>
+        <CardDescription className="text-sm">
           Current plan: <span className="font-semibold text-foreground">{planName}</span>
         </CardDescription>
       </CardHeader>

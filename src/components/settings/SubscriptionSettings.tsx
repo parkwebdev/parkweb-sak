@@ -302,8 +302,8 @@ export const SubscriptionSettings = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold">Billing History</h3>
-            <p className="text-xs text-muted-foreground">View and download your past invoices</p>
+            <h3 className="text-base font-semibold">Billing History</h3>
+            <p className="text-sm text-muted-foreground">View and download your past invoices</p>
           </div>
           <Button
             variant="ghost"
