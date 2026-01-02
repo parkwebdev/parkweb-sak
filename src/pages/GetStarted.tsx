@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboardingProgress, OnboardingStep } from '@/hooks/useOnboardingProgress';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { SkeletonGetStartedPage } from '@/components/ui/page-skeleton';
 import {
@@ -82,6 +83,7 @@ export function GetStarted() {
   const prefersReducedMotion = useReducedMotion();
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationChecked, setCelebrationChecked] = useState(false);
+  const { isAdmin } = useRoleAuthorization();
   
   const { 
     steps, 
@@ -90,6 +92,15 @@ export function GetStarted() {
     allComplete,
     isLoading,
   } = useOnboardingProgress();
+
+  /**
+   * Redirect to dashboard when all steps are complete (admin only)
+   */
+  useEffect(() => {
+    if (allComplete && !isLoading && isAdmin) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [allComplete, isLoading, isAdmin, navigate]);
 
   /**
    * Check if user has already seen the celebration and show it if not
