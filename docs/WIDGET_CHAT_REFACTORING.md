@@ -1,10 +1,10 @@
 # Widget-Chat Edge Function Refactoring Plan
 
-> **Document Version**: 2.1.0  
+> **Document Version**: 2.2.0  
 > **Created**: 2025-01-01  
 > **Updated**: 2025-01-02  
-> **Status**: Phase 1 Complete  
-> **Target File**: `supabase/functions/widget-chat/index.ts` (4,534 lines, reduced from 4,678)
+> **Status**: Phase 2 Complete  
+> **Target File**: `supabase/functions/widget-chat/index.ts` (4,146 lines, reduced from 4,678)
 
 ---
 
@@ -14,8 +14,8 @@
 |-------|-------------|--------|
 | ~~Phase 0~~ | ~~Pre-Refactoring Validation~~ | ⛔ Skipped (no Deno test runner) |
 | **Phase 1** | Core Module Extraction | ✅ **COMPLETE** (2025-01-02) |
-| Phase 2 | Line-by-Line Extraction Map | ⏳ Ready to Start |
-| Phase 3 | Extraction Order & Procedures | ⏳ Pending |
+| **Phase 2** | Utility & Security Extraction | ✅ **COMPLETE** (2025-01-02) |
+| Phase 3 | Extraction Order & Procedures | ⏳ Ready to Start |
 | Phase 4 | Refactored Main Handler | ⏳ Pending |
 
 ### Phase 1 Completion Summary
@@ -27,18 +27,29 @@
 | Errors | `_shared/errors.ts` | 100 lines | ✅ Verified |
 | Types | `_shared/types.ts` | 57 lines | ✅ Verified |
 
+### Phase 2 Completion Summary
+
+| Module | File | Lines Extracted | Status |
+|--------|------|-----------------|--------|
+| Phone Utils | `_shared/utils/phone.ts` | 40 lines | ✅ Verified |
+| Hashing Utils | `_shared/utils/hashing.ts` | 25 lines | ✅ Verified |
+| Link Utils | `_shared/utils/links.ts` | 50 lines | ✅ Verified |
+| State Mapping | `_shared/utils/state-mapping.ts` | 30 lines | ✅ Verified |
+| Language Detection | `_shared/utils/language.ts` | 120 lines | ✅ Verified |
+| AI Config | `_shared/ai/config.ts` | 55 lines | ✅ Verified |
+| Model Routing | `_shared/ai/model-routing.ts` | 45 lines | ✅ Verified |
+| Security Guardrails | `_shared/security/guardrails.ts` | 15 lines | ✅ Verified |
+| Sanitization | `_shared/security/sanitization.ts` | 45 lines | ✅ Verified |
+| Content Moderation | `_shared/security/moderation.ts` | 90 lines | ✅ Verified |
+
+**Total Lines Extracted in Phase 2**: ~515 lines  
+**Main Handler Reduction**: 4,534 → 4,146 lines (-388 lines)
+
 **Validation Performed:**
 - ✅ Edge function deployed successfully
 - ✅ All imports resolved correctly
 - ✅ TypeScript compilation passed
-- ✅ Main handler reduced by 144 lines (4,678 → 4,534)
-
-> **⚠️ NO AUTOMATED TESTS AVAILABLE**  
-> Without Deno test runner, we must validate each extraction step manually:
-> 1. Deploy the edge function after each change
-> 2. Test the widget UI in browser
-> 3. Verify all response fields are correct
-> 4. Check edge function logs for errors
+- ✅ Barrel exports created for utils/, ai/, security/
 
 ---
 
