@@ -14,6 +14,7 @@ import { validatePasswordStrength } from '@/utils/input-validation';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Eye, EyeOff, User01, Key01, UsersPlus, CheckCircle, Mail01, ArrowLeft } from '@untitledui/icons';
+import { EmailTagInput } from '@/components/ui/email-tag-input';
 import { AnimatePresence, motion } from 'motion/react';
 import PilotLogo from '@/components/PilotLogo';
 import { AuthTurnstile, AuthTurnstileRef } from '@/components/AuthTurnstile';
@@ -72,7 +73,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [teamEmails, setTeamEmails] = useState('');
+  const [teamEmails, setTeamEmails] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [currentStep, setCurrentStep] = useState(0);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -392,7 +393,7 @@ const Auth = () => {
     setCurrentStep(0);
     setPassword('');
     setConfirmPassword('');
-    setTeamEmails('');
+    setTeamEmails([]);
     // Don't clear firstName/lastName/email in case user needs to sign in
   };
 
@@ -715,23 +716,20 @@ const Auth = () => {
             <div className="flex flex-col gap-4">
               <div className="space-y-2">
                 <Label htmlFor="team-emails">Team email addresses (optional)</Label>
-                <Input
-                  id="team-emails"
-                  type="text"
-                  placeholder="Enter emails separated by commas"
+                <EmailTagInput
                   value={teamEmails}
-                  onChange={(e) => setTeamEmails(e.target.value)}
-                  className="h-10"
+                  onChange={setTeamEmails}
+                  placeholder="Enter an email address"
                   disabled={isLoading}
                 />
-                <FormHint>You can also invite team members later from settings</FormHint>
+                <FormHint>Press Enter or click + to add each email</FormHint>
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" size="lg" onClick={handlePrevStep}>
                   <ArrowLeft />
                 </Button>
                 <Button onClick={handleNextStep} size="lg" className="flex-1" loading={isLoading}>
-                  {teamEmails.trim() ? 'Send invites & continue' : 'Skip for now'}
+                  {teamEmails.length > 0 ? 'Send invites & continue' : 'Skip for now'}
                 </Button>
               </div>
             </div>
