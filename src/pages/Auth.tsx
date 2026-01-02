@@ -299,6 +299,11 @@ const Auth = () => {
     if (isInvitedUser) {
       if (currentStep < 2) {
         if (currentStep === 1) {
+          // For invited users, verify captcha before signup
+          if (!captchaToken) {
+            toast.error("Verification required", { description: "Please complete the security check" });
+            return;
+          }
           // Trigger signup for invited user, then move to completion
           handleSignUp();
         } else {
@@ -313,6 +318,10 @@ const Auth = () => {
 
       // If moving to step 3 (Complete), trigger signup
       if (currentStep === 2) {
+        if (!captchaToken) {
+          toast.error("Verification required", { description: "Please complete the security check on the password step" });
+          return;
+        }
         handleSignUp();
       }
     }
@@ -646,7 +655,7 @@ const Auth = () => {
                 <Button variant="outline" size="lg" onClick={handlePrevStep}>
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleNextStep} size="lg" className="flex-1" disabled={isLoading || !captchaToken}>
+                <Button onClick={handleNextStep} size="lg" className="flex-1" disabled={isLoading}>
                   Continue
                 </Button>
               </div>
