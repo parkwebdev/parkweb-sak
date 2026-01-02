@@ -117,7 +117,7 @@ export const createLocationsColumns = ({
     size: 90,
     minSize: 70,
     maxSize: 100,
-    header: () => <span>Calendars</span>,
+    header: () => <span className="text-xs font-medium">Calendars</span>,
     cell: ({ row }) => {
       const count = row.original.calendarCount;
       if (count === 0) {
@@ -135,7 +135,7 @@ export const createLocationsColumns = ({
     size: 80,
     minSize: 60,
     maxSize: 90,
-    header: () => <span>Actions</span>,
+    header: () => <span className="text-xs font-medium">Actions</span>,
     cell: ({ row }) => (
       canManage ? (
         <div className="flex items-center justify-end">

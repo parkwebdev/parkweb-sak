@@ -61,7 +61,7 @@ export const customerFeedbackColumns: ColumnDef<CustomerFeedbackData>[] = [
   },
   {
     accessorKey: "feedback",
-    header: "Feedback",
+    header: () => <span className="text-xs font-medium">Feedback</span>,
     cell: ({ row }) => {
       const feedback = row.original.feedback;
       if (!feedback) return <span className="text-muted-foreground">—</span>;

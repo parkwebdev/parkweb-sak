@@ -200,7 +200,7 @@ export const createHelpArticlesColumns = ({
     size: 120,
     minSize: 80,
     maxSize: 150,
-    header: () => <span className="text-xs font-medium block text-center">Category</span>,
+    header: () => <span className="text-xs font-medium">Category</span>,
     cell: ({ row }) => {
       const article = row.original;
       const CategoryIcon = getCategoryIcon(article.categoryIcon);
@@ -223,7 +223,7 @@ export const createHelpArticlesColumns = ({
     size: 90,
     minSize: 70,
     maxSize: 100,
-    header: () => <span className="text-xs font-medium block text-center">Status</span>,
+    header: () => <span className="text-xs font-medium">Status</span>,
     cell: ({ row }) => {
       const hasEmbedding = row.original.hasEmbedding;
       
@@ -268,9 +268,7 @@ export const createHelpArticlesColumns = ({
     minSize: 80,
     maxSize: 120,
     header: ({ column }) => (
-      <div className="text-center">
-        <DataTableColumnHeader column={column} title="Added" />
-      </div>
+      <DataTableColumnHeader column={column} title="Added" />
     ),
     cell: ({ row }) => {
       const date = row.original.createdAt;

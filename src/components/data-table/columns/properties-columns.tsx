@@ -135,7 +135,7 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
     size: 100,
     minSize: 80,
     maxSize: 120,
-    header: 'Beds/Baths',
+    header: () => <span className="text-xs font-medium">Beds/Baths</span>,
     cell: ({ row }) => {
       const beds = row.original.beds;
       const baths = row.original.baths;
@@ -187,7 +187,7 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
     size: 60,
     minSize: 50,
     maxSize: 70,
-    header: 'Actions',
+    header: () => <span className="text-xs font-medium">Actions</span>,
     cell: ({ row }) => {
       const listingUrl = row.original.listing_url;
       
