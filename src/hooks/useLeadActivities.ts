@@ -7,6 +7,7 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/query-keys';
 import type { Tables } from '@/integrations/supabase/types';
 
 export type LeadActivity = Tables<'lead_activities'> & {
@@ -36,7 +37,7 @@ export type AssigneeProfile = {
 
 export function useLeadActivities(leadId: string | undefined) {
   const queryClient = useQueryClient();
-  const queryKey = ['lead-activities', leadId];
+  const queryKey = queryKeys.leadActivities.list(leadId ?? '');
 
   // Fetch activities with user profiles
   const { data, isLoading } = useQuery({
