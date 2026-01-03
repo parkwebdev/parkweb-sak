@@ -1347,6 +1347,52 @@ curl -X POST \
 
 ## Utility Functions
 
+### `preview-email-template`
+
+**Purpose:** Renders email templates without sending them, for use by the email test page.
+
+**Auth:** Public (no JWT required)
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  templateType: 'team-invitation' | 'booking-confirmation' | 'weekly-report' | 
+                'scheduled-report' | 'new-lead' | 'welcome' | 
+                'webhook-failure' | 'team-member-removed';
+  data: Record<string, unknown>;  // Template-specific data
+}
+```
+
+**Response:**
+```typescript
+{
+  html: string;  // Rendered email HTML
+}
+```
+
+**Details:**
+- Uses the same generators as production email functions
+- Ensures preview matches actual sent emails
+- Supports all edge-backed email templates
+- Used exclusively by the dev email test page
+
+**Supported Templates:**
+
+| Template Type | Data Fields |
+|--------------|-------------|
+| `team-invitation` | invitedBy, companyName, signupUrl |
+| `booking-confirmation` | visitorName, eventType, date, time, timezone, location?, notes? |
+| `weekly-report` | reportName, dateRange, metrics[], viewReportUrl |
+| `scheduled-report` | reportName, dateRange, format?, viewReportUrl |
+| `new-lead` | leadName, leadEmail?, leadPhone?, source?, message?, viewLeadUrl |
+| `welcome` | userName, companyName?, getStartedUrl |
+| `webhook-failure` | webhookName, endpoint, errorCode, errorMessage, failedAt, retryCount, configureUrl |
+| `team-member-removed` | adminFirstName, memberFullName, companyName |
+
+---
+
 ### `validate_api_key` (Database Function)
 
 **Purpose:** Validates agent-level API keys with rate limiting.
