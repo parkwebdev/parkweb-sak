@@ -492,7 +492,7 @@ export const LeadDetailsSheet = ({
   // Always render Sheet for proper animation handling
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-4xl h-[96vh] flex flex-col overflow-hidden" aria-describedby="lead-details-description">
+      <SheetContent className="sm:max-w-4xl h-[94vh] flex flex-col overflow-hidden" aria-describedby="lead-details-description">
         {!lead ? (
           <SkeletonLeadDetails />
         ) : (
