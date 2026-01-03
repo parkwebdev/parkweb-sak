@@ -7,6 +7,7 @@
 
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { motion, AnimatePresence } from 'motion/react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,8 @@ import { useLeadComments, type LeadComment } from '@/hooks/useLeadComments';
 import { useLeadActivities, type LeadActivity, type ActionData, type AssigneeProfile } from '@/hooks/useLeadActivities';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useAuth } from '@/contexts/AuthContext';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { slideUpVariants, fadeReducedVariants, getVariants } from '@/lib/motion-variants';
 import {
   Flag01,
   Edit02,
@@ -55,14 +58,16 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const { comments, isLoading: commentsLoading, addComment, updateComment, deleteComment, isAdding } = useLeadComments(leadId);
   const { activities, assigneeProfiles, isLoading: activitiesLoading } = useLeadActivities(leadId);
   const { stages } = useLeadStages();
+  const prefersReducedMotion = useReducedMotion();
 
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const isLoading = commentsLoading || activitiesLoading;
+  const itemVariants = getVariants(slideUpVariants, fadeReducedVariants, prefersReducedMotion);
 
   // Create stage lookup map
   const stageMap = useMemo(() => {
@@ -83,8 +88,10 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
 
   // Auto-scroll to bottom when new items are added
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    // Find the actual Radix viewport element inside ScrollArea
+    const viewport = scrollContainerRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
   }, [feedItems.length]);
 
@@ -287,9 +294,9 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       </div>
 
       {/* Feed area with gray background */}
-      <div className="flex-1 flex flex-col min-h-0 bg-muted/30">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-muted/30">
         {/* Unified feed - scrollable */}
-        <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
+        <ScrollArea className="h-full" ref={scrollContainerRef}>
           <div className="px-4 pt-4 pb-2">
           {feedItems.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-4">
@@ -297,6 +304,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
             </p>
           ) : (
             <div className="space-y-0">
+              <AnimatePresence mode="popLayout" initial={false}>
               {feedItems.map((item, index) => {
                 if (item.type === 'comment') {
                   const comment = item.data;
@@ -304,7 +312,14 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                   const isOwner = user?.id === comment.user_id;
 
                   return (
-                    <div key={`comment-${comment.id}`} className="flex gap-2 py-2 group relative">
+                    <motion.div
+                      key={`comment-${comment.id}`}
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      layout
+                      className="flex gap-2 py-2 group relative">
                       {/* Timeline line */}
                       {index < feedItems.length - 1 && (
                         <div className="absolute left-2.5 top-7 bottom-0 w-px bg-border" aria-hidden="true" />
@@ -373,14 +388,21 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                           </p>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 } else {
                   const activity = item.data;
                   const isSystemAction = activity.action_type === 'created';
                   
                   return (
-                    <div key={`activity-${activity.id}`} className="flex gap-2 py-2 relative">
+                    <motion.div
+                      key={`activity-${activity.id}`}
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      layout
+                      className="flex gap-2 py-2 relative">
                       {/* Timeline line */}
                       {index < feedItems.length - 1 && (
                         <div className="absolute left-2.5 top-7 bottom-0 w-px bg-border" aria-hidden="true" />
@@ -412,10 +434,11 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                           {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
                         </time>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 }
               })}
+              </AnimatePresence>
             </div>
           )}
           </div>
