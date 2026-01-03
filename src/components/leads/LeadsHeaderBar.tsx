@@ -36,13 +36,7 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
   return (
     <div className="sticky top-0 z-10 bg-background border-b border-border">
       <div className="flex items-center justify-between gap-4 px-4 lg:px-8 py-3">
-        {/* Left: View Mode Toggle */}
-        <ViewModeToggle
-          viewMode={viewMode}
-          onViewModeChange={onViewModeChange}
-        />
-
-        {/* Center: Search */}
+        {/* Left: Search */}
         <div className="flex-1 max-w-md">
           <div className="relative">
             <Input
@@ -67,11 +61,17 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
           </div>
         </div>
 
-        {/* Right: Display Dropdown */}
-        <LeadsDisplayDropdown
-          onOpenSettings={onOpenSettings}
-          activeCustomizationCount={activeCustomizationCount}
-        />
+        {/* Right: Display Dropdown + View Mode Toggle */}
+        <div className="flex items-center gap-2">
+          <LeadsDisplayDropdown
+            onOpenSettings={onOpenSettings}
+            activeCustomizationCount={activeCustomizationCount}
+          />
+          <ViewModeToggle
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+          />
+        </div>
       </div>
     </div>
   );
