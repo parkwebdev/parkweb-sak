@@ -29,6 +29,7 @@ import {
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
 import type { Tables } from "@/integrations/supabase/types";
+import type { SortOption } from "@/components/leads/LeadsViewSettingsSheet";
 import type { ConversationMetadata } from "@/types/metadata";
 
 // Kanban-compatible lead type with extended fields
@@ -69,6 +70,8 @@ interface LeadsKanbanBoardProps {
   visibleFields?: Set<CardFieldKey>;
   /** Whether the user can manage (edit, drag) leads. Controls DnD and stage editing. */
   canManage?: boolean;
+  /** Sort option for ordering leads within each column */
+  sortOption?: SortOption | null;
 }
 
 // Inline editable column header
@@ -293,6 +296,7 @@ export function LeadsKanbanBoard({
   onOrderChange,
   visibleFields = getDefaultVisibleFields(),
   canManage = true,
+  sortOption,
 }: LeadsKanbanBoardProps) {
   const { stages, loading: stagesLoading, updateStage } = useLeadStages();
 
@@ -306,68 +310,110 @@ export function LeadsKanbanBoard({
   );
 
   // Transform leads to kanban format with extended data extraction
-  const kanbanLeads = useMemo<KanbanLead[]>(
-    () =>
-      leads.map((lead) => {
-        // Find matching stage - fallback to first stage if not found
-        const stageId = lead.stage_id || stages.find(s => s.is_default)?.id || stages[0]?.id || '';
+  const kanbanLeads = useMemo<KanbanLead[]>(() => {
+    const mapped = leads.map((lead) => {
+      // Find matching stage - fallback to first stage if not found
+      const stageId = lead.stage_id || stages.find(s => s.is_default)?.id || stages[0]?.id || '';
+      
+      // Extract data from lead.data JSONB field
+      const leadData = (lead.data || {}) as Record<string, unknown>;
+      const firstName = (leadData.firstName as string) || (leadData['First Name'] as string) || null;
+      const lastName = (leadData.lastName as string) || (leadData['Last Name'] as string) || null;
+      
+      // Get phone from column OR data field
+      const phone = lead.phone || (leadData['Phone Number'] as string) || (leadData.phone as string) || null;
+      
+      // Extract conversation metadata
+      const conversation = (lead as LeadWithConversation).conversations;
+      const metadata = (conversation?.metadata || {}) as ConversationMetadata;
+      
+      // Build location string
+      const locationParts: string[] = [];
+      if (metadata.city) locationParts.push(metadata.city);
+      if (metadata.country) locationParts.push(metadata.country);
+      const location = locationParts.length > 0 ? locationParts.join(', ') : null;
+      
+      // Format entry page
+      const entryPage = formatEntryPage(metadata.referrer_journey?.landing_page);
+      
+      // Map priority from ConversationMetadata to KanbanLead format
+      let priority: 'high' | 'medium' | 'low' | null = null;
+      if (metadata.priority) {
+        // Map 'normal' → 'medium', 'urgent' → 'high', ignore 'not_set'
+        const priorityMap: Record<string, 'high' | 'medium' | 'low' | null> = {
+          'high': 'high',
+          'urgent': 'high',
+          'normal': 'medium',
+          'low': 'low',
+          'not_set': null,
+        };
+        priority = priorityMap[metadata.priority] ?? null;
+      }
+      
+      return {
+        id: lead.id,
+        name: lead.name || "Unnamed Lead",
+        column: stageId,
+        firstName,
+        lastName,
+        email: lead.email,
+        phone,
+        stage_id: lead.stage_id,
+        created_at: lead.created_at,
+        updated_at: lead.updated_at,
+        hasConversation: !!lead.conversation_id,
+        location,
+        entryPage,
+        priority,
+        tags: metadata.tags || [],
+        notes: metadata.notes || null,
+      };
+    });
+
+    // Apply sorting if sortOption is provided
+    if (sortOption) {
+      const { column, direction } = sortOption;
+      const multiplier = direction === 'asc' ? 1 : -1;
+      
+      mapped.sort((a, b) => {
+        let aVal: string | null = null;
+        let bVal: string | null = null;
         
-        // Extract data from lead.data JSONB field
-        const leadData = (lead.data || {}) as Record<string, unknown>;
-        const firstName = (leadData.firstName as string) || (leadData['First Name'] as string) || null;
-        const lastName = (leadData.lastName as string) || (leadData['Last Name'] as string) || null;
-        
-        // Get phone from column OR data field
-        const phone = lead.phone || (leadData['Phone Number'] as string) || (leadData.phone as string) || null;
-        
-        // Extract conversation metadata
-        const conversation = (lead as LeadWithConversation).conversations;
-        const metadata = (conversation?.metadata || {}) as ConversationMetadata;
-        
-        // Build location string
-        const locationParts: string[] = [];
-        if (metadata.city) locationParts.push(metadata.city);
-        if (metadata.country) locationParts.push(metadata.country);
-        const location = locationParts.length > 0 ? locationParts.join(', ') : null;
-        
-        // Format entry page
-        const entryPage = formatEntryPage(metadata.referrer_journey?.landing_page);
-        
-        // Map priority from ConversationMetadata to KanbanLead format
-        let priority: 'high' | 'medium' | 'low' | null = null;
-        if (metadata.priority) {
-          // Map 'normal' → 'medium', 'urgent' → 'high', ignore 'not_set'
-          const priorityMap: Record<string, 'high' | 'medium' | 'low' | null> = {
-            'high': 'high',
-            'urgent': 'high',
-            'normal': 'medium',
-            'low': 'low',
-            'not_set': null,
-          };
-          priority = priorityMap[metadata.priority] ?? null;
+        switch (column) {
+          case 'name':
+            aVal = a.name?.toLowerCase() ?? '';
+            bVal = b.name?.toLowerCase() ?? '';
+            break;
+          case 'email':
+            aVal = a.email?.toLowerCase() ?? '';
+            bVal = b.email?.toLowerCase() ?? '';
+            break;
+          case 'company':
+            // Company is not on KanbanLead, so fall back to name
+            aVal = a.name?.toLowerCase() ?? '';
+            bVal = b.name?.toLowerCase() ?? '';
+            break;
+          case 'created_at':
+            aVal = a.created_at;
+            bVal = b.created_at;
+            break;
+          case 'updated_at':
+            aVal = a.updated_at;
+            bVal = b.updated_at;
+            break;
+          default:
+            return 0;
         }
         
-        return {
-          id: lead.id,
-          name: lead.name || "Unnamed Lead",
-          column: stageId,
-          firstName,
-          lastName,
-          email: lead.email,
-          phone,
-          stage_id: lead.stage_id,
-          created_at: lead.created_at,
-          updated_at: lead.updated_at,
-          hasConversation: !!lead.conversation_id,
-          location,
-          entryPage,
-          priority,
-          tags: metadata.tags || [],
-          notes: metadata.notes || null,
-        };
-      }),
-    [leads, stages]
-  );
+        if (aVal === bVal) return 0;
+        if (aVal === null || aVal === '') return 1;
+        if (bVal === null || bVal === '') return -1;
+        return aVal < bVal ? -1 * multiplier : 1 * multiplier;
+      });
+    }
+
+    return mapped;
+  }, [leads, stages, sortOption]);
 
   // Get count for each column
   const getColumnCount = useCallback(
