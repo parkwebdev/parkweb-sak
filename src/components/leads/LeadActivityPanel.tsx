@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { IconButton } from '@/components/ui/icon-button';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useLeadComments, type LeadComment } from '@/hooks/useLeadComments';
 import { useLeadActivities, type LeadActivity, type ActionData, type AssigneeProfile } from '@/hooks/useLeadActivities';
@@ -34,6 +35,7 @@ import {
   FilterLines,
   ArrowNarrowUp,
   ArrowNarrowDown,
+  Tag01,
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { PriorityBadge } from '@/components/ui/priority-badge';
@@ -157,6 +159,10 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
         return <UserPlus01 className="h-3 w-3" />;
       case 'assignee_removed':
         return <UserMinus01 className="h-3 w-3" />;
+      case 'tag_added':
+        return <Tag01 className="h-3 w-3" />;
+      case 'tag_removed':
+        return <Tag01 className="h-3 w-3" />;
       default:
         return <Edit02 className="h-3 w-3" />;
     }
@@ -276,6 +282,24 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
             <span className="font-medium">{userName}</span>
             {' unassigned '}
             <span className="font-medium">{removedUserName}</span>
+          </span>
+        );
+
+      case 'tag_added':
+        return (
+          <span className="flex items-center gap-1 flex-wrap">
+            <span className="font-medium">{userName}</span>
+            <span>added tag</span>
+            <Badge variant="secondary" className="text-2xs h-4">{data.tag}</Badge>
+          </span>
+        );
+
+      case 'tag_removed':
+        return (
+          <span className="flex items-center gap-1 flex-wrap">
+            <span className="font-medium">{userName}</span>
+            <span>removed tag</span>
+            <Badge variant="outline" className="text-2xs h-4 line-through opacity-60">{data.tag}</Badge>
           </span>
         );
 

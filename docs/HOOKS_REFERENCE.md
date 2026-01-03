@@ -487,6 +487,68 @@ interface LeadStage {
 
 ---
 
+### useLeadActivities
+
+Fetches lead activity history with real-time subscriptions. Used for displaying activity feeds in lead details.
+
+```tsx
+import { useLeadActivities, type LeadActivity, type ActionData, type AssigneeProfile } from '@/hooks/useLeadActivities';
+
+const {
+  activities,         // LeadActivity[] - All activities for the lead (newest first)
+  assigneeProfiles,   // Map<string, AssigneeProfile> - Profiles for assignee changes
+  isLoading,          // boolean - Loading state
+  refetch,            // () => void - Trigger background refetch
+} = useLeadActivities(leadId: string | undefined);
+```
+
+**LeadActivity Interface**:
+```typescript
+type LeadActivity = Tables<'lead_activities'> & {
+  profile?: {
+    display_name: string | null;
+    avatar_url: string | null;
+  };
+};
+```
+
+**ActionData Interface**:
+```typescript
+type ActionData = {
+  // stage_changed
+  from_stage_id?: string;
+  to_stage_id?: string;
+  // field_updated & status_changed
+  field?: string;
+  from?: string | null;
+  to?: string | null;
+  // assignee changes
+  user_id?: string;
+  // tag changes
+  tag?: string;
+};
+```
+
+**Supported Activity Types**:
+- `created` - Lead was created
+- `stage_changed` - Lead moved to different pipeline stage
+- `status_changed` - Lead status was updated
+- `field_updated` - Lead field was modified (name, email, phone, company, priority, internal_notes)
+- `assignee_added` - Team member was assigned
+- `assignee_removed` - Team member was unassigned
+- `tag_added` - Tag was added to lead
+- `tag_removed` - Tag was removed from lead
+
+**Key Features**:
+- React Query caching with 30-second stale time
+- Real-time updates via Supabase subscription on INSERT events
+- Fetches user profiles for activity actors and assignee targets
+- Limited to 50 most recent activities
+
+**File**: `src/hooks/useLeadActivities.ts`
+
+---
+
 ### useKnowledgeSources
 
 Manages knowledge sources for RAG. **Powered by React Query** with real-time updates.

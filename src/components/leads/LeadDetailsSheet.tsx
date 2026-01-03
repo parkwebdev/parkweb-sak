@@ -45,7 +45,11 @@ interface LeadDetailsSheetProps {
   onDelete?: (id: string) => void;
 }
 
-// Preset tags removed - users can add tags via the input field
+// Preset tags for quick selection
+const PRESET_TAGS = [
+  'VIP', 'Follow-up', 'Hot Lead', 'Cold Lead', 
+  'Qualified', 'Not Qualified', 'Callback', 'Demo Scheduled'
+];
 
 // Helper to convert country code to emoji flag
 const countryCodeToFlag = (code: string): string => {
@@ -331,6 +335,42 @@ export const LeadDetailsSheet = ({
 
       // Invalidate conversations list for sync
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+
+      // Log activity for tag changes
+      if ('tags' in updates && lead?.id && user?.id) {
+        const oldTags = currentMetadata.tags || [];
+        const newTags = updates.tags || [];
+        
+        // Find added tags
+        const addedTags = newTags.filter(t => !oldTags.includes(t));
+        // Find removed tags
+        const removedTags = oldTags.filter(t => !newTags.includes(t));
+        
+        // Log each added tag
+        for (const tag of addedTags) {
+          await supabase.from('lead_activities').insert({
+            lead_id: lead.id,
+            user_id: user.id,
+            action_type: 'tag_added',
+            action_data: { tag },
+          });
+        }
+        
+        // Log each removed tag
+        for (const tag of removedTags) {
+          await supabase.from('lead_activities').insert({
+            lead_id: lead.id,
+            user_id: user.id,
+            action_type: 'tag_removed',
+            action_data: { tag },
+          });
+        }
+        
+        if (addedTags.length > 0 || removedTags.length > 0) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.leadActivities.list(lead.id) });
+        }
+      }
+
       // Log activity for internal notes changes
       if ('notes' in updates && lead?.id && user?.id) {
         const oldNotes = previousNotesRef.current;
@@ -880,34 +920,53 @@ export const LeadDetailsSheet = ({
 
                   {/* Tags - Inline */}
                   {lead.conversation_id && (
-                    <div className="flex items-center gap-2 rounded transition-all duration-200">
-                      <Label className="text-xs text-muted-foreground flex-shrink-0">Tags</Label>
-                      <div className="flex flex-wrap items-center gap-1.5 flex-1">
-                        {conversationMetadata.tags?.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-2xs h-5">
-                            {tag}
-                            <button
-                              onClick={() => handleRemoveTag(tag)}
-                              className="ml-0.5 hover:bg-muted rounded p-0.5"
-                              aria-label={`Remove ${tag} tag`}
-                            >
-                              <XClose className="h-2.5 w-2.5" />
-                            </button>
-                          </Badge>
-                        ))}
-                        <Input
-                          placeholder="Add..."
-                          value={newTag}
-                          onChange={(e) => setNewTag(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddTag(newTag);
-                            }
-                          }}
-                          className="h-5 w-14 text-2xs px-1.5 border-dashed"
-                        />
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 rounded transition-all duration-200">
+                        <Label className="text-xs text-muted-foreground flex-shrink-0">Tags</Label>
+                        <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                          {conversationMetadata.tags?.map((tag) => (
+                            <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-2xs h-5">
+                              {tag}
+                              <button
+                                onClick={() => handleRemoveTag(tag)}
+                                className="ml-0.5 hover:bg-muted rounded p-0.5"
+                                aria-label={`Remove ${tag} tag`}
+                              >
+                                <XClose className="h-2.5 w-2.5" />
+                              </button>
+                            </Badge>
+                          ))}
+                          <Input
+                            placeholder="Add..."
+                            value={newTag}
+                            onChange={(e) => setNewTag(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddTag(newTag);
+                              }
+                            }}
+                            className="h-5 w-14 text-2xs px-1.5 border-dashed"
+                          />
+                        </div>
                       </div>
+                      {/* Preset Tags */}
+                      {PRESET_TAGS.filter(t => !(conversationMetadata.tags || []).includes(t)).length > 0 && (
+                        <div className="flex flex-wrap gap-1 pl-9">
+                          {PRESET_TAGS
+                            .filter(t => !(conversationMetadata.tags || []).includes(t))
+                            .slice(0, 6)
+                            .map((tag) => (
+                              <button
+                                key={tag}
+                                onClick={() => handleAddTag(tag)}
+                                className="text-2xs px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+                              >
+                                {tag}
+                              </button>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
