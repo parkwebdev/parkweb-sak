@@ -893,6 +893,27 @@ Pending team invitations.
 
 ---
 
+#### `account_settings`
+Account-wide configuration settings (shared by all team members).
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `owner_id` | uuid | No | - | Account owner's user ID (unique) |
+| `leads_view_mode` | text | No | `'kanban'` | Leads page view mode |
+| `leads_kanban_visible_fields` | text[] | No | `[...]` | Visible fields on Kanban cards |
+| `leads_table_column_visibility` | jsonb | No | `{...}` | Table column visibility |
+| `leads_table_column_order` | text[] | No | `[...]` | Table column order |
+| `leads_default_sort` | jsonb | Yes | `null` | Default sort option |
+| `created_at` | timestamptz | No | `now()` | Creation timestamp |
+| `updated_at` | timestamptz | No | `now()` | Last update timestamp |
+
+**RLS Policies:**
+- Team members can view their account owner's settings (`has_account_access(owner_id)`)
+- Only account owners can insert/update/delete settings (`owner_id = auth.uid()`)
+
+---
+
 ### Billing System
 
 #### `plans`
