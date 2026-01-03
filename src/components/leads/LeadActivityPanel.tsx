@@ -214,8 +214,8 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header - ClickUp style */}
-      <div className="flex items-center justify-between pb-3">
+      {/* Header - white background */}
+      <div className="flex items-center justify-between px-4 py-3 bg-background border-b">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Activity</span>
           {feedItems.length > 0 && (
@@ -234,151 +234,154 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
         </div>
       </div>
 
-      {/* Unified feed - scrollable */}
-      <ScrollArea className="flex-1 min-h-0">
-        {feedItems.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">
-            No activity yet
-          </p>
-        ) : (
-          <div className="space-y-0">
-            {feedItems.map((item, index) => {
-              if (item.type === 'comment') {
-                const comment = item.data;
-                const isEditing = editingId === comment.id;
-                const isOwner = user?.id === comment.user_id;
+      {/* Feed area with padding */}
+      <div className="flex-1 flex flex-col min-h-0 p-4">
+        {/* Unified feed - scrollable */}
+        <ScrollArea className="flex-1 min-h-0">
+          {feedItems.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">
+              No activity yet
+            </p>
+          ) : (
+            <div className="space-y-0">
+              {feedItems.map((item, index) => {
+                if (item.type === 'comment') {
+                  const comment = item.data;
+                  const isEditing = editingId === comment.id;
+                  const isOwner = user?.id === comment.user_id;
 
-                return (
-                  <div key={`comment-${comment.id}`} className="flex gap-2 py-2 group relative">
-                    {/* Timeline line */}
-                    {index < feedItems.length - 1 && (
-                      <div className="absolute left-2.5 top-7 bottom-0 w-px bg-border" aria-hidden="true" />
-                    )}
-                    
-                    <Avatar className="h-5 w-5 flex-shrink-0">
-                      <AvatarImage src={comment.profile?.avatar_url || undefined} />
-                      <AvatarFallback className="text-2xs">
-                        {getInitials(comment.profile?.display_name)}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-xs font-medium truncate">
-                          {comment.profile?.display_name || 'Unknown'}
-                        </span>
-                        <time className="text-2xs text-muted-foreground flex-shrink-0">
-                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                        </time>
-                        
-                        {isOwner && !isEditing && (
-                          <div className="ml-auto flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <IconButton
-                              size="icon-sm"
-                              variant="ghost"
-                              label="Edit"
-                              onClick={() => startEditing(comment)}
-                            >
-                              <Edit02 className="h-2.5 w-2.5" />
-                            </IconButton>
-                            <IconButton
-                              size="icon-sm"
-                              variant="ghost"
-                              label="Delete"
-                              onClick={() => handleDelete(comment.id)}
-                            >
-                              <Trash02 className="h-2.5 w-2.5" />
-                            </IconButton>
-                          </div>
-                        )}
-                      </div>
-
-                      {isEditing ? (
-                        <div className="space-y-1.5">
-                          <Textarea
-                            value={editContent}
-                            onChange={(e) => setEditContent(e.target.value)}
-                            className="min-h-[50px] text-xs"
-                            autoFocus
-                          />
-                          <div className="flex gap-1">
-                            <Button size="sm" onClick={() => handleUpdate(comment.id)} disabled={!editContent.trim()}>
-                              <Check className="h-3 w-3 mr-1" />
-                              Save
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditContent(''); }}>
-                              <XClose className="h-3 w-3 mr-1" />
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-xs whitespace-pre-wrap bg-muted/50 rounded px-2 py-1.5">
-                          {comment.content}
-                        </p>
+                  return (
+                    <div key={`comment-${comment.id}`} className="flex gap-2 py-2 group relative">
+                      {/* Timeline line */}
+                      {index < feedItems.length - 1 && (
+                        <div className="absolute left-2.5 top-7 bottom-0 w-px bg-border" aria-hidden="true" />
                       )}
-                    </div>
-                  </div>
-                );
-              } else {
-                const activity = item.data;
-                return (
-                  <div key={`activity-${activity.id}`} className="flex gap-2 py-2 relative">
-                    {/* Timeline line */}
-                    {index < feedItems.length - 1 && (
-                      <div className="absolute left-2.5 top-7 bottom-0 w-px bg-border" aria-hidden="true" />
-                    )}
-                    
-                    {activity.profile ? (
+                      
                       <Avatar className="h-5 w-5 flex-shrink-0">
-                        <AvatarImage src={activity.profile.avatar_url || undefined} />
+                        <AvatarImage src={comment.profile?.avatar_url || undefined} />
                         <AvatarFallback className="text-2xs">
-                          {getInitials(activity.profile.display_name)}
+                          {getInitials(comment.profile?.display_name)}
                         </AvatarFallback>
                       </Avatar>
-                    ) : (
-                      <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                        {getActivityIcon(activity.action_type)}
-                      </div>
-                    )}
 
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs leading-relaxed">
-                        {renderActivityDescription(activity)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-xs font-medium truncate">
+                            {comment.profile?.display_name || 'Unknown'}
+                          </span>
+                          <time className="text-2xs text-muted-foreground flex-shrink-0">
+                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                          </time>
+                          
+                          {isOwner && !isEditing && (
+                            <div className="ml-auto flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <IconButton
+                                size="icon-sm"
+                                variant="ghost"
+                                label="Edit"
+                                onClick={() => startEditing(comment)}
+                              >
+                                <Edit02 className="h-2.5 w-2.5" />
+                              </IconButton>
+                              <IconButton
+                                size="icon-sm"
+                                variant="ghost"
+                                label="Delete"
+                                onClick={() => handleDelete(comment.id)}
+                              >
+                                <Trash02 className="h-2.5 w-2.5" />
+                              </IconButton>
+                            </div>
+                          )}
+                        </div>
+
+                        {isEditing ? (
+                          <div className="space-y-1.5">
+                            <Textarea
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="min-h-[50px] text-xs"
+                              autoFocus
+                            />
+                            <div className="flex gap-1">
+                              <Button size="sm" onClick={() => handleUpdate(comment.id)} disabled={!editContent.trim()}>
+                                <Check className="h-3 w-3 mr-1" />
+                                Save
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditContent(''); }}>
+                                <XClose className="h-3 w-3 mr-1" />
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs whitespace-pre-wrap bg-background rounded px-2 py-1.5">
+                            {comment.content}
+                          </p>
+                        )}
                       </div>
-                      <time className="text-2xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
-                      </time>
                     </div>
-                  </div>
-                );
-              }
-            })}
-          </div>
-        )}
-      </ScrollArea>
+                  );
+                } else {
+                  const activity = item.data;
+                  return (
+                    <div key={`activity-${activity.id}`} className="flex gap-2 py-2 relative">
+                      {/* Timeline line */}
+                      {index < feedItems.length - 1 && (
+                        <div className="absolute left-2.5 top-7 bottom-0 w-px bg-border" aria-hidden="true" />
+                      )}
+                      
+                      {activity.profile ? (
+                        <Avatar className="h-5 w-5 flex-shrink-0">
+                          <AvatarImage src={activity.profile.avatar_url || undefined} />
+                          <AvatarFallback className="text-2xs">
+                            {getInitials(activity.profile.display_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                          {getActivityIcon(activity.action_type)}
+                        </div>
+                      )}
 
-      {/* Comment input - inline send button */}
-      <div className="pt-3 mt-auto border-t">
-        <div className="relative">
-          <Input
-            ref={inputRef}
-            placeholder="Add a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="pr-9 h-9 text-xs bg-muted/30 border-muted"
-          />
-          <IconButton
-            size="icon-sm"
-            variant="ghost"
-            label="Send comment"
-            className="absolute right-1 top-1/2 -translate-y-1/2"
-            onClick={handleSubmit}
-            disabled={!newComment.trim() || isAdding}
-          >
-            <Send01 className="h-3.5 w-3.5" />
-          </IconButton>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs leading-relaxed">
+                          {renderActivityDescription(activity)}
+                        </div>
+                        <time className="text-2xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                        </time>
+                      </div>
+                    </div>
+                  );
+                }
+              })}
+            </div>
+          )}
+        </ScrollArea>
+
+        {/* Comment input - inline send button */}
+        <div className="pt-3 mt-auto border-t">
+          <div className="relative">
+            <Input
+              ref={inputRef}
+              placeholder="Add a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pr-9 h-9 text-xs bg-background border-muted"
+            />
+            <IconButton
+              size="icon-sm"
+              variant="ghost"
+              label="Send comment"
+              className="absolute right-1 top-1/2 -translate-y-1/2"
+              onClick={handleSubmit}
+              disabled={!newComment.trim() || isAdding}
+            >
+              <Send01 className="h-3.5 w-3.5" />
+            </IconButton>
+          </div>
         </div>
       </div>
     </div>
