@@ -34,6 +34,7 @@ import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
+import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
 import { createKnowledgeColumns, type KnowledgeSourceWithMeta } from '@/components/data-table/columns';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import type { KnowledgeSourceMetadata } from '@/types/metadata';
@@ -548,35 +549,6 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
           />
         ) : (
           <>
-            {/* Bulk selection action bar - only show if user can manage */}
-            {canManageKnowledge && selectedCount > 0 && (
-              <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
-                <span className="text-sm text-muted-foreground">
-                  {selectedCount} source{selectedCount > 1 ? 's' : ''} selected
-                </span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearSelection}
-                    className="h-8 gap-1.5"
-                  >
-                    <XClose className="h-4 w-4" />
-                    Clear
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleBulkDelete}
-                    className="h-8 gap-1.5"
-                  >
-                    <Trash01 className="h-4 w-4" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            )}
-
             {/* DataTable with toolbar and filters */}
             <div className="flex items-center justify-between gap-2">
               <DataTableToolbar
@@ -630,6 +602,21 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
               </div>
             )}
           </>
+        )}
+
+        {/* Floating bar for bulk actions */}
+        {canManageKnowledge && (
+          <DataTableFloatingBar table={table}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="h-7 gap-1.5"
+            >
+              <Trash01 size={14} />
+              Delete
+            </Button>
+          </DataTableFloatingBar>
         )}
 
         <AddKnowledgeDialog
