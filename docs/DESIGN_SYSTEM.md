@@ -414,10 +414,65 @@ Use `<IconButton>` (not `<Button>`) for icon-only buttons. It provides proper ac
 
 ### Inputs
 
-| Size | Height | Usage |
-|------|--------|-------|
-| Default | 40px (`h-10`) | Standard inputs |
-| Small | 32px (`h-8`) | Compact forms, filters |
+| Size | Height | Text | Usage |
+|------|--------|------|-------|
+| Default | 40px (`h-10`) | `text-base md:text-sm` | Standard inputs |
+| Small | 32px (`h-8`) | `text-xs` | Compact forms, filters |
+
+**Usage:**
+```tsx
+// Default (40px)
+<Input placeholder="Enter email..." />
+
+// Compact (32px)
+<Input size="sm" placeholder="Filter..." />
+```
+
+### Selects
+
+| Size | Height | Text | Usage |
+|------|--------|------|-------|
+| Default | 40px (`h-10`) | `text-sm` | Standard selects |
+| Small | 32px (`h-8`) | `text-xs` | Compact forms, filters |
+
+**Usage:**
+```tsx
+// Default (40px)
+<Select>
+  <SelectTrigger>
+    <SelectValue placeholder="Select option..." />
+  </SelectTrigger>
+  <SelectContent>...</SelectContent>
+</Select>
+
+// Compact (32px)
+<Select>
+  <SelectTrigger size="sm">
+    <SelectValue placeholder="Filter..." />
+  </SelectTrigger>
+  <SelectContent>...</SelectContent>
+</Select>
+```
+
+### Textareas
+
+| Size | Min Height | Text | Usage |
+|------|------------|------|-------|
+| Default | 80px | `text-sm` | Standard text areas |
+| Small | 60px | `text-xs` | Compact text areas |
+| Large | 120px | `text-base` | Extended content |
+
+**Usage:**
+```tsx
+// Default
+<Textarea placeholder="Enter message..." />
+
+// Compact
+<Textarea size="sm" placeholder="Quick note..." />
+
+// Extended
+<Textarea size="lg" placeholder="Detailed description..." />
+```
 
 ### Avatars
 

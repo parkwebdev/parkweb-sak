@@ -140,7 +140,7 @@ export function BusinessHoursEditor({
                       value={day.open || '09:00'}
                       onValueChange={(time) => updateTime(key, 'open', time)}
                     >
-                      <SelectTrigger className="w-[100px] h-8">
+                      <SelectTrigger size="sm" className="w-[100px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -156,7 +156,7 @@ export function BusinessHoursEditor({
                       value={day.close || '17:00'}
                       onValueChange={(time) => updateTime(key, 'close', time)}
                     >
-                      <SelectTrigger className="w-[100px] h-8">
+                      <SelectTrigger size="sm" className="w-[100px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

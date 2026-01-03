@@ -35,7 +35,7 @@ export function AnalyticsDatePicker({
 
   return (
     <Select value={selectedPreset} onValueChange={(value) => onPresetChange(value as AnalyticsDatePreset)}>
-      <SelectTrigger className="w-[180px] h-9">
+      <SelectTrigger className="w-[180px]">
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
           <SelectValue placeholder="Select range">{selectedLabel}</SelectValue>

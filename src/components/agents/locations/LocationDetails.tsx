@@ -162,7 +162,7 @@ export function LocationDetails({
             value={formData.timezone}
             onValueChange={(value) => handleChange('timezone', value)}
           >
-            <SelectTrigger className="h-8">
+            <SelectTrigger size="sm">
               <SelectValue placeholder="Timezone" />
             </SelectTrigger>
             <SelectContent>
