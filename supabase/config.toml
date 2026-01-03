@@ -145,3 +145,6 @@ schedule = "0 8 * * 1"
 
 [functions.send-webhook-failure-email]
 verify_jwt = true
+
+[functions.preview-email-template]
+verify_jwt = false

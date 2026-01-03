@@ -8,46 +8,22 @@
  * - Bulletproof buttons using border technique
  * - System font stack for consistent rendering
  * - 600px max-width (industry standard)
+ * 
+ * NOTE: Templates with edge function equivalents are NOT included here.
+ * Use the preview-email-template edge function for:
+ * - team-invitation
+ * - booking-confirmation
+ * - weekly-report
+ * - scheduled-report
+ * - new-lead
+ * - welcome
+ * - webhook-failure
+ * - team-member-removed
  */
 
 // =============================================================================
 // TYPES
 // =============================================================================
-
-export interface TeamInvitationData {
-  invitedBy: string;
-  companyName: string;
-  signupUrl: string;
-}
-
-export interface BookingConfirmationData {
-  visitorName: string;
-  eventType: string;
-  date: string;
-  time: string;
-  timezone: string;
-  location?: string;
-  notes?: string;
-  calendarLink?: string;
-}
-
-export interface ScheduledReportData {
-  reportName: string;
-  dateRange: string;
-  format?: 'pdf' | 'csv';
-  viewReportUrl: string;
-}
-
-export interface WeeklyReportData {
-  reportName: string;
-  dateRange: string;
-  metrics: {
-    label: string;
-    value: string;
-    change?: string;
-  }[];
-  viewReportUrl: string;
-}
 
 export interface PasswordResetData {
   userName?: string;
@@ -60,8 +36,6 @@ export interface SignupConfirmationData {
   confirmationUrl: string;
   expiresIn?: string;
 }
-
-// NEW TEMPLATE DATA TYPES
 
 export interface BookingCancellationData {
   visitorName: string;
@@ -80,23 +54,8 @@ export interface BookingReminderData {
   time: string;
   timezone: string;
   location?: string;
-  reminderTime: string; // e.g., "24 hours", "1 hour"
+  reminderTime: string;
   calendarLink?: string;
-}
-
-export interface NewLeadNotificationData {
-  leadName: string;
-  leadEmail?: string;
-  leadPhone?: string;
-  source?: string; // Defaults to 'Ari Agent'
-  message?: string;
-  viewLeadUrl: string;
-}
-
-export interface WelcomeEmailData {
-  userName: string;
-  companyName?: string;
-  getStartedUrl: string;
 }
 
 export interface BookingRescheduledData {
@@ -108,26 +67,6 @@ export interface BookingRescheduledData {
   newTime: string;
   timezone: string;
   calendarLink?: string;
-}
-
-export interface WebhookFailureAlertData {
-  webhookName: string;
-  endpoint: string;
-  errorCode: number;
-  errorMessage: string;
-  failedAt: string;
-  retryCount: number;
-  configureUrl: string;
-}
-
-/**
- * Team member removal notification data.
- * Sent to the admin when a team member is removed.
- */
-export interface TeamMemberRemovedData {
-  adminFirstName: string;
-  memberFullName: string;
-  companyName: string;
 }
 
 export interface FeatureAnnouncementData {
@@ -142,7 +81,6 @@ export interface FeatureAnnouncementData {
 // =============================================================================
 
 const colors = {
-  // Light mode (default)
   background: '#f5f5f5',
   card: '#ffffff',
   text: '#171717',
@@ -153,7 +91,6 @@ const colors = {
   success: '#22c55e',
   warning: '#f59e0b',
   error: '#ef4444',
-  // Dark mode overrides
   dark: {
     background: '#0a0a0a',
     card: '#171717',
@@ -389,161 +326,9 @@ const detailRow = (label: string, value: string): string => `
   </tr>
 `;
 
-const badge = (text: string, color: string): string => `
-  <span style="display: inline-block; padding: 4px 10px; font-size: 12px; font-weight: 600; color: ${color}; background-color: ${color}15; border-radius: 4px;">${text}</span>
-`;
-
-const divider = (): string => `
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-    <tr><td class="email-border" style="height: 1px; background-color: ${colors.border};"></td></tr>
-  </table>
-`;
-
-const alertBox = (text: string, type: 'warning' | 'error' | 'success' = 'warning'): string => {
-  const colorMap = { warning: colors.warning, error: colors.error, success: colors.success };
-  const bgColor = colorMap[type];
-  return `
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${bgColor}10; border-left: 4px solid ${bgColor}; border-radius: 4px;">
-    <tr>
-      <td style="padding: 16px;">
-        <p class="email-text" style="margin: 0; font-size: 14px; line-height: 1.5; color: ${colors.text};">${text}</p>
-      </td>
-    </tr>
-  </table>
-`;
-};
-
 // =============================================================================
-// EXISTING TEMPLATES
+// FRONTEND-ONLY TEMPLATES (No edge function equivalent)
 // =============================================================================
-
-export function generateTeamInvitationEmail(data: TeamInvitationData): string {
-  const content = `
-    ${heading(`You're invited to join ${data.companyName}`)}
-    ${paragraph(`<strong>${data.invitedBy}</strong> has invited you to collaborate on Pilot as part of ${data.companyName}.`)}
-    ${paragraph('Pilot helps teams manage conversations, leads, and customer interactions with AI-powered assistance.', true)}
-    ${spacer(8)}
-    ${button('Accept Invitation', data.signupUrl)}
-    ${spacer(24)}
-    ${paragraph("If you weren't expecting this invitation, you can safely ignore this email.", true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `${data.invitedBy} invited you to join ${data.companyName} on Pilot`,
-    content,
-    footer: 'social-unsubscribe',
-    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#team-emails',
-  });
-}
-
-export function generateBookingConfirmationEmail(data: BookingConfirmationData): string {
-  const content = `
-    ${heading('Your booking is confirmed')}
-    ${paragraph(`Hi <strong>${data.visitorName}</strong>, your appointment has been scheduled.`)}
-    
-    <!-- Event Card -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>
-        <td style="padding: 20px;">
-          <p class="email-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: ${colors.text};">${data.eventType}</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            ${detailRow('Date', data.date)}
-            ${detailRow('Time', `${data.time} (${data.timezone})`)}
-            ${data.location ? detailRow('Location', data.location) : ''}
-            ${data.notes ? detailRow('Notes', data.notes) : ''}
-          </table>
-        </td>
-      </tr>
-    </table>
-    
-    ${data.calendarLink ? `${spacer(24)}${button('Add to Calendar', data.calendarLink)}` : ''}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `Your ${data.eventType} is confirmed for ${data.date} at ${data.time}`,
-    content,
-    footer: 'simple',
-  });
-}
-
-export function generateScheduledReportEmail(data: ScheduledReportData): string {
-  const formatBadge = data.format ? `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-      <tr>
-        <td style="padding: 4px 10px; font-size: 12px; font-weight: 600; color: ${colors.textMuted}; background-color: ${colors.background}; border-radius: 4px; text-transform: uppercase;">
-          ${data.format.toUpperCase()} Report
-        </td>
-      </tr>
-    </table>
-  ` : '';
-
-  const content = `
-    ${heading('Your Report is Ready')}
-    ${formatBadge}
-    ${paragraph(`Your <strong>${data.reportName}</strong> covering <strong>${data.dateRange}</strong> has been generated and is ready to download.`)}
-    ${spacer(8)}
-    ${button('Download Report', data.viewReportUrl)}
-    ${spacer(24)}
-    ${paragraph("This report was automatically generated based on your scheduled report settings.", true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready to download`,
-    content,
-    footer: 'social-unsubscribe',
-    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#report-emails',
-  });
-}
-
-export function generateWeeklyReportEmail(data: WeeklyReportData): string {
-  const metricsHtml = data.metrics.map(m => {
-    const changeColor = m.change?.startsWith('+') || m.change?.startsWith('↑') ? '#22c55e' 
-      : m.change?.startsWith('-') || m.change?.startsWith('↓') ? '#ef4444' 
-      : colors.textMuted;
-    
-    return `
-      <td width="50%" style="padding: 6px; vertical-align: top;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-          <tr>
-            <td style="padding: 16px; text-align: center;">
-              <p class="email-text" style="margin: 0 0 4px 0; font-size: 24px; font-weight: 600; color: ${colors.text};">${m.value}</p>
-              <p class="email-text-muted" style="margin: 0; font-size: 13px; color: ${colors.textMuted};">${m.label}</p>
-              ${m.change ? `<p style="margin: 4px 0 0 0; font-size: 12px; color: ${changeColor};">${m.change}</p>` : ''}
-            </td>
-          </tr>
-        </table>
-      </td>
-    `;
-  });
-  
-  // Build 2x2 grid rows
-  const rows: string[] = [];
-  for (let i = 0; i < metricsHtml.length; i += 2) {
-    const cell1 = metricsHtml[i] || '';
-    const cell2 = metricsHtml[i + 1] || '<td width="50%"></td>';
-    rows.push(`<tr>${cell1}${cell2}</tr>`);
-  }
-  
-  const content = `
-    ${heading(data.reportName)}
-    ${paragraph(`Here's your report for ${data.dateRange}.`)}
-    
-    <!-- Metrics Grid - 2 columns -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-      ${rows.join('')}
-    </table>
-    
-    ${spacer(24)}
-    ${button('Review Analytics', data.viewReportUrl)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `Your ${data.reportName} for ${data.dateRange} is ready`,
-    content,
-    footer: 'social-unsubscribe',
-    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#report-emails',
-  });
-}
 
 export function generatePasswordResetEmail(data: PasswordResetData): string {
   const greeting = data.userName ? `Hi ${data.userName},` : 'Hi,';
@@ -597,10 +382,6 @@ export function generateSignupConfirmationEmail(data: SignupConfirmationData): s
 // These use Supabase template variables for copy/paste into Auth settings
 // =============================================================================
 
-/**
- * Password Reset email template for Supabase Dashboard.
- * Uses Supabase template variables: {{ .ConfirmationURL }}
- */
 export function generateSupabasePasswordResetEmail(): string {
   const content = `
     ${heading('Reset your password')}
@@ -620,10 +401,6 @@ export function generateSupabasePasswordResetEmail(): string {
   });
 }
 
-/**
- * Signup Confirmation email template for Supabase Dashboard.
- * Uses Supabase template variables: {{ .ConfirmationURL }}
- */
 export function generateSupabaseSignupConfirmationEmail(): string {
   const content = `
     ${heading('Confirm your email')}
@@ -642,10 +419,6 @@ export function generateSupabaseSignupConfirmationEmail(): string {
   });
 }
 
-/**
- * Team Invitation (Invite User) email template for Supabase Dashboard.
- * Uses Supabase template variables: {{ .ConfirmationURL }}
- */
 export function generateSupabaseTeamInvitationEmail(): string {
   const content = `
     ${heading("You're invited to join Pilot")}
@@ -666,7 +439,7 @@ export function generateSupabaseTeamInvitationEmail(): string {
 }
 
 // =============================================================================
-// NEW TEMPLATES - HIGH PRIORITY
+// BOOKING TEMPLATES (No edge function equivalent)
 // =============================================================================
 
 export function generateBookingCancellationEmail(data: BookingCancellationData): string {
@@ -731,89 +504,6 @@ export function generateBookingReminderEmail(data: BookingReminderData): string 
   });
 }
 
-export function generateNewLeadNotificationEmail(data: NewLeadNotificationData): string {
-  const source = data.source || 'Ari Agent';
-  
-  const content = `
-    ${heading('You have a new lead')}
-    ${paragraph('View the lead to see more details.')}
-    
-    <!-- Lead Card -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>
-        <td style="padding: 20px;">
-          <p class="email-text" style="margin: 0 0 12px 0; font-size: 18px; font-weight: 600; color: ${colors.text};">${data.leadName}</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            ${data.leadEmail ? detailRow('Email', data.leadEmail) : ''}
-            ${data.leadPhone ? detailRow('Phone', data.leadPhone) : ''}
-            ${detailRow('Source', source)}
-          </table>
-          ${data.message ? `
-            ${spacer(12)}
-            <p class="email-text-muted" style="margin: 0; font-size: 14px; font-style: italic; color: ${colors.textMuted};">"${data.message}"</p>
-          ` : ''}
-        </td>
-      </tr>
-    </table>
-    
-    ${spacer(24)}
-    ${button('View Lead', data.viewLeadUrl)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `New lead: ${data.leadName} from ${source}`,
-    content,
-    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#lead-emails',
-  });
-}
-
-// =============================================================================
-// NEW TEMPLATES - MEDIUM PRIORITY
-// =============================================================================
-
-export function generateWelcomeEmail(data: WelcomeEmailData): string {
-  const companyNote = data.companyName 
-    ? ` We're excited to have ${data.companyName} on board.`
-    : '';
-  
-  const content = `
-    ${heading(`Welcome to Pilot, ${data.userName}!`)}
-    ${paragraph(`Thanks for joining Pilot.${companyNote}`)}
-    ${paragraph('Pilot helps you manage conversations, capture leads, and provide AI-powered customer support—all in one place.', true)}
-    
-    <!-- Quick Start -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>
-        <td style="padding: 20px;">
-          <p class="email-text" style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: ${colors.text};">Get started in 3 steps:</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr>
-              <td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">1. Set up your AI agent</td>
-            </tr>
-            <tr>
-              <td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">2. Add your knowledge base</td>
-            </tr>
-            <tr>
-              <td class="email-text" style="padding: 8px 0; font-size: 14px; color: ${colors.text};">3. Install the widget on your site</td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-    
-    ${spacer(24)}
-    ${button('Get Started', data.getStartedUrl)}
-    ${spacer(16)}
-    ${paragraph("Need help? Reply to this email and we'll get back to you.", true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `Welcome to Pilot, ${data.userName}! Let's get you set up.`,
-    content,
-    footer: 'social',
-  });
-}
-
 export function generateBookingRescheduledEmail(data: BookingRescheduledData): string {
   const content = `
     ${heading('Your booking has been rescheduled')}
@@ -855,58 +545,9 @@ export function generateBookingRescheduledEmail(data: BookingRescheduledData): s
   });
 }
 
-export function generateWebhookFailureAlertEmail(data: WebhookFailureAlertData): string {
-  const content = `
-    ${heading('Webhook delivery failed')}
-    ${alertBox(`Failed to deliver to <strong>${data.webhookName}</strong> after ${data.retryCount} retries.`, 'error')}
-    ${spacer(16)}
-    
-    <!-- Error Details -->
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-detail-bg email-bg" style="background-color: ${colors.background}; border-radius: 8px;">
-      <tr>
-        <td style="padding: 20px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            ${detailRow('Endpoint', data.endpoint)}
-            ${detailRow('Error Code', String(data.errorCode))}
-            ${detailRow('Failed At', data.failedAt)}
-            ${detailRow('Retries', String(data.retryCount))}
-          </table>
-          ${spacer(12)}
-          <p class="email-text-muted" style="margin: 0 0 4px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: ${colors.textMuted};">Error Message</p>
-          <p class="email-text-error" style="margin: 0; font-size: 13px; font-family: monospace; padding: 8px; background-color: ${colors.card}; border-radius: 4px; color: ${colors.error};">${data.errorMessage}</p>
-        </td>
-      </tr>
-    </table>
-    
-    ${spacer(24)}
-    ${button('Configure Webhook', data.configureUrl)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `Webhook failed: ${data.webhookName} - Error ${data.errorCode}`,
-    content,
-    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#agent-emails',
-  });
-}
-
 // =============================================================================
-// NEW TEMPLATES - LOWER PRIORITY
+// FEATURE ANNOUNCEMENT (No edge function equivalent)
 // =============================================================================
-
-export function generateTeamMemberRemovedEmail(data: TeamMemberRemovedData): string {
-  const content = `
-    ${heading('Team member removed')}
-    ${paragraph(`Hi <strong>${data.adminFirstName}</strong>, your team member <strong>${data.memberFullName}</strong> has been removed from <strong>${data.companyName}</strong>.`)}
-    ${spacer(8)}
-    ${paragraph('This team member no longer has access to your Pilot account.', true)}
-  `;
-  
-  return generateWrapper({
-    preheaderText: `${data.memberFullName} has been removed from ${data.companyName}`,
-    content,
-    unsubscribeUrl: 'https://app.getpilot.io/settings?tab=notifications#team-emails',
-  });
-}
 
 export function generateFeatureAnnouncementEmail(data: FeatureAnnouncementData): string {
   const content = `

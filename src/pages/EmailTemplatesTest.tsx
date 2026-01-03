@@ -2,9 +2,10 @@
  * Email Templates Test Page
  * 
  * Dev-only page for previewing and testing email templates with sidebar navigation.
+ * Uses the preview-email-template edge function for templates with production equivalents.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,16 +13,13 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Copy01, Send01, Loading02, ChevronDown } from '@untitledui/icons';
+import { Copy01, Send01, Loading02, ChevronDown, RefreshCw02 } from '@untitledui/icons';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
 import { EmailPreviewModeToggle, type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
 import {
-  generateTeamInvitationEmail,
-  generateBookingConfirmationEmail,
-  generateScheduledReportEmail,
-  generateWeeklyReportEmail,
+  // Frontend-only templates (no edge function equivalent)
   generatePasswordResetEmail,
   generateSignupConfirmationEmail,
   generateSupabasePasswordResetEmail,
@@ -29,33 +27,42 @@ import {
   generateSupabaseTeamInvitationEmail,
   generateBookingCancellationEmail,
   generateBookingReminderEmail,
-  generateNewLeadNotificationEmail,
-  
-  generateWelcomeEmail,
   generateBookingRescheduledEmail,
-  
-  generateWebhookFailureAlertEmail,
-  generateTeamMemberRemovedEmail,
   generateFeatureAnnouncementEmail,
-  type TeamInvitationData,
-  type BookingConfirmationData,
-  type ScheduledReportData,
-  type WeeklyReportData,
+  // Types only - no functions imported for edge-backed templates
   type PasswordResetData,
   type SignupConfirmationData,
   type BookingCancellationData,
   type BookingReminderData,
-  type NewLeadNotificationData,
-  
-  type WelcomeEmailData,
   type BookingRescheduledData,
-  
-  type WebhookFailureAlertData,
-  type TeamMemberRemovedData,
   type FeatureAnnouncementData,
 } from '@/lib/email-templates';
 
 type PreviewWidth = 'mobile' | 'desktop';
+
+// Templates that have edge function equivalents
+const EDGE_BACKED_TEMPLATES: EmailTemplateType[] = [
+  'invitation',
+  'booking',
+  'report',
+  'weekly-report',
+  'new-lead',
+  'welcome',
+  'webhook-failure',
+  'team-member-removed',
+];
+
+// Map frontend template types to edge function template types
+const TEMPLATE_TYPE_MAP: Record<string, string> = {
+  'invitation': 'team-invitation',
+  'booking': 'booking-confirmation',
+  'report': 'scheduled-report',
+  'weekly-report': 'weekly-report',
+  'new-lead': 'new-lead',
+  'welcome': 'welcome',
+  'webhook-failure': 'webhook-failure',
+  'team-member-removed': 'team-member-removed',
+};
 
 interface EmailPreviewProps {
   html: string;
@@ -64,9 +71,11 @@ interface EmailPreviewProps {
   templateType: string;
   subject: string;
   darkMode: boolean;
+  isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
-function EmailPreview({ html, width, showSource, templateType, subject, darkMode }: EmailPreviewProps) {
+function EmailPreview({ html, width, showSource, templateType, subject, darkMode, isLoading, onRefresh }: EmailPreviewProps) {
   const iframeWidth = width === 'mobile' ? 375 : 600;
   const [testEmail, setTestEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -91,9 +100,10 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
       if (error) throw error;
       toast.success(`Test email sent to ${testEmail}`);
       setTestEmail('');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to send test email';
       console.error('Failed to send test email:', error);
-      toast.error(error.message || 'Failed to send test email');
+      toast.error(message);
     } finally {
       setIsSending(false);
     }
@@ -146,6 +156,11 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
           )}
         </CardTitle>
         <div className="flex items-center gap-2 flex-1 justify-end">
+          {onRefresh && (
+            <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isLoading}>
+              <RefreshCw02 size={16} className={isLoading ? 'animate-spin' : ''} />
+            </Button>
+          )}
           <Input
             type="email"
             placeholder="test@example.com"
@@ -164,7 +179,11 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {showSource ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center h-[650px] bg-muted/20">
+            <Loading02 size={24} className="animate-spin text-muted-foreground" />
+          </div>
+        ) : showSource ? (
           <pre className="p-4 text-xs overflow-auto max-h-[600px] bg-muted">
             <code>{html}</code>
           </pre>
@@ -197,6 +216,10 @@ export default function EmailTemplatesTest() {
   const [previewMode, setPreviewMode] = useState<EmailPreviewMode>('preview');
   const [darkMode, setDarkMode] = useState(false);
   const [mockDataOpen, setMockDataOpen] = useState(false);
+  
+  // Edge function preview state
+  const [edgeHtml, setEdgeHtml] = useState<string>('');
+  const [isLoadingEdge, setIsLoadingEdge] = useState(false);
 
   // Derive showSource and supabaseExportMode from previewMode
   const showSource = previewMode === 'source';
@@ -204,15 +227,21 @@ export default function EmailTemplatesTest() {
 
   // Check if current template supports Supabase export
   const supportsSupabaseExport = activeTemplate === 'password-reset' || activeTemplate === 'signup-confirmation' || activeTemplate === 'invitation';
+  
+  // Check if current template is backed by edge function
+  const isEdgeBacked = EDGE_BACKED_TEMPLATES.includes(activeTemplate);
 
-  // Existing template data
-  const [invitationData, setInvitationData] = useState<TeamInvitationData>({
+  // =============================================================================
+  // MOCK DATA STATE - Edge-backed templates
+  // =============================================================================
+  
+  const [invitationData, setInvitationData] = useState({
     invitedBy: 'John Smith',
     companyName: 'Acme Corporation',
     signupUrl: 'https://app.getpilot.io/signup?token=abc123',
   });
 
-  const [bookingData, setBookingData] = useState<BookingConfirmationData>({
+  const [bookingData, setBookingData] = useState({
     visitorName: 'Michael Chen',
     eventType: 'Product Demo',
     date: 'Thursday, January 15, 2025',
@@ -220,17 +249,16 @@ export default function EmailTemplatesTest() {
     timezone: 'EST',
     location: 'Google Meet',
     notes: 'Looking forward to showing you our new features!',
-    calendarLink: 'https://calendar.google.com/event?id=abc123',
   });
 
-  const [reportData, setReportData] = useState<ScheduledReportData>({
+  const [reportData, setReportData] = useState({
     reportName: 'scheduled report',
     dateRange: 'Dec 1 - Dec 31, 2025',
-    format: 'pdf',
+    format: 'pdf' as 'pdf' | 'csv',
     viewReportUrl: 'https://app.getpilot.io/analytics',
   });
 
-  const [weeklyReportData, setWeeklyReportData] = useState<WeeklyReportData>({
+  const [weeklyReportData, setWeeklyReportData] = useState({
     reportName: 'Weekly Report',
     dateRange: 'Jan 6 - Jan 12, 2025',
     metrics: [
@@ -241,6 +269,41 @@ export default function EmailTemplatesTest() {
     ],
     viewReportUrl: 'https://app.getpilot.io/analytics',
   });
+
+  const [newLeadData, setNewLeadData] = useState({
+    leadName: 'Sarah Johnson',
+    leadEmail: 'sarah@example.com',
+    leadPhone: '+1 (555) 123-4567',
+    source: 'Ari Agent',
+    message: 'Interested in the Enterprise plan. Need a demo.',
+    viewLeadUrl: 'https://app.getpilot.io/leads/123',
+  });
+
+  const [welcomeData, setWelcomeData] = useState({
+    userName: 'Alex',
+    companyName: 'Acme Inc',
+    getStartedUrl: 'https://app.getpilot.io/onboarding',
+  });
+
+  const [webhookFailureData, setWebhookFailureData] = useState({
+    webhookName: 'CRM Sync',
+    endpoint: 'https://api.example.com/webhook',
+    errorCode: 500,
+    errorMessage: 'Internal Server Error: Connection timeout after 30s',
+    failedAt: 'Jan 10, 2025 at 3:45 PM',
+    retryCount: 3,
+    configureUrl: 'https://app.getpilot.io/settings/webhooks',
+  });
+
+  const [teamMemberRemovedData, setTeamMemberRemovedData] = useState({
+    adminFirstName: 'John',
+    memberFullName: 'Jane Doe',
+    companyName: 'Acme Corporation',
+  });
+
+  // =============================================================================
+  // MOCK DATA STATE - Frontend-only templates
+  // =============================================================================
 
   const [passwordResetData, setPasswordResetData] = useState<PasswordResetData>({
     userName: 'Alex',
@@ -254,7 +317,6 @@ export default function EmailTemplatesTest() {
     expiresIn: '24 hours',
   });
 
-  // NEW template data
   const [bookingCancellationData, setBookingCancellationData] = useState<BookingCancellationData>({
     visitorName: 'Michael Chen',
     eventType: 'Product Demo',
@@ -276,21 +338,6 @@ export default function EmailTemplatesTest() {
     calendarLink: 'https://calendar.google.com/event?id=abc123',
   });
 
-  const [newLeadData, setNewLeadData] = useState<NewLeadNotificationData>({
-    leadName: 'Sarah Johnson',
-    leadEmail: 'sarah@example.com',
-    leadPhone: '+1 (555) 123-4567',
-    source: 'Ari Agent',
-    message: 'Interested in the Enterprise plan. Need a demo.',
-    viewLeadUrl: 'https://app.getpilot.io/leads/123',
-  });
-
-  const [welcomeData, setWelcomeData] = useState<WelcomeEmailData>({
-    userName: 'Alex',
-    companyName: 'Acme Inc',
-    getStartedUrl: 'https://app.getpilot.io/onboarding',
-  });
-
   const [bookingRescheduledData, setBookingRescheduledData] = useState<BookingRescheduledData>({
     visitorName: 'Michael Chen',
     eventType: 'Product Demo',
@@ -302,28 +349,75 @@ export default function EmailTemplatesTest() {
     calendarLink: 'https://calendar.google.com/event?id=abc123',
   });
 
-  const [webhookFailureData, setWebhookFailureData] = useState<WebhookFailureAlertData>({
-    webhookName: 'CRM Sync',
-    endpoint: 'https://api.example.com/webhook',
-    errorCode: 500,
-    errorMessage: 'Internal Server Error: Connection timeout after 30s',
-    failedAt: 'Jan 10, 2025 at 3:45 PM',
-    retryCount: 3,
-    configureUrl: 'https://app.getpilot.io/settings/webhooks',
-  });
-
-  const [teamMemberRemovedData, setTeamMemberRemovedData] = useState<TeamMemberRemovedData>({
-    adminFirstName: 'John',
-    memberFullName: 'Jane Doe',
-    companyName: 'Acme Corporation',
-  });
-
   const [featureAnnouncementData, setFeatureAnnouncementData] = useState<FeatureAnnouncementData>({
     featureTitle: 'Introducing AI-Powered Lead Scoring',
     description: 'Our new AI-powered lead scoring automatically prioritizes your most promising leads based on conversation context, engagement patterns, and buying signals. Focus on what matters most.',
     imageUrl: 'https://placehold.co/520x260/171717/fafafa?text=AI+Lead+Scoring',
     learnMoreUrl: 'https://app.getpilot.io/features/lead-scoring',
   });
+
+  // =============================================================================
+  // EDGE FUNCTION PREVIEW
+  // =============================================================================
+
+  const getEdgeTemplateData = useCallback(() => {
+    switch (activeTemplate) {
+      case 'invitation':
+        return invitationData;
+      case 'booking':
+        return bookingData;
+      case 'report':
+        return reportData;
+      case 'weekly-report':
+        return weeklyReportData;
+      case 'new-lead':
+        return newLeadData;
+      case 'welcome':
+        return welcomeData;
+      case 'webhook-failure':
+        return webhookFailureData;
+      case 'team-member-removed':
+        return teamMemberRemovedData;
+      default:
+        return null;
+    }
+  }, [activeTemplate, invitationData, bookingData, reportData, weeklyReportData, newLeadData, welcomeData, webhookFailureData, teamMemberRemovedData]);
+
+  const fetchEdgePreview = useCallback(async () => {
+    if (!isEdgeBacked || supabaseExportMode) return;
+    
+    const edgeTemplateType = TEMPLATE_TYPE_MAP[activeTemplate];
+    const data = getEdgeTemplateData();
+    
+    if (!edgeTemplateType || !data) return;
+    
+    setIsLoadingEdge(true);
+    try {
+      const { data: response, error } = await supabase.functions.invoke('preview-email-template', {
+        body: { templateType: edgeTemplateType, data },
+      });
+      
+      if (error) throw error;
+      setEdgeHtml(response.html);
+    } catch (error) {
+      console.error('Failed to fetch edge preview:', error);
+      toast.error('Failed to load preview from edge function');
+      setEdgeHtml('');
+    } finally {
+      setIsLoadingEdge(false);
+    }
+  }, [activeTemplate, isEdgeBacked, supabaseExportMode, getEdgeTemplateData]);
+
+  // Fetch edge preview when template or data changes
+  useEffect(() => {
+    if (isEdgeBacked && !supabaseExportMode) {
+      fetchEdgePreview();
+    }
+  }, [fetchEdgePreview, isEdgeBacked, supabaseExportMode]);
+
+  // =============================================================================
+  // TEMPLATE HTML GENERATION
+  // =============================================================================
 
   const getTemplateHtml = (): string => {
     // For Supabase export mode, return the template variable version
@@ -336,20 +430,18 @@ export default function EmailTemplatesTest() {
       }
     }
     
+    // For edge-backed templates, use the fetched HTML
+    if (isEdgeBacked) {
+      return edgeHtml;
+    }
+    
+    // Frontend-only templates
     switch (activeTemplate) {
-      case 'invitation': return generateTeamInvitationEmail(invitationData);
-      case 'booking': return generateBookingConfirmationEmail(bookingData);
-      case 'report': return generateScheduledReportEmail(reportData);
-      case 'weekly-report': return generateWeeklyReportEmail(weeklyReportData);
       case 'password-reset': return generatePasswordResetEmail(passwordResetData);
       case 'signup-confirmation': return generateSignupConfirmationEmail(signupConfirmationData);
       case 'booking-cancellation': return generateBookingCancellationEmail(bookingCancellationData);
       case 'booking-reminder': return generateBookingReminderEmail(bookingReminderData);
-      case 'new-lead': return generateNewLeadNotificationEmail(newLeadData);
-      case 'welcome': return generateWelcomeEmail(welcomeData);
       case 'booking-rescheduled': return generateBookingRescheduledEmail(bookingRescheduledData);
-      case 'webhook-failure': return generateWebhookFailureAlertEmail(webhookFailureData);
-      case 'team-member-removed': return generateTeamMemberRemovedEmail(teamMemberRemovedData);
       case 'feature-announcement': return generateFeatureAnnouncementEmail(featureAnnouncementData);
       default: return '';
     }
@@ -375,7 +467,6 @@ export default function EmailTemplatesTest() {
     }
   };
 
-  /** Get a compact summary of mock data for the collapsed state */
   const getMockDataSummary = (): string => {
     switch (activeTemplate) {
       case 'invitation': return `${invitationData.invitedBy}, ${invitationData.companyName}`;
@@ -396,6 +487,10 @@ export default function EmailTemplatesTest() {
     }
   };
 
+  // =============================================================================
+  // MOCK DATA CONTROLS
+  // =============================================================================
+
   const renderMockDataControls = () => {
     switch (activeTemplate) {
       case 'invitation':
@@ -403,30 +498,15 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="inv-by" className="text-xs">Invited By</Label>
-              <Input
-                id="inv-by"
-                value={invitationData.invitedBy}
-                onChange={(e) => setInvitationData({ ...invitationData, invitedBy: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input id="inv-by" value={invitationData.invitedBy} onChange={(e) => setInvitationData({ ...invitationData, invitedBy: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="inv-company" className="text-xs">Company Name</Label>
-              <Input
-                id="inv-company"
-                value={invitationData.companyName}
-                onChange={(e) => setInvitationData({ ...invitationData, companyName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input id="inv-company" value={invitationData.companyName} onChange={(e) => setInvitationData({ ...invitationData, companyName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="inv-url" className="text-xs">Signup URL</Label>
-              <Input
-                id="inv-url"
-                value={invitationData.signupUrl}
-                onChange={(e) => setInvitationData({ ...invitationData, signupUrl: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input id="inv-url" value={invitationData.signupUrl} onChange={(e) => setInvitationData({ ...invitationData, signupUrl: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -436,51 +516,27 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Visitor Name</Label>
-              <Input
-                value={bookingData.visitorName}
-                onChange={(e) => setBookingData({ ...bookingData, visitorName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingData.visitorName} onChange={(e) => setBookingData({ ...bookingData, visitorName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Event Type</Label>
-              <Input
-                value={bookingData.eventType}
-                onChange={(e) => setBookingData({ ...bookingData, eventType: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingData.eventType} onChange={(e) => setBookingData({ ...bookingData, eventType: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Date</Label>
-              <Input
-                value={bookingData.date}
-                onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingData.date} onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Time</Label>
-              <Input
-                value={bookingData.time}
-                onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingData.time} onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Timezone</Label>
-              <Input
-                value={bookingData.timezone}
-                onChange={(e) => setBookingData({ ...bookingData, timezone: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingData.timezone} onChange={(e) => setBookingData({ ...bookingData, timezone: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Location</Label>
-              <Input
-                value={bookingData.location || ''}
-                onChange={(e) => setBookingData({ ...bookingData, location: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingData.location || ''} onChange={(e) => setBookingData({ ...bookingData, location: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -490,29 +546,16 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Report Name</Label>
-              <Input
-                value={reportData.reportName}
-                onChange={(e) => setReportData({ ...reportData, reportName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={reportData.reportName} onChange={(e) => setReportData({ ...reportData, reportName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Date Range</Label>
-              <Input
-                value={reportData.dateRange}
-                onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={reportData.dateRange} onChange={(e) => setReportData({ ...reportData, dateRange: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Format</Label>
-              <Select
-                value={reportData.format || 'pdf'}
-                onValueChange={(value: 'pdf' | 'csv') => setReportData({ ...reportData, format: value })}
-              >
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={reportData.format || 'pdf'} onValueChange={(value: 'pdf' | 'csv') => setReportData({ ...reportData, format: value })}>
+                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pdf">PDF</SelectItem>
                   <SelectItem value="csv">CSV</SelectItem>
@@ -527,19 +570,11 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Report Name</Label>
-              <Input
-                value={weeklyReportData.reportName}
-                onChange={(e) => setWeeklyReportData({ ...weeklyReportData, reportName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={weeklyReportData.reportName} onChange={(e) => setWeeklyReportData({ ...weeklyReportData, reportName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Date Range</Label>
-              <Input
-                value={weeklyReportData.dateRange}
-                onChange={(e) => setWeeklyReportData({ ...weeklyReportData, dateRange: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={weeklyReportData.dateRange} onChange={(e) => setWeeklyReportData({ ...weeklyReportData, dateRange: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -549,27 +584,15 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">User Name</Label>
-              <Input
-                value={passwordResetData.userName || ''}
-                onChange={(e) => setPasswordResetData({ ...passwordResetData, userName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={passwordResetData.userName || ''} onChange={(e) => setPasswordResetData({ ...passwordResetData, userName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Reset URL</Label>
-              <Input
-                value={passwordResetData.resetUrl}
-                onChange={(e) => setPasswordResetData({ ...passwordResetData, resetUrl: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={passwordResetData.resetUrl} onChange={(e) => setPasswordResetData({ ...passwordResetData, resetUrl: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Expires In</Label>
-              <Input
-                value={passwordResetData.expiresIn || ''}
-                onChange={(e) => setPasswordResetData({ ...passwordResetData, expiresIn: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={passwordResetData.expiresIn || ''} onChange={(e) => setPasswordResetData({ ...passwordResetData, expiresIn: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -579,27 +602,15 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">User Name</Label>
-              <Input
-                value={signupConfirmationData.userName || ''}
-                onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, userName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={signupConfirmationData.userName || ''} onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, userName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Confirmation URL</Label>
-              <Input
-                value={signupConfirmationData.confirmationUrl}
-                onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, confirmationUrl: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={signupConfirmationData.confirmationUrl} onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, confirmationUrl: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Expires In</Label>
-              <Input
-                value={signupConfirmationData.expiresIn || ''}
-                onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, expiresIn: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={signupConfirmationData.expiresIn || ''} onChange={(e) => setSignupConfirmationData({ ...signupConfirmationData, expiresIn: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -609,43 +620,23 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Visitor Name</Label>
-              <Input
-                value={bookingCancellationData.visitorName}
-                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, visitorName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingCancellationData.visitorName} onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, visitorName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Event Type</Label>
-              <Input
-                value={bookingCancellationData.eventType}
-                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, eventType: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingCancellationData.eventType} onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, eventType: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Date</Label>
-              <Input
-                value={bookingCancellationData.date}
-                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, date: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingCancellationData.date} onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, date: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Time</Label>
-              <Input
-                value={bookingCancellationData.time}
-                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, time: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingCancellationData.time} onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, time: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Reason</Label>
-              <Input
-                value={bookingCancellationData.reason || ''}
-                onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, reason: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingCancellationData.reason || ''} onChange={(e) => setBookingCancellationData({ ...bookingCancellationData, reason: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -655,27 +646,15 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Visitor Name</Label>
-              <Input
-                value={bookingReminderData.visitorName}
-                onChange={(e) => setBookingReminderData({ ...bookingReminderData, visitorName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingReminderData.visitorName} onChange={(e) => setBookingReminderData({ ...bookingReminderData, visitorName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Event Type</Label>
-              <Input
-                value={bookingReminderData.eventType}
-                onChange={(e) => setBookingReminderData({ ...bookingReminderData, eventType: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingReminderData.eventType} onChange={(e) => setBookingReminderData({ ...bookingReminderData, eventType: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Reminder Time</Label>
-              <Input
-                value={bookingReminderData.reminderTime}
-                onChange={(e) => setBookingReminderData({ ...bookingReminderData, reminderTime: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingReminderData.reminderTime} onChange={(e) => setBookingReminderData({ ...bookingReminderData, reminderTime: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -685,35 +664,19 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Lead Name</Label>
-              <Input
-                value={newLeadData.leadName}
-                onChange={(e) => setNewLeadData({ ...newLeadData, leadName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={newLeadData.leadName} onChange={(e) => setNewLeadData({ ...newLeadData, leadName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Email</Label>
-              <Input
-                value={newLeadData.leadEmail || ''}
-                onChange={(e) => setNewLeadData({ ...newLeadData, leadEmail: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={newLeadData.leadEmail || ''} onChange={(e) => setNewLeadData({ ...newLeadData, leadEmail: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Source</Label>
-              <Input
-                value={newLeadData.source}
-                onChange={(e) => setNewLeadData({ ...newLeadData, source: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={newLeadData.source} onChange={(e) => setNewLeadData({ ...newLeadData, source: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="col-span-3 space-y-2">
               <Label className="text-xs">Message</Label>
-              <Input
-                value={newLeadData.message || ''}
-                onChange={(e) => setNewLeadData({ ...newLeadData, message: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={newLeadData.message || ''} onChange={(e) => setNewLeadData({ ...newLeadData, message: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -723,27 +686,15 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">User Name</Label>
-              <Input
-                value={welcomeData.userName}
-                onChange={(e) => setWelcomeData({ ...welcomeData, userName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={welcomeData.userName} onChange={(e) => setWelcomeData({ ...welcomeData, userName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Company</Label>
-              <Input
-                value={welcomeData.companyName || ''}
-                onChange={(e) => setWelcomeData({ ...welcomeData, companyName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={welcomeData.companyName || ''} onChange={(e) => setWelcomeData({ ...welcomeData, companyName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Get Started URL</Label>
-              <Input
-                value={welcomeData.getStartedUrl}
-                onChange={(e) => setWelcomeData({ ...welcomeData, getStartedUrl: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={welcomeData.getStartedUrl} onChange={(e) => setWelcomeData({ ...welcomeData, getStartedUrl: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -753,51 +704,27 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Visitor Name</Label>
-              <Input
-                value={bookingRescheduledData.visitorName}
-                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, visitorName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingRescheduledData.visitorName} onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, visitorName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Old Date</Label>
-              <Input
-                value={bookingRescheduledData.oldDate}
-                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, oldDate: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingRescheduledData.oldDate} onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, oldDate: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">New Date</Label>
-              <Input
-                value={bookingRescheduledData.newDate}
-                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, newDate: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingRescheduledData.newDate} onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, newDate: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Old Time</Label>
-              <Input
-                value={bookingRescheduledData.oldTime}
-                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, oldTime: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingRescheduledData.oldTime} onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, oldTime: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">New Time</Label>
-              <Input
-                value={bookingRescheduledData.newTime}
-                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, newTime: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingRescheduledData.newTime} onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, newTime: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Timezone</Label>
-              <Input
-                value={bookingRescheduledData.timezone}
-                onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, timezone: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={bookingRescheduledData.timezone} onChange={(e) => setBookingRescheduledData({ ...bookingRescheduledData, timezone: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -807,37 +734,19 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Webhook Name</Label>
-              <Input
-                value={webhookFailureData.webhookName}
-                onChange={(e) => setWebhookFailureData({ ...webhookFailureData, webhookName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={webhookFailureData.webhookName} onChange={(e) => setWebhookFailureData({ ...webhookFailureData, webhookName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Error Code</Label>
-              <Input
-                type="number"
-                value={webhookFailureData.errorCode}
-                onChange={(e) => setWebhookFailureData({ ...webhookFailureData, errorCode: Number(e.target.value) })}
-                className="h-8 text-sm"
-              />
+              <Input type="number" value={webhookFailureData.errorCode} onChange={(e) => setWebhookFailureData({ ...webhookFailureData, errorCode: Number(e.target.value) })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Retry Count</Label>
-              <Input
-                type="number"
-                value={webhookFailureData.retryCount}
-                onChange={(e) => setWebhookFailureData({ ...webhookFailureData, retryCount: Number(e.target.value) })}
-                className="h-8 text-sm"
-              />
+              <Input type="number" value={webhookFailureData.retryCount} onChange={(e) => setWebhookFailureData({ ...webhookFailureData, retryCount: Number(e.target.value) })} className="h-8 text-sm" />
             </div>
             <div className="col-span-3 space-y-2">
               <Label className="text-xs">Error Message</Label>
-              <Input
-                value={webhookFailureData.errorMessage}
-                onChange={(e) => setWebhookFailureData({ ...webhookFailureData, errorMessage: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={webhookFailureData.errorMessage} onChange={(e) => setWebhookFailureData({ ...webhookFailureData, errorMessage: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -847,27 +756,15 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Admin First Name</Label>
-              <Input
-                value={teamMemberRemovedData.adminFirstName}
-                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, adminFirstName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={teamMemberRemovedData.adminFirstName} onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, adminFirstName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Member Full Name</Label>
-              <Input
-                value={teamMemberRemovedData.memberFullName}
-                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, memberFullName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={teamMemberRemovedData.memberFullName} onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, memberFullName: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Company Name</Label>
-              <Input
-                value={teamMemberRemovedData.companyName}
-                onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, companyName: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={teamMemberRemovedData.companyName} onChange={(e) => setTeamMemberRemovedData({ ...teamMemberRemovedData, companyName: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -877,27 +774,15 @@ export default function EmailTemplatesTest() {
           <div className="p-4 grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs">Feature Title</Label>
-              <Input
-                value={featureAnnouncementData.featureTitle}
-                onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, featureTitle: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={featureAnnouncementData.featureTitle} onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, featureTitle: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="space-y-2">
               <Label className="text-xs">Image URL</Label>
-              <Input
-                value={featureAnnouncementData.imageUrl || ''}
-                onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, imageUrl: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={featureAnnouncementData.imageUrl || ''} onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, imageUrl: e.target.value })} className="h-8 text-sm" />
             </div>
             <div className="col-span-2 space-y-2">
               <Label className="text-xs">Description</Label>
-              <Input
-                value={featureAnnouncementData.description}
-                onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, description: e.target.value })}
-                className="h-8 text-sm"
-              />
+              <Input value={featureAnnouncementData.description} onChange={(e) => setFeatureAnnouncementData({ ...featureAnnouncementData, description: e.target.value })} className="h-8 text-sm" />
             </div>
           </div>
         );
@@ -923,7 +808,12 @@ export default function EmailTemplatesTest() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-xl font-semibold text-foreground">Email Templates</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">Preview and test email templates</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Preview and test email templates
+                {isEdgeBacked && !supabaseExportMode && (
+                  <span className="ml-2 text-xs text-green-600 dark:text-green-400">• Using Edge Function</span>
+                )}
+              </p>
             </div>
             <EmailPreviewModeToggle
               mode={previewMode}
@@ -976,6 +866,8 @@ export default function EmailTemplatesTest() {
             darkMode={darkMode}
             templateType={activeTemplate}
             subject={getTemplateSubject()}
+            isLoading={isEdgeBacked && isLoadingEdge}
+            onRefresh={isEdgeBacked ? fetchEdgePreview : undefined}
           />
         </div>
       </main>
