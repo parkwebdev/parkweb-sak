@@ -955,15 +955,15 @@ export const LeadDetailsSheet = ({
 
                   {/* Dynamic Custom Fields - Accordion */}
                   {customFields.length > 0 && (
-                    <Accordion type="single" collapsible className="border-0 px-0 bg-transparent">
+                    <Accordion type="single" collapsible className="border-0 p-0 bg-transparent rounded-none">
                       <AccordionItem value="additional-info" className="border-b-0">
                         <AccordionTrigger className="py-2 text-sm font-medium hover:no-underline">
-                          <div className="flex items-center justify-between w-full pr-2">
+                          <div className="flex items-center justify-between w-full">
                             <span>Additional Information</span>
                             <span className="text-xs text-muted-foreground font-normal">({customFields.length} fields)</span>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="pt-2 space-y-3">
+                        <AccordionContent className="pt-1 pb-2 space-y-3">
                           {customFields.map(([key, value]) => {
                             const currentCustomData = { ...((lead.data || {}) as Record<string, unknown>), ...editedCustomData };
                             return (
@@ -992,8 +992,6 @@ export const LeadDetailsSheet = ({
                       />
                     </div>
                   )}
-
-                  <Separator />
 
                   {/* Actions */}
                   <div className="flex gap-2">

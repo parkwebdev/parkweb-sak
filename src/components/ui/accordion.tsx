@@ -152,7 +152,7 @@ function AccordionContent({
             transition={transition}
             style={{ overflow: 'hidden' }}
           >
-            <div className={cn("text-muted-foreground pb-4", className)}>
+            <div className={cn("text-muted-foreground", className)}>
               {children}
             </div>
           </motion.div>
@@ -172,7 +172,7 @@ function AccordionContent({
               transition={transition}
               style={{ overflow: 'hidden' }}
             >
-              <div className={cn("text-muted-foreground pb-4", className)}>
+              <div className={cn("text-muted-foreground", className)}>
                 {children}
               </div>
             </motion.div>
