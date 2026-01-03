@@ -146,7 +146,7 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
           contextSummary={contextSummary}
           rightSlot={
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-              <SelectTrigger className="w-[120px] h-8 text-xs">
+              <SelectTrigger size="sm" className="w-[120px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

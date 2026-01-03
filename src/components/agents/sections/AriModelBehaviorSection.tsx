@@ -496,7 +496,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
             <div className="space-y-2">
               <Label className="text-sm font-medium">AI Model</Label>
               <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
-                <SelectTrigger className="h-10">
+                <SelectTrigger>
                   <SelectValue>
                     <div className="flex items-center gap-2">
                       {getModelIcon(MODELS.find(m => m.value === formData.model)?.provider || '')}
@@ -615,7 +615,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
                 value={formData.response_length_preset}
                 onValueChange={(value) => handleUpdate({ response_length_preset: value })}
               >
-                <SelectTrigger className="h-10">
+                <SelectTrigger>
                   <SelectValue>
                     {RESPONSE_LENGTH_PRESETS.find(p => p.value === formData.response_length_preset)?.label}
                   </SelectValue>

@@ -143,7 +143,7 @@ export const BookingTrendChart = React.memo(function BookingTrendChart({
           trendPeriod={trendPeriod}
           rightSlot={
             <Select value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <SelectTrigger className="w-[130px] h-8 text-xs">
+              <SelectTrigger size="sm" className="w-[130px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

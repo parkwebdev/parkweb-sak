@@ -197,11 +197,11 @@ export const ContactForm = ({
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
           />
-          <WidgetInput name="firstName" placeholder="First name" className="text-sm" required autoComplete="given-name" />
+          <WidgetInput name="firstName" placeholder="First name" required autoComplete="given-name" />
           {formErrors.firstName && <p className="text-xs text-destructive" role="alert">{formErrors.firstName}</p>}
-          <WidgetInput name="lastName" placeholder="Last name" className="text-sm" required autoComplete="family-name" />
+          <WidgetInput name="lastName" placeholder="Last name" required autoComplete="family-name" />
           {formErrors.lastName && <p className="text-xs text-destructive" role="alert">{formErrors.lastName}</p>}
-          <WidgetInput name="email" type="email" placeholder="Email" className="text-sm" required autoComplete="email" />
+          <WidgetInput name="email" type="email" placeholder="Email" required autoComplete="email" />
           {formErrors.email && <p className="text-xs text-destructive" role="alert">{formErrors.email}</p>}
           
           {customFields.map(field => (
@@ -223,7 +223,7 @@ export const ContactForm = ({
                 </>
               ) : field.fieldType === 'select' ? (
                 <WidgetSelect name={field.id} required={field.required}>
-                  <WidgetSelectTrigger className="text-sm">
+                  <WidgetSelectTrigger>
                     <WidgetSelectValue placeholder={field.label} />
                   </WidgetSelectTrigger>
                   <WidgetSelectContent>
@@ -233,18 +233,17 @@ export const ContactForm = ({
                   </WidgetSelectContent>
                 </WidgetSelect>
               ) : field.fieldType === 'textarea' ? (
-                <Textarea name={field.id} placeholder={field.label} className="text-sm" required={field.required} />
+                <Textarea name={field.id} placeholder={field.label} required={field.required} />
               ) : field.fieldType === 'phone' ? (
-                <Suspense fallback={<WidgetInput placeholder={field.label} className="text-sm" disabled />}>
+                <Suspense fallback={<WidgetInput placeholder={field.label} disabled />}>
                   <PhoneInputField 
                     name={field.id}
                     placeholder={field.label}
-                    className="text-sm"
                     required={field.required}
                   />
                 </Suspense>
               ) : (
-                <WidgetInput name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} className="text-sm" required={field.required} />
+                <WidgetInput name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} required={field.required} />
               )}
             </div>
           ))}
