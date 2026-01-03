@@ -1,10 +1,10 @@
 /**
- * @fileoverview Dropdown menu for toggling field/column visibility.
+ * @fileoverview Icon-only dropdown for toggling field/column visibility.
  * Shows kanban card fields or table columns based on view mode.
  */
 
 import React from 'react';
-import { ChevronDown, LayoutGrid01, Rows03 } from '@untitledui/icons';
+import { Settings01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,6 +14,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { 
   CARD_FIELDS, 
   FIELD_GROUP_LABELS, 
@@ -55,30 +60,24 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
     });
   };
 
-  // Count visible properties
-  const visibleCount = viewMode === 'kanban' 
-    ? visibleCardFields.size 
-    : TABLE_COLUMNS.filter(col => columnVisibility[col.id] !== false).length;
-
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 px-2.5 gap-1.5"
-        >
-          {viewMode === 'kanban' ? (
-            <LayoutGrid01 size={14} className="text-muted-foreground" />
-          ) : (
-            <Rows03 size={14} className="text-muted-foreground" />
-          )}
-          <span className="text-sm">Properties</span>
-          <span className="text-xs text-muted-foreground">({visibleCount})</span>
-          <ChevronDown size={14} className="text-muted-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-52 bg-popover max-h-80 overflow-y-auto">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <Settings01 size={16} className="text-muted-foreground" />
+              <span className="sr-only">Properties</span>
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Properties</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="end" className="w-52 bg-popover max-h-80 overflow-y-auto">
         {viewMode === 'kanban' ? (
           // Kanban: Show card field toggles grouped
           <>

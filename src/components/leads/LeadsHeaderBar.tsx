@@ -1,6 +1,6 @@
 /**
  * @fileoverview Full-width header bar for the Leads page.
- * Provides search, inline filters, sort, properties, and view mode toggle.
+ * Clean layout: Search | Active Filters | Icon Controls | View Toggle
  */
 
 import React from 'react';
@@ -8,7 +8,7 @@ import { SearchMd, X } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ViewModeToggle } from './ViewModeToggle';
-import { LeadsFiltersDropdown, type DateRangeFilter } from './LeadsFiltersDropdown';
+import { LeadsActiveFilters, type DateRangeFilter } from './LeadsActiveFilters';
 import { LeadsSortDropdown } from './LeadsSortDropdown';
 import { LeadsPropertiesDropdown } from './LeadsPropertiesDropdown';
 import type { LeadStage } from '@/hooks/useLeadStages';
@@ -68,9 +68,9 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
 }: LeadsHeaderBarProps) {
   return (
     <div className="sticky top-0 z-10 bg-background border-b border-border">
-      <div className="flex items-center gap-2 px-4 lg:px-8 py-3">
-        {/* Left: Search */}
-        <div className="flex-1 max-w-sm">
+      <div className="flex items-center gap-3 px-4 lg:px-8 py-3">
+        {/* Search - compact */}
+        <div className="w-48 lg:w-64 flex-shrink-0">
           <div className="relative">
             <Input
               type="text"
@@ -94,33 +94,38 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
           </div>
         </div>
 
-        {/* Center-Right: Filters, Sort, Properties */}
-        <LeadsFiltersDropdown
+        {/* Active filter chips + Add filter button */}
+        <LeadsActiveFilters
           stages={stages}
           selectedStageIds={selectedStageIds}
           onStageFilterChange={onStageFilterChange}
           dateRange={dateRange}
           onDateRangeChange={onDateRangeChange}
         />
-        
-        <LeadsSortDropdown
-          sortOption={sortOption}
-          onSortChange={onSortChange}
-        />
 
-        <LeadsPropertiesDropdown
-          viewMode={viewMode}
-          visibleCardFields={visibleCardFields}
-          onToggleCardField={onToggleCardField}
-          columnVisibility={columnVisibility}
-          onColumnVisibilityChange={onColumnVisibilityChange}
-        />
+        {/* Spacer */}
+        <div className="flex-1" />
 
-        {/* Right: View Mode Toggle */}
-        <ViewModeToggle
-          viewMode={viewMode}
-          onViewModeChange={onViewModeChange}
-        />
+        {/* Right controls - icon buttons */}
+        <div className="flex items-center gap-1">
+          {viewMode === 'kanban' && (
+            <LeadsSortDropdown
+              sortOption={sortOption}
+              onSortChange={onSortChange}
+            />
+          )}
+          <LeadsPropertiesDropdown
+            viewMode={viewMode}
+            visibleCardFields={visibleCardFields}
+            onToggleCardField={onToggleCardField}
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={onColumnVisibilityChange}
+          />
+          <ViewModeToggle
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+          />
+        </div>
       </div>
     </div>
   );

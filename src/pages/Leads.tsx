@@ -31,7 +31,7 @@ import {
   type SortOption,
 } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
-import { type DateRangeFilter } from '@/components/leads/LeadsFiltersDropdown';
+import { type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
 import type { VisibilityState } from '@tanstack/react-table';
