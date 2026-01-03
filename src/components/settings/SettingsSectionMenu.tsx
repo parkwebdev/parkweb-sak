@@ -23,6 +23,7 @@ import {
   CreditCard01,
   BarChart01,
   Bell01,
+  Shield01,
 } from '@untitledui/icons';
 
 // Re-export the tab type from routes.ts
@@ -36,6 +37,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   CreditCard01,
   BarChart01,
   Bell01,
+  Shield01,
 };
 
 function getIcon(iconName: string): React.ComponentType<{ size?: number; className?: string }> {

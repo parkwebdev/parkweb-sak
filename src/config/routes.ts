@@ -194,6 +194,14 @@ export const SETTINGS_TABS: readonly SettingsTabConfig[] = [
     description: 'Manage notification preferences',
     // No permission - always visible
   },
+  {
+    id: 'settings-sessions',
+    label: 'Sessions',
+    tabParam: 'sessions',
+    iconName: 'Shield01',
+    description: 'Manage active sessions and devices',
+    // No permission - always visible (users should always be able to manage their own sessions)
+  },
 ] as const;
 
 /** Type for settings tab param values */

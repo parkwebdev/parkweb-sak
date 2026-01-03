@@ -71,12 +71,20 @@ function getMarkerFillColor(count: number, maxCount: number): string {
   return "#22c55e";
 }
 
-function createCircleSVG(fillColor: string, size: number, withBorder: boolean = true): string {
-  // Simple circle marker with optional border
-  return `
-  <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" fill="${fillColor}"${withBorder ? ' stroke="white" stroke-width="2"' : ''}/>
-  </svg>`;
+// Create circle SVG as React component for safe rendering (no dangerouslySetInnerHTML)
+function CircleMarkerIcon({ fillColor, size, withBorder = true }: { fillColor: string; size: number; withBorder?: boolean }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle 
+        cx="12" 
+        cy="12" 
+        r="10" 
+        fill={fillColor}
+        stroke={withBorder ? "white" : undefined}
+        strokeWidth={withBorder ? 2 : undefined}
+      />
+    </svg>
+  );
 }
 
 function buildGeoJson(markers: MapMarker[]) {
@@ -387,15 +395,29 @@ export function MapLibreMap({
           });
         }
 
+        // Build popup content safely using DOM APIs (no innerHTML/setHTML XSS vulnerability)
+        const popupContent = document.createElement('div');
+        popupContent.style.cssText = 'padding: 8px; text-align: center; font-family: system-ui, sans-serif; background: white; border-radius: 6px;';
+        
+        const countDiv = document.createElement('div');
+        countDiv.style.cssText = 'font-size: 18px; font-weight: 700; color: #1f2937;';
+        countDiv.textContent = String(pointCount);
+        
+        const labelDiv = document.createElement('div');
+        labelDiv.style.cssText = 'font-size: 12px; color: #6b7280;';
+        labelDiv.textContent = 'locations';
+        
+        const hintDiv = document.createElement('div');
+        hintDiv.style.cssText = 'font-size: 10px; margin-top: 4px; color: #9ca3af;';
+        hintDiv.textContent = 'Click to expand';
+        
+        popupContent.appendChild(countDiv);
+        popupContent.appendChild(labelDiv);
+        popupContent.appendChild(hintDiv);
+
         hoverPopupRef.current
           .setLngLat(coords)
-          .setHTML(
-            `<div style="padding: 8px; text-align: center; font-family: system-ui, sans-serif; color: #1f2937; background: white; border-radius: 6px;">
-              <div style="font-size: 18px; font-weight: 700; color: #1f2937;">${pointCount}</div>
-              <div style="font-size: 12px; color: #6b7280;">locations</div>
-              <div style="font-size: 10px; margin-top: 4px; color: #9ca3af;">Click to expand</div>
-            </div>`
-          )
+          .setDOMContent(popupContent)
           .addTo(map);
       });
 
@@ -600,37 +622,54 @@ export function MapLibreMap({
       const fontSize = Math.max(8, size * 0.35);
       const animationDelay = index * 0.05;
       
-      // All animations and transforms go on .marker-inner, NOT the root el
-      // Glassmorphism: transparent background + backdrop blur + thin border
-      el.innerHTML = `
-        <div class="marker-inner" style="
-          width:${size}px;
-          height:${size}px;
-          position:relative;
-          border-radius:50%;
-          background: ${fillColor}cc;
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          border: 1px solid rgba(255,255,255,0.35);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.2);
-          opacity:0;
-          animation: marker-bounce-in 0.5s ease-out ${animationDelay}s both;
-          transition: transform 0.2s ease-out, width 0.2s ease-out, height 0.2s ease-out;
-        ">
-          <!-- Pulse ring (hidden by default, shown on hover) -->
-          <div class="pulse-ring" style="
-            position: absolute;
-            inset: -4px;
-            border-radius: 50%;
-            border: 1.5px solid ${fillColor};
-            opacity: 0;
-            pointer-events: none;
-          "></div>
-          <span style="position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;color:white;font-size:${fontSize}px;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,0.4);transition:font-size 0.2s ease-out;">
-            ${m.count > 99 ? "99+" : m.count}
-          </span>
-        </div>
+      // Build marker content using safe DOM APIs (no innerHTML XSS vulnerability)
+      const inner = document.createElement('div');
+      inner.className = 'marker-inner';
+      inner.style.cssText = `
+        width:${size}px;
+        height:${size}px;
+        position:relative;
+        border-radius:50%;
+        background: ${fillColor}cc;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.35);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.2);
+        opacity:0;
+        animation: marker-bounce-in 0.5s ease-out ${animationDelay}s both;
+        transition: transform 0.2s ease-out, width 0.2s ease-out, height 0.2s ease-out;
       `;
+      
+      // Pulse ring (hidden by default, shown on hover)
+      const pulseRing = document.createElement('div');
+      pulseRing.className = 'pulse-ring';
+      pulseRing.style.cssText = `
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 1.5px solid ${fillColor};
+        opacity: 0;
+        pointer-events: none;
+      `;
+      
+      // Count text
+      const textSpan = document.createElement('span');
+      textSpan.style.cssText = `
+        position:absolute;
+        top:0;left:0;right:0;height:100%;
+        display:flex;align-items:center;justify-content:center;
+        pointer-events:none;
+        color:white;
+        font-size:${fontSize}px;
+        font-weight:600;
+        text-shadow:0 1px 3px rgba(0,0,0,0.4);
+        transition:font-size 0.2s ease-out;
+      `;
+      textSpan.textContent = m.count > 99 ? "99+" : String(m.count);
+      
+      inner.appendChild(pulseRing);
+      inner.appendChild(textSpan);
+      el.appendChild(inner);
 
       el.addEventListener("mouseenter", () => {
         // Scale up inner element (NOT root el - that would break MapLibre positioning)
@@ -651,22 +690,51 @@ export function MapLibreMap({
         }
 
         const flag = m.countryCode && m.countryCode.length === 2 ? countryCodeToFlag(m.countryCode) : "";
+        // Build popup content safely using DOM APIs (no innerHTML/setHTML XSS vulnerability)
+        const popupContent = document.createElement('div');
+        popupContent.style.cssText = 'padding: 8px; font-family: system-ui, sans-serif; background: white; border-radius: 6px;';
+        
+        const headerRow = document.createElement('div');
+        headerRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 4px;';
+        
+        if (flag) {
+          const flagSpan = document.createElement('span');
+          flagSpan.style.fontSize = '20px';
+          flagSpan.textContent = flag;
+          headerRow.appendChild(flagSpan);
+        }
+        
+        const infoDiv = document.createElement('div');
+        
+        const countryDiv = document.createElement('div');
+        countryDiv.style.cssText = 'font-weight: 600; font-size: 14px; color: #1f2937;';
+        countryDiv.textContent = m.country;
+        infoDiv.appendChild(countryDiv);
+        
+        if (m.city) {
+          const cityDiv = document.createElement('div');
+          cityDiv.style.cssText = 'font-size: 12px; color: #6b7280;';
+          cityDiv.textContent = m.city;
+          infoDiv.appendChild(cityDiv);
+        }
+        
+        headerRow.appendChild(infoDiv);
+        popupContent.appendChild(headerRow);
+        
+        const visitorDiv = document.createElement('div');
+        visitorDiv.style.cssText = 'font-size: 14px; font-weight: 500; color: #374151;';
+        
+        const countSpan = document.createElement('span');
+        countSpan.style.cssText = 'font-size: 18px; font-weight: 700;';
+        countSpan.textContent = String(m.count);
+        
+        visitorDiv.appendChild(countSpan);
+        visitorDiv.appendChild(document.createTextNode(` visitor${m.count !== 1 ? "s" : ""}`));
+        popupContent.appendChild(visitorDiv);
+
         hoverPopupRef.current
           .setLngLat([m.lng, m.lat])
-          .setHTML(
-            `<div style="padding: 8px; font-family: system-ui, sans-serif; color: #1f2937; background: white; border-radius: 6px;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                ${flag ? `<span style="font-size: 20px;">${flag}</span>` : ""}
-                <div>
-                  <div style="font-weight: 600; font-size: 14px; color: #1f2937;">${m.country}</div>
-                  ${m.city ? `<div style="font-size: 12px; color: #6b7280;">${m.city}</div>` : ""}
-                </div>
-              </div>
-              <div style="font-size: 14px; font-weight: 500; color: #374151;">
-                <span style="font-size: 18px; font-weight: 700;">${m.count}</span> visitor${m.count !== 1 ? "s" : ""}
-              </div>
-            </div>`
-          )
+          .setDOMContent(popupContent)
           .addTo(map);
       });
 
@@ -846,15 +914,15 @@ export function MapLibreMap({
           ) : (
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#22c55e", 14, false) }} />
+                <CircleMarkerIcon fillColor="#22c55e" size={14} withBorder={false} />
                 <span>Low</span>
               </div>
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#f59e0b", 14, false) }} />
+                <CircleMarkerIcon fillColor="#f59e0b" size={14} withBorder={false} />
                 <span>Medium</span>
               </div>
               <div className="flex items-center gap-2">
-                <span dangerouslySetInnerHTML={{ __html: createCircleSVG("#ef4444", 14, false) }} />
+                <CircleMarkerIcon fillColor="#ef4444" size={14} withBorder={false} />
                 <span>High</span>
               </div>
             </div>
