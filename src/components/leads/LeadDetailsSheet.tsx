@@ -25,6 +25,7 @@ import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import type { Tables, Enums, Json } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
+import { LeadAssigneeSelector } from './LeadAssigneeSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -491,7 +492,7 @@ export const LeadDetailsSheet = ({
         ) : (
           <>
             <SheetHeader>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <SheetTitle>Lead Details</SheetTitle>
                 <LeadStatusDropdown
                   stageId={{ ...lead, ...editedLead }.stage_id}
@@ -499,6 +500,14 @@ export const LeadDetailsSheet = ({
                     lastEditedFieldRef.current = 'stage_id';
                     setEditedLead({ ...editedLead, stage_id: stageId });
                   }}
+                />
+                <LeadAssigneeSelector
+                  assignedTo={{ ...lead, ...editedLead }.assigned_to || null}
+                  onAssign={(userId) => {
+                    lastEditedFieldRef.current = 'assigned_to';
+                    setEditedLead({ ...editedLead, assigned_to: userId });
+                  }}
+                  size="sm"
                 />
               </div>
             </SheetHeader>

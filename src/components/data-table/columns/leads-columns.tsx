@@ -1,6 +1,8 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
+import { User01 } from '@untitledui/icons';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { PHONE_FIELD_KEYS } from '@/lib/field-keys';
 import type { Tables } from '@/integrations/supabase/types';
@@ -13,15 +15,33 @@ export type Lead = Tables<'leads'> & {
   };
 };
 
+interface TeamMember {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
 interface LeadsColumnsProps {
   onView: (lead: Lead) => void;
   onStageChange: (leadId: string, stageId: string) => void;
   StatusDropdown: React.ComponentType<{ stageId: string | null; onStageChange: (stageId: string) => void }>;
+  teamMembers?: TeamMember[];
+}
+
+function getInitials(name: string | null | undefined): string {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 export const createLeadsColumns = ({
   onStageChange,
   StatusDropdown,
+  teamMembers = [],
 }: LeadsColumnsProps): ColumnDef<Lead>[] => [
   {
     id: 'select',
@@ -214,6 +234,38 @@ export const createLeadsColumns = ({
         <span className="truncate block" title={sourceText !== '-' ? sourceText : undefined}>
           {sourceText}
         </span>
+      );
+    },
+  },
+  {
+    accessorKey: 'assigned_to',
+    size: 140,
+    minSize: 100,
+    maxSize: 180,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Assignee" />
+    ),
+    cell: ({ row }) => {
+      const assignedTo = row.original.assigned_to;
+      if (!assignedTo) {
+        return <span className="text-muted-foreground">Unassigned</span>;
+      }
+      
+      const member = teamMembers.find(m => m.user_id === assignedTo);
+      if (!member) {
+        return <span className="text-muted-foreground">Unknown</span>;
+      }
+      
+      return (
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={member.avatar_url || undefined} alt={member.display_name || ''} />
+            <AvatarFallback className="text-2xs">
+              {getInitials(member.display_name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="truncate">{member.display_name?.split(' ')[0] || 'Team Member'}</span>
+        </div>
       );
     },
   },

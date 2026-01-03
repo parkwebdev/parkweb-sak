@@ -27,7 +27,9 @@ import {
   KanbanCard,
 } from "@/components/ui/kanban";
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
+import { useTeam } from '@/hooks/useTeam';
 import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
+import { LeadAssigneeAvatar } from './LeadAssigneeSelector';
 import type { Tables } from "@/integrations/supabase/types";
 import type { SortOption } from "@/components/leads/LeadsViewSettingsSheet";
 import type { ConversationMetadata } from "@/types/metadata";
@@ -45,6 +47,7 @@ type KanbanLead = {
   created_at: string;
   updated_at: string;
   hasConversation: boolean;
+  assigned_to: string | null;
   // From conversation metadata
   location: string | null;
   entryPage: string | null;
@@ -174,13 +177,16 @@ function formatEntryPage(url: string | undefined): string | null {
   }
 }
 
+
 // Individual lead card content - memoized for performance
 export const LeadCardContent = React.memo(function LeadCardContent({ 
   lead,
   visibleFields = getDefaultVisibleFields(),
+  teamMembers = [],
 }: { 
   lead: KanbanLead;
   visibleFields?: Set<CardFieldKey>;
+  teamMembers?: { user_id: string; display_name: string | null; avatar_url: string | null }[];
 }) {
   // Build display name from first/last name fields
   const displayName = useMemo(() => {
@@ -233,8 +239,8 @@ export const LeadCardContent = React.memo(function LeadCardContent({
         </div>
       )}
 
-      {/* Priority & Tags */}
-      {(visibleFields.has('priority') || visibleFields.has('tags')) && (
+      {/* Priority, Tags & Assignee */}
+      {(visibleFields.has('priority') || visibleFields.has('tags') || visibleFields.has('assignee')) && (
         <div className="flex flex-wrap items-center gap-1">
           {visibleFields.has('priority') && lead.priority && (
             <PriorityBadge priority={lead.priority} />
@@ -256,6 +262,13 @@ export const LeadCardContent = React.memo(function LeadCardContent({
                 </span>
               )}
             </>
+          )}
+          {visibleFields.has('assignee') && lead.assigned_to && (
+            <LeadAssigneeAvatar 
+              assignedTo={lead.assigned_to} 
+              teamMembers={teamMembers} 
+              size="sm" 
+            />
           )}
         </div>
       )}
@@ -299,6 +312,7 @@ export function LeadsKanbanBoard({
   sortOption,
 }: LeadsKanbanBoardProps) {
   const { stages, loading: stagesLoading, updateStage } = useLeadStages();
+  const { teamMembers } = useTeam();
 
   // Build columns from stages
   const columns = useMemo(() => 
@@ -362,6 +376,7 @@ export function LeadsKanbanBoard({
         created_at: lead.created_at,
         updated_at: lead.updated_at,
         hasConversation: !!lead.conversation_id,
+        assigned_to: lead.assigned_to || null,
         location,
         entryPage,
         priority,
@@ -480,10 +495,10 @@ export function LeadsKanbanBoard({
   const renderCardOverlay = useCallback(
     (lead: KanbanLead) => (
       <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-md">
-        <LeadCardContent lead={lead} visibleFields={visibleFields} />
+        <LeadCardContent lead={lead} visibleFields={visibleFields} teamMembers={teamMembers} />
       </Card>
     ),
-    [visibleFields]
+    [visibleFields, teamMembers]
   );
 
   // Handle stage name updates
@@ -549,7 +564,7 @@ export function LeadsKanbanBoard({
                         }
                       }}
                     >
-                      <LeadCardContent lead={lead} visibleFields={visibleFields} />
+                      <LeadCardContent lead={lead} visibleFields={visibleFields} teamMembers={teamMembers} />
                     </KanbanCard>
                   )}
                 </KanbanCards>
