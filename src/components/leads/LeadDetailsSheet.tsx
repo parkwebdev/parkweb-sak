@@ -10,19 +10,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Trash02, LinkExternal02, InfoCircle, Globe01, Monitor01, Clock, Browser, Link01, Plus, XClose } from '@untitledui/icons';
+import { Trash02, LinkExternal02, InfoCircle, Globe01, Monitor01, Clock, Browser, XClose } from '@untitledui/icons';
 import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFromLeadData } from '@/lib/field-keys';
 import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
 import { SkeletonLeadDetails } from '@/components/ui/page-skeleton';
-import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import type { Tables, Enums, Json } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
@@ -31,6 +29,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
 import { LeadActivityPanel } from './LeadActivityPanel';
+import { useAuth } from '@/contexts/AuthContext';
+import { queryKeys } from '@/lib/query-keys';
+import { cn } from '@/lib/utils';
 
 interface LeadDetailsSheetProps {
   lead: Tables<'leads'> | null;
@@ -98,15 +99,23 @@ export const LeadDetailsSheet = ({
 }: LeadDetailsSheetProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [editedLead, setEditedLead] = useState<Partial<Tables<'leads'>>>({});
   const [editedCustomData, setEditedCustomData] = useState<Record<string, unknown>>({});
-  const [savedField, setSavedField] = useState<string | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Track which fields are currently saving (for pulse animation)
+  const [savingFields, setSavingFields] = useState<Set<string>>(new Set());
+
+  // Track if user is actively editing to prevent state reset
+  const isEditingRef = useRef(false);
+  const isEditingNotesRef = useRef(false);
 
   // State for Priority, Tags, Notes
   const [newTag, setNewTag] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const notesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previousNotesRef = useRef<string>('');
   
   // Lead assignees hook for multi-assignee support
   const { getAssignees, addAssignee, removeAssignee } = useLeadAssignees();
@@ -169,24 +178,38 @@ export const LeadDetailsSheet = ({
 
   const conversationMetadata = (conversation?.metadata || {}) as ConversationMetadata;
 
-  // Initialize notes from conversation metadata
+  // Initialize notes from conversation metadata (only when not actively editing)
   useEffect(() => {
-    if (conversation?.metadata) {
+    if (conversation?.metadata && !isEditingNotesRef.current) {
       const meta = conversation.metadata as ConversationMetadata;
       setInternalNotes(meta.notes || '');
+      previousNotesRef.current = meta.notes || '';
     }
   }, [conversation?.id, conversation?.metadata]);
 
-  // Reset edited state when lead changes
+  // Reset edited state when lead changes (only if not actively editing)
   useEffect(() => {
+    if (isEditingRef.current) return;
+    
     setEditedLead({});
     setEditedCustomData({});
-    setSavedField(null);
     setNewTag('');
   }, [lead?.id]);
 
   // Track which field was last edited
   const lastEditedFieldRef = useRef<string | null>(null);
+
+  // Show saving pulse on a field
+  const showSavingPulse = useCallback((fieldId: string) => {
+    setSavingFields(prev => new Set(prev).add(fieldId));
+    setTimeout(() => {
+      setSavingFields(prev => {
+        const next = new Set(prev);
+        next.delete(fieldId);
+        return next;
+      });
+    }, 600);
+  }, []);
 
   // Auto-save with debounce
   const performAutoSave = useCallback(() => {
@@ -209,12 +232,11 @@ export const LeadDetailsSheet = ({
     setEditedLead({});
     setEditedCustomData({});
     
-    // Show saved indicator under the last edited field
+    // Show pulse animation on the last edited field
     if (lastEditedFieldRef.current) {
-      setSavedField(lastEditedFieldRef.current);
-      setTimeout(() => setSavedField(null), 2000);
+      showSavingPulse(lastEditedFieldRef.current);
     }
-  }, [lead, editedLead, editedCustomData, onUpdate]);
+  }, [lead, editedLead, editedCustomData, onUpdate, showSavingPulse]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -292,11 +314,36 @@ export const LeadDetailsSheet = ({
       // Invalidate conversations list for sync
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       
-      // Show saved indicator
-      setSavedField(fieldName);
-      setTimeout(() => setSavedField(null), 2000);
+      // Show pulse animation
+      showSavingPulse(fieldName);
+
+      // Log activity for internal notes changes
+      if ('notes' in updates && lead?.id && user?.id) {
+        const oldNotes = previousNotesRef.current;
+        const newNotes = updates.notes || '';
+        
+        // Only log if notes actually changed
+        if (oldNotes !== newNotes) {
+          await supabase.from('lead_activities').insert({
+            lead_id: lead.id,
+            user_id: user.id,
+            action_type: 'field_updated',
+            action_data: {
+              field: 'internal_notes',
+              from: oldNotes || null,
+              to: newNotes || null
+            }
+          });
+          
+          // Update previous notes ref
+          previousNotesRef.current = newNotes;
+          
+          // Invalidate activities to show the new entry
+          queryClient.invalidateQueries({ queryKey: queryKeys.leadActivities.list(lead.id) });
+        }
+      }
     }
-  }, [lead?.conversation_id, conversation, queryClient]);
+  }, [lead?.conversation_id, lead?.id, conversation, queryClient, showSavingPulse, user?.id]);
 
   // Handle priority change
   const handlePriorityChange = useCallback((value: string) => {
@@ -379,7 +426,17 @@ export const LeadDetailsSheet = ({
     return null;
   };
 
-  // Render input based on value type with field-level saved indicator
+  // Input class with saving pulse animation
+  const getInputClassName = (fieldId: string, baseClass: string = '') => {
+    const isSaving = savingFields.has(fieldId);
+    return cn(
+      "h-8 text-sm bg-muted/50 border-transparent focus:border-input focus:bg-background transition-all duration-200",
+      isSaving && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse",
+      baseClass
+    );
+  };
+
+  // Render input based on value type with saving pulse
   const renderCustomFieldInput = (key: string, value: unknown, currentCustomData: Record<string, unknown>) => {
     const currentValue = currentCustomData[key] ?? value;
     const fieldId = `custom_${key}`;
@@ -442,10 +499,7 @@ export const LeadDetailsSheet = ({
     if (strValue.length > 100) {
       return (
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor={key} className="text-muted-foreground">{formatLabel(key)}</Label>
-            <SavedIndicator show={savedField === fieldId} />
-          </div>
+          <Label htmlFor={key} className="text-muted-foreground">{formatLabel(key)}</Label>
           <Textarea
             id={key}
             value={strValue}
@@ -453,7 +507,13 @@ export const LeadDetailsSheet = ({
               lastEditedFieldRef.current = fieldId;
               setEditedCustomData({ ...editedCustomData, [key]: e.target.value });
             }}
+            onFocus={() => { isEditingRef.current = true; }}
+            onBlur={() => { isEditingRef.current = false; }}
             rows={3}
+            className={cn(
+              "transition-all duration-200",
+              savingFields.has(fieldId) && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
+            )}
           />
         </div>
       );
@@ -461,10 +521,7 @@ export const LeadDetailsSheet = ({
     
     return (
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor={key} className="text-muted-foreground">{formatLabel(key)}</Label>
-          <SavedIndicator show={savedField === fieldId} />
-        </div>
+        <Label htmlFor={key} className="text-muted-foreground">{formatLabel(key)}</Label>
         <Input
           id={key}
           value={strValue}
@@ -472,6 +529,9 @@ export const LeadDetailsSheet = ({
             lastEditedFieldRef.current = fieldId;
             setEditedCustomData({ ...editedCustomData, [key]: e.target.value });
           }}
+          onFocus={() => { isEditingRef.current = true; }}
+          onBlur={() => { isEditingRef.current = false; }}
+          className={getInputClassName(fieldId)}
         />
       </div>
     );
@@ -539,8 +599,10 @@ export const LeadDetailsSheet = ({
                     {lead.conversation_id && (
                       <div className="flex items-center justify-between">
                         <Label className="text-xs text-muted-foreground">Priority</Label>
-                        <div className="flex items-center gap-1">
-                          <SavedIndicator show={savedField === 'priority'} />
+                        <div className={cn(
+                          "flex items-center gap-1 rounded transition-all duration-200",
+                          savingFields.has('priority') && "ring-2 ring-primary/50"
+                        )}>
                           <Select
                             value={conversationMetadata.priority || 'none'}
                             onValueChange={handlePriorityChange}
@@ -576,11 +638,11 @@ export const LeadDetailsSheet = ({
                   {/* Tags - inline */}
                   {lead.conversation_id && (
                     <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground">Tags</Label>
-                        <SavedIndicator show={savedField === 'tags'} />
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
+                      <Label className="text-xs text-muted-foreground">Tags</Label>
+                      <div className={cn(
+                        "flex flex-wrap gap-1.5 p-1 -m-1 rounded transition-all duration-200",
+                        savingFields.has('tags') && "ring-2 ring-primary/50"
+                      )}>
                         {conversationMetadata.tags?.map((tag) => (
                           <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-xs">
                             {tag}
@@ -631,37 +693,32 @@ export const LeadDetailsSheet = ({
                     
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="firstName" className="text-xs text-muted-foreground">First Name</Label>
-                          <SavedIndicator show={savedField === 'firstName'} />
-                        </div>
+                        <Label htmlFor="firstName" className="text-xs text-muted-foreground">First Name</Label>
                         <Input
                           id="firstName"
                           value={firstName}
                           onChange={(e) => handleNameChange(e.target.value, lastName, 'firstName')}
-                          className="h-8 text-sm bg-muted/50 border-transparent focus:border-input focus:bg-background"
+                          onFocus={() => { isEditingRef.current = true; }}
+                          onBlur={() => { isEditingRef.current = false; }}
+                          className={getInputClassName('firstName')}
                         />
                       </div>
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="lastName" className="text-xs text-muted-foreground">Last Name</Label>
-                          <SavedIndicator show={savedField === 'lastName'} />
-                        </div>
+                        <Label htmlFor="lastName" className="text-xs text-muted-foreground">Last Name</Label>
                         <Input
                           id="lastName"
                           value={lastName}
                           onChange={(e) => handleNameChange(firstName, e.target.value, 'lastName')}
-                          className="h-8 text-sm bg-muted/50 border-transparent focus:border-input focus:bg-background"
+                          onFocus={() => { isEditingRef.current = true; }}
+                          onBlur={() => { isEditingRef.current = false; }}
+                          className={getInputClassName('lastName')}
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="email" className="text-xs text-muted-foreground">Email</Label>
-                          <SavedIndicator show={savedField === 'email'} />
-                        </div>
+                        <Label htmlFor="email" className="text-xs text-muted-foreground">Email</Label>
                         <Input
                           id="email"
                           type="email"
@@ -670,14 +727,13 @@ export const LeadDetailsSheet = ({
                             lastEditedFieldRef.current = 'email';
                             setEditedLead({ ...editedLead, email: e.target.value });
                           }}
-                          className="h-8 text-sm bg-muted/50 border-transparent focus:border-input focus:bg-background"
+                          onFocus={() => { isEditingRef.current = true; }}
+                          onBlur={() => { isEditingRef.current = false; }}
+                          className={getInputClassName('email')}
                         />
                       </div>
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="phone" className="text-xs text-muted-foreground">Phone</Label>
-                          <SavedIndicator show={savedField === 'phone'} />
-                        </div>
+                        <Label htmlFor="phone" className="text-xs text-muted-foreground">Phone</Label>
                         <Input
                           id="phone"
                           type="tel"
@@ -686,7 +742,9 @@ export const LeadDetailsSheet = ({
                             lastEditedFieldRef.current = 'phone';
                             setEditedLead({ ...editedLead, phone: e.target.value });
                           }}
-                          className="h-8 text-sm bg-muted/50 border-transparent focus:border-input focus:bg-background"
+                          onFocus={() => { isEditingRef.current = true; }}
+                          onBlur={() => { isEditingRef.current = false; }}
+                          className={getInputClassName('phone')}
                         />
                       </div>
                     </div>
@@ -779,16 +837,18 @@ export const LeadDetailsSheet = ({
                     <>
                       <Separator />
                       <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs text-muted-foreground">Internal Notes</Label>
-                          <SavedIndicator show={savedField === 'notes'} />
-                        </div>
+                        <Label className="text-xs text-muted-foreground">Internal Notes</Label>
                         <Textarea
                           placeholder="Add internal notes..."
                           value={internalNotes}
                           onChange={(e) => handleNotesChange(e.target.value)}
+                          onFocus={() => { isEditingNotesRef.current = true; }}
+                          onBlur={() => { isEditingNotesRef.current = false; }}
                           rows={2}
-                          className="resize-none text-sm min-h-[60px]"
+                          className={cn(
+                            "resize-none text-sm min-h-[60px] transition-all duration-200",
+                            savingFields.has('notes') && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
+                          )}
                         />
                       </div>
                     </>
@@ -811,7 +871,7 @@ export const LeadDetailsSheet = ({
                         onClick={handleDelete}
                         aria-label="Delete lead"
                       >
-                        <Trash02 className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Trash02 className="h-3.5 w-3.5" />
                       </Button>
                     )}
                   </div>
@@ -819,8 +879,8 @@ export const LeadDetailsSheet = ({
               </div>
             </div>
 
-            {/* Right column - Activity & Comments - full height with border */}
-            <div className="w-72 border-l flex-shrink-0 flex flex-col bg-muted/30">
+            {/* Right side - Activity Panel */}
+            <div className="w-[340px] border-l border-border flex flex-col min-h-0">
               <LeadActivityPanel leadId={lead.id} />
             </div>
           </>
