@@ -960,6 +960,38 @@ export type Database = {
           },
         ]
       }
+      lead_assignees: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          lead_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          lead_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          lead_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_assignees_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_stages: {
         Row: {
           color: string

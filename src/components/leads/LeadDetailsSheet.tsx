@@ -25,9 +25,10 @@ import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import type { Tables, Enums, Json } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
-import { LeadAssigneeSelector } from './LeadAssigneeSelector';
+import { LeadAssigneePicker } from './LeadAssigneePicker';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLeadAssignees } from '@/hooks/useLeadAssignees';
 
 interface LeadDetailsSheetProps {
   lead: Tables<'leads'> | null;
@@ -104,9 +105,9 @@ export const LeadDetailsSheet = ({
   const [newTag, setNewTag] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const notesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Local assignee state to prevent visual revert during save
-  const [localAssignee, setLocalAssignee] = useState<string | null>(null);
+  
+  // Lead assignees hook for multi-assignee support
+  const { getAssignees, addAssignee, removeAssignee } = useLeadAssignees();
 
   // Fetch conversation data if lead has a conversation_id
   const { data: conversation, refetch: refetchConversation } = useQuery({
@@ -180,13 +181,7 @@ export const LeadDetailsSheet = ({
     setEditedCustomData({});
     setSavedField(null);
     setNewTag('');
-    setLocalAssignee(lead?.assigned_to || null);
   }, [lead?.id]);
-
-  // Sync local assignee when lead prop changes (e.g., from real-time update)
-  useEffect(() => {
-    setLocalAssignee(lead?.assigned_to || null);
-  }, [lead?.assigned_to]);
 
   // Track which field was last edited
   const lastEditedFieldRef = useRef<string | null>(null);
@@ -510,15 +505,15 @@ export const LeadDetailsSheet = ({
                     setEditedLead({ ...editedLead, stage_id: stageId });
                   }}
                 />
-                <LeadAssigneeSelector
-                  assignedTo={localAssignee}
-                  onAssign={(userId) => {
-                    setLocalAssignee(userId); // Immediately update local state
-                    lastEditedFieldRef.current = 'assigned_to';
-                    setEditedLead({ ...editedLead, assigned_to: userId });
-                  }}
-                  size="sm"
-                />
+                {lead && (
+                  <LeadAssigneePicker
+                    leadId={lead.id}
+                    assignees={getAssignees(lead.id)}
+                    onAdd={(userId) => addAssignee(lead.id, userId)}
+                    onRemove={(userId) => removeAssignee(lead.id, userId)}
+                    size="default"
+                  />
+                )}
               </div>
             </SheetHeader>
 
