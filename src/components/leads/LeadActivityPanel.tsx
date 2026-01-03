@@ -9,6 +9,7 @@ import { useMemo, useState, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,6 +29,8 @@ import {
   Trash02,
   XClose,
   Check,
+  SearchMd,
+  FilterLines,
 } from '@untitledui/icons';
 
 interface LeadActivityPanelProps {
@@ -58,7 +61,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const isLoading = commentsLoading || activitiesLoading;
 
@@ -153,7 +156,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
     try {
       await addComment(newComment.trim());
       setNewComment('');
-      textareaRef.current?.focus();
+      inputRef.current?.focus();
     } catch (error) {
       console.error('Failed to add comment:', error);
     }
@@ -179,7 +182,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
@@ -211,8 +214,25 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="text-sm font-medium pb-3">Activity</div>
+      {/* Header - ClickUp style */}
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Activity</span>
+          {feedItems.length > 0 && (
+            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              {feedItems.length}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-0.5">
+          <IconButton size="icon-sm" variant="ghost" label="Search activity">
+            <SearchMd className="h-3.5 w-3.5" />
+          </IconButton>
+          <IconButton size="icon-sm" variant="ghost" label="Filter activity">
+            <FilterLines className="h-3.5 w-3.5" />
+          </IconButton>
+        </div>
+      </div>
 
       {/* Unified feed - scrollable */}
       <ScrollArea className="flex-1 min-h-0">
@@ -338,22 +358,27 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
         )}
       </ScrollArea>
 
-      {/* Comment input - pinned at bottom */}
+      {/* Comment input - inline send button */}
       <div className="pt-3 mt-auto border-t">
-        <Textarea
-          ref={textareaRef}
-          placeholder="Add a comment... (⌘+Enter)"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="min-h-[44px] text-xs resize-none bg-muted/30 border-muted"
-          rows={2}
-        />
-        <div className="flex justify-end mt-2">
-          <Button size="sm" onClick={handleSubmit} disabled={!newComment.trim() || isAdding}>
-            <Send01 className="h-3.5 w-3.5 mr-1.5" />
-            {isAdding ? 'Sending...' : 'Send'}
-          </Button>
+        <div className="relative">
+          <Input
+            ref={inputRef}
+            placeholder="Add a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="pr-9 h-9 text-xs bg-muted/30 border-muted"
+          />
+          <IconButton
+            size="icon-sm"
+            variant="ghost"
+            label="Send comment"
+            className="absolute right-1 top-1/2 -translate-y-1/2"
+            onClick={handleSubmit}
+            disabled={!newComment.trim() || isAdding}
+          >
+            <Send01 className="h-3.5 w-3.5" />
+          </IconButton>
         </div>
       </div>
     </div>
