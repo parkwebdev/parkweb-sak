@@ -236,7 +236,7 @@ export const KanbanCards = <T extends KanbanItemProps>({
 
   return (
     <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
-      <ScrollArea className="max-h-[calc(100vh-320px)]">
+      <ScrollArea className="max-h-[calc(100vh-200px)]">
         <div
           className={cn("flex flex-col gap-2 p-0.5 min-h-[100px]", className)}
           {...props}
