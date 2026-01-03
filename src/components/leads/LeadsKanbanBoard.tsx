@@ -31,6 +31,7 @@ import { StageProgressIcon } from "./StageProgressIcon";
 import { useTeam } from '@/hooks/useTeam';
 import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
 import { LeadAssigneePicker } from './LeadAssigneePicker';
+import { PriorityBadge } from "@/components/ui/priority-badge";
 import type { Tables } from "@/integrations/supabase/types";
 import type { SortOption } from "@/components/leads/LeadsViewSettingsSheet";
 import type { ConversationMetadata } from "@/types/metadata";
@@ -51,7 +52,8 @@ type KanbanLead = {
   // From conversation metadata
   location: string | null;
   entryPage: string | null;
-  priority: 'high' | 'medium' | 'low' | null;
+  /** Priority value from conversation metadata - passed to PriorityBadge which handles normalization */
+  priority: string | null;
   tags: string[];
   notes: string | null;
 };
@@ -167,23 +169,7 @@ function InlineStageHeader({
   );
 }
 
-// Priority badge component
-function PriorityBadge({ priority }: { priority: 'high' | 'medium' | 'low' }) {
-  const config = {
-    high: { label: 'High', className: 'bg-destructive/10 text-destructive border-destructive/20' },
-    medium: { label: 'Medium', className: 'bg-warning/10 text-warning border-warning/20' },
-    low: { label: 'Low', className: 'bg-muted text-muted-foreground border-border' },
-  };
-  
-  const { label, className } = config[priority];
-  
-  return (
-    <Badge variant="outline" className={`h-5 text-2xs px-1.5 ${className}`}>
-      <Flag01 size={10} className="mr-0.5" />
-      {label}
-    </Badge>
-  );
-}
+// PriorityBadge is now imported from @/components/ui/priority-badge
 
 // Helper to extract domain/path from URL
 function formatEntryPage(url: string | undefined): string | null {
@@ -380,19 +366,8 @@ export function LeadsKanbanBoard({
       // Format entry page
       const entryPage = formatEntryPage(metadata.referrer_journey?.landing_page);
       
-      // Map priority from ConversationMetadata to KanbanLead format
-      let priority: 'high' | 'medium' | 'low' | null = null;
-      if (metadata.priority) {
-        // Map 'normal' → 'medium', 'urgent' → 'high', ignore 'not_set'
-        const priorityMap: Record<string, 'high' | 'medium' | 'low' | null> = {
-          'high': 'high',
-          'urgent': 'high',
-          'normal': 'medium',
-          'low': 'low',
-          'not_set': null,
-        };
-        priority = priorityMap[metadata.priority] ?? null;
-      }
+      // Pass priority through directly - PriorityBadge handles normalization
+      const priority = metadata.priority || null;
       
       return {
         id: lead.id,
