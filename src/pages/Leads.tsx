@@ -339,11 +339,6 @@ function Leads({ onMenuClick }: LeadsProps) {
 
   return (
     <div className="flex flex-col h-full w-full min-w-0 bg-muted/30 overflow-y-auto">
-      <PageHeader
-        title="Leads"
-        description="Track and manage leads captured from conversations"
-        onMenuClick={onMenuClick}
-      />
 
       {/* Header bar - outside content padding for full-width effect */}
       <LeadsHeaderBar
