@@ -190,7 +190,7 @@ export function SitemapChildPages({
                   {isError && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge variant="destructive" className="text-xs h-5">
+                        <Badge variant="destructive" size="counter">
                           <AlertCircle className="h-3 w-3 mr-1" />
                           Error
                         </Badge>
