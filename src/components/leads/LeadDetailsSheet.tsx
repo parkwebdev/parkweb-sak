@@ -14,7 +14,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01 } from '@untitledui/icons';
+import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01, Mail01 } from '@untitledui/icons';
 import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFromLeadData } from '@/lib/field-keys';
 import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
@@ -797,14 +797,26 @@ export const LeadDetailsSheet = ({
                         placeholder="email@example.com"
                       />
                       {({ ...lead, ...editedLead }.email) && (
-                        <IconButton
-                          label="Copy email"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
-                        >
-                          <Copy01 className="h-3.5 w-3.5" />
-                        </IconButton>
+                        <div className="flex items-center gap-1">
+                          <IconButton
+                            label="Copy email"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
+                          >
+                            <Copy01 className="h-3.5 w-3.5" />
+                          </IconButton>
+                          <IconButton
+                            label="Send email"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={() => window.open(`mailto:${({ ...lead, ...editedLead }.email)}`, '_blank')}
+                          >
+                            <Mail01 className="h-3.5 w-3.5" />
+                          </IconButton>
+                        </div>
                       )}
                     </div>
                     
@@ -824,26 +836,26 @@ export const LeadDetailsSheet = ({
                         placeholder="(555) 123-4567"
                       />
                       {({ ...lead, ...editedLead }.phone || phoneValue) && (
-                        <>
+                        <div className="flex items-center gap-1">
                           <IconButton
                             label="Copy phone"
                             size="sm"
                             variant="ghost"
+                            className="h-8 w-8"
                             onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
                           >
                             <Copy01 className="h-3.5 w-3.5" />
                           </IconButton>
-                          <a href={`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`}>
-                            <IconButton
-                              label="Call"
-                              size="sm"
-                              variant="ghost"
-                              asChild
-                            >
-                              <Phone01 className="h-3.5 w-3.5" />
-                            </IconButton>
-                          </a>
-                        </>
+                          <IconButton
+                            label="Call"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={() => window.open(`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`, '_self')}
+                          >
+                            <Phone01 className="h-3.5 w-3.5" />
+                          </IconButton>
+                        </div>
                       )}
                     </div>
                   </div>
