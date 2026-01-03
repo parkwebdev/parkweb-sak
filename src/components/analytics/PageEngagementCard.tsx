@@ -124,8 +124,8 @@ export const PageEngagementCard = React.memo(function PageEngagementCard({
                   </p>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top">
-                <p className="text-xs max-w-48">{metric.tooltip}</p>
+              <TooltipContent side="top" className="max-w-48">
+                <p>{metric.tooltip}</p>
               </TooltipContent>
             </Tooltip>
           ))}
