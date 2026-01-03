@@ -730,7 +730,7 @@ export const LeadDetailsSheet = ({
 
               {/* Scrollable content */}
               <div className="flex-1 min-h-0 overflow-y-auto">
-                <div className="space-y-2 pb-4">
+                <div className="space-y-4 pb-4">
                   {/* Header Bar - Status, Priority, Created Date */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <LeadStatusDropdown
@@ -862,7 +862,7 @@ export const LeadDetailsSheet = ({
 
                   {/* Session Info - 2 Column Grid with background */}
                   {conversation && (
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-muted-foreground bg-muted/30 rounded-md p-3 mt-2">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-muted-foreground bg-muted/30 rounded-md p-3">
                       {/* Row 1: Source, Location */}
                       <div className="flex items-center gap-1.5 truncate">
                         {getSourceType().icon}
