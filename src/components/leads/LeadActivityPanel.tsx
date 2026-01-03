@@ -346,7 +346,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
               <FilterLines className="h-4 w-4" />
             </IconButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-popover z-50">
+          <DropdownMenuContent align="end" className="bg-popover z-50 space-y-1">
             <DropdownMenuItem onClick={() => setSortOrder('asc')} className={sortOrder === 'asc' ? 'bg-accent' : ''}>
               <ArrowNarrowUp className="h-4 w-4 mr-2" />
               Oldest first
