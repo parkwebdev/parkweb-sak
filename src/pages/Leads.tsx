@@ -18,7 +18,7 @@ import { useLeadStages } from '@/hooks/useLeadStages';
 import { useCanManage } from '@/hooks/useCanManage';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
-import { LeadsToolbar } from '@/components/leads/LeadsToolbar';
+import { LeadsHeaderBar } from '@/components/leads/LeadsHeaderBar';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { 
@@ -345,7 +345,17 @@ function Leads({ onMenuClick }: LeadsProps) {
         onMenuClick={onMenuClick}
       />
 
-      <div className="px-4 lg:px-8 mt-6 space-y-6 min-w-0">
+      {/* Header bar - outside content padding for full-width effect */}
+      <LeadsHeaderBar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onOpenSettings={() => setIsSettingsSheetOpen(true)}
+        activeCustomizationCount={activeCustomizationCount}
+      />
+
+      <div className="px-4 lg:px-8 pt-4 space-y-6 min-w-0">
 
         {/* Content */}
         {loading ? (
@@ -359,17 +369,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="space-y-4"
               >
-                {/* Unified toolbar */}
-                <LeadsToolbar
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
-                  onOpenSettings={() => setIsSettingsSheetOpen(true)}
-                  activeCustomizationCount={activeCustomizationCount}
-                />
                 <LeadsKanbanBoard
                   leads={filteredLeads}
                   onStatusChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
@@ -398,12 +398,6 @@ function Leads({ onMenuClick }: LeadsProps) {
                     setSelectedLeadIds(new Set(ids));
                     setIsDeleteDialogOpen(true);
                   } : undefined}
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  onOpenSettings={() => setIsSettingsSheetOpen(true)}
-                  activeCustomizationCount={activeCustomizationCount}
                   columnVisibility={columnVisibility}
                   onColumnVisibilityChange={handleColumnVisibilityChange}
                   columnOrder={columnOrder}

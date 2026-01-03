@@ -27,7 +27,6 @@ import {
 } from '@/components/data-table';
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
-import { LeadsToolbar } from './LeadsToolbar';
 import { Button } from '@/components/ui/button';
 import type { SortOption } from './LeadsViewSettingsSheet';
 
@@ -39,13 +38,6 @@ interface LeadsTableProps {
   onSelectionChange: (id: string, checked: boolean) => void;
   onSelectAll: (checked: boolean) => void;
   onBulkDelete?: (ids: string[]) => void;
-  viewMode: 'kanban' | 'table';
-  onViewModeChange: (mode: 'kanban' | 'table') => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  onOpenSettings?: () => void;
-  /** Number of active customizations for badge display */
-  activeCustomizationCount?: number;
   // External column visibility control
   columnVisibility: VisibilityState;
   onColumnVisibilityChange: (visibility: VisibilityState) => void;
@@ -65,12 +57,6 @@ export const LeadsTable = React.memo(function LeadsTable({
   onSelectionChange,
   onSelectAll,
   onBulkDelete,
-  viewMode,
-  onViewModeChange,
-  searchQuery,
-  onSearchChange,
-  onOpenSettings,
-  activeCustomizationCount = 0,
   columnVisibility,
   onColumnVisibilityChange,
   columnOrder,
@@ -201,14 +187,6 @@ export const LeadsTable = React.memo(function LeadsTable({
 
   return (
     <div className="space-y-4">
-      <LeadsToolbar
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
-        onOpenSettings={onOpenSettings ?? (() => {})}
-        activeCustomizationCount={activeCustomizationCount}
-      />
       <DataTable
         table={table}
         columns={orderedColumns}
