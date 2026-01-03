@@ -112,12 +112,18 @@ function InlineStageHeader({
   // Check if onUpdate was provided (means user can manage)
   const canEdit = !!onUpdate;
 
+  // Create contrasting text color based on background
+  const getContrastColor = (hexColor: string) => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+  };
+
   return (
     <div className="flex items-center gap-2">
-      <div
-        className="h-2 w-2 rounded-full"
-        style={{ backgroundColor: stage.color }}
-      />
       {isEditing && canEdit ? (
         <Input
           ref={inputRef}
@@ -131,21 +137,21 @@ function InlineStageHeader({
               setIsEditing(false);
             }
           }}
-          className="h-6 w-24 text-sm font-medium px-1"
+          className="h-6 w-24 text-sm font-medium px-2"
         />
-      ) : canEdit ? (
-        <button
-          onClick={() => setIsEditing(true)}
-          className="text-sm font-medium hover:text-primary transition-colors"
+      ) : (
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wide cursor-pointer hover:opacity-90 transition-opacity"
+          style={{ 
+            backgroundColor: stage.color,
+            color: getContrastColor(stage.color),
+          }}
+          onClick={canEdit ? () => setIsEditing(true) : undefined}
         >
           {stage.name}
-        </button>
-      ) : (
-        <span className="text-sm font-medium">{stage.name}</span>
+        </div>
       )}
-      <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-        {count}
-      </Badge>
+      <span className="text-sm font-medium text-muted-foreground">{count}</span>
     </div>
   );
 }
