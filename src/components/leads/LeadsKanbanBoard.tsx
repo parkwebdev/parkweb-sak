@@ -388,11 +388,6 @@ export function LeadsKanbanBoard({
             aVal = a.email?.toLowerCase() ?? '';
             bVal = b.email?.toLowerCase() ?? '';
             break;
-          case 'company':
-            // Company is not on KanbanLead, so fall back to name
-            aVal = a.name?.toLowerCase() ?? '';
-            bVal = b.name?.toLowerCase() ?? '';
-            break;
           case 'created_at':
             aVal = a.created_at;
             bVal = b.created_at;

@@ -7,6 +7,7 @@ import { useState, useCallback, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -241,6 +242,9 @@ export function ManageStagesDialog({ open, onOpenChange, canManage = true }: Man
       <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Manage Pipeline Stages</DialogTitle>
+          <DialogDescription>
+            Create, edit, and reorder your lead pipeline stages.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-3 py-4">
