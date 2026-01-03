@@ -12,8 +12,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { hexToRgbObject } from '@/lib/color-utils';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import type { LeadStage } from '@/hooks/useLeadStages';
@@ -134,29 +134,39 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-0">
           <div className="p-3 space-y-4">
-            {/* Stage filters */}
+            {/* Stage filters - Toggle Pills */}
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Stage</Label>
-              <div className="space-y-1">
-                {stages.map(stage => (
-                  <div key={stage.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`stage-${stage.id}`}
-                      checked={selectedStageIds.includes(stage.id)}
-                      onCheckedChange={(checked) => handleStageToggle(stage.id, checked === true)}
-                    />
-                    <label
-                      htmlFor={`stage-${stage.id}`}
-                      className="flex items-center gap-2 text-sm cursor-pointer flex-1"
+              <div className="flex flex-wrap gap-1.5">
+                {stages.map(stage => {
+                  const isSelected = selectedStageIds.includes(stage.id);
+                  const rgb = hexToRgbObject(stage.color);
+                  const bgStyle = isSelected && rgb 
+                    ? { backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` }
+                    : {};
+                  
+                  return (
+                    <button
+                      key={stage.id}
+                      onClick={() => handleStageToggle(stage.id, !isSelected)}
+                      className={`
+                        inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                        transition-all duration-150 border
+                        ${isSelected 
+                          ? 'border-transparent text-foreground' 
+                          : 'border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground'
+                        }
+                      `}
+                      style={bgStyle}
                     >
                       <span
                         className="w-2 h-2 rounded-full flex-shrink-0"
                         style={{ backgroundColor: stage.color }}
                       />
                       {stage.name}
-                    </label>
-                  </div>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
