@@ -28,6 +28,7 @@ import {
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 import { Button } from '@/components/ui/button';
+import { useTeam } from '@/hooks/useTeam';
 import type { SortOption } from './LeadsViewSettingsSheet';
 
 interface LeadsTableProps {
@@ -63,6 +64,7 @@ export const LeadsTable = React.memo(function LeadsTable({
   defaultSort,
   canManage = true,
 }: LeadsTableProps) {
+  const { teamMembers } = useTeam();
   // Initialize sorting from defaultSort
   const [sorting, setSorting] = useState<SortingState>(() => {
     if (defaultSort) {
@@ -95,8 +97,9 @@ export const LeadsTable = React.memo(function LeadsTable({
         onView,
         onStageChange,
         StatusDropdown: LeadStatusDropdown,
+        teamMembers,
       }),
-    [onView, onStageChange]
+    [onView, onStageChange, teamMembers]
   );
 
   // Reorder columns based on columnOrder prop

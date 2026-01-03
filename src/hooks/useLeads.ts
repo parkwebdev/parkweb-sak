@@ -124,6 +124,7 @@ export const useLeads = () => {
         if ('phone' in updates) {
           metadataUpdates.lead_phone = updates.phone || null;
         }
+        // Note: assigned_to is stored on the lead record, not in conversation metadata
         
         if (Object.keys(metadataUpdates).length > 0) {
           // Get current conversation metadata and merge updates

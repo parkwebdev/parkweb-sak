@@ -5,6 +5,7 @@
 
 import { 
   User01, 
+  Users01,
   Mail01, 
   Phone, 
   MarkerPin01, 
@@ -28,7 +29,8 @@ export type CardFieldKey =
   | 'tags' 
   | 'createdAt' 
   | 'lastUpdated' 
-  | 'notes';
+  | 'notes'
+  | 'assignee';
 
 /** Field group for organizing in dropdown */
 export type FieldGroup = 'contact' | 'session' | 'organization' | 'timestamps' | 'notes';
@@ -66,6 +68,7 @@ export const CARD_FIELDS: CardFieldConfig[] = [
   // Organization
   { key: 'priority', label: 'Priority', icon: Flag01, defaultVisible: true, group: 'organization' },
   { key: 'tags', label: 'Tags', icon: Tag01, defaultVisible: true, group: 'organization' },
+  { key: 'assignee', label: 'Assignee', icon: Users01, defaultVisible: true, group: 'organization' },
   
   // Timestamps
   { key: 'createdAt', label: 'Created', icon: Calendar, defaultVisible: false, group: 'timestamps' },
