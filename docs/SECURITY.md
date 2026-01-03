@@ -61,9 +61,17 @@ This section tracks the implementation status of security enhancements identifie
 | 9 | [Response Cache RLS](#rls-policies) | 🟢 Complete | Low | - |
 | 10 | [Automated Alerting](#automated-security-alerts) | 🔴 Planned | Medium | 3 hours |
 | 11 | [Key Age Warning](#key-rotation-policy) | 🔴 Planned | Medium | 1 hour |
-| 12 | [OAuth Token Encryption](#oauth-token-encryption) | 🔴 Planned | High | 3 hours |
+| 12 | [OAuth Token Encryption](#oauth-token-encryption) | 🟡 Blocked | High | 3 hours |
 
-**Legend**: 🟢 Complete | 🟡 In Progress | 🔴 Planned
+**Legend**: 🟢 Complete | 🟡 In Progress/Blocked | 🔴 Planned
+
+### OAuth Token Encryption (Blocked)
+
+OAuth token encryption requires `pgsodium` functions which need special permissions not available through standard Supabase migrations. This requires:
+- Manual configuration via Supabase dashboard SQL editor with superuser privileges
+- Or using Supabase's Transparent Column Encryption (TCE) feature
+
+**Current mitigation**: Tokens are protected by RLS policies and Supabase's encrypted-at-rest storage.
 
 ### Implemented Security Features
 
