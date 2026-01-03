@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import {
   Tooltip,
@@ -91,16 +90,26 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
                   <DropdownMenuLabel className="text-xs">
                     {FIELD_GROUP_LABELS[group]}
                   </DropdownMenuLabel>
-                  {fields.map(field => (
-                    <DropdownMenuCheckboxItem
-                      key={field.key}
-                      checked={visibleCardFields.has(field.key)}
-                      onCheckedChange={() => onToggleCardField(field.key)}
-                    >
-                      <field.icon size={14} className="mr-2 text-muted-foreground" />
-                      {field.label}
-                    </DropdownMenuCheckboxItem>
-                  ))}
+                  {fields.map(field => {
+                    const isSelected = visibleCardFields.has(field.key);
+                    return (
+                      <button
+                        key={field.key}
+                        onClick={() => onToggleCardField(field.key)}
+                        className={`
+                          w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm
+                          transition-colors cursor-pointer
+                          ${isSelected 
+                            ? 'bg-accent text-accent-foreground border-l-2 border-l-primary pl-1.5' 
+                            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border-l-2 border-l-transparent pl-1.5'
+                          }
+                        `}
+                      >
+                        <field.icon size={14} className={isSelected ? 'text-foreground' : 'text-muted-foreground'} />
+                        {field.label}
+                      </button>
+                    );
+                  })}
                 </React.Fragment>
               );
             })}
@@ -109,15 +118,25 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
           // Table: Show column toggles
           <>
             <DropdownMenuLabel className="text-xs">Columns</DropdownMenuLabel>
-            {TABLE_COLUMNS.map(column => (
-              <DropdownMenuCheckboxItem
-                key={column.id}
-                checked={columnVisibility[column.id] !== false}
-                onCheckedChange={() => handleTableColumnToggle(column.id)}
-              >
-                {column.label}
-              </DropdownMenuCheckboxItem>
-            ))}
+            {TABLE_COLUMNS.map(column => {
+              const isSelected = columnVisibility[column.id] !== false;
+              return (
+                <button
+                  key={column.id}
+                  onClick={() => handleTableColumnToggle(column.id)}
+                  className={`
+                    w-full flex items-center px-2 py-1.5 text-sm rounded-sm
+                    transition-colors cursor-pointer
+                    ${isSelected 
+                      ? 'bg-accent text-accent-foreground border-l-2 border-l-primary pl-1.5' 
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground border-l-2 border-l-transparent pl-1.5'
+                    }
+                  `}
+                >
+                  {column.label}
+                </button>
+              );
+            })}
           </>
         )}
       </DropdownMenuContent>

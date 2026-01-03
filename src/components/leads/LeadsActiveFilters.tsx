@@ -12,7 +12,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { hexToRgbObject } from '@/lib/color-utils';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -38,6 +37,10 @@ interface LeadsActiveFiltersProps {
   dateRange: DateRangeFilter;
   /** Handler for date range changes */
   onDateRangeChange: (range: DateRangeFilter) => void;
+  /** Whether to show the add filter button (default: true) */
+  showAddButton?: boolean;
+  /** Whether to show active filter chips (default: true) */
+  showChips?: boolean;
 }
 
 export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
@@ -46,6 +49,8 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
   onStageFilterChange,
   dateRange,
   onDateRangeChange,
+  showAddButton = true,
+  showChips = true,
 }: LeadsActiveFiltersProps) {
   const [open, setOpen] = useState(false);
 
@@ -82,7 +87,7 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {/* Active stage filter chips */}
-      {selectedStages.map(stage => (
+      {showChips && selectedStages.map(stage => (
         <Badge
           key={stage.id}
           variant="secondary"
@@ -104,7 +109,7 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
       ))}
 
       {/* Active date filter chip */}
-      {hasDateFilter && (
+      {showChips && hasDateFilter && (
         <Badge
           variant="secondary"
           className="h-6 gap-1.5 pr-1 pl-2 text-xs font-normal"
@@ -121,6 +126,7 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
       )}
 
       {/* Add filter popover */}
+      {showAddButton && (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -172,19 +178,30 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
 
             <Separator />
 
-            {/* Date range filter */}
+            {/* Date range filter - Toggle Pills */}
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Date Range</Label>
-              <RadioGroup value={dateRange} onValueChange={(v) => onDateRangeChange(v as DateRangeFilter)}>
-                {DATE_RANGE_OPTIONS.map(option => (
-                  <div key={option.value} className="flex items-center gap-2">
-                    <RadioGroupItem value={option.value} id={`date-${option.value}`} />
-                    <label htmlFor={`date-${option.value}`} className="text-sm cursor-pointer">
+              <div className="flex flex-wrap gap-1.5">
+                {DATE_RANGE_OPTIONS.map(option => {
+                  const isSelected = dateRange === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => onDateRangeChange(option.value)}
+                      className={`
+                        px-2.5 py-1 rounded-full text-xs font-medium
+                        transition-all duration-150 border
+                        ${isSelected 
+                          ? 'bg-accent border-transparent text-foreground' 
+                          : 'border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground'
+                        }
+                      `}
+                    >
                       {option.label}
-                    </label>
-                  </div>
-                ))}
-              </RadioGroup>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Clear all */}
@@ -205,6 +222,7 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
           </div>
         </PopoverContent>
       </Popover>
+      )}
     </div>
   );
 });

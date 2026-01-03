@@ -94,13 +94,14 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
           </div>
         </div>
 
-        {/* Active filter chips + Add filter button */}
+        {/* Active filter chips only (Add filter moved to right) */}
         <LeadsActiveFilters
           stages={stages}
           selectedStageIds={selectedStageIds}
           onStageFilterChange={onStageFilterChange}
           dateRange={dateRange}
           onDateRangeChange={onDateRangeChange}
+          showAddButton={false}
         />
 
         {/* Spacer */}
@@ -108,6 +109,16 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
 
         {/* Right controls - icon buttons */}
         <div className="flex items-center gap-1">
+          {/* Add filter button - moved here */}
+          <LeadsActiveFilters
+            stages={stages}
+            selectedStageIds={selectedStageIds}
+            onStageFilterChange={onStageFilterChange}
+            dateRange={dateRange}
+            onDateRangeChange={onDateRangeChange}
+            showAddButton={true}
+            showChips={false}
+          />
           {viewMode === 'kanban' && (
             <LeadsSortDropdown
               sortOption={sortOption}
