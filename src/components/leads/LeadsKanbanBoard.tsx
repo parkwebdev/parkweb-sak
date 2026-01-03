@@ -32,6 +32,7 @@ import { useTeam } from '@/hooks/useTeam';
 import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
 import { LeadAssigneePicker } from './LeadAssigneePicker';
 import { PriorityBadge } from "@/components/ui/priority-badge";
+import { SkeletonKanbanColumn } from "@/components/ui/skeleton";
 import type { Tables } from "@/integrations/supabase/types";
 import type { SortOption } from "@/components/leads/LeadsViewSettingsSheet";
 import type { ConversationMetadata } from "@/types/metadata";
@@ -517,15 +518,9 @@ export function LeadsKanbanBoard({
   if (stagesLoading || stages.length === 0) {
     return (
       <div className="w-full min-w-0">
-        <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex-shrink-0 w-72">
-              <div className="h-8 bg-muted animate-pulse rounded mb-2" />
-              <div className="space-y-2">
-                <div className="h-24 bg-muted animate-pulse rounded" />
-                <div className="h-24 bg-muted animate-pulse rounded" />
-              </div>
-            </div>
+            <SkeletonKanbanColumn key={i} cards={2} />
           ))}
         </div>
       </div>

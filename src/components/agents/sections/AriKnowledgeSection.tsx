@@ -396,7 +396,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
           <FilterLines size={16} />
           Filters
           {activeFilters.length > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+            <Badge variant="secondary" size="counter" className="ml-1">
               {activeFilters.length}
             </Badge>
           )}

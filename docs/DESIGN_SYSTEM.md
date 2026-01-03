@@ -432,6 +432,70 @@ When interactive elements (buttons, filters, dropdowns, selects) are placed adja
 </div>
 ```
 
+### Badges
+
+| Size | Classes | Usage |
+|------|---------|-------|
+| Default | `size="default"` | `px-2.5 py-0.5 text-xs` | Standard badges |
+| Small | `size="sm"` | `px-2 py-0.5 text-2xs` | Compact badges |
+| Large | `size="lg"` | `px-3 py-1 text-sm` | Prominent badges |
+| Counter | `size="counter"` | `h-5 px-1.5 text-xs` | Inline count badges (filters, tabs) |
+| Dot | `size="dot"` | `h-5 w-5 p-0 rounded-full` | Notification dots |
+
+**Usage:**
+```tsx
+// Filter count badge
+<Button variant="outline">
+  Filters
+  <Badge variant="secondary" size="counter" className="ml-1">3</Badge>
+</Button>
+
+// Notification dot
+<Badge variant="destructive" size="dot" className="absolute -top-1 -right-1">
+  {unreadCount}
+</Badge>
+
+// Tab counter
+<Badge variant="outline" size="counter">12</Badge>
+```
+
+### Skeleton Loading States
+
+Use the pre-built skeleton components from `@/components/ui/skeleton` for consistent loading states:
+
+| Component | Usage |
+|-----------|-------|
+| `Skeleton` | Base skeleton element |
+| `SkeletonAvatar` | Avatar placeholders (sm/md/lg) |
+| `SkeletonBadge` | Badge placeholders (rounded-md) |
+| `SkeletonCard` | Card layouts |
+| `SkeletonFormField` | Form input with label |
+| `SkeletonTableRow` | Table row placeholder |
+| `SkeletonKanbanColumn` | Kanban board column |
+
+**Guidelines:**
+- Always use `<Skeleton>` component instead of inline `animate-pulse` divs
+- Badge skeletons use `rounded-md` to match Badge component
+- Avatar skeletons use `rounded-full`
+- Import specific skeleton variants for consistency
+
+```tsx
+// ✅ Correct - use Skeleton component
+import { Skeleton, SkeletonKanbanColumn } from '@/components/ui/skeleton';
+
+{loading && (
+  <div className="space-y-2">
+    <Skeleton className="h-12 rounded-lg" />
+    <Skeleton className="h-12 rounded-lg" />
+  </div>
+)}
+
+// ❌ Wrong - inline animate-pulse
+{loading && (
+  <div className="h-12 bg-muted animate-pulse rounded-lg" />
+)}
+```
+
 ---
 
 ## Shadows & Effects
