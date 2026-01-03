@@ -54,8 +54,14 @@ This section tracks the implementation status of security enhancements identifie
 | 2 | [Content Moderation](#content-moderation) | 🟢 Complete | Critical | - |
 | 3 | [Security Testing Documentation](#security-testing) | 🟢 Complete | High | - |
 | 4 | [CAPTCHA Protection](#bot-protection) | 🟢 Complete | High | - |
-| 5 | [Automated Alerting](#automated-security-alerts) | 🔴 Planned | Medium | 3 hours |
-| 6 | [Key Age Warning](#key-rotation-policy) | 🔴 Planned | Medium | 1 hour |
+| 5 | [PII Protection in Widget](#pii-protection) | 🟢 Complete | High | - |
+| 6 | [Rate Limit User Feedback](#rate-limit-feedback) | 🟢 Complete | Medium | - |
+| 7 | [Session Management UI](#session-management) | 🟢 Complete | Medium | - |
+| 8 | [MapLibre XSS Fixes](#xss-protection) | 🟢 Complete | Medium | - |
+| 9 | [Response Cache RLS](#rls-policies) | 🟢 Complete | Low | - |
+| 10 | [Automated Alerting](#automated-security-alerts) | 🔴 Planned | Medium | 3 hours |
+| 11 | [Key Age Warning](#key-rotation-policy) | 🔴 Planned | Medium | 1 hour |
+| 12 | [OAuth Token Encryption](#oauth-token-encryption) | 🔴 Planned | High | 3 hours |
 
 **Legend**: 🟢 Complete | 🟡 In Progress | 🔴 Planned
 
@@ -67,7 +73,9 @@ The following security measures are fully implemented:
 |---------|----------|-------------|
 | SSRF Protection | 5 edge functions | URL validation blocks internal IPs, localhost, AWS metadata |
 | Rate Limiting | 12+ endpoints | Per-IP and per-key rate limiting with sliding windows |
+| Rate Limit UX | Auth.tsx | User-friendly "Too many attempts" messages |
 | XSS Protection | Widget components | DOMPurify sanitization in 6+ files |
+| MapLibre XSS Fix | maplibre-map.tsx | Safe DOM APIs replace innerHTML/dangerouslySetInnerHTML |
 | Honeypot Spam | Widget forms | Hidden field detection |
 | Timing Check | Widget forms | Submission speed validation |
 | Security Logging | `security_logs` table | Event tracking with RLS |
@@ -76,6 +84,8 @@ The following security measures are fully implemented:
 | Type-Safe Errors | All edge functions | `getErrorMessage()` pattern |
 | CSP Headers | index.html, widget | Content Security Policy |
 | RLS Policies | All tables | Row Level Security enabled |
+| PII Protection | `get_widget_conversation()` | Filters sensitive metadata from widget |
+| Session Management | SessionsSection.tsx | Sign out other devices feature |
 
 ### Required Secrets
 

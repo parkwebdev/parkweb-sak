@@ -26,6 +26,7 @@ import { NotificationSettings } from '@/components/settings/NotificationSettings
 import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings';
 import { UsageSettings } from '@/components/settings/UsageSettings';
 import { TeamSettings } from '@/components/settings/TeamSettings';
+import { SessionsSection } from '@/components/settings/SessionsSection';
 import { SETTINGS_TABS } from '@/config/routes';
 import { cn } from '@/lib/utils';
 import { useCanManageChecker } from '@/hooks/useCanManage';
@@ -106,6 +107,8 @@ function Settings({ onMenuClick }: SettingsProps) {
         return <UsageSettings />;
       case 'notifications':
         return <NotificationSettings />;
+      case 'sessions':
+        return <SessionsSection />;
       default:
         return <GeneralSettings />;
     }

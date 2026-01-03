@@ -188,6 +188,16 @@ const Auth = () => {
     turnstileRef.current?.reset();
   }, [activeTab, showForgotPassword]);
 
+  // Helper to detect rate limit errors from Supabase
+  const isRateLimitError = (error: { message?: string; status?: number }): boolean => {
+    return (
+      error.status === 429 ||
+      error.message?.toLowerCase().includes('rate limit') ||
+      error.message?.toLowerCase().includes('too many requests') ||
+      error.message?.toLowerCase().includes('email rate limit')
+    );
+  };
+
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
@@ -200,7 +210,11 @@ const Auth = () => {
 
       if (error) {
         logAuthEvent('login', false, { error: error.message, provider: 'google' });
-        toast.error("Google sign in failed", { description: error.message });
+        if (isRateLimitError(error)) {
+          toast.error("Too many attempts", { description: "Please wait a few minutes before trying again." });
+        } else {
+          toast.error("Google sign in failed", { description: error.message });
+        }
       }
     } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
@@ -222,7 +236,11 @@ const Auth = () => {
 
       if (error) {
         logAuthEvent('login', false, { error: error.message, provider: 'azure' });
-        toast.error("Microsoft sign in failed", { description: error.message });
+        if (isRateLimitError(error)) {
+          toast.error("Too many attempts", { description: "Please wait a few minutes before trying again." });
+        } else {
+          toast.error("Microsoft sign in failed", { description: error.message });
+        }
       }
     } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred. Please try again." });
@@ -258,7 +276,9 @@ const Auth = () => {
       if (error) {
         resetCaptcha();
         logAuthEvent('login', false, { error: error.message });
-        if (error.message.includes('Invalid login credentials')) {
+        if (isRateLimitError(error)) {
+          toast.error("Too many attempts", { description: "Please wait a few minutes before trying again." });
+        } else if (error.message.includes('Invalid login credentials')) {
           toast.error("Invalid credentials", { description: "Please check your email and password and try again." });
         } else if (error.message.includes('Email not confirmed')) {
           toast.error("Email not confirmed", { description: "Please check your email and click the confirmation link." });
@@ -369,7 +389,9 @@ const Auth = () => {
       if (error) {
         resetCaptcha();
         logAuthEvent('signup', false, { error: error.message });
-        if (error.message.includes('User already registered')) {
+        if (isRateLimitError(error)) {
+          toast.error("Too many attempts", { description: "Please wait a few minutes before trying again." });
+        } else if (error.message.includes('User already registered')) {
           toast.error("Account exists", { description: "An account with this email already exists. Please sign in instead." });
           setActiveTab('signin');
           setCurrentStep(0);
@@ -422,7 +444,12 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error("Reset failed", { description: error.message });
+        resetCaptcha();
+        if (isRateLimitError(error)) {
+          toast.error("Too many attempts", { description: "Please wait a few minutes before trying again." });
+        } else {
+          toast.error("Reset failed", { description: error.message });
+        }
         return;
       }
 
@@ -464,7 +491,11 @@ const Auth = () => {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       
       if (error) {
-        toast.error("Failed to update password", { description: error.message });
+        if (isRateLimitError(error)) {
+          toast.error("Too many attempts", { description: "Please wait a few minutes before trying again." });
+        } else {
+          toast.error("Failed to update password", { description: error.message });
+        }
         return;
       }
       
