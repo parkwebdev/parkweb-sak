@@ -19,7 +19,7 @@ import {
   ColumnOrderState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { Trash01, Sliders02 } from '@untitledui/icons';
+import { Trash01, FilterLines } from '@untitledui/icons';
 import {
   DataTable,
   DataTablePagination,
@@ -204,24 +204,23 @@ export const LeadsTable = React.memo(function LeadsTable({
         searchPlaceholder="Search leads..."
         searchValue={searchQuery}
         onSearchChange={onSearchChange}
-        prefix={
-          <ViewModeToggle
-            viewMode={viewMode}
-            onViewModeChange={onViewModeChange}
-          />
-        }
         endContent={
-          onOpenSettings && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-2"
-              onClick={onOpenSettings}
-            >
-              <Sliders02 size={16} />
-              <span className="hidden sm:inline">Customize</span>
-            </Button>
-          )
+          <div className="flex items-center gap-2">
+            {onOpenSettings && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={onOpenSettings}
+              >
+                <FilterLines size={16} />
+              </Button>
+            )}
+            <ViewModeToggle
+              viewMode={viewMode}
+              onViewModeChange={onViewModeChange}
+            />
+          </div>
         }
       />
       <DataTable
