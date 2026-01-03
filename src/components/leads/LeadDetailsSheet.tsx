@@ -454,7 +454,7 @@ export const LeadDetailsSheet = ({
   const getInputClassName = (fieldId: string, baseClass: string = '') => {
     const isSaving = savingFields.has(fieldId);
     return cn(
-      "h-8 text-sm bg-muted/50 border-transparent focus:border-input focus:bg-background transition-all duration-200",
+      "h-8 text-xs bg-muted/50 border-transparent focus:border-input focus:bg-background transition-all duration-200",
       isSaving && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse",
       baseClass
     );
@@ -469,9 +469,9 @@ export const LeadDetailsSheet = ({
     if (isMessageField(key)) {
       const strValue = String(currentValue || '');
       return (
-        <div className="space-y-2">
-          <Label className="text-muted-foreground">{formatLabel(key)}</Label>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/50 rounded-md p-3">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{formatLabel(key)}</Label>
+          <p className="text-xs text-muted-foreground whitespace-pre-wrap bg-muted/50 rounded-md p-2 min-h-8">
             {strValue || '-'}
           </p>
         </div>
@@ -491,28 +491,28 @@ export const LeadDetailsSheet = ({
         : '';
       
       return (
-        <div className="space-y-2">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Label className="text-muted-foreground">{formatLabel(key)}</Label>
+            <Label className="text-xs text-muted-foreground">{formatLabel(key)}</Label>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                  <InfoCircle className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
                   {sanitizedContent ? (
                     <div 
-                      className="text-sm [&_a]:text-primary [&_a]:underline"
+                      className="text-xs [&_a]:text-primary [&_a]:underline"
                       dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
                     />
                   ) : (
-                    <p className="text-sm">User agreed to the consent checkbox on the contact form.</p>
+                    <p className="text-xs">User agreed to the consent checkbox on the contact form.</p>
                   )}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
-          <p className="text-sm bg-muted/50 rounded-md p-3">
+          <p className="text-xs bg-muted/50 rounded-md p-2 h-8 flex items-center">
             {consented ? 'Yes' : 'No'}
           </p>
         </div>
@@ -522,8 +522,8 @@ export const LeadDetailsSheet = ({
     const strValue = String(currentValue || '');
     if (strValue.length > 100) {
       return (
-        <div className="space-y-2">
-          <Label htmlFor={key} className="text-muted-foreground">{formatLabel(key)}</Label>
+        <div className="space-y-1">
+          <Label htmlFor={key} className="text-xs text-muted-foreground">{formatLabel(key)}</Label>
           <Textarea
             id={key}
             value={strValue}
@@ -533,9 +533,9 @@ export const LeadDetailsSheet = ({
             }}
             onFocus={() => { isEditingRef.current = true; }}
             onBlur={() => { isEditingRef.current = false; }}
-            rows={3}
+            rows={2}
             className={cn(
-              "transition-all duration-200",
+              "text-xs min-h-8 resize-none transition-all duration-200",
               savingFields.has(fieldId) && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
             )}
           />
@@ -544,8 +544,8 @@ export const LeadDetailsSheet = ({
     }
     
     return (
-      <div className="space-y-2">
-        <Label htmlFor={key} className="text-muted-foreground">{formatLabel(key)}</Label>
+      <div className="space-y-1">
+        <Label htmlFor={key} className="text-xs text-muted-foreground">{formatLabel(key)}</Label>
         <Input
           id={key}
           value={strValue}
@@ -690,11 +690,11 @@ export const LeadDetailsSheet = ({
                   </div>
 
                   {/* Contact - Property List (no background) */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {/* First Name / Last Name Row */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground w-10 flex-shrink-0">First</Label>
+                        <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">First</Label>
                         <Input
                           value={currentFirstName}
                           onChange={(e) => handleFirstNameChange(e.target.value)}
@@ -705,7 +705,7 @@ export const LeadDetailsSheet = ({
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground w-10 flex-shrink-0">Last</Label>
+                        <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">Last</Label>
                         <Input
                           value={currentLastName}
                           onChange={(e) => handleLastNameChange(e.target.value)}
@@ -719,7 +719,7 @@ export const LeadDetailsSheet = ({
                     
                     {/* Email Row */}
                     <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground w-10 flex-shrink-0">Email</Label>
+                      <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">Email</Label>
                       <Input
                         type="email"
                         value={{ ...lead, ...editedLead }.email || ''}
@@ -739,14 +739,14 @@ export const LeadDetailsSheet = ({
                           variant="ghost"
                           onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
                         >
-                          <Copy01 className="h-4 w-4" />
+                          <Copy01 className="h-3.5 w-3.5" />
                         </IconButton>
                       )}
                     </div>
                     
                     {/* Phone Row */}
                     <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground w-10 flex-shrink-0">Phone</Label>
+                      <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">Phone</Label>
                       <Input
                         type="tel"
                         value={{ ...lead, ...editedLead }.phone || phoneValue}
@@ -767,7 +767,7 @@ export const LeadDetailsSheet = ({
                             variant="ghost"
                             onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
                           >
-                            <Copy01 className="h-4 w-4" />
+                            <Copy01 className="h-3.5 w-3.5" />
                           </IconButton>
                           <a href={`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`}>
                             <IconButton
@@ -776,7 +776,7 @@ export const LeadDetailsSheet = ({
                               variant="ghost"
                               asChild
                             >
-                              <Phone01 className="h-4 w-4" />
+                              <Phone01 className="h-3.5 w-3.5" />
                             </IconButton>
                           </a>
                         </>
@@ -786,7 +786,7 @@ export const LeadDetailsSheet = ({
 
                   {/* Session Info - 3 Column Grid with background */}
                   {conversation && (
-                    <div className="grid grid-cols-3 gap-x-3 gap-y-2 text-xs text-muted-foreground bg-muted/30 rounded-md p-3">
+                    <div className="grid grid-cols-3 gap-x-4 gap-y-2.5 text-xs text-muted-foreground bg-muted/30 rounded-md p-3 mt-2">
                       {/* Row 1: Source, Location, Device */}
                       <div className="flex items-center gap-1.5 truncate">
                         {getSourceType().icon}
@@ -857,37 +857,39 @@ export const LeadDetailsSheet = ({
                     />
                   </div>
 
-                  {/* Tags */}
+                  {/* Tags - Inline */}
                   {lead.conversation_id && (
                     <div className={cn(
-                      "flex flex-wrap items-center gap-1.5 rounded transition-all duration-200",
+                      "flex items-center gap-2 rounded transition-all duration-200",
                       savingFields.has('tags') && "ring-2 ring-primary/50"
                     )}>
-                      <Label className="text-xs text-muted-foreground mr-1">Tags</Label>
-                      {conversationMetadata.tags?.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-xs h-6">
-                          {tag}
-                          <button
-                            onClick={() => handleRemoveTag(tag)}
-                            className="ml-0.5 hover:bg-muted rounded p-0.5"
-                            aria-label={`Remove ${tag} tag`}
-                          >
-                            <XClose className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                      <Input
-                        placeholder="Add..."
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddTag(newTag);
-                          }
-                        }}
-                        className="h-6 w-16 text-xs px-1.5 border-dashed"
-                      />
+                      <Label className="text-xs text-muted-foreground flex-shrink-0">Tags</Label>
+                      <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                        {conversationMetadata.tags?.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-2xs h-5">
+                            {tag}
+                            <button
+                              onClick={() => handleRemoveTag(tag)}
+                              className="ml-0.5 hover:bg-muted rounded p-0.5"
+                              aria-label={`Remove ${tag} tag`}
+                            >
+                              <XClose className="h-2.5 w-2.5" />
+                            </button>
+                          </Badge>
+                        ))}
+                        <Input
+                          placeholder="Add..."
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddTag(newTag);
+                            }
+                          }}
+                          className="h-5 w-14 text-2xs px-1.5 border-dashed"
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -926,7 +928,7 @@ export const LeadDetailsSheet = ({
                         onBlur={() => { isEditingNotesRef.current = false; }}
                         rows={2}
                         className={cn(
-                          "resize-none text-sm min-h-[40px] transition-all duration-200",
+                          "resize-none text-xs min-h-8 transition-all duration-200",
                           savingFields.has('notes') && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
                         )}
                       />
