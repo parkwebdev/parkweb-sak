@@ -335,6 +335,9 @@ export const LeadDetailsSheet = ({
 
       // Invalidate conversations list for sync
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      
+      // Invalidate leads cache so Kanban/Table reflect updated tags/priority/notes
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
 
       // Log activity for tag changes
       if ('tags' in updates && lead?.id && user?.id) {
