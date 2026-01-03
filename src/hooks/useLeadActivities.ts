@@ -20,14 +20,18 @@ export type ActionData = {
   // stage_changed
   from_stage_id?: string;
   to_stage_id?: string;
-  // field_updated
+  // field_updated & status_changed
   field?: string;
   from?: string | null;
   to?: string | null;
   // assignee changes
   user_id?: string;
-  // comment_added
-  comment_id?: string;
+};
+
+export type AssigneeProfile = {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
 };
 
 export function useLeadActivities(leadId: string | undefined) {
@@ -35,10 +39,10 @@ export function useLeadActivities(leadId: string | undefined) {
   const queryKey = ['lead-activities', leadId];
 
   // Fetch activities with user profiles
-  const { data: activities = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      if (!leadId) return [];
+      if (!leadId) return { activities: [] as LeadActivity[], assigneeProfiles: new Map<string, AssigneeProfile>() };
 
       const { data, error } = await supabase
         .from('lead_activities')
@@ -49,24 +53,43 @@ export function useLeadActivities(leadId: string | undefined) {
 
       if (error) throw error;
 
-      // Fetch profiles for activities
-      if (data.length === 0) return [];
+      if (data.length === 0) return { activities: [] as LeadActivity[], assigneeProfiles: new Map<string, AssigneeProfile>() };
 
-      const userIds = [...new Set(data.map(a => a.user_id).filter(Boolean))] as string[];
+      // Collect all user IDs - both activity actors and assignee targets
+      const actorUserIds = data.map(a => a.user_id).filter(Boolean) as string[];
+      const assigneeUserIds = data
+        .filter(a => a.action_type === 'assignee_added' || a.action_type === 'assignee_removed')
+        .map(a => (a.action_data as ActionData)?.user_id)
+        .filter(Boolean) as string[];
       
-      if (userIds.length === 0) return data as LeadActivity[];
+      const allUserIds = [...new Set([...actorUserIds, ...assigneeUserIds])];
+      
+      if (allUserIds.length === 0) {
+        return { 
+          activities: data as LeadActivity[], 
+          assigneeProfiles: new Map<string, AssigneeProfile>() 
+        };
+      }
 
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, display_name, avatar_url')
-        .in('user_id', userIds);
+        .in('user_id', allUserIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      return data.map(activity => ({
+      // Create assignee profiles map
+      const assigneeProfilesMap = new Map<string, AssigneeProfile>();
+      profiles?.forEach(p => {
+        assigneeProfilesMap.set(p.user_id, p);
+      });
+
+      const activitiesWithProfiles = data.map(activity => ({
         ...activity,
         profile: activity.user_id ? profileMap.get(activity.user_id) || null : null,
       })) as LeadActivity[];
+
+      return { activities: activitiesWithProfiles, assigneeProfiles: assigneeProfilesMap };
     },
     enabled: !!leadId,
     staleTime: 30_000,
@@ -99,7 +122,8 @@ export function useLeadActivities(leadId: string | undefined) {
   }, [leadId, queryClient, queryKey]);
 
   return {
-    activities,
+    activities: data?.activities ?? [],
+    assigneeProfiles: data?.assigneeProfiles ?? new Map<string, AssigneeProfile>(),
     isLoading,
     refetch: () => queryClient.invalidateQueries({ queryKey }),
   };
