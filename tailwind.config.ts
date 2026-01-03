@@ -28,14 +28,14 @@ const config: Config = {
     extend: {
       fontSize: {
         '3xs': ['0.5rem', { lineHeight: '0.75rem' }],      // 8px - micro avatars
-        '2xs': ['0.5625rem', { lineHeight: '0.8125rem' }], // 9px
-        'xs': ['0.6875rem', { lineHeight: '1rem' }],       // 11px
-        'sm': ['0.8125rem', { lineHeight: '1.25rem' }],    // 13px
-        'base': ['0.9375rem', { lineHeight: '1.5rem' }],   // 15px
-        'lg': ['1.0625rem', { lineHeight: '1.625rem' }],   // 17px
-        'xl': ['1.1875rem', { lineHeight: '1.75rem' }],    // 19px
-        '2xl': ['1.4375rem', { lineHeight: '2rem' }],      // 23px
-        '3xl': ['1.8125rem', { lineHeight: '2.25rem' }],   // 29px
+        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],   // 10px
+        'xs': ['0.75rem', { lineHeight: '1rem' }],         // 12px
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],     // 14px
+        'base': ['1rem', { lineHeight: '1.5rem' }],        // 16px
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],     // 18px
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],      // 20px
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],         // 24px
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],    // 30px
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif'],
