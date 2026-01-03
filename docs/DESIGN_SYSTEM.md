@@ -493,8 +493,8 @@ Standard duration: 150ms (Tailwind default)
 | Token | Value | Class | Usage |
 |-------|-------|-------|-------|
 | `--radius` | 0.5rem (8px) | `rounded-lg` | Cards, buttons |
-| `--radius - 2px` | 6px | `rounded-md` | Inputs, smaller elements |
-| `--radius - 4px` | 4px | `rounded-sm` | Badges, small elements |
+| `--radius - 2px` | 6px | `rounded-md` | Badges, inputs, smaller elements |
+| `--radius - 4px` | 4px | `rounded-sm` | Small elements, chips |
 | Full | 9999px | `rounded-full` | Avatars, pills |
 
 ### Common Patterns

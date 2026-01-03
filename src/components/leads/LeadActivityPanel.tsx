@@ -183,7 +183,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
             <span className="font-medium">{userName}</span>
             <span>→</span>
             <span 
-              className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
+              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium"
               style={{ 
                 backgroundColor: `${getStageColor(data.to_stage_id)}20`,
                 color: getStageColor(data.to_stage_id),

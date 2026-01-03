@@ -1267,7 +1267,7 @@ export function LeadsViewSettingsSheet({
                           <div
                             key={stage.id}
                             className={cn(
-                              'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs cursor-pointer transition-colors',
+                              'flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs cursor-pointer transition-colors',
                               selectedStageIds.includes(stage.id)
                                 ? 'bg-primary/10 border-primary text-primary'
                                 : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
