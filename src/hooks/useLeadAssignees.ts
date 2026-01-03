@@ -3,7 +3,7 @@
  * Provides CRUD operations with optimistic updates.
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,6 +50,30 @@ export function useLeadAssignees(): UseLeadAssigneesReturn {
     enabled: !!user,
     staleTime: 30000,
   });
+
+  // Real-time subscription for assignee changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('lead-assignees-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'lead_assignees',
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient, queryKey]);
 
   // Build map of lead_id -> user_id[]
   const assigneesByLead = useMemo(() => {
