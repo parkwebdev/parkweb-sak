@@ -1649,39 +1649,6 @@ const {
 
 ---
 
-### useAccountSettings
-
-Fetches and manages account-wide settings (shared across all team members).
-
-```tsx
-import { useAccountSettings } from '@/hooks/useAccountSettings';
-
-const {
-  // Settings values (with defaults)
-  viewMode,                // 'kanban' | 'table' - Leads page view mode
-  kanbanVisibleFields,     // Set<CardFieldKey> - Visible fields on Kanban cards
-  tableColumnVisibility,   // VisibilityState - Table column visibility
-  tableColumnOrder,        // string[] - Table column order
-  defaultSort,             // SortOption | null - Default sort option
-  
-  // State
-  settings,            // AccountSettings | null - Raw settings object
-  loading,             // boolean - Loading state
-  canManageSettings,   // boolean - Whether user can update settings (owner only)
-  
-  // Mutations
-  updateSettings,      // (updates) => void - Update settings
-  updateSettingsAsync, // (updates) => Promise - Async update
-  isUpdating,          // boolean - Update in progress
-} = useAccountSettings();
-```
-
-**Use Case**: Account-wide configuration for features like Leads page display settings. Only account owners can modify settings; team members can read them.
-
-**File**: `src/hooks/useAccountSettings.ts`
-
----
-
 Logs security-relevant events.
 
 ```tsx

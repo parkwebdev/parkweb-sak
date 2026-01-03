@@ -14,42 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      account_settings: {
-        Row: {
-          created_at: string
-          id: string
-          leads_default_sort: Json | null
-          leads_kanban_visible_fields: string[]
-          leads_table_column_order: string[]
-          leads_table_column_visibility: Json
-          leads_view_mode: string
-          owner_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          leads_default_sort?: Json | null
-          leads_kanban_visible_fields?: string[]
-          leads_table_column_order?: string[]
-          leads_table_column_visibility?: Json
-          leads_view_mode?: string
-          owner_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          leads_default_sort?: Json | null
-          leads_kanban_visible_fields?: string[]
-          leads_table_column_order?: string[]
-          leads_table_column_visibility?: Json
-          leads_view_mode?: string
-          owner_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       agent_api_keys: {
         Row: {
           agent_id: string
