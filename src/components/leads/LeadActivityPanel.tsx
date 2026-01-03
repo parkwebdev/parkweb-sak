@@ -5,7 +5,7 @@
  * Comment input is pinned at the bottom.
  */
 
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -60,6 +60,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const isLoading = commentsLoading || activitiesLoading;
 
@@ -76,9 +77,16 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       ...filteredActivities.map(a => ({ type: 'activity' as const, data: a, created_at: a.created_at })),
       ...comments.map(c => ({ type: 'comment' as const, data: c, created_at: c.created_at })),
     ];
-    // Sort by created_at descending (newest first)
-    return items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    // Sort by created_at ascending (oldest first, newest at bottom)
+    return items.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }, [activities, comments]);
+
+  // Auto-scroll to bottom when new items are added
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [feedItems.length]);
 
   // Get stage name by ID
   const getStageName = (stageId: string | undefined): string => {
@@ -278,10 +286,11 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
         )}
       </div>
 
-      {/* Feed area with padding */}
-      <div className="flex-1 flex flex-col min-h-0 px-4 pt-4">
+      {/* Feed area with gray background */}
+      <div className="flex-1 flex flex-col min-h-0 bg-muted/30">
         {/* Unified feed - scrollable */}
-        <ScrollArea className="flex-1 min-h-0">
+        <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
+          <div className="px-4 pt-4 pb-2">
           {feedItems.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-4">
               No activity yet
@@ -409,8 +418,8 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
               })}
             </div>
           )}
+          </div>
         </ScrollArea>
-
       </div>
 
       {/* Comment input - full width border */}
