@@ -31,8 +31,16 @@ import {
   Trash02,
   XClose,
   Check,
+  SwitchVertical01,
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from '@/components/ui/dropdown-menu';
 
 interface LeadActivityPanelProps {
   leadId: string;
@@ -63,6 +71,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const wasAtBottomRef = useRef(true);
@@ -84,9 +93,12 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       ...filteredActivities.map(a => ({ type: 'activity' as const, data: a, created_at: a.created_at })),
       ...comments.map(c => ({ type: 'comment' as const, data: c, created_at: c.created_at })),
     ];
-    // Sort by created_at ascending (oldest first, newest at bottom)
-    return items.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  }, [activities, comments]);
+    // Sort based on sortOrder
+    return items.sort((a, b) => {
+      const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortOrder === 'asc' ? diff : -diff;
+    });
+  }, [activities, comments, sortOrder]);
 
   // Track if user is at bottom of scroll
   const checkIfAtBottom = useCallback(() => {
@@ -101,17 +113,22 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
     wasAtBottomRef.current = checkIfAtBottom();
   }, [checkIfAtBottom]);
 
-  // Auto-scroll to bottom only when new items are added AND user was already at bottom
+  // Auto-scroll when new items are added AND user was at bottom
+  // For 'asc' (oldest first): scroll to bottom; for 'desc' (newest first): scroll to top
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    // Only scroll if we have new items and user was at bottom
+    // Only scroll if we have new items and user was at the relevant edge
     if (feedItems.length > prevFeedLengthRef.current && wasAtBottomRef.current) {
-      container.scrollTop = container.scrollHeight;
+      if (sortOrder === 'asc') {
+        container.scrollTop = container.scrollHeight;
+      } else {
+        container.scrollTop = 0;
+      }
     }
     prevFeedLengthRef.current = feedItems.length;
-  }, [feedItems.length]);
+  }, [feedItems.length, sortOrder]);
 
   // Get stage name by ID
   const getStageName = (stageId: string | undefined): string => {
@@ -308,13 +325,33 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header - white background */}
-      <div className="flex items-center gap-2 px-4 py-3 bg-background border-b">
-        <span className="text-sm font-medium">Activity</span>
-        {feedItems.length > 0 && (
-          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-            {feedItems.length}
-          </span>
-        )}
+      <div className="flex items-center justify-between px-4 py-3 bg-background border-b">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Activity</span>
+          {feedItems.length > 0 && (
+            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              {feedItems.length}
+            </span>
+          )}
+        </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <IconButton 
+              variant="ghost" 
+              size="icon-sm" 
+              label={sortOrder === 'asc' ? 'Sorted oldest first' : 'Sorted newest first'}
+            >
+              <SwitchVertical01 className="h-4 w-4" />
+            </IconButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40 bg-popover z-50">
+            <DropdownMenuRadioGroup value={sortOrder} onValueChange={(v) => setSortOrder(v as 'asc' | 'desc')}>
+              <DropdownMenuRadioItem value="asc">Oldest first</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="desc">Newest first</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Feed area with gray background - native scroll for reliability */}
