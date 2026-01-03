@@ -1,18 +1,19 @@
 /**
  * @fileoverview Full-width header bar for the Leads page.
- * Provides search, inline filters, display options, view mode toggle, and settings access.
+ * Provides search, inline filters, display options, and view mode toggle.
  */
 
 import React from 'react';
-import { SearchMd, X, Settings01 } from '@untitledui/icons';
+import { SearchMd, X } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
 import { ViewModeToggle } from './ViewModeToggle';
 import { LeadsFiltersDropdown, type DateRangeFilter } from './LeadsFiltersDropdown';
 import { LeadsDisplayDropdown } from './LeadsDisplayDropdown';
 import type { LeadStage } from '@/hooks/useLeadStages';
 import type { SortOption } from '@/components/leads/LeadsViewSettingsSheet';
+import type { CardFieldKey } from '@/components/leads/KanbanCardFields';
+import type { VisibilityState } from '@tanstack/react-table';
 
 interface LeadsHeaderBarProps {
   /** Current view mode */
@@ -23,8 +24,6 @@ interface LeadsHeaderBarProps {
   searchQuery: string;
   /** Handler for search changes */
   onSearchChange: (query: string) => void;
-  /** Handler to open full settings sheet */
-  onOpenSettings: () => void;
   /** Available pipeline stages */
   stages: LeadStage[];
   /** Currently selected stage IDs for filtering */
@@ -39,6 +38,14 @@ interface LeadsHeaderBarProps {
   sortOption: SortOption | null;
   /** Handler for sort changes */
   onSortChange: (sort: SortOption | null) => void;
+  /** Visible kanban card fields */
+  visibleCardFields: Set<CardFieldKey>;
+  /** Handler for toggling kanban card fields */
+  onToggleCardField: (field: CardFieldKey) => void;
+  /** Table column visibility */
+  columnVisibility: VisibilityState;
+  /** Handler for column visibility changes */
+  onColumnVisibilityChange: (visibility: VisibilityState) => void;
 }
 
 export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
@@ -46,7 +53,6 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
   onViewModeChange,
   searchQuery,
   onSearchChange,
-  onOpenSettings,
   stages,
   selectedStageIds,
   onStageFilterChange,
@@ -54,6 +60,10 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
   onDateRangeChange,
   sortOption,
   onSortChange,
+  visibleCardFields,
+  onToggleCardField,
+  columnVisibility,
+  onColumnVisibilityChange,
 }: LeadsHeaderBarProps) {
   return (
     <div className="sticky top-0 z-10 bg-background border-b border-border">
@@ -93,26 +103,20 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
         />
         
         <LeadsDisplayDropdown
+          viewMode={viewMode}
           sortOption={sortOption}
           onSortChange={onSortChange}
-          onOpenFieldsSettings={onOpenSettings}
+          visibleCardFields={visibleCardFields}
+          onToggleCardField={onToggleCardField}
+          columnVisibility={columnVisibility}
+          onColumnVisibilityChange={onColumnVisibilityChange}
         />
 
-        {/* Right: View Mode + Settings */}
-        <div className="flex items-center gap-1">
-          <ViewModeToggle
-            viewMode={viewMode}
-            onViewModeChange={onViewModeChange}
-          />
-          <IconButton
-            label="All settings"
-            variant="ghost"
-            size="sm"
-            onClick={onOpenSettings}
-          >
-            <Settings01 size={16} />
-          </IconButton>
-        </div>
+        {/* Right: View Mode Toggle */}
+        <ViewModeToggle
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+        />
       </div>
     </div>
   );
