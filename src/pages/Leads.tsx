@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useLeads } from '@/hooks/useLeads';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
+import { useTeam } from '@/hooks/useTeam';
 import { useCanManage } from '@/hooks/useCanManage';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
@@ -48,7 +49,8 @@ interface LeadsProps {
 function Leads({ onMenuClick }: LeadsProps) {
   const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const { stages } = useLeadStages();
-  const { getAssignees, addAssignee, removeAssignee } = useLeadAssignees();
+  const { getAssignees, addAssignee, removeAssignee, assigneesByLead } = useLeadAssignees();
+  const { teamMembers } = useTeam();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
@@ -170,6 +172,9 @@ function Leads({ onMenuClick }: LeadsProps) {
   // Stage filter state
   const [selectedStageIds, setSelectedStageIds] = useState<string[]>([]);
   
+  // Assignee filter state
+  const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
+  
   // Date range filter state
   const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
   
@@ -185,6 +190,14 @@ function Leads({ onMenuClick }: LeadsProps) {
       result = result.filter(lead => {
         const effectiveStageId = lead.stage_id ?? defaultStage?.id;
         return effectiveStageId && selectedStageIds.includes(effectiveStageId);
+      });
+    }
+    
+    // Assignee filter
+    if (selectedAssigneeIds.length > 0) {
+      result = result.filter(lead => {
+        const leadAssignees = assigneesByLead[lead.id] || [];
+        return selectedAssigneeIds.some(id => leadAssignees.includes(id));
       });
     }
     
@@ -210,7 +223,7 @@ function Leads({ onMenuClick }: LeadsProps) {
     }
     
     return result;
-  }, [leads, selectedStageIds, dateRangeFilter, searchQuery, defaultStage?.id]);
+  }, [leads, selectedStageIds, selectedAssigneeIds, assigneesByLead, dateRangeFilter, searchQuery, defaultStage?.id]);
 
   const handleViewLead = useCallback((lead: Tables<'leads'>) => {
     setSelectedLead(lead);
@@ -281,6 +294,9 @@ function Leads({ onMenuClick }: LeadsProps) {
         onStageFilterChange={setSelectedStageIds}
         dateRange={dateRangeFilter}
         onDateRangeChange={setDateRangeFilter}
+        teamMembers={teamMembers}
+        selectedAssigneeIds={selectedAssigneeIds}
+        onAssigneeFilterChange={setSelectedAssigneeIds}
         sortOption={defaultSort}
         onSortChange={handleDefaultSortChange}
         visibleCardFields={visibleCardFields}
