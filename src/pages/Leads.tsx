@@ -173,13 +173,19 @@ function Leads({ onMenuClick }: LeadsProps) {
   // Date range filter state
   const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
   
+  // Find the default stage for leads without a stage_id
+  const defaultStage = stages.find(s => s.is_default);
+  
   // Filter leads based on search query, stage filter, and date range
   const filteredLeads = useMemo(() => {
     let result = leads;
     
-    // Stage filter
+    // Stage filter - treat null stage_id as the default stage
     if (selectedStageIds.length > 0) {
-      result = result.filter(lead => lead.stage_id && selectedStageIds.includes(lead.stage_id));
+      result = result.filter(lead => {
+        const effectiveStageId = lead.stage_id ?? defaultStage?.id;
+        return effectiveStageId && selectedStageIds.includes(effectiveStageId);
+      });
     }
     
     // Date range filter
@@ -204,7 +210,7 @@ function Leads({ onMenuClick }: LeadsProps) {
     }
     
     return result;
-  }, [leads, selectedStageIds, dateRangeFilter, searchQuery]);
+  }, [leads, selectedStageIds, dateRangeFilter, searchQuery, defaultStage?.id]);
 
   const handleViewLead = useCallback((lead: Tables<'leads'>) => {
     setSelectedLead(lead);
