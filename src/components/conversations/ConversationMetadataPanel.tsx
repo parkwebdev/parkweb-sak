@@ -509,9 +509,9 @@ export function ConversationMetadataPanel({
                                           <AlertCircle className="h-3 w-3 text-muted-foreground" />
                                         </span>
                                       </TooltipTrigger>
-                                      <TooltipContent side="left" className="max-w-xs">
+                                      <TooltipContent side="left">
                                         <div 
-                                          className="text-xs [&_a]:text-primary [&_a]:underline"
+                                          className="[&_a]:text-primary [&_a]:underline"
                                           dangerouslySetInnerHTML={{ __html: sanitizedConsentContent }} 
                                         />
                                       </TooltipContent>
@@ -724,8 +724,8 @@ export function ConversationMetadataPanel({
                               </div>
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent side="left" className="max-w-xs">
-                            <div className="text-xs break-all">{metadata.referrer_journey.referrer_url}</div>
+                          <TooltipContent side="left">
+                            <div className="break-all">{metadata.referrer_journey.referrer_url}</div>
                           </TooltipContent>
                         </Tooltip>
                       )}
@@ -751,8 +751,8 @@ export function ConversationMetadataPanel({
                               </div>
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent side="left" className="max-w-xs">
-                            <div className="text-xs break-all">{metadata.referrer_journey.landing_page}</div>
+                          <TooltipContent side="left">
+                            <div className="break-all">{metadata.referrer_journey.landing_page}</div>
                           </TooltipContent>
                         </Tooltip>
                       )}
@@ -867,8 +867,8 @@ export function ConversationMetadataPanel({
                                   </div>
                                 </div>
                               </TooltipTrigger>
-                              <TooltipContent side="left" className="max-w-xs">
-                                <div className="text-xs break-all">{fullUrl}</div>
+                              <TooltipContent side="left">
+                                <div className="break-all">{fullUrl}</div>
                               </TooltipContent>
                             </Tooltip>
                           );
