@@ -425,7 +425,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
             </p>
           ) : (
             <div className="space-y-0">
-              <AnimatePresence mode="popLayout" initial={false}>
+              <AnimatePresence initial={false}>
               {feedItems.map((item, index) => {
                 if (item.type === 'comment') {
                   const comment = item.data;
@@ -439,7 +439,6 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                       initial="hidden"
                       animate="visible"
                       exit="exit"
-                      layout
                       className="flex gap-2 py-2 group relative">
                       {/* Timeline line */}
                       {index < feedItems.length - 1 && (
@@ -512,7 +511,6 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                       initial="hidden"
                       animate="visible"
                       exit="exit"
-                      layout
                       className="flex gap-2 py-2 relative">
                       {/* Timeline line */}
                       {index < feedItems.length - 1 && (
