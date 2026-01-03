@@ -492,20 +492,22 @@ export const LeadDetailsSheet = ({
   // Always render Sheet for proper animation handling
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-4xl h-[94vh] flex flex-col overflow-hidden" aria-describedby="lead-details-description">
+      <SheetContent className="sm:max-w-4xl h-[94vh] p-0 flex overflow-hidden" aria-describedby="lead-details-description">
         {!lead ? (
-          <SkeletonLeadDetails />
+          <div className="p-6">
+            <SkeletonLeadDetails />
+          </div>
         ) : (
           <>
-            <SheetHeader className="flex-shrink-0 pb-4">
-              <SheetTitle>Lead Details</SheetTitle>
-              <p id="lead-details-description" className="sr-only">View and edit lead information, activity, and comments</p>
-            </SheetHeader>
+            {/* Left side - header + scrollable content */}
+            <div className="flex-1 flex flex-col min-h-0 min-w-0 p-6 pr-0">
+              <SheetHeader className="flex-shrink-0 pb-4 pr-6">
+                <SheetTitle>Lead Details</SheetTitle>
+                <p id="lead-details-description" className="sr-only">View and edit lead information, activity, and comments</p>
+              </SheetHeader>
 
-            {/* Two-column layout with independent scrolling */}
-            <div className="flex flex-1 min-h-0 overflow-hidden">
-              {/* Left column - Lead details with scroll */}
-              <div className="flex-1 min-w-0 min-h-0 overflow-y-auto pr-6">
+              {/* Scrollable content */}
+              <div className="flex-1 min-h-0 overflow-y-auto pr-6">
                 <div className="space-y-4 pb-4">
                   {/* Compact Property Grid - Status, Assignees, Priority */}
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -815,11 +817,11 @@ export const LeadDetailsSheet = ({
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Right column - Activity & Comments - full height border */}
-              <div className="w-72 border-l flex-shrink-0 flex flex-col -my-4 py-4 pl-4">
-                <LeadActivityPanel leadId={lead.id} />
-              </div>
+            {/* Right column - Activity & Comments - full height with border */}
+            <div className="w-72 border-l flex-shrink-0 flex flex-col p-4">
+              <LeadActivityPanel leadId={lead.id} />
             </div>
           </>
         )}
