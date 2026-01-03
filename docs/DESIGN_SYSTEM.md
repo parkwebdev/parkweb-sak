@@ -441,6 +441,7 @@ When interactive elements (buttons, filters, dropdowns, selects) are placed adja
 | Large | `size="lg"` | `px-3 py-1 text-sm` | Prominent badges |
 | Counter | `size="counter"` | `h-5 px-1.5 text-xs` | Inline count badges (filters, tabs) |
 | Dot | `size="dot"` | `h-5 w-5 p-0 rounded-full` | Notification dots |
+| Micro | `size="micro"` | `h-4 px-1.5 py-0 text-2xs` | Tiny inline labels (tags, model badges) |
 
 **Usage:**
 ```tsx

@@ -90,21 +90,21 @@ function AccountCard({ account, onDisconnect, onRefetch }: AccountCardProps) {
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Quick Status Badge */}
             {account.sync_error ? (
-              <Badge variant="destructive" className="text-2xs">
+              <Badge variant="destructive" size="sm">
                 <AlertCircle size={10} className="mr-1" />
                 Error
               </Badge>
             ) : account.is_active && account.webhook_channel_id ? (
-              <Badge variant="secondary" className="text-2xs bg-status-active/10 text-status-active">
+              <Badge variant="secondary" size="sm" className="bg-status-active/10 text-status-active">
                 <Check size={10} className="mr-1" />
                 Live
               </Badge>
             ) : account.is_active ? (
-              <Badge variant="secondary" className="text-2xs bg-status-pending/10 text-status-pending">
+              <Badge variant="secondary" size="sm" className="bg-status-pending/10 text-status-pending">
                 Connected
               </Badge>
             ) : (
-              <Badge variant="secondary" className="text-2xs">Inactive</Badge>
+              <Badge variant="secondary" size="sm">Inactive</Badge>
             )}
             
             {/* Expand/Collapse */}

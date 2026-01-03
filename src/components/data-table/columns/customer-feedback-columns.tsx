@@ -114,7 +114,7 @@ export const customerFeedbackColumns: ColumnDef<CustomerFeedbackData>[] = [
       <DataTableColumnHeader column={column} title="Trigger" />
     ),
     cell: ({ row }) => (
-      <Badge variant="secondary" className="text-2xs font-normal">
+      <Badge variant="secondary" size="sm" className="font-normal">
         {getTriggerLabel(row.original.triggerType)}
       </Badge>
     ),

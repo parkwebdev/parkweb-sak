@@ -518,7 +518,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge size="sm" className="px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                <Badge size="micro" className="font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -543,7 +543,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge size="sm" className="px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                <Badge size="micro" className="font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -568,7 +568,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge size="sm" className="px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                <Badge size="micro" className="font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -593,7 +593,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge size="sm" className="px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                <Badge size="micro" className="font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}

@@ -290,7 +290,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
           <span className="flex items-center gap-1 flex-wrap">
             <span className="font-medium">{userName}</span>
             <span>added tag</span>
-            <Badge variant="secondary" className="text-2xs h-4">{data.tag}</Badge>
+            <Badge variant="secondary" size="micro">{data.tag}</Badge>
           </span>
         );
 
@@ -299,7 +299,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
           <span className="flex items-center gap-1 flex-wrap">
             <span className="font-medium">{userName}</span>
             <span>removed tag</span>
-            <Badge variant="outline" className="text-2xs h-4 line-through opacity-60">{data.tag}</Badge>
+            <Badge variant="outline" size="micro" className="line-through opacity-60">{data.tag}</Badge>
           </span>
         );
 
