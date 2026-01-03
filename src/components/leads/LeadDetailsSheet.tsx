@@ -106,8 +106,8 @@ export const LeadDetailsSheet = ({
   const [editedCustomData, setEditedCustomData] = useState<Record<string, unknown>>({});
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Track which fields are currently saving (for pulse animation)
-  const [savingFields, setSavingFields] = useState<Set<string>>(new Set());
+  // Track the last saved values to detect when lead prop has been updated
+  const lastSavedValuesRef = useRef<{ lead: Partial<Tables<'leads'>>; customData: Record<string, unknown> } | null>(null);
 
   // Track if user is actively editing to prevent state reset
   const isEditingRef = useRef(false);
@@ -201,42 +201,39 @@ export const LeadDetailsSheet = ({
   // Track which field was last edited
   const lastEditedFieldRef = useRef<string | null>(null);
 
-  // Refs to track timeouts for cleanup
-  const savingPulseTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-
   // Clean up all timeouts on unmount
   useEffect(() => {
-    const timeouts = savingPulseTimeoutsRef.current;
     const notesTimeout = notesTimeoutRef.current;
     const autoSaveTimeout = autoSaveTimeoutRef.current;
     
     return () => {
-      timeouts.forEach(timeout => clearTimeout(timeout));
-      timeouts.clear();
       if (notesTimeout) clearTimeout(notesTimeout);
       if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
     };
   }, []);
 
-  // Show saving pulse on a field
-  const showSavingPulse = useCallback((fieldId: string) => {
-    setSavingFields(prev => new Set(prev).add(fieldId));
+  // Clear local edited state once lead prop reflects saved values
+  useEffect(() => {
+    if (!lastSavedValuesRef.current || !lead) return;
     
-    // Clear any existing timeout for this field
-    const existing = savingPulseTimeoutsRef.current.get(fieldId);
-    if (existing) clearTimeout(existing);
+    const { lead: savedLead, customData: savedCustomData } = lastSavedValuesRef.current;
+    const currentData = (lead.data || {}) as Record<string, unknown>;
     
-    const timeout = setTimeout(() => {
-      setSavingFields(prev => {
-        const next = new Set(prev);
-        next.delete(fieldId);
-        return next;
-      });
-      savingPulseTimeoutsRef.current.delete(fieldId);
-    }, 600);
+    // Check if lead prop now reflects saved values
+    const leadValuesMatch = Object.entries(savedLead).every(
+      ([key, value]) => lead[key as keyof Tables<'leads'>] === value
+    );
+    const customDataValuesMatch = Object.entries(savedCustomData).every(
+      ([key, value]) => currentData[key] === value
+    );
     
-    savingPulseTimeoutsRef.current.set(fieldId, timeout);
-  }, []);
+    if (leadValuesMatch && customDataValuesMatch) {
+      // Lead prop has been updated, safe to clear local state
+      setEditedLead({});
+      setEditedCustomData({});
+      lastSavedValuesRef.current = null;
+    }
+  }, [lead]);
 
   // Auto-save with debounce
   const performAutoSave = useCallback(() => {
@@ -255,15 +252,14 @@ export const LeadDetailsSheet = ({
       ...(hasCustomDataChanges ? { data: mergedData as Json } : {}),
     };
     
-    onUpdate(lead.id, updates);
-    setEditedLead({});
-    setEditedCustomData({});
+    // Store what we're saving so we can clear local state once lead prop updates
+    lastSavedValuesRef.current = {
+      lead: editedLead,
+      customData: editedCustomData,
+    };
     
-    // Show pulse animation on the last edited field
-    if (lastEditedFieldRef.current) {
-      showSavingPulse(lastEditedFieldRef.current);
-    }
-  }, [lead, editedLead, editedCustomData, onUpdate, showSavingPulse]);
+    onUpdate(lead.id, updates);
+  }, [lead, editedLead, editedCustomData, onUpdate]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -341,8 +337,6 @@ export const LeadDetailsSheet = ({
       // Invalidate conversations list for sync
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       
-      // Show pulse animation
-      showSavingPulse(fieldName);
 
       // Log activity for internal notes changes
       if ('notes' in updates && lead?.id && user?.id) {
@@ -370,7 +364,7 @@ export const LeadDetailsSheet = ({
         }
       }
     }
-  }, [lead?.conversation_id, lead?.id, conversation, queryClient, showSavingPulse, user?.id]);
+  }, [lead?.conversation_id, lead?.id, conversation, queryClient, user?.id]);
 
   // Handle priority change
   const handlePriorityChange = useCallback((value: string) => {
@@ -451,12 +445,10 @@ export const LeadDetailsSheet = ({
     return null;
   };
 
-  // Input class with saving pulse animation
-  const getInputClassName = (fieldId: string, baseClass: string = '') => {
-    const isSaving = savingFields.has(fieldId);
+  // Input class styling
+  const getInputClassName = (baseClass: string = '') => {
     return cn(
       "h-8 text-xs bg-muted/50 border-transparent focus:border-input focus:bg-background transition-all duration-200",
-      isSaving && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse",
       baseClass
     );
   };
@@ -535,10 +527,7 @@ export const LeadDetailsSheet = ({
             onFocus={() => { isEditingRef.current = true; }}
             onBlur={() => { isEditingRef.current = false; }}
             rows={2}
-            className={cn(
-              "text-xs min-h-8 resize-none transition-all duration-200",
-              savingFields.has(fieldId) && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
-            )}
+            className="text-xs min-h-8 resize-none transition-all duration-200"
           />
         </div>
       );
@@ -556,7 +545,7 @@ export const LeadDetailsSheet = ({
           }}
           onFocus={() => { isEditingRef.current = true; }}
           onBlur={() => { isEditingRef.current = false; }}
-          className={getInputClassName(fieldId)}
+          className={getInputClassName()}
         />
       </div>
     );
@@ -644,7 +633,7 @@ export const LeadDetailsSheet = ({
                         if (e.key === 'Escape') setIsEditingName(false);
                         if (e.key === 'Enter') setIsEditingName(false);
                       }}
-                      className={cn("h-8 text-lg font-semibold flex-1", getInputClassName('firstName'))}
+                      className={cn("h-8 text-lg font-semibold flex-1", getInputClassName())}
                       placeholder="First name"
                       autoFocus
                     />
@@ -657,7 +646,7 @@ export const LeadDetailsSheet = ({
                         if (e.key === 'Escape') setIsEditingName(false);
                         if (e.key === 'Enter') setIsEditingName(false);
                       }}
-                      className={cn("h-8 text-lg font-semibold flex-1", getInputClassName('lastName'))}
+                      className={cn("h-8 text-lg font-semibold flex-1", getInputClassName())}
                       placeholder="Last name"
                     />
                     <Button
@@ -696,10 +685,7 @@ export const LeadDetailsSheet = ({
                     />
                     
                     {lead.conversation_id && (
-                      <div className={cn(
-                        "flex items-center gap-1 rounded transition-all duration-200",
-                        savingFields.has('priority') && "ring-2 ring-primary/50"
-                      )}>
+                      <div className="flex items-center gap-1 rounded transition-all duration-200">
                         <Select
                           value={conversationMetadata.priority || 'none'}
                           onValueChange={handlePriorityChange}
@@ -880,10 +866,7 @@ export const LeadDetailsSheet = ({
 
                   {/* Tags - Inline */}
                   {lead.conversation_id && (
-                    <div className={cn(
-                      "flex items-center gap-2 rounded transition-all duration-200",
-                      savingFields.has('tags') && "ring-2 ring-primary/50"
-                    )}>
+                    <div className="flex items-center gap-2 rounded transition-all duration-200">
                       <Label className="text-xs text-muted-foreground flex-shrink-0">Tags</Label>
                       <div className="flex flex-wrap items-center gap-1.5 flex-1">
                         {conversationMetadata.tags?.map((tag) => (
@@ -948,10 +931,7 @@ export const LeadDetailsSheet = ({
                         onFocus={() => { isEditingNotesRef.current = true; }}
                         onBlur={() => { isEditingNotesRef.current = false; }}
                         rows={2}
-                        className={cn(
-                          "resize-none text-xs min-h-8 transition-all duration-200",
-                          savingFields.has('notes') && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
-                        )}
+                        className="resize-none text-xs min-h-8 transition-all duration-200"
                       />
                     </div>
                   )}
