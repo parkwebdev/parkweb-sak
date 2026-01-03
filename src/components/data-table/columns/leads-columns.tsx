@@ -2,7 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
-import { LeadAssigneeSelector } from '@/components/leads/LeadAssigneeSelector';
+import { LeadAssigneePicker } from '@/components/leads/LeadAssigneePicker';
 import { PHONE_FIELD_KEYS } from '@/lib/field-keys';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -14,25 +14,21 @@ export type Lead = Tables<'leads'> & {
   };
 };
 
-interface TeamMember {
-  user_id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-}
-
 interface LeadsColumnsProps {
   onView: (lead: Lead) => void;
   onStageChange: (leadId: string, stageId: string) => void;
-  onAssignChange?: (leadId: string, userId: string | null) => void;
+  onAddAssignee?: (leadId: string, userId: string) => void;
+  onRemoveAssignee?: (leadId: string, userId: string) => void;
+  getAssignees: (leadId: string) => string[];
   StatusDropdown: React.ComponentType<{ stageId: string | null; onStageChange: (stageId: string) => void }>;
-  teamMembers?: TeamMember[];
 }
 
 export const createLeadsColumns = ({
   onStageChange,
-  onAssignChange,
+  onAddAssignee,
+  onRemoveAssignee,
+  getAssignees,
   StatusDropdown,
-  teamMembers = [],
 }: LeadsColumnsProps): ColumnDef<Lead>[] => [
   {
     id: 'select',
@@ -229,20 +225,22 @@ export const createLeadsColumns = ({
     },
   },
   {
-    accessorKey: 'assigned_to',
-    size: 160,
-    minSize: 120,
-    maxSize: 200,
+    id: 'assignees',
+    size: 140,
+    minSize: 100,
+    maxSize: 180,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Assignee" />
+      <DataTableColumnHeader column={column} title="Assignees" />
     ),
     cell: ({ row }) => (
       <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-        <LeadAssigneeSelector
-          assignedTo={row.original.assigned_to}
-          onAssign={(userId) => onAssignChange?.(row.original.id, userId)}
+        <LeadAssigneePicker
+          leadId={row.original.id}
+          assignees={getAssignees(row.original.id)}
+          onAdd={(userId) => onAddAssignee?.(row.original.id, userId)}
+          onRemove={(userId) => onRemoveAssignee?.(row.original.id, userId)}
           size="sm"
-          disabled={!onAssignChange}
+          disabled={!onAddAssignee}
         />
       </div>
     ),

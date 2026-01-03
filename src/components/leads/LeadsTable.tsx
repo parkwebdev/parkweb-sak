@@ -28,7 +28,6 @@ import {
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 import { Button } from '@/components/ui/button';
-import { useTeam } from '@/hooks/useTeam';
 import type { SortOption } from './LeadsViewSettingsSheet';
 
 interface LeadsTableProps {
@@ -36,7 +35,9 @@ interface LeadsTableProps {
   selectedIds: Set<string>;
   onView: (lead: Lead) => void;
   onStageChange?: (leadId: string, stageId: string) => void;
-  onAssignChange?: (leadId: string, userId: string | null) => void;
+  onAddAssignee?: (leadId: string, userId: string) => void;
+  onRemoveAssignee?: (leadId: string, userId: string) => void;
+  getAssignees: (leadId: string) => string[];
   onSelectionChange?: (id: string, checked: boolean) => void;
   onSelectAll?: (checked: boolean) => void;
   onBulkDelete?: (ids: string[]) => void;
@@ -56,7 +57,9 @@ export const LeadsTable = React.memo(function LeadsTable({
   selectedIds,
   onView,
   onStageChange,
-  onAssignChange,
+  onAddAssignee,
+  onRemoveAssignee,
+  getAssignees,
   onSelectionChange,
   onSelectAll,
   onBulkDelete,
@@ -66,7 +69,6 @@ export const LeadsTable = React.memo(function LeadsTable({
   defaultSort,
   canManage = true,
 }: LeadsTableProps) {
-  const { teamMembers } = useTeam();
   // Initialize sorting from defaultSort
   const [sorting, setSorting] = useState<SortingState>(() => {
     if (defaultSort) {
@@ -98,11 +100,12 @@ export const LeadsTable = React.memo(function LeadsTable({
       createLeadsColumns({
         onView,
         onStageChange: onStageChange || (() => {}),
-        onAssignChange,
+        onAddAssignee,
+        onRemoveAssignee,
+        getAssignees,
         StatusDropdown: LeadStatusDropdown,
-        teamMembers,
       }),
-    [onView, onStageChange, onAssignChange, teamMembers]
+    [onView, onStageChange, onAddAssignee, onRemoveAssignee, getAssignees]
   );
 
   // Reorder columns based on columnOrder prop

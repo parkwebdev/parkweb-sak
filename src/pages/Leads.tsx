@@ -15,6 +15,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLeads } from '@/hooks/useLeads';
 import { useLeadStages } from '@/hooks/useLeadStages';
+import { useLeadAssignees } from '@/hooks/useLeadAssignees';
 import { useCanManage } from '@/hooks/useCanManage';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
@@ -47,6 +48,7 @@ interface LeadsProps {
 function Leads({ onMenuClick }: LeadsProps) {
   const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const { stages } = useLeadStages();
+  const { getAssignees, addAssignee, removeAssignee } = useLeadAssignees();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
@@ -304,7 +306,9 @@ function Leads({ onMenuClick }: LeadsProps) {
                   onStatusChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : () => {}}
                   onViewLead={handleViewLead}
                   onOrderChange={canManageLeads ? updateLeadOrders : undefined}
-                  onAssign={canManageLeads ? (leadId, userId) => updateLead(leadId, { assigned_to: userId }) : undefined}
+                  onAddAssignee={canManageLeads ? addAssignee : undefined}
+                  onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
+                  getAssignees={getAssignees}
                   visibleFields={visibleCardFields}
                   canManage={canManageLeads}
                   sortOption={defaultSort}
@@ -323,7 +327,9 @@ function Leads({ onMenuClick }: LeadsProps) {
                   selectedIds={selectedLeadIds}
                   onView={handleViewLead}
                   onStageChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
-                  onAssignChange={canManageLeads ? (leadId, userId) => updateLead(leadId, { assigned_to: userId }) : undefined}
+                  onAddAssignee={canManageLeads ? addAssignee : undefined}
+                  onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
+                  getAssignees={getAssignees}
                   onSelectionChange={canManageLeads ? handleSelectLead : undefined}
                   onSelectAll={canManageLeads ? handleSelectAll : undefined}
                   onBulkDelete={canManageLeads ? (ids) => {
