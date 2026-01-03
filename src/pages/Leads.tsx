@@ -11,15 +11,14 @@
  * @page
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '@/components/ui/button';
 import { useLeads } from '@/hooks/useLeads';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useCanManage } from '@/hooks/useCanManage';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
-import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
+import { LeadsToolbar } from '@/components/leads/LeadsToolbar';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { 
@@ -36,7 +35,6 @@ import {
   type SortOption,
 } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
-import { FilterLines, SearchMd } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -254,6 +252,36 @@ function Leads({ onMenuClick }: LeadsProps) {
     });
   }, [leads, searchQuery]);
 
+  // Compute active customization count for badge display
+  const activeCustomizationCount = useMemo(() => {
+    let count = 0;
+    
+    if (viewMode === 'kanban') {
+      // Count kanban field customizations
+      const defaultFields = getDefaultVisibleFields();
+      const hasKanbanChanges = 
+        visibleCardFields.size !== defaultFields.size ||
+        [...visibleCardFields].some(f => !defaultFields.has(f));
+      if (hasKanbanChanges) count++;
+    } else {
+      // Count table column visibility customizations
+      const tableChanges = Object.entries(columnVisibility).filter(
+        ([key, value]) => value !== DEFAULT_TABLE_COLUMN_VISIBILITY[key]
+      ).length;
+      if (tableChanges > 0) count++;
+      
+      // Count column order customizations
+      const defaultOrder = getDefaultColumnOrder();
+      const hasOrderChanges = columnOrder.some((col, i) => col !== defaultOrder[i]);
+      if (hasOrderChanges) count++;
+    }
+    
+    // Count sorting customization
+    if (defaultSort) count++;
+    
+    return count;
+  }, [viewMode, visibleCardFields, columnVisibility, columnOrder, defaultSort]);
+
   const handleViewLead = useCallback((lead: Tables<'leads'>) => {
     setSelectedLead(lead);
     setIsDetailsOpen(true);
@@ -333,33 +361,15 @@ function Leads({ onMenuClick }: LeadsProps) {
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="space-y-4"
               >
-                {/* Kanban toolbar with search and view toggle */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="relative flex-1 max-w-sm">
-                    <input
-                      type="text"
-                      placeholder="Search leads..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    />
-                    <SearchMd className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => setIsSettingsSheetOpen(true)}
-                    >
-                      <FilterLines size={16} />
-                    </Button>
-                    <ViewModeToggle
-                      viewMode={viewMode}
-                      onViewModeChange={setViewMode}
-                    />
-                  </div>
-                </div>
+                {/* Unified toolbar */}
+                <LeadsToolbar
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  onOpenSettings={() => setIsSettingsSheetOpen(true)}
+                  activeCustomizationCount={activeCustomizationCount}
+                />
                 <LeadsKanbanBoard
                   leads={filteredLeads}
                   onStatusChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
@@ -393,6 +403,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
                   onOpenSettings={() => setIsSettingsSheetOpen(true)}
+                  activeCustomizationCount={activeCustomizationCount}
                   columnVisibility={columnVisibility}
                   onColumnVisibilityChange={handleColumnVisibilityChange}
                   columnOrder={columnOrder}

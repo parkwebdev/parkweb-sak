@@ -19,16 +19,15 @@ import {
   ColumnOrderState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { Trash01, FilterLines } from '@untitledui/icons';
+import { Trash01 } from '@untitledui/icons';
 import {
   DataTable,
   DataTablePagination,
-  DataTableToolbar,
   DataTableFloatingBar,
 } from '@/components/data-table';
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
-import { ViewModeToggle } from './ViewModeToggle';
+import { LeadsToolbar } from './LeadsToolbar';
 import { Button } from '@/components/ui/button';
 import type { SortOption } from './LeadsViewSettingsSheet';
 
@@ -45,6 +44,8 @@ interface LeadsTableProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onOpenSettings?: () => void;
+  /** Number of active customizations for badge display */
+  activeCustomizationCount?: number;
   // External column visibility control
   columnVisibility: VisibilityState;
   onColumnVisibilityChange: (visibility: VisibilityState) => void;
@@ -69,6 +70,7 @@ export const LeadsTable = React.memo(function LeadsTable({
   searchQuery,
   onSearchChange,
   onOpenSettings,
+  activeCustomizationCount = 0,
   columnVisibility,
   onColumnVisibilityChange,
   columnOrder,
@@ -199,29 +201,13 @@ export const LeadsTable = React.memo(function LeadsTable({
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar
-        table={table}
-        searchPlaceholder="Search leads..."
-        searchValue={searchQuery}
+      <LeadsToolbar
+        searchQuery={searchQuery}
         onSearchChange={onSearchChange}
-        endContent={
-          <div className="flex items-center gap-2">
-            {onOpenSettings && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={onOpenSettings}
-              >
-                <FilterLines size={16} />
-              </Button>
-            )}
-            <ViewModeToggle
-              viewMode={viewMode}
-              onViewModeChange={onViewModeChange}
-            />
-          </div>
-        }
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
+        onOpenSettings={onOpenSettings ?? (() => {})}
+        activeCustomizationCount={activeCustomizationCount}
       />
       <DataTable
         table={table}
