@@ -265,7 +265,7 @@ export const createKnowledgeColumns = ({
     cell: ({ row }) => {
       const label = getSourceTypeLabel(row.original);
       return (
-        <Badge variant="outline" className="text-xs whitespace-nowrap">
+        <Badge variant="outline" className="whitespace-nowrap">
           {label}
         </Badge>
       );
@@ -291,14 +291,14 @@ export const createKnowledgeColumns = ({
       
       return (
         <div className="flex items-center gap-1.5">
-          <Badge variant={variant} className="text-xs gap-1">
+          <Badge variant={variant} className="gap-1">
             <StatusIcon className="h-3 w-3" />
             <span className="capitalize">{status}</span>
           </Badge>
           {outdated && status === 'ready' && (
             <Tooltip>
               <TooltipTrigger>
-                <Badge variant="outline" className="text-xs gap-1 border-warning text-warning">
+                <Badge variant="outline" className="gap-1 border-warning text-warning">
                   <AlertCircle className="h-3 w-3" />
                   Outdated
                 </Badge>

@@ -124,7 +124,7 @@ export const createLocationsColumns = ({
         return <span className="text-muted-foreground text-sm">None</span>;
       }
       return (
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="secondary">
           {count}
         </Badge>
       );

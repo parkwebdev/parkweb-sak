@@ -645,7 +645,7 @@ export function FullCalendar({
               <h2 className="text-lg font-semibold text-foreground">
                 {getHeaderTitle()}
               </h2>
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary">
                 Week {getWeek(currentDate)}
               </Badge>
             </div>

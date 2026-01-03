@@ -694,7 +694,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
           {/* Behavior Controls Section */}
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs font-normal">
+              <Badge variant="outline" className="font-normal">
                 {selectedModel?.label || formData.model}
               </Badge>
               <span className="text-xs text-muted-foreground">

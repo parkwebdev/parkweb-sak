@@ -751,9 +751,9 @@ export function LeadsViewSettingsSheet({
   // --- Sub-view header component ---
   const SubViewHeader = ({ title, onBack }: { title: string; onBack: () => void }) => (
     <div className="flex items-center gap-2 pb-4 border-b mb-4">
-      <Button variant="ghost" size="sm" onClick={onBack} className="h-8 w-8 p-0">
+      <IconButton label="Go back" variant="ghost" size="icon-sm" onClick={onBack}>
         <ArrowLeft size={16} />
-      </Button>
+      </IconButton>
       <span className="font-semibold">{title}</span>
     </div>
   );
@@ -1231,10 +1231,10 @@ export function LeadsViewSettingsSheet({
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-medium">Columns to export</Label>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={handleExportSelectAll} className="h-7 px-2 text-xs">
+                        <Button variant="ghost" size="xs" onClick={handleExportSelectAll}>
                           Select all
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={handleExportDeselectAll} className="h-7 px-2 text-xs">
+                        <Button variant="ghost" size="xs" onClick={handleExportDeselectAll}>
                           Deselect all
                         </Button>
                       </div>

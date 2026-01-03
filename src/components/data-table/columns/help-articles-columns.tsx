@@ -207,7 +207,7 @@ export const createHelpArticlesColumns = ({
       
       return (
         <div className="flex justify-center">
-          <Badge variant="outline" className="text-xs gap-1 max-w-[120px]">
+          <Badge variant="outline" className="gap-1 max-w-[120px]">
             <CategoryIcon className="h-3 w-3 shrink-0" />
             <span className="truncate" title={article.categoryName}>{article.categoryName}</span>
           </Badge>

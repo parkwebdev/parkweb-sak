@@ -76,7 +76,7 @@ export function WordPressConnectionCard({ agent, onSyncComplete }: WordPressConn
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-medium text-sm">WordPress Connection</h3>
             {isConnected && !isEditing && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary">
                 Connected
               </Badge>
             )}
