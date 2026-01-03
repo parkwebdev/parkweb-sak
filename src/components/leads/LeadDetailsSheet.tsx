@@ -29,6 +29,7 @@ import { LeadAssigneePicker } from './LeadAssigneePicker';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
+import { LeadActivityPanel } from './LeadActivityPanel';
 
 interface LeadDetailsSheetProps {
   lead: Tables<'leads'> | null;
@@ -490,7 +491,7 @@ export const LeadDetailsSheet = ({
   // Always render Sheet for proper animation handling
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-xl overflow-y-auto">
+      <SheetContent className="sm:max-w-4xl overflow-y-auto">
         {!lead ? (
           <SkeletonLeadDetails />
         ) : (
@@ -517,7 +518,10 @@ export const LeadDetailsSheet = ({
               </div>
             </SheetHeader>
 
-            <div className="space-y-6 py-6">
+            {/* Two-column layout */}
+            <div className="flex gap-6 py-6">
+              {/* Left column - Lead details */}
+              <div className="flex-1 min-w-0 space-y-6">
               {/* Contact Information */}
               <div className="space-y-4">
                 <h3 className="font-semibold">Contact Information</h3>
@@ -877,6 +881,12 @@ export const LeadDetailsSheet = ({
                     <Trash02 className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 )}
+              </div>
+              </div>
+
+              {/* Right column - Activity & Comments */}
+              <div className="w-80 border-l pl-6 flex-shrink-0 flex flex-col min-h-[400px]">
+                <LeadActivityPanel leadId={lead.id} />
               </div>
             </div>
           </>
