@@ -292,11 +292,12 @@ function Leads({ onMenuClick }: LeadsProps) {
               >
                 <LeadsKanbanBoard
                   leads={filteredLeads}
-                  onStatusChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
+                  onStatusChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : () => {}}
                   onViewLead={handleViewLead}
                   onOrderChange={canManageLeads ? updateLeadOrders : undefined}
                   visibleFields={visibleCardFields}
                   canManage={canManageLeads}
+                  sortOption={defaultSort}
                 />
               </motion.div>
             ) : (
