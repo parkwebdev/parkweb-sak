@@ -199,16 +199,41 @@ export const LeadDetailsSheet = ({
   // Track which field was last edited
   const lastEditedFieldRef = useRef<string | null>(null);
 
+  // Refs to track timeouts for cleanup
+  const savingPulseTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  // Clean up all timeouts on unmount
+  useEffect(() => {
+    const timeouts = savingPulseTimeoutsRef.current;
+    const notesTimeout = notesTimeoutRef.current;
+    const autoSaveTimeout = autoSaveTimeoutRef.current;
+    
+    return () => {
+      timeouts.forEach(timeout => clearTimeout(timeout));
+      timeouts.clear();
+      if (notesTimeout) clearTimeout(notesTimeout);
+      if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+    };
+  }, []);
+
   // Show saving pulse on a field
   const showSavingPulse = useCallback((fieldId: string) => {
     setSavingFields(prev => new Set(prev).add(fieldId));
-    setTimeout(() => {
+    
+    // Clear any existing timeout for this field
+    const existing = savingPulseTimeoutsRef.current.get(fieldId);
+    if (existing) clearTimeout(existing);
+    
+    const timeout = setTimeout(() => {
       setSavingFields(prev => {
         const next = new Set(prev);
         next.delete(fieldId);
         return next;
       });
+      savingPulseTimeoutsRef.current.delete(fieldId);
     }, 600);
+    
+    savingPulseTimeoutsRef.current.set(fieldId, timeout);
   }, []);
 
   // Auto-save with debounce
@@ -393,8 +418,6 @@ export const LeadDetailsSheet = ({
     const messageKeys = ['message', 'Message', 'comments', 'Comments', 'note', 'notes'];
     return messageKeys.includes(key);
   };
-
-  // Check if field is a consent field - uses centralized helper
 
   // Get consent content from custom data (look for related content field)
   const getConsentContent = (key: string, data: Record<string, unknown>): string | null => {

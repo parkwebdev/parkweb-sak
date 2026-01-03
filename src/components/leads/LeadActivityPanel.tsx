@@ -5,7 +5,7 @@
  * Comment input is pinned at the bottom.
  */
 
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { IconButton } from '@/components/ui/icon-button';
+import { toast } from 'sonner';
 import { useLeadComments, type LeadComment } from '@/hooks/useLeadComments';
 import { useLeadActivities, type LeadActivity, type ActionData, type AssigneeProfile } from '@/hooks/useLeadActivities';
 import { useLeadStages } from '@/hooks/useLeadStages';
@@ -64,6 +65,8 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const [editContent, setEditContent] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const wasAtBottomRef = useRef(true);
+  const prevFeedLengthRef = useRef(0);
 
   const isLoading = commentsLoading || activitiesLoading;
   const itemVariants = getVariants(slideUpVariants, fadeReducedVariants, prefersReducedMotion);
@@ -85,11 +88,29 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
     return items.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }, [activities, comments]);
 
-  // Auto-scroll to bottom when new items are added
+  // Track if user is at bottom of scroll
+  const checkIfAtBottom = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return true;
+    const threshold = 50; // px from bottom
+    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+  }, []);
+
+  // Update wasAtBottom when user scrolls
+  const handleScroll = useCallback(() => {
+    wasAtBottomRef.current = checkIfAtBottom();
+  }, [checkIfAtBottom]);
+
+  // Auto-scroll to bottom only when new items are added AND user was already at bottom
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Only scroll if we have new items and user was at bottom
+    if (feedItems.length > prevFeedLengthRef.current && wasAtBottomRef.current) {
+      container.scrollTop = container.scrollHeight;
     }
+    prevFeedLengthRef.current = feedItems.length;
   }, [feedItems.length]);
 
   // Get stage name by ID
@@ -220,11 +241,14 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
     try {
+      // Force scroll to bottom when user adds a comment
+      wasAtBottomRef.current = true;
       await addComment(newComment.trim());
       setNewComment('');
       inputRef.current?.focus();
     } catch (error) {
       console.error('Failed to add comment:', error);
+      toast.error('Failed to add comment');
     }
   };
 
@@ -236,14 +260,17 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       setEditContent('');
     } catch (error) {
       console.error('Failed to update comment:', error);
+      toast.error('Failed to update comment');
     }
   };
 
   const handleDelete = async (commentId: string) => {
     try {
       await deleteComment(commentId);
+      toast.success('Comment deleted');
     } catch (error) {
       console.error('Failed to delete comment:', error);
+      toast.error('Failed to delete comment');
     }
   };
 
@@ -293,6 +320,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       {/* Feed area with gray background - native scroll for reliability */}
       <div 
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-muted/30"
       >
         <div className="px-4 pt-4 pb-2">
