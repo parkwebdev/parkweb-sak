@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { IconButton } from '@/components/ui/icon-button';
 import { useLeadComments, type LeadComment } from '@/hooks/useLeadComments';
-import { useLeadActivities, type LeadActivity, type ActionData } from '@/hooks/useLeadActivities';
+import { useLeadActivities, type LeadActivity, type ActionData, type AssigneeProfile } from '@/hooks/useLeadActivities';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -53,7 +53,7 @@ type FeedItem =
 export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const { user } = useAuth();
   const { comments, isLoading: commentsLoading, addComment, updateComment, deleteComment, isAdding } = useLeadComments(leadId);
-  const { activities, isLoading: activitiesLoading } = useLeadActivities(leadId);
+  const { activities, assigneeProfiles, isLoading: activitiesLoading } = useLeadActivities(leadId);
   const { stages } = useLeadStages();
 
   const [newComment, setNewComment] = useState('');
@@ -110,6 +110,12 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
     }
   };
 
+  // Get assignee display name from profiles map
+  const getAssigneeDisplayName = (userId: string | undefined): string => {
+    if (!userId) return 'Someone';
+    return assigneeProfiles.get(userId)?.display_name || 'Someone';
+  };
+
   // Render activity description
   const renderActivityDescription = (activity: LeadActivity) => {
     const data = (activity.action_data || {}) as ActionData;
@@ -136,6 +142,22 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
           </span>
         );
 
+      case 'status_changed':
+        return (
+          <span className="flex flex-col gap-0.5">
+            <span>
+              <span className="font-medium">{userName}</span>
+              {' updated '}
+              <span className="font-medium">Status</span>
+            </span>
+            <span className="text-muted-foreground flex items-center gap-1 text-2xs">
+              <span className="capitalize">{data.from?.replace(/_/g, ' ')}</span>
+              <ArrowRight className="h-2.5 w-2.5" />
+              <span className="capitalize">{data.to?.replace(/_/g, ' ')}</span>
+            </span>
+          </span>
+        );
+
       case 'field_updated':
         const fieldName = data.field?.replace(/_/g, ' ');
         const oldValue = data.from;
@@ -154,6 +176,26 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                 <span>{newValue || 'empty'}</span>
               </span>
             )}
+          </span>
+        );
+
+      case 'assignee_added':
+        const assignedUserName = getAssigneeDisplayName(data.user_id);
+        return (
+          <span>
+            <span className="font-medium">{userName}</span>
+            {' assigned '}
+            <span className="font-medium">{assignedUserName}</span>
+          </span>
+        );
+
+      case 'assignee_removed':
+        const removedUserName = getAssigneeDisplayName(data.user_id);
+        return (
+          <span>
+            <span className="font-medium">{userName}</span>
+            {' unassigned '}
+            <span className="font-medium">{removedUserName}</span>
           </span>
         );
 
