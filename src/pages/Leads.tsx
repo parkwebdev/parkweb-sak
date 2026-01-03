@@ -21,6 +21,9 @@ import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadsHeaderBar } from '@/components/leads/LeadsHeaderBar';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
+import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
+import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
+import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
 import { 
   TABLE_VISIBILITY_STORAGE_KEY,
   DEFAULT_TABLE_COLUMN_VISIBILITY,
@@ -43,7 +46,7 @@ interface LeadsProps {
 }
 
 function Leads({ onMenuClick }: LeadsProps) {
-  const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
+  const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations, createLead } = useLeads();
   const { stages } = useLeadStages();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -70,6 +73,11 @@ function Leads({ onMenuClick }: LeadsProps) {
   // Single lead delete from details sheet
   const [singleDeleteLeadId, setSingleDeleteLeadId] = useState<string | null>(null);
   const [isSingleDeleteOpen, setIsSingleDeleteOpen] = useState(false);
+  
+  // Dialog states for action buttons
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isManageStagesOpen, setIsManageStagesOpen] = useState(false);
   
   // Kanban card field visibility state with localStorage persistence
   const [visibleCardFields, setVisibleCardFields] = useState<Set<CardFieldKey>>(() => {
@@ -273,6 +281,10 @@ function Leads({ onMenuClick }: LeadsProps) {
         onToggleCardField={handleToggleField}
         columnVisibility={columnVisibility}
         onColumnVisibilityChange={handleColumnVisibilityChange}
+        onAddLead={() => setIsCreateDialogOpen(true)}
+        onExport={() => setIsExportDialogOpen(true)}
+        onManageStages={() => setIsManageStagesOpen(true)}
+        canManage={canManageLeads}
       />
 
       <div className="px-4 lg:px-8 pt-4 space-y-6 min-w-0">
@@ -362,6 +374,25 @@ function Leads({ onMenuClick }: LeadsProps) {
         hasConversations={singleDeleteLeadId ? getLeadsWithConversations([singleDeleteLeadId]) : false}
         onConfirm={handleSingleDeleteConfirm}
         isDeleting={isDeleting}
+      />
+
+      <CreateLeadDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onCreate={async (leadData) => { await createLead(leadData); }}
+      />
+
+      <ExportLeadsDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        allLeads={leads}
+        filteredLeads={filteredLeads}
+      />
+
+      <ManageStagesDialog
+        open={isManageStagesOpen}
+        onOpenChange={setIsManageStagesOpen}
+        canManage={canManageLeads}
       />
 
     </div>
