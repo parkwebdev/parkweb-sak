@@ -426,7 +426,7 @@ function SkeletonLeadsPage({ className }: { className?: string }) {
  * Badge skeleton for status indicators
  */
 function SkeletonBadge({ width = "w-16", className }: { width?: string; className?: string }) {
-  return <Skeleton className={cn("h-5 rounded-full", width, className)} />;
+  return <Skeleton className={cn("h-5 rounded-md", width, className)} />;
 }
 
 /**
@@ -597,6 +597,22 @@ function SkeletonSearchResults({ items = 5, className }: { items?: number; class
   );
 }
 
+/**
+ * Kanban column skeleton for leads board loading state
+ */
+function SkeletonKanbanColumn({ cards = 2, className }: { cards?: number; className?: string }) {
+  return (
+    <div className={cn("flex-shrink-0 w-72", className)}>
+      <Skeleton className="h-8 w-full rounded mb-2" />
+      <div className="space-y-2">
+        {Array.from({ length: cards }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full rounded" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export {
   Skeleton,
   SkeletonText,
@@ -625,4 +641,5 @@ export {
   SkeletonMessageThread,
   SkeletonUserCard,
   SkeletonSearchResults,
+  SkeletonKanbanColumn,
 };

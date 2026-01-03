@@ -34,6 +34,10 @@ const badgeVariants = cva(
         default: "px-2.5 py-0.5 text-xs",
         sm: "px-2 py-0.5 text-2xs",
         lg: "px-3 py-1 text-sm",
+        /** Counter badge for inline counts (filters, tabs) */
+        counter: "h-5 px-1.5 text-xs",
+        /** Notification dot badge */
+        dot: "h-5 w-5 p-0 rounded-full justify-center",
       },
     },
     defaultVariants: {

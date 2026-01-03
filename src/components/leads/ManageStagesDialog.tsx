@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { IconButton } from '@/components/ui/icon-button';
 import { ColorPicker } from '@/components/ui/color-picker';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useLeadStages, LeadStage } from '@/hooks/useLeadStages';
 import { useStableArray } from '@/hooks/useStableObject';
 import { Plus, Trash01, Check, DotsGrid } from '@untitledui/icons';
@@ -270,10 +271,10 @@ export function ManageStagesDialog({ open, onOpenChange, canManage = true }: Man
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-3 py-4">
-          {loading ? (
+        {loading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
+                <Skeleton key={i} className="h-12 rounded-lg" />
               ))}
             </div>
           ) : (

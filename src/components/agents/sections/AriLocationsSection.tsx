@@ -411,7 +411,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
         className={viewMode === 'communities' ? 'bg-muted hover:bg-muted/80' : ''}
       >
         Communities
-        <Badge variant="outline" className="ml-1.5 h-5 px-1.5 text-xs">
+        <Badge variant="outline" size="counter" className="ml-1.5">
           {locations.length}
         </Badge>
       </Button>
@@ -421,7 +421,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
         className={viewMode === 'properties' ? 'bg-muted hover:bg-muted/80' : ''}
       >
         Properties
-        <Badge variant="outline" className="ml-1.5 h-5 px-1.5 text-xs">
+        <Badge variant="outline" size="counter" className="ml-1.5">
           {propertiesWithLocation.length}
         </Badge>
       </Button>
@@ -445,7 +445,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
           <FilterLines size={16} />
           Filters
           {activeFilters.length > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+            <Badge variant="secondary" size="counter" className="ml-1">
               {activeFilters.length}
             </Badge>
           )}

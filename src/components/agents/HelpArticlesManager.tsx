@@ -610,7 +610,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           <FilterLines size={16} />
           Filters
           {activeFilters.length > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+            <Badge variant="secondary" size="counter" className="ml-1">
               {activeFilters.length}
             </Badge>
           )}
@@ -795,7 +795,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                               <div className="flex items-center gap-2">
                                 <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
                                 <span className="text-sm">{cat.name}</span>
-                                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                                <Badge variant="secondary" size="counter">
                                   {articles.filter(a => a.category === cat.name).length}
                                 </Badge>
                               </div>

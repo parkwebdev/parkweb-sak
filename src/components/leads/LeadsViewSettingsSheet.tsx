@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { IconButton } from '@/components/ui/icon-button';
 import { ColorPicker } from '@/components/ui/color-picker';
+import { Skeleton } from '@/components/ui/skeleton';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
@@ -988,7 +989,7 @@ export function LeadsViewSettingsSheet({
                   {stagesLoading ? (
                     <div className="space-y-2">
                       {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-12 bg-muted animate-pulse rounded-lg" />
+                        <Skeleton key={i} className="h-12 rounded-lg" />
                       ))}
                     </div>
                   ) : (
