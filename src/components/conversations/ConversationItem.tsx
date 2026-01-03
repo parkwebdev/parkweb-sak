@@ -80,7 +80,7 @@ export const ConversationItem = memo(function ConversationItem({
         
         {/* Status badge and timestamp */}
         <div className="flex items-center gap-1.5">
-          <Badge variant="outline" className={`${getStatusColor(conversation.status)} text-xs pl-1 pr-2 py-0.5`}>
+          <Badge variant="outline" className={`${getStatusColor(conversation.status)} pl-1 pr-2 py-0.5`}>
             {conversation.status === 'human_takeover' ? (
               <span className="flex items-center gap-1">
                 {takeoverAvatarUrl && (

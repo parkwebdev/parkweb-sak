@@ -164,7 +164,7 @@ export const HelpView = ({
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="font-medium text-sm flex-1">{article.title}</h4>
                           {article.category && (
-                            <Badge variant="secondary" className="text-xs flex-shrink-0">
+                            <Badge variant="secondary" className="flex-shrink-0">
                               {article.category}
                             </Badge>
                           )}

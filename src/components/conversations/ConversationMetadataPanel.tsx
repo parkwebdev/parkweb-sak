@@ -463,7 +463,7 @@ export function ConversationMetadataPanel({
                           <div className="flex items-center gap-2.5 text-sm">
                             <Flag01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <span className="text-muted-foreground">Language:</span>
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline">
                               {metadata.detected_language}
                             </Badge>
                           </div>

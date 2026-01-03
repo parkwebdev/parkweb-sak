@@ -211,12 +211,12 @@ export function EventDetailDialog({
                 </DialogDescription>
                 <div className="flex items-center gap-2 pt-1">
                   {typeConfig && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary">
                       {typeConfig.label}
                     </Badge>
                   )}
                   {statusConfig && (
-                    <Badge variant={statusConfig.variant} className="text-xs">
+                    <Badge variant={statusConfig.variant}>
                       {statusConfig.label}
                     </Badge>
                   )}

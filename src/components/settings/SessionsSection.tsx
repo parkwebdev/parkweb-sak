@@ -150,7 +150,7 @@ export function SessionsSection() {
                   <span className="font-medium text-foreground">
                     {currentSession.device}
                   </span>
-                  <Badge variant="outline" className="text-2xs bg-status-active/10 text-status-active border-status-active/20">
+                  <Badge variant="outline" size="sm" className="bg-status-active/10 text-status-active border-status-active/20">
                     Current
                   </Badge>
                 </div>

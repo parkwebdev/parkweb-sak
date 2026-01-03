@@ -206,7 +206,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">WordPress Integration</span>
             {isConnected && (
-              <Badge variant="secondary" className="text-xs">Connected</Badge>
+              <Badge variant="secondary">Connected</Badge>
             )}
           </div>
           <p className="text-xs text-muted-foreground">{getSummary()}</p>
@@ -360,7 +360,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                     <Building01 className="h-4 w-4 text-muted-foreground" />
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Communities</Label>
                     {communityCount !== undefined && communityCount > 0 && (
-                      <Badge variant="secondary" className="text-xs">{communityCount} synced</Badge>
+                      <Badge variant="secondary">{communityCount} synced</Badge>
                     )}
                   </div>
 
@@ -418,7 +418,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                       <Home01 className="h-4 w-4 text-muted-foreground" />
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Property Listings</Label>
                       {homeCount !== undefined && homeCount > 0 && (
-                        <Badge variant="secondary" className="text-xs">{homeCount} homes</Badge>
+                        <Badge variant="secondary">{homeCount} homes</Badge>
                       )}
                     </div>
                     

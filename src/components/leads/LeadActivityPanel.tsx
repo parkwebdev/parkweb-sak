@@ -484,10 +484,10 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                               autoFocus
                             />
                             <div className="flex gap-1">
-                              <Button size="sm" className="h-6 px-2 text-xs" onClick={() => handleUpdate(comment.id)} disabled={!editContent.trim()}>
+                              <Button size="xs" onClick={() => handleUpdate(comment.id)} disabled={!editContent.trim()}>
                                 Save
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => { setEditingId(null); setEditContent(''); }}>
+                              <Button size="xs" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => { setEditingId(null); setEditContent(''); }}>
                                 Cancel
                               </Button>
                             </div>

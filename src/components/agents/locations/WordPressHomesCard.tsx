@@ -73,7 +73,7 @@ export function WordPressHomesCard({ agent, onSyncComplete }: WordPressHomesCard
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-medium text-sm">Property Listings</h3>
             {homeCount !== undefined && homeCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary">
                 {homeCount} homes
               </Badge>
             )}

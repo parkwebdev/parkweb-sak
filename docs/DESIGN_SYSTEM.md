@@ -370,13 +370,47 @@ These heights are layout-specific and cannot be meaningfully tokenized without l
 
 ### Buttons
 
-| Size | Height | Padding | Usage |
-|------|--------|---------|-------|
-| Default | 40px (`h-10`) | `px-4 py-2` | Standard buttons |
-| Small | 32px (`h-8`) | `px-3` | Compact areas |
-| Large | 44px (`h-11`) | `px-8` | Hero CTAs |
-| Icon | 32px (`h-8 w-8`) | `p-0` | Icon-only buttons |
-| Icon (lg) | 40px (`h-10 w-10`) | `p-0` | Large icon buttons |
+| Size | Height | Padding | Class | Usage |
+|------|--------|---------|-------|-------|
+| Default | 40px (`h-10`) | `px-4 py-2` | `size="default"` | Standard buttons |
+| Extra Small | 24px (`h-6`) | `px-2` | `size="xs"` | Compact inline actions, activity panels |
+| Small | 32px (`h-8`) | `px-2.5` | `size="sm"` | Compact areas, toolbars, filters |
+| Large | 44px (`h-11`) | `px-6` | `size="lg"` | Hero CTAs |
+| Icon | 40px (`h-10 w-10`) | `p-0` | `size="icon"` | Icon-only default size |
+| Icon Small | 32px (`h-8 w-8`) | `p-0` | `size="icon-sm"` | Icon-only compact size |
+
+### Button Variants
+
+| Variant | Usage |
+|---------|-------|
+| `default` | Primary actions, CTAs |
+| `secondary` | Secondary actions |
+| `outline` | Tertiary actions, filters, toggles |
+| `ghost` | Minimal emphasis, icon buttons, inline actions |
+| `destructive` | Dangerous/delete actions |
+| `link` | Inline text links with underline |
+| `linkPlain` | Collapsible triggers, minimal links without underline |
+
+### IconButton Component
+
+Use `<IconButton>` (not `<Button>`) for icon-only buttons. It provides proper accessibility via the required `label` prop:
+
+```tsx
+// ✅ Correct - Use IconButton for icon-only buttons
+<IconButton label="Close dialog" variant="ghost" size="icon-sm">
+  <XClose size={16} />
+</IconButton>
+
+// ❌ Incorrect - Avoid manual sizing on Button
+<Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+  <XClose size={16} />
+</Button>
+```
+
+| Size | Height/Width | Usage |
+|------|--------------|-------|
+| `icon` (default) | 40px | Standard icon buttons |
+| `icon-sm` | 32px | Compact icon buttons |
 
 ### Inputs
 
