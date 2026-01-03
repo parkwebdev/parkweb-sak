@@ -2188,6 +2188,19 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_widget_conversation: {
+        Args: { p_conversation_id: string }
+        Returns: {
+          agent_id: string
+          channel: string
+          created_at: string
+          expires_at: string
+          id: string
+          metadata: Json
+          status: Database["public"]["Enums"]["conversation_status"]
+          updated_at: string
+        }[]
+      }
       has_account_access: {
         Args: { account_owner_id: string }
         Returns: boolean

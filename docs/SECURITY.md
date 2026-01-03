@@ -408,18 +408,59 @@ USING (is_admin(auth.uid()));
 ### Public Access Pattern (Widget)
 
 ```sql
--- Allow widget to create conversations
-CREATE POLICY "Public can create conversations"
-ON public.conversations
-FOR INSERT
-WITH CHECK (true);
+-- Allow widget to create conversations (via edge function with service role)
+-- Widget users cannot insert directly - they go through create-widget-lead function
 
--- Allow widget to read active conversations
-CREATE POLICY "Public can view conversation status"
-ON public.conversations
-FOR SELECT
-USING (true);  -- Widget filters by conversation_id client-side
+-- Minimal SELECT policy for realtime subscriptions (status changes only)
+CREATE POLICY "Widget realtime: status changes only" 
+ON conversations 
+FOR SELECT 
+USING (
+  channel = 'widget' 
+  AND status IN ('active', 'human_takeover') 
+  AND expires_at > now()
+);
 ```
+
+### Secure Widget Conversation Access
+
+Widget access to conversation data is protected via a secure RPC function that filters PII:
+
+```sql
+-- Secure function filters out sensitive metadata (IP, location, device info)
+CREATE FUNCTION public.get_widget_conversation(p_conversation_id uuid)
+RETURNS TABLE (id uuid, agent_id uuid, status text, ...)
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    c.id, c.agent_id, c.status, ...
+    filter_widget_conversation_metadata(c.metadata) AS metadata  -- PII stripped
+  FROM conversations c
+  WHERE c.id = p_conversation_id
+    AND c.channel = 'widget'
+    AND c.status IN ('active', 'human_takeover');
+END;
+$$;
+
+-- Widget must use RPC for data queries
+await supabase.rpc('get_widget_conversation', { p_conversation_id: convId });
+```
+
+**Protected PII** (excluded from widget access):
+- `ip_address` - Visitor IP
+- `country`, `city`, `region` - Geolocation  
+- `device_type`, `device_os`, `browser` - Device fingerprint
+- `user_agent` - Full user agent string
+- `referrer_journey` - Entry URLs and UTM parameters
+- `visitor_id` - Tracking identifier
+
+**Allowed fields** (safe for widget):
+- `lead_id`, `lead_name`, `lead_email` - Lead identity
+- `last_message_at`, `last_message_role` - Conversation state
+- `message_count` - Stats
+- `detected_language` - Localization
 
 ---
 

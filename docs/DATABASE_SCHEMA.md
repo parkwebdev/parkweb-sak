@@ -1182,6 +1182,33 @@ Deletes expired entries from `response_cache` and `query_embedding_cache` tables
 
 ---
 
+### Widget Security Functions
+
+#### `filter_widget_conversation_metadata(raw_metadata jsonb)`
+**Returns:** `jsonb`
+
+Filters conversation metadata to remove sensitive PII (IP address, location, device info) for safe public widget access.
+
+**Excluded fields:** `ip_address`, `country`, `city`, `region`, `device_type`, `device_os`, `browser`, `user_agent`, `referrer_journey`, `visitor_id`
+
+**Allowed fields:** `lead_id`, `lead_name`, `lead_email`, `last_message_at`, `last_message_role`, `last_message_preview`, `admin_last_read_at`, `last_user_message_at`, `message_count`, `user_message_count`, `detected_language`
+
+---
+
+#### `get_widget_conversation(p_conversation_id uuid)`
+**Returns:** `TABLE(id uuid, agent_id uuid, status conversation_status, channel text, created_at timestamptz, updated_at timestamptz, expires_at timestamptz, metadata jsonb)`
+
+Secure SECURITY DEFINER function for widget access to conversation data. Automatically applies `filter_widget_conversation_metadata()` to protect PII. Widget code should use this RPC instead of direct table queries.
+
+```typescript
+// Widget usage
+const { data } = await supabase.rpc('get_widget_conversation', { 
+  p_conversation_id: conversationId 
+});
+```
+
+---
+
 ## RLS Patterns
 
 ### Pattern 1: Owner-Only Access
