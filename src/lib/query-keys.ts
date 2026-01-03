@@ -114,6 +114,18 @@ export const queryKeys = {
   // Lead stages
   leadStages: ['lead-stages'] as const,
 
+  // Lead comments
+  leadComments: {
+    all: ['lead-comments'] as const,
+    list: (leadId: string) => ['lead-comments', leadId] as const,
+  },
+
+  // Lead activities
+  leadActivities: {
+    all: ['lead-activities'] as const,
+    list: (leadId: string) => ['lead-activities', leadId] as const,
+  },
+
   // Analytics
   analytics: {
     all: ['analytics'] as const,
