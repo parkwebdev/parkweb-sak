@@ -114,7 +114,7 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
           <FilterLines size={14} />
           <span className="text-xs">Filter</span>
           {activeFilterCount > 0 && (
-            <span className="flex items-center justify-center min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-medium px-1">
+            <span className="flex items-center justify-center min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-2xs font-medium px-1">
               {activeFilterCount}
             </span>
           )}
@@ -184,7 +184,7 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
                       >
                         <Avatar className="w-4 h-4">
                           <AvatarImage src={member.avatar_url || undefined} />
-                          <AvatarFallback className="text-[8px]">
+                          <AvatarFallback className="text-3xs">
                             {getInitials(member.display_name)}
                           </AvatarFallback>
                         </Avatar>

@@ -58,16 +58,17 @@ Geist is loaded via Google Fonts in `index.html`:
 
 | Element | Tailwind Class | Size | Line Height | Letter Spacing |
 |---------|---------------|------|-------------|----------------|
-| Body | `text-sm` | 14px | 1.6 | -0.011em |
-| H1 | `text-base font-semibold` | 16px | 1.25 | -0.022em |
-| H2 | `text-sm font-semibold` | 14px | 1.3 | -0.022em |
-| H3 | `text-sm font-medium` | 14px | 1.4 | -0.022em |
-| H4 | `text-xs font-medium` | 12px | 1.4 | -0.022em |
-| Caption | `text-xs` | 12px | 1.5 | -0.011em |
-| Micro | `text-2xs` | 10px | 0.875rem | -0.01em |
-| Code | `text-xs font-mono` | 12px | 1.6 | -0.01em |
+| Body | `text-sm` | 13px | 1.25rem | -0.011em |
+| H1 | `text-base font-bold` | 15px | 1.5rem | -0.022em |
+| H2 | `text-sm font-bold` | 13px | 1.25rem | -0.022em |
+| H3 | `text-sm font-semibold` | 13px | 1.25rem | -0.022em |
+| H4 | `text-xs font-medium` | 11px | 1rem | -0.022em |
+| Caption | `text-xs` | 11px | 1rem | -0.011em |
+| Micro | `text-2xs` | 9px | 0.8125rem | -0.01em |
+| Micro-XS | `text-3xs` | 8px | 0.75rem | -0.01em |
+| Code | `text-xs font-mono` | 11px | 1rem | -0.01em |
 
-> **Note**: `text-2xs` (10px) is a custom design token for intentional micro-text use cases like debug consoles, avatar fallbacks, notification badges, and calendar mini indicators. Avoid using arbitrary values like `text-[10px]`.
+> **Note**: `text-2xs` (9px) is for micro-text like badges and overflow counts. `text-3xs` (8px) is reserved for extremely constrained contexts like 16x16px avatar fallbacks. Avoid arbitrary values like `text-[10px]}` or `text-[8px]`.
 
 ### Font Weights
 
