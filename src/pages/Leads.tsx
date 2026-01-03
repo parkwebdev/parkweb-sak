@@ -304,6 +304,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   onStatusChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : () => {}}
                   onViewLead={handleViewLead}
                   onOrderChange={canManageLeads ? updateLeadOrders : undefined}
+                  onAssign={canManageLeads ? (leadId, userId) => updateLead(leadId, { assigned_to: userId }) : undefined}
                   visibleFields={visibleCardFields}
                   canManage={canManageLeads}
                   sortOption={defaultSort}
@@ -322,6 +323,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   selectedIds={selectedLeadIds}
                   onView={handleViewLead}
                   onStageChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
+                  onAssignChange={canManageLeads ? (leadId, userId) => updateLead(leadId, { assigned_to: userId }) : undefined}
                   onSelectionChange={canManageLeads ? handleSelectLead : undefined}
                   onSelectAll={canManageLeads ? handleSelectAll : undefined}
                   onBulkDelete={canManageLeads ? (ids) => {
