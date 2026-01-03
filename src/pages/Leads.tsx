@@ -182,6 +182,11 @@ function Leads({ onMenuClick }: LeadsProps) {
     localStorage.setItem(TABLE_COLUMNS_KEY, JSON.stringify(visibility));
   }, []);
 
+  const handleColumnOrderChange = useCallback((order: string[]) => {
+    setTableColumnOrder(order);
+    localStorage.setItem(TABLE_COLUMN_ORDER_KEY, JSON.stringify(order));
+  }, []);
+
   const handleDefaultSortChange = useCallback((sort: SortOption | null) => {
     setDefaultSort(sort);
     localStorage.setItem(DEFAULT_SORT_KEY, JSON.stringify(sort));
@@ -342,6 +347,8 @@ function Leads({ onMenuClick }: LeadsProps) {
         onToggleCardField={handleToggleField}
         columnVisibility={tableColumnVisibility}
         onColumnVisibilityChange={handleColumnVisibilityChange}
+        tableColumnOrder={tableColumnOrder}
+        onColumnOrderChange={handleColumnOrderChange}
         onExport={() => setIsExportDialogOpen(true)}
         onManageStages={() => setIsManageStagesOpen(true)}
         canManage={canManageLeads}

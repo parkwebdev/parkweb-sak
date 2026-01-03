@@ -55,6 +55,10 @@ interface LeadsHeaderBarProps {
   columnVisibility: VisibilityState;
   /** Handler for column visibility changes */
   onColumnVisibilityChange: (visibility: VisibilityState) => void;
+  /** Table column order */
+  tableColumnOrder: string[];
+  /** Handler for column order changes */
+  onColumnOrderChange: (order: string[]) => void;
   /** Handler for exporting leads */
   onExport: () => void;
   /** Handler for managing stages */
@@ -82,6 +86,8 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
   onToggleCardField,
   columnVisibility,
   onColumnVisibilityChange,
+  tableColumnOrder,
+  onColumnOrderChange,
   onExport,
   onManageStages,
   canManage,
@@ -167,6 +173,8 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
             onToggleCardField={onToggleCardField}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={onColumnVisibilityChange}
+            tableColumnOrder={tableColumnOrder}
+            onColumnOrderChange={onColumnOrderChange}
           />
           <ViewModeToggle
             viewMode={viewMode}
