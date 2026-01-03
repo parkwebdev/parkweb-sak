@@ -102,7 +102,7 @@ export function LeadAssigneePicker({
                 className={cn(
                   avatarSize,
                   overlap,
-                  'rounded-full bg-muted flex items-center justify-center border-2 border-background'
+                  'rounded-full bg-muted flex items-center justify-center ring-2 ring-background'
                 )}
               >
                 <span className={cn(textSize, 'font-medium text-muted-foreground')}>
@@ -117,7 +117,7 @@ export function LeadAssigneePicker({
                 key={member.user_id}
                 className={cn(
                   avatarSize,
-                  'border-2 border-background',
+                  'ring-2 ring-background',
                   index < visibleMembers.length - 1 && overlap
                 )}
               >
@@ -221,7 +221,7 @@ export function LeadAssigneeAvatars({
           className={cn(
             avatarSize,
             overlap,
-            'rounded-full bg-muted flex items-center justify-center border border-background'
+            'rounded-full bg-muted flex items-center justify-center ring-1 ring-background'
           )}
         >
           <span className={cn(textSize, 'font-medium text-muted-foreground')}>
@@ -234,7 +234,7 @@ export function LeadAssigneeAvatars({
           key={member.user_id}
           className={cn(
             avatarSize,
-            'border border-background',
+            'ring-1 ring-background',
             index < visibleMembers.length - 1 && overlap
           )}
         >
