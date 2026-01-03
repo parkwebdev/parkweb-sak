@@ -129,12 +129,6 @@ function InlineStageHeader({
 
   return (
     <div className="flex items-center gap-2">
-      <StageProgressIcon
-        stageIndex={stageIndex}
-        totalStages={totalStages}
-        color={stage.color}
-        size={16}
-      />
       {isEditing && canEdit ? (
         <Input
           ref={inputRef}
@@ -159,6 +153,12 @@ function InlineStageHeader({
           }}
           onClick={canEdit ? () => setIsEditing(true) : undefined}
         >
+          <StageProgressIcon
+            stageIndex={stageIndex}
+            totalStages={totalStages}
+            color={getContrastColor(stage.color)}
+            size={12}
+          />
           {stage.name}
         </div>
       )}
