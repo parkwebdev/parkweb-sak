@@ -785,6 +785,7 @@ export const LeadDetailsSheet = ({
                     <div className="flex items-center gap-2">
                       <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">Email</Label>
                       <Input
+                        size="sm"
                         type="email"
                         value={{ ...lead, ...editedLead }.email || ''}
                         onChange={(e) => {
@@ -832,6 +833,7 @@ export const LeadDetailsSheet = ({
                     <div className="flex items-center gap-2">
                       <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">Phone</Label>
                       <Input
+                        size="sm"
                         type="tel"
                         value={{ ...lead, ...editedLead }.phone || phoneValue}
                         onChange={(e) => {
