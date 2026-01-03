@@ -57,7 +57,8 @@ export function LeadAssigneePicker({
   const overflowCount = Math.max(0, assignedMembers.length - maxVisible);
 
   const avatarSize = size === 'sm' ? 'h-6 w-6' : 'h-7 w-7';
-  const iconSize = size === 'sm' ? 12 : 14;
+  const dashedSize = size === 'sm' ? 'h-6 w-6' : 'h-7 w-7';
+  const iconSize = size === 'sm' ? 10 : 12;
   const textSize = size === 'sm' ? 'text-[9px]' : 'text-2xs';
   const overlap = size === 'sm' ? '-ml-2' : '-ml-2.5';
 
@@ -82,10 +83,15 @@ export function LeadAssigneePicker({
             {/* Add button (dashed circle) - always last in DOM, first visually */}
             <div
               className={cn(
-                avatarSize,
-                'rounded-full border-2 border-dashed border-muted-foreground/40 flex items-center justify-center bg-background hover:border-muted-foreground/60 hover:bg-muted/50 transition-colors',
+                dashedSize,
+                'rounded-full flex items-center justify-center bg-background hover:bg-muted/50 transition-colors',
                 visibleMembers.length > 0 && overlap
               )}
+              style={{
+                border: '1.5px dashed',
+                borderColor: 'hsl(var(--muted-foreground) / 0.5)',
+                backgroundImage: 'none',
+              }}
             >
               <Plus size={iconSize} className="text-muted-foreground" />
             </div>
