@@ -21,7 +21,7 @@ import { useLeadActivities, type LeadActivity, type ActionData, type AssigneePro
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { slideUpVariants, fadeReducedVariants, getVariants } from '@/lib/motion-variants';
+import { fadeGentleVariants, fadeReducedVariants, getVariants } from '@/lib/motion-variants';
 import {
   Flag01,
   Edit02,
@@ -82,7 +82,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const prevFeedLengthRef = useRef(0);
 
   const isLoading = commentsLoading || activitiesLoading;
-  const itemVariants = getVariants(slideUpVariants, fadeReducedVariants, prefersReducedMotion);
+  const itemVariants = getVariants(fadeGentleVariants, fadeReducedVariants, prefersReducedMotion);
 
   // Create stage lookup map
   const stageMap = useMemo(() => {

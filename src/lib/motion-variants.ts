@@ -49,6 +49,20 @@ export const fadeVariants: Variants = {
   },
 };
 
+/** Subtle fade with gentle movement - good for list items, activity feeds */
+export const fadeGentleVariants: Variants = {
+  hidden: { opacity: 0, y: 4 },
+  visible: { 
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: easings.easeOut }
+  },
+  exit: { 
+    opacity: 0,
+    transition: { duration: 0.15, ease: easings.easeIn }
+  },
+};
+
 export const fadeReducedVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0 } },
