@@ -81,7 +81,7 @@ export const HomeView = ({
         
         {/* Close button in top right */}
         <div className="absolute top-4 right-4 z-30">
-          <WidgetButton variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white h-8 w-8" onClick={onClose} aria-label="Close chat">
+          <WidgetButton variant="ghost" size="icon-sm" className="text-white hover:bg-white/10 hover:text-white" onClick={onClose} aria-label="Close chat">
             <X className="h-4 w-4" aria-hidden="true" />
           </WidgetButton>
         </div>

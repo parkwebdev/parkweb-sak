@@ -138,8 +138,8 @@ export const CreateToolDialog = ({ open, onOpenChange, onCreateTool }: CreateToo
 
           <Collapsible>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-xs px-0 hover:bg-transparent">
-                <ChevronDown className="h-3 w-3 mr-1" />
+              <Button variant="linkPlain" size="sm" className="gap-1 px-0">
+                <ChevronDown className="h-3 w-3" />
                 Advanced Settings
               </Button>
             </CollapsibleTrigger>

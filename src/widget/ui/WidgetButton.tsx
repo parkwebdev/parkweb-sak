@@ -29,6 +29,7 @@ const widgetButtonVariants = cva(
       },
       size: {
         default: "h-10 px-4",
+        xs: "h-6 px-2",
         sm: "h-8 px-2.5",
         lg: "h-11 px-6",
         icon: "h-10 w-10",

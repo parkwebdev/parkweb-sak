@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronUp
 } from '@untitledui/icons';
+import { IconButton } from '@/components/ui/icon-button';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -109,20 +110,21 @@ function AccountCard({ account, onDisconnect, onRefetch }: AccountCardProps) {
             
             {/* Expand/Collapse */}
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+              <IconButton label={isExpanded ? "Collapse details" : "Expand details"} variant="ghost" size="icon-sm">
                 {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              </Button>
+              </IconButton>
             </CollapsibleTrigger>
             
             {/* Disconnect */}
-            <Button
+            <IconButton
+              label="Disconnect calendar"
               variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+              size="icon-sm"
+              className="text-muted-foreground hover:text-destructive"
               onClick={() => onDisconnect(account.id)}
             >
               <LinkBroken01 size={14} />
-            </Button>
+            </IconButton>
           </div>
         </div>
         

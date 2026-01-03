@@ -103,8 +103,8 @@ export const WidgetHeader = ({
         <div className="relative">
           <WidgetButton 
             variant="ghost" 
-            size="icon" 
-            className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" 
+            size="icon-sm" 
+            className="text-muted-foreground hover:text-foreground hover:bg-transparent" 
             onClick={onSettingsToggle}
             aria-label="Settings"
             aria-expanded={showSettingsDropdown}
@@ -127,7 +127,7 @@ export const WidgetHeader = ({
             </div>
           )}
         </div>
-        <WidgetButton variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" onClick={onClose} aria-label="Close chat">
+        <WidgetButton variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground hover:bg-transparent" onClick={onClose} aria-label="Close chat">
           <X className="h-4 w-4" aria-hidden="true" />
         </WidgetButton>
       </div>

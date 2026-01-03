@@ -214,21 +214,20 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
         
         <div className="flex-shrink-0">
           {integration.comingSoon ? (
-            <Button variant="secondary" size="sm" disabled className="text-xs">
+            <Button variant="secondary" size="sm" disabled>
               Coming Soon
             </Button>
           ) : integration.connected ? (
             <div className="flex items-center gap-2">
               <Switch checked={true} />
-              <Button variant="ghost" size="sm" className="text-xs text-destructive">
+              <Button variant="ghost" size="sm" className="text-destructive">
                 Disconnect
               </Button>
             </div>
           ) : (
             <Button 
               variant="outline" 
-              size="sm" 
-              className="text-xs"
+              size="sm"
               onClick={() => handleConnect(integration.id)}
             >
               <Link03 className="h-3.5 w-3.5 mr-1.5" />
