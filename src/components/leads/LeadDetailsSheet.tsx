@@ -10,11 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Trash02, LinkExternal02, InfoCircle, Globe01, Monitor01, Clock, Browser, XClose, Copy01, Phone01, MessageChatCircle, File02, Link01 } from '@untitledui/icons';
+import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01 } from '@untitledui/icons';
 import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFromLeadData } from '@/lib/field-keys';
 import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
@@ -677,7 +677,7 @@ export const LeadDetailsSheet = ({
         ) : (
           <>
             {/* Left side - header + scrollable content */}
-            <div className="flex-1 flex flex-col min-h-0 min-w-0 py-6 pl-6 pr-4">
+            <div className="flex-1 flex flex-col min-h-0 min-w-0 p-6">
               <SheetHeader className="flex-shrink-0 pb-4">
                 {isEditingName ? (
                   <div className="flex items-center gap-2">
@@ -729,7 +729,7 @@ export const LeadDetailsSheet = ({
               </SheetHeader>
 
               {/* Scrollable content */}
-              <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+              <div className="flex-1 min-h-0 overflow-y-auto">
                 <div className="space-y-2 pb-4">
                   {/* Header Bar - Status, Priority, Created Date */}
                   <div className="flex items-center gap-2 flex-wrap">
@@ -848,10 +848,10 @@ export const LeadDetailsSheet = ({
                     </div>
                   </div>
 
-                  {/* Session Info - 3 Column Grid with background */}
+                  {/* Session Info - 2 Column Grid with background */}
                   {conversation && (
-                    <div className="grid grid-cols-3 gap-x-4 gap-y-2.5 text-xs text-muted-foreground bg-muted/30 rounded-md p-3 mt-2">
-                      {/* Row 1: Source, Location, Device */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs text-muted-foreground bg-muted/30 rounded-md p-3 mt-2">
+                      {/* Row 1: Source, Location */}
                       <div className="flex items-center gap-1.5 truncate">
                         {getSourceType().icon}
                         <span>{getSourceType().type}</span>
@@ -869,43 +869,23 @@ export const LeadDetailsSheet = ({
                           </span>
                         ) : <span className="text-muted-foreground/50">—</span>}
                       </div>
-                      <div className="flex items-center gap-1.5 truncate capitalize">
-                        <Monitor01 className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span>{conversationMetadata.device_type || conversationMetadata.device || '—'}</span>
-                      </div>
                       
-                      {/* Row 2: Browser, Messages, Pages */}
-                      <div className="flex items-center gap-1.5 truncate">
-                        <Browser className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span>{conversationMetadata.browser || '—'}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <MessageChatCircle className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span>{getMessagesCount()} msgs</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <File02 className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span>{getPagesCount()} pages</span>
-                      </div>
-                      
-                      {/* Row 3: Time, Landing/Referrer */}
+                      {/* Row 2: Time, Landing/Referrer */}
                       <div className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                         <span>{lead.created_at ? formatDistanceToNow(new Date(lead.created_at), { addSuffix: false }) : '—'}</span>
                       </div>
                       {conversationMetadata.landing_page ? (
-                        <div className="flex items-center gap-1.5 truncate col-span-2">
+                        <div className="flex items-center gap-1.5 truncate">
                           <span className="text-muted-foreground/60 flex-shrink-0">Landing:</span>
                           <span className="truncate">{stripUrl(conversationMetadata.landing_page)}</span>
                         </div>
                       ) : (conversationMetadata.referrer_url || conversationMetadata.referrer) ? (
-                        <div className="flex items-center gap-1.5 truncate col-span-2">
+                        <div className="flex items-center gap-1.5 truncate">
                           <span className="text-muted-foreground/60 flex-shrink-0">Referrer:</span>
                           <span className="truncate">{stripUrl(conversationMetadata.referrer_url || conversationMetadata.referrer || '')}</span>
                         </div>
-                      ) : (
-                        <div className="col-span-2" />
-                      )}
+                      ) : null}
                     </div>
                   )}
 
@@ -973,16 +953,17 @@ export const LeadDetailsSheet = ({
                     </div>
                   )}
 
-                  {/* Dynamic Custom Fields - Collapsible */}
+                  {/* Dynamic Custom Fields - Accordion */}
                   {customFields.length > 0 && (
-                    <>
-                      <Separator />
-                      <Collapsible defaultOpen={customFields.length <= 4}>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full py-1 text-sm font-medium hover:text-foreground text-muted-foreground group">
-                          <span>Additional Information</span>
-                          <span className="text-xs">({customFields.length} fields)</span>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="pt-2 space-y-3">
+                    <Accordion type="single" collapsible className="border-0 px-0 bg-transparent">
+                      <AccordionItem value="additional-info" className="border-b-0">
+                        <AccordionTrigger className="py-2 text-sm font-medium hover:no-underline">
+                          <div className="flex items-center justify-between w-full pr-2">
+                            <span>Additional Information</span>
+                            <span className="text-xs text-muted-foreground font-normal">({customFields.length} fields)</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-2 space-y-3">
                           {customFields.map(([key, value]) => {
                             const currentCustomData = { ...((lead.data || {}) as Record<string, unknown>), ...editedCustomData };
                             return (
@@ -991,9 +972,9 @@ export const LeadDetailsSheet = ({
                               </div>
                             );
                           })}
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   )}
 
                   {/* Internal Notes */}
