@@ -318,9 +318,9 @@ export const LeadDetailsSheet = ({
     updates: Partial<Pick<ConversationMetadata, 'priority' | 'tags' | 'notes'>>,
     fieldName: string
   ) => {
-    if (!lead?.conversation_id || !conversation) return;
+    if (!lead?.conversation_id) return;
 
-    const currentMetadata = (conversation.metadata || {}) as ConversationMetadata;
+    const currentMetadata = ((conversation?.metadata || {}) as ConversationMetadata);
     const newMetadata = { ...currentMetadata, ...updates };
 
     const { error } = await supabase
@@ -329,20 +329,21 @@ export const LeadDetailsSheet = ({
       .eq('id', lead.conversation_id);
 
     if (!error) {
-      // Update local cache
+      // Update local cache (even if conversation query hasn't resolved yet)
       queryClient.setQueryData(['conversation-for-lead', lead.conversation_id], {
-        ...conversation,
+        id: lead.conversation_id,
         metadata: newMetadata,
+        created_at: conversation?.created_at ?? new Date().toISOString(),
+        channel: conversation?.channel ?? null,
       });
+
       // Invalidate conversations list for sync
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      
-
       // Log activity for internal notes changes
       if ('notes' in updates && lead?.id && user?.id) {
         const oldNotes = previousNotesRef.current;
         const newNotes = updates.notes || '';
-        
+
         // Only log if notes actually changed
         if (oldNotes !== newNotes) {
           await supabase.from('lead_activities').insert({
@@ -352,14 +353,35 @@ export const LeadDetailsSheet = ({
             action_data: {
               field: 'internal_notes',
               from: oldNotes || null,
-              to: newNotes || null
-            }
+              to: newNotes || null,
+            },
           });
-          
+
           // Update previous notes ref
           previousNotesRef.current = newNotes;
-          
+
           // Invalidate activities to show the new entry
+          queryClient.invalidateQueries({ queryKey: queryKeys.leadActivities.list(lead.id) });
+        }
+      }
+
+      // Log activity for priority changes
+      if ('priority' in updates && lead?.id && user?.id) {
+        const oldPriority = currentMetadata.priority ?? null;
+        const newPriority = updates.priority ?? null;
+
+        if (oldPriority !== newPriority) {
+          await supabase.from('lead_activities').insert({
+            lead_id: lead.id,
+            user_id: user.id,
+            action_type: 'field_updated',
+            action_data: {
+              field: 'priority',
+              from: oldPriority,
+              to: newPriority,
+            },
+          });
+
           queryClient.invalidateQueries({ queryKey: queryKeys.leadActivities.list(lead.id) });
         }
       }
