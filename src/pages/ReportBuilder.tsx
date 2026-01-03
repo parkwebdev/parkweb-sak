@@ -492,7 +492,7 @@ export default function ReportBuilder() {
                         value={config.grouping}
                         onValueChange={(v) => updateConfig('grouping', v as 'day' | 'week' | 'month')}
                       >
-                        <SelectTrigger className="h-9">
+                        <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
