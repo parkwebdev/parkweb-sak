@@ -622,7 +622,7 @@ export const LeadDetailsSheet = ({
   // Always render Sheet for proper animation handling
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-4xl h-[94vh] p-0 flex overflow-hidden" aria-describedby="lead-details-description">
+      <SheetContent className="sm:max-w-5xl h-[94vh] p-0 flex overflow-hidden" aria-describedby="lead-details-description">
         {!lead ? (
           <div className="p-6">
             <SkeletonLeadDetails />
@@ -630,14 +630,14 @@ export const LeadDetailsSheet = ({
         ) : (
           <>
             {/* Left side - header + scrollable content */}
-            <div className="flex-1 flex flex-col min-h-0 min-w-0 p-6 pr-0">
-              <SheetHeader className="flex-shrink-0 pb-4 pr-6">
+            <div className="flex-1 flex flex-col min-h-0 min-w-0 p-6">
+              <SheetHeader className="flex-shrink-0 pb-4">
                 <SheetTitle>Lead Details</SheetTitle>
                 <p id="lead-details-description" className="sr-only">View and edit lead information, activity, and comments</p>
               </SheetHeader>
 
               {/* Scrollable content */}
-              <div className="flex-1 min-h-0 overflow-y-auto pr-6">
+              <div className="flex-1 min-h-0 overflow-y-auto">
                 <div className="space-y-2 pb-4">
                   {/* Header Bar - Status, Priority, Created Date */}
                   <div className="flex items-center gap-2 flex-wrap">
