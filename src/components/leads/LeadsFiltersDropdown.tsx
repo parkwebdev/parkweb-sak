@@ -42,8 +42,9 @@ export const LeadsFiltersDropdown = React.memo(function LeadsFiltersDropdown({
   onDateRangeChange,
 }: LeadsFiltersDropdownProps) {
   // Count active filters
+  const stageCount = stages?.length ?? 0;
   const activeFilterCount = 
-    (selectedStageIds.length > 0 && selectedStageIds.length < stages.length ? 1 : 0) +
+    (selectedStageIds.length > 0 && selectedStageIds.length < stageCount ? 1 : 0) +
     (dateRange !== 'all' ? 1 : 0);
 
   const handleStageToggle = (stageId: string, checked: boolean) => {
@@ -82,7 +83,7 @@ export const LeadsFiltersDropdown = React.memo(function LeadsFiltersDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56 bg-popover">
         <DropdownMenuLabel>Stage</DropdownMenuLabel>
-        {stages.map(stage => (
+        {stages?.map(stage => (
           <DropdownMenuCheckboxItem
             key={stage.id}
             checked={selectedStageIds.includes(stage.id)}
