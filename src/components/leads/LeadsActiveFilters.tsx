@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Plus, X } from '@untitledui/icons';
+import { FilterLines, X, ChevronDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -130,12 +130,13 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="h-6 w-6 p-0"
+            className="h-8 gap-1.5 px-2.5"
           >
-            <Plus size={16} className="text-muted-foreground" />
-            <span className="sr-only">Add filter</span>
+            <FilterLines size={14} />
+            <span className="text-xs">Filter</span>
+            <ChevronDown size={14} className="text-muted-foreground" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-64 p-0">

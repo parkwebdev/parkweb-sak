@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { ArrowsDown, ArrowUp, ArrowDown, Check } from '@untitledui/icons';
+import { SwitchVertical01, ArrowUp, ArrowDown, ChevronDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,11 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import type { SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 
 interface LeadsSortDropdownProps {
@@ -59,21 +54,17 @@ export const LeadsSortDropdown = React.memo(function LeadsSortDropdown({
 
   return (
     <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-            >
-              <ArrowsDown size={16} className="text-muted-foreground" />
-              <span className="sr-only">Sort</span>
-            </Button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">Sort</TooltipContent>
-      </Tooltip>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 px-2.5"
+        >
+          <SwitchVertical01 size={14} />
+          <span className="text-xs">Sort</span>
+          <ChevronDown size={14} className="text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44 bg-popover">
         <DropdownMenuLabel className="text-xs">Sort by</DropdownMenuLabel>
         {SORT_COLUMNS.map(col => (
