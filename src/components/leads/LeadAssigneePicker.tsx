@@ -59,7 +59,7 @@ export function LeadAssigneePicker({
   const avatarSize = size === 'sm' ? 'h-6 w-6' : 'h-7 w-7';
   const dashedSize = size === 'sm' ? 'h-6 w-6' : 'h-7 w-7';
   const iconSize = size === 'sm' ? 10 : 12;
-  const textSize = size === 'sm' ? 'text-[9px]' : 'text-2xs';
+  const textSize = 'text-2xs';
   const overlap = size === 'sm' ? '-ml-2' : '-ml-2.5';
 
   const handleToggle = (userId: string) => {
@@ -211,7 +211,7 @@ export function LeadAssigneeAvatars({
   const overflowCount = Math.max(0, assignedMembers.length - maxVisible);
 
   const avatarSize = size === 'xs' ? 'h-4 w-4' : 'h-5 w-5';
-  const textSize = size === 'xs' ? 'text-[8px]' : 'text-2xs';
+  const textSize = size === 'xs' ? 'text-3xs' : 'text-2xs';
   const overlap = size === 'xs' ? '-ml-1' : '-ml-1.5';
 
   return (
