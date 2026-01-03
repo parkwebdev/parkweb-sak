@@ -798,7 +798,7 @@ export const LeadDetailsSheet = ({
                         placeholder="email@example.com"
                       />
                       {({ ...lead, ...editedLead }.email) && (
-                        <div className="flex h-8 rounded-md border overflow-hidden">
+                        <div className="flex h-8 rounded-md border overflow-hidden self-center flex-shrink-0">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
@@ -846,7 +846,7 @@ export const LeadDetailsSheet = ({
                         placeholder="(555) 123-4567"
                       />
                       {({ ...lead, ...editedLead }.phone || phoneValue) && (
-                        <div className="flex h-8 rounded-md border overflow-hidden">
+                        <div className="flex h-8 rounded-md border overflow-hidden self-center flex-shrink-0">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
