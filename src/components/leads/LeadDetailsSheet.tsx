@@ -505,7 +505,7 @@ export const LeadDetailsSheet = ({
             {/* Two-column layout with independent scrolling */}
             <div className="flex flex-1 min-h-0">
               {/* Left column - Lead details with scroll */}
-              <ScrollArea className="flex-1 min-w-0 pr-6">
+              <ScrollArea className="flex-1 min-w-0 min-h-0 h-full pr-6">
                 <div className="space-y-4 pb-4">
                   {/* Compact Property Grid - Status, Assignees, Priority */}
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
