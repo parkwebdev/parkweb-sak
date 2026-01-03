@@ -797,13 +797,13 @@ export const LeadDetailsSheet = ({
                         placeholder="email@example.com"
                       />
                       {({ ...lead, ...editedLead }.email) && (
-                        <div className="flex rounded-lg border overflow-hidden">
+                        <div className="flex h-8 rounded-md border overflow-hidden">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
                                 onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
-                                className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                 aria-label="Copy email"
                               >
                                 <Copy01 className="h-3.5 w-3.5" />
@@ -816,7 +816,7 @@ export const LeadDetailsSheet = ({
                               <button
                                 type="button"
                                 onClick={() => window.open(`mailto:${({ ...lead, ...editedLead }.email)}`, '_blank')}
-                                className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l"
+                                className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l"
                                 aria-label="Send email"
                               >
                                 <Mail01 className="h-3.5 w-3.5" />
@@ -844,13 +844,13 @@ export const LeadDetailsSheet = ({
                         placeholder="(555) 123-4567"
                       />
                       {({ ...lead, ...editedLead }.phone || phoneValue) && (
-                        <div className="flex rounded-lg border overflow-hidden">
+                        <div className="flex h-8 rounded-md border overflow-hidden">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 type="button"
                                 onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
-                                className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                 aria-label="Copy phone"
                               >
                                 <Copy01 className="h-3.5 w-3.5" />
@@ -863,7 +863,7 @@ export const LeadDetailsSheet = ({
                               <button
                                 type="button"
                                 onClick={() => window.open(`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`, '_self')}
-                                className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l"
+                                className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l"
                                 aria-label="Call"
                               >
                                 <Phone01 className="h-3.5 w-3.5" />
