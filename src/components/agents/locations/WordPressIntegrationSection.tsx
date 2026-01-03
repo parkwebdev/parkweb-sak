@@ -448,7 +448,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                               <InfoCircleIconFilled className="h-4 w-4 hidden group-hover:block" />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs text-xs">
+                          <TooltipContent side="top">
                             <p>Enable if your WordPress site doesn't use ACF. AI will parse property details from page HTML.</p>
                           </TooltipContent>
                         </Tooltip>

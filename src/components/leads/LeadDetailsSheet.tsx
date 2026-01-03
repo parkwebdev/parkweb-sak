@@ -549,10 +549,10 @@ export const LeadDetailsSheet = ({
                 <TooltipTrigger asChild>
                   <InfoCircle className="h-3.5 w-3.5 text-muted-foreground" />
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
+                <TooltipContent side="top">
                   {sanitizedContent ? (
                     <div 
-                      className="text-xs [&_a]:text-primary [&_a]:underline"
+                      className="[&_a]:text-primary [&_a]:underline"
                       dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
                     />
                   ) : (
