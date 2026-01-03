@@ -689,12 +689,12 @@ export const LeadDetailsSheet = ({
                     </span>
                   </div>
 
-                  {/* Contact - Compact Property List */}
-                  <div className="space-y-1 bg-muted/30 rounded-md p-2">
+                  {/* Contact - Property List (no background) */}
+                  <div className="space-y-2">
                     {/* First Name / Last Name Row */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <Label className="text-2xs text-muted-foreground w-10 flex-shrink-0">First</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground w-10 flex-shrink-0">First</Label>
                         <Input
                           value={currentFirstName}
                           onChange={(e) => handleFirstNameChange(e.target.value)}
@@ -704,8 +704,8 @@ export const LeadDetailsSheet = ({
                           placeholder="First name"
                         />
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Label className="text-2xs text-muted-foreground w-10 flex-shrink-0">Last</Label>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground w-10 flex-shrink-0">Last</Label>
                         <Input
                           value={currentLastName}
                           onChange={(e) => handleLastNameChange(e.target.value)}
@@ -718,8 +718,8 @@ export const LeadDetailsSheet = ({
                     </div>
                     
                     {/* Email Row */}
-                    <div className="flex items-center gap-1.5">
-                      <Label className="text-2xs text-muted-foreground w-10 flex-shrink-0">Email</Label>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground w-10 flex-shrink-0">Email</Label>
                       <Input
                         type="email"
                         value={{ ...lead, ...editedLead }.email || ''}
@@ -739,14 +739,14 @@ export const LeadDetailsSheet = ({
                           variant="ghost"
                           onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
                         >
-                          <Copy01 className="h-3 w-3" />
+                          <Copy01 className="h-4 w-4" />
                         </IconButton>
                       )}
                     </div>
                     
                     {/* Phone Row */}
-                    <div className="flex items-center gap-1.5">
-                      <Label className="text-2xs text-muted-foreground w-10 flex-shrink-0">Phone</Label>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground w-10 flex-shrink-0">Phone</Label>
                       <Input
                         type="tel"
                         value={{ ...lead, ...editedLead }.phone || phoneValue}
@@ -767,7 +767,7 @@ export const LeadDetailsSheet = ({
                             variant="ghost"
                             onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
                           >
-                            <Copy01 className="h-3 w-3" />
+                            <Copy01 className="h-4 w-4" />
                           </IconButton>
                           <a href={`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`}>
                             <IconButton
@@ -776,7 +776,7 @@ export const LeadDetailsSheet = ({
                               variant="ghost"
                               asChild
                             >
-                              <Phone01 className="h-3 w-3" />
+                              <Phone01 className="h-4 w-4" />
                             </IconButton>
                           </a>
                         </>
@@ -784,57 +784,58 @@ export const LeadDetailsSheet = ({
                     </div>
                   </div>
 
-                  {/* Session Info - 3 Column Grid */}
+                  {/* Session Info - 3 Column Grid with background */}
                   {conversation && (
-                    <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-2xs text-muted-foreground">
+                    <div className="grid grid-cols-3 gap-x-3 gap-y-2 text-xs text-muted-foreground bg-muted/30 rounded-md p-3">
                       {/* Row 1: Source, Location, Device */}
-                      <div className="flex items-center gap-1 truncate">
+                      <div className="flex items-center gap-1.5 truncate">
                         {getSourceType().icon}
                         <span>{getSourceType().type}</span>
                       </div>
-                      <div className="flex items-center gap-1 truncate">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Globe01 className="h-3.5 w-3.5 flex-shrink-0" />
                         {conversationMetadata.city || conversationMetadata.country ? (
-                          <>
-                            <span>
-                              {conversationMetadata.city || conversationMetadata.country}
-                              {(conversationMetadata.country_code || getCountryCode(conversationMetadata.country)) && (
-                                <span className="ml-0.5" role="img" aria-label={conversationMetadata.country || ''}>
-                                  {countryCodeToFlag((conversationMetadata.country_code || getCountryCode(conversationMetadata.country))!)}
-                                </span>
-                              )}
-                            </span>
-                          </>
+                          <span>
+                            {conversationMetadata.city || conversationMetadata.country}
+                            {(conversationMetadata.country_code || getCountryCode(conversationMetadata.country)) && (
+                              <span className="ml-0.5" role="img" aria-label={conversationMetadata.country || ''}>
+                                {countryCodeToFlag((conversationMetadata.country_code || getCountryCode(conversationMetadata.country))!)}
+                              </span>
+                            )}
+                          </span>
                         ) : <span className="text-muted-foreground/50">—</span>}
                       </div>
-                      <div className="flex items-center gap-1 truncate capitalize">
-                        {conversationMetadata.device_type || conversationMetadata.device || <span className="text-muted-foreground/50">—</span>}
+                      <div className="flex items-center gap-1.5 truncate capitalize">
+                        <Monitor01 className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span>{conversationMetadata.device_type || conversationMetadata.device || '—'}</span>
                       </div>
                       
                       {/* Row 2: Browser, Messages, Pages */}
-                      <div className="flex items-center gap-1 truncate">
-                        {conversationMetadata.browser || <span className="text-muted-foreground/50">—</span>}
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Browser className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span>{conversationMetadata.browser || '—'}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <MessageChatCircle className="h-3 w-3" />
+                      <div className="flex items-center gap-1.5">
+                        <MessageChatCircle className="h-3.5 w-3.5 flex-shrink-0" />
                         <span>{getMessagesCount()} msgs</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <File02 className="h-3 w-3" />
+                      <div className="flex items-center gap-1.5">
+                        <File02 className="h-3.5 w-3.5 flex-shrink-0" />
                         <span>{getPagesCount()} pages</span>
                       </div>
                       
-                      {/* Row 3: Time, Landing, Referrer */}
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
+                      {/* Row 3: Time, Landing/Referrer */}
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                         <span>{lead.created_at ? formatDistanceToNow(new Date(lead.created_at), { addSuffix: false }) : '—'}</span>
                       </div>
                       {conversationMetadata.landing_page ? (
-                        <div className="flex items-center gap-1 truncate col-span-2">
+                        <div className="flex items-center gap-1.5 truncate col-span-2">
                           <span className="text-muted-foreground/60 flex-shrink-0">Landing:</span>
                           <span className="truncate">{stripUrl(conversationMetadata.landing_page)}</span>
                         </div>
                       ) : (conversationMetadata.referrer_url || conversationMetadata.referrer) ? (
-                        <div className="flex items-center gap-1 truncate col-span-2">
+                        <div className="flex items-center gap-1.5 truncate col-span-2">
                           <span className="text-muted-foreground/60 flex-shrink-0">Referrer:</span>
                           <span className="truncate">{stripUrl(conversationMetadata.referrer_url || conversationMetadata.referrer || '')}</span>
                         </div>
@@ -844,9 +845,9 @@ export const LeadDetailsSheet = ({
                     </div>
                   )}
 
-                  {/* Assignees - Compact inline row */}
-                  <div className="flex items-center gap-1.5">
-                    <Label className="text-2xs text-muted-foreground">Assignees</Label>
+                  {/* Assignees */}
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground">Assignees</Label>
                     <LeadAssigneePicker
                       leadId={lead.id}
                       assignees={getAssignees(lead.id)}
@@ -856,22 +857,22 @@ export const LeadDetailsSheet = ({
                     />
                   </div>
 
-                  {/* Tags - inline, no presets */}
+                  {/* Tags */}
                   {lead.conversation_id && (
                     <div className={cn(
-                      "flex flex-wrap items-center gap-1 rounded transition-all duration-200",
+                      "flex flex-wrap items-center gap-1.5 rounded transition-all duration-200",
                       savingFields.has('tags') && "ring-2 ring-primary/50"
                     )}>
-                      <Label className="text-2xs text-muted-foreground mr-1">Tags</Label>
+                      <Label className="text-xs text-muted-foreground mr-1">Tags</Label>
                       {conversationMetadata.tags?.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="gap-0.5 pr-0.5 text-2xs h-5">
+                        <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-xs h-6">
                           {tag}
                           <button
                             onClick={() => handleRemoveTag(tag)}
                             className="ml-0.5 hover:bg-muted rounded p-0.5"
                             aria-label={`Remove ${tag} tag`}
                           >
-                            <XClose className="h-2.5 w-2.5" />
+                            <XClose className="h-3 w-3" />
                           </button>
                         </Badge>
                       ))}
@@ -885,7 +886,7 @@ export const LeadDetailsSheet = ({
                             handleAddTag(newTag);
                           }
                         }}
-                        className="h-5 w-14 text-2xs px-1 border-dashed"
+                        className="h-6 w-16 text-xs px-1.5 border-dashed"
                       />
                     </div>
                   )}
@@ -913,10 +914,10 @@ export const LeadDetailsSheet = ({
                     </>
                   )}
 
-                  {/* Internal Notes - Compact */}
+                  {/* Internal Notes */}
                   {lead.conversation_id && (
-                    <div className="space-y-0.5">
-                      <Label className="text-2xs text-muted-foreground">Internal Notes</Label>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Internal Notes</Label>
                       <Textarea
                         placeholder="Add internal notes..."
                         value={internalNotes}
