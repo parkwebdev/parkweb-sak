@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Settings01 } from '@untitledui/icons';
+import { Columns03, ChevronDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,11 +13,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { 
   CARD_FIELDS, 
   FIELD_GROUP_LABELS, 
@@ -61,21 +56,17 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
 
   return (
     <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-            >
-              <Settings01 size={16} className="text-muted-foreground" />
-              <span className="sr-only">Properties</span>
-            </Button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">Properties</TooltipContent>
-      </Tooltip>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 px-2.5"
+        >
+          <Columns03 size={14} />
+          <span className="text-xs">{viewMode === 'kanban' ? 'Fields' : 'Columns'}</span>
+          <ChevronDown size={14} className="text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52 bg-popover max-h-80 overflow-y-auto">
         {viewMode === 'kanban' ? (
           // Kanban: Show card field toggles grouped
