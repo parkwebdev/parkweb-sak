@@ -98,6 +98,7 @@ export const LeadDetailsSheet = ({
   onUpdate,
   onDelete,
 }: LeadDetailsSheetProps) => {
+  const [isEditingName, setIsEditingName] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -632,7 +633,52 @@ export const LeadDetailsSheet = ({
             {/* Left side - header + scrollable content */}
             <div className="flex-1 flex flex-col min-h-0 min-w-0 py-6 pl-6 pr-4">
               <SheetHeader className="flex-shrink-0 pb-4">
-                <SheetTitle>Lead Details</SheetTitle>
+                {isEditingName ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={currentFirstName}
+                      onChange={(e) => handleFirstNameChange(e.target.value)}
+                      onFocus={() => { isEditingRef.current = true; }}
+                      onBlur={() => { isEditingRef.current = false; }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') setIsEditingName(false);
+                        if (e.key === 'Enter') setIsEditingName(false);
+                      }}
+                      className={cn("h-8 text-lg font-semibold flex-1", getInputClassName('firstName'))}
+                      placeholder="First name"
+                      autoFocus
+                    />
+                    <Input
+                      value={currentLastName}
+                      onChange={(e) => handleLastNameChange(e.target.value)}
+                      onFocus={() => { isEditingRef.current = true; }}
+                      onBlur={() => { isEditingRef.current = false; }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') setIsEditingName(false);
+                        if (e.key === 'Enter') setIsEditingName(false);
+                      }}
+                      className={cn("h-8 text-lg font-semibold flex-1", getInputClassName('lastName'))}
+                      placeholder="Last name"
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2"
+                      onClick={() => setIsEditingName(false)}
+                    >
+                      Done
+                    </Button>
+                  </div>
+                ) : (
+                  <SheetTitle
+                    className="cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => setIsEditingName(true)}
+                  >
+                    {currentFirstName || currentLastName
+                      ? `${currentFirstName} ${currentLastName}`.trim()
+                      : <span className="text-muted-foreground">Unnamed Lead</span>}
+                  </SheetTitle>
+                )}
                 <p id="lead-details-description" className="sr-only">View and edit lead information, activity, and comments</p>
               </SheetHeader>
 
@@ -691,31 +737,6 @@ export const LeadDetailsSheet = ({
 
                   {/* Contact - Property List (no background) */}
                   <div className="space-y-1.5">
-                    {/* First Name / Last Name Row */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">First</Label>
-                        <Input
-                          value={currentFirstName}
-                          onChange={(e) => handleFirstNameChange(e.target.value)}
-                          onFocus={() => { isEditingRef.current = true; }}
-                          onBlur={() => { isEditingRef.current = false; }}
-                          className={cn(getInputClassName('firstName'), "flex-1")}
-                          placeholder="First name"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">Last</Label>
-                        <Input
-                          value={currentLastName}
-                          onChange={(e) => handleLastNameChange(e.target.value)}
-                          onFocus={() => { isEditingRef.current = true; }}
-                          onBlur={() => { isEditingRef.current = false; }}
-                          className={cn(getInputClassName('lastName'), "flex-1")}
-                          placeholder="Last name"
-                        />
-                      </div>
-                    </div>
                     
                     {/* Email Row */}
                     <div className="flex items-center gap-2">
