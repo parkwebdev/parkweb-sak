@@ -84,9 +84,9 @@ export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSecti
                     )}
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs p-4">
+                <TooltipContent side="right" className="p-3">
                   <p className="font-medium mb-2">Tips for a great prompt:</p>
-                  <ul className="text-xs space-y-1.5 text-muted-foreground">
+                  <ul className="space-y-1.5 text-muted-foreground">
                     {PROMPT_TIPS.map((tip, i) => (
                       <li key={i} className="flex gap-2">
                         <span className="text-primary">•</span>

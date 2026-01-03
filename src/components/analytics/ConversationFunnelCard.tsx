@@ -115,13 +115,13 @@ export const ConversationFunnelCard = React.memo(function ConversationFunnelCard
                       />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-[200px]">
+                  <TooltipContent side="top">
                     <div className="space-y-1">
-                      <p className="font-medium text-xs">{stage.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-medium">{stage.name}</p>
+                      <p className="text-muted-foreground">
                         <span className="text-foreground font-medium">{stage.count.toLocaleString()}</span> conversations
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground">
                         {stage.percentage.toFixed(1)}% of total
                       </p>
                     </div>
@@ -145,7 +145,7 @@ export const ConversationFunnelCard = React.memo(function ConversationFunnelCard
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="top">
-                        <p className="text-xs">{stage.dropOffPercent.toFixed(1)}% drop from previous stage</p>
+                        <p>{stage.dropOffPercent.toFixed(1)}% drop from previous stage</p>
                       </TooltipContent>
                     </Tooltip>
                   )}

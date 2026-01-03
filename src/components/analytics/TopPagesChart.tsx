@@ -198,22 +198,22 @@ export const TopPagesChart = React.memo(function TopPagesChart({ data, loading }
                       />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side="top" align="start" className="max-w-xs">
+                  <TooltipContent side="top" align="start">
                     <div className="space-y-1.5">
-                      <p className="font-medium text-xs break-all">{page.url}</p>
+                      <p className="font-medium break-all">{page.url}</p>
                       <div className="border-t border-border pt-1.5 space-y-0.5">
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground">
                           <span className="text-foreground font-medium">{page.visits.toLocaleString()}</span> visits
                         </p>
                         {page.avgDuration > 0 && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground">
                             <span className="text-foreground font-medium">{formatDuration(page.avgDuration)}</span> avg. time
                           </p>
                         )}
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground">
                           <span className="text-primary font-medium">{page.conversions}</span> leads
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground">
                           <span className="text-foreground font-medium">{page.conversionRate.toFixed(1)}%</span> conversion rate
                         </p>
                       </div>

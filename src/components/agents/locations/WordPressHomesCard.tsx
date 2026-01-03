@@ -113,7 +113,7 @@ export function WordPressHomesCard({ agent, onSyncComplete }: WordPressHomesCard
                       <InfoCircleIconFilled className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs text-xs">
+                  <TooltipContent side="top">
                     <p>Enable this if your WordPress site doesn't use ACF (Advanced Custom Fields). AI will parse property details from your page HTML instead. Only use if standard sync returns incomplete data.</p>
                   </TooltipContent>
                 </Tooltip>

@@ -133,8 +133,8 @@ export const PageDepthChart = React.memo(function PageDepthChart({
                   </TooltipTrigger>
                   <TooltipContent side="top" align="start">
                     <div className="space-y-1">
-                      <p className="font-medium text-xs">{item.depth}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-medium">{item.depth}</p>
+                      <p className="text-muted-foreground">
                         <span className="text-foreground font-medium">{item.count.toLocaleString()}</span> sessions ({item.percentage.toFixed(1)}%)
                       </p>
                     </div>

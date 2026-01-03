@@ -218,8 +218,8 @@ export const PeakActivityChart = React.memo(function PeakActivityChart({
                             />
                         </TooltipTrigger>
                         <TooltipContent side="top" className="text-center">
-                          <p className="text-sm font-medium">{FULL_DAYS[dayIdx]}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-medium">{FULL_DAYS[dayIdx]}</p>
+                          <p className="text-muted-foreground">
                             {block.label}: {value.toLocaleString()} conversations
                           </p>
                         </TooltipContent>

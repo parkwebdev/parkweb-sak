@@ -186,12 +186,12 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({
                   </TooltipTrigger>
                   <TooltipContent side="top" align="start">
                     <div className="space-y-1">
-                      <p className="font-medium text-xs capitalize">{source.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-medium capitalize">{source.name}</p>
+                      <p className="text-muted-foreground">
                         <span className="text-foreground font-medium">{source.value.toLocaleString()}</span> conversations ({percentage}%)
                       </p>
                       {hasSourceTrend && (
-                        <p className={cn("text-xs", isSourcePositive ? "text-success" : "text-destructive")}>
+                        <p className={cn(isSourcePositive ? "text-success" : "text-destructive")}>
                           {isSourcePositive ? '+' : ''}{sourceTrend.toFixed(1)}% vs last period
                         </p>
                       )}

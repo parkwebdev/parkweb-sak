@@ -146,8 +146,8 @@ export const CSATDistributionCard = React.memo(function CSATDistributionCard({
                   </TooltipTrigger>
                   <TooltipContent side="top">
                     <div className="space-y-1">
-                      <p className="font-medium text-xs">{item.rating} Star Rating</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-medium">{item.rating} Star Rating</p>
+                      <p className="text-muted-foreground">
                         <span className="text-foreground font-medium">{item.count.toLocaleString()}</span> ratings ({item.percentage.toFixed(1)}%)
                       </p>
                     </div>
