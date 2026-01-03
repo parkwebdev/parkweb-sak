@@ -196,7 +196,7 @@ export function SitemapChildPages({
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-[300px]">
-                        <p className="text-xs">{getErrorMessage(source)}</p>
+                        <p>{getErrorMessage(source)}</p>
                       </TooltipContent>
                     </Tooltip>
                   )}
