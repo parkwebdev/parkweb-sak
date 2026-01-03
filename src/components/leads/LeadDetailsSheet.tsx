@@ -747,7 +747,7 @@ export const LeadDetailsSheet = ({
                           value={conversationMetadata.priority || 'none'}
                           onValueChange={handlePriorityChange}
                         >
-                          <SelectTrigger className="h-6 w-auto min-w-[80px] text-xs border-none bg-muted/50 hover:bg-muted px-2">
+                          <SelectTrigger size="sm" className="w-auto min-w-[80px] text-xs border-none bg-muted/50 hover:bg-muted px-2">
                             <SelectValue>
                               <div className="flex items-center gap-1.5">
                                 <span

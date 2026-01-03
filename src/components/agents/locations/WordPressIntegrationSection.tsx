@@ -371,7 +371,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                         value={communitySyncInterval}
                         onValueChange={handleCommunitySyncIntervalChange}
                       >
-                        <SelectTrigger className="h-7 w-[140px] text-xs">
+                        <SelectTrigger size="sm" className="w-[140px] text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -462,7 +462,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                           value={homeSyncInterval}
                           onValueChange={handleHomeSyncIntervalChange}
                         >
-                          <SelectTrigger className="h-7 w-[140px] text-xs">
+                          <SelectTrigger size="sm" className="w-[140px] text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
