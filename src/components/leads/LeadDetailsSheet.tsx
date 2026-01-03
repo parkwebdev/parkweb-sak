@@ -630,14 +630,14 @@ export const LeadDetailsSheet = ({
         ) : (
           <>
             {/* Left side - header + scrollable content */}
-            <div className="flex-1 flex flex-col min-h-0 min-w-0 p-6">
+            <div className="flex-1 flex flex-col min-h-0 min-w-0 py-6 pl-6 pr-4">
               <SheetHeader className="flex-shrink-0 pb-4">
                 <SheetTitle>Lead Details</SheetTitle>
                 <p id="lead-details-description" className="sr-only">View and edit lead information, activity, and comments</p>
               </SheetHeader>
 
               {/* Scrollable content */}
-              <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="flex-1 min-h-0 overflow-y-auto pr-2">
                 <div className="space-y-2 pb-4">
                   {/* Header Bar - Status, Priority, Created Date */}
                   <div className="flex items-center gap-2 flex-wrap">
