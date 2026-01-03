@@ -27,6 +27,8 @@ export type ActionData = {
   to?: string | null;
   // assignee changes
   user_id?: string;
+  // tag changes
+  tag?: string;
 };
 
 export type AssigneeProfile = {
