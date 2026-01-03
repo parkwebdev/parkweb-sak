@@ -145,10 +145,10 @@ export function CalendarSyncStatus({
               <span className="ml-1">{healthLabels[health]}</span>
             </Badge>
           </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-xs">
-            <p className="text-xs">{statusMessage}</p>
+          <TooltipContent side="top">
+            <p>{statusMessage}</p>
             {account.webhook_expires_at && health !== 'error' && (
-              <p className="text-2xs text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1">
                 Webhook expires: {formatDistanceToNow(parseISO(account.webhook_expires_at), { addSuffix: true })}
               </p>
             )}
@@ -167,7 +167,7 @@ export function CalendarSyncStatus({
               </span>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p className="text-xs">Last synced: {new Date(account.last_synced_at).toLocaleString()}</p>
+              <p>Last synced: {new Date(account.last_synced_at).toLocaleString()}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -194,7 +194,7 @@ export function CalendarSyncStatus({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">Sync now</p>
+                <p>Sync now</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -219,7 +219,7 @@ export function CalendarSyncStatus({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">
-                <p className="text-xs">Test webhook</p>
+                <p>Test webhook</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

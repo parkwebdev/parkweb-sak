@@ -153,7 +153,7 @@ export function ResizableEvent({
         <Tooltip>
           <TooltipTrigger asChild>{content}</TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">⚠️ Conflicts with: {conflictingEvents.join(', ')}</p>
+            <p>⚠️ Conflicts with: {conflictingEvents.join(', ')}</p>
           </TooltipContent>
         </Tooltip>
       );
@@ -235,7 +235,7 @@ export function ResizableEvent({
       <Tooltip>
         <TooltipTrigger asChild>{weekDayContent}</TooltipTrigger>
         <TooltipContent>
-          <p className="text-xs">⚠️ Conflicts with: {conflictingEvents.join(', ')}</p>
+          <p>⚠️ Conflicts with: {conflictingEvents.join(', ')}</p>
         </TooltipContent>
       </Tooltip>
     );

@@ -56,7 +56,7 @@ const ToolbarButton = ({ icon, label, isActive, onClick, disabled }: ToolbarButt
         {icon}
       </Button>
     </TooltipTrigger>
-    <TooltipContent side="bottom" className="text-xs">
+    <TooltipContent side="bottom">
       {label}
     </TooltipContent>
   </Tooltip>

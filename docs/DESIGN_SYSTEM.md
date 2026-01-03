@@ -655,6 +655,63 @@ Semantic tokens for external platform brand colors:
 
 ---
 
+## Tooltips
+
+Tooltips use standardized styling defined in the base component (`src/components/ui/tooltip.tsx`).
+
+### Default Styles
+
+| Property | Value | Notes |
+|----------|-------|-------|
+| Text Size | `text-xs` (12px) | Compact, readable |
+| Padding | `px-3 py-1.5` | Tight but comfortable |
+| Max Width | `max-w-xs` (320px) | Prevents overly wide tooltips |
+| Border Radius | `rounded-md` | Matches design system |
+| Animation | `fade-in zoom-in-95` | Subtle entrance |
+
+### Content Patterns
+
+```tsx
+// ✅ Simple tooltip - plain text, no wrapper needed
+<TooltipContent>
+  Click to save changes
+</TooltipContent>
+
+// ✅ Complex tooltip - structured content
+<TooltipContent>
+  <div className="space-y-1">
+    <p className="font-medium">Traffic Source</p>
+    <p className="text-muted-foreground">
+      <span className="text-foreground font-medium">1,234</span> visits
+    </p>
+  </div>
+</TooltipContent>
+```
+
+### When to Override
+
+Most tooltips should use defaults. Only override for special cases:
+
+| Use Case | Override | Example |
+|----------|----------|---------|
+| Long URLs | `max-w-[400px]` | Sitemap child pages |
+| Compact form labels | `max-w-[200px]` | Content section labels |
+| Extra padding for lists | `p-3` | System prompt tips |
+
+```tsx
+// ❌ Wrong - redundant className overrides
+<TooltipContent className="text-xs">  {/* text-xs is default */}
+  Simple tooltip
+</TooltipContent>
+
+// ✅ Correct - no override needed
+<TooltipContent>
+  Simple tooltip
+</TooltipContent>
+```
+
+---
+
 ## Usage Examples
 
 ### Card Component

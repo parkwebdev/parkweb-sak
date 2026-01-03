@@ -73,17 +73,17 @@ function StackedBar({
             />
           </div>
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-[240px]">
+        <TooltipContent side="top">
           <div className="space-y-1.5">
-            {tooltip && <p className="text-xs text-muted-foreground">{tooltip}</p>}
-            <div className="flex items-center gap-2 text-xs">
+            {tooltip && <p className="text-muted-foreground">{tooltip}</p>}
+            <div className="flex items-center gap-2">
               <span 
                 className="w-2 h-2 rounded-full" 
                 style={{ backgroundColor: primaryColor }}
               />
               <span>{primaryLabel}: {primaryValue.toFixed(1)}%</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2">
               <span 
                 className="w-2 h-2 rounded-full" 
                 style={{ backgroundColor: secondaryColor }}
