@@ -23,15 +23,13 @@ import {
   Edit02,
   UserPlus01,
   UserMinus01,
-  Plus,
   ArrowRight,
   Send01,
   Trash02,
   XClose,
   Check,
-  SearchMd,
-  FilterLines,
 } from '@untitledui/icons';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
 interface LeadActivityPanelProps {
   leadId: string;
@@ -71,9 +69,11 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   }, [stages]);
 
   // Merge activities and comments into unified feed
+  // Filter out comment_added activities since comments are shown separately
   const feedItems = useMemo<FeedItem[]>(() => {
+    const filteredActivities = activities.filter(a => a.action_type !== 'comment_added');
     const items: FeedItem[] = [
-      ...activities.map(a => ({ type: 'activity' as const, data: a, created_at: a.created_at })),
+      ...filteredActivities.map(a => ({ type: 'activity' as const, data: a, created_at: a.created_at })),
       ...comments.map(c => ({ type: 'comment' as const, data: c, created_at: c.created_at })),
     ];
     // Sort by created_at descending (newest first)
@@ -96,7 +96,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   const getActivityIcon = (actionType: string) => {
     switch (actionType) {
       case 'created':
-        return <Plus className="h-3 w-3" />;
+        return <AriAgentsIcon size={12} />;
       case 'stage_changed':
         return <Flag01 className="h-3 w-3" />;
       case 'field_updated':
@@ -117,7 +117,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
 
     switch (activity.action_type) {
       case 'created':
-        return <span><span className="font-medium">{userName}</span> created this lead</span>;
+        return <span><span className="font-medium">Ari</span> created this lead</span>;
 
       case 'stage_changed':
         return (
@@ -137,11 +137,23 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
         );
 
       case 'field_updated':
+        const fieldName = data.field?.replace(/_/g, ' ');
+        const oldValue = data.from;
+        const newValue = data.to;
         return (
-          <span className="flex items-center gap-1 flex-wrap">
-            <span className="font-medium">{userName}</span>
-            <span>updated</span>
-            <span className="font-medium capitalize">{data.field?.replace(/_/g, ' ')}</span>
+          <span className="flex flex-col gap-0.5">
+            <span>
+              <span className="font-medium">{userName}</span>
+              {' updated '}
+              <span className="font-medium capitalize">{fieldName}</span>
+            </span>
+            {(oldValue || newValue) && (
+              <span className="text-muted-foreground flex items-center gap-1 text-2xs">
+                <span className="line-through">{oldValue || 'empty'}</span>
+                <ArrowRight className="h-2.5 w-2.5" />
+                <span>{newValue || 'empty'}</span>
+              </span>
+            )}
           </span>
         );
 
@@ -314,6 +326,8 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                   );
                 } else {
                   const activity = item.data;
+                  const isSystemAction = activity.action_type === 'created';
+                  
                   return (
                     <div key={`activity-${activity.id}`} className="flex gap-2 py-2 relative">
                       {/* Timeline line */}
@@ -321,7 +335,12 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                         <div className="absolute left-2.5 top-7 bottom-0 w-px bg-border" aria-hidden="true" />
                       )}
                       
-                      {activity.profile ? (
+                      {isSystemAction ? (
+                        // Ari icon for system actions (created)
+                        <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <AriAgentsIcon size={12} className="text-primary" />
+                        </div>
+                      ) : activity.profile ? (
                         <Avatar className="h-5 w-5 flex-shrink-0">
                           <AvatarImage src={activity.profile.avatar_url || undefined} />
                           <AvatarFallback className="text-2xs">
