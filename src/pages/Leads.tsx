@@ -18,6 +18,7 @@ import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
 import { useTeam } from '@/hooks/useTeam';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useAccountSettings } from '@/hooks/useAccountSettings';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadsHeaderBar } from '@/components/leads/LeadsHeaderBar';
@@ -25,16 +26,8 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
-import { 
-  TABLE_VISIBILITY_STORAGE_KEY,
-  DEFAULT_TABLE_COLUMN_VISIBILITY,
-  TABLE_COLUMN_ORDER_STORAGE_KEY,
-  DEFAULT_VIEW_MODE_STORAGE_KEY,
-  DEFAULT_SORT_STORAGE_KEY,
-  getDefaultColumnOrder,
-  type SortOption,
-} from '@/components/leads/LeadsViewSettingsSheet';
-import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
+import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
+import { type CardFieldKey } from '@/components/leads/KanbanCardFields';
 import { type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -57,16 +50,17 @@ function Leads({ onMenuClick }: LeadsProps) {
   // Check if user can manage leads (delete, edit stage, etc.)
   const canManageLeads = useCanManage('manage_leads');
   
-  // Initialize view mode from localStorage
-  const [viewMode, setViewMode] = useState<'kanban' | 'table'>(() => {
-    try {
-      const stored = localStorage.getItem(DEFAULT_VIEW_MODE_STORAGE_KEY);
-      if (stored === 'kanban' || stored === 'table') return stored;
-    } catch {
-      // fallback
-    }
-    return 'kanban';
-  });
+  // Account-wide settings from database
+  const {
+    viewMode,
+    kanbanVisibleFields,
+    tableColumnVisibility,
+    tableColumnOrder,
+    defaultSort,
+    loading: settingsLoading,
+    canManageSettings,
+    updateSettings,
+  } = useAccountSettings();
   
   // Bulk selection state
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
@@ -80,91 +74,38 @@ function Leads({ onMenuClick }: LeadsProps) {
   // Dialog states for action buttons
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isManageStagesOpen, setIsManageStagesOpen] = useState(false);
-  
-  // Kanban card field visibility state with localStorage persistence
-  const [visibleCardFields, setVisibleCardFields] = useState<Set<CardFieldKey>>(() => {
-    try {
-      const stored = localStorage.getItem(KANBAN_FIELDS_STORAGE_KEY);
-      if (stored) {
-        return new Set(JSON.parse(stored) as CardFieldKey[]);
-      }
-    } catch {
-      // Fallback to defaults on parse error
-    }
-    return getDefaultVisibleFields();
-  });
 
-  // Table column visibility state with localStorage persistence
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
-    try {
-      const stored = localStorage.getItem(TABLE_VISIBILITY_STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored) as VisibilityState;
-      }
-    } catch {
-      // Fallback to defaults on parse error
+  // Settings update handlers (only available for account owners)
+  const handleViewModeChange = useCallback((mode: 'kanban' | 'table') => {
+    if (canManageSettings) {
+      updateSettings({ leads_view_mode: mode });
     }
-    return { ...DEFAULT_TABLE_COLUMN_VISIBILITY };
-  });
-
-  // Column order state with localStorage persistence
-  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem(TABLE_COLUMN_ORDER_STORAGE_KEY);
-      if (stored) {
-        const parsedOrder = JSON.parse(stored) as string[];
-        // Ensure all current columns are included (handles new columns added later)
-        const allColumnIds = getDefaultColumnOrder();
-        const missingColumns = allColumnIds.filter(id => !parsedOrder.includes(id));
-        // Remove any obsolete columns that no longer exist
-        const validOrder = parsedOrder.filter(id => allColumnIds.includes(id));
-        return [...validOrder, ...missingColumns];
-      }
-    } catch {
-      // Fallback to defaults
-    }
-    return getDefaultColumnOrder();
-  });
-
-  // Default sorting state with localStorage persistence
-  const [defaultSort, setDefaultSort] = useState<SortOption | null>(() => {
-    try {
-      const stored = localStorage.getItem(DEFAULT_SORT_STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored) as SortOption;
-      }
-    } catch {
-      // Fallback to null
-    }
-    return null;
-  });
+  }, [canManageSettings, updateSettings]);
 
   const handleColumnVisibilityChange = useCallback((visibility: VisibilityState) => {
-    setColumnVisibility(visibility);
-    localStorage.setItem(TABLE_VISIBILITY_STORAGE_KEY, JSON.stringify(visibility));
-  }, []);
+    if (canManageSettings) {
+      updateSettings({ leads_table_column_visibility: visibility });
+    }
+  }, [canManageSettings, updateSettings]);
 
   const handleDefaultSortChange = useCallback((sort: SortOption | null) => {
-    setDefaultSort(sort);
-    if (sort) {
-      localStorage.setItem(DEFAULT_SORT_STORAGE_KEY, JSON.stringify(sort));
-    } else {
-      localStorage.removeItem(DEFAULT_SORT_STORAGE_KEY);
+    if (canManageSettings) {
+      updateSettings({ leads_default_sort: sort });
     }
-  }, []);
+  }, [canManageSettings, updateSettings]);
 
   const handleToggleField = useCallback((field: CardFieldKey) => {
-    setVisibleCardFields(prev => {
-      const next = new Set(prev);
-      if (next.has(field)) {
-        next.delete(field);
+    if (canManageSettings) {
+      const currentFields = [...kanbanVisibleFields];
+      const fieldIndex = currentFields.indexOf(field);
+      if (fieldIndex >= 0) {
+        currentFields.splice(fieldIndex, 1);
       } else {
-        next.add(field);
+        currentFields.push(field);
       }
-      localStorage.setItem(KANBAN_FIELDS_STORAGE_KEY, JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
+      updateSettings({ leads_kanban_visible_fields: currentFields as CardFieldKey[] });
+    }
+  }, [canManageSettings, kanbanVisibleFields, updateSettings]);
   
   // Shared search state for filtering across both views
   const [searchQuery, setSearchQuery] = useState('');
@@ -286,7 +227,7 @@ function Leads({ onMenuClick }: LeadsProps) {
       {/* Header bar - outside content padding for full-width effect */}
       <LeadsHeaderBar
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
+        onViewModeChange={handleViewModeChange}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         stages={stages}
@@ -299,9 +240,9 @@ function Leads({ onMenuClick }: LeadsProps) {
         onAssigneeFilterChange={setSelectedAssigneeIds}
         sortOption={defaultSort}
         onSortChange={handleDefaultSortChange}
-        visibleCardFields={visibleCardFields}
+        visibleCardFields={kanbanVisibleFields}
         onToggleCardField={handleToggleField}
-        columnVisibility={columnVisibility}
+        columnVisibility={tableColumnVisibility}
         onColumnVisibilityChange={handleColumnVisibilityChange}
         onExport={() => setIsExportDialogOpen(true)}
         onManageStages={() => setIsManageStagesOpen(true)}
@@ -311,7 +252,7 @@ function Leads({ onMenuClick }: LeadsProps) {
       <div className="px-4 lg:px-8 pt-4 space-y-6 min-w-0">
 
         {/* Content */}
-        {loading ? (
+        {loading || settingsLoading ? (
           <SkeletonLeadsPage />
         ) : (
           <AnimatePresence mode="wait">
@@ -331,7 +272,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   onAddAssignee={canManageLeads ? addAssignee : undefined}
                   onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
                   getAssignees={getAssignees}
-                  visibleFields={visibleCardFields}
+                  visibleFields={kanbanVisibleFields}
                   canManage={canManageLeads}
                   sortOption={defaultSort}
                 />
@@ -358,9 +299,9 @@ function Leads({ onMenuClick }: LeadsProps) {
                     setSelectedLeadIds(new Set(ids));
                     setIsDeleteDialogOpen(true);
                   } : undefined}
-                  columnVisibility={columnVisibility}
+                  columnVisibility={tableColumnVisibility}
                   onColumnVisibilityChange={handleColumnVisibilityChange}
-                  columnOrder={columnOrder}
+                  columnOrder={tableColumnOrder}
                   defaultSort={defaultSort}
                   canManage={canManageLeads}
                 />
