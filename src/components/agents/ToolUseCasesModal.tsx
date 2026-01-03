@@ -110,7 +110,7 @@ export const ToolUseCasesModal = ({ open, onOpenChange }: ToolUseCasesModalProps
           {/* How it Works */}
           <Collapsible open={showHowItWorks} onOpenChange={setShowHowItWorks}>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between px-0 hover:bg-transparent">
+              <Button variant="linkPlain" className="w-full justify-between px-0">
                 <span className="text-sm font-medium">How it works</span>
                 {showHowItWorks ? (
                   <ChevronUp className="h-4 w-4" />
@@ -159,7 +159,7 @@ Body: {"location": "NYC"}`}
           {/* Example Tool Definition */}
           <Collapsible open={showExample} onOpenChange={setShowExample}>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between px-0 hover:bg-transparent">
+              <Button variant="linkPlain" className="w-full justify-between px-0">
                 <span className="text-sm font-medium">Example tool definition</span>
                 {showExample ? (
                   <ChevronUp className="h-4 w-4" />

@@ -678,7 +678,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                       </Badge>
                     ))}
                     {activeFilters.length > 1 && (
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground" onClick={clearAllFilters}>
+                      <Button variant="ghost" size="xs" className="text-muted-foreground" onClick={clearAllFilters}>
                         Clear all
                       </Button>
                     )}
@@ -739,7 +739,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                       </Badge>
                     ))}
                     {activeFilters.length > 1 && (
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground" onClick={clearAllFilters}>
+                      <Button variant="ghost" size="xs" className="text-muted-foreground" onClick={clearAllFilters}>
                         Clear all
                       </Button>
                     )}
