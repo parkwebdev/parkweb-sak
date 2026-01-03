@@ -65,6 +65,13 @@ interface LeadsProps {
   onMenuClick?: () => void;
 }
 
+// Date filter day ranges
+const DATE_FILTER_DAYS: Record<Exclude<DateRangeFilter, 'all'>, number> = {
+  '7days': 7,
+  '30days': 30,
+  '90days': 90,
+};
+
 function Leads({ onMenuClick }: LeadsProps) {
   const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const { stages } = useLeadStages();
@@ -81,7 +88,9 @@ function Leads({ onMenuClick }: LeadsProps) {
     try {
       const stored = localStorage.getItem(VIEW_MODE_KEY);
       if (stored === 'table' || stored === 'kanban') return stored;
-    } catch {}
+    } catch (e) {
+      console.warn('Failed to read view mode from localStorage:', e);
+    }
     return 'kanban';
   });
 
@@ -107,7 +116,9 @@ function Leads({ onMenuClick }: LeadsProps) {
         
         return savedFields;
       }
-    } catch {}
+    } catch (e) {
+      console.warn('Failed to read kanban fields from localStorage:', e);
+    }
     
     localStorage.setItem(KANBAN_FIELDS_VERSION_KEY, String(KANBAN_FIELDS_VERSION));
     return defaults;
@@ -118,7 +129,9 @@ function Leads({ onMenuClick }: LeadsProps) {
     try {
       const stored = localStorage.getItem(TABLE_COLUMNS_KEY);
       if (stored) return JSON.parse(stored);
-    } catch {}
+    } catch (e) {
+      console.warn('Failed to read table columns from localStorage:', e);
+    }
     return DEFAULT_TABLE_COLUMNS;
   });
 
@@ -127,7 +140,9 @@ function Leads({ onMenuClick }: LeadsProps) {
     try {
       const stored = localStorage.getItem(TABLE_COLUMN_ORDER_KEY);
       if (stored) return JSON.parse(stored);
-    } catch {}
+    } catch (e) {
+      console.warn('Failed to read table column order from localStorage:', e);
+    }
     return DEFAULT_TABLE_COLUMN_ORDER;
   });
 
@@ -136,7 +151,9 @@ function Leads({ onMenuClick }: LeadsProps) {
     try {
       const stored = localStorage.getItem(DEFAULT_SORT_KEY);
       if (stored) return JSON.parse(stored);
-    } catch {}
+    } catch (e) {
+      console.warn('Failed to read default sort from localStorage:', e);
+    }
     return null;
   });
   
@@ -219,7 +236,7 @@ function Leads({ onMenuClick }: LeadsProps) {
     
     // Date range filter
     if (dateRangeFilter !== 'all') {
-      const daysAgo = { '7days': 7, '30days': 30, '90days': 90 }[dateRangeFilter];
+      const daysAgo = DATE_FILTER_DAYS[dateRangeFilter];
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - daysAgo);
       result = result.filter(lead => new Date(lead.created_at) >= cutoff);
@@ -281,6 +298,11 @@ function Leads({ onMenuClick }: LeadsProps) {
   const handleSingleDelete = useCallback((leadId: string) => {
     setSingleDeleteLeadId(leadId);
     setIsSingleDeleteOpen(true);
+  }, []);
+
+  const handleOpenBulkDelete = useCallback((ids: string[]) => {
+    setSelectedLeadIds(new Set(ids));
+    setIsDeleteDialogOpen(true);
   }, []);
 
   const handleSingleDeleteConfirm = useCallback(async (deleteConversation: boolean) => {
@@ -370,10 +392,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   getAssignees={getAssignees}
                   onSelectionChange={canManageLeads ? handleSelectLead : undefined}
                   onSelectAll={canManageLeads ? handleSelectAll : undefined}
-                  onBulkDelete={canManageLeads ? (ids) => {
-                    setSelectedLeadIds(new Set(ids));
-                    setIsDeleteDialogOpen(true);
-                  } : undefined}
+                  onBulkDelete={canManageLeads ? handleOpenBulkDelete : undefined}
                   columnVisibility={tableColumnVisibility}
                   onColumnVisibilityChange={handleColumnVisibilityChange}
                   columnOrder={tableColumnOrder}
