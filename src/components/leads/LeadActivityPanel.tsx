@@ -11,7 +11,7 @@ import { LeadActivityFeed } from './LeadActivityFeed';
 import { LeadComments } from './LeadComments';
 import { useLeadComments } from '@/hooks/useLeadComments';
 import { useLeadActivities } from '@/hooks/useLeadActivities';
-import { Activity, MessageTextSquare02 } from '@untitledui/icons';
+import { ClockRefresh, MessageTextSquare02 } from '@untitledui/icons';
 
 interface LeadActivityPanelProps {
   leadId: string;
@@ -25,7 +25,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
     <Tabs defaultValue="activity" className="flex flex-col h-full">
       <TabsList className="grid w-full grid-cols-2 mb-4">
         <TabsTrigger value="activity" className="gap-1.5">
-          <Activity className="h-4 w-4" />
+          <ClockRefresh className="h-4 w-4" />
           Activity
           {activities.length > 0 && (
             <span className="ml-1 text-xs text-muted-foreground">
