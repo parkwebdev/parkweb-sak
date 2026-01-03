@@ -27,6 +27,7 @@ import {
   KanbanCard,
 } from "@/components/ui/kanban";
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
+import { StageProgressIcon } from "./StageProgressIcon";
 import { useTeam } from '@/hooks/useTeam';
 import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
 import { LeadAssigneePicker } from './LeadAssigneePicker';
@@ -83,10 +84,14 @@ interface LeadsKanbanBoardProps {
 function InlineStageHeader({
   stage,
   count,
+  stageIndex,
+  totalStages,
   onUpdate,
 }: {
   stage: LeadStage;
   count: number;
+  stageIndex: number;
+  totalStages: number;
   onUpdate: (id: string, updates: Partial<Pick<LeadStage, 'name' | 'color'>>) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -124,6 +129,12 @@ function InlineStageHeader({
 
   return (
     <div className="flex items-center gap-2">
+      <StageProgressIcon
+        stageIndex={stageIndex}
+        totalStages={totalStages}
+        color={stage.color}
+        size={16}
+      />
       {isEditing && canEdit ? (
         <Input
           ref={inputRef}
@@ -565,6 +576,8 @@ export function LeadsKanbanBoard({
                   <InlineStageHeader
                     stage={stage}
                     count={getColumnCount(column.id)}
+                    stageIndex={stages.findIndex(s => s.id === column.id)}
+                    totalStages={stages.length}
                     onUpdate={canManage ? handleStageUpdate : undefined as unknown as typeof handleStageUpdate}
                   />
                 </KanbanHeader>
