@@ -112,7 +112,7 @@ export const ConversationsList = memo(function ConversationsList({
         {!isCollapsed && (
           <div className="flex items-center justify-between mt-3">
             {/* Open count badge */}
-            <Badge variant="secondary" className="text-xs font-medium">
+            <Badge variant="secondary" className="font-medium">
               {openCount} Open
             </Badge>
             

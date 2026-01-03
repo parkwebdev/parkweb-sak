@@ -10,6 +10,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { LinkPreviewCard, LinkPreviewData } from '@/components/chat/LinkPreviewCard';
 import { widgetSupabase } from '../api';
+import { WidgetSkeletonLinkPreview } from '../ui/WidgetSkeleton';
 
 // URL regex that matches http/https URLs
 const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
@@ -103,11 +104,7 @@ export function LinkPreviewsWidget({ content, compact = false, cachedPreviews }:
   if (loading) {
     return (
       <div className="space-y-2">
-        <div className="rounded-lg border border-border bg-muted/30 p-3 animate-pulse">
-          <div className="h-3 bg-muted rounded w-24 mb-2" />
-          <div className="h-4 bg-muted rounded w-3/4 mb-1" />
-          <div className="h-3 bg-muted rounded w-full" />
-        </div>
+        <WidgetSkeletonLinkPreview />
       </div>
     );
   }
