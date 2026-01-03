@@ -64,7 +64,7 @@ export const ChatHeader = memo(function ChatHeader({
           )}
           {conversation.status === 'human_takeover' && (
             <Button size="sm" variant="outline" onClick={onReturnToAI}>
-              Return to AI
+              Return to Ari
             </Button>
           )}
           {conversation.status !== 'closed' && (
