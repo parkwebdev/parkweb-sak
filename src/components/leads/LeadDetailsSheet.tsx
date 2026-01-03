@@ -797,25 +797,33 @@ export const LeadDetailsSheet = ({
                         placeholder="email@example.com"
                       />
                       {({ ...lead, ...editedLead }.email) && (
-                        <div className="flex items-center gap-1">
-                          <IconButton
-                            label="Copy email"
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
-                          >
-                            <Copy01 className="h-3.5 w-3.5" />
-                          </IconButton>
-                          <IconButton
-                            label="Send email"
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => window.open(`mailto:${({ ...lead, ...editedLead }.email)}`, '_blank')}
-                          >
-                            <Mail01 className="h-3.5 w-3.5" />
-                          </IconButton>
+                        <div className="flex rounded-lg border overflow-hidden">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
+                                className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                aria-label="Copy email"
+                              >
+                                <Copy01 className="h-3.5 w-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">Copy email</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => window.open(`mailto:${({ ...lead, ...editedLead }.email)}`, '_blank')}
+                                className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l"
+                                aria-label="Send email"
+                              >
+                                <Mail01 className="h-3.5 w-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">Send email</TooltipContent>
+                          </Tooltip>
                         </div>
                       )}
                     </div>
@@ -836,25 +844,33 @@ export const LeadDetailsSheet = ({
                         placeholder="(555) 123-4567"
                       />
                       {({ ...lead, ...editedLead }.phone || phoneValue) && (
-                        <div className="flex items-center gap-1">
-                          <IconButton
-                            label="Copy phone"
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
-                          >
-                            <Copy01 className="h-3.5 w-3.5" />
-                          </IconButton>
-                          <IconButton
-                            label="Call"
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => window.open(`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`, '_self')}
-                          >
-                            <Phone01 className="h-3.5 w-3.5" />
-                          </IconButton>
+                        <div className="flex rounded-lg border overflow-hidden">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
+                                className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                aria-label="Copy phone"
+                              >
+                                <Copy01 className="h-3.5 w-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">Copy phone</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => window.open(`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`, '_self')}
+                                className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l"
+                                aria-label="Call"
+                              >
+                                <Phone01 className="h-3.5 w-3.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">Call</TooltipContent>
+                          </Tooltip>
                         </div>
                       )}
                     </div>
