@@ -155,7 +155,7 @@ interface ConversationMetadataPanelProps {
 import { PRIORITY_OPTIONS } from '@/lib/priority-config';
 
 const PRESET_TAGS = [
-  'VIP', 'Follow-up', 'Bug Report', 'Feature Request', 'Billing', 
+  'Follow-up', 'Bug Report', 'Feature Request', 'Billing', 
   'Technical', 'Sales', 'Support', 'Urgent', 'Resolved'
 ];
 

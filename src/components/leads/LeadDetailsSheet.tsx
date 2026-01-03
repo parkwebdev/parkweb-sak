@@ -47,7 +47,7 @@ interface LeadDetailsSheetProps {
 
 // Preset tags for quick selection
 const PRESET_TAGS = [
-  'VIP', 'Follow-up', 'Hot Lead', 'Cold Lead', 
+  'Follow-up', 'Hot Lead', 'Cold Lead', 
   'Qualified', 'Not Qualified', 'Callback', 'Demo Scheduled'
 ];
 
