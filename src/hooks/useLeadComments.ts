@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { queryKeys } from '@/lib/query-keys';
 import type { Tables } from '@/integrations/supabase/types';
 
 export type LeadComment = Tables<'lead_comments'> & {
@@ -20,7 +21,7 @@ export type LeadComment = Tables<'lead_comments'> & {
 export function useLeadComments(leadId: string | undefined) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const queryKey = ['lead-comments', leadId];
+  const queryKey = queryKeys.leadComments.list(leadId ?? '');
 
   // Fetch comments with user profiles
   const { data: comments = [], isLoading } = useQuery({
@@ -103,7 +104,7 @@ export function useLeadComments(leadId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
       // Also invalidate activities since a comment adds an activity
-      queryClient.invalidateQueries({ queryKey: ['lead-activities', leadId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leadActivities.list(leadId ?? '') });
     },
   });
 
