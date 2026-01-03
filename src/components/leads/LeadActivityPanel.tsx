@@ -282,7 +282,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Header - white background */}
       <div className="flex items-center gap-2 px-4 py-3 bg-background border-b">
         <span className="text-sm font-medium">Activity</span>
@@ -296,7 +296,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       {/* Feed area with gray background */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-muted/30">
         {/* Unified feed - scrollable */}
-        <ScrollArea className="h-full" ref={scrollContainerRef}>
+        <ScrollArea className="flex-1 min-h-0" ref={scrollContainerRef}>
           <div className="px-4 pt-4 pb-2">
           {feedItems.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-4">
