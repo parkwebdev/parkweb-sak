@@ -35,7 +35,7 @@ import {
   type SortOption,
 } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
-import { PageHeader } from '@/components/ui/page-header';
+import { type DateRangeFilter } from '@/components/leads/LeadsFiltersDropdown';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
 import type { VisibilityState } from '@tanstack/react-table';
@@ -237,20 +237,44 @@ function Leads({ onMenuClick }: LeadsProps) {
   // Shared search state for filtering across both views
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Filter leads based on search query (shared across views)
+  // Stage filter state
+  const [selectedStageIds, setSelectedStageIds] = useState<string[]>([]);
+  
+  // Date range filter state
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
+  
+  // Filter leads based on search query, stage filter, and date range
   const filteredLeads = useMemo(() => {
-    if (!searchQuery.trim()) return leads;
+    let result = leads;
     
-    const query = searchQuery.toLowerCase();
-    return leads.filter((lead) => {
-      return (
-        lead.name?.toLowerCase().includes(query) ||
-        lead.email?.toLowerCase().includes(query) ||
-        lead.phone?.toLowerCase().includes(query) ||
-        lead.company?.toLowerCase().includes(query)
-      );
-    });
-  }, [leads, searchQuery]);
+    // Stage filter
+    if (selectedStageIds.length > 0) {
+      result = result.filter(lead => lead.stage_id && selectedStageIds.includes(lead.stage_id));
+    }
+    
+    // Date range filter
+    if (dateRangeFilter !== 'all') {
+      const daysAgo = { '7days': 7, '30days': 30, '90days': 90 }[dateRangeFilter];
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - daysAgo);
+      result = result.filter(lead => new Date(lead.created_at) >= cutoff);
+    }
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((lead) => {
+        return (
+          lead.name?.toLowerCase().includes(query) ||
+          lead.email?.toLowerCase().includes(query) ||
+          lead.phone?.toLowerCase().includes(query) ||
+          lead.company?.toLowerCase().includes(query)
+        );
+      });
+    }
+    
+    return result;
+  }, [leads, selectedStageIds, dateRangeFilter, searchQuery]);
 
   // Compute active customization count for badge display
   const activeCustomizationCount = useMemo(() => {
@@ -347,7 +371,13 @@ function Leads({ onMenuClick }: LeadsProps) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onOpenSettings={() => setIsSettingsSheetOpen(true)}
-        activeCustomizationCount={activeCustomizationCount}
+        stages={stages}
+        selectedStageIds={selectedStageIds}
+        onStageFilterChange={setSelectedStageIds}
+        dateRange={dateRangeFilter}
+        onDateRangeChange={setDateRangeFilter}
+        sortOption={defaultSort}
+        onSortChange={handleDefaultSortChange}
       />
 
       <div className="px-4 lg:px-8 pt-4 space-y-6 min-w-0">

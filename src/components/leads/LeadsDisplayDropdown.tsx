@@ -1,62 +1,105 @@
 /**
- * @fileoverview Dropdown menu for display settings on the Leads page.
- * Shows a "Display" button with chevron and badge for active customizations.
+ * @fileoverview Dropdown menu for display/sorting settings on the Leads page.
+ * Provides inline sort options and access to field customization.
  */
 
 import React from 'react';
-import { ChevronDown, Settings01 } from '@untitledui/icons';
+import { ChevronDown, ArrowUp, ArrowDown, Columns03 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
+import type { SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 
 interface LeadsDisplayDropdownProps {
-  /** Handler to open full settings sheet */
-  onOpenSettings: () => void;
-  /** Number of active customizations */
-  activeCustomizationCount: number;
+  /** Current sort option */
+  sortOption: SortOption | null;
+  /** Handler for sort changes */
+  onSortChange: (sort: SortOption | null) => void;
+  /** Handler to open fields/columns settings */
+  onOpenFieldsSettings: () => void;
 }
 
+const SORT_COLUMNS = [
+  { value: 'name', label: 'Name' },
+  { value: 'created_at', label: 'Created' },
+  { value: 'updated_at', label: 'Updated' },
+  { value: 'email', label: 'Email' },
+  { value: 'company', label: 'Company' },
+] as const;
+
 export const LeadsDisplayDropdown = React.memo(function LeadsDisplayDropdown({
-  onOpenSettings,
-  activeCustomizationCount,
+  sortOption,
+  onSortChange,
+  onOpenFieldsSettings,
 }: LeadsDisplayDropdownProps) {
+  const currentColumn = sortOption?.column || 'created_at';
+  const currentDirection = sortOption?.direction || 'desc';
+
+  const handleColumnChange = (column: string) => {
+    onSortChange({
+      column: column as SortOption['column'],
+      direction: currentDirection,
+    });
+  };
+
+  const handleToggleDirection = () => {
+    onSortChange({
+      column: currentColumn as SortOption['column'],
+      direction: currentDirection === 'asc' ? 'desc' : 'asc',
+    });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="h-9 px-3 gap-1.5"
+          className="h-8 px-2.5 gap-1.5"
         >
           <span className="text-sm">Display</span>
-          {activeCustomizationCount > 0 && (
-            <Badge
-              variant="default"
-              className="h-5 min-w-5 px-1.5 text-2xs flex items-center justify-center"
-            >
-              {activeCustomizationCount}
-            </Badge>
-          )}
           <ChevronDown size={14} className="text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 bg-popover">
-        <DropdownMenuItem onClick={onOpenSettings}>
-          <Settings01 size={16} className="mr-2" />
-          View Settings
-          {activeCustomizationCount > 0 && (
-            <Badge
-              variant="secondary"
-              className="ml-auto h-5 px-1.5 text-2xs"
-            >
-              {activeCustomizationCount}
-            </Badge>
+      <DropdownMenuContent align="start" className="w-48 bg-popover">
+        <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={currentColumn} onValueChange={handleColumnChange}>
+          {SORT_COLUMNS.map(col => (
+            <DropdownMenuRadioItem key={col.value} value={col.value}>
+              {col.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem onClick={handleToggleDirection}>
+          {currentDirection === 'asc' ? (
+            <>
+              <ArrowUp size={16} className="mr-2" />
+              Ascending
+            </>
+          ) : (
+            <>
+              <ArrowDown size={16} className="mr-2" />
+              Descending
+            </>
           )}
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem onClick={onOpenFieldsSettings}>
+          <Columns03 size={16} className="mr-2" />
+          Customize Fields...
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
