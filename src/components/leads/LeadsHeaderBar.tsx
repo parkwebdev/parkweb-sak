@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { SearchMd, X, Plus, Download01, LayersThree01 } from '@untitledui/icons';
+import { SearchMd, X, Download01, LayersThree01 } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -48,8 +48,6 @@ interface LeadsHeaderBarProps {
   columnVisibility: VisibilityState;
   /** Handler for column visibility changes */
   onColumnVisibilityChange: (visibility: VisibilityState) => void;
-  /** Handler for adding a new lead */
-  onAddLead: () => void;
   /** Handler for exporting leads */
   onExport: () => void;
   /** Handler for managing stages */
@@ -74,7 +72,6 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
   onToggleCardField,
   columnVisibility,
   onColumnVisibilityChange,
-  onAddLead,
   onExport,
   onManageStages,
   canManage,
@@ -123,17 +120,6 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
         {/* Right controls - icon buttons */}
         <div className="flex items-center gap-1">
           {/* Action buttons */}
-          {canManage && (
-            <Button
-              variant="default"
-              size="sm"
-              className="h-8 gap-1.5"
-              onClick={onAddLead}
-            >
-              <Plus size={16} />
-              <span className="hidden sm:inline">Add Lead</span>
-            </Button>
-          )}
           <IconButton
             label="Export leads"
             variant="outline"

@@ -21,7 +21,6 @@ import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadsHeaderBar } from '@/components/leads/LeadsHeaderBar';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
-import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
 import { 
@@ -46,7 +45,7 @@ interface LeadsProps {
 }
 
 function Leads({ onMenuClick }: LeadsProps) {
-  const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations, createLead } = useLeads();
+  const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const { stages } = useLeadStages();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -75,7 +74,6 @@ function Leads({ onMenuClick }: LeadsProps) {
   const [isSingleDeleteOpen, setIsSingleDeleteOpen] = useState(false);
   
   // Dialog states for action buttons
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isManageStagesOpen, setIsManageStagesOpen] = useState(false);
   
@@ -281,7 +279,6 @@ function Leads({ onMenuClick }: LeadsProps) {
         onToggleCardField={handleToggleField}
         columnVisibility={columnVisibility}
         onColumnVisibilityChange={handleColumnVisibilityChange}
-        onAddLead={() => setIsCreateDialogOpen(true)}
         onExport={() => setIsExportDialogOpen(true)}
         onManageStages={() => setIsManageStagesOpen(true)}
         canManage={canManageLeads}
@@ -374,12 +371,6 @@ function Leads({ onMenuClick }: LeadsProps) {
         hasConversations={singleDeleteLeadId ? getLeadsWithConversations([singleDeleteLeadId]) : false}
         onConfirm={handleSingleDeleteConfirm}
         isDeleting={isDeleting}
-      />
-
-      <CreateLeadDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onCreate={async (leadData) => { await createLead(leadData); }}
       />
 
       <ExportLeadsDialog
