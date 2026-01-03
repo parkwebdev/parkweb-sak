@@ -820,7 +820,7 @@ export const LeadDetailsSheet = ({
             </div>
 
             {/* Right column - Activity & Comments - full height with border */}
-            <div className="w-72 border-l flex-shrink-0 flex flex-col p-4">
+            <div className="w-72 border-l flex-shrink-0 flex flex-col bg-muted/30">
               <LeadActivityPanel leadId={lead.id} />
             </div>
           </>
