@@ -345,7 +345,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
               <FilterLines className="h-4 w-4" />
             </IconButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40 bg-popover z-50">
+          <DropdownMenuContent align="end" className="bg-popover z-50">
             <DropdownMenuRadioGroup value={sortOrder} onValueChange={(v) => setSortOrder(v as 'asc' | 'desc')}>
               <DropdownMenuRadioItem value="asc">Oldest first</DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="desc">Newest first</DropdownMenuRadioItem>
