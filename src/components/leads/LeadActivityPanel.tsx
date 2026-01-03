@@ -193,7 +193,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <div className="text-sm font-medium text-muted-foreground mb-3">Activity</div>
+        <div className="text-sm font-medium pb-3">Activity</div>
         <div className="flex-1 space-y-3">
           {[1, 2, 3].map(i => (
             <div key={i} className="flex gap-2">
@@ -212,10 +212,10 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="text-sm font-medium text-muted-foreground mb-3">Activity</div>
+      <div className="text-sm font-medium pb-3">Activity</div>
 
       {/* Unified feed - scrollable */}
-      <ScrollArea className="flex-1 min-h-0 -mr-3 pr-3">
+      <ScrollArea className="flex-1 min-h-0">
         {feedItems.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-4">
             No activity yet
@@ -339,19 +339,19 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       </ScrollArea>
 
       {/* Comment input - pinned at bottom */}
-      <div className="pt-3 mt-3 border-t">
+      <div className="pt-3 mt-auto border-t">
         <Textarea
           ref={textareaRef}
           placeholder="Add a comment... (⌘+Enter)"
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="min-h-[48px] text-xs resize-none"
+          className="min-h-[44px] text-xs resize-none bg-muted/30 border-muted"
           rows={2}
         />
         <div className="flex justify-end mt-2">
           <Button size="sm" onClick={handleSubmit} disabled={!newComment.trim() || isAdding}>
-            <Send01 className="h-3 w-3 mr-1" />
+            <Send01 className="h-3.5 w-3.5 mr-1.5" />
             {isAdding ? 'Sending...' : 'Send'}
           </Button>
         </div>
