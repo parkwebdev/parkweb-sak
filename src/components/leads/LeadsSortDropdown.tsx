@@ -27,7 +27,6 @@ const SORT_COLUMNS = [
   { value: 'created_at', label: 'Created' },
   { value: 'updated_at', label: 'Updated' },
   { value: 'email', label: 'Email' },
-  { value: 'company', label: 'Company' },
 ] as const;
 
 export const LeadsSortDropdown = React.memo(function LeadsSortDropdown({
