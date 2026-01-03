@@ -14,7 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Trash02, LinkExternal02, InfoCircle, Globe01, Monitor01, Clock, Browser, XClose } from '@untitledui/icons';
+import { Trash02, LinkExternal02, InfoCircle, Globe01, Monitor01, Clock, Browser, XClose, Copy01, Phone01, MessageChatCircle, File02, Link01 } from '@untitledui/icons';
 import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFromLeadData } from '@/lib/field-keys';
 import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
@@ -32,6 +32,8 @@ import { LeadActivityPanel } from './LeadActivityPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { queryKeys } from '@/lib/query-keys';
 import { cn } from '@/lib/utils';
+import { toast } from '@/lib/toast';
+import { IconButton } from '@/components/ui/icon-button';
 
 interface LeadDetailsSheetProps {
   lead: Tables<'leads'> | null;
@@ -560,16 +562,47 @@ export const LeadDetailsSheet = ({
     );
   };
 
-  // Parse name into first and last
+  // Get full name for single name field
   const currentName = { ...lead, ...editedLead }.name || '';
-  const nameParts = currentName.split(' ');
-  const firstName = nameParts[0] || '';
-  const lastName = nameParts.slice(1).join(' ') || '';
 
-  const handleNameChange = (first: string, last: string, fieldId: string) => {
-    const fullName = [first, last].filter(Boolean).join(' ');
-    lastEditedFieldRef.current = fieldId;
-    setEditedLead({ ...editedLead, name: fullName });
+  const handleNameChange = (name: string) => {
+    lastEditedFieldRef.current = 'name';
+    setEditedLead({ ...editedLead, name });
+  };
+
+  // Copy to clipboard helper
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error('Failed to copy');
+    }
+  };
+
+  // Get source type from referrer journey
+  const getSourceType = (): { type: string; icon: React.ReactNode } => {
+    const referrer = conversationMetadata.referrer_url || conversationMetadata.referrer;
+    if (!referrer) return { type: 'Direct', icon: <Link01 className="h-3 w-3" /> };
+    
+    const lowerRef = referrer.toLowerCase();
+    if (lowerRef.includes('google') || lowerRef.includes('bing') || lowerRef.includes('yahoo')) {
+      return { type: 'Organic', icon: <Globe01 className="h-3 w-3" /> };
+    }
+    if (lowerRef.includes('facebook') || lowerRef.includes('twitter') || lowerRef.includes('linkedin') || lowerRef.includes('instagram')) {
+      return { type: 'Social', icon: <Globe01 className="h-3 w-3" /> };
+    }
+    return { type: 'Referral', icon: <Link01 className="h-3 w-3" /> };
+  };
+
+  // Get messages count from conversation
+  const getMessagesCount = (): number => {
+    return conversationMetadata.messages_count || 0;
+  };
+
+  // Get pages visited count
+  const getPagesCount = (): number => {
+    return conversationMetadata.visited_pages?.length || 0;
   };
 
   // Always render Sheet for proper animation handling
@@ -591,83 +624,245 @@ export const LeadDetailsSheet = ({
 
               {/* Scrollable content */}
               <div className="flex-1 min-h-0 overflow-y-auto pr-6">
-                <div className="space-y-4 pb-4">
-                  {/* Compact Property Grid - Status, Assignees, Priority */}
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    {/* Status */}
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-muted-foreground">Status</Label>
-                      <LeadStatusDropdown
-                        stageId={{ ...lead, ...editedLead }.stage_id}
-                        onStageChange={(stageId) => {
-                          lastEditedFieldRef.current = 'stage_id';
-                          setEditedLead({ ...editedLead, stage_id: stageId });
-                        }}
-                      />
-                    </div>
+                <div className="space-y-3 pb-4">
+                  {/* Header Bar - Status, Priority, Created Date */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <LeadStatusDropdown
+                      stageId={{ ...lead, ...editedLead }.stage_id}
+                      onStageChange={(stageId) => {
+                        lastEditedFieldRef.current = 'stage_id';
+                        setEditedLead({ ...editedLead, stage_id: stageId });
+                      }}
+                    />
                     
-                    {/* Assignees */}
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-muted-foreground">Assignees</Label>
-                      <LeadAssigneePicker
-                        leadId={lead.id}
-                        assignees={getAssignees(lead.id)}
-                        onAdd={(userId) => addAssignee(lead.id, userId)}
-                        onRemove={(userId) => removeAssignee(lead.id, userId)}
-                        size="sm"
-                      />
-                    </div>
-                    
-                    {/* Priority */}
                     {lead.conversation_id && (
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs text-muted-foreground">Priority</Label>
-                        <div className={cn(
-                          "flex items-center gap-1 rounded transition-all duration-200",
-                          savingFields.has('priority') && "ring-2 ring-primary/50"
-                        )}>
-                          <Select
-                            value={conversationMetadata.priority || 'none'}
-                            onValueChange={handlePriorityChange}
-                          >
-                            <SelectTrigger className="h-7 w-auto min-w-[90px] text-xs border-none bg-transparent hover:bg-muted/50 px-2">
-                              <SelectValue>
-                                <div className="flex items-center gap-1.5">
-                                  <span
-                                    className={`h-1.5 w-1.5 rounded-full ${
-                                      PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.color || 'bg-muted'
-                                    }`}
-                                  />
-                                  <span className="text-xs">{PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.label || 'Not Set'}</span>
+                      <div className={cn(
+                        "flex items-center gap-1 rounded transition-all duration-200",
+                        savingFields.has('priority') && "ring-2 ring-primary/50"
+                      )}>
+                        <Select
+                          value={conversationMetadata.priority || 'none'}
+                          onValueChange={handlePriorityChange}
+                        >
+                          <SelectTrigger className="h-6 w-auto min-w-[80px] text-xs border-none bg-muted/50 hover:bg-muted px-2">
+                            <SelectValue>
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={`h-1.5 w-1.5 rounded-full ${
+                                    PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.color || 'bg-muted'
+                                  }`}
+                                />
+                                <span className="text-xs">{PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.label || 'Not Set'}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRIORITY_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <div className="flex items-center gap-2">
+                                  <span className={`h-2 w-2 rounded-full ${option.color}`} />
+                                  {option.label}
                                 </div>
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PRIORITY_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  <div className="flex items-center gap-2">
-                                    <span className={`h-2 w-2 rounded-full ${option.color}`} />
-                                    {option.label}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
+                    
+                    <span className="ml-auto text-2xs text-muted-foreground">
+                      {format(new Date(lead.created_at), 'MMM d, yyyy')}
+                    </span>
+                  </div>
+
+                  {/* Contact - Property List Style */}
+                  <div className="space-y-1.5 bg-muted/30 rounded-md p-3">
+                    {/* Name Row */}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground w-14 flex-shrink-0">Name</Label>
+                      <Input
+                        value={currentName}
+                        onChange={(e) => handleNameChange(e.target.value)}
+                        onFocus={() => { isEditingRef.current = true; }}
+                        onBlur={() => { isEditingRef.current = false; }}
+                        className={cn(getInputClassName('name'), "flex-1")}
+                        placeholder="Full name"
+                      />
+                    </div>
+                    
+                    {/* Email Row */}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground w-14 flex-shrink-0">Email</Label>
+                      <Input
+                        type="email"
+                        value={{ ...lead, ...editedLead }.email || ''}
+                        onChange={(e) => {
+                          lastEditedFieldRef.current = 'email';
+                          setEditedLead({ ...editedLead, email: e.target.value });
+                        }}
+                        onFocus={() => { isEditingRef.current = true; }}
+                        onBlur={() => { isEditingRef.current = false; }}
+                        className={cn(getInputClassName('email'), "flex-1")}
+                        placeholder="email@example.com"
+                      />
+                      {({ ...lead, ...editedLead }.email) && (
+                        <IconButton
+                          label="Copy email"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
+                        >
+                          <Copy01 className="h-3.5 w-3.5" />
+                        </IconButton>
+                      )}
+                    </div>
+                    
+                    {/* Phone Row */}
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground w-14 flex-shrink-0">Phone</Label>
+                      <Input
+                        type="tel"
+                        value={{ ...lead, ...editedLead }.phone || phoneValue}
+                        onChange={(e) => {
+                          lastEditedFieldRef.current = 'phone';
+                          setEditedLead({ ...editedLead, phone: e.target.value });
+                        }}
+                        onFocus={() => { isEditingRef.current = true; }}
+                        onBlur={() => { isEditingRef.current = false; }}
+                        className={cn(getInputClassName('phone'), "flex-1")}
+                        placeholder="(555) 123-4567"
+                      />
+                      {({ ...lead, ...editedLead }.phone || phoneValue) && (
+                        <>
+                          <IconButton
+                            label="Copy phone"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
+                          >
+                            <Copy01 className="h-3.5 w-3.5" />
+                          </IconButton>
+                          <a href={`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`}>
+                            <IconButton
+                              label="Call"
+                              size="sm"
+                              variant="ghost"
+                              asChild
+                            >
+                              <Phone01 className="h-3.5 w-3.5" />
+                            </IconButton>
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Source & Session - Compact Inline */}
+                  {conversation && (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      {/* Source */}
+                      <div className="flex items-center gap-1">
+                        {getSourceType().icon}
+                        <span>{getSourceType().type}</span>
+                      </div>
+                      
+                      {/* Location */}
+                      {conversationMetadata.country && (
+                        <div className="flex items-center gap-1">
+                          <Globe01 className="h-3 w-3" />
+                          <span>
+                            {conversationMetadata.city || conversationMetadata.country}
+                            {(conversationMetadata.country_code || getCountryCode(conversationMetadata.country)) && (
+                              <span className="ml-1" role="img" aria-label={conversationMetadata.country || ''}>
+                                {countryCodeToFlag((conversationMetadata.country_code || getCountryCode(conversationMetadata.country))!)}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Device */}
+                      {(conversationMetadata.device_type || conversationMetadata.device) && (
+                        <div className="flex items-center gap-1">
+                          <Monitor01 className="h-3 w-3" />
+                          <span className="capitalize">
+                            {conversationMetadata.device_type || conversationMetadata.device}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Browser */}
+                      {conversationMetadata.browser && (
+                        <div className="flex items-center gap-1">
+                          <Browser className="h-3 w-3" />
+                          <span>{conversationMetadata.browser}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Engagement Stats */}
+                  {conversation && (
+                    <div className="flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <MessageChatCircle className="h-3 w-3" />
+                        <span>{getMessagesCount()} messages</span>
+                      </div>
+                      {getPagesCount() > 0 && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <File02 className="h-3 w-3" />
+                          <span>{getPagesCount()} pages</span>
+                        </div>
+                      )}
+                      {conversationMetadata.session_started_at && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatDistanceToNow(new Date(conversationMetadata.session_started_at), { addSuffix: false })} ago</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Landing Page / Referrer */}
+                  {conversation && (conversationMetadata.landing_page || conversationMetadata.referrer_url || conversationMetadata.referrer) && (
+                    <div className="space-y-1 text-xs">
+                      {conversationMetadata.landing_page && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <span className="text-muted-foreground/60">Landing:</span>
+                          <span className="truncate">{stripUrl(conversationMetadata.landing_page)}</span>
+                        </div>
+                      )}
+                      {(conversationMetadata.referrer_url || conversationMetadata.referrer) && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <span className="text-muted-foreground/60">Referrer:</span>
+                          <span className="truncate">{stripUrl(conversationMetadata.referrer_url || conversationMetadata.referrer || '')}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Assignees */}
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground">Assignees</Label>
+                    <LeadAssigneePicker
+                      leadId={lead.id}
+                      assignees={getAssignees(lead.id)}
+                      onAdd={(userId) => addAssignee(lead.id, userId)}
+                      onRemove={(userId) => removeAssignee(lead.id, userId)}
+                      size="sm"
+                    />
                   </div>
 
                   {/* Tags - inline */}
                   {lead.conversation_id && (
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Tags</Label>
+                    <div className="space-y-1">
                       <div className={cn(
-                        "flex flex-wrap gap-1.5 p-1 -m-1 rounded transition-all duration-200",
+                        "flex flex-wrap items-center gap-1.5 rounded transition-all duration-200",
                         savingFields.has('tags') && "ring-2 ring-primary/50"
                       )}>
+                        <Label className="text-xs text-muted-foreground mr-1">Tags</Label>
                         {conversationMetadata.tags?.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-xs">
+                          <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-xs h-5">
                             {tag}
                             <button
                               onClick={() => handleRemoveTag(tag)}
@@ -678,24 +873,22 @@ export const LeadDetailsSheet = ({
                             </button>
                           </Badge>
                         ))}
-                        <div className="flex gap-1">
-                          <Input
-                            placeholder="Add..."
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleAddTag(newTag);
-                              }
-                            }}
-                            className="h-6 w-20 text-xs px-2"
-                          />
-                        </div>
+                        <Input
+                          placeholder="Add..."
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddTag(newTag);
+                            }
+                          }}
+                          className="h-5 w-16 text-xs px-1.5 border-dashed"
+                        />
                       </div>
                       {/* Preset tags */}
                       <div className="flex flex-wrap gap-1">
-                        {PRESET_TAGS.filter(t => !conversationMetadata.tags?.includes(t)).slice(0, 3).map((tag) => (
+                        {PRESET_TAGS.filter(t => !conversationMetadata.tags?.includes(t)).slice(0, 2).map((tag) => (
                           <button
                             key={tag}
                             onClick={() => handleAddTag(tag)}
@@ -707,71 +900,6 @@ export const LeadDetailsSheet = ({
                       </div>
                     </div>
                   )}
-
-                  <Separator />
-
-                  {/* Contact Information - Compact */}
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-medium">Contact</h3>
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="firstName" className="text-xs text-muted-foreground">First Name</Label>
-                        <Input
-                          id="firstName"
-                          value={firstName}
-                          onChange={(e) => handleNameChange(e.target.value, lastName, 'firstName')}
-                          onFocus={() => { isEditingRef.current = true; }}
-                          onBlur={() => { isEditingRef.current = false; }}
-                          className={getInputClassName('firstName')}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="lastName" className="text-xs text-muted-foreground">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          value={lastName}
-                          onChange={(e) => handleNameChange(firstName, e.target.value, 'lastName')}
-                          onFocus={() => { isEditingRef.current = true; }}
-                          onBlur={() => { isEditingRef.current = false; }}
-                          className={getInputClassName('lastName')}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <Label htmlFor="email" className="text-xs text-muted-foreground">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={{ ...lead, ...editedLead }.email || ''}
-                          onChange={(e) => {
-                            lastEditedFieldRef.current = 'email';
-                            setEditedLead({ ...editedLead, email: e.target.value });
-                          }}
-                          onFocus={() => { isEditingRef.current = true; }}
-                          onBlur={() => { isEditingRef.current = false; }}
-                          className={getInputClassName('email')}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="phone" className="text-xs text-muted-foreground">Phone</Label>
-                        <Input
-                          id="phone"
-                          type="tel"
-                          value={{ ...lead, ...editedLead }.phone || phoneValue}
-                          onChange={(e) => {
-                            lastEditedFieldRef.current = 'phone';
-                            setEditedLead({ ...editedLead, phone: e.target.value });
-                          }}
-                          onFocus={() => { isEditingRef.current = true; }}
-                          onBlur={() => { isEditingRef.current = false; }}
-                          className={getInputClassName('phone')}
-                        />
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Dynamic Custom Fields - Collapsible */}
                   {customFields.length > 0 && (
@@ -796,90 +924,28 @@ export const LeadDetailsSheet = ({
                     </>
                   )}
 
-                  {/* Session Details - Collapsible */}
-                  {conversation && (
-                    <>
-                      <Separator />
-                      <Collapsible>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full py-1 text-sm font-medium hover:text-foreground text-muted-foreground">
-                          <span>Session Details</span>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="pt-2">
-                          <div className="space-y-2 text-xs">
-                            {conversationMetadata.country && (
-                              <div className="flex items-center gap-2">
-                                <Globe01 className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                                <span>
-                                  {conversationMetadata.city || ''}{conversationMetadata.city && conversationMetadata.region ? ', ' : ''}{conversationMetadata.region || ''}
-                                  {!conversationMetadata.city && !conversationMetadata.region && conversationMetadata.country}
-                                </span>
-                                {(conversationMetadata.country_code || getCountryCode(conversationMetadata.country)) && (
-                                  <span className="flex-shrink-0" role="img" aria-label={conversationMetadata.country || ''}>
-                                    {countryCodeToFlag((conversationMetadata.country_code || getCountryCode(conversationMetadata.country))!)}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            {(conversationMetadata.device_type || conversationMetadata.device) && (
-                              <div className="flex items-center gap-2">
-                                <Monitor01 className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                                <span className="capitalize">
-                                  {conversationMetadata.device_type || conversationMetadata.device}
-                                  {conversationMetadata.browser && ` • ${conversationMetadata.browser}`}
-                                </span>
-                              </div>
-                            )}
-                            {conversationMetadata.os && (
-                              <div className="flex items-center gap-2">
-                                <Browser className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                                <span>{conversationMetadata.os}</span>
-                              </div>
-                            )}
-                            {conversationMetadata.session_started_at && (
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                                <span>
-                                  Started {formatDistanceToNow(new Date(conversationMetadata.session_started_at), { addSuffix: true })}
-                                </span>
-                              </div>
-                            )}
-                            {!conversationMetadata.country && 
-                             !conversationMetadata.device_type && 
-                             !conversationMetadata.device && 
-                             !conversationMetadata.session_started_at && (
-                              <p className="text-muted-foreground italic">No session details available</p>
-                            )}
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </>
-                  )}
-
                   {/* Internal Notes */}
                   {lead.conversation_id && (
-                    <>
-                      <Separator />
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Internal Notes</Label>
-                        <Textarea
-                          placeholder="Add internal notes..."
-                          value={internalNotes}
-                          onChange={(e) => handleNotesChange(e.target.value)}
-                          onFocus={() => { isEditingNotesRef.current = true; }}
-                          onBlur={() => { isEditingNotesRef.current = false; }}
-                          rows={2}
-                          className={cn(
-                            "resize-none text-sm min-h-[60px] transition-all duration-200",
-                            savingFields.has('notes') && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
-                          )}
-                        />
-                      </div>
-                    </>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Internal Notes</Label>
+                      <Textarea
+                        placeholder="Add internal notes..."
+                        value={internalNotes}
+                        onChange={(e) => handleNotesChange(e.target.value)}
+                        onFocus={() => { isEditingNotesRef.current = true; }}
+                        onBlur={() => { isEditingNotesRef.current = false; }}
+                        rows={2}
+                        className={cn(
+                          "resize-none text-sm min-h-[48px] transition-all duration-200",
+                          savingFields.has('notes') && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
+                        )}
+                      />
+                    </div>
                   )}
 
                   <Separator />
 
-                  {/* Actions - moved to bottom of left column */}
+                  {/* Actions */}
                   <div className="flex gap-2">
                     {lead.conversation_id && (
                       <Button variant="outline" size="sm" className="flex-1" onClick={handleViewConversation}>
