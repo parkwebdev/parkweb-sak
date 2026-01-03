@@ -111,7 +111,7 @@ export const TABLE_COLUMNS: TableColumnDef[] = [
   { id: 'email', label: 'Email', canHide: true },
   { id: 'phone', label: 'Phone', canHide: true },
   { id: 'stage_id', label: 'Stage', canHide: true },
-  { id: 'assigned_to', label: 'Assignee', canHide: true },
+  { id: 'assignees', label: 'Assignees', canHide: true },
   { id: 'location', label: 'Location', canHide: true },
   { id: 'source', label: 'Source', canHide: true },
   { id: 'created_at', label: 'Created', canHide: true },
@@ -123,7 +123,7 @@ export const DEFAULT_TABLE_COLUMN_VISIBILITY: VisibilityState = {
   email: true,
   phone: true,
   stage_id: true,
-  assigned_to: true,
+  assignees: true,
   location: false,
   source: false,
   created_at: true,
@@ -572,7 +572,6 @@ export function LeadsViewSettingsSheet({
     { id: 'email', label: 'Email' },
     { id: 'created_at', label: 'Created' },
     { id: 'updated_at', label: 'Last Updated' },
-    { id: 'company', label: 'Company' },
   ], []);
 
   // --- Presets logic ---
