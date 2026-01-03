@@ -503,9 +503,9 @@ export const LeadDetailsSheet = ({
             </SheetHeader>
 
             {/* Two-column layout with independent scrolling */}
-            <div className="flex flex-1 min-h-0">
+            <div className="flex flex-1 min-h-0 overflow-hidden">
               {/* Left column - Lead details with scroll */}
-              <ScrollArea className="flex-1 min-w-0 min-h-0 h-full pr-6">
+              <div className="flex-1 min-w-0 min-h-0 overflow-y-auto pr-6">
                 <div className="space-y-4 pb-4">
                   {/* Compact Property Grid - Status, Assignees, Priority */}
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -814,7 +814,7 @@ export const LeadDetailsSheet = ({
                     )}
                   </div>
                 </div>
-              </ScrollArea>
+              </div>
 
               {/* Right column - Activity & Comments - full height border */}
               <div className="w-72 border-l flex-shrink-0 flex flex-col -my-4 py-4 pl-4">
