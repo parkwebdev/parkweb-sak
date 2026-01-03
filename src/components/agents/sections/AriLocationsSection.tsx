@@ -29,6 +29,7 @@ import { SkeletonTableSection } from '@/components/ui/skeleton';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
+import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
 import { createLocationsColumns, type LocationWithCounts, createPropertiesColumns, type PropertyWithLocation } from '@/components/data-table/columns';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MarkerPin01 } from '@untitledui/icons';
@@ -636,29 +637,6 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
           </div>
         )}
 
-        {/* Bulk Actions Bar */}
-        {selectedCount > 0 && canManageLocations && (
-          <div className="flex items-center justify-between p-3 bg-muted rounded-lg border">
-            <span className="text-sm">
-              {selectedCount} {viewMode === 'communities' ? 'location' : 'propert'}{selectedCount > 1 ? (viewMode === 'communities' ? 's' : 'ies') : (viewMode === 'communities' ? '' : 'y')} selected
-            </span>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={clearSelection}>
-                <XClose size={14} className="mr-1.5" />
-                Clear
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={viewMode === 'communities' ? handleBulkDeleteLocations : handleBulkDeleteProperties}
-              >
-                <Trash01 size={14} className="mr-1.5" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Communities View */}
         {viewMode === 'communities' && (
           <>
@@ -785,6 +763,36 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
               </div>
             )}
           </>
+        )}
+
+        {/* Floating bar for bulk actions - Communities */}
+        {canManageLocations && viewMode === 'communities' && (
+          <DataTableFloatingBar table={locationsTable}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDeleteLocations}
+              className="h-7 gap-1.5"
+            >
+              <Trash01 size={14} />
+              Delete
+            </Button>
+          </DataTableFloatingBar>
+        )}
+
+        {/* Floating bar for bulk actions - Properties */}
+        {canManageLocations && viewMode === 'properties' && (
+          <DataTableFloatingBar table={propertiesTable}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDeleteProperties}
+              className="h-7 gap-1.5"
+            >
+              <Trash01 size={14} />
+              Delete
+            </Button>
+          </DataTableFloatingBar>
         )}
 
         <CreateLocationDialog
