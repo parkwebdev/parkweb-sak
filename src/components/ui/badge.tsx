@@ -38,6 +38,8 @@ const badgeVariants = cva(
         counter: "h-5 px-1.5 text-xs",
         /** Notification dot badge */
         dot: "h-5 w-5 p-0 rounded-full justify-center",
+        /** Micro badge for tiny inline labels */
+        micro: "h-4 px-1.5 py-0 text-2xs",
       },
     },
     defaultVariants: {
