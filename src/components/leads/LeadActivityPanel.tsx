@@ -36,6 +36,7 @@ import {
   ArrowNarrowDown,
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+import { PriorityBadge } from '@/components/ui/priority-badge';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -213,6 +214,34 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
         const fieldName = data.field?.replace(/_/g, ' ');
         const oldValue = data.from;
         const newValue = data.to;
+        
+        // Special handling for priority - show as badges
+        if (data.field === 'priority') {
+          return (
+            <span className="flex flex-col gap-1">
+              <span>
+                <span className="font-medium">{userName}</span>
+                {' updated '}
+                <span className="font-medium">Priority</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                {oldValue ? (
+                  <PriorityBadge priority={oldValue} size="sm" />
+                ) : (
+                  <span className="text-2xs text-muted-foreground">none</span>
+                )}
+                <ArrowRight className="h-2.5 w-2.5 text-muted-foreground" />
+                {newValue ? (
+                  <PriorityBadge priority={newValue} size="sm" />
+                ) : (
+                  <span className="text-2xs text-muted-foreground">none</span>
+                )}
+              </span>
+            </span>
+          );
+        }
+        
+        // Default text rendering for other fields
         return (
           <span className="flex flex-col gap-0.5">
             <span>

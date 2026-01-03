@@ -152,13 +152,7 @@ interface ConversationMetadataPanelProps {
   onToggleCollapse?: () => void;
 }
 
-const priorityColors: Record<string, string> = {
-  not_set: 'bg-muted text-muted-foreground',
-  low: 'bg-muted text-muted-foreground',
-  normal: 'bg-info/10 text-info',
-  high: 'bg-warning/10 text-warning',
-  urgent: 'bg-destructive/10 text-destructive',
-};
+import { PRIORITY_OPTIONS } from '@/lib/priority-config';
 
 const PRESET_TAGS = [
   'VIP', 'Follow-up', 'Bug Report', 'Feature Request', 'Billing', 
@@ -897,44 +891,22 @@ export function ConversationMetadataPanel({
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <Select
-                value={metadata.priority || 'not_set'}
-                onValueChange={handlePriorityChange}
+                value={metadata.priority || 'none'}
+                onValueChange={(val) => handlePriorityChange(val === 'none' ? 'not_set' : val)}
                 disabled={isSaving}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="not_set">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-muted border border-muted-foreground/30" />
-                      Not set
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="low">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-muted-foreground" />
-                      Low
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="normal">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-info" />
-                      Normal
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="high">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-warning" />
-                      High
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="urgent">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-destructive" />
-                      Urgent
-                    </div>
-                  </SelectItem>
+                  {PRIORITY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${option.dotColor}`} />
+                        {option.label}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </AccordionContent>

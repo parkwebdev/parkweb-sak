@@ -34,6 +34,7 @@ import { queryKeys } from '@/lib/query-keys';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import { IconButton } from '@/components/ui/icon-button';
+import { PRIORITY_OPTIONS } from '@/lib/priority-config';
 
 interface LeadDetailsSheetProps {
   lead: Tables<'leads'> | null;
@@ -43,15 +44,6 @@ interface LeadDetailsSheetProps {
   /** If undefined, delete button will be hidden (user lacks permission) */
   onDelete?: (id: string) => void;
 }
-
-// Priority options with semantic colors
-const PRIORITY_OPTIONS = [
-  { value: 'none', label: 'Not Set', color: 'bg-muted' },
-  { value: 'low', label: 'Low', color: 'bg-info' },
-  { value: 'normal', label: 'Normal', color: 'bg-success' },
-  { value: 'high', label: 'High', color: 'bg-warning' },
-  { value: 'urgent', label: 'Urgent', color: 'bg-destructive' },
-];
 
 // Preset tags removed - users can add tags via the input field
 
@@ -717,7 +709,7 @@ export const LeadDetailsSheet = ({
                               <div className="flex items-center gap-1.5">
                                 <span
                                   className={`h-1.5 w-1.5 rounded-full ${
-                                    PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.color || 'bg-muted'
+                                    PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.dotColor || 'bg-muted'
                                   }`}
                                 />
                                 <span className="text-xs">{PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.label || 'Not Set'}</span>
@@ -728,7 +720,7 @@ export const LeadDetailsSheet = ({
                             {PRIORITY_OPTIONS.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 <div className="flex items-center gap-2">
-                                  <span className={`h-2 w-2 rounded-full ${option.color}`} />
+                                  <span className={`h-2 w-2 rounded-full ${option.dotColor}`} />
                                   {option.label}
                                 </div>
                               </SelectItem>

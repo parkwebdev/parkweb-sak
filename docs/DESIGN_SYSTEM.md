@@ -176,6 +176,42 @@ Semantic tokens for status badges with light/dark mode support:
 | `--status-draft` | Draft content | `bg-status-draft/10 text-status-draft-foreground` |
 | `--status-paused` | Paused states | `bg-status-paused/10 text-status-paused-foreground` |
 
+### Priority Colors (Centralized)
+
+> **Source of Truth**: `src/lib/priority-config.ts`  
+> **Verified**: 2026-01-03
+
+Priority styling is centralized in a shared configuration used by:
+- `LeadDetailsSheet` (dropdown)
+- `ConversationMetadataPanel` (dropdown)
+- `LeadsKanbanBoard` (badges via `PriorityBadge`)
+- `LeadActivityPanel` (activity badges via `PriorityBadge`)
+
+| Priority | Dot Color | Badge Classes |
+|----------|-----------|---------------|
+| `none` | `bg-muted` | `bg-muted text-muted-foreground border-border` |
+| `low` | `bg-muted-foreground` | `bg-muted text-muted-foreground border-border` |
+| `normal` | `bg-info` | `bg-info/10 text-info border-info/20` |
+| `high` | `bg-warning` | `bg-warning/10 text-warning border-warning/20` |
+| `urgent` | `bg-destructive` | `bg-destructive/10 text-destructive border-destructive/20` |
+
+**Usage:**
+```tsx
+// For badges - use the shared component
+import { PriorityBadge } from '@/components/ui/priority-badge';
+<PriorityBadge priority="high" />
+<PriorityBadge priority={metadata.priority} size="sm" />
+
+// For dropdowns - use the shared options
+import { PRIORITY_OPTIONS } from '@/lib/priority-config';
+{PRIORITY_OPTIONS.map((option) => (
+  <SelectItem key={option.value} value={option.value}>
+    <span className={`w-2 h-2 rounded-full ${option.dotColor}`} />
+    {option.label}
+  </SelectItem>
+))}
+```
+
 ### Accent Colors
 
 | Token | Value | Usage |
