@@ -36,7 +36,7 @@ import {
   type SortOption,
 } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
-import { Sliders02, SearchMd } from '@untitledui/icons';
+import { FilterLines, SearchMd } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -335,31 +335,30 @@ function Leads({ onMenuClick }: LeadsProps) {
               >
                 {/* Kanban toolbar with search and view toggle */}
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 flex-1">
+                  <div className="relative flex-1 max-w-sm">
+                    <input
+                      type="text"
+                      placeholder="Search leads..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                    <SearchMd className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => setIsSettingsSheetOpen(true)}
+                    >
+                      <FilterLines size={16} />
+                    </Button>
                     <ViewModeToggle
                       viewMode={viewMode}
                       onViewModeChange={setViewMode}
                     />
-                    <div className="relative w-full max-w-sm">
-                      <input
-                        type="text"
-                        placeholder="Search leads..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      />
-                      <SearchMd className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 gap-2"
-                    onClick={() => setIsSettingsSheetOpen(true)}
-                  >
-                    <Sliders02 size={16} />
-                    <span className="hidden sm:inline">Customize</span>
-                  </Button>
                 </div>
                 <LeadsKanbanBoard
                   leads={filteredLeads}
