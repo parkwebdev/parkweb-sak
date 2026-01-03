@@ -34,7 +34,6 @@ export const queryKeys = {
   account: {
     all: ['account'] as const,
     ownerId: (userId?: string) => ['account', 'owner-id', userId] as const,
-    settings: (ownerId?: string | null) => ['account', 'settings', ownerId] as const,
   },
 
   // Agent keys
