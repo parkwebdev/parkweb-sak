@@ -31,7 +31,7 @@ import {
   Trash02,
   XClose,
   Check,
-  SwitchVertical01,
+  FilterLines,
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import {
@@ -325,7 +325,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header - white background */}
-      <div className="flex items-center justify-between px-4 py-3 bg-background border-b">
+      <div className="flex items-center justify-between px-4 py-3 bg-background border-b pr-12">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">Activity</span>
           {feedItems.length > 0 && (
@@ -342,7 +342,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
               size="icon-sm" 
               label={sortOrder === 'asc' ? 'Sorted oldest first' : 'Sorted newest first'}
             >
-              <SwitchVertical01 className="h-4 w-4" />
+              <FilterLines className="h-4 w-4" />
             </IconButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40 bg-popover z-50">
