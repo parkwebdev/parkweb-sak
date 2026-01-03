@@ -24,11 +24,11 @@ import { slideUpVariants, fadeReducedVariants, getVariants } from '@/lib/motion-
 import {
   Flag01,
   Edit02,
+  Edit05,
   UserPlus01,
   UserMinus01,
   ArrowRight,
   Send01,
-  Trash02,
   XClose,
   Check,
   FilterLines,
@@ -417,15 +417,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                                 label="Edit"
                                 onClick={() => startEditing(comment)}
                               >
-                                <Edit02 className="h-2.5 w-2.5" />
-                              </IconButton>
-                              <IconButton
-                                size="icon-sm"
-                                variant="ghost"
-                                label="Delete"
-                                onClick={() => handleDelete(comment.id)}
-                              >
-                                <Trash02 className="h-2.5 w-2.5" />
+                                <Edit05 className="h-2 w-2" />
                               </IconButton>
                             </div>
                           )}
