@@ -492,7 +492,7 @@ export const LeadDetailsSheet = ({
   // Always render Sheet for proper animation handling
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-4xl h-[90vh] flex flex-col overflow-hidden" aria-describedby="lead-details-description">
+      <SheetContent className="sm:max-w-4xl h-[96vh] flex flex-col overflow-hidden" aria-describedby="lead-details-description">
         {!lead ? (
           <SkeletonLeadDetails />
         ) : (
@@ -503,9 +503,9 @@ export const LeadDetailsSheet = ({
             </SheetHeader>
 
             {/* Two-column layout with independent scrolling */}
-            <div className="flex gap-6 flex-1 min-h-0">
+            <div className="flex flex-1 min-h-0">
               {/* Left column - Lead details with scroll */}
-              <ScrollArea className="flex-1 min-w-0 pr-4">
+              <ScrollArea className="flex-1 min-w-0 pr-6">
                 <div className="space-y-4 pb-4">
                   {/* Compact Property Grid - Status, Assignees, Priority */}
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -816,8 +816,8 @@ export const LeadDetailsSheet = ({
                 </div>
               </ScrollArea>
 
-              {/* Right column - Activity & Comments */}
-              <div className="w-72 border-l pl-4 flex-shrink-0 flex flex-col">
+              {/* Right column - Activity & Comments - full height border */}
+              <div className="w-72 border-l flex-shrink-0 flex flex-col -my-4 py-4 pl-4">
                 <LeadActivityPanel leadId={lead.id} />
               </div>
             </div>
