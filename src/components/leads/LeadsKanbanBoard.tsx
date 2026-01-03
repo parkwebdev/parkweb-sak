@@ -157,7 +157,7 @@ function InlineStageHeader({
             stageIndex={stageIndex}
             totalStages={totalStages}
             color={getContrastColor(stage.color)}
-            size={12}
+            size={14}
           />
           {stage.name}
         </div>
