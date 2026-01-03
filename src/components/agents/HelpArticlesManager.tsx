@@ -44,6 +44,7 @@ import { DeleteCategoryDialog } from './DeleteCategoryDialog';
 import { ArticleDetailsSheet } from './articles/ArticleDetailsSheet';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
+import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { 
   createHelpArticlesColumns, 
@@ -725,35 +726,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         />
       ) : (
         <>
-          {/* Bulk selection action bar - only show if user can manage */}
-          {canManageHelpArticles && selectedCount > 0 && (
-            <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
-              <span className="text-sm text-muted-foreground">
-                {selectedCount} article{selectedCount > 1 ? 's' : ''} selected
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearSelection}
-                  className="h-8 gap-1.5"
-                >
-                  <XClose className="h-4 w-4" />
-                  Clear
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                  className="h-8 gap-1.5"
-                >
-                  <Trash01 className="h-4 w-4" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Toolbar */}
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
@@ -1197,6 +1169,21 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         agentId={agentId}
         userId={userId}
       />
+
+      {/* Floating bar for bulk actions */}
+      {canManageHelpArticles && (
+        <DataTableFloatingBar table={table}>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+            className="h-7 gap-1.5"
+          >
+            <Trash01 size={14} />
+            Delete
+          </Button>
+        </DataTableFloatingBar>
+      )}
 
       {/* Delete confirmation dialog */}
       <SimpleDeleteDialog
