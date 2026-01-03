@@ -784,86 +784,62 @@ export const LeadDetailsSheet = ({
                     </div>
                   </div>
 
-                  {/* Source & Session - Compact Inline */}
+                  {/* Session Info - 3 Column Grid */}
                   {conversation && (
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      {/* Source */}
-                      <div className="flex items-center gap-1">
+                    <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-2xs text-muted-foreground">
+                      {/* Row 1: Source, Location, Device */}
+                      <div className="flex items-center gap-1 truncate">
                         {getSourceType().icon}
                         <span>{getSourceType().type}</span>
                       </div>
-                      
-                      {/* Location */}
-                      {conversationMetadata.country && (
-                        <div className="flex items-center gap-1">
-                          <Globe01 className="h-3 w-3" />
-                          <span>
-                            {conversationMetadata.city || conversationMetadata.country}
-                            {(conversationMetadata.country_code || getCountryCode(conversationMetadata.country)) && (
-                              <span className="ml-1" role="img" aria-label={conversationMetadata.country || ''}>
-                                {countryCodeToFlag((conversationMetadata.country_code || getCountryCode(conversationMetadata.country))!)}
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Device */}
-                      {(conversationMetadata.device_type || conversationMetadata.device) && (
-                        <div className="flex items-center gap-1">
-                          <Monitor01 className="h-3 w-3" />
-                          <span className="capitalize">
-                            {conversationMetadata.device_type || conversationMetadata.device}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Browser */}
-                      {conversationMetadata.browser && (
-                        <div className="flex items-center gap-1">
-                          <Browser className="h-3 w-3" />
-                          <span>{conversationMetadata.browser}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Engagement Stats */}
-                  {conversation && (
-                    <div className="flex items-center gap-4 text-xs">
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <MessageChatCircle className="h-3 w-3" />
-                        <span>{getMessagesCount()} messages</span>
+                      <div className="flex items-center gap-1 truncate">
+                        {conversationMetadata.city || conversationMetadata.country ? (
+                          <>
+                            <span>
+                              {conversationMetadata.city || conversationMetadata.country}
+                              {(conversationMetadata.country_code || getCountryCode(conversationMetadata.country)) && (
+                                <span className="ml-0.5" role="img" aria-label={conversationMetadata.country || ''}>
+                                  {countryCodeToFlag((conversationMetadata.country_code || getCountryCode(conversationMetadata.country))!)}
+                                </span>
+                              )}
+                            </span>
+                          </>
+                        ) : <span className="text-muted-foreground/50">—</span>}
                       </div>
-                      {getPagesCount() > 0 && (
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <File02 className="h-3 w-3" />
-                          <span>{getPagesCount()} pages</span>
-                        </div>
-                      )}
-                      {conversationMetadata.session_started_at && (
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatDistanceToNow(new Date(conversationMetadata.session_started_at), { addSuffix: false })} ago</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Landing Page / Referrer */}
-                  {conversation && (conversationMetadata.landing_page || conversationMetadata.referrer_url || conversationMetadata.referrer) && (
-                    <div className="space-y-1 text-xs">
-                      {conversationMetadata.landing_page && (
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <span className="text-muted-foreground/60">Landing:</span>
+                      <div className="flex items-center gap-1 truncate capitalize">
+                        {conversationMetadata.device_type || conversationMetadata.device || <span className="text-muted-foreground/50">—</span>}
+                      </div>
+                      
+                      {/* Row 2: Browser, Messages, Pages */}
+                      <div className="flex items-center gap-1 truncate">
+                        {conversationMetadata.browser || <span className="text-muted-foreground/50">—</span>}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageChatCircle className="h-3 w-3" />
+                        <span>{getMessagesCount()} msgs</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <File02 className="h-3 w-3" />
+                        <span>{getPagesCount()} pages</span>
+                      </div>
+                      
+                      {/* Row 3: Time, Landing, Referrer */}
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{lead.created_at ? formatDistanceToNow(new Date(lead.created_at), { addSuffix: false }) : '—'}</span>
+                      </div>
+                      {conversationMetadata.landing_page ? (
+                        <div className="flex items-center gap-1 truncate col-span-2">
+                          <span className="text-muted-foreground/60 flex-shrink-0">Landing:</span>
                           <span className="truncate">{stripUrl(conversationMetadata.landing_page)}</span>
                         </div>
-                      )}
-                      {(conversationMetadata.referrer_url || conversationMetadata.referrer) && (
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <span className="text-muted-foreground/60">Referrer:</span>
+                      ) : (conversationMetadata.referrer_url || conversationMetadata.referrer) ? (
+                        <div className="flex items-center gap-1 truncate col-span-2">
+                          <span className="text-muted-foreground/60 flex-shrink-0">Referrer:</span>
                           <span className="truncate">{stripUrl(conversationMetadata.referrer_url || conversationMetadata.referrer || '')}</span>
                         </div>
+                      ) : (
+                        <div className="col-span-2" />
                       )}
                     </div>
                   )}
