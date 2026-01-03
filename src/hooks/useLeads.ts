@@ -34,6 +34,9 @@ export const useLeads = () => {
   const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
+  // Create a stable query key that includes accountOwnerId for cache consistency
+  const leadsQueryKey = queryKeys.leads.list({ ownerId: accountOwnerId });
+
   // Fetch leads using React Query with real-time updates
   // Scoped by accountOwnerId so team members see owner's leads
   const { 
@@ -41,7 +44,7 @@ export const useLeads = () => {
     isLoading: loading,
     refetch,
   } = useSupabaseQuery<Lead[]>({
-    queryKey: queryKeys.leads.list({ ownerId: accountOwnerId }),
+    queryKey: leadsQueryKey,
     queryFn: async () => {
       if (!accountOwnerId) return [];
       
@@ -93,10 +96,10 @@ export const useLeads = () => {
   const updateLead = async (id: string, updates: Partial<Tables<'leads'>>) => {
     // Get the current lead to find conversation_id for sync
     const currentLead = leads.find(l => l.id === id);
-    const previousLeads = queryClient.getQueryData<Lead[]>(queryKeys.leads.list());
+    const previousLeads = queryClient.getQueryData<Lead[]>(leadsQueryKey);
 
     // Optimistically update cache immediately to prevent reverting
-    queryClient.setQueryData<Lead[]>(queryKeys.leads.list(), (oldLeads) => {
+    queryClient.setQueryData<Lead[]>(leadsQueryKey, (oldLeads) => {
       if (!oldLeads) return oldLeads;
       return oldLeads.map(lead => 
         lead.id === id ? { ...lead, ...updates } as Lead : lead
@@ -154,7 +157,7 @@ export const useLeads = () => {
     } catch (error: unknown) {
       // Revert on error
       if (previousLeads) {
-        queryClient.setQueryData(queryKeys.leads.list(), previousLeads);
+        queryClient.setQueryData(leadsQueryKey, previousLeads);
       }
       toast.error('Error updating lead', {
         description: getErrorMessage(error),
@@ -170,10 +173,10 @@ export const useLeads = () => {
   const updateLeadOrders = async (updates: { id: string; kanban_order: number; status?: Enums<'lead_status'>; stage_id?: string }[]) => {
     if (updates.length === 0) return;
 
-    const previousLeads = queryClient.getQueryData<Lead[]>(queryKeys.leads.list());
+    const previousLeads = queryClient.getQueryData<Lead[]>(leadsQueryKey);
 
     // Optimistically update cache
-    queryClient.setQueryData<Lead[]>(queryKeys.leads.list(), (oldLeads) => {
+    queryClient.setQueryData<Lead[]>(leadsQueryKey, (oldLeads) => {
       if (!oldLeads) return oldLeads;
       
       const updatesMap = new Map(updates.map(u => [u.id, u]));
@@ -208,7 +211,7 @@ export const useLeads = () => {
     } catch (error: unknown) {
       // Revert on error
       if (previousLeads) {
-        queryClient.setQueryData(queryKeys.leads.list(), previousLeads);
+        queryClient.setQueryData(leadsQueryKey, previousLeads);
       }
       toast.error('Error updating lead order', {
         description: getErrorMessage(error),
