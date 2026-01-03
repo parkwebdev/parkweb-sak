@@ -8,7 +8,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -88,10 +87,8 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
 
   // Auto-scroll to bottom when new items are added
   useEffect(() => {
-    // Find the actual Radix viewport element inside ScrollArea
-    const viewport = scrollContainerRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
   }, [feedItems.length]);
 
@@ -293,11 +290,12 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
         )}
       </div>
 
-      {/* Feed area with gray background */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-muted/30">
-        {/* Unified feed - scrollable */}
-        <ScrollArea className="flex-1 min-h-0" ref={scrollContainerRef}>
-          <div className="px-4 pt-4 pb-2">
+      {/* Feed area with gray background - native scroll for reliability */}
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-muted/30"
+      >
+        <div className="px-4 pt-4 pb-2">
           {feedItems.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-4">
               No activity yet
@@ -441,8 +439,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
               </AnimatePresence>
             </div>
           )}
-          </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Comment input - full width border */}

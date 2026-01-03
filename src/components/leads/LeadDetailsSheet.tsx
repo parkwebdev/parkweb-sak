@@ -880,7 +880,7 @@ export const LeadDetailsSheet = ({
             </div>
 
             {/* Right side - Activity Panel */}
-            <div className="w-[340px] border-l border-border flex flex-col min-h-0">
+            <div className="w-[340px] border-l border-border flex flex-col h-full min-h-0 overflow-hidden">
               <LeadActivityPanel leadId={lead.id} />
             </div>
           </>
