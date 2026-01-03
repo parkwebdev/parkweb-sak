@@ -3,7 +3,7 @@
  * Provides CRUD operations with real-time updates.
  */
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
@@ -52,19 +52,30 @@ export function useLeadStages() {
     enabled: !!accountOwnerId && !ownerLoading,
   });
 
+  // Track seeding attempts to prevent infinite loops
+  const hasSeededRef = useRef(false);
+
+  // Reset seeding flag when account changes
+  useEffect(() => {
+    hasSeededRef.current = false;
+  }, [accountOwnerId]);
+
   // Seed default stages if none exist (only for account owner)
   useEffect(() => {
     const seedIfNeeded = async () => {
+      if (hasSeededRef.current) return;
       if (!accountOwnerId || ownerLoading || loading) return;
       
-      // Check if stages exist
       if (stages.length === 0) {
+        hasSeededRef.current = true;
+        
         const { error } = await supabase.rpc('seed_default_lead_stages', {
           p_user_id: accountOwnerId,
         });
         
         if (error) {
           logger.error('Failed to seed default stages:', error);
+          hasSeededRef.current = false; // Allow retry on error
         } else {
           refetch();
         }
