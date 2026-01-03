@@ -53,8 +53,7 @@ const PRIORITY_OPTIONS = [
   { value: 'urgent', label: 'Urgent', color: 'bg-destructive' },
 ];
 
-// Preset tags for quick selection
-const PRESET_TAGS = ['VIP', 'Follow-up', 'Hot Lead', 'Cold Lead', 'Needs Review', 'Bug Report'];
+// Preset tags removed - users can add tags via the input field
 
 // Helper to convert country code to emoji flag
 const countryCodeToFlag = (code: string): string => {
@@ -562,12 +561,27 @@ export const LeadDetailsSheet = ({
     );
   };
 
-  // Get full name for single name field
-  const currentName = { ...lead, ...editedLead }.name || '';
+  // Extract first/last name from lead.data (matching Kanban pattern)
+  const leadData = useMemo(() => (lead?.data || {}) as Record<string, unknown>, [lead?.data]);
+  const currentFirstName = (editedCustomData.firstName as string) ?? 
+    (leadData.firstName as string) ?? 
+    (leadData['First Name'] as string) ?? '';
+  const currentLastName = (editedCustomData.lastName as string) ?? 
+    (leadData.lastName as string) ?? 
+    (leadData['Last Name'] as string) ?? '';
 
-  const handleNameChange = (name: string) => {
-    lastEditedFieldRef.current = 'name';
-    setEditedLead({ ...editedLead, name });
+  const handleFirstNameChange = (value: string) => {
+    lastEditedFieldRef.current = 'firstName';
+    setEditedCustomData({ ...editedCustomData, firstName: value });
+    // Also sync the combined name field for backward compat
+    setEditedLead({ ...editedLead, name: `${value} ${currentLastName}`.trim() });
+  };
+
+  const handleLastNameChange = (value: string) => {
+    lastEditedFieldRef.current = 'lastName';
+    setEditedCustomData({ ...editedCustomData, lastName: value });
+    // Also sync the combined name field for backward compat
+    setEditedLead({ ...editedLead, name: `${currentFirstName} ${value}`.trim() });
   };
 
   // Copy to clipboard helper
@@ -624,9 +638,9 @@ export const LeadDetailsSheet = ({
 
               {/* Scrollable content */}
               <div className="flex-1 min-h-0 overflow-y-auto pr-6">
-                <div className="space-y-3 pb-4">
+                <div className="space-y-2 pb-4">
                   {/* Header Bar - Status, Priority, Created Date */}
-                  <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <LeadStatusDropdown
                       stageId={{ ...lead, ...editedLead }.stage_id}
                       onStageChange={(stageId) => {
@@ -675,24 +689,37 @@ export const LeadDetailsSheet = ({
                     </span>
                   </div>
 
-                  {/* Contact - Property List Style */}
-                  <div className="space-y-1.5 bg-muted/30 rounded-md p-3">
-                    {/* Name Row */}
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground w-14 flex-shrink-0">Name</Label>
-                      <Input
-                        value={currentName}
-                        onChange={(e) => handleNameChange(e.target.value)}
-                        onFocus={() => { isEditingRef.current = true; }}
-                        onBlur={() => { isEditingRef.current = false; }}
-                        className={cn(getInputClassName('name'), "flex-1")}
-                        placeholder="Full name"
-                      />
+                  {/* Contact - Compact Property List */}
+                  <div className="space-y-1 bg-muted/30 rounded-md p-2">
+                    {/* First Name / Last Name Row */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <Label className="text-2xs text-muted-foreground w-10 flex-shrink-0">First</Label>
+                        <Input
+                          value={currentFirstName}
+                          onChange={(e) => handleFirstNameChange(e.target.value)}
+                          onFocus={() => { isEditingRef.current = true; }}
+                          onBlur={() => { isEditingRef.current = false; }}
+                          className={cn(getInputClassName('firstName'), "flex-1")}
+                          placeholder="First name"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Label className="text-2xs text-muted-foreground w-10 flex-shrink-0">Last</Label>
+                        <Input
+                          value={currentLastName}
+                          onChange={(e) => handleLastNameChange(e.target.value)}
+                          onFocus={() => { isEditingRef.current = true; }}
+                          onBlur={() => { isEditingRef.current = false; }}
+                          className={cn(getInputClassName('lastName'), "flex-1")}
+                          placeholder="Last name"
+                        />
+                      </div>
                     </div>
                     
                     {/* Email Row */}
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground w-14 flex-shrink-0">Email</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label className="text-2xs text-muted-foreground w-10 flex-shrink-0">Email</Label>
                       <Input
                         type="email"
                         value={{ ...lead, ...editedLead }.email || ''}
@@ -712,14 +739,14 @@ export const LeadDetailsSheet = ({
                           variant="ghost"
                           onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
                         >
-                          <Copy01 className="h-3.5 w-3.5" />
+                          <Copy01 className="h-3 w-3" />
                         </IconButton>
                       )}
                     </div>
                     
                     {/* Phone Row */}
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground w-14 flex-shrink-0">Phone</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label className="text-2xs text-muted-foreground w-10 flex-shrink-0">Phone</Label>
                       <Input
                         type="tel"
                         value={{ ...lead, ...editedLead }.phone || phoneValue}
@@ -740,7 +767,7 @@ export const LeadDetailsSheet = ({
                             variant="ghost"
                             onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
                           >
-                            <Copy01 className="h-3.5 w-3.5" />
+                            <Copy01 className="h-3 w-3" />
                           </IconButton>
                           <a href={`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`}>
                             <IconButton
@@ -749,7 +776,7 @@ export const LeadDetailsSheet = ({
                               variant="ghost"
                               asChild
                             >
-                              <Phone01 className="h-3.5 w-3.5" />
+                              <Phone01 className="h-3 w-3" />
                             </IconButton>
                           </a>
                         </>
@@ -841,9 +868,9 @@ export const LeadDetailsSheet = ({
                     </div>
                   )}
 
-                  {/* Assignees */}
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs text-muted-foreground">Assignees</Label>
+                  {/* Assignees - Compact inline row */}
+                  <div className="flex items-center gap-1.5">
+                    <Label className="text-2xs text-muted-foreground">Assignees</Label>
                     <LeadAssigneePicker
                       leadId={lead.id}
                       assignees={getAssignees(lead.id)}
@@ -853,51 +880,37 @@ export const LeadDetailsSheet = ({
                     />
                   </div>
 
-                  {/* Tags - inline */}
+                  {/* Tags - inline, no presets */}
                   {lead.conversation_id && (
-                    <div className="space-y-1">
-                      <div className={cn(
-                        "flex flex-wrap items-center gap-1.5 rounded transition-all duration-200",
-                        savingFields.has('tags') && "ring-2 ring-primary/50"
-                      )}>
-                        <Label className="text-xs text-muted-foreground mr-1">Tags</Label>
-                        {conversationMetadata.tags?.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="gap-1 pr-1 text-xs h-5">
-                            {tag}
-                            <button
-                              onClick={() => handleRemoveTag(tag)}
-                              className="ml-0.5 hover:bg-muted rounded p-0.5"
-                              aria-label={`Remove ${tag} tag`}
-                            >
-                              <XClose className="h-2.5 w-2.5" />
-                            </button>
-                          </Badge>
-                        ))}
-                        <Input
-                          placeholder="Add..."
-                          value={newTag}
-                          onChange={(e) => setNewTag(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddTag(newTag);
-                            }
-                          }}
-                          className="h-5 w-16 text-xs px-1.5 border-dashed"
-                        />
-                      </div>
-                      {/* Preset tags */}
-                      <div className="flex flex-wrap gap-1">
-                        {PRESET_TAGS.filter(t => !conversationMetadata.tags?.includes(t)).slice(0, 2).map((tag) => (
+                    <div className={cn(
+                      "flex flex-wrap items-center gap-1 rounded transition-all duration-200",
+                      savingFields.has('tags') && "ring-2 ring-primary/50"
+                    )}>
+                      <Label className="text-2xs text-muted-foreground mr-1">Tags</Label>
+                      {conversationMetadata.tags?.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="gap-0.5 pr-0.5 text-2xs h-5">
+                          {tag}
                           <button
-                            key={tag}
-                            onClick={() => handleAddTag(tag)}
-                            className="text-2xs px-1.5 py-0.5 rounded bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+                            onClick={() => handleRemoveTag(tag)}
+                            className="ml-0.5 hover:bg-muted rounded p-0.5"
+                            aria-label={`Remove ${tag} tag`}
                           >
-                            + {tag}
+                            <XClose className="h-2.5 w-2.5" />
                           </button>
-                        ))}
-                      </div>
+                        </Badge>
+                      ))}
+                      <Input
+                        placeholder="Add..."
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddTag(newTag);
+                          }
+                        }}
+                        className="h-5 w-14 text-2xs px-1 border-dashed"
+                      />
                     </div>
                   )}
 
@@ -924,10 +937,10 @@ export const LeadDetailsSheet = ({
                     </>
                   )}
 
-                  {/* Internal Notes */}
+                  {/* Internal Notes - Compact */}
                   {lead.conversation_id && (
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Internal Notes</Label>
+                    <div className="space-y-0.5">
+                      <Label className="text-2xs text-muted-foreground">Internal Notes</Label>
                       <Textarea
                         placeholder="Add internal notes..."
                         value={internalNotes}
@@ -936,7 +949,7 @@ export const LeadDetailsSheet = ({
                         onBlur={() => { isEditingNotesRef.current = false; }}
                         rows={2}
                         className={cn(
-                          "resize-none text-sm min-h-[48px] transition-all duration-200",
+                          "resize-none text-sm min-h-[40px] transition-all duration-200",
                           savingFields.has('notes') && "ring-2 ring-primary/50 ring-offset-1 ring-offset-background animate-pulse"
                         )}
                       />
