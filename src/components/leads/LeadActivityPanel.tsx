@@ -215,27 +215,17 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header - white background */}
-      <div className="flex items-center justify-between px-4 py-3 bg-background border-b">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Activity</span>
-          {feedItems.length > 0 && (
-            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-              {feedItems.length}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-0.5">
-          <IconButton size="icon-sm" variant="ghost" label="Search activity">
-            <SearchMd className="h-3.5 w-3.5" />
-          </IconButton>
-          <IconButton size="icon-sm" variant="ghost" label="Filter activity">
-            <FilterLines className="h-3.5 w-3.5" />
-          </IconButton>
-        </div>
+      <div className="flex items-center gap-2 px-4 py-3 bg-background border-b">
+        <span className="text-sm font-medium">Activity</span>
+        {feedItems.length > 0 && (
+          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+            {feedItems.length}
+          </span>
+        )}
       </div>
 
       {/* Feed area with padding */}
-      <div className="flex-1 flex flex-col min-h-0 p-4">
+      <div className="flex-1 flex flex-col min-h-0 px-4 pt-4">
         {/* Unified feed - scrollable */}
         <ScrollArea className="flex-1 min-h-0">
           {feedItems.length === 0 ? (
@@ -360,28 +350,29 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
           )}
         </ScrollArea>
 
-        {/* Comment input - inline send button */}
-        <div className="pt-3 mt-auto border-t">
-          <div className="relative">
-            <Input
-              ref={inputRef}
-              placeholder="Add a comment..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="pr-9 h-9 text-xs bg-background border-muted"
-            />
-            <IconButton
-              size="icon-sm"
-              variant="ghost"
-              label="Send comment"
-              className="absolute right-1 top-1/2 -translate-y-1/2"
-              onClick={handleSubmit}
-              disabled={!newComment.trim() || isAdding}
-            >
-              <Send01 className="h-3.5 w-3.5" />
-            </IconButton>
-          </div>
+      </div>
+
+      {/* Comment input - full width border */}
+      <div className="px-4 py-3 border-t bg-background/50">
+        <div className="relative">
+          <Input
+            ref={inputRef}
+            placeholder="Add a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="pr-9 h-9 text-xs bg-background border-muted"
+          />
+          <IconButton
+            size="icon-sm"
+            variant="ghost"
+            label="Send comment"
+            className="absolute right-1 top-1/2 -translate-y-1/2"
+            onClick={handleSubmit}
+            disabled={!newComment.trim() || isAdding}
+          >
+            <Send01 className="h-3.5 w-3.5" />
+          </IconButton>
         </div>
       </div>
     </div>
