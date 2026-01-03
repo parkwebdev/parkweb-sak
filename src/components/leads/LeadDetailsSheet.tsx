@@ -105,6 +105,9 @@ export const LeadDetailsSheet = ({
   const [internalNotes, setInternalNotes] = useState('');
   const notesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Local assignee state to prevent visual revert during save
+  const [localAssignee, setLocalAssignee] = useState<string | null>(null);
+
   // Fetch conversation data if lead has a conversation_id
   const { data: conversation, refetch: refetchConversation } = useQuery({
     queryKey: ['conversation-for-lead', lead?.conversation_id],
@@ -177,7 +180,13 @@ export const LeadDetailsSheet = ({
     setEditedCustomData({});
     setSavedField(null);
     setNewTag('');
+    setLocalAssignee(lead?.assigned_to || null);
   }, [lead?.id]);
+
+  // Sync local assignee when lead prop changes (e.g., from real-time update)
+  useEffect(() => {
+    setLocalAssignee(lead?.assigned_to || null);
+  }, [lead?.assigned_to]);
 
   // Track which field was last edited
   const lastEditedFieldRef = useRef<string | null>(null);
@@ -502,8 +511,9 @@ export const LeadDetailsSheet = ({
                   }}
                 />
                 <LeadAssigneeSelector
-                  assignedTo={{ ...lead, ...editedLead }.assigned_to || null}
+                  assignedTo={localAssignee}
                   onAssign={(userId) => {
+                    setLocalAssignee(userId); // Immediately update local state
                     lastEditedFieldRef.current = 'assigned_to';
                     setEditedLead({ ...editedLead, assigned_to: userId });
                   }}

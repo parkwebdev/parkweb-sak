@@ -29,7 +29,7 @@ import {
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { useTeam } from '@/hooks/useTeam';
 import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
-import { LeadAssigneeAvatar } from './LeadAssigneeSelector';
+import { LeadAssigneeAvatar, LeadAssigneeSelector } from './LeadAssigneeSelector';
 import type { Tables } from "@/integrations/supabase/types";
 import type { SortOption } from "@/components/leads/LeadsViewSettingsSheet";
 import type { ConversationMetadata } from "@/types/metadata";
@@ -70,6 +70,7 @@ interface LeadsKanbanBoardProps {
   onStatusChange: (leadId: string, stageId: string) => void;
   onViewLead: (lead: Tables<"leads">) => void;
   onOrderChange?: (updates: { id: string; kanban_order: number; stage_id?: string }[]) => void;
+  onAssign?: (leadId: string, userId: string | null) => void;
   visibleFields?: Set<CardFieldKey>;
   /** Whether the user can manage (edit, drag) leads. Controls DnD and stage editing. */
   canManage?: boolean;
@@ -183,10 +184,12 @@ export const LeadCardContent = React.memo(function LeadCardContent({
   lead,
   visibleFields = getDefaultVisibleFields(),
   teamMembers = [],
+  onAssign,
 }: { 
   lead: KanbanLead;
   visibleFields?: Set<CardFieldKey>;
   teamMembers?: { user_id: string; display_name: string | null; avatar_url: string | null }[];
+  onAssign?: (userId: string | null) => void;
 }) {
   // Build display name from first/last name fields
   const displayName = useMemo(() => {
@@ -263,12 +266,24 @@ export const LeadCardContent = React.memo(function LeadCardContent({
               )}
             </>
           )}
-          {visibleFields.has('assignee') && lead.assigned_to && (
-            <LeadAssigneeAvatar 
-              assignedTo={lead.assigned_to} 
-              teamMembers={teamMembers} 
-              size="sm" 
-            />
+          {visibleFields.has('assignee') && (
+            onAssign ? (
+              <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                <LeadAssigneeSelector 
+                  assignedTo={lead.assigned_to} 
+                  onAssign={onAssign}
+                  size="sm" 
+                />
+              </div>
+            ) : (
+              lead.assigned_to && (
+                <LeadAssigneeAvatar 
+                  assignedTo={lead.assigned_to} 
+                  teamMembers={teamMembers} 
+                  size="sm" 
+                />
+              )
+            )
           )}
         </div>
       )}
@@ -307,6 +322,7 @@ export function LeadsKanbanBoard({
   onStatusChange,
   onViewLead,
   onOrderChange,
+  onAssign,
   visibleFields = getDefaultVisibleFields(),
   canManage = true,
   sortOption,
@@ -501,6 +517,14 @@ export function LeadsKanbanBoard({
     [visibleFields, teamMembers]
   );
 
+  // Create onAssign handler for a specific lead
+  const handleCardAssign = useCallback(
+    (leadId: string) => (userId: string | null) => {
+      onAssign?.(leadId, userId);
+    },
+    [onAssign]
+  );
+
   // Handle stage name updates
   const handleStageUpdate = useCallback(
     (id: string, updates: Partial<Pick<LeadStage, 'name' | 'color'>>) => {
@@ -564,7 +588,12 @@ export function LeadsKanbanBoard({
                         }
                       }}
                     >
-                      <LeadCardContent lead={lead} visibleFields={visibleFields} teamMembers={teamMembers} />
+                      <LeadCardContent 
+                        lead={lead} 
+                        visibleFields={visibleFields} 
+                        teamMembers={teamMembers}
+                        onAssign={canManage && onAssign ? handleCardAssign(lead.id) : undefined}
+                      />
                     </KanbanCard>
                   )}
                 </KanbanCards>

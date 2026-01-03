@@ -35,9 +35,10 @@ interface LeadsTableProps {
   leads: Lead[];
   selectedIds: Set<string>;
   onView: (lead: Lead) => void;
-  onStageChange: (leadId: string, stageId: string) => void;
-  onSelectionChange: (id: string, checked: boolean) => void;
-  onSelectAll: (checked: boolean) => void;
+  onStageChange?: (leadId: string, stageId: string) => void;
+  onAssignChange?: (leadId: string, userId: string | null) => void;
+  onSelectionChange?: (id: string, checked: boolean) => void;
+  onSelectAll?: (checked: boolean) => void;
   onBulkDelete?: (ids: string[]) => void;
   // External column visibility control
   columnVisibility: VisibilityState;
@@ -55,6 +56,7 @@ export const LeadsTable = React.memo(function LeadsTable({
   selectedIds,
   onView,
   onStageChange,
+  onAssignChange,
   onSelectionChange,
   onSelectAll,
   onBulkDelete,
@@ -95,11 +97,12 @@ export const LeadsTable = React.memo(function LeadsTable({
     () =>
       createLeadsColumns({
         onView,
-        onStageChange,
+        onStageChange: onStageChange || (() => {}),
+        onAssignChange,
         StatusDropdown: LeadStatusDropdown,
         teamMembers,
       }),
-    [onView, onStageChange, teamMembers]
+    [onView, onStageChange, onAssignChange, teamMembers]
   );
 
   // Reorder columns based on columnOrder prop
