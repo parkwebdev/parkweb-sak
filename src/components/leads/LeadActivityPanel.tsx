@@ -32,14 +32,15 @@ import {
   XClose,
   Check,
   FilterLines,
+  ArrowNarrowUp,
+  ArrowNarrowDown,
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 
 interface LeadActivityPanelProps {
@@ -346,10 +347,14 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
             </IconButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-popover z-50">
-            <DropdownMenuRadioGroup value={sortOrder} onValueChange={(v) => setSortOrder(v as 'asc' | 'desc')}>
-              <DropdownMenuRadioItem value="asc">Oldest first</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="desc">Newest first</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
+            <DropdownMenuItem onClick={() => setSortOrder('asc')} className={sortOrder === 'asc' ? 'bg-accent' : ''}>
+              <ArrowNarrowUp className="h-4 w-4 mr-2" />
+              Oldest first
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortOrder('desc')} className={sortOrder === 'desc' ? 'bg-accent' : ''}>
+              <ArrowNarrowDown className="h-4 w-4 mr-2" />
+              Newest first
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
