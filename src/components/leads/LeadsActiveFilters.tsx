@@ -1,12 +1,11 @@
 /**
- * @fileoverview Visible active filter chips with "Add filter" popover.
- * Displays current filters as dismissible badges and provides a popover to add/modify filters.
+ * @fileoverview Filter popover for leads.
+ * Provides stage, assignee, and date range filtering in a dropdown.
  */
 
 import React, { useState } from 'react';
 import { FilterLines, X, ChevronDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Popover,
   PopoverContent,
@@ -15,7 +14,9 @@ import {
 import { hexToRgbObject } from '@/lib/color-utils';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { LeadStage } from '@/hooks/useLeadStages';
+import type { TeamMember } from '@/types/team';
 
 export type DateRangeFilter = 'all' | '7days' | '30days' | '90days';
 
@@ -37,6 +38,12 @@ interface LeadsActiveFiltersProps {
   dateRange: DateRangeFilter;
   /** Handler for date range changes */
   onDateRangeChange: (range: DateRangeFilter) => void;
+  /** Available team members for assignee filtering */
+  teamMembers?: TeamMember[];
+  /** Currently selected assignee user IDs for filtering */
+  selectedAssigneeIds?: string[];
+  /** Handler for assignee filter changes */
+  onAssigneeFilterChange?: (userIds: string[]) => void;
   /** Whether to show the add filter button (default: true) */
   showAddButton?: boolean;
   /** Whether to show active filter chips (default: true) */
@@ -49,16 +56,20 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
   onStageFilterChange,
   dateRange,
   onDateRangeChange,
+  teamMembers = [],
+  selectedAssigneeIds = [],
+  onAssigneeFilterChange,
   showAddButton = true,
   showChips = true,
 }: LeadsActiveFiltersProps) {
   const [open, setOpen] = useState(false);
 
   // Get selected stages for display
-  const selectedStages = stages.filter(s => selectedStageIds.includes(s.id));
   const hasStageFilter = selectedStageIds.length > 0;
   const hasDateFilter = dateRange !== 'all';
-  const hasActiveFilters = hasStageFilter || hasDateFilter;
+  const hasAssigneeFilter = selectedAssigneeIds.length > 0;
+  const hasActiveFilters = hasStageFilter || hasDateFilter || hasAssigneeFilter;
+  const activeFilterCount = selectedStageIds.length + (hasDateFilter ? 1 : 0) + selectedAssigneeIds.length;
 
   const handleStageToggle = (stageId: string, checked: boolean) => {
     if (checked) {
@@ -68,162 +79,169 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
     }
   };
 
-  const removeStageFilter = (stageId: string) => {
-    onStageFilterChange(selectedStageIds.filter(id => id !== stageId));
-  };
-
-  const removeDateFilter = () => {
-    onDateRangeChange('all');
+  const handleAssigneeToggle = (userId: string, checked: boolean) => {
+    if (!onAssigneeFilterChange) return;
+    if (checked) {
+      onAssigneeFilterChange([...selectedAssigneeIds, userId]);
+    } else {
+      onAssigneeFilterChange(selectedAssigneeIds.filter(id => id !== userId));
+    }
   };
 
   const clearAllFilters = () => {
     onStageFilterChange([]);
     onDateRangeChange('all');
+    onAssigneeFilterChange?.([]);
     setOpen(false);
   };
 
-  const dateRangeLabel = DATE_RANGE_OPTIONS.find(o => o.value === dateRange)?.label;
+  const getInitials = (name: string | null) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Filter button - no chips shown
+  if (!showAddButton) return null;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {/* Active stage filter chips */}
-      {showChips && selectedStages.map(stage => (
-        <Badge
-          key={stage.id}
-          variant="secondary"
-          className="h-6 gap-1.5 pr-1 pl-2 text-xs font-normal"
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 px-2.5"
         >
-          <span
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ backgroundColor: stage.color }}
-          />
-          {stage.name}
-          <button
-            onClick={() => removeStageFilter(stage.id)}
-            className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20 transition-colors"
-          >
-            <X size={12} />
-            <span className="sr-only">Remove {stage.name} filter</span>
-          </button>
-        </Badge>
-      ))}
-
-      {/* Active date filter chip */}
-      {showChips && hasDateFilter && (
-        <Badge
-          variant="secondary"
-          className="h-6 gap-1.5 pr-1 pl-2 text-xs font-normal"
-        >
-          {dateRangeLabel}
-          <button
-            onClick={removeDateFilter}
-            className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20 transition-colors"
-          >
-            <X size={12} />
-            <span className="sr-only">Remove date filter</span>
-          </button>
-        </Badge>
-      )}
-
-      {/* Add filter popover */}
-      {showAddButton && (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 px-2.5"
-          >
-            <FilterLines size={14} />
-            <span className="text-xs">Filter</span>
-            <ChevronDown size={14} className="text-muted-foreground" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-64 p-0">
-          <div className="p-3 space-y-4">
-            {/* Stage filters - Toggle Pills */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">Stage</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {stages.map(stage => {
-                  const isSelected = selectedStageIds.includes(stage.id);
-                  const rgb = hexToRgbObject(stage.color);
-                  const bgStyle = isSelected && rgb 
-                    ? { backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` }
-                    : {};
-                  
-                  return (
-                    <button
-                      key={stage.id}
-                      onClick={() => handleStageToggle(stage.id, !isSelected)}
-                      className={`
-                        inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                        transition-all duration-150 border
-                        ${isSelected 
-                          ? 'border-transparent text-foreground' 
-                          : 'border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground'
-                        }
-                      `}
-                      style={bgStyle}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: stage.color }}
-                      />
-                      {stage.name}
-                    </button>
-                  );
-                })}
-              </div>
+          <FilterLines size={14} />
+          <span className="text-xs">Filter</span>
+          {activeFilterCount > 0 && (
+            <span className="flex items-center justify-center min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-medium px-1">
+              {activeFilterCount}
+            </span>
+          )}
+          <ChevronDown size={14} className="text-muted-foreground" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-72 p-0">
+        <div className="p-3 space-y-4">
+          {/* Stage filters - Toggle Pills */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Stage</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {stages.map(stage => {
+                const isSelected = selectedStageIds.includes(stage.id);
+                const rgb = hexToRgbObject(stage.color);
+                const bgStyle = isSelected && rgb 
+                  ? { backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` }
+                  : {};
+                
+                return (
+                  <button
+                    key={stage.id}
+                    onClick={() => handleStageToggle(stage.id, !isSelected)}
+                    className={`
+                      inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+                      transition-all duration-150 border
+                      ${isSelected 
+                        ? 'border-transparent text-foreground' 
+                        : 'border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground'
+                      }
+                    `}
+                    style={bgStyle}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: stage.color }}
+                    />
+                    {stage.name}
+                  </button>
+                );
+              })}
             </div>
-
-            <Separator />
-
-            {/* Date range filter - Toggle Pills */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">Date Range</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {DATE_RANGE_OPTIONS.map(option => {
-                  const isSelected = dateRange === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      onClick={() => onDateRangeChange(option.value)}
-                      className={`
-                        px-2.5 py-1 rounded-full text-xs font-medium
-                        transition-all duration-150 border
-                        ${isSelected 
-                          ? 'bg-accent border-transparent text-foreground' 
-                          : 'border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground'
-                        }
-                      `}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Clear all */}
-            {hasActiveFilters && (
-              <>
-                <Separator />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start h-8 text-muted-foreground hover:text-foreground"
-                  onClick={clearAllFilters}
-                >
-                  <X size={14} className="mr-2" />
-                  Clear all filters
-                </Button>
-              </>
-            )}
           </div>
-        </PopoverContent>
-      </Popover>
-      )}
-    </div>
+
+          {/* Assignee filters */}
+          {teamMembers.length > 0 && onAssigneeFilterChange && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Assignee</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {teamMembers.map(member => {
+                    const isSelected = selectedAssigneeIds.includes(member.user_id);
+                    
+                    return (
+                      <button
+                        key={member.user_id}
+                        onClick={() => handleAssigneeToggle(member.user_id, !isSelected)}
+                        className={`
+                          inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium
+                          transition-all duration-150 border
+                          ${isSelected 
+                            ? 'bg-accent border-transparent text-foreground' 
+                            : 'border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground'
+                          }
+                        `}
+                      >
+                        <Avatar className="w-4 h-4">
+                          <AvatarImage src={member.avatar_url || undefined} />
+                          <AvatarFallback className="text-[8px]">
+                            {getInitials(member.display_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {member.display_name || 'Unknown'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          <Separator />
+
+          {/* Date range filter - Toggle Pills */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground">Date Range</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {DATE_RANGE_OPTIONS.map(option => {
+                const isSelected = dateRange === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => onDateRangeChange(option.value)}
+                    className={`
+                      px-2.5 py-1 rounded-full text-xs font-medium
+                      transition-all duration-150 border
+                      ${isSelected 
+                        ? 'bg-accent border-transparent text-foreground' 
+                        : 'border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground'
+                      }
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Clear all */}
+          {hasActiveFilters && (
+            <>
+              <Separator />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-8 text-muted-foreground hover:text-foreground"
+                onClick={clearAllFilters}
+              >
+                <X size={14} className="mr-2" />
+                Clear all filters
+              </Button>
+            </>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 });

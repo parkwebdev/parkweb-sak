@@ -16,6 +16,7 @@ import type { LeadStage } from '@/hooks/useLeadStages';
 import type { SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 import type { CardFieldKey } from '@/components/leads/KanbanCardFields';
 import type { VisibilityState } from '@tanstack/react-table';
+import type { TeamMember } from '@/types/team';
 
 interface LeadsHeaderBarProps {
   /** Current view mode */
@@ -36,6 +37,12 @@ interface LeadsHeaderBarProps {
   dateRange: DateRangeFilter;
   /** Handler for date range changes */
   onDateRangeChange: (range: DateRangeFilter) => void;
+  /** Available team members for assignee filtering */
+  teamMembers: TeamMember[];
+  /** Currently selected assignee user IDs for filtering */
+  selectedAssigneeIds: string[];
+  /** Handler for assignee filter changes */
+  onAssigneeFilterChange: (userIds: string[]) => void;
   /** Current sort option */
   sortOption: SortOption | null;
   /** Handler for sort changes */
@@ -66,6 +73,9 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
   onStageFilterChange,
   dateRange,
   onDateRangeChange,
+  teamMembers,
+  selectedAssigneeIds,
+  onAssigneeFilterChange,
   sortOption,
   onSortChange,
   visibleCardFields,
@@ -104,15 +114,7 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
           </div>
         </div>
 
-        {/* Active filter chips only (Add filter moved to right) */}
-        <LeadsActiveFilters
-          stages={stages}
-          selectedStageIds={selectedStageIds}
-          onStageFilterChange={onStageFilterChange}
-          dateRange={dateRange}
-          onDateRangeChange={onDateRangeChange}
-          showAddButton={false}
-        />
+        {/* Spacer - chips removed, filter button is in right controls */}
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -149,8 +151,9 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
             onStageFilterChange={onStageFilterChange}
             dateRange={dateRange}
             onDateRangeChange={onDateRangeChange}
-            showAddButton={true}
-            showChips={false}
+            teamMembers={teamMembers}
+            selectedAssigneeIds={selectedAssigneeIds}
+            onAssigneeFilterChange={onAssigneeFilterChange}
           />
           {viewMode === 'kanban' && (
             <LeadsSortDropdown
