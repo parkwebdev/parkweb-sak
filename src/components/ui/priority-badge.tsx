@@ -4,7 +4,7 @@
  * Reusable priority badge for consistent display across:
  * - LeadsKanbanBoard cards
  * - LeadActivityPanel activity descriptions
- * - LeadsTable (future)
+ * - LeadsTable priority column
  * 
  * @verified 2026-01-03
  */
