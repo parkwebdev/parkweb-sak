@@ -784,97 +784,107 @@ export const LeadDetailsSheet = ({
                     {/* Email Row */}
                     <div className="flex items-center gap-2">
                       <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">Email</Label>
-                      <Input
-                        size="sm"
-                        type="email"
-                        value={{ ...lead, ...editedLead }.email || ''}
-                        onChange={(e) => {
-                          lastEditedFieldRef.current = 'email';
-                          setEditedLead({ ...editedLead, email: e.target.value });
-                        }}
-                        onFocus={() => { isEditingRef.current = true; }}
-                        onBlur={() => { isEditingRef.current = false; }}
-                        className={cn(getInputClassName('email'), "flex-1")}
-                        placeholder="email@example.com"
-                      />
-                      {({ ...lead, ...editedLead }.email) && (
-                        <div className="flex h-8 rounded-md border overflow-hidden self-center flex-shrink-0">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
-                                className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                aria-label="Copy email"
-                              >
-                                <Copy01 className="h-3.5 w-3.5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">Copy email</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => window.open(`mailto:${({ ...lead, ...editedLead }.email)}`, '_blank')}
-                                className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l"
-                                aria-label="Send email"
-                              >
-                                <Mail01 className="h-3.5 w-3.5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">Send email</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      )}
+                      <div className="flex flex-1 h-8 rounded-md border border-input bg-background overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+                        <Input
+                          size="sm"
+                          type="email"
+                          value={{ ...lead, ...editedLead }.email || ''}
+                          onChange={(e) => {
+                            lastEditedFieldRef.current = 'email';
+                            setEditedLead({ ...editedLead, email: e.target.value });
+                          }}
+                          onFocus={() => { isEditingRef.current = true; }}
+                          onBlur={() => { isEditingRef.current = false; }}
+                          className={cn(
+                            getInputClassName('email'),
+                            'flex-1 h-8 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                          )}
+                          placeholder="email@example.com"
+                        />
+                        {({ ...lead, ...editedLead }.email) && (
+                          <div className="flex h-full border-l border-border">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard({ ...lead, ...editedLead }.email || '', 'Email')}
+                                  className="flex h-full w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                  aria-label="Copy email"
+                                >
+                                  <Copy01 className="h-3.5 w-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">Copy email</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(`mailto:${({ ...lead, ...editedLead }.email)}`, '_blank')}
+                                  className="flex h-full w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l border-border"
+                                  aria-label="Send email"
+                                >
+                                  <Mail01 className="h-3.5 w-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">Send email</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Phone Row */}
                     <div className="flex items-center gap-2">
                       <Label className="text-xs text-muted-foreground w-12 flex-shrink-0">Phone</Label>
-                      <Input
-                        size="sm"
-                        type="tel"
-                        value={{ ...lead, ...editedLead }.phone || phoneValue}
-                        onChange={(e) => {
-                          lastEditedFieldRef.current = 'phone';
-                          setEditedLead({ ...editedLead, phone: e.target.value });
-                        }}
-                        onFocus={() => { isEditingRef.current = true; }}
-                        onBlur={() => { isEditingRef.current = false; }}
-                        className={cn(getInputClassName('phone'), "flex-1")}
-                        placeholder="(555) 123-4567"
-                      />
-                      {({ ...lead, ...editedLead }.phone || phoneValue) && (
-                        <div className="flex h-8 rounded-md border overflow-hidden self-center flex-shrink-0">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
-                                className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                aria-label="Copy phone"
-                              >
-                                <Copy01 className="h-3.5 w-3.5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">Copy phone</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => window.open(`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`, '_self')}
-                                className="flex h-full w-7 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l"
-                                aria-label="Call"
-                              >
-                                <Phone01 className="h-3.5 w-3.5" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">Call</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      )}
+                      <div className="flex flex-1 h-8 rounded-md border border-input bg-background overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+                        <Input
+                          size="sm"
+                          type="tel"
+                          value={{ ...lead, ...editedLead }.phone || phoneValue}
+                          onChange={(e) => {
+                            lastEditedFieldRef.current = 'phone';
+                            setEditedLead({ ...editedLead, phone: e.target.value });
+                          }}
+                          onFocus={() => { isEditingRef.current = true; }}
+                          onBlur={() => { isEditingRef.current = false; }}
+                          className={cn(
+                            getInputClassName('phone'),
+                            'flex-1 h-8 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                          )}
+                          placeholder="(555) 123-4567"
+                        />
+                        {({ ...lead, ...editedLead }.phone || phoneValue) && (
+                          <div className="flex h-full border-l border-border">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard({ ...lead, ...editedLead }.phone || phoneValue, 'Phone')}
+                                  className="flex h-full w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                  aria-label="Copy phone"
+                                >
+                                  <Copy01 className="h-3.5 w-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">Copy phone</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(`tel:${({ ...lead, ...editedLead }.phone || phoneValue).replace(/\D/g, '')}`, '_self')}
+                                  className="flex h-full w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l border-border"
+                                  aria-label="Call"
+                                >
+                                  <Phone01 className="h-3.5 w-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">Call</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
