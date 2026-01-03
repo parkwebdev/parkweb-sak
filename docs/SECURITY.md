@@ -65,13 +65,120 @@ This section tracks the implementation status of security enhancements identifie
 
 **Legend**: 🟢 Complete | 🟡 In Progress/Blocked | 🔴 Planned
 
-### OAuth Token Encryption (Blocked)
+### OAuth Token Encryption (Manual Setup Required)
 
-OAuth token encryption requires `pgsodium` functions which need special permissions not available through standard Supabase migrations. This requires:
-- Manual configuration via Supabase dashboard SQL editor with superuser privileges
-- Or using Supabase's Transparent Column Encryption (TCE) feature
+OAuth token encryption requires `pgsodium` functions which need elevated permissions not available through standard Supabase migrations. **This must be configured directly in the Supabase Dashboard.**
 
-**Current mitigation**: Tokens are protected by RLS policies and Supabase's encrypted-at-rest storage.
+#### Why This Matters
+The `connected_accounts` table stores OAuth access and refresh tokens for Google Calendar and Outlook integrations. While Supabase encrypts data at rest, encrypting tokens at the application level provides defense-in-depth.
+
+#### Setup via Supabase Dashboard
+
+1. **Navigate to SQL Editor**: Go to [Supabase Dashboard > SQL Editor](https://supabase.com/dashboard/project/mvaimvwdukpgvkifkfpa/sql/new)
+
+2. **Create Encryption Key** (run once):
+```sql
+-- Create a secret key for OAuth token encryption
+INSERT INTO vault.secrets (name, secret) 
+VALUES ('oauth_encryption_key', encode(gen_random_bytes(32), 'base64'));
+```
+
+3. **Create Encryption Functions**:
+```sql
+-- Encrypt function
+CREATE OR REPLACE FUNCTION encrypt_oauth_token(plaintext text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, vault
+AS $$
+DECLARE
+  key_bytes bytea;
+  nonce bytea;
+  encrypted bytea;
+BEGIN
+  SELECT decode(secret, 'base64') INTO key_bytes 
+  FROM vault.decrypted_secrets 
+  WHERE name = 'oauth_encryption_key';
+  
+  nonce := gen_random_bytes(12);
+  encrypted := pgsodium.crypto_aead_det_encrypt(
+    convert_to(plaintext, 'utf8'),
+    '',
+    key_bytes,
+    nonce
+  );
+  RETURN encode(nonce || encrypted, 'base64');
+END;
+$$;
+
+-- Decrypt function
+CREATE OR REPLACE FUNCTION decrypt_oauth_token(ciphertext text)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, vault
+AS $$
+DECLARE
+  key_bytes bytea;
+  raw_bytes bytea;
+  nonce bytea;
+  encrypted bytea;
+BEGIN
+  SELECT decode(secret, 'base64') INTO key_bytes 
+  FROM vault.decrypted_secrets 
+  WHERE name = 'oauth_encryption_key';
+  
+  raw_bytes := decode(ciphertext, 'base64');
+  nonce := substring(raw_bytes from 1 for 12);
+  encrypted := substring(raw_bytes from 13);
+  
+  RETURN convert_from(
+    pgsodium.crypto_aead_det_decrypt(encrypted, '', key_bytes, nonce),
+    'utf8'
+  );
+END;
+$$;
+```
+
+4. **Migrate Existing Tokens** (optional, for existing data):
+```sql
+-- Add encrypted columns
+ALTER TABLE connected_accounts 
+ADD COLUMN IF NOT EXISTS access_token_encrypted text,
+ADD COLUMN IF NOT EXISTS refresh_token_encrypted text;
+
+-- Encrypt existing tokens
+UPDATE connected_accounts 
+SET 
+  access_token_encrypted = encrypt_oauth_token(access_token),
+  refresh_token_encrypted = encrypt_oauth_token(refresh_token)
+WHERE access_token IS NOT NULL;
+
+-- After verification, drop plaintext columns
+-- ALTER TABLE connected_accounts DROP COLUMN access_token, DROP COLUMN refresh_token;
+```
+
+5. **Update Edge Functions**: After enabling encryption, update these edge functions to use the encryption functions:
+   - `google-calendar-auth/index.ts`
+   - `outlook-calendar-auth/index.ts`
+   - `google-calendar-webhook/index.ts`
+   - `outlook-calendar-webhook/index.ts`
+   - `renew-calendar-webhooks/index.ts`
+   - `check-calendar-availability/index.ts`
+   - `book-appointment/index.ts`
+
+#### Alternative: Supabase Transparent Column Encryption (TCE)
+
+Supabase offers [Transparent Column Encryption](https://supabase.com/docs/guides/database/vault) which can automatically encrypt/decrypt columns. This is a simpler approach if available on your plan.
+
+#### Current Mitigations
+
+Until encryption is enabled, tokens are protected by:
+- **RLS Policies**: Only account owners and team members can access `connected_accounts`
+- **Supabase Encryption at Rest**: Database storage is encrypted
+- **Token Expiration**: Access tokens expire and are refreshed automatically
+- **Secure Transport**: All API calls use HTTPS/TLS
 
 ### Implemented Security Features
 

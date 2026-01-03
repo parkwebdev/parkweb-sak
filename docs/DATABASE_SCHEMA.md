@@ -243,6 +243,9 @@ OAuth connected calendar accounts with webhook subscription tracking.
 **Indexes:**
 - `idx_connected_accounts_webhook_expires`: Partial index on `webhook_expires_at` for efficient renewal queries
 
+**Security Note:**
+OAuth tokens (`access_token`, `refresh_token`) are stored in this table. For enhanced security, these should be encrypted using Supabase Vault. See [SECURITY.md - OAuth Token Encryption](./SECURITY.md#oauth-token-encryption-manual-setup-required) for setup instructions.
+
 **RLS Policies:**
 - Users can manage accounts for accessible agents
 
