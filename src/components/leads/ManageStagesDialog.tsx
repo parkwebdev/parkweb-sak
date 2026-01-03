@@ -3,7 +3,7 @@
  * Provides CRUD, reordering, and color customization.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { IconButton } from '@/components/ui/icon-button';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { useLeadStages, LeadStage } from '@/hooks/useLeadStages';
+import { useStableArray } from '@/hooks/useStableObject';
 import { Plus, Trash01, Check, DotsGrid } from '@untitledui/icons';
 import {
   DndContext,
@@ -183,16 +184,37 @@ function SortableStageItem({
 }
 
 export function ManageStagesDialog({ open, onOpenChange, canManage = true }: ManageStagesDialogProps) {
-  const { stages, createStage, updateStage, deleteStage, reorderStages, loading } = useLeadStages();
+  const { stages: rawStages, createStage, updateStage, deleteStage, reorderStages, loading } = useLeadStages();
+  const stages = useStableArray(rawStages);
   const [localStages, setLocalStages] = useState<LeadStage[]>([]);
   const [newStageName, setNewStageName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  
+  // Track if we've synced for current dialog open
+  const hasSyncedRef = useRef(false);
 
-  // Sync local stages with hook data
+  // Sync local stages only when dialog opens or stages actually change
   useEffect(() => {
-    setLocalStages(stages);
-  }, [stages]);
+    if (open && !hasSyncedRef.current) {
+      setLocalStages(stages);
+      hasSyncedRef.current = true;
+    }
+  }, [open, stages]);
+
+  // Reset sync flag when dialog closes
+  useEffect(() => {
+    if (!open) {
+      hasSyncedRef.current = false;
+    }
+  }, [open]);
+
+  // Also sync when stages change while dialog is open (for real-time updates)
+  useEffect(() => {
+    if (open && hasSyncedRef.current) {
+      setLocalStages(stages);
+    }
+  }, [open, stages]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
