@@ -1,6 +1,6 @@
 /**
  * @fileoverview Full-width header bar for the Leads page.
- * Provides search, inline filters, display options, and view mode toggle.
+ * Provides search, inline filters, sort, properties, and view mode toggle.
  */
 
 import React from 'react';
@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ViewModeToggle } from './ViewModeToggle';
 import { LeadsFiltersDropdown, type DateRangeFilter } from './LeadsFiltersDropdown';
-import { LeadsDisplayDropdown } from './LeadsDisplayDropdown';
+import { LeadsSortDropdown } from './LeadsSortDropdown';
+import { LeadsPropertiesDropdown } from './LeadsPropertiesDropdown';
 import type { LeadStage } from '@/hooks/useLeadStages';
 import type { SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 import type { CardFieldKey } from '@/components/leads/KanbanCardFields';
@@ -67,7 +68,7 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
 }: LeadsHeaderBarProps) {
   return (
     <div className="sticky top-0 z-10 bg-background border-b border-border">
-      <div className="flex items-center gap-3 px-4 lg:px-8 py-3">
+      <div className="flex items-center gap-2 px-4 lg:px-8 py-3">
         {/* Left: Search */}
         <div className="flex-1 max-w-sm">
           <div className="relative">
@@ -93,7 +94,7 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
           </div>
         </div>
 
-        {/* Center-Right: Filters + Display dropdowns */}
+        {/* Center-Right: Filters, Sort, Properties */}
         <LeadsFiltersDropdown
           stages={stages}
           selectedStageIds={selectedStageIds}
@@ -102,10 +103,13 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
           onDateRangeChange={onDateRangeChange}
         />
         
-        <LeadsDisplayDropdown
-          viewMode={viewMode}
+        <LeadsSortDropdown
           sortOption={sortOption}
           onSortChange={onSortChange}
+        />
+
+        <LeadsPropertiesDropdown
+          viewMode={viewMode}
           visibleCardFields={visibleCardFields}
           onToggleCardField={onToggleCardField}
           columnVisibility={columnVisibility}
