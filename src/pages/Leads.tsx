@@ -49,6 +49,7 @@ const DEFAULT_TABLE_COLUMNS: VisibilityState = {
   email: true,
   phone: true,
   stage_id: true,
+  priority: true,
   assignees: true,
   location: false,
   source: false,
@@ -57,7 +58,7 @@ const DEFAULT_TABLE_COLUMNS: VisibilityState = {
 };
 
 // Default table column order
-const DEFAULT_TABLE_COLUMN_ORDER = ['name', 'email', 'phone', 'stage_id', 'assignees', 'location', 'source', 'created_at', 'updated_at'];
+const DEFAULT_TABLE_COLUMN_ORDER = ['name', 'email', 'phone', 'stage_id', 'priority', 'assignees', 'location', 'source', 'created_at', 'updated_at'];
 
 /** Props for the Leads page */
 interface LeadsProps {

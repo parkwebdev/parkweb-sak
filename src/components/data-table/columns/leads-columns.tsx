@@ -3,6 +3,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { LeadAssigneePicker } from '@/components/leads/LeadAssigneePicker';
+import { PriorityBadge } from '@/components/ui/priority-badge';
+import { normalizePriority, PRIORITY_CONFIG } from '@/lib/priority-config';
 import { PHONE_FIELD_KEYS } from '@/lib/field-keys';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -126,6 +128,32 @@ export const createLeadsColumns = ({
         />
       </div>
     ),
+  },
+  {
+    id: 'priority',
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
+    accessorFn: (row) => {
+      const metadata = row.conversations?.metadata as Record<string, unknown> | undefined;
+      return metadata?.priority ?? 'none';
+    },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Priority" />
+    ),
+    cell: ({ row }) => {
+      const metadata = row.original.conversations?.metadata as Record<string, unknown> | undefined;
+      const priority = metadata?.priority as string | undefined;
+      return <PriorityBadge priority={priority} size="sm" />;
+    },
+    sortingFn: (rowA, rowB) => {
+      const priorityOrder = { urgent: 4, high: 3, normal: 2, low: 1, none: 0 };
+      const metadataA = rowA.original.conversations?.metadata as Record<string, unknown> | undefined;
+      const metadataB = rowB.original.conversations?.metadata as Record<string, unknown> | undefined;
+      const priorityA = normalizePriority(metadataA?.priority as string | undefined);
+      const priorityB = normalizePriority(metadataB?.priority as string | undefined);
+      return priorityOrder[priorityA] - priorityOrder[priorityB];
+    },
   },
   {
     accessorKey: 'location',
