@@ -4,14 +4,13 @@
  * System prompt editor for defining agent personality.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import { AriSectionHeader } from './AriSectionHeader';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -32,10 +31,6 @@ const PROMPT_TIPS = [
 export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSectionProps) {
   const [systemPrompt, setSystemPrompt] = useState(agent.system_prompt);
   const [isHoveringTip, setIsHoveringTip] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Auto-resize textarea as content changes
-  useAutoResizeTextarea(textareaRef, systemPrompt, { minRows: 8, maxRows: 30, lineHeight: 20 });
 
   useEffect(() => {
     setSystemPrompt(agent.system_prompt);
@@ -96,13 +91,12 @@ export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSecti
             </TooltipProvider>
           </div>
           <Textarea
-            ref={textareaRef}
             id="system-prompt"
             value={systemPrompt}
             onChange={(e) => handleChange(e.target.value)}
             placeholder="You are a helpful assistant..."
-            rows={8}
-            className="font-mono text-sm resize-none !min-h-0"
+            rows={16}
+            className="font-mono text-sm resize-y min-h-[200px]"
           />
           <p className="text-xs text-muted-foreground">
             This prompt defines how Ari responds to users. Be specific about tone, expertise, and any rules.
