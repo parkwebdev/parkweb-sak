@@ -188,7 +188,7 @@ async function generateEmbeddingsBatch(
       batch.map(async (chunk) => {
         try {
           return await generateEmbedding(chunk.content);
-        } catch (error) {
+        } catch (error: unknown) {
           console.error(`Failed to generate embedding for chunk:`, error);
           return null;
         }
@@ -345,7 +345,7 @@ async function processUrlSource(
       .eq('id', sourceId);
 
     return { success: true };
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     // Fetch existing metadata to preserve parent_source_id, batch_id, etc.
@@ -411,7 +411,7 @@ async function triggerNextBatch(
     } else {
       console.log('Next batch triggered successfully');
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error triggering next batch:', error);
   }
 }
@@ -810,7 +810,7 @@ async function processSitemap(
         
         // Small delay between sitemap fetches
         await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`Failed to fetch child sitemap ${childSitemapUrl}:`, error);
       }
     }
@@ -946,7 +946,7 @@ async function fetchUrlContent(url: string): Promise<string> {
     } else {
       throw new Error(`Unsupported content type: ${contentType}`);
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching URL:', error);
     throw new Error(`Error fetching URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -1266,7 +1266,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error processing knowledge source:', error);
     
     // Update status to error if we have sourceId and supabase client

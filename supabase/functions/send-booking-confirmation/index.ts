@@ -211,10 +211,10 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error sending booking confirmation:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to send confirmation email' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to send confirmation email' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
