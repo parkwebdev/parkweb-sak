@@ -38,6 +38,7 @@ export function LocationPicker({
     <div className="space-y-3 p-4">
       <p className="text-sm font-medium text-center mb-4">{prompt}</p>
       
+      {/* Intentional: max-h-[300px] constrains scrollable location list */}
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
         {locations.map((location) => {
           const isSelected = selectedLocation?.id === location.id;

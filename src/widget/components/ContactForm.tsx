@@ -8,9 +8,8 @@
  */
 
 import { Suspense, useState } from 'react';
-import { WidgetButton, WidgetInput, WidgetCheckbox } from '../ui';
+import { WidgetButton, WidgetInput, WidgetCheckbox, WidgetTextarea } from '../ui';
 import { WidgetSelect, WidgetSelectTrigger, WidgetSelectValue, WidgetSelectContent, WidgetSelectItem } from '../ui';
-import { Textarea } from '@/components/ui/textarea';
 import { PhoneInputField } from '../constants';
 import { createLead } from '../api';
 import { useSystemTheme } from '../hooks/useSystemTheme';
@@ -233,7 +232,7 @@ export const ContactForm = ({
                   </WidgetSelectContent>
                 </WidgetSelect>
               ) : field.fieldType === 'textarea' ? (
-                <Textarea name={field.id} placeholder={field.label} required={field.required} />
+                <WidgetTextarea name={field.id} placeholder={field.label} required={field.required} />
               ) : field.fieldType === 'phone' ? (
                 <Suspense fallback={<WidgetInput placeholder={field.label} disabled />}>
                   <PhoneInputField 

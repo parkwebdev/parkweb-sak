@@ -8,8 +8,7 @@
  */
 
 import { Suspense, useRef, useEffect } from 'react';
-import { WidgetButton, WidgetSkeleton } from '../ui';
-import { Textarea } from '@/components/ui/textarea';
+import { WidgetButton, WidgetSkeleton, WidgetTextarea } from '../ui';
 import { Send01, Microphone01, Attachment01, X } from '../icons';
 import { VoiceInput } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
@@ -172,7 +171,8 @@ export const MessageInput = ({
             )}
             
             <div className="relative flex-1">
-              <Textarea
+              {/* Intentional: Auto-resize textarea from 1 line (36px) to ~5 lines (120px) */}
+              <WidgetTextarea
                 ref={textareaRef}
                 value={messageInput}
                 onChange={(e) => onMessageChange(e.target.value)}

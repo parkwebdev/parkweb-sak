@@ -46,6 +46,7 @@ export {
   WidgetSkeletonNewsItem,
   WidgetSkeletonConversationItem,
 } from './WidgetSkeleton';
+export { WidgetTextarea, widgetTextareaVariants } from './WidgetTextarea';
 
 // Animation components (CSS-only staggered animations)
 export { CSSAnimatedList } from './CSSAnimatedList';
