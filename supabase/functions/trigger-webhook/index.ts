@@ -5,10 +5,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/** Event data passed to webhook, typically entity records */
+interface WebhookEventData {
+  id?: string;
+  [key: string]: unknown;
+}
+
 interface WebhookPayload {
   webhookId?: string;
   eventType?: string;
-  eventData?: any;
+  eventData?: WebhookEventData;
   testMode?: boolean;
 }
 
