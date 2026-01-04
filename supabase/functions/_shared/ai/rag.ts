@@ -251,7 +251,7 @@ export async function cacheResponse(
     if (error) {
       console.error('Failed to cache response:', error);
     }
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Failed to cache response:', err);
   }
 }

@@ -350,7 +350,7 @@ Deno.serve(async (req) => {
               }
             );
             console.log(`[outlook-calendar-auth] Webhook subscription deleted for account ${accountId}`);
-          } catch (e) {
+          } catch (e: unknown) {
             console.warn('[outlook-calendar-auth] Webhook deletion failed (non-critical):', e);
           }
         }
@@ -535,7 +535,7 @@ Deno.serve(async (req) => {
                 headers: { Authorization: `Bearer ${account.access_token}` },
               }
             );
-          } catch (e) {
+          } catch (e: unknown) {
             console.warn('[outlook-calendar-auth] Existing subscription delete failed:', e);
           }
         }
@@ -561,7 +561,7 @@ Deno.serve(async (req) => {
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
-        } catch (e) {
+        } catch (e: unknown) {
           console.error('[outlook-calendar-auth] Webhook refresh failed:', e);
         }
 

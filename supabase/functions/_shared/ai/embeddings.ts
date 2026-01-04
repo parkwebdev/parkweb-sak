@@ -117,7 +117,7 @@ export async function getCachedEmbedding(
     
     console.log(`Embedding CACHE HIT - retrieved ${values.length} dimensions`);
     return values;
-  } catch {
+  } catch (_err: unknown) {
     return null;
   }
 }
