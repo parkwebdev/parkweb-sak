@@ -125,7 +125,7 @@ export const MessageInputArea = memo(function MessageInputArea({
       
       <form 
         onSubmit={handleSubmit}
-        className="flex items-end gap-3 max-w-4xl mx-auto"
+        className="flex items-center gap-1 max-w-4xl mx-auto"
       >
         <QuickEmojiButton
           onEmojiSelect={handleEmojiSelect}
