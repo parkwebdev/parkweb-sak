@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { widgetSupabase } from '../api';
+import { getWidgetSupabase } from '../api';
 import { widgetLogger } from '../utils';
 
 /** Location data from database */
@@ -114,12 +114,12 @@ export function useLocationDetection({
     if (!agentId) return;
     
     try {
-      const { data, error } = await widgetSupabase
+      const { data, error } = await getWidgetSupabase()
         .from('locations')
         .select('id, name, wordpress_slug, city, state')
         .eq('agent_id', agentId)
         .eq('is_active', true)
-        .order('name');
+        .order('name') as { data: Array<{ id: string; name: string; wordpress_slug: string | null; city: string | null; state: string | null }> | null; error: unknown };
       
       if (!error && data) {
         setAvailableLocations(data.map(loc => ({
@@ -142,13 +142,13 @@ export function useLocationDetection({
     if (!agentId || !slug) return null;
     
     try {
-      const { data, error } = await widgetSupabase
+      const { data, error } = await getWidgetSupabase()
         .from('locations')
         .select('id, name, wordpress_slug, city, state')
         .eq('agent_id', agentId)
         .eq('is_active', true)
         .eq('wordpress_slug', slug.toLowerCase())
-        .single();
+        .single() as { data: { id: string; name: string; wordpress_slug: string | null; city: string | null; state: string | null } | null; error: unknown };
       
       if (!error && data) {
         return {

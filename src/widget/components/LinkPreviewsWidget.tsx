@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { LinkPreviewCard, LinkPreviewData } from '@/components/chat/LinkPreviewCard';
-import { widgetSupabase } from '../api';
+import { getWidgetSupabase } from '../api';
 import { WidgetSkeletonLinkPreview } from '../ui/WidgetSkeleton';
 
 // URL regex that matches http/https URLs
@@ -72,7 +72,7 @@ export function LinkPreviewsWidget({ content, compact = false, cachedPreviews }:
           }
 
           try {
-            const { data, error } = await widgetSupabase.functions.invoke('fetch-link-preview', {
+            const { data, error } = await getWidgetSupabase().functions.invoke('fetch-link-preview', {
               body: { url }
             });
 

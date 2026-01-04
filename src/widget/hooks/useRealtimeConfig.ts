@@ -18,7 +18,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react';
-import { widgetSupabase, fetchWidgetConfig, type WidgetConfig } from '../api';
+import { getWidgetSupabase, fetchWidgetConfig, type WidgetConfig } from '../api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { widgetLogger } from '../utils';
 
@@ -62,7 +62,7 @@ export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealt
     if (!enabled || !agentId) return;
 
     // Subscribe to announcements changes for this agent
-    const channel = widgetSupabase
+    const channel = getWidgetSupabase()
       .channel(`widget-config-${agentId}`)
       .on(
         'postgres_changes',
@@ -129,7 +129,7 @@ export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealt
         clearTimeout(debounceRef.current);
       }
       if (channelRef.current) {
-        widgetSupabase.removeChannel(channelRef.current);
+        getWidgetSupabase().removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };

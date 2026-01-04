@@ -76,18 +76,43 @@ export class WidgetApiError extends Error {
 }
 
 /**
- * Supabase client configured for widget use.
- * Uses unique storage key to prevent "Multiple GoTrueClient instances" warning.
- * Session persistence and auto-refresh are disabled for anonymous widget context.
+ * Lazy-initialized Supabase client for widget use.
+ * Uses a singleton pattern to prevent "Multiple GoTrueClient instances" warning
+ * when the widget code is imported into the main app for preview mode.
+ * The client is only created when first accessed, not at module load time.
  */
-export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    storageKey: 'pilot-widget-auth',
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false, // Prevent conflicts with main app client
+let _widgetSupabaseInstance: ReturnType<typeof createClient> | null = null;
+
+/**
+ * Get or create the widget Supabase client.
+ * Uses lazy initialization to prevent client creation when ChatWidget
+ * is imported for preview mode in the main app.
+ */
+export function getWidgetSupabase() {
+  if (!_widgetSupabaseInstance) {
+    _widgetSupabaseInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        storageKey: 'pilot-widget-auth',
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      }
+    });
   }
-});
+  return _widgetSupabaseInstance;
+}
+
+/**
+ * @deprecated Use getWidgetSupabase() instead for lazy initialization.
+ * This export is kept for backward compatibility but will eagerly create the client.
+ */
+export const widgetSupabase = {
+  get storage() { return getWidgetSupabase().storage; },
+  from: (...args: Parameters<ReturnType<typeof createClient>['from']>) => getWidgetSupabase().from(...args),
+  get functions() { return getWidgetSupabase().functions; },
+  channel: (...args: Parameters<ReturnType<typeof createClient>['channel']>) => getWidgetSupabase().channel(...args),
+  removeChannel: (channel: RealtimeChannel) => getWidgetSupabase().removeChannel(channel),
+};
 
 /**
  * Complete widget configuration object containing all display,
