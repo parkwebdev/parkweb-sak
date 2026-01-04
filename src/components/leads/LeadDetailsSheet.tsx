@@ -33,6 +33,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { queryKeys } from '@/lib/query-keys';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
+import { copyToClipboard } from '@/lib/clipboard';
 import { IconButton } from '@/components/ui/icon-button';
 import { PRIORITY_OPTIONS } from '@/lib/priority-config';
 
@@ -631,15 +632,6 @@ export const LeadDetailsSheet = ({
     setEditedLead({ ...editedLead, name: `${currentFirstName} ${value}`.trim() });
   };
 
-  // Copy to clipboard helper
-  const copyToClipboard = async (text: string, label: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied`);
-    } catch {
-      toast.error('Failed to copy');
-    }
-  };
 
   // Get source type from referrer journey
   const getSourceType = (): { type: string; icon: React.ReactNode } => {

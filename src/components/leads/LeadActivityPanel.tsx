@@ -45,21 +45,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import { getInitials } from '@/lib/formatting-utils';
 
 interface LeadActivityPanelProps {
   leadId: string;
 }
-
-// Get initials from name
-const getInitials = (name: string | null | undefined): string => {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-};
 
 type FeedItem = 
   | { type: 'activity'; data: LeadActivity; created_at: string }

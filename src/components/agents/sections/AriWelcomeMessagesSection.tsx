@@ -4,11 +4,12 @@
  * Welcome messages and content settings.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ContentSection } from '@/components/agents/embed/sections/ContentSection';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonFormSection } from '@/components/ui/skeleton';
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 
 interface AriWelcomeMessagesSectionProps {
   agentId: string;
@@ -18,28 +19,21 @@ export function AriWelcomeMessagesSection({ agentId }: AriWelcomeMessagesSection
   const { config, loading, saveConfig } = useEmbeddedChatConfig(agentId);
   const [localConfig, setLocalConfig] = useState(config);
   const [showSaved, setShowSaved] = useState(false);
-  const saveTimerRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     setLocalConfig(config);
   }, [config]);
 
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+  const debouncedSave = useDebouncedCallback(async (updates: Partial<typeof config>) => {
+    await saveConfig(updates);
+    setShowSaved(true);
+    setTimeout(() => setShowSaved(false), 2000);
+  }, 1000);
 
   const handleConfigChange = (updates: Partial<typeof config>) => {
     const newConfig = { ...localConfig, ...updates };
     setLocalConfig(newConfig);
-
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(async () => {
-      await saveConfig(updates);
-      setShowSaved(true);
-      setTimeout(() => setShowSaved(false), 2000);
-    }, 1000);
+    debouncedSave(updates);
   };
 
   if (loading) {

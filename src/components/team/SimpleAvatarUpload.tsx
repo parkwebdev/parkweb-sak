@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Upload01 as Upload } from '@untitledui/icons';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
+import { getInitials } from '@/lib/formatting-utils';
 
 interface SimpleAvatarUploadProps {
   currentAvatarUrl?: string;
@@ -100,22 +101,12 @@ export function SimpleAvatarUpload({
     }
   };
 
-  const getInitials = () => {
-    if (displayName) {
-      return displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    }
-    if (email) {
-      return email.substring(0, 2).toUpperCase();
-    }
-    return 'U';
-  };
-
   return (
     <div className="flex flex-col items-center gap-4">
       <Avatar className="h-20 w-20">
         <AvatarImage src={currentAvatarUrl} />
         <AvatarFallback className="text-lg">
-          {getInitials()}
+          {getInitials(displayName, email)}
         </AvatarFallback>
       </Avatar>
       

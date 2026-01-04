@@ -123,3 +123,39 @@ export const formatFileSize = (bytes: number | null): string => {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 };
+
+// =============================================================================
+// INITIALS EXTRACTION
+// =============================================================================
+
+/**
+ * Extract initials from a display name or email address.
+ * Returns up to 2 uppercase characters.
+ * 
+ * @param name - Display name (preferred) or email address
+ * @param fallbackEmail - Optional email for fallback extraction
+ * @returns 1-2 character initials, or '?' if no valid input
+ * 
+ * @example
+ * getInitials('John Smith') // 'JS'
+ * getInitials('john@example.com') // 'JO'
+ * getInitials(null, 'jane@test.com') // 'JA'
+ * getInitials(null, null) // '?'
+ */
+export function getInitials(
+  name: string | null | undefined,
+  fallbackEmail?: string | null
+): string {
+  if (name) {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }
+  if (fallbackEmail) {
+    return fallbackEmail.slice(0, 2).toUpperCase();
+  }
+  return '?';
+}

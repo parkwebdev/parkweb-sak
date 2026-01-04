@@ -17,6 +17,7 @@ import { CalendarConnections } from './CalendarConnections';
 import { SocialConnections } from './SocialConnections';
 import { US_TIMEZONES, type BusinessHours, type LocationFormData } from '@/types/locations';
 import type { Tables } from '@/integrations/supabase/types';
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 
 type Location = Tables<'locations'>;
 
@@ -44,8 +45,11 @@ export function LocationDetails({
     business_hours: (location.business_hours as BusinessHours) || {},
     wordpress_slug: location.wordpress_slug || '',
   });
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hoursOpen, setHoursOpen] = useState(false);
+
+  // Use ref to avoid recreating debouncedSave when onUpdate changes
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
   // Reset form when location changes
   useEffect(() => {
@@ -64,27 +68,12 @@ export function LocationDetails({
     });
   }, [location.id]);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    };
-  }, []);
-
-  // Use ref to avoid recreating debouncedSave when onUpdate changes
-  const onUpdateRef = useRef(onUpdate);
-  onUpdateRef.current = onUpdate;
-
-  // Auto-save with debounce - stable reference
-  const debouncedSave = useCallback(
+  // Debounced save - stable reference via hook
+  const debouncedSave = useDebouncedCallback(
     (data: Partial<LocationFormData>) => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      
-      saveTimeoutRef.current = setTimeout(async () => {
-        await onUpdateRef.current(location.id, data);
-      }, 1000);
+      onUpdateRef.current(location.id, data);
     },
-    [location.id]
+    1000
   );
 
   const handleChange = (field: keyof LocationFormData, value: string | BusinessHours | string[]) => {
