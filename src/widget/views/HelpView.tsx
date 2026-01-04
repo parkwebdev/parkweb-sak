@@ -367,8 +367,11 @@ export const HelpView = ({
                       setArticleFeedback('helpful');
                       setShowFeedbackComment(true);
                     }}
-                    className="gap-1.5"
-                    style={articleFeedback === 'helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
+                    className={`gap-1.5 ${
+                      articleFeedback === 'helpful'
+                        ? 'bg-foreground text-background hover:bg-foreground/90 border border-transparent'
+                        : ''
+                    }`}
                   >
                     <ThumbsUp className="h-4 w-4" />
                     Yes
@@ -380,8 +383,11 @@ export const HelpView = ({
                       setArticleFeedback('not_helpful');
                       setShowFeedbackComment(true);
                     }}
-                    className="gap-1.5"
-                    style={articleFeedback === 'not_helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
+                    className={`gap-1.5 ${
+                      articleFeedback === 'not_helpful'
+                        ? 'bg-foreground text-background hover:bg-foreground/90 border border-transparent'
+                        : ''
+                    }`}
                   >
                     <ThumbsDown className="h-4 w-4" />
                     No
@@ -400,8 +406,7 @@ export const HelpView = ({
                     <WidgetButton
                       size="sm"
                       onClick={handleSubmitFeedback}
-                      className="w-full"
-                      style={{ backgroundColor: accentColor, color: buttonTextColor }}
+                      className="w-full bg-foreground text-background hover:bg-foreground/90"
                     >
                       Submit Feedback
                     </WidgetButton>
