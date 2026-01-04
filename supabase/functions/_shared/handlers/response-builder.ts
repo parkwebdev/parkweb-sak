@@ -9,7 +9,8 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders } from "../cors.ts";
-import type { ConversationMetadata, ShownProperty, CallAction, ChatMessage, PageVisit } from "../types.ts";
+import type { ConversationMetadata, ShownProperty, CallAction, ChatMessage, PageVisit, KnowledgeSourceResult, ToolUsage, LinkPreview, Logger } from "../types.ts";
+import type { BookingToolResult } from "../types/tools.ts";
 import { moderateContent } from "../security/moderation.ts";
 import { sanitizeAiOutput } from "../security/sanitization.ts";
 import { splitResponseIntoChunks } from "../utils/response-chunking.ts";
@@ -163,8 +164,8 @@ export interface SaveChunksOptions {
   content: string;
   selectedModel: string;
   modelTier: string;
-  sources: any[];
-  toolsUsed: any[];
+  sources: KnowledgeSourceResult[];
+  toolsUsed: ToolUsage[];
   supabaseUrl: string;
   supabaseKey: string;
   previewMode: boolean;
@@ -174,7 +175,7 @@ export interface SaveChunksOptions {
 export interface SaveChunksResult {
   chunks: string[];
   assistantMessageIds: string[];
-  linkPreviews: any[];
+  linkPreviews: LinkPreview[];
 }
 
 /**
@@ -242,11 +243,11 @@ export async function saveResponseChunks(options: SaveChunksOptions): Promise<Sa
 export interface UpdateMetadataOptions {
   supabase: ReturnType<typeof createClient>;
   conversationId: string;
-  conversationMetadata: any;
+  conversationMetadata: ConversationMetadata;
   assistantContent: string;
-  pageVisits: any[];
+  pageVisits: PageVisit[];
   storedShownProperties?: ShownProperty[];
-  messagesToSend: any[];
+  messagesToSend: ChatMessage[];
   openRouterApiKey: string;
   previewMode: boolean;
 }
@@ -365,9 +366,9 @@ export interface ExtractMemoriesOptions {
   supabase: ReturnType<typeof createClient>;
   agentId: string;
   conversationId: string;
-  messages: any[];
+  messages: ChatMessage[];
   assistantContent: string;
-  conversationMetadata: any;
+  conversationMetadata: ConversationMetadata;
   openRouterApiKey: string;
   isGreetingRequest: boolean;
   previewMode: boolean;
@@ -415,17 +416,17 @@ export interface BuildResponseOptions {
   assistantMessageIds: string[];
   assistantContent: string;
   userMessageId: string | undefined;
-  sources: any[];
-  toolsUsed: any[];
-  linkPreviews: any[];
+  sources: KnowledgeSourceResult[];
+  toolsUsed: ToolUsage[];
+  linkPreviews: LinkPreview[];
   quickReplies: string[];
   aiMarkedComplete: boolean;
-  lastCalendarResult: any;
-  lastBookingResult: any;
-  messagesToSend: any[];
+  lastCalendarResult: BookingToolResult | null;
+  lastBookingResult: BookingToolResult | null;
+  messagesToSend: ChatMessage[];
   totalDuration: number;
   previewMode: boolean;
-  log: any;
+  log: Logger;
 }
 
 /**

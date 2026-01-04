@@ -129,3 +129,46 @@ export const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
  * Matches: (xxx) xxx-xxxx, xxx-xxx-xxxx, xxx.xxx.xxxx, +1 xxx xxx xxxx, etc.
  */
 export const PHONE_REGEX = /\b(?:\+?1[-.\s]?)?\(?([2-9][0-9]{2})\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})\b/g;
+
+// ============================================
+// KNOWLEDGE & TOOL USAGE TYPES
+// ============================================
+
+/**
+ * Knowledge source result from RAG.
+ */
+export interface KnowledgeSourceResult {
+  id: string;
+  source: string;
+  type: string;
+  similarity: number;
+  content?: string;
+}
+
+/**
+ * Tool usage tracking.
+ */
+export interface ToolUsage {
+  name: string;
+  success: boolean;
+}
+
+/**
+ * Link preview data.
+ */
+export interface LinkPreview {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+}
+
+/**
+ * Logger interface for structured logging.
+ */
+export interface Logger {
+  info: (message: string, data?: Record<string, unknown>) => void;
+  warn: (message: string, data?: Record<string, unknown>) => void;
+  error: (message: string, data?: Record<string, unknown>) => void;
+  debug: (message: string, data?: Record<string, unknown>) => void;
+}

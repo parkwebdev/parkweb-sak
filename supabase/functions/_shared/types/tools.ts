@@ -5,6 +5,8 @@
  * @module _shared/types/tools
  */
 
+import type { ConversationMetadata } from '../types.ts';
+
 // ============================================
 // TOOL RESULT TYPES
 // ============================================
@@ -17,6 +19,139 @@ export interface ToolResult<T = unknown> {
   success: boolean;
   result?: T;
   error?: string;
+}
+
+// ============================================
+// MESSAGE & TOOL CALL TYPES
+// ============================================
+
+/**
+ * Tool message from cache or history.
+ */
+export interface ToolMessage {
+  role: 'tool';
+  tool_call_id: string;
+  content: string;
+  timestamp?: string;
+  name?: string;
+  success?: boolean;
+  result?: unknown;
+  arguments?: unknown;
+}
+
+/**
+ * Tool call structure from OpenAI-style API.
+ */
+export interface ToolCallStructure {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+/**
+ * AI assistant message with optional tool calls.
+ */
+export interface AssistantMessage {
+  role: 'assistant';
+  content: string | null;
+  tool_calls?: ToolCallStructure[];
+}
+
+/**
+ * AI request body for OpenRouter/OpenAI.
+ */
+export interface AIRequestBody {
+  model: string;
+  messages: Array<{ role: string; content: string }>;
+  stream: boolean;
+  temperature: number;
+  max_completion_tokens: number;
+  top_p?: number;
+  presence_penalty?: number;
+  frequency_penalty?: number;
+  top_k?: number;
+  tools?: unknown[];
+  tool_choice?: string | Record<string, unknown>;
+}
+
+/**
+ * Enabled tool configuration for AI.
+ */
+export interface EnabledToolConfig {
+  id: string;
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+  endpoint_url: string | null;
+  headers: Record<string, string> | null;
+  timeout_ms: number | null;
+}
+
+/**
+ * Tool execution options.
+ */
+export interface ToolExecutionOptions {
+  assistantMessage: AssistantMessage;
+  assistantContent: string;
+  aiRequestBody: AIRequestBody;
+  activeConversationId: string;
+  agentId: string;
+  supabaseUrl: string;
+  enabledTools: EnabledToolConfig[];
+  previewMode: boolean;
+  conversationMetadata: ConversationMetadata;
+  openRouterApiKey: string;
+}
+
+// ============================================
+// SCHEDULED REPORT TYPES
+// ============================================
+
+/**
+ * Scheduled report configuration.
+ */
+export interface ScheduledReportConfig {
+  format: 'csv' | 'pdf';
+  startDate: string;
+  endDate: string;
+  type?: 'summary' | 'detailed' | 'comparison';
+  grouping?: 'day' | 'week' | 'month';
+  filters?: {
+    agentId?: string;
+    leadStatus?: string;
+  };
+  includeKPIs?: boolean;
+  includeCharts?: boolean;
+  includeTables?: boolean;
+  includeConversations?: boolean;
+  includeLeads?: boolean;
+  includeBookings?: boolean;
+  includeSatisfaction?: boolean;
+  includeTrafficSources?: boolean;
+  includeTopPages?: boolean;
+}
+
+/**
+ * Scheduled report from database.
+ */
+export interface ScheduledReport {
+  id: string;
+  user_id: string;
+  name: string;
+  recipients: string[];
+  frequency: string;
+  timezone?: string;
+  time_of_day: string;
+  day_of_week?: number;
+  day_of_month?: number;
+  report_config: ScheduledReportConfig;
+  profiles?: {
+    display_name: string | null;
+    company_name: string | null;
+  };
 }
 
 // ============================================

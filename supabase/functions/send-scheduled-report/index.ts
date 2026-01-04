@@ -94,7 +94,7 @@ interface ScheduledReport {
 // SCHEDULE HELPERS
 // =============================================================================
 
-function checkShouldRun(report: any, utcNow: Date): boolean {
+function checkShouldRun(report: ScheduledReport, utcNow: Date): boolean {
   const timezone = report.timezone || 'America/New_York';
   
   const formatter = new Intl.DateTimeFormat('en-US', {

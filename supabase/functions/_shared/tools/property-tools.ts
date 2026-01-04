@@ -18,6 +18,7 @@
 import { normalizeState } from '../utils/state-mapping.ts';
 import { getErrorMessage } from '../errors.ts';
 import type { SupabaseClientType } from '../types/supabase.ts';
+import type { PropertyRow } from '../types/tools.ts';
 
 // ============================================
 // TYPES
@@ -57,6 +58,11 @@ export interface LookupPropertyArgs {
   address?: string;
   property_id?: string;
   lot_number?: string;
+}
+
+/** Property row with joined location data from search query */
+interface PropertyRowWithLocation extends PropertyRow {
+  locations?: { name: string } | null;
 }
 
 // ============================================
@@ -134,7 +140,7 @@ export async function searchProperties(
       };
     }
 
-    const properties = data.map((p: any, idx: number) => ({
+    const properties = (data as PropertyRowWithLocation[]).map((p, idx: number) => ({
       id: p.id,
       index: idx + 1, // 1-indexed for user-friendly referencing
       address: p.address || `Lot ${p.lot_number}`,
@@ -153,7 +159,20 @@ export async function searchProperties(
     }));
 
     // Create shown_properties array for conversation context memory (limit to 5)
-    const shownProperties: ShownProperty[] = properties.slice(0, 5).map((p: any) => ({
+    interface PropertyResult {
+      index: number;
+      id: string;
+      address: string;
+      city: string;
+      state: string;
+      beds: number | null;
+      baths: number | null;
+      price: number | null;
+      price_formatted: string;
+      community: string | null;
+      location_id: string | null;
+    }
+    const shownProperties: ShownProperty[] = (properties as PropertyResult[]).slice(0, 5).map((p) => ({
       index: p.index,
       id: p.id,
       address: p.address,
@@ -367,7 +386,15 @@ export async function getLocations(
       };
     }
 
-    const locations = data.map((l: any) => ({
+    interface LocationRow {
+      id: string;
+      name: string;
+      city: string | null;
+      state: string | null;
+      phone: string | null;
+      email: string | null;
+    }
+    const locations = (data as LocationRow[]).map((l) => ({
       id: l.id,
       name: l.name,
       city: l.city,
