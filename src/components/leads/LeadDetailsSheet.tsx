@@ -14,7 +14,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01, Mail01 } from '@untitledui/icons';
+import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01, Mail01, DotsGrid } from '@untitledui/icons';
 import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFromLeadData } from '@/lib/field-keys';
 import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
@@ -1013,15 +1013,22 @@ export const LeadDetailsSheet = ({
                   {lead.conversation_id && (
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Internal Notes</Label>
-                      <Textarea
-                        placeholder="Add internal notes..."
-                        value={internalNotes}
-                        onChange={(e) => handleNotesChange(e.target.value)}
-                        onFocus={() => { isEditingNotesRef.current = true; }}
-                        onBlur={() => { isEditingNotesRef.current = false; }}
-                        rows={2}
-                        className="resize-none text-xs min-h-8 transition-all duration-200"
-                      />
+                      <div className="relative">
+                        <Textarea
+                          placeholder="Add internal notes..."
+                          value={internalNotes}
+                          onChange={(e) => handleNotesChange(e.target.value)}
+                          onFocus={() => { isEditingNotesRef.current = true; }}
+                          onBlur={() => { isEditingNotesRef.current = false; }}
+                          rows={2}
+                          className="resize-y text-xs min-h-8 transition-all duration-200 pr-6"
+                        />
+                        <DotsGrid 
+                          size={12} 
+                          className="absolute bottom-1.5 right-1.5 text-muted-foreground/40 pointer-events-none rotate-45" 
+                          aria-hidden="true" 
+                        />
+                      </div>
                     </div>
                   )}
 
