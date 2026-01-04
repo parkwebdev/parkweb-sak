@@ -11,13 +11,14 @@ Complete reference for all custom React hooks in the Pilot application.
 ## Table of Contents
 
 1. [React Query Infrastructure](#react-query-infrastructure)
-2. [Error Handling Convention](#error-handling-convention)
-3. [Data Hooks](#data-hooks)
-4. [UI & State Hooks](#ui--state-hooks)
-5. [Permission Hooks](#permission-hooks)
-6. [Authentication & Security Hooks](#authentication--security-hooks)
-7. [Widget Hooks](#widget-hooks)
-8. [Usage Patterns](#usage-patterns)
+2. [Toast Notification System](#toast-notification-system)
+3. [Error Handling Convention](#error-handling-convention)
+4. [Data Hooks](#data-hooks)
+5. [UI & State Hooks](#ui--state-hooks)
+6. [Permission Hooks](#permission-hooks)
+7. [Authentication & Security Hooks](#authentication--security-hooks)
+8. [Widget Hooks](#widget-hooks)
+9. [Usage Patterns](#usage-patterns)
 
 ---
 
@@ -309,6 +310,217 @@ const { data } = useSupabaseQuery({
 - [ ] Guard in `queryFn`: `if (!user) return []`
 - [ ] Conditional `realtime`: `user ? {...} : undefined`
 - [ ] User-scoped filter: `filter: \`user_id=eq.${user.id}\``
+
+---
+
+## Toast Notification System
+
+### Toast API (`src/lib/toast.ts`)
+
+Structured wrapper around Sonner with consistent action formatting, undo patterns, deduplication, and progress tracking. **Standard for all toast notifications across the app.**
+
+```tsx
+import { toast, createProgressToast } from '@/lib/toast';
+```
+
+#### API Reference
+
+| Method | Description | Duration |
+|--------|-------------|----------|
+| `toast.success(msg)` | Success feedback | 3s |
+| `toast.error(msg)` | Error notification | 4s |
+| `toast.warning(msg)` | Warning notification | 4s |
+| `toast.info(msg)` | Info notification | 4s |
+| `toast.loading(msg)` | Loading state | Until dismissed |
+| `toast.saving(msg)` | Auto-save indicator | Min 2s |
+| `toast.undo(msg, opts)` | Destructive action with undo button | 5s |
+| `toast.dedupe(key, msg)` | Prevent spam (2s window) | 4s |
+| `toast.persistent(msg)` | Critical, manual dismiss only | Infinite |
+| `toast.promise(promise, opts)` | Async operation tracker | Auto |
+| `toast.dismiss(id?)` | Dismiss specific or all | - |
+| `toast.update(id, msg)` | Update existing toast | - |
+
+#### Basic Usage
+
+```tsx
+// Simple notifications
+toast.success('Saved successfully');
+toast.error('Failed to save', { description: 'Please try again' });
+toast.warning('Please review your changes');
+toast.info('New update available');
+
+// With action buttons
+toast.error('Failed to save', {
+  action: { label: 'Retry', onClick: () => save() },
+  cancel: { label: 'Dismiss', onClick: () => {} }
+});
+```
+
+#### Undo Pattern (Destructive Actions)
+
+Use `toast.undo()` for destructive actions that can be reversed. Provides a 5-second window for the user to undo.
+
+```tsx
+const handleDelete = async () => {
+  // Perform soft delete first
+  const deletedItem = await softDelete(itemId);
+  
+  toast.undo('Item deleted', {
+    onUndo: async () => {
+      await restore(deletedItem);
+      toast.success('Item restored');
+    },
+    description: 'Click undo to restore',
+    duration: 5000, // Optional, defaults to 5s
+  });
+};
+```
+
+**When to use:**
+- Deleting items (leads, conversations, knowledge sources)
+- Bulk operations that affect multiple records
+- Any destructive action where immediate undo is valuable
+
+#### Deduplication (Prevent Spam)
+
+Use `toast.dedupe()` to prevent identical toasts from appearing in rapid succession.
+
+```tsx
+// Only shows one "Connection lost" toast every 2 seconds
+// Even if called 100 times in quick succession
+toast.dedupe('connection-lost', 'Connection lost', { 
+  description: 'Retrying...' 
+});
+
+// Different keys for different contexts
+toast.dedupe('sync-error', 'Sync failed');
+toast.dedupe('validation-email', 'Invalid email format');
+```
+
+**When to use:**
+- Network error handlers that may fire repeatedly
+- WebSocket disconnect handlers
+- Validation errors on rapid input
+- Any event that could trigger multiple times quickly
+
+#### Persistent Toasts (Critical Notifications)
+
+Use `toast.persistent()` for critical notifications requiring user acknowledgment.
+
+```tsx
+// Show critical error that must be acknowledged
+const id = toast.persistent('Session expired', {
+  description: 'Please log in again',
+  action: { 
+    label: 'Log in', 
+    onClick: () => navigate('/login') 
+  }
+});
+
+// Manually dismiss when resolved
+toast.dismiss(id);
+```
+
+**When to use:**
+- Session expiration
+- Critical errors requiring action
+- Important system notifications
+
+#### Auto-Save Pattern
+
+Use `toast.saving()` for auto-save feedback with minimum visibility duration.
+
+```tsx
+const handleAutoSave = async (data: FormData) => {
+  const toastId = toast.saving('Saving changes...');
+  
+  try {
+    await saveData(data);
+    toast.dismiss(toastId); // Respects 2s minimum duration
+  } catch (error: unknown) {
+    toast.dismiss(toastId);
+    toast.error('Save failed', { 
+      description: getErrorMessage(error) 
+    });
+  }
+};
+
+// Or use the useAutoSave hook for automatic handling
+const { save } = useAutoSave({ onSave: saveData });
+```
+
+#### Promise-Based Toasts
+
+Track async operations with automatic success/error states.
+
+```tsx
+toast.promise(saveData(), {
+  loading: 'Saving...',
+  success: 'Saved successfully!',
+  error: 'Failed to save',
+});
+
+// With dynamic messages
+toast.promise(uploadFiles(files), {
+  loading: 'Uploading files...',
+  success: (result) => `Uploaded ${result.count} files`,
+  error: (err) => `Upload failed: ${getErrorMessage(err)}`,
+});
+```
+
+#### Progress Toasts
+
+For long-running operations with progress updates.
+
+```tsx
+const progress = createProgressToast('Uploading files...');
+
+try {
+  for (let i = 0; i < files.length; i++) {
+    await uploadFile(files[i]);
+    progress.update('Uploading files...', ((i + 1) / files.length) * 100);
+  }
+  progress.success('All files uploaded!');
+} catch (error: unknown) {
+  progress.error('Upload failed');
+}
+```
+
+#### Type Definitions
+
+```tsx
+interface ToastOptions {
+  description?: string;
+  action?: { label: string; onClick: () => void };
+  cancel?: { label: string; onClick: () => void };
+  duration?: number;
+  onDismiss?: (toast: Toast) => void;
+  onAutoClose?: (toast: Toast) => void;
+}
+
+interface UndoOptions extends ToastOptions {
+  onUndo: () => void | Promise<void>;
+  duration?: number; // Default: 5000ms
+}
+
+interface PromiseOptions<T> {
+  loading: string;
+  success: string | ((data: T) => string);
+  error: string | ((error: unknown) => string);
+  description?: string;
+  finally?: () => void;
+}
+
+interface ProgressToast {
+  id: string | number;
+  update: (message: string, progress?: number) => void;
+  success: (message: string) => void;
+  error: (message: string) => void;
+  dismiss: () => void;
+}
+```
+
+**Files:** `src/lib/toast.ts`, `src/components/ui/sonner.tsx`
 
 ---
 
