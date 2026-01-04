@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { DataTable } from '@/components/data-table';
-import { LogOut01, Shield01 } from '@untitledui/icons';
+import { LogOut01 } from '@untitledui/icons';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -104,8 +104,7 @@ export function SessionsSection() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div className="space-y-1">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <Shield01 size={20} className="text-primary" aria-hidden="true" />
+            <CardTitle className="text-base font-semibold">
                 Active Sessions
               </CardTitle>
               <CardDescription className="text-sm">
