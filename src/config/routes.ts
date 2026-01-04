@@ -150,7 +150,7 @@ export const SETTINGS_TABS: readonly SettingsTabConfig[] = [
     id: 'settings-general',
     label: 'General',
     tabParam: 'general',
-    iconName: 'Settings01',
+    iconName: 'Settings02',
     description: 'Organization settings',
     // No permission - always visible
   },

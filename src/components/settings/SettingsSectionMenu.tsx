@@ -17,7 +17,6 @@ import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
 import { SETTINGS_TABS, type SettingsTabParam } from '@/config/routes';
 import {
-  Settings01,
   User01,
   Users01,
   CreditCard01,
@@ -25,13 +24,14 @@ import {
   Bell01,
   Shield01,
 } from '@untitledui/icons';
+import { Settings02Icon, Settings02IconFilled } from '@/components/ui/settings-icon';
 
 // Re-export the tab type from routes.ts
 export type SettingsTab = SettingsTabParam;
 
-// Icon mapping from string names to components
+// Icon mapping from string names to components (outline versions)
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  Settings01,
+  Settings02: Settings02Icon,
   User01,
   Users01,
   CreditCard01,
@@ -40,8 +40,16 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   Shield01,
 };
 
-function getIcon(iconName: string): React.ComponentType<{ size?: number; className?: string }> {
-  return ICON_MAP[iconName] || Settings01;
+// Filled icon mapping for active states
+const FILLED_ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  Settings02: Settings02IconFilled,
+};
+
+function getIcon(iconName: string, isActive: boolean = false): React.ComponentType<{ size?: number; className?: string }> {
+  if (isActive && FILLED_ICON_MAP[iconName]) {
+    return FILLED_ICON_MAP[iconName];
+  }
+  return ICON_MAP[iconName] || Settings02Icon;
 }
 
 interface SettingsSectionMenuProps {
@@ -78,7 +86,7 @@ export function SettingsSectionMenu({
       <div className="space-y-0.5">
         {visibleTabs.map((tab, index) => {
           const isActive = activeTab === tab.tabParam;
-          const Icon = getIcon(tab.iconName || 'Settings01');
+          const Icon = getIcon(tab.iconName || 'Settings02', isActive);
           
           return (
             <motion.button
