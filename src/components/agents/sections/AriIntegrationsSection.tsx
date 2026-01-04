@@ -145,27 +145,27 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
   const IntegrationCard = ({ integration }: { integration: Integration }) => (
     <div className="px-4 py-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="h-8 w-8 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {integration.logoComponent ? (
-            integration.logoComponent
+            <div className="h-5 w-5 [&>svg]:h-5 [&>svg]:w-5">{integration.logoComponent}</div>
           ) : integration.logoDark ? (
             <>
               <img 
                 src={integration.logo} 
                 alt={`${integration.name} logo`}
-                className="h-8 w-8 object-contain dark:hidden"
+                className="h-5 w-5 object-contain dark:hidden"
               />
               <img 
                 src={integration.logoDark} 
                 alt={`${integration.name} logo`}
-                className="h-8 w-8 object-contain hidden dark:block"
+                className="h-5 w-5 object-contain hidden dark:block"
               />
             </>
           ) : (
             <img 
               src={integration.logo} 
               alt={`${integration.name} logo`}
-              className="h-8 w-8 object-contain"
+              className="h-5 w-5 object-contain"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
