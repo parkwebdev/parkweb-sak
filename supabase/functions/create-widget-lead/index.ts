@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getErrorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,7 +50,7 @@ async function verifyTurnstile(token: string | null): Promise<{ success: boolean
     const data = await response.json();
     console.log('Turnstile verification result:', data.success ? 'passed' : 'failed');
     return { success: data.success === true, failOpen: false };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Turnstile: Verification error', error);
     return { success: true, failOpen: true }; // Fail open on exceptions
   }
@@ -69,7 +70,7 @@ async function getLocationFromIP(ip: string): Promise<{ country: string; city: s
       console.log(`Geo-IP lookup for ${ip}: ${data.city}, ${data.country}`);
       return { country: data.country || 'Unknown', city: data.city || '' };
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Geo-IP lookup failed:', error);
   }
   return { country: 'Unknown', city: '' };
@@ -414,10 +415,10 @@ serve(async (req) => {
       JSON.stringify({ leadId: lead.id, conversationId }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in create-widget-lead:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: getErrorMessage(error) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

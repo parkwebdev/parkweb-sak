@@ -204,7 +204,7 @@ serve(async (req) => {
       JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in update-page-visits:', error);
     return new Response(
       JSON.stringify({ error: (error as Error).message }),

@@ -332,7 +332,7 @@ const handler = async (req: Request): Promise<Response> => {
         ...corsHeaders,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Unexpected error in send-notification-email function:", error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),

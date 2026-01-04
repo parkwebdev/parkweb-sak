@@ -41,8 +41,8 @@ async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseK
           return data;
         }
         return null;
-      } catch (error) {
-        console.error(`Error fetching preview for ${url}:`, error.message);
+      } catch (error: unknown) {
+        console.error(`Error fetching preview for ${url}:`, (error as Error).message);
         return null;
       }
     })
@@ -234,7 +234,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Send human message error:', error);
     return new Response(
       JSON.stringify({ error: (error as Error).message || 'Internal server error' }),

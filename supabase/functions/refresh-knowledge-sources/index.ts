@@ -82,7 +82,7 @@ async function fetchUrlContent(url: string): Promise<{ content: string; title: s
     const title = titleMatch ? titleMatch[1].trim() : url;
 
     return { content, title };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(`Error fetching ${url}:`, error);
     return null;
   }
@@ -197,7 +197,7 @@ Return ONLY a JSON array of properties. If no properties found, return [].`,
     }
 
     return [];
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error extracting properties:", error);
     return [];
   }
@@ -326,7 +326,7 @@ async function syncProperties(
     }
 
     return result;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error syncing properties:", error);
     return result;
   }
@@ -513,7 +513,7 @@ serve(async (req) => {
             next_refresh_at: calculateNextRefresh(source.refresh_strategy),
           })
           .eq("id", source.id);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`Error processing source ${source.id}:`, error);
         results.errors++;
       }
@@ -532,7 +532,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Refresh job error:", error);
     return new Response(
       JSON.stringify({

@@ -13,7 +13,8 @@ import {
   type ErrorCode, 
   MAX_MESSAGE_LENGTH, 
   MAX_FILES_PER_MESSAGE, 
-  createErrorResponse 
+  createErrorResponse,
+  getErrorMessage
 } from "../_shared/errors.ts";
 import { 
   type ShownProperty, 
@@ -977,10 +978,11 @@ NEVER mark complete when:
       previewMode: !!previewMode,
       log,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     const totalDuration = performance.now() - startTime;
+    const errorMsg = getErrorMessage(error);
     log.error('Request failed', { 
-      error: error.message,
+      error: errorMsg,
       durationMs: Math.round(totalDuration),
     });
     
@@ -991,7 +993,7 @@ NEVER mark complete when:
       const errorSupabase = createClient(supabaseUrl, supabaseServiceKey);
       
       // Try to get agent info from request body for notification
-      const body = await new Response(error.body).json().catch(() => ({}));
+      const body = await new Response((error as { body?: BodyInit }).body).json().catch(() => ({}));
       if (body.agentId) {
         const { data: agent } = await errorSupabase
           .from('agents')
@@ -1005,20 +1007,20 @@ NEVER mark complete when:
             type: 'agent',
             title: 'Agent Error',
             message: `Agent "${agent.name}" encountered an error while responding`,
-            data: { agent_id: body.agentId, error: error.message, requestId },
+            data: { agent_id: body.agentId, error: errorMsg, requestId },
             read: false
           });
           log.info('Agent error notification created');
         }
       }
-    } catch (notifError) {
-      log.error('Failed to create error notification', { error: notifError.message });
+    } catch (notifError: unknown) {
+      log.error('Failed to create error notification', { error: getErrorMessage(notifError) });
     }
     
     return createErrorResponse(
       requestId,
       ErrorCodes.INTERNAL_ERROR,
-      error.message || 'An error occurred',
+      errorMsg,
       500,
       totalDuration
     );

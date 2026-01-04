@@ -24,6 +24,7 @@
 
 import { generateEmbedding } from '../ai/embeddings.ts';
 import { MODEL_TIERS } from '../ai/model-routing.ts';
+import { getErrorMessage } from '../errors.ts';
 
 // ============================================
 // TYPES
@@ -235,11 +236,11 @@ Output ONLY valid JSON array, no other text.`;
         } else {
           console.log(`MEMORY: Stored ${memory.type} memory: "${memory.content.substring(0, 50)}..."`);
         }
-      } catch (embedError) {
+      } catch (embedError: unknown) {
         console.error('Error generating memory embedding:', embedError);
       }
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Memory extraction error:', error);
   }
 }

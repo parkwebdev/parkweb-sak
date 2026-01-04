@@ -138,7 +138,7 @@ Return ONLY the bullet points, no introduction or conclusion.`;
         wasNeeded: true
       };
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Summarization error:', error);
   }
   
@@ -174,7 +174,7 @@ export async function storeConversationSummary(
     }).eq('id', conversationId);
     
     console.log('Stored conversation summary in metadata');
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error storing conversation summary:', error);
   }
 }

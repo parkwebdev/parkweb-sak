@@ -115,7 +115,7 @@ export async function moderateContent(content: string): Promise<ModerationResult
       severity,
       action: severity === 'high' ? 'block' : severity === 'medium' ? 'warn' : 'allow',
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Moderation API call failed:', error);
     // Fail open on exceptions
     return { flagged: false, categories: [], severity: 'low', action: 'allow' };

@@ -444,7 +444,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in send-weekly-report:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),

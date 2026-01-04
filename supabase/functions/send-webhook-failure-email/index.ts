@@ -11,6 +11,7 @@ import {
   alertBox,
   colors,
 } from "../_shared/email-template.ts";
+import { getErrorMessage } from '../_shared/errors.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -128,10 +129,10 @@ const handler = async (req: Request): Promise<Response> => {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[send-webhook-failure-email] Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: getErrorMessage(error) }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

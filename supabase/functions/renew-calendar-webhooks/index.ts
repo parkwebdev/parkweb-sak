@@ -257,7 +257,7 @@ async function stopGoogleWebhook(account: {
         resourceId: account.webhook_resource_id,
       }),
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('[renew-calendar-webhooks] Error stopping Google webhook:', error);
   }
 }

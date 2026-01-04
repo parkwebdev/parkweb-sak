@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in cleanup-orphaned-sources:', error);
     return new Response(
       JSON.stringify({ 

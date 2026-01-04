@@ -16,6 +16,7 @@
  */
 
 import { normalizeState } from '../utils/state-mapping.ts';
+import { getErrorMessage } from '../errors.ts';
 
 // ============================================
 // TYPES
@@ -174,9 +175,9 @@ export async function searchProperties(
         message: `Found ${properties.length} ${args.status === 'all' ? '' : 'available '}properties.`
       } 
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('searchProperties error:', error);
-    return { success: false, error: error.message || 'Search failed' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -321,9 +322,9 @@ export async function lookupProperty(
     };
 
     return { success: true, result: { found: true, property } };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('lookupProperty error:', error);
-    return { success: false, error: error.message || 'Lookup failed' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -383,8 +384,8 @@ export async function getLocations(
         message: `We have ${locations.length} communities. Which one are you interested in?`
       } 
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('getLocations error:', error);
-    return { success: false, error: error.message || 'Failed to get locations' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }

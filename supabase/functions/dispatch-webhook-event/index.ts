@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
       }),
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in dispatch-webhook-event:', error);
     return new Response(
       JSON.stringify({
