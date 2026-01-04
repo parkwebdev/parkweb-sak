@@ -94,7 +94,7 @@ export function LocationDetails({
   };
 
   return (
-    <div className="space-y-8 py-2">
+    <div className="space-y-5 py-2">
       {/* Name - Most prominent */}
       <AnimatedItem>
         <div>
