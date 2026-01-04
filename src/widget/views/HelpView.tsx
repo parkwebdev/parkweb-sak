@@ -9,7 +9,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
 import { WidgetButton, WidgetInput, WidgetSkeletonArticleContent, CSSAnimatedList, CSSAnimatedItem } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -72,7 +71,7 @@ export const HelpView = ({
 
   // Theme-aware colors: white in dark mode, primaryColor in light mode
   const accentColor = systemTheme === 'dark' ? '#FFFFFF' : config.primaryColor;
-  const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#000000';
+  const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
 
   // Lazy-load and sanitize article content
   useEffect(() => {
@@ -363,24 +362,26 @@ export const HelpView = ({
                 <div className="flex justify-center gap-3">
                   <WidgetButton
                     size="sm"
-                    variant={articleFeedback === 'helpful' ? 'secondary' : 'outline'}
+                    variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
                     onClick={() => {
                       setArticleFeedback('helpful');
                       setShowFeedbackComment(true);
                     }}
-                    className={cn("gap-1.5", articleFeedback === 'helpful' && "bg-muted text-foreground")}
+                    className="gap-1.5"
+                    style={articleFeedback === 'helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
                   >
                     <ThumbsUp className="h-4 w-4" />
                     Yes
                   </WidgetButton>
                   <WidgetButton
                     size="sm"
-                    variant={articleFeedback === 'not_helpful' ? 'secondary' : 'outline'}
+                    variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
                     onClick={() => {
                       setArticleFeedback('not_helpful');
                       setShowFeedbackComment(true);
                     }}
-                    className={cn("gap-1.5", articleFeedback === 'not_helpful' && "bg-muted text-foreground")}
+                    className="gap-1.5"
+                    style={articleFeedback === 'not_helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
                   >
                     <ThumbsDown className="h-4 w-4" />
                     No
