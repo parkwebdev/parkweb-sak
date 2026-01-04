@@ -142,7 +142,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     // Bottom Navigation
     showBottomNav: true,
     enableMessagesTab: true,
-    enableHelpTab: false,
+    enableHelpTab: true,
     enableNewsTab: false,
     
     // Gradient
