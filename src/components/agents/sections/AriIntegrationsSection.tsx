@@ -143,8 +143,8 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
   };
 
   const IntegrationCard = ({ integration }: { integration: Integration }) => (
-    <div className="p-5 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
-      <div className="flex items-start gap-4">
+    <div className="px-4 py-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+      <div className="flex items-center gap-3">
         <div className="h-12 w-12 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {integration.logoComponent ? (
             integration.logoComponent
