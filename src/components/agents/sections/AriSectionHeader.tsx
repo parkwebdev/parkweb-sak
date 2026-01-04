@@ -24,7 +24,7 @@ export function AriSectionHeader({
     <div className="mb-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+          <h2 className="text-base font-semibold text-foreground">{title}</h2>
           {description && (
             <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
           )}
