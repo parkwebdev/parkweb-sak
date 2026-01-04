@@ -71,7 +71,7 @@ export const useAgent = () => {
     isLoading,
     refetch,
   } = useSupabaseQuery<Agent | null>({
-    queryKey: queryKeys.agent.detail(accountOwnerId),
+    queryKey: queryKeys.agent.detail(accountOwnerId ?? undefined),
     queryFn: () => fetchAgent(accountOwnerId!),
     enabled: !!accountOwnerId && !ownerLoading,
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
@@ -99,7 +99,7 @@ export const useAgent = () => {
     },
     onSuccess: (data) => {
       // Update the cache immediately with the new data
-      queryClient.setQueryData(queryKeys.agent.detail(accountOwnerId), data);
+      queryClient.setQueryData(queryKeys.agent.detail(accountOwnerId ?? undefined), data);
     },
     onError: (error) => {
       logger.error('Error updating agent:', error);

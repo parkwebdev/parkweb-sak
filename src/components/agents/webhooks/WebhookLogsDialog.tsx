@@ -21,7 +21,7 @@ interface WebhookLogsDialogProps {
 }
 
 export const WebhookLogsDialog = ({ open, onOpenChange, webhookId, agentId }: WebhookLogsDialogProps) => {
-  const { logs, fetchLogs } = useWebhooks(agentId);
+  const { logs, fetchLogs } = useWebhooks(agentId ?? '');
 
   useEffect(() => {
     if (open && webhookId) {
@@ -68,14 +68,14 @@ export const WebhookLogsDialog = ({ open, onOpenChange, webhookId, agentId }: We
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <Badge variant={getStatusColor(log.delivered, log.response_status)}>
+                      <Badge variant={getStatusColor(log.delivered ?? false, log.response_status)}>
                         <span className="flex items-center gap-1">
-                          {getStatusIcon(log.delivered, log.response_status)}
+                          {getStatusIcon(log.delivered ?? false, log.response_status)}
                           {log.response_status || 'Failed'}
                         </span>
                       </Badge>
                       <span className="font-medium">{log.event_type}</span>
-                      {log.retry_count > 0 && (
+                      {(log.retry_count ?? 0) > 0 && (
                         <Badge variant="outline">
                           Retry {log.retry_count}
                         </Badge>

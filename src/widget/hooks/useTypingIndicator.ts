@@ -60,7 +60,7 @@ export function useTypingIndicator(options: UseTypingIndicatorOptions) {
       typingChannelRef.current = null;
     }
 
-    typingChannelRef.current = subscribeToTypingIndicator(activeConversationId, (typing, agentName) => {
+    typingChannelRef.current = subscribeToTypingIndicator(activeConversationId!, (typing, agentName) => {
       logger.debug('[Widget] Human typing state:', { typing, agentName });
       setIsHumanTyping(typing);
       if (typing && agentName) {

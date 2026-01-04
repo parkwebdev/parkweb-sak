@@ -80,7 +80,7 @@ export const useHelpArticles = (agentId: string) => {
         title: article.title,
         content: article.content,
         category: categoriesData?.find(c => c.id === article.category_id)?.name || '',
-        order: article.order_index,
+        order: article.order_index ?? 0,
         featured_image: article.featured_image || undefined,
         has_embedding: article.embedding !== null,
         created_at: article.created_at || undefined,
@@ -184,7 +184,7 @@ export const useHelpArticles = (agentId: string) => {
           content: newArticle.content,
           category: article.category,
           featured_image: article.featured_image,
-          order: newArticle.order_index,
+          order: newArticle.order_index ?? 0,
           has_embedding: false,
         }],
       }));
@@ -576,12 +576,12 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      const newArticles = insertedArticles.map((article, index) => ({
+      const newArticles: HelpArticle[] = insertedArticles.map((article, index) => ({
         id: article.id,
         title: article.title,
         content: article.content,
         category: importData[index].category,
-        order: article.order_index,
+        order: article.order_index ?? 0,
         has_embedding: false,
       }));
 

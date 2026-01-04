@@ -87,7 +87,7 @@ function hasCustomAppearance(deploymentConfig: AgentDeploymentConfig | null | un
     (embeddedChat.welcomeTitle && embeddedChat.welcomeTitle !== DEFAULT_WELCOME_TITLE) ||
     (embeddedChat.welcomeSubtitle && embeddedChat.welcomeSubtitle !== DEFAULT_WELCOME_SUBTITLE);
   
-  return hasCustomGradient || hasCustomWelcome;
+  return Boolean(hasCustomGradient || hasCustomWelcome);
 }
 
 /**

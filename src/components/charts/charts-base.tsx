@@ -101,8 +101,9 @@ export const ChartTooltipContent = ({
     ? (isRadialChart ? payload[0].payload.name : isPieChart ? payload[0].name : label) 
     : payload;
 
-  title = isSingleDataPoint && formatter
-    ? formatter(payload[0].value, payload?.[0].name || label, payload[0], 0, payload)
+  const payloadValue = payload[0].value;
+  title = isSingleDataPoint && formatter && payloadValue !== undefined
+    ? formatter(payloadValue, payload?.[0].name ?? label ?? '', payload[0], 0, payload)
     : labelFormatter
       ? labelFormatter(String(title), payload)
       : title;

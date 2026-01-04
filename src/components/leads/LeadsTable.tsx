@@ -139,15 +139,15 @@ export const LeadsTable = React.memo(function LeadsTable({
     const noneSelected = Object.keys(newSelection).length === 0;
     
     if (allSelected && !selectedIds.size) {
-      onSelectAll(true);
+      onSelectAll?.(true);
     } else if (noneSelected && selectedIds.size > 0) {
-      onSelectAll(false);
+      onSelectAll?.(false);
     } else {
       leads.forEach((lead, index) => {
         const wasSelected = selectedIds.has(lead.id);
         const isNowSelected = newSelection[index] ?? false;
         if (wasSelected !== isNowSelected) {
-          onSelectionChange(lead.id, isNowSelected);
+          onSelectionChange?.(lead.id, isNowSelected);
         }
       });
     }

@@ -27,7 +27,7 @@ interface LocationAnalyticsSheetProps {
 // Generate pseudo-random but consistent activity data based on location
 function generateActivityData(country: string, city?: string): number[] {
   const seed = (country + (city || '')).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const hours = [];
+  const hours: number[] = [];
   for (let i = 0; i < 24; i++) {
     // Create a realistic pattern with peak hours (9-11am, 2-4pm local time)
     const baseActivity = Math.sin((i - 6) * Math.PI / 12) * 0.5 + 0.5;

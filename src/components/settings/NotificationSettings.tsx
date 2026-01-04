@@ -95,7 +95,24 @@ export function NotificationSettings() {
         return;
       }
 
-      setPreferences(data);
+      // Transform nullable booleans to required booleans with defaults
+      setPreferences({
+        ...data,
+        email_notifications: data.email_notifications ?? true,
+        browser_notifications: data.browser_notifications ?? true,
+        sound_notifications: data.sound_notifications ?? true,
+        conversation_notifications: data.conversation_notifications ?? true,
+        lead_notifications: data.lead_notifications ?? true,
+        agent_notifications: data.agent_notifications ?? true,
+        team_notifications: data.team_notifications ?? true,
+        report_notifications: data.report_notifications ?? true,
+        booking_email_notifications: data.booking_email_notifications ?? true,
+        lead_email_notifications: data.lead_email_notifications ?? true,
+        team_email_notifications: data.team_email_notifications ?? true,
+        agent_email_notifications: data.agent_email_notifications ?? true,
+        report_email_notifications: data.report_email_notifications ?? true,
+        product_email_notifications: data.product_email_notifications ?? true,
+      });
     } catch (error: unknown) {
       logger.error('Error in fetchNotificationPreferences:', error);
     } finally {
@@ -134,7 +151,24 @@ export function NotificationSettings() {
         return;
       }
 
-      setPreferences(data);
+      // Transform nullable booleans to required booleans with defaults
+      setPreferences({
+        ...data,
+        email_notifications: data.email_notifications ?? true,
+        browser_notifications: data.browser_notifications ?? true,
+        sound_notifications: data.sound_notifications ?? true,
+        conversation_notifications: data.conversation_notifications ?? true,
+        lead_notifications: data.lead_notifications ?? true,
+        agent_notifications: data.agent_notifications ?? true,
+        team_notifications: data.team_notifications ?? true,
+        report_notifications: data.report_notifications ?? true,
+        booking_email_notifications: data.booking_email_notifications ?? true,
+        lead_email_notifications: data.lead_email_notifications ?? true,
+        team_email_notifications: data.team_email_notifications ?? true,
+        agent_email_notifications: data.agent_email_notifications ?? true,
+        report_email_notifications: data.report_email_notifications ?? true,
+        product_email_notifications: data.product_email_notifications ?? true,
+      });
     } catch (error: unknown) {
       logger.error('Error in createDefaultPreferences:', error);
     }

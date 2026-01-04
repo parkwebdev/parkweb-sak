@@ -54,7 +54,7 @@ type KanbanLead = {
   location: string | null;
   entryPage: string | null;
   /** Priority value from conversation metadata - passed to PriorityBadge which handles normalization */
-  priority: string | null;
+  priority: string | null | undefined;
   tags: string[];
   notes: string | null;
 };
@@ -365,10 +365,10 @@ export function LeadsKanbanBoard({
       const location = locationParts.length > 0 ? locationParts.join(', ') : null;
       
       // Format entry page
-      const entryPage = formatEntryPage(metadata.referrer_journey?.landing_page);
+      const entryPage = formatEntryPage(metadata.referrer_journey?.landing_page ?? undefined);
       
       // Pass priority through directly - PriorityBadge handles normalization
-      const priority = metadata.priority || null;
+      const priority = metadata.priority ?? undefined;
       
       return {
         id: lead.id,

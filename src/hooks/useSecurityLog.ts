@@ -69,10 +69,10 @@ export const useSecurityLog = () => {
   const logSecurityEvent = async (params: SecurityLogParams) => {
     try {
       const { error } = await supabase.rpc('log_security_event', {
-        p_user_id: user?.id || null,
+        p_user_id: user?.id ?? '',
         p_action: params.action,
         p_resource_type: params.resourceType,
-        p_resource_id: params.resourceId || null,
+        p_resource_id: params.resourceId ?? undefined,
         p_success: params.success ?? true,
         p_details: params.details || {}
       });

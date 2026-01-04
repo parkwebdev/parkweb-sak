@@ -168,7 +168,7 @@ export default function ReportBuilder() {
   // Only recomputes when dataVersion or grouping changes
   const pdfData = useMemo(() => {
     if (!dataVersion) return null;
-    const rawData = buildPDFData(data, peakActivityData);
+    const rawData = buildPDFData(data, peakActivityData ?? undefined);
     // Apply grouping aggregation (weekly/monthly)
     return aggregatePDFData(rawData, config.grouping);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -364,8 +364,6 @@ export default function ReportBuilder() {
         time_of_day: `${timeOfDay}:00`,
         timezone,
         report_config: {
-          format: config.format,
-          type: config.type,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
           ...config,

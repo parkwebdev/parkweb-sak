@@ -285,7 +285,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       };
 
       if (result.success) {
-        const parts = [];
+        const parts: string[] = [];
         if (result.created > 0) parts.push(`${result.created} new`);
         if (result.updated > 0) parts.push(`${result.updated} updated`);
         if (result.unchanged > 0) parts.push(`${result.unchanged} unchanged`);

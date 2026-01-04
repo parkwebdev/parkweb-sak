@@ -142,12 +142,14 @@ export function NotificationCenter({ onNotificationClick }: NotificationCenterPr
   };
 
   const markAsRead = async (notificationId: string) => {
+    if (!user?.id) return;
+    
     try {
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId)
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (error) {
         logger.error('Error marking notification as read:', error);
@@ -190,12 +192,14 @@ export function NotificationCenter({ onNotificationClick }: NotificationCenterPr
   };
 
   const deleteNotification = async (notificationId: string) => {
+    if (!user?.id) return;
+    
     try {
       const { error } = await supabase
         .from('notifications')
         .delete()
         .eq('id', notificationId)
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (error) {
         logger.error('Error deleting notification:', error);

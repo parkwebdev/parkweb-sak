@@ -62,8 +62,8 @@ const shortcuts: KeyboardShortcut[] = [
   { key: 's', altKey: true, description: 'Settings' },
 ];
 
-const formatShortcut = (shortcut: KeyboardShortcut) => {
-  const keys = [];
+const formatShortcut = (shortcut: KeyboardShortcut): string[] => {
+  const keys: string[] = [];
   if (shortcut.ctrlKey) keys.push('⌘');
   if (shortcut.altKey) keys.push('Alt');
   if (shortcut.shiftKey) keys.push('⇧');

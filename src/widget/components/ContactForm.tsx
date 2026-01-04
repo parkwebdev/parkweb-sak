@@ -171,10 +171,10 @@ export const ContactForm = ({
         lastName: trimmedLastName, 
         email: trimmedEmail, 
         leadId, 
-        conversationId: conversationId || undefined 
+        conversationId: conversationId ?? undefined 
       };
       
-      onSubmit(userData, conversationId);
+      onSubmit(userData, conversationId ?? undefined);
     } catch (error: unknown) {
       logger.error('Error creating lead:', error);
     }

@@ -10,7 +10,7 @@ import { queryKeys } from '@/lib/query-keys';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 
 type Lead = Tables<'leads'> & {
-  conversations?: { id: string; created_at: string; metadata?: unknown };
+  conversations?: { id: string; created_at: string; metadata?: unknown } | null;
 };
 
 /**

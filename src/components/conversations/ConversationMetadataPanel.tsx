@@ -862,7 +862,7 @@ export function ConversationMetadataPanel({
                                   <div className="flex-1 pb-3 min-w-0">
                                     <div className="font-medium text-sm truncate">{pageName}</div>
                                     <div className="text-xs text-muted-foreground">
-                                      {isCurrentlyActive ? 'Currently viewing' : formatDuration(visit.duration_ms)}
+                                      {isCurrentlyActive ? 'Currently viewing' : formatDuration(visit.duration_ms ?? 0)}
                                     </div>
                                   </div>
                                 </div>

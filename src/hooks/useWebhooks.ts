@@ -18,8 +18,8 @@ type WebhookLog = {
   response_status: number | null;
   response_body: string | null;
   error_message: string | null;
-  retry_count: number;
-  delivered: boolean;
+  retry_count: number | null;
+  delivered: boolean | null;
   created_at: string;
   delivered_at: string | null;
 };
@@ -97,7 +97,7 @@ export const useWebhooks = (agentId: string) => {
     try {
       const { data, error } = await supabase
         .from('webhooks')
-        .insert([{ ...webhookData, user_id: accountOwnerId, agent_id: agentId || null }])
+        .insert([{ ...webhookData, user_id: accountOwnerId ?? '', agent_id: agentId || null }])
         .select()
         .single();
 

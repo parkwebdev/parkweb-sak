@@ -496,6 +496,7 @@ export const useAnalytics = (
 
       // Aggregate ratings per day
       (ratings || []).forEach((r) => {
+        if (!r.created_at) return;
         const dateKey = format(new Date(r.created_at), 'yyyy-MM-dd');
         const dayData = trendMap.get(dateKey);
         if (dayData) {
