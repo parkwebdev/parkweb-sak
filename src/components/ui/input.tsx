@@ -28,7 +28,7 @@ const inputVariants = cva(
       },
     },
     defaultVariants: {
-      size: "default",
+      size: "sm",
     },
   }
 )

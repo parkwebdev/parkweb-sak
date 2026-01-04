@@ -28,7 +28,7 @@ const textareaVariants = cva(
       },
     },
     defaultVariants: {
-      size: "default",
+      size: "sm",
     },
   }
 )

@@ -42,7 +42,7 @@ const selectTriggerVariants = cva(
       },
     },
     defaultVariants: {
-      size: "default",
+      size: "sm",
     },
   }
 )
