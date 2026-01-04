@@ -89,7 +89,7 @@ function Leads({ onMenuClick }: LeadsProps) {
     try {
       const stored = localStorage.getItem(VIEW_MODE_KEY);
       if (stored === 'table' || stored === 'kanban') return stored;
-    } catch (e) {
+    } catch (e: unknown) {
       console.warn('Failed to read view mode from localStorage:', e);
     }
     return 'kanban';
@@ -117,7 +117,7 @@ function Leads({ onMenuClick }: LeadsProps) {
         
         return savedFields;
       }
-    } catch (e) {
+    } catch (e: unknown) {
       console.warn('Failed to read kanban fields from localStorage:', e);
     }
     
@@ -130,7 +130,7 @@ function Leads({ onMenuClick }: LeadsProps) {
     try {
       const stored = localStorage.getItem(TABLE_COLUMNS_KEY);
       if (stored) return JSON.parse(stored);
-    } catch (e) {
+    } catch (e: unknown) {
       console.warn('Failed to read table columns from localStorage:', e);
     }
     return DEFAULT_TABLE_COLUMNS;
@@ -141,7 +141,7 @@ function Leads({ onMenuClick }: LeadsProps) {
     try {
       const stored = localStorage.getItem(TABLE_COLUMN_ORDER_KEY);
       if (stored) return JSON.parse(stored);
-    } catch (e) {
+    } catch (e: unknown) {
       console.warn('Failed to read table column order from localStorage:', e);
     }
     return DEFAULT_TABLE_COLUMN_ORDER;
@@ -152,7 +152,7 @@ function Leads({ onMenuClick }: LeadsProps) {
     try {
       const stored = localStorage.getItem(DEFAULT_SORT_KEY);
       if (stored) return JSON.parse(stored);
-    } catch (e) {
+    } catch (e: unknown) {
       console.warn('Failed to read default sort from localStorage:', e);
     }
     return null;

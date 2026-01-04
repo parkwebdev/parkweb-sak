@@ -399,7 +399,7 @@ export default function EmailTemplatesTest() {
       
       if (error) throw error;
       setEdgeHtml(response.html);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch edge preview:', error);
       toast.error('Failed to load preview from edge function');
       setEdgeHtml('');

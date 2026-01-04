@@ -63,7 +63,7 @@ export function migrateLocalStorage(): void {
     if (migratedCount > 0) {
       console.info(`[Pilot] Migrated ${migratedCount} localStorage keys`);
     }
-  } catch (e) {
+  } catch (e: unknown) {
     console.warn('[Pilot] localStorage migration failed:', e);
   }
 }

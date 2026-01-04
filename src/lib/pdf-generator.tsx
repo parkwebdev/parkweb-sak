@@ -53,7 +53,7 @@ export async function generateBeautifulPDF(opts: GenerateOptions): Promise<Blob>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const blob = await pdf(doc as any).toBlob();
     return blob;
-  } catch (error) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('[PDF Generator] Failed to generate PDF:', error);
     throw new Error(`PDF generation failed: ${message}`);

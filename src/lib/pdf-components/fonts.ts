@@ -40,7 +40,7 @@ export function registerFonts(): void {
     Font.registerHyphenationCallback(word => [word]);
     
     fontsRegistered = true;
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('[PDF Fonts] Failed to register Inter fonts, falling back to Helvetica:', error);
     
     // Fallback to system font if CDN fails
@@ -53,7 +53,7 @@ export function registerFonts(): void {
         ],
       });
       fontsRegistered = true;
-    } catch (fallbackError) {
+    } catch (fallbackError: unknown) {
       logger.error('[PDF Fonts] Fallback font registration also failed:', fallbackError);
     }
   }

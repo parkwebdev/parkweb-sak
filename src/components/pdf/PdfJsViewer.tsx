@@ -168,7 +168,7 @@ export function PdfJsViewer({
           }))
         );
         onLoad?.(pdf.numPages);
-      } catch (err) {
+      } catch (err: unknown) {
         if (cancelled) return;
         const errorMsg = err instanceof Error ? err.message : 'Failed to load PDF';
         setError(errorMsg);
@@ -276,7 +276,7 @@ export function PdfJsViewer({
             p.pageNum === pageNum ? { ...p, rendered: true } : p
           )
         );
-      } catch (err) {
+      } catch (err: unknown) {
         console.error(`Failed to render page ${pageNum}:`, err);
       }
     },
