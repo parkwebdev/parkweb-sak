@@ -76,7 +76,7 @@ export async function fetchLinkPreviews(
           return { url, ...data } as LinkPreview;
         }
         return null;
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`Error fetching preview for ${url}:`, (error as Error).message);
         return null;
       }

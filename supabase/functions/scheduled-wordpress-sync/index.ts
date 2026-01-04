@@ -184,10 +184,10 @@ Deno.serve(async (req: Request) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 Scheduled WordPress sync failed:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

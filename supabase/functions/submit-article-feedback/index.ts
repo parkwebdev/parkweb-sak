@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getErrorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -115,10 +116,10 @@ serve(async (req) => {
       JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in submit-article-feedback:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: getErrorMessage(error) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

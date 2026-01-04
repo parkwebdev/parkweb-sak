@@ -254,8 +254,8 @@ export async function callToolEndpoint(
       });
       return { success: true, result };
       
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') {
         lastError = 'Request timed out';
         console.error(`Tool ${tool.name} timed out after ${tool.timeout_ms}ms (attempt ${attempt + 1})`);
         // Retry on timeout
@@ -265,7 +265,7 @@ export async function callToolEndpoint(
         console.error(`Tool ${tool.name} returned invalid JSON:`, error.message);
         return { success: false, error: 'Invalid JSON response from tool' };
       } else {
-        lastError = error.message || 'Unknown error';
+        lastError = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Tool ${tool.name} error (attempt ${attempt + 1}):`, error);
         // Retry on network errors
         if (attempt < MAX_RETRIES) continue;

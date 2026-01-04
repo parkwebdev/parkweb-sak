@@ -95,3 +95,29 @@ export function createErrorResponse(
     }
   );
 }
+
+// ============================================
+// ERROR MESSAGE EXTRACTION
+// ============================================
+
+/**
+ * Safely extract error message from unknown error type.
+ * Use in catch blocks with `error: unknown` for type-safe error handling.
+ * 
+ * @param error - The caught error of unknown type
+ * @returns A string error message
+ * 
+ * @example
+ * ```typescript
+ * try {
+ *   await riskyOperation();
+ * } catch (error: unknown) {
+ *   console.error(getErrorMessage(error));
+ * }
+ * ```
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Unknown error';
+}

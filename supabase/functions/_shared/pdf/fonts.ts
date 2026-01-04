@@ -40,7 +40,7 @@ export function registerFonts(): void {
     
     fontsRegistered = true;
     console.log('[PDF Fonts] Registered Inter font family');
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[PDF Fonts] Failed to register Inter fonts:', error);
     
     // Fallback to system font if CDN fails

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getErrorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -217,11 +218,11 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in handle-signup function:", error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: getErrorMessage(error),
         success: false 
       }),
       {

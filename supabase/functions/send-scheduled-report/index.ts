@@ -13,7 +13,8 @@ import React from 'npm:react@18.3.1';
 // @ts-ignore
 import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.0';
 
-import { 
+import { getErrorMessage } from '../_shared/errors.ts';
+import {
   colors, 
   heading, 
   paragraph, 
@@ -181,7 +182,7 @@ async function generatePDF(
     const buffer = await renderToBuffer(doc);
     console.log(`[generatePDF] Successfully generated PDF, size: ${buffer.byteLength} bytes`);
     return new Uint8Array(buffer);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[generatePDF] Error rendering PDF:', error);
     throw error;
   }
@@ -515,7 +516,7 @@ serve(async (req: Request): Promise<Response> => {
 
         processedReports.push(report.id);
         console.log(`[send-scheduled-report] Successfully sent report ${report.id}`);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`[send-scheduled-report] Error processing report ${report.id}:`, error);
       }
     }
@@ -531,10 +532,10 @@ serve(async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[send-scheduled-report] Error in function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: getErrorMessage(error) }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

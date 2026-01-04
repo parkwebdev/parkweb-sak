@@ -15,6 +15,7 @@
  */
 
 import type { ToolResult } from './property-tools.ts';
+import { getErrorMessage } from '../errors.ts';
 
 // ============================================
 // TYPES
@@ -93,9 +94,9 @@ export async function checkCalendarAvailability(
         }
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('checkCalendarAvailability error:', error);
-    return { success: false, error: error.message || 'Failed to check availability' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -171,8 +172,8 @@ export async function bookAppointment(
         message: data.booking.confirmation_message
       }
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('bookAppointment error:', error);
-    return { success: false, error: error.message || 'Failed to book appointment' };
+    return { success: false, error: getErrorMessage(error) };
   }
 }

@@ -137,7 +137,7 @@ Do not add any explanation or commentary. Only output the JSON array.`
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Translation error:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),

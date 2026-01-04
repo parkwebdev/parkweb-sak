@@ -54,7 +54,7 @@ export async function getLocationFromIP(ip: string): Promise<GeoLocation> {
         region: data.regionName || '',
       };
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Geo-IP lookup failed:', error);
   }
   return { country: 'Unknown', city: '', countryCode: '', region: '' };

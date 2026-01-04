@@ -64,10 +64,10 @@ serve(async (req: Request): Promise<Response> => {
       JSON.stringify({ success: true, id: emailResponse.data?.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error sending test email:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to send test email" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Failed to send test email" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

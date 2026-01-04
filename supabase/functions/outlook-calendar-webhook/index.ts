@@ -207,7 +207,7 @@ async function refreshAccessToken(
       .eq('id', account.id);
 
     return tokens.access_token;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[outlook-calendar-webhook] Token refresh error:', error);
     return null;
   }
@@ -352,7 +352,7 @@ async function syncEventFromGraph(
       .update(updateData)
       .eq('id', existingEvent.id);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[outlook-calendar-webhook] Error syncing event from Graph:', error);
   }
 }

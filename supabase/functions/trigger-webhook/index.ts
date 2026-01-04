@@ -252,7 +252,7 @@ Deno.serve(async (req) => {
           lastError = `HTTP ${response.status}: ${responseBody?.substring(0, 200)}`;
           console.error('Webhook delivery failed:', lastError);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         lastError = error instanceof Error ? error.message : 'Unknown error';
         console.error('Webhook delivery error:', lastError);
       }
@@ -385,7 +385,7 @@ Deno.serve(async (req) => {
         status: success ? 200 : 500,
       }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in trigger-webhook function:', error);
     return new Response(
       JSON.stringify({

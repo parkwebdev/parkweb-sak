@@ -360,7 +360,7 @@ Deno.serve(async (req: Request) => {
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in sync-wordpress-homes:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
@@ -441,8 +441,8 @@ async function testWordPressHomesEndpoint(
       success: false,
       message: 'No homes/properties endpoint found. Configure a custom endpoint slug in Advanced Settings.',
     };
-  } catch (error) {
-    return { success: false, message: `Connection failed: ${error.message}` };
+  } catch (error: unknown) {
+    return { success: false, message: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 }
 
@@ -756,8 +756,8 @@ async function syncHomesToProperties(
           result.created++;
         }
       }
-    } catch (error) {
-      result.errors.push(`Error processing home ${home.slug}: ${error.message}`);
+    } catch (error: unknown) {
+      result.errors.push(`Error processing home ${home.slug}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

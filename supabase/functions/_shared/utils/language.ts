@@ -158,7 +158,7 @@ export async function detectConversationLanguage(
     console.log(`Detected language: ${detectedCode} (${languageName})`);
     
     return { code: detectedCode, name: languageName };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Language detection error:', error);
     return null;
   }

@@ -184,7 +184,7 @@ async function refreshAccessToken(
       .eq('id', account.id);
 
     return tokens.access_token;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[google-calendar-webhook] Token refresh error:', error);
     return null;
   }
@@ -234,7 +234,7 @@ async function syncRecentChanges(
     for (const event of events) {
       await processEventChange(supabase, account.id, event);
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[google-calendar-webhook] Error syncing changes:', error);
   }
 }

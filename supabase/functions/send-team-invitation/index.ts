@@ -14,6 +14,7 @@ import {
   spacer,
   generateWrapper 
 } from '../_shared/email-template.ts';
+import { getErrorMessage } from '../_shared/errors.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -190,11 +191,11 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in send-team-invitation function:", error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: getErrorMessage(error),
         success: false 
       }),
       {
