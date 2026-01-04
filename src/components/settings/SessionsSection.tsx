@@ -1,17 +1,17 @@
 /**
  * SessionsSection Component
  * 
- * Allows users to view their current session and sign out of other devices.
- * Part of the Settings page security improvements.
+ * Displays a table of all active user sessions with the ability to
+ * sign out of other devices. Matches the design patterns of other
+ * settings pages.
  * 
  * @module components/settings/SessionsSection
  */
 
-import React, { useState, useMemo } from 'react';
-import { motion } from 'motion/react';
-import { Button } from '@/components/ui/button';
+import { useState, useMemo } from 'react';
+import { useReactTable, getCoreRowModel } from '@tanstack/react-table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -22,208 +22,118 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Monitor01, Phone01, Globe02, Shield01, LogOut01, CheckCircle } from '@untitledui/icons';
-import { supabase } from '@/integrations/supabase/client';
+import { DataTable } from '@/components/data-table';
+import { LogOut01, Shield01 } from '@untitledui/icons';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useSessions } from '@/hooks/useSessions';
+import { createSessionColumns } from '@/components/data-table/columns/sessions-columns';
 import { toast } from '@/lib/toast';
-import { useAuth } from '@/hooks/useAuth';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { springs } from '@/lib/motion-variants';
-
-interface SessionInfo {
-  device: string;
-  deviceIcon: typeof Monitor01;
-  browser: string;
-  lastActive: string;
-  isCurrent: boolean;
-}
-
-function detectDeviceInfo(): SessionInfo {
-  const ua = navigator.userAgent;
-  
-  // Detect device type
-  let device = 'Desktop';
-  let deviceIcon = Monitor01;
-  
-  if (/Mobile|Android|iPhone|iPad|iPod/i.test(ua)) {
-    device = /iPad|Tablet/i.test(ua) ? 'Tablet' : 'Mobile';
-    deviceIcon = Phone01;
-  }
-  
-  // Detect browser
-  let browser = 'Unknown Browser';
-  if (ua.includes('Chrome') && !ua.includes('Edg')) {
-    browser = 'Chrome';
-  } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
-    browser = 'Safari';
-  } else if (ua.includes('Firefox')) {
-    browser = 'Firefox';
-  } else if (ua.includes('Edg')) {
-    browser = 'Edge';
-  }
-  
-  // Detect OS
-  let os = '';
-  if (ua.includes('Mac')) {
-    os = 'macOS';
-  } else if (ua.includes('Windows')) {
-    os = 'Windows';
-  } else if (ua.includes('Linux')) {
-    os = 'Linux';
-  } else if (ua.includes('Android')) {
-    os = 'Android';
-  } else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) {
-    os = 'iOS';
-  }
-  
-  return {
-    device: os ? `${device} (${os})` : device,
-    deviceIcon,
-    browser,
-    lastActive: 'Now',
-    isCurrent: true,
-  };
-}
 
 export function SessionsSection() {
-  const { user } = useAuth();
-  const prefersReducedMotion = useReducedMotion();
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [signOutSuccess, setSignOutSuccess] = useState(false);
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
   
-  const currentSession = useMemo(() => detectDeviceInfo(), []);
-  
-  const handleSignOutOtherSessions = async () => {
-    setIsSigningOut(true);
-    try {
-      const { error } = await supabase.auth.signOut({ scope: 'others' });
-      
-      if (error) {
-        toast.error("Failed to sign out other sessions", { description: error.message });
-        return;
-      }
-      
-      setSignOutSuccess(true);
-      toast.success("Signed out of other devices", { 
-        description: "All other sessions have been terminated." 
-      });
-      
-      // Reset success state after animation
-      setTimeout(() => setSignOutSuccess(false), 3000);
-    } catch (error: unknown) {
-      toast.error("Error", { description: "An unexpected error occurred" });
-    } finally {
-      setIsSigningOut(false);
-      setShowConfirmDialog(false);
-    }
+  const { 
+    sessions, 
+    isLoading, 
+    revokeOthers, 
+    isRevokingOthers 
+  } = useSessions();
+
+  // Individual session revocation - show toast since not fully implemented
+  const handleRevokeSession = (sessionId: string) => {
+    setRevokingSessionId(sessionId);
+    toast.info('Individual session revocation', {
+      description: 'Use "Sign out other sessions" to terminate all other sessions at once.',
+    });
+    setTimeout(() => setRevokingSessionId(null), 1000);
   };
-  
-  const DeviceIcon = currentSession.deviceIcon;
-  
-  return (
-    <motion.div
-      initial={prefersReducedMotion ? {} : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={springs.smooth}
-      className="space-y-6"
-    >
-      {/* Current Session Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield01 size={20} className="text-primary" />
-            Active Sessions
-          </CardTitle>
-          <CardDescription>
-            Manage your active login sessions across devices
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Current Session */}
-          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-            <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-primary/10 rounded-lg">
-                <DeviceIcon size={20} className="text-primary" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground">
-                    {currentSession.device}
-                  </span>
-                  <Badge variant="outline" size="sm" className="bg-status-active/10 text-status-active border-status-active/20">
-                    Current
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Globe02 size={14} />
-                  <span>{currentSession.browser}</span>
-                  <span className="text-border">•</span>
-                  <span>Active now</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Session Security Info */}
-          <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
-            <h4 className="text-sm font-medium text-foreground mb-2">Session Security</h4>
-            <ul className="space-y-1.5 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <CheckCircle size={14} className="text-status-active" />
-                Logged in as {user?.email}
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle size={14} className="text-status-active" />
-                Session protected with secure authentication
-              </li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Sign Out Other Devices Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <LogOut01 size={20} className="text-muted-foreground" />
-            Other Devices
-          </CardTitle>
-          <CardDescription>
-            Sign out of all other devices and sessions where you're logged in
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg border border-border/50">
+
+  const columns = useMemo(
+    () => createSessionColumns({
+      onRevoke: handleRevokeSession,
+      isRevoking: revokingSessionId,
+    }),
+    [revokingSessionId]
+  );
+
+  const table = useReactTable({
+    data: sessions,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const hasOtherSessions = sessions.filter(s => !s.is_current).length > 0;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">
-                Sign out everywhere else
-              </p>
-              <p className="text-sm text-muted-foreground">
-                This will terminate all sessions except your current one.
-              </p>
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-64" />
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowConfirmDialog(true)}
-              disabled={isSigningOut}
-              className="shrink-0"
-            >
-              {signOutSuccess ? (
-                <>
-                  <CheckCircle size={16} className="text-status-active" />
-                  Done
-                </>
-              ) : (
-                <>
-                  <LogOut01 size={16} />
-                  Sign out other sessions
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      
+            <Skeleton className="h-9 w-40" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-4 py-2">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                  </div>
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <AnimatedList className="space-y-4" staggerDelay={0.1}>
+      <AnimatedItem>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div className="space-y-1">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Shield01 size={20} className="text-primary" aria-hidden="true" />
+                Active Sessions
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Manage your active login sessions across devices
+              </CardDescription>
+            </div>
+            {hasOtherSessions && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowConfirmDialog(true)}
+                disabled={isRevokingOthers}
+              >
+                <LogOut01 size={16} aria-hidden="true" />
+                Sign out other sessions
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              table={table}
+              columns={columns}
+              emptyMessage="No active sessions found"
+            />
+          </CardContent>
+        </Card>
+      </AnimatedItem>
+
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
@@ -235,16 +145,19 @@ export function SessionsSection() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSigningOut}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isRevokingOthers}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleSignOutOtherSessions}
-              disabled={isSigningOut}
+              onClick={() => {
+                revokeOthers();
+                setShowConfirmDialog(false);
+              }}
+              disabled={isRevokingOthers}
             >
-              {isSigningOut ? 'Signing out...' : 'Sign out other sessions'}
+              {isRevokingOthers ? 'Signing out...' : 'Sign out other sessions'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </motion.div>
+    </AnimatedList>
   );
 }

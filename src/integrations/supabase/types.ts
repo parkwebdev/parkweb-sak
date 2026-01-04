@@ -2293,6 +2293,16 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_user_sessions: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          ip: string
+          updated_at: string
+          user_agent: string
+        }[]
+      }
       get_widget_conversation: {
         Args: { p_conversation_id: string }
         Returns: {

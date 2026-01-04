@@ -148,3 +148,6 @@ verify_jwt = true
 
 [functions.preview-email-template]
 verify_jwt = false
+
+[functions.list-user-sessions]
+verify_jwt = true
