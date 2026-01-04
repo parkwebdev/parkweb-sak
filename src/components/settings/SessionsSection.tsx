@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { DataTable } from '@/components/data-table';
-import { LogOut01 } from '@untitledui/icons';
+
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -118,8 +118,7 @@ export function SessionsSection() {
                 onClick={() => setShowConfirmDialog(true)}
                 disabled={isRevokingOthers}
               >
-                <LogOut01 size={16} aria-hidden="true" />
-                Sign out other sessions
+                Remove all sessions
               </Button>
             )}
           </CardHeader>

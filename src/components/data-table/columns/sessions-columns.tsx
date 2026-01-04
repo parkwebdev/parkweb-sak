@@ -106,11 +106,11 @@ export const createSessionColumns = ({
       
       return (
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={() => onRevoke(session.id)}
           disabled={isRevoking === session.id}
-          className="text-destructive hover:text-destructive"
+          className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50 hover:bg-destructive/10"
         >
           Remove
         </Button>
