@@ -9,11 +9,10 @@
  * @module pages/AriConfigurator
  */
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAgent } from '@/hooks/useAgent';
-import { useAuth } from '@/contexts/AuthContext';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
@@ -22,7 +21,6 @@ import { logger } from '@/utils/logger';
 import { AriSectionMenu, type AriSection } from '@/components/agents/AriSectionMenu';
 import { getValidAriSectionIds } from '@/config/routes';
 import { AriPreviewColumn } from '@/components/agents/AriPreviewColumn';
-import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 import { SkeletonAriConfiguratorPage } from '@/components/ui/page-skeleton';
 import { ChatWidget } from '@/widget/ChatWidget';
 import type { Tables } from '@/integrations/supabase/types';
@@ -47,15 +45,7 @@ import { AriInstallationSection } from '@/components/agents/sections/AriInstalla
 import { SectionErrorBoundary } from '@/components/agents/sections/SectionErrorBoundary';
 type Agent = Tables<'agents'>;
 
-// Loading step timing
-const STEP_DURATION = 800;
-const loadingStates = [
-  { text: "Loading Ari configuration..." },
-  { text: "Fetching agent settings..." },
-  { text: "Preparing widget preview..." },
-  { text: "Almost ready..." },
-];
-const MIN_DISPLAY_TIME = loadingStates.length * STEP_DURATION;
+// Get valid sections from centralized config
 
 // Get valid sections from centralized config
 const VALID_SECTIONS = getValidAriSectionIds();
@@ -66,8 +56,7 @@ const AriConfigurator = () => {
   const prefersReducedMotion = useReducedMotion();
   logger.debug('AriConfigurator: useReducedMotion complete', { prefersReducedMotion });
   
-  const { hasSeenAriLoader, setHasSeenAriLoader } = useAuth();
-  logger.debug('AriConfigurator: useAuth complete', { hasSeenAriLoader });
+  
   
   const { agent, agentId, updateAgent, loading: agentLoading } = useAgent();
   logger.debug('AriConfigurator: useAgent complete', { agentId, agentLoading, hasAgent: !!agent });
@@ -93,27 +82,6 @@ const AriConfigurator = () => {
     }
   }, [searchParams]);
   
-  // Only show loader if user hasn't seen it this session
-  const [showLoader, setShowLoader] = useState(!hasSeenAriLoader);
-  const loadStartTime = useRef(Date.now());
-  
-  // Handle minimum display time for loader
-  useEffect(() => {
-    // Skip if already seen this session
-    if (hasSeenAriLoader) return;
-    
-    if (!agentLoading && showLoader) {
-      const elapsed = Date.now() - loadStartTime.current;
-      const remainingTime = Math.max(0, MIN_DISPLAY_TIME - elapsed);
-      
-      const timer = setTimeout(() => {
-        setShowLoader(false);
-        setHasSeenAriLoader(true);
-      }, remainingTime);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [agentLoading, showLoader, hasSeenAriLoader, setHasSeenAriLoader]);
 
   // Widget preview hooks
   logger.debug('AriConfigurator: Initializing widget preview hooks', { agentId });
@@ -218,17 +186,7 @@ const AriConfigurator = () => {
     };
   }, [agent, embedConfig, activeAnnouncements, helpCategories, helpArticles]);
 
-  // Show loader until minimum display time elapsed
-  if (showLoader) {
-    return (
-      <MultiStepLoader
-        loadingStates={loadingStates}
-        loading={true}
-        duration={STEP_DURATION}
-        loop={false}
-      />
-    );
-  }
+  // Show skeleton while agent data loads
 
   // Show skeleton while agent data loads (after MultiStepLoader completes)
   if (!agent || agentLoading) {
