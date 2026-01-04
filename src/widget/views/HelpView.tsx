@@ -395,7 +395,7 @@ export const HelpView = ({
                 </div>
                 
                 {showFeedbackComment && (
-                  <div className="space-y-2 mt-3">
+                  <div className="space-y-2 mt-3 animate-fade-in">
                     <Textarea
                       value={feedbackComment}
                       onChange={(e) => setFeedbackComment(e.target.value)}
