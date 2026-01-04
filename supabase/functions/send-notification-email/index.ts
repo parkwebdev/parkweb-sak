@@ -235,7 +235,7 @@ const handler = async (req: Request): Promise<Response> => {
     let emailRequest: EmailRequest;
     try {
       emailRequest = await req.json();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Invalid JSON in request body:', error);
       return new Response(
         JSON.stringify({ error: 'Invalid JSON in request body' }),

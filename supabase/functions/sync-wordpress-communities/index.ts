@@ -310,7 +310,7 @@ async function discoverEndpoints(siteUrl: string): Promise<{
     }
     
     console.log(`Discovered ${communityEndpoints.length} community endpoints, ${homeEndpoints.length} home endpoints`);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error discovering endpoints:', error);
   }
   
@@ -567,10 +567,10 @@ Deno.serve(async (req: Request) => {
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in sync-wordpress-communities:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -649,7 +649,7 @@ async function testWordPressConnection(
       communityCount: totalCount,
       normalizedUrl,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('WordPress connection test error:', error);
     
     // Provide user-friendly error messages for common connection issues
@@ -952,8 +952,8 @@ async function syncCommunitiesToLocations(
           result.created++;
         }
       }
-    } catch (error) {
-      result.errors.push(`Error processing ${community.slug}: ${error.message}`);
+    } catch (error: unknown) {
+      result.errors.push(`Error processing ${community.slug}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
