@@ -30,12 +30,12 @@ export interface DbMessage {
   id: string;
   role: string;
   content: string;
-  metadata: any;
+  metadata: Record<string, unknown> | null;
   created_at: string;
   tool_call_id: string | null;
   tool_name: string | null;
-  tool_arguments: any | null;
-  tool_result: any | null;
+  tool_arguments: Record<string, unknown> | null;
+  tool_result: unknown | null;
 }
 
 // ============================================
@@ -83,8 +83,8 @@ export async function fetchConversationHistory(
  * @param dbMessages - Array of database message records
  * @returns OpenAI-formatted message array
  */
-export function convertDbMessagesToOpenAI(dbMessages: DbMessage[]): any[] {
-  const openAIMessages: any[] = [];
+export function convertDbMessagesToOpenAI(dbMessages: DbMessage[]): Array<{ role: string; content: string | null; tool_call_id?: string; tool_calls?: unknown[] }> {
+  const openAIMessages: Array<{ role: string; content: string | null; tool_call_id?: string; tool_calls?: unknown[] }> = [];
 
   for (const msg of dbMessages) {
     // Tool result message (response from tool execution)

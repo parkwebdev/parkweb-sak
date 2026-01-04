@@ -841,8 +841,8 @@ NEVER mark complete when:
     let quickReplies: string[] = [];
     let aiMarkedComplete = false;
     let storedShownProperties: ShownProperty[] | undefined;
-    let lastCalendarResult: any = null;
-    let lastBookingResult: any = null;
+    let lastCalendarResult: BookingToolResult | null = null;
+    let lastBookingResult: BookingToolResult | null = null;
 
     // ============================================
     // PHASE 4: Use executeToolCalls handler
