@@ -24,7 +24,6 @@ export function GeneralSettings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [preferences, setPreferences] = useState({
-    compact_mode: false,
     default_project_view: 'dashboard',
   });
   const [company, setCompany] = useState({
@@ -33,7 +32,6 @@ export function GeneralSettings() {
     company_phone: '',
   });
   const [showSaved, setShowSaved] = useState({
-    compact_mode: false,
     default_project_view: false,
     company_name: false,
     company_address: false,
@@ -65,7 +63,6 @@ export function GeneralSettings() {
 
       if (data) {
         setPreferences({
-          compact_mode: data.compact_mode ?? false,
           default_project_view: data.default_project_view ?? 'dashboard',
         });
       }
@@ -95,18 +92,13 @@ export function GeneralSettings() {
     }
   };
 
-  const updatePreference = async (key: keyof typeof preferences, value: boolean | string) => {
+  const updatePreference = async (key: keyof typeof preferences, value: string) => {
     if (!user) return;
 
     // Update local state immediately for responsive UI
     const prevValue = preferences[key];
     const newPreferences = { ...preferences, [key]: value };
     setPreferences(newPreferences);
-
-    // Apply compact mode immediately to body
-    if (key === 'compact_mode') {
-      document.body.classList.toggle('compact-mode', value as boolean);
-    }
 
     // Clear existing timer for this field
     if (saveTimers.current[key]) {
@@ -132,12 +124,11 @@ export function GeneralSettings() {
             .eq('user_id', user.id);
           error = result.error;
         } else {
-          // Insert new record with typed payload
-          const insertPayload: { user_id: string; compact_mode?: boolean; default_project_view?: string } = {
+          // Insert new record
+          const insertPayload: { user_id: string; default_project_view?: string } = {
             user_id: user.id,
           };
-          if (key === 'compact_mode') insertPayload.compact_mode = value as boolean;
-          if (key === 'default_project_view') insertPayload.default_project_view = value as string;
+          if (key === 'default_project_view') insertPayload.default_project_view = value;
           
           const result = await supabase
             .from('user_preferences')
@@ -149,9 +140,6 @@ export function GeneralSettings() {
           logger.error('Error updating preference:', error);
           // Revert local state on error
           setPreferences({ ...preferences, [key]: prevValue });
-          if (key === 'compact_mode') {
-            document.body.classList.toggle('compact-mode', prevValue as boolean);
-          }
           toast.error("Update failed", {
             description: "Failed to update preference.",
           });
@@ -164,9 +152,6 @@ export function GeneralSettings() {
         logger.error('Error in updatePreference:', error);
         // Revert local state on error
         setPreferences({ ...preferences, [key]: prevValue });
-        if (key === 'compact_mode') {
-          document.body.classList.toggle('compact-mode', prevValue as boolean);
-        }
         toast.error("Update failed", {
           description: "Failed to update preference.",
         });
@@ -180,15 +165,6 @@ export function GeneralSettings() {
       Object.values(saveTimers.current).forEach(timer => clearTimeout(timer));
     };
   }, []);
-
-  // Apply compact mode on load
-  useEffect(() => {
-    if (preferences.compact_mode) {
-      document.body.classList.add('compact-mode');
-    } else {
-      document.body.classList.remove('compact-mode');
-    }
-  }, [preferences.compact_mode]);
 
   const updateCompanyField = async (key: keyof typeof company, value: string) => {
     if (!user) return;
@@ -307,19 +283,6 @@ export function GeneralSettings() {
             <ThemeToggle />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Compact Mode</label>
-                <SavedIndicator show={showSaved.compact_mode} />
-              </div>
-              <p className="text-xs text-muted-foreground">Reduce spacing and padding for more content on screen</p>
-            </div>
-            <Switch
-              checked={preferences.compact_mode}
-              onCheckedChange={(checked) => updatePreference('compact_mode', checked)}
-            />
-          </div>
         </CardContent>
       </Card>
       </AnimatedItem>
