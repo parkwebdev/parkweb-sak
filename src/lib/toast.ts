@@ -10,6 +10,12 @@
 
 import { toast as sonnerToast, ExternalToast } from 'sonner';
 
+/** Minimum time saving toasts should be visible (2 seconds) */
+const SAVING_MIN_DURATION_MS = 2000;
+
+/** Track when saving toasts were created to enforce minimum duration */
+const savingToastStartedAt = new Map<string | number, number>();
+
 /**
  * Action button configuration for toast notifications
  */
@@ -137,9 +143,11 @@ toastImpl.loading = (message: string, options?: ToastOptions) => {
 };
 
 toastImpl.saving = (message: string = 'Saving...') => {
-  return sonnerToast.loading(message, {
-    duration: Infinity, // Controlled by useAutoSave with minimum display time
+  const id = sonnerToast.loading(message, {
+    duration: Infinity, // Never auto-dismiss, we control it
   });
+  savingToastStartedAt.set(id, Date.now());
+  return id;
 };
 
 toastImpl.promise = <T>(promise: Promise<T>, options: PromiseOptions<T>): Promise<T> => {
@@ -154,7 +162,34 @@ toastImpl.promise = <T>(promise: Promise<T>, options: PromiseOptions<T>): Promis
 };
 
 toastImpl.dismiss = (id?: string | number) => {
-  sonnerToast.dismiss(id);
+  // If no id, dismiss all toasts immediately
+  if (id === undefined) {
+    savingToastStartedAt.clear();
+    sonnerToast.dismiss();
+    return;
+  }
+
+  // Check if this is a saving toast that needs minimum duration
+  const startTime = savingToastStartedAt.get(id);
+  if (startTime !== undefined) {
+    const elapsed = Date.now() - startTime;
+    const remainingTime = SAVING_MIN_DURATION_MS - elapsed;
+
+    if (remainingTime > 0) {
+      // Delay dismissal to meet minimum duration
+      setTimeout(() => {
+        savingToastStartedAt.delete(id);
+        sonnerToast.dismiss(id);
+      }, remainingTime);
+    } else {
+      // Already met minimum duration, dismiss immediately
+      savingToastStartedAt.delete(id);
+      sonnerToast.dismiss(id);
+    }
+  } else {
+    // Not a saving toast, dismiss immediately
+    sonnerToast.dismiss(id);
+  }
 };
 
 toastImpl.update = (id: string | number, message: string, options?: ToastOptions) => {
