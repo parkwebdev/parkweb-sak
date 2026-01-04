@@ -23,7 +23,7 @@ export function AriAppearanceSection({ agentId }: AriAppearanceSectionProps) {
     setLocalConfig(config);
   }, [config]);
 
-  const { save, isSaving } = useAutoSave({
+  const { save } = useAutoSave({
     onSave: async (updates: Partial<typeof config>) => {
       await saveConfig(updates);
     },
@@ -44,7 +44,6 @@ export function AriAppearanceSection({ agentId }: AriAppearanceSectionProps) {
       <AriSectionHeader
         title="Appearance"
         description="Customize colors and visual styling"
-        isSaving={isSaving}
       />
       <AppearanceSection config={localConfig} onConfigChange={handleConfigChange} />
     </div>

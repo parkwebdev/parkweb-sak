@@ -26,7 +26,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { SavingIndicator } from '@/components/ui/saving-indicator';
+
 import { uploadFeaturedImage, deleteArticleImage } from '@/lib/article-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
@@ -573,7 +573,6 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
       />
 
       <div className="mt-6 space-y-4">
-        <SavingIndicator isSaving={isSaving} />
 
         {loading ? (
           <div className="space-y-3">

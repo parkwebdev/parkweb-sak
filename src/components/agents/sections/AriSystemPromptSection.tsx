@@ -36,7 +36,7 @@ export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSecti
     setSystemPrompt(agent.system_prompt);
   }, [agent.id, agent.system_prompt]);
 
-  const { save, isSaving } = useAutoSave({
+  const { save } = useAutoSave({
     onSave: async (value: string) => {
       await onUpdate(agent.id, { system_prompt: value });
     },
@@ -52,7 +52,6 @@ export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSecti
       <AriSectionHeader
         title="System Prompt"
         description="Define your agent's personality, role, and communication style"
-        isSaving={isSaving}
       />
 
       <div className="space-y-4">

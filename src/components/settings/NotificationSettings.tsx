@@ -1,6 +1,6 @@
 /**
  * @fileoverview Notification preferences settings with email category controls and deep linking.
- * Manages email categories, browser, and sound notification toggles with silent auto-save.
+ * Manages email categories, browser, and sound notification toggles with toast auto-save feedback.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -47,7 +47,6 @@ export function NotificationSettings() {
   const { requestBrowserNotificationPermission } = useNotifications();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
-  const [savingFields, setSavingFields] = useState<{ [key: string]: boolean }>({});
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
@@ -227,11 +226,9 @@ export function NotificationSettings() {
       clearTimeout(saveTimers.current[key]);
     }
 
-    // Mark as saving
-    setSavingFields(prev => ({ ...prev, [key]: true }));
-
     // Debounce the save operation (500ms standard)
     saveTimers.current[key] = setTimeout(async () => {
+      const toastId = toast.saving();
       try {
         const { error } = await supabase
           .from('notification_preferences')
@@ -250,7 +247,7 @@ export function NotificationSettings() {
           description: getErrorMessage(error),
         });
       } finally {
-        setSavingFields(prev => ({ ...prev, [key]: false }));
+        toast.dismiss(toastId);
       }
     }, 500);
   };
@@ -335,7 +332,6 @@ export function NotificationSettings() {
               description="Receive important updates and alerts via email"
               checked={preferences.email_notifications}
               onCheckedChange={(checked) => updatePreference('email_notifications', checked)}
-              isSaving={savingFields.email_notifications}
             />
 
             {preferences.email_notifications && (
@@ -347,7 +343,6 @@ export function NotificationSettings() {
                     description="Confirmations, reminders, cancellations, and reschedules"
                     checked={preferences.booking_email_notifications}
                     onCheckedChange={(checked) => updatePreference('booking_email_notifications', checked)}
-                    isSaving={savingFields.booking_email_notifications}
                   />
                 </div>
 
@@ -358,7 +353,6 @@ export function NotificationSettings() {
                     description="New leads, status changes, and human takeover requests"
                     checked={preferences.lead_email_notifications}
                     onCheckedChange={(checked) => updatePreference('lead_email_notifications', checked)}
-                    isSaving={savingFields.lead_email_notifications}
                   />
                 </div>
 
@@ -369,7 +363,6 @@ export function NotificationSettings() {
                     description="Invitations and team member changes"
                     checked={preferences.team_email_notifications}
                     onCheckedChange={(checked) => updatePreference('team_email_notifications', checked)}
-                    isSaving={savingFields.team_email_notifications}
                   />
                 </div>
 
@@ -380,7 +373,6 @@ export function NotificationSettings() {
                     description="Webhook failures and agent error alerts"
                     checked={preferences.agent_email_notifications}
                     onCheckedChange={(checked) => updatePreference('agent_email_notifications', checked)}
-                    isSaving={savingFields.agent_email_notifications}
                   />
                 </div>
 
@@ -391,7 +383,6 @@ export function NotificationSettings() {
                     description="Scheduled reports and analytics digests"
                     checked={preferences.report_email_notifications}
                     onCheckedChange={(checked) => updatePreference('report_email_notifications', checked)}
-                    isSaving={savingFields.report_email_notifications}
                   />
                 </div>
 
@@ -402,7 +393,6 @@ export function NotificationSettings() {
                     description="Feature announcements and product news"
                     checked={preferences.product_email_notifications}
                     onCheckedChange={(checked) => updatePreference('product_email_notifications', checked)}
-                    isSaving={savingFields.product_email_notifications}
                   />
                 </div>
               </div>
@@ -427,7 +417,6 @@ export function NotificationSettings() {
               description="Show desktop notifications in your browser"
               checked={preferences.browser_notifications}
               onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
-              isSaving={savingFields.browser_notifications}
             />
 
             <ToggleSettingRow
@@ -436,7 +425,6 @@ export function NotificationSettings() {
               description="Play a sound when new messages arrive"
               checked={preferences.sound_notifications}
               onCheckedChange={(checked) => updatePreference('sound_notifications', checked)}
-              isSaving={savingFields.sound_notifications}
             />
           </CardContent>
         </Card>
@@ -458,7 +446,6 @@ export function NotificationSettings() {
               description="New conversations, escalations, and takeover requests"
               checked={preferences.conversation_notifications}
               onCheckedChange={(checked) => updatePreference('conversation_notifications', checked)}
-              isSaving={savingFields.conversation_notifications}
             />
 
             <ToggleSettingRow
@@ -467,7 +454,6 @@ export function NotificationSettings() {
               description="New leads captured and lead status changes"
               checked={preferences.lead_notifications}
               onCheckedChange={(checked) => updatePreference('lead_notifications', checked)}
-              isSaving={savingFields.lead_notifications}
             />
 
             <ToggleSettingRow
@@ -476,7 +462,6 @@ export function NotificationSettings() {
               description="Agent errors and knowledge source updates"
               checked={preferences.agent_notifications}
               onCheckedChange={(checked) => updatePreference('agent_notifications', checked)}
-              isSaving={savingFields.agent_notifications}
             />
 
             <ToggleSettingRow
@@ -485,7 +470,6 @@ export function NotificationSettings() {
               description="Team invitations and member updates"
               checked={preferences.team_notifications}
               onCheckedChange={(checked) => updatePreference('team_notifications', checked)}
-              isSaving={savingFields.team_notifications}
             />
 
             <ToggleSettingRow
@@ -494,7 +478,6 @@ export function NotificationSettings() {
               description="Scheduled reports and analytics alerts"
               checked={preferences.report_notifications}
               onCheckedChange={(checked) => updatePreference('report_notifications', checked)}
-              isSaving={savingFields.report_notifications}
             />
           </CardContent>
         </Card>
@@ -509,53 +492,28 @@ export function NotificationSettings() {
               Current browser notification permission
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Browser Permission</p>
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium">Permission Status</p>
                 <p className="text-xs text-muted-foreground">
-                  {!('Notification' in window) ? 'Notifications not supported in this environment' :
-                   Notification.permission === 'granted' ? 'Notifications are allowed' :
-                   Notification.permission === 'denied' ? 'Notifications are blocked' :
-                   'Notification permission not requested'}
+                  {typeof window !== 'undefined' && 'Notification' in window
+                    ? Notification.permission === 'granted'
+                      ? 'Notifications are enabled'
+                      : Notification.permission === 'denied'
+                      ? 'Notifications are blocked. Enable in browser settings.'
+                      : 'Notifications permission not requested'
+                    : 'Browser notifications not supported'}
                 </p>
               </div>
-            {('Notification' in window) && Notification.permission !== 'granted' && (
               <Button 
                 variant="outline" 
-                size="sm" 
-                onClick={async () => {
-                  try {
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                      toast.success("Notifications enabled", {
-                        description: "You will now receive browser notifications.",
-                      });
-                    } else {
-                      toast.error("Permission denied", {
-                        description: "Browser notifications were not enabled.",
-                      });
-                    }
-                  } catch (error: unknown) {
-                    logger.error('Notification permission error:', error);
-                    toast.error("Error", {
-                      description: "Failed to request notification permission.",
-                    });
-                  }
-                }}
-              >
-                Enable Notifications
-              </Button>
-            )}
-            {('Notification' in window) && Notification.permission === 'granted' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
+                size="sm"
                 onClick={testNotification}
+                disabled={!preferences.browser_notifications}
               >
                 Test Notification
               </Button>
-            )}
             </div>
           </CardContent>
         </Card>

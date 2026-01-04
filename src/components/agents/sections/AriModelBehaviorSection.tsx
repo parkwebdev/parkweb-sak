@@ -403,7 +403,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
     });
   }, [agent.id]);
 
-  const { save: autoSave, isSaving } = useAutoSave({
+  const { save: autoSave } = useAutoSave({
     onSave: async (data: typeof formData) => {
       const { top_p, top_k, presence_penalty, frequency_penalty, response_length_preset, ...coreFields } = data;
       await onUpdate(agent.id, {
@@ -476,7 +476,6 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
       <AriSectionHeader
         title="Model & Behavior"
         description="Choose your AI model and fine-tune response creativity"
-        isSaving={isSaving}
       />
 
       <div className="flex gap-8">

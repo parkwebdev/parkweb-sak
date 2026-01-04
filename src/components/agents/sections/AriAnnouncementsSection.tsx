@@ -25,7 +25,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { SavingIndicator } from '@/components/ui/saving-indicator';
+
 import { uploadAnnouncementImage, deleteAnnouncementImage } from '@/lib/announcement-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
@@ -492,7 +492,6 @@ export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSec
       />
 
       <div className="mt-6 space-y-4">
-        <SavingIndicator isSaving={showSaved} />
 
         {loading ? (
           <div className="space-y-3">

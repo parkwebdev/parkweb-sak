@@ -75,6 +75,7 @@ type ToastFunction = {
   warning: (message: string, options?: ToastOptions) => string | number;
   info: (message: string, options?: ToastOptions) => string | number;
   loading: (message: string, options?: ToastOptions) => string | number;
+  saving: (message?: string) => string | number;
   promise: <T>(promise: Promise<T>, options: PromiseOptions<T>) => Promise<T>;
   dismiss: (id?: string | number) => void;
   update: (id: string | number, message: string, options?: ToastOptions) => void;
@@ -132,6 +133,12 @@ toastImpl.loading = (message: string, options?: ToastOptions) => {
     ...options,
     action: formatAction(options?.action),
     cancel: formatAction(options?.cancel),
+  });
+};
+
+toastImpl.saving = (message: string = 'Saving...') => {
+  return sonnerToast.loading(message, {
+    duration: 800,
   });
 };
 

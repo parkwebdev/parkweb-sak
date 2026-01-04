@@ -2,7 +2,7 @@
  * ToggleSettingRow Component
  * 
  * A settings row with label, optional description, and toggle switch.
- * Used for binary on/off settings with optional saving indicator.
+ * Used for binary on/off settings.
  * 
  * @module components/ui/toggle-setting-row
  * 
@@ -14,13 +14,11 @@
  *   description="Receive alerts for new messages"
  *   checked={enabled}
  *   onCheckedChange={setEnabled}
- *   isSaving={isSaving}
  * />
  * ```
  */
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { SavingIndicator } from '@/components/ui/saving-indicator';
 
 interface ToggleSettingRowProps {
   id: string;
@@ -28,7 +26,6 @@ interface ToggleSettingRowProps {
   description?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
-  isSaving?: boolean;
   disabled?: boolean;
 }
 
@@ -38,18 +35,14 @@ export function ToggleSettingRow({
   description,
   checked,
   onCheckedChange,
-  isSaving,
   disabled,
 }: ToggleSettingRowProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="space-y-0.5 flex-1">
-        <div className="flex items-center gap-2">
-          <Label htmlFor={id} className="text-sm font-medium">
-            {label}
-          </Label>
-          <SavingIndicator isSaving={isSaving ?? false} />
-        </div>
+        <Label htmlFor={id} className="text-sm font-medium">
+          {label}
+        </Label>
         {description && (
           <p className="text-xs text-muted-foreground">
             {description}
