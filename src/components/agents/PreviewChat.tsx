@@ -433,8 +433,9 @@ export function PreviewChat({
               onKeyDown={handleKeyDown}
               placeholder="Type a message..."
               disabled={isLoading}
+              size="compact"
               rows={1}
-              className="h-9 max-h-[120px] py-1.5 pr-11 resize-none leading-normal"
+              className="h-9 max-h-[120px] pr-11 resize-none"
             />
             <Button 
               type="submit" 
