@@ -321,7 +321,6 @@ export function ManageStagesDialog({ open, onOpenChange, canManage = true }: Man
               disabled={!newStageName.trim() || isCreating}
               size="sm"
             >
-              <Plus size={16} className="mr-1" />
               Add
             </Button>
           </div>
