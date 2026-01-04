@@ -69,8 +69,8 @@ export const HelpView = ({
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const systemTheme = useSystemTheme();
 
-  // Theme-aware colors: white in dark mode, primaryColor in light mode
-  const accentColor = systemTheme === 'dark' ? '#FFFFFF' : config.primaryColor;
+  // Theme-aware colors: white in dark mode, black in light mode (inverted high-contrast)
+  const accentColor = systemTheme === 'dark' ? '#FFFFFF' : '#000000';
   const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
 
   // Lazy-load and sanitize article content
