@@ -70,3 +70,133 @@ export const Settings02IconFilled = React.forwardRef<SVGSVGElement, SettingsIcon
   }
 );
 Settings02IconFilled.displayName = 'Settings02IconFilled';
+
+// User Circle Icon (Profile)
+export const UserCircleIcon = React.forwardRef<SVGSVGElement, SettingsIconProps>(
+  ({ size = 24, className, ...props }, ref) => {
+    return (
+      <svg
+        ref={ref}
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        className={className}
+        aria-hidden="true"
+        {...props}
+      >
+        <path
+          d="M5.3163 19.4384C5.92462 18.0052 7.34492 17 9 17H15C16.6551 17 18.0754 18.0052 18.6837 19.4384M16 9.5C16 11.7091 14.2091 13.5 12 13.5C9.79086 13.5 8 11.7091 8 9.5C8 7.29086 9.79086 5.5 12 5.5C14.2091 5.5 16 7.29086 16 9.5ZM22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+);
+UserCircleIcon.displayName = 'UserCircleIcon';
+
+export const UserCircleIconFilled = React.forwardRef<SVGSVGElement, SettingsIconProps>(
+  ({ size = 24, className, ...props }, ref) => {
+    return (
+      <svg
+        ref={ref}
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        className={className}
+        aria-hidden="true"
+        {...props}
+      >
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M7 9.5C7 6.73858 9.23858 4.5 12 4.5C14.7614 4.5 17 6.73858 17 9.5C17 12.2614 14.7614 14.5 12 14.5C9.23858 14.5 7 12.2614 7 9.5Z"
+          fill="currentColor"
+        />
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M12 1C5.92487 1 1 5.92487 1 12C1 18.0751 5.92487 23 12 23C18.0751 23 23 18.0751 23 12C23 5.92487 18.0751 1 12 1ZM3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 14.2211 20.1954 16.2543 18.8618 17.824C17.9457 16.7114 16.5564 16 15 16H9.00005C7.44368 16 6.05439 16.7114 5.13825 17.8241C3.8046 16.2543 3 14.2211 3 12Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+);
+UserCircleIconFilled.displayName = 'UserCircleIconFilled';
+
+// Users Icon (Team)
+export const UsersIconFilled = React.forwardRef<SVGSVGElement, SettingsIconProps>(
+  ({ size = 24, className, ...props }, ref) => {
+    return (
+      <svg
+        ref={ref}
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        className={className}
+        aria-hidden="true"
+        {...props}
+      >
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M18.0316 14.8768C18.1693 14.3419 18.7144 14.0199 19.2493 14.1576C21.4056 14.7126 23 16.6688 23 19V21C23 21.5523 22.5523 22 22 22C21.4478 22 21 21.5523 21 21V19C21 17.6035 20.0449 16.4275 18.7508 16.0945C18.2159 15.9568 17.8939 15.4116 18.0316 14.8768Z"
+          fill="currentColor"
+        />
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M14.5731 2.91554C14.7803 2.40361 15.3633 2.1566 15.8753 2.36382C17.7058 3.10481 19 4.90006 19 7C19 9.09994 17.7058 10.8952 15.8753 11.6362C15.3633 11.8434 14.7803 11.5964 14.5731 11.0845C14.3659 10.5725 14.6129 9.98953 15.1248 9.7823C16.2261 9.33652 17 8.25744 17 7C17 5.74256 16.2261 4.66348 15.1248 4.2177C14.6129 4.01047 14.3659 3.42748 14.5731 2.91554Z"
+          fill="currentColor"
+        />
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M7.17898 14C8.72635 14.0005 10.2737 14.0005 11.8211 14C12.9117 13.9996 13.6559 13.9994 14.2941 14.1704C16.0196 14.6327 17.3673 15.9804 17.8297 17.7059C18.0599 18.5652 17.9933 19.4836 18.0002 20.3641C18.0011 20.471 18.0028 20.6872 17.9489 20.8882C17.8102 21.4059 17.4059 21.8102 16.8883 21.9489C16.6873 22.0028 16.471 22.001 16.3641 22.0002C11.7891 21.9637 7.21096 21.9637 2.63595 22.0002C2.52904 22.001 2.31282 22.0028 2.11181 21.9489C1.59417 21.8102 1.18985 21.4059 1.05115 20.8882C0.997286 20.6872 0.99901 20.471 0.999862 20.3641C1.00686 19.4858 0.940521 18.5639 1.17041 17.7059C1.63274 15.9804 2.98048 14.6327 4.70594 14.1704C5.34416 13.9994 6.08836 13.9996 7.17898 14Z"
+          fill="currentColor"
+        />
+        <path
+          fillRule="evenodd"
+          clipRule="evenodd"
+          d="M4.50004 7C4.50004 4.23858 6.73861 2 9.50004 2C12.2615 2 14.5 4.23858 14.5 7C14.5 9.76142 12.2615 12 9.50004 12C6.73861 12 4.50004 9.76142 4.50004 7Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+);
+UsersIconFilled.displayName = 'UsersIconFilled';
+
+// Credit Card Icon (Billing)
+export const CreditCardIconFilled = React.forwardRef<SVGSVGElement, SettingsIconProps>(
+  ({ size = 24, className, ...props }, ref) => {
+    return (
+      <svg
+        ref={ref}
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        className={className}
+        aria-hidden="true"
+        {...props}
+      >
+        <path
+          d="M5.16146 4L18.8385 4C19.3657 3.99999 19.8205 3.99997 20.195 4.03057C20.5904 4.06288 20.9836 4.13419 21.362 4.32699C21.9265 4.61461 22.3854 5.07355 22.673 5.63803C22.8658 6.01641 22.9371 6.40963 22.9694 6.80498C23 7.17954 23 7.6343 23 8.16144C23 8.62456 22.6246 9 22.1614 9H1.83859C1.37545 9 1 8.62455 1 8.16141C0.999985 7.6343 0.999971 7.17953 1.03057 6.80497C1.06287 6.40963 1.13419 6.01641 1.32698 5.63803C1.6146 5.07354 2.07355 4.6146 2.63803 4.32698C3.01641 4.13419 3.40963 4.06287 3.80498 4.03057C4.17953 3.99997 4.63434 3.99998 5.16146 4Z"
+          fill="currentColor"
+        />
+        <path
+          d="M2.6 11C2.03995 11 1.75992 11 1.54601 11.109C1.35785 11.2049 1.20487 11.3578 1.10899 11.546C1 11.7599 1 12.0399 1 12.6V15.8385C0.999985 16.3657 0.999971 16.8205 1.03057 17.195C1.06287 17.5904 1.13419 17.9836 1.32698 18.362C1.6146 18.9265 2.07355 19.3854 2.63803 19.673C3.01641 19.8658 3.40963 19.9371 3.80497 19.9694C4.17951 20 4.63421 20 5.16129 20L18.8386 20C19.3656 20 19.8205 20 20.195 19.9694C20.5904 19.9371 20.9836 19.8658 21.362 19.673C21.9265 19.3854 22.3854 18.9265 22.673 18.362C22.8658 17.9836 22.9371 17.5904 22.9694 17.195C23 16.8205 23 16.3657 23 15.8386V12.6C23 12.0399 23 11.7599 22.891 11.546C22.7951 11.3578 22.6422 11.2049 22.454 11.109C22.2401 11 21.9601 11 21.4 11H2.6Z"
+          fill="currentColor"
+        />
+      </svg>
+    );
+  }
+);
+CreditCardIconFilled.displayName = 'CreditCardIconFilled';

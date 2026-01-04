@@ -17,14 +17,20 @@ import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
 import { SETTINGS_TABS, type SettingsTabParam } from '@/config/routes';
 import {
-  User01,
   Users01,
   CreditCard01,
   BarChart01,
   Bell01,
   Shield01,
 } from '@untitledui/icons';
-import { Settings02Icon, Settings02IconFilled } from '@/components/ui/settings-icon';
+import { 
+  Settings02Icon, 
+  Settings02IconFilled,
+  UserCircleIcon,
+  UserCircleIconFilled,
+  UsersIconFilled,
+  CreditCardIconFilled,
+} from '@/components/ui/settings-icon';
 
 // Re-export the tab type from routes.ts
 export type SettingsTab = SettingsTabParam;
@@ -32,7 +38,7 @@ export type SettingsTab = SettingsTabParam;
 // Icon mapping from string names to components (outline versions)
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Settings02: Settings02Icon,
-  User01,
+  UserCircle: UserCircleIcon,
   Users01,
   CreditCard01,
   BarChart01,
@@ -43,6 +49,9 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
 // Filled icon mapping for active states
 const FILLED_ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Settings02: Settings02IconFilled,
+  UserCircle: UserCircleIconFilled,
+  Users01: UsersIconFilled,
+  CreditCard01: CreditCardIconFilled,
 };
 
 function getIcon(iconName: string, isActive: boolean = false): React.ComponentType<{ size?: number; className?: string }> {
