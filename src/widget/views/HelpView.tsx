@@ -71,7 +71,7 @@ export const HelpView = ({
 
   // Theme-aware colors: white in dark mode, primaryColor in light mode
   const accentColor = systemTheme === 'dark' ? '#FFFFFF' : config.primaryColor;
-  const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
+  const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#000000';
 
   // Lazy-load and sanitize article content
   useEffect(() => {
