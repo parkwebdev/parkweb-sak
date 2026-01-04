@@ -139,7 +139,7 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
   const displayName = profile?.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
   const email = profile?.email || user.email || '';
   const avatarUrl = profile?.avatar_url || '';
-  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
     <DropdownMenu onOpenChange={handleDropdownOpenChange}>
