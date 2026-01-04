@@ -113,12 +113,11 @@ export function SessionsSection() {
             </div>
             {hasOtherSessions && (
               <Button
-                variant="outline"
                 size="sm"
                 onClick={() => setShowConfirmDialog(true)}
                 disabled={isRevokingOthers}
               >
-                Remove all sessions
+                Remove All Sessions
               </Button>
             )}
           </CardHeader>
