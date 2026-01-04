@@ -51,7 +51,7 @@ export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSecti
     <div>
       <AriSectionHeader
         title="System Prompt"
-        description="Define your agent's personality, role, and communication style"
+        description="Define how Ari responds to users — specify tone, expertise, personality, and any rules"
       />
 
       <div className="space-y-4">
@@ -98,9 +98,6 @@ export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSecti
             rows={16}
             className="font-mono text-sm resize-y min-h-[200px]"
           />
-          <p className="text-xs text-muted-foreground">
-            This prompt defines how Ari responds to users. Be specific about tone, expertise, and any rules.
-          </p>
         </div>
       </div>
     </div>
