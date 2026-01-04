@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getErrorMessage } from '../_shared/errors.ts';
 import type { SupabaseClientType } from '../_shared/types/supabase.ts';
+import type { GoogleCalendarEventBody, MicrosoftCalendarEventBody, ScheduleItem } from '../_shared/types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -148,7 +149,7 @@ async function createGoogleEvent(
 ): Promise<string> {
   const calId = calendarId || 'primary';
   
-  const eventBody: any = {
+  const eventBody: GoogleCalendarEventBody = {
     summary: event.title,
     description: event.description,
     start: {
@@ -200,7 +201,7 @@ async function createOutlookEvent(
     attendeeEmail?: string;
   }
 ): Promise<string> {
-  const eventBody: any = {
+  const eventBody: MicrosoftCalendarEventBody = {
     subject: event.title,
     body: {
       contentType: 'text',
@@ -290,7 +291,7 @@ async function isSlotAvailable(
       
       const data = await response.json();
       const scheduleItems = data.value?.[0]?.scheduleItems || [];
-      const busyItems = scheduleItems.filter((item: any) => item.status !== 'free');
+      const busyItems = scheduleItems.filter((item: ScheduleItem) => item.status !== 'free');
       return busyItems.length === 0;
     }
   } catch (error: unknown) {

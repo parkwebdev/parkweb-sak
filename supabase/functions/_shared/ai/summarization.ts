@@ -19,6 +19,7 @@
 import { MODEL_TIERS } from './model-routing.ts';
 import { SUMMARIZATION_THRESHOLD } from './config.ts';
 import type { SupabaseClientType } from '../types/supabase.ts';
+import type { ChatMessage } from '../types.ts';
 
 // ============================================
 // TYPES
@@ -26,7 +27,7 @@ import type { SupabaseClientType } from '../types/supabase.ts';
 
 export interface SummarizationResult {
   summary: string;
-  keptMessages: any[];
+  keptMessages: ChatMessage[];
   wasNeeded: boolean;
 }
 
@@ -46,7 +47,7 @@ export interface SummarizationResult {
  * @returns Summarization result with summary, kept messages, and whether summarization was needed
  */
 export async function summarizeConversationHistory(
-  messages: any[],
+  messages: ChatMessage[],
   keepCount: number,
   openrouterKey: string,
   existingSummary?: string

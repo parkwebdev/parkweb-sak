@@ -172,3 +172,86 @@ export interface Logger {
   error: (message: string, data?: Record<string, unknown>) => void;
   debug: (message: string, data?: Record<string, unknown>) => void;
 }
+
+// ============================================
+// REFERRER & SESSION TYPES
+// ============================================
+
+/**
+ * Referrer journey tracking data.
+ */
+export interface ReferrerJourney {
+  referrer_url: string | null;
+  landing_page: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+  entry_type: string;
+}
+
+// ============================================
+// DATABASE ROW TYPES
+// ============================================
+
+/**
+ * Usage metrics row from database.
+ */
+export interface UsageMetricRow {
+  period_start: string;
+  conversations_count: number;
+  messages_count: number;
+}
+
+/**
+ * Agent row with basic fields.
+ */
+export interface AgentRow {
+  id: string;
+  name: string;
+  user_id: string;
+}
+
+/**
+ * Business hours configuration.
+ */
+export interface BusinessHoursConfig {
+  [dayOfWeek: string]: { open: string; close: string; closed?: boolean } | null;
+}
+
+/**
+ * Microsoft Graph schedule item.
+ */
+export interface ScheduleItem {
+  status: 'free' | 'busy' | 'tentative' | 'outOfOffice' | 'workingElsewhere';
+  start: { dateTime: string };
+  end: { dateTime: string };
+}
+
+// ============================================
+// CALENDAR EVENT BODY TYPES
+// ============================================
+
+/**
+ * Google Calendar event body.
+ */
+export interface GoogleCalendarEventBody {
+  summary: string;
+  description?: string;
+  start: { dateTime: string; timeZone: string };
+  end: { dateTime: string; timeZone: string };
+  attendees?: Array<{ email: string }>;
+  reminders?: { useDefault: boolean };
+}
+
+/**
+ * Microsoft Calendar event body.
+ */
+export interface MicrosoftCalendarEventBody {
+  subject: string;
+  body?: { contentType: string; content: string };
+  start: { dateTime: string; timeZone: string };
+  end: { dateTime: string; timeZone: string };
+  attendees?: Array<{ emailAddress: { address: string }; type: string }>;
+}

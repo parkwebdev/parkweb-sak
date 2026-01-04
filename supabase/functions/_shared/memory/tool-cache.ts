@@ -26,8 +26,8 @@ import type { SupabaseClientType } from '../types/supabase.ts';
 
 export interface CachedToolResult {
   toolName: string;
-  arguments: any;
-  result: any;
+  arguments: Record<string, unknown>;
+  result: unknown;
   success: boolean;
   timestamp: string;
 }
@@ -43,17 +43,18 @@ export interface CachedToolResult {
  * @param args - Tool arguments object
  * @returns Normalized JSON string for comparison
  */
-export function normalizeToolArgs(args: any): string {
+export function normalizeToolArgs(args: unknown): string {
   if (!args || typeof args !== 'object') {
     return JSON.stringify(args || {});
   }
   
   // Sort keys and normalize values
-  const sorted: Record<string, any> = {};
-  const keys = Object.keys(args).sort();
+  const sorted: Record<string, unknown> = {};
+  const argsObj = args as Record<string, unknown>;
+  const keys = Object.keys(argsObj).sort();
   
   for (const key of keys) {
-    let value = args[key];
+    let value = argsObj[key];
     
     // Normalize string values (lowercase, trim)
     if (typeof value === 'string') {
@@ -86,7 +87,7 @@ export function normalizeToolArgs(args: any): string {
 export function findCachedToolResult(
   dbMessages: DbMessage[],
   toolName: string,
-  toolArgs: any,
+  toolArgs: Record<string, unknown>,
   maxAgeMinutes: number = 10
 ): CachedToolResult | null {
   const normalizedArgs = normalizeToolArgs(toolArgs);
