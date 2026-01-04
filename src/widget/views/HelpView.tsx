@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { WidgetButton, WidgetInput, WidgetSkeletonArticleContent, CSSAnimatedList, CSSAnimatedItem } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -362,26 +363,24 @@ export const HelpView = ({
                 <div className="flex justify-center gap-3">
                   <WidgetButton
                     size="sm"
-                    variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
+                    variant={articleFeedback === 'helpful' ? 'secondary' : 'outline'}
                     onClick={() => {
                       setArticleFeedback('helpful');
                       setShowFeedbackComment(true);
                     }}
-                    className="gap-1.5"
-                    style={articleFeedback === 'helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
+                    className={cn("gap-1.5", articleFeedback === 'helpful' && "bg-muted text-foreground")}
                   >
                     <ThumbsUp className="h-4 w-4" />
                     Yes
                   </WidgetButton>
                   <WidgetButton
                     size="sm"
-                    variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
+                    variant={articleFeedback === 'not_helpful' ? 'secondary' : 'outline'}
                     onClick={() => {
                       setArticleFeedback('not_helpful');
                       setShowFeedbackComment(true);
                     }}
-                    className="gap-1.5"
-                    style={articleFeedback === 'not_helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
+                    className={cn("gap-1.5", articleFeedback === 'not_helpful' && "bg-muted text-foreground")}
                   >
                     <ThumbsDown className="h-4 w-4" />
                     No
