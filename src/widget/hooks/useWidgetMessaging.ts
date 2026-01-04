@@ -33,7 +33,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { sendChatMessage, widgetSupabase, type WidgetConfig, type ReferrerJourney } from '../api';
+import { sendChatMessage, getWidgetSupabase, type WidgetConfig, type ReferrerJourney } from '../api';
 import { widgetLogger } from '../utils/widget-logger';
 import type { Message, ChatUser, PendingFile, PageVisit, ViewType } from '../types';
 
@@ -173,13 +173,13 @@ export function useWidgetMessaging({
         uploadedFiles = await Promise.all(
           pendingFiles.map(async (pf) => {
             const fileName = `widget/${activeConversationId || 'temp'}/${Date.now()}-${pf.file.name}`;
-            const { data, error } = await widgetSupabase.storage
+            const { data, error } = await getWidgetSupabase().storage
               .from('conversation-files')
               .upload(fileName, pf.file, { upsert: false });
             
             if (error) throw error;
             
-            const { data: urlData } = widgetSupabase.storage
+            const { data: urlData } = getWidgetSupabase().storage
               .from('conversation-files')
               .getPublicUrl(data.path);
             
