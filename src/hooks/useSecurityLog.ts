@@ -67,9 +67,14 @@ export const useSecurityLog = () => {
   const { user } = useAuth();
 
   const logSecurityEvent = async (params: SecurityLogParams) => {
+    // Skip logging if no authenticated user (prevents 400 error from invalid UUID)
+    if (!user?.id) {
+      return;
+    }
+
     try {
       const { error } = await supabase.rpc('log_security_event', {
-        p_user_id: user?.id ?? '',
+        p_user_id: user.id,
         p_action: params.action,
         p_resource_type: params.resourceType,
         p_resource_id: params.resourceId ?? undefined,

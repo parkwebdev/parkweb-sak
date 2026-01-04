@@ -85,6 +85,7 @@ export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     storageKey: 'pilot-widget-auth',
     persistSession: false,
     autoRefreshToken: false,
+    detectSessionInUrl: false, // Prevent conflicts with main app client
   }
 });
 
