@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getErrorMessage } from '../_shared/errors.ts';
+import type { SupabaseClientType } from '../_shared/types/supabase.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,8 +59,8 @@ interface BookingRequest {
 
 // Refresh OAuth token if needed
 async function refreshTokenIfNeeded(
-  supabase: any, 
-  account: any
+  supabase: SupabaseClientType, 
+  account: { id: string; provider: string; refresh_token: string; access_token: string; token_expires_at: string | null }
 ): Promise<string> {
   const now = new Date();
   const expiresAt = account.token_expires_at ? new Date(account.token_expires_at) : null;
@@ -244,9 +245,9 @@ async function createOutlookEvent(
 
 // Check if time slot is still available
 async function isSlotAvailable(
-  supabase: any,
+  supabase: SupabaseClientType,
   accessToken: string,
-  account: any,
+  account: { provider: string; calendar_id: string | null },
   startTime: Date,
   endTime: Date
 ): Promise<boolean> {

@@ -69,6 +69,8 @@ export async function generateEmbedding(query: string): Promise<number[]> {
 // EMBEDDING CACHING
 // ============================================
 
+import type { SupabaseClientType } from '../types/supabase.ts';
+
 /**
  * Check query embedding cache
  * 
@@ -78,7 +80,7 @@ export async function generateEmbedding(query: string): Promise<number[]> {
  * @returns Cached embedding or null if not found
  */
 export async function getCachedEmbedding(
-  supabase: any,
+  supabase: SupabaseClientType,
   queryHash: string,
   agentId: string
 ): Promise<number[] | null> {
@@ -130,7 +132,7 @@ export async function getCachedEmbedding(
  * @param agentId - Agent UUID
  */
 export async function cacheQueryEmbedding(
-  supabase: any,
+  supabase: SupabaseClientType,
   queryHash: string,
   normalized: string,
   embedding: number[],

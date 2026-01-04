@@ -14,6 +14,7 @@ import React from 'npm:react@18.3.1';
 import { renderToBuffer } from 'npm:@react-pdf/renderer@4.3.0';
 
 import { getErrorMessage } from '../_shared/errors.ts';
+import type { SupabaseClientType } from '../_shared/types/supabase.ts';
 import {
   colors, 
   heading, 
@@ -332,7 +333,7 @@ function generateReportEmail(
 // =============================================================================
 
 async function uploadReportToStorage(
-  supabase: any,
+  supabase: SupabaseClientType,
   report: ScheduledReport,
   fileData: Uint8Array | string,
   format: 'pdf' | 'csv'
@@ -373,7 +374,7 @@ async function uploadReportToStorage(
 }
 
 async function createExportRecord(
-  supabase: any,
+  supabase: SupabaseClientType,
   report: ScheduledReport,
   filePath: string,
   fileSize: number

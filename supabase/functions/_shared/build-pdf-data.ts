@@ -6,6 +6,7 @@
  */
 
 import type { PDFData } from './pdf/types.ts';
+import type { SupabaseClientType } from './types/supabase.ts';
 
 interface ReportConfig {
   startDate: string;
@@ -98,7 +99,7 @@ function calculatePeakActivity(conversations: Array<{ created_at: string }>): { 
  * Fetch and build comprehensive PDF data from all analytics tables
  */
 export async function buildPDFDataFromSupabase(
-  supabase: any,
+  supabase: SupabaseClientType,
   userId: string,
   config: ReportConfig
 ): Promise<PDFData> {

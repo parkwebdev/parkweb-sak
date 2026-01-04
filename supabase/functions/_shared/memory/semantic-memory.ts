@@ -25,6 +25,7 @@
 import { generateEmbedding } from '../ai/embeddings.ts';
 import { MODEL_TIERS } from '../ai/model-routing.ts';
 import { getErrorMessage } from '../errors.ts';
+import type { SupabaseClientType } from '../types/supabase.ts';
 
 // ============================================
 // TYPES
@@ -56,7 +57,7 @@ export interface SemanticMemory {
  * @returns Array of matching memories
  */
 export async function searchSemanticMemories(
-  supabase: any,
+  supabase: SupabaseClientType,
   agentId: string,
   leadId: string | null,
   conversationId: string | null,
@@ -114,7 +115,7 @@ export async function searchSemanticMemories(
  * @param apiKey - OpenRouter API key
  */
 export async function extractAndStoreMemories(
-  supabase: any,
+  supabase: SupabaseClientType,
   agentId: string,
   leadId: string | null,
   conversationId: string,

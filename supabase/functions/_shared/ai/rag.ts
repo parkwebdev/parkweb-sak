@@ -15,6 +15,7 @@
  */
 
 import { MAX_RAG_CHUNKS } from './config.ts';
+import type { SupabaseClientType } from '../types/supabase.ts';
 
 // ============================================
 // TYPES
@@ -44,7 +45,7 @@ export interface KnowledgeResult {
  * @returns Array of knowledge results sorted by similarity
  */
 export async function searchKnowledge(
-  supabase: any,
+  supabase: SupabaseClientType,
   agentId: string,
   queryEmbedding: number[],
   matchThreshold: number = 0.7,
@@ -155,7 +156,7 @@ export async function searchKnowledge(
  * @returns Cached response or null
  */
 export async function getCachedResponse(
-  supabase: any,
+  supabase: SupabaseClientType,
   queryHash: string,
   agentId: string
 ): Promise<{ content: string; similarity: number } | null> {
@@ -192,7 +193,7 @@ export async function getCachedResponse(
  * @param similarity - Similarity score of the response
  */
 export async function cacheResponse(
-  supabase: any,
+  supabase: SupabaseClientType,
   queryHash: string,
   agentId: string,
   content: string,
