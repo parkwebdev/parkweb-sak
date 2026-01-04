@@ -15,7 +15,7 @@ import { Trash01, Clock } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
-import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { SavingIndicator } from '@/components/ui/saving-indicator';
 
 interface ScheduledReportsManagerProps {
   /** Optional external loading state override */
@@ -111,7 +111,7 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
                         checked={report.active}
                         onCheckedChange={(checked) => handleToggle(report.id, checked)}
                       />
-                      <SavedIndicator show={savedReportIds.has(report.id)} />
+                      <SavingIndicator isSaving={savedReportIds.has(report.id)} />
                     </div>
                     <Button
                       variant="ghost"

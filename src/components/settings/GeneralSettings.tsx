@@ -1,6 +1,6 @@
 /**
  * @fileoverview General application settings with theme and preferences.
- * Auto-saves changes with debouncing and visual saved indicators.
+ * Silent auto-save with 500ms debouncing - no visual saved indicators.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -8,10 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { toast } from '@/lib/toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { SavedIndicator } from './SavedIndicator';
+import { SavingIndicator } from '@/components/ui/saving-indicator';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -19,6 +18,7 @@ import { AnimatedItem } from '@/components/ui/animated-item';
 import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { PhoneInputField } from '@/components/ui/phone-input';
+import { getErrorMessage } from '@/types/errors';
 
 export function GeneralSettings() {
   const { user } = useAuth();
@@ -31,12 +31,7 @@ export function GeneralSettings() {
     company_address: '',
     company_phone: '',
   });
-  const [showSaved, setShowSaved] = useState({
-    default_project_view: false,
-    company_name: false,
-    company_address: false,
-    company_phone: false,
-  });
+  const [savingFields, setSavingFields] = useState<{ [key: string]: boolean }>({});
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
@@ -105,7 +100,10 @@ export function GeneralSettings() {
       clearTimeout(saveTimers.current[key]);
     }
 
-    // Debounce the save operation
+    // Mark as saving
+    setSavingFields(prev => ({ ...prev, [key]: true }));
+
+    // Debounce the save operation (500ms standard)
     saveTimers.current[key] = setTimeout(async () => {
       try {
         // Use UPDATE instead of UPSERT to avoid duplicate key issues
@@ -141,22 +139,20 @@ export function GeneralSettings() {
           // Revert local state on error
           setPreferences({ ...preferences, [key]: prevValue });
           toast.error("Update failed", {
-            description: "Failed to update preference.",
+            description: getErrorMessage(error),
           });
-          return;
         }
-
-        // Show saved indicator
-        setShowSaved({ ...showSaved, [key]: true });
       } catch (error: unknown) {
         logger.error('Error in updatePreference:', error);
         // Revert local state on error
         setPreferences({ ...preferences, [key]: prevValue });
         toast.error("Update failed", {
-          description: "Failed to update preference.",
+          description: getErrorMessage(error),
         });
+      } finally {
+        setSavingFields(prev => ({ ...prev, [key]: false }));
       }
-    }, 1000);
+    }, 500);
   };
 
   // Cleanup timers on unmount
@@ -178,7 +174,10 @@ export function GeneralSettings() {
       clearTimeout(saveTimers.current[key]);
     }
 
-    // Debounce the save operation
+    // Mark as saving
+    setSavingFields(prev => ({ ...prev, [key]: true }));
+
+    // Debounce the save operation (500ms standard)
     saveTimers.current[key] = setTimeout(async () => {
       try {
         const { error } = await supabase
@@ -190,20 +189,19 @@ export function GeneralSettings() {
           logger.error('Error updating company field:', error);
           setCompany(prev => ({ ...prev, [key]: prevValue }));
           toast.error("Update failed", {
-            description: "Failed to update company information.",
+            description: getErrorMessage(error),
           });
-          return;
         }
-
-        setShowSaved(prev => ({ ...prev, [key]: true }));
       } catch (error: unknown) {
         logger.error('Error in updateCompanyField:', error);
         setCompany(prev => ({ ...prev, [key]: prevValue }));
         toast.error("Update failed", {
-          description: "Failed to update company information.",
+          description: getErrorMessage(error),
         });
+      } finally {
+        setSavingFields(prev => ({ ...prev, [key]: false }));
       }
-    }, 1000);
+    }, 500);
   };
 
   if (loading) {
@@ -227,7 +225,7 @@ export function GeneralSettings() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="company_name" className="text-sm font-medium">Company Name</Label>
-                <SavedIndicator show={showSaved.company_name} />
+                <SavingIndicator isSaving={savingFields.company_name} />
               </div>
               <Input
                 id="company_name"
@@ -240,7 +238,7 @@ export function GeneralSettings() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="company_address" className="text-sm font-medium">Company Address</Label>
-                <SavedIndicator show={showSaved.company_address} />
+                <SavingIndicator isSaving={savingFields.company_address} />
               </div>
               <Input
                 id="company_address"
@@ -253,7 +251,7 @@ export function GeneralSettings() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="company_phone" className="text-sm font-medium">Company Phone</Label>
-                <SavedIndicator show={showSaved.company_phone} />
+                <SavingIndicator isSaving={savingFields.company_phone} />
               </div>
               <PhoneInputField
                 name="company_phone"
@@ -298,7 +296,7 @@ export function GeneralSettings() {
             <div className="space-y-0.5 flex-1">
               <div className="flex items-center gap-2">
                 <Label className="text-sm font-medium">Default View</Label>
-                <SavedIndicator show={showSaved.default_project_view} />
+                <SavingIndicator isSaving={savingFields.default_project_view} />
               </div>
               <p className="text-xs text-muted-foreground">Choose which page loads first when opening the application</p>
             </div>
@@ -332,4 +330,4 @@ export function GeneralSettings() {
       </AnimatedItem>
     </AnimatedList>
   );
-};
+}

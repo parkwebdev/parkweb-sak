@@ -1,6 +1,6 @@
 /**
  * @fileoverview Notification preferences settings with email category controls and deep linking.
- * Manages email categories, browser, and sound notification toggles with auto-save.
+ * Manages email categories, browser, and sound notification toggles with silent auto-save.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -15,6 +15,7 @@ import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 
 
 interface NotificationPreferences {
@@ -46,7 +47,7 @@ export function NotificationSettings() {
   const { requestBrowserNotificationPermission } = useNotifications();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showSaved, setShowSaved] = useState<{ [key: string]: boolean }>({});
+  const [savingFields, setSavingFields] = useState<{ [key: string]: boolean }>({});
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
@@ -226,7 +227,10 @@ export function NotificationSettings() {
       clearTimeout(saveTimers.current[key]);
     }
 
-    // Debounce the save operation
+    // Mark as saving
+    setSavingFields(prev => ({ ...prev, [key]: true }));
+
+    // Debounce the save operation (500ms standard)
     saveTimers.current[key] = setTimeout(async () => {
       try {
         const { error } = await supabase
@@ -236,21 +240,19 @@ export function NotificationSettings() {
 
         if (error) {
           logger.error('Error updating preference:', error);
-        toast.error("Update failed", {
-          description: "Failed to update notification preference.",
-        });
-          return;
+          toast.error("Update failed", {
+            description: getErrorMessage(error),
+          });
         }
-
-        // Show saved indicator
-        setShowSaved(prev => ({ ...prev, [key]: true }));
       } catch (error: unknown) {
         logger.error('Error in updatePreference:', error);
-          toast.error("Update failed", {
-            description: "Failed to update notification preference.",
-          });
+        toast.error("Update failed", {
+          description: getErrorMessage(error),
+        });
+      } finally {
+        setSavingFields(prev => ({ ...prev, [key]: false }));
       }
-    }, 1000);
+    }, 500);
   };
 
   // Cleanup timers on unmount
@@ -333,7 +335,7 @@ export function NotificationSettings() {
               description="Receive important updates and alerts via email"
               checked={preferences.email_notifications}
               onCheckedChange={(checked) => updatePreference('email_notifications', checked)}
-              showSaved={showSaved.email_notifications}
+              isSaving={savingFields.email_notifications}
             />
 
             {preferences.email_notifications && (
@@ -345,7 +347,7 @@ export function NotificationSettings() {
                     description="Confirmations, reminders, cancellations, and reschedules"
                     checked={preferences.booking_email_notifications}
                     onCheckedChange={(checked) => updatePreference('booking_email_notifications', checked)}
-                    showSaved={showSaved.booking_email_notifications}
+                    isSaving={savingFields.booking_email_notifications}
                   />
                 </div>
 
@@ -356,7 +358,7 @@ export function NotificationSettings() {
                     description="New leads, status changes, and human takeover requests"
                     checked={preferences.lead_email_notifications}
                     onCheckedChange={(checked) => updatePreference('lead_email_notifications', checked)}
-                    showSaved={showSaved.lead_email_notifications}
+                    isSaving={savingFields.lead_email_notifications}
                   />
                 </div>
 
@@ -367,7 +369,7 @@ export function NotificationSettings() {
                     description="Invitations and team member changes"
                     checked={preferences.team_email_notifications}
                     onCheckedChange={(checked) => updatePreference('team_email_notifications', checked)}
-                    showSaved={showSaved.team_email_notifications}
+                    isSaving={savingFields.team_email_notifications}
                   />
                 </div>
 
@@ -378,7 +380,7 @@ export function NotificationSettings() {
                     description="Webhook failures and agent error alerts"
                     checked={preferences.agent_email_notifications}
                     onCheckedChange={(checked) => updatePreference('agent_email_notifications', checked)}
-                    showSaved={showSaved.agent_email_notifications}
+                    isSaving={savingFields.agent_email_notifications}
                   />
                 </div>
 
@@ -389,7 +391,7 @@ export function NotificationSettings() {
                     description="Scheduled reports and analytics digests"
                     checked={preferences.report_email_notifications}
                     onCheckedChange={(checked) => updatePreference('report_email_notifications', checked)}
-                    showSaved={showSaved.report_email_notifications}
+                    isSaving={savingFields.report_email_notifications}
                   />
                 </div>
 
@@ -400,7 +402,7 @@ export function NotificationSettings() {
                     description="Feature announcements and product news"
                     checked={preferences.product_email_notifications}
                     onCheckedChange={(checked) => updatePreference('product_email_notifications', checked)}
-                    showSaved={showSaved.product_email_notifications}
+                    isSaving={savingFields.product_email_notifications}
                   />
                 </div>
               </div>
@@ -425,7 +427,7 @@ export function NotificationSettings() {
               description="Show desktop notifications in your browser"
               checked={preferences.browser_notifications}
               onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
-              showSaved={showSaved.browser_notifications}
+              isSaving={savingFields.browser_notifications}
             />
 
             <ToggleSettingRow
@@ -434,7 +436,7 @@ export function NotificationSettings() {
               description="Play a sound when new messages arrive"
               checked={preferences.sound_notifications}
               onCheckedChange={(checked) => updatePreference('sound_notifications', checked)}
-              showSaved={showSaved.sound_notifications}
+              isSaving={savingFields.sound_notifications}
             />
           </CardContent>
         </Card>
@@ -456,7 +458,7 @@ export function NotificationSettings() {
               description="New conversations, escalations, and takeover requests"
               checked={preferences.conversation_notifications}
               onCheckedChange={(checked) => updatePreference('conversation_notifications', checked)}
-              showSaved={showSaved.conversation_notifications}
+              isSaving={savingFields.conversation_notifications}
             />
 
             <ToggleSettingRow
@@ -465,7 +467,7 @@ export function NotificationSettings() {
               description="New leads captured and lead status changes"
               checked={preferences.lead_notifications}
               onCheckedChange={(checked) => updatePreference('lead_notifications', checked)}
-              showSaved={showSaved.lead_notifications}
+              isSaving={savingFields.lead_notifications}
             />
 
             <ToggleSettingRow
@@ -474,7 +476,7 @@ export function NotificationSettings() {
               description="Agent errors and knowledge source updates"
               checked={preferences.agent_notifications}
               onCheckedChange={(checked) => updatePreference('agent_notifications', checked)}
-              showSaved={showSaved.agent_notifications}
+              isSaving={savingFields.agent_notifications}
             />
 
             <ToggleSettingRow
@@ -483,7 +485,7 @@ export function NotificationSettings() {
               description="Team invitations and member updates"
               checked={preferences.team_notifications}
               onCheckedChange={(checked) => updatePreference('team_notifications', checked)}
-              showSaved={showSaved.team_notifications}
+              isSaving={savingFields.team_notifications}
             />
 
             <ToggleSettingRow
@@ -492,7 +494,7 @@ export function NotificationSettings() {
               description="Scheduled reports and analytics alerts"
               checked={preferences.report_notifications}
               onCheckedChange={(checked) => updatePreference('report_notifications', checked)}
-              showSaved={showSaved.report_notifications}
+              isSaving={savingFields.report_notifications}
             />
           </CardContent>
         </Card>

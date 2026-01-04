@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { SavingIndicator } from '@/components/ui/saving-indicator';
 import {
   Select,
   SelectContent,
@@ -169,32 +169,34 @@ export function ConversationMetadataPanel({
   const metadata = (conversation.metadata || {}) as ConversationMetadata;
   const [newTag, setNewTag] = useState('');
   const [notes, setNotes] = useState(metadata.notes || '');
-  const [notesSaved, setNotesSaved] = useState(false);
+  const [notesSaving, setNotesSaving] = useState(false);
   const notesDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   // Sync notes state when conversation changes
   useEffect(() => {
     setNotes((conversation.metadata as ConversationMetadata)?.notes || '');
-    setNotesSaved(false);
+    setNotesSaving(false);
   }, [conversation.id]);
   
   // Debounced auto-save for notes
   const handleNotesChange = useCallback((value: string) => {
     setNotes(value);
-    setNotesSaved(false);
+    setNotesSaving(false);
     
     // Clear existing debounce timer
     if (notesDebounceRef.current) {
       clearTimeout(notesDebounceRef.current);
     }
     
-    // Debounce save (1 second after typing stops) - silent to avoid toast
-    // Only pass the notes field to avoid overwriting real-time metadata updates
+    // Mark as saving
+    setNotesSaving(true);
+    
+    // Debounce save (500ms standard)
     notesDebounceRef.current = setTimeout(async () => {
       await onUpdateMetadata(conversation.id, { notes: value }, { silent: true });
-      setNotesSaved(true);
-    }, 1000);
+      setNotesSaving(false);
+    }, 500);
   }, [conversation.id, onUpdateMetadata]);
   
   // Cleanup debounce timer on unmount
@@ -1000,7 +1002,7 @@ export function ConversationMetadataPanel({
                   placeholder="Add internal notes about this conversation..."
                   className="min-h-[80px] text-sm resize-none"
                 />
-                <SavedIndicator show={notesSaved} className="mt-1" />
+                <SavingIndicator isSaving={notesSaving} />
               </div>
             </AccordionContent>
           </AccordionItem>

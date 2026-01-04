@@ -2,7 +2,7 @@
  * ToggleSettingRow Component
  * 
  * A settings row with label, optional description, and toggle switch.
- * Used for binary on/off settings with optional saved state indicator.
+ * Used for binary on/off settings with optional saving indicator.
  * 
  * @module components/ui/toggle-setting-row
  * 
@@ -14,13 +14,13 @@
  *   description="Receive alerts for new messages"
  *   checked={enabled}
  *   onCheckedChange={setEnabled}
- *   showSaved={justSaved}
+ *   isSaving={isSaving}
  * />
  * ```
  */
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { SavingIndicator } from '@/components/ui/saving-indicator';
 
 interface ToggleSettingRowProps {
   id: string;
@@ -28,19 +28,19 @@ interface ToggleSettingRowProps {
   description?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
-  showSaved?: boolean;
+  isSaving?: boolean;
   disabled?: boolean;
 }
 
-export const ToggleSettingRow = ({
+export function ToggleSettingRow({
   id,
   label,
   description,
   checked,
   onCheckedChange,
-  showSaved,
+  isSaving,
   disabled,
-}: ToggleSettingRowProps) => {
+}: ToggleSettingRowProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="space-y-0.5 flex-1">
@@ -48,7 +48,7 @@ export const ToggleSettingRow = ({
           <Label htmlFor={id} className="text-sm font-medium">
             {label}
           </Label>
-          {showSaved !== undefined && <SavedIndicator show={showSaved} />}
+          <SavingIndicator isSaving={isSaving ?? false} />
         </div>
         {description && (
           <p className="text-xs text-muted-foreground">
@@ -64,4 +64,4 @@ export const ToggleSettingRow = ({
       />
     </div>
   );
-};
+}

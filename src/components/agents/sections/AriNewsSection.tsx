@@ -26,7 +26,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { SavingIndicator } from '@/components/ui/saving-indicator';
 import { uploadFeaturedImage, deleteArticleImage } from '@/lib/article-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
@@ -510,7 +510,7 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
-  const [showSaved, setShowSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -522,12 +522,12 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
+      setIsSaving(true);
       const oldIndex = newsItems.findIndex((n) => n.id === active.id);
       const newIndex = newsItems.findIndex((n) => n.id === over.id);
       const reordered = arrayMove(newsItems, oldIndex, newIndex);
       await reorderNewsItems(reordered);
-      setShowSaved(true);
-      setTimeout(() => setShowSaved(false), 2000);
+      setIsSaving(false);
     }
   };
 
@@ -573,7 +573,7 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
       />
 
       <div className="mt-6 space-y-4">
-        <SavedIndicator show={showSaved} message="Order saved" />
+        <SavingIndicator isSaving={isSaving} />
 
         {loading ? (
           <div className="space-y-3">
