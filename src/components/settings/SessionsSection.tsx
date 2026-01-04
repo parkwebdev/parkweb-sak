@@ -110,7 +110,7 @@ export function SessionsSection() {
       
       // Reset success state after animation
       setTimeout(() => setSignOutSuccess(false), 3000);
-    } catch (error) {
+    } catch (error: unknown) {
       toast.error("Error", { description: "An unexpected error occurred" });
     } finally {
       setIsSigningOut(false);

@@ -82,7 +82,7 @@ export const TurnstileWidget = ({
           widgetIdRef.current = id;
           setIsLoaded(true);
           console.debug('Turnstile: Widget rendered successfully');
-        } catch (err) {
+        } catch (err: unknown) {
           console.error('Turnstile: Failed to render widget', err);
           onError?.();
         }
@@ -116,7 +116,7 @@ export const TurnstileWidget = ({
         try {
           window.turnstile.remove(widgetIdRef.current);
           widgetIdRef.current = null;
-        } catch (err) {
+        } catch (err: unknown) {
           console.debug('Turnstile: Cleanup error (expected if already removed)', err);
         }
       }

@@ -317,7 +317,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       await addComment(newComment.trim());
       setNewComment('');
       inputRef.current?.focus();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to add comment:', error);
       toast.error('Failed to add comment');
     }
@@ -329,7 +329,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
       await updateComment({ commentId, content: editContent.trim() });
       setEditingId(null);
       setEditContent('');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to update comment:', error);
       toast.error('Failed to update comment');
     }
@@ -339,7 +339,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
     try {
       await deleteComment(commentId);
       toast.success('Comment deleted');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to delete comment:', error);
       toast.error('Failed to delete comment');
     }

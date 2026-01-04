@@ -264,7 +264,7 @@ export default function ReportBuilder() {
           lastPreviewKeyRef.current = previewKey;
           logger.debug('PDF preview generation complete', { previewKey });
         }
-      } catch (err) {
+      } catch (err: unknown) {
         if (!cancelled) {
           logger.error('Failed to generate PDF preview:', err);
           setPreviewError(err instanceof Error ? err.message : 'Failed to generate preview');

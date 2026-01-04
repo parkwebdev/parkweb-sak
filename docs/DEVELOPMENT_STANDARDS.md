@@ -270,6 +270,76 @@ Sections filtered by permission; API key actions require `manage_ari`.
 
 ---
 
+## 7. TypeScript Strict Mode Preparation
+
+> **Status**: Phase 4.1 Complete ✓  
+> **Completed**: January 2026
+
+### Error Handling Standard
+
+All `catch` blocks MUST use `error: unknown` typing:
+
+```typescript
+// ✅ CORRECT: Typed catch block
+try {
+  await riskyOperation();
+} catch (error: unknown) {
+  console.error('Operation failed:', error);
+  // Use getErrorMessage(error) for user-facing messages
+}
+
+// ❌ WRONG: Untyped catch block (breaks strict mode)
+try {
+  await riskyOperation();
+} catch (error) {  // Implicit 'any' type
+  console.error(error.message);  // Unsafe property access
+}
+```
+
+### Record Types Standard
+
+Use `Record<string, unknown>` instead of `Record<string, any>`:
+
+```typescript
+// ✅ CORRECT
+function processData(data: Record<string, unknown>) { ... }
+
+// ❌ WRONG: Allows unsafe property access
+function processData(data: Record<string, any>) { ... }
+```
+
+### Phase 4.1 Completion Verification
+
+```bash
+# Verify no untyped catch blocks (should only find JSDoc examples)
+grep -rn "catch (error) {" src/ --include="*.ts" --include="*.tsx" | grep -v "^\s*//"
+grep -rn "catch (e) {" src/ --include="*.ts" --include="*.tsx"
+grep -rn "catch (err) {" src/ --include="*.ts" --include="*.tsx"
+
+# Verify no Record<string, any> (should return empty)
+grep -rn "Record<string, any>" src/ --include="*.ts" --include="*.tsx"
+```
+
+### Files Updated in Phase 4.1
+
+| File | Changes |
+|------|---------|
+| `src/components/leads/LeadActivityPanel.tsx` | 3 catch blocks typed |
+| `src/lib/pdf-components/fonts.ts` | 2 catch blocks typed |
+| `src/lib/pdf-generator.tsx` | 1 catch block typed |
+| `src/components/AuthTurnstile.tsx` | 3 catch blocks typed |
+| `src/components/settings/SessionsSection.tsx` | 1 catch block typed |
+| `src/pages/EmailTemplatesTest.tsx` | 1 catch block typed |
+| `src/pages/Leads.tsx` | 5 catch blocks typed |
+| `src/pages/ReportBuilder.tsx` | 1 catch block typed |
+| `src/widget/utils/migration.ts` | 1 catch block typed |
+| `src/widget/components/TurnstileWidget.tsx` | 2 catch blocks typed |
+| `src/widget/hooks/useWidgetMessaging.ts` | Already typed ✓ |
+| `src/components/pdf/PdfJsViewer.tsx` | 2 catch blocks typed |
+| `src/widget/api.ts` | `Record<string, any>` → `Record<string, unknown>` |
+
+---
+
 ## Related Documentation
 
 - [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Tables and RLS policies

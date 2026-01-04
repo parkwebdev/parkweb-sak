@@ -269,7 +269,7 @@ export async function createLead(agentId: string, data: {
   firstName: string;
   lastName: string;
   email: string;
-  customFields: Record<string, any>;
+  customFields: Record<string, unknown>;
   _formLoadTime?: number; // Spam protection: timestamp when form was loaded
   turnstileToken?: string | null; // Bot protection: Cloudflare Turnstile token
 }): Promise<{ leadId: string; conversationId: string | null }> {

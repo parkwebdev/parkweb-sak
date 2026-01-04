@@ -78,7 +78,7 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
         if (widgetIdRef.current && window.turnstile) {
           try {
             window.turnstile.reset(widgetIdRef.current);
-          } catch (err) {
+          } catch (err: unknown) {
             console.debug('AuthTurnstile: Reset error', err);
           }
         }
@@ -101,7 +101,7 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
             widgetIdRef.current = id;
             setIsLoaded(true);
             console.debug('AuthTurnstile: Widget rendered successfully');
-          } catch (err) {
+        } catch (err: unknown) {
             console.error('AuthTurnstile: Failed to render widget', err);
             onErrorRef.current?.();
           }
@@ -135,7 +135,7 @@ export const AuthTurnstile = forwardRef<AuthTurnstileRef, AuthTurnstileProps>(
           try {
             window.turnstile.remove(widgetIdRef.current);
             widgetIdRef.current = null;
-          } catch (err) {
+          } catch (err: unknown) {
             console.debug('AuthTurnstile: Cleanup error', err);
           }
         }
