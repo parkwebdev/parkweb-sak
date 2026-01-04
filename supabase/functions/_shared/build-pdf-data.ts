@@ -269,9 +269,9 @@ export async function buildPDFDataFromSupabase(
     const messagesQuery = await supabase
       .from('messages')
       .select('conversation_id')
-      .in('conversation_id', (conversations || []).slice(0, 100).map((c: any) => c.id));
+      .in('conversation_id', (conversations || []).slice(0, 100).map((c: { id: string }) => c.id));
     
-    const conversationsWithMessages = new Set((messagesQuery.data || []).map((m: any) => m.conversation_id));
+    const conversationsWithMessages = new Set((messagesQuery.data || []).map((m: { conversation_id: string }) => m.conversation_id));
     const engagedCount = conversationsWithMessages.size;
     
     data.conversationFunnel = [
@@ -300,7 +300,7 @@ export async function buildPDFDataFromSupabase(
   // SATISFACTION RATINGS
   // =========================================================================
   
-  const conversationIds = (conversations || []).map((c: any) => c.id).filter(Boolean);
+  const conversationIds = (conversations || []).map((c: { id: string }) => c.id).filter(Boolean);
   
   if (conversationIds.length > 0) {
     const { data: ratings } = await supabase
@@ -310,12 +310,12 @@ export async function buildPDFDataFromSupabase(
 
     if (ratings?.length) {
       const totalRatings = ratings.length;
-      const avgRating = ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / totalRatings;
+      const avgRating = ratings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / totalRatings;
       
       // Distribution
       const distribution = [1, 2, 3, 4, 5].map(rating => ({
         rating,
-        count: ratings.filter((r: any) => r.rating === rating).length,
+        count: ratings.filter((r: { rating: number }) => r.rating === rating).length,
       }));
 
       data.satisfactionStats = {
@@ -334,9 +334,9 @@ export async function buildPDFDataFromSupabase(
 
       // Recent feedback
       data.recentFeedback = ratings
-        .filter((r: any) => r.feedback)
+        .filter((r: { rating: number; feedback?: string; created_at: string; trigger_type: string }) => r.feedback)
         .slice(0, 10)
-        .map((r: any) => ({
+        .map((r: { rating: number; feedback?: string; created_at: string; trigger_type: string }) => ({
           rating: r.rating,
           feedback: r.feedback,
           createdAt: r.created_at,
@@ -675,10 +675,10 @@ export async function buildPDFDataFromSupabase(
           const { data: agentRatings } = await supabase
             .from('conversation_ratings')
             .select('rating')
-            .in('conversation_id', agentConvIds.map((c: any) => c.id));
+            .in('conversation_id', agentConvIds.map((c: { id: string }) => c.id));
           
           if (agentRatings?.length) {
-            avgRating = agentRatings.reduce((sum: number, r: any) => sum + r.rating, 0) / agentRatings.length;
+            avgRating = agentRatings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / agentRatings.length;
           }
         }
 

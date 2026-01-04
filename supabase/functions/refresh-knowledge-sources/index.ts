@@ -244,14 +244,14 @@ async function syncProperties(
     if (fetchError) throw fetchError;
 
     const existingMap = new Map(
-      (existingProperties || []).map((p) => [p.external_id, p.id])
+      (existingProperties || []).map((p: { id: string; external_id: string | null }) => [p.external_id, p.id])
     );
-    const extractedIds = new Set(extractedProperties.map((p) => p.external_id));
+    const extractedIds = new Set(extractedProperties.map((p: ExtractedProperty) => p.external_id));
 
     // Delete properties no longer in source (HARD DELETE for cost savings)
     const toDelete = (existingProperties || [])
-      .filter((p) => !extractedIds.has(p.external_id))
-      .map((p) => p.id);
+      .filter((p: { id: string; external_id: string | null }) => !extractedIds.has(p.external_id))
+      .map((p: { id: string; external_id: string | null }) => p.id);
 
     if (toDelete.length > 0) {
       const { error: deleteError } = await supabase

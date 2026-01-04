@@ -228,7 +228,7 @@ async function getGoogleBusyTimes(
   const data = await response.json();
   const busy = data.calendars?.[calId]?.busy || [];
   
-  return busy.map((period: any) => ({
+  return busy.map((period: { start: string; end: string }) => ({
     start: new Date(period.start),
     end: new Date(period.end),
   }));

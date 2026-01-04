@@ -47,7 +47,7 @@ let currentBatchContext: {
 } | null = null;
 
 // Register beforeunload handler to detect forced shutdowns
-addEventListener('beforeunload', (ev: any) => {
+addEventListener('beforeunload', (ev: Event & { detail?: { reason?: string } }) => {
   console.log('Function shutdown due to:', ev.detail?.reason || 'unknown');
   
   // If we were processing a batch, it will be picked up by the stalled detection
@@ -186,7 +186,7 @@ async function generateEmbeddingsBatch(
     
     // Process batch in parallel
     const batchResults = await Promise.all(
-      batch.map(async (chunk) => {
+      batch.map(async (chunk: { content: string; tokenCount: number }) => {
         try {
           return await generateEmbedding(chunk.content);
         } catch (error: unknown) {

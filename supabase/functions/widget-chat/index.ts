@@ -20,6 +20,7 @@ import {
   type ShownProperty, 
   type ConversationMetadata, 
   type CallAction, 
+  type ChatMessage,
   URL_REGEX, 
   PHONE_REGEX 
 } from "../_shared/types.ts";
@@ -433,7 +434,7 @@ serve(async (req) => {
     let dbConversationHistory: any[] = [];
     if (activeConversationId && !isGreetingRequest && !previewMode) {
       dbConversationHistory = await fetchConversationHistory(supabase, activeConversationId);
-      console.log(`Fetched ${dbConversationHistory.length} messages from database (including ${dbConversationHistory.filter((m: any) => m.role === 'tool').length} tool results)`);
+      console.log(`Fetched ${dbConversationHistory.length} messages from database (including ${dbConversationHistory.filter((m: ChatMessage) => m.role === 'tool').length} tool results)`);
     }
     
     const { data: subscription } = await supabase
@@ -530,7 +531,7 @@ serve(async (req) => {
     let rawHistory: any[];
     if (previewMode) {
       // Preview mode: use client-provided messages (no database history)
-      rawHistory = messages.map((m: any) => ({
+      rawHistory = messages.map((m: ChatMessage) => ({
         role: m.role,
         content: m.content,
       }));
@@ -539,7 +540,7 @@ serve(async (req) => {
       rawHistory = convertDbMessagesToOpenAI(dbConversationHistory);
     } else {
       // Fallback: use client messages if no database history
-      rawHistory = messages.map((m: any) => ({
+      rawHistory = messages.map((m: ChatMessage) => ({
         role: m.role,
         content: m.content,
       }));
@@ -639,7 +640,7 @@ Generate a warm, personalized greeting using the user information provided above
     // SMART MODEL ROUTING: Select optimal model based on query complexity
     const hasUserTools = formattedTools && formattedTools.length > 0;
     const conversationLength = messagesToSend.length;
-    const lastUserQuery = messagesToSend.filter((m: any) => m.role === 'user').pop()?.content || '';
+    const lastUserQuery = messagesToSend.filter((m: ChatMessage) => m.role === 'user').pop()?.content || '';
     
     const { model: selectedModel, tier: modelTier } = selectModelTier(
       lastUserQuery,
@@ -713,7 +714,7 @@ Generate a warm, personalized greeting using the user information provided above
     } : null;
 
     // Built-in tool to mark conversation as complete (triggers satisfaction rating)
-    const userMessageCount = messages.filter((m: any) => m.role === 'user').length;
+    const userMessageCount = messages.filter((m: ChatMessage) => m.role === 'user').length;
     
     const markCompleteTool = {
       type: 'function',

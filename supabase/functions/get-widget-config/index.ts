@@ -167,10 +167,18 @@ Deno.serve(async (req) => {
     const enableNewsTab = agent.enable_news_tab || embeddedChatConfig.enableNewsTab || false;
 
     // Transform quick actions to match widget format
-    const quickActions = (embeddedChatConfig.quickActions || [
+    interface QuickAction {
+      id?: string;
+      title?: string;
+      label?: string;
+      subtitle?: string;
+      icon?: string;
+      action?: string;
+    }
+    const quickActions = ((embeddedChatConfig.quickActions || [
       { icon: 'chat', title: 'Start a Chat', subtitle: 'Chat with our AI assistant', action: 'start_chat' },
       { icon: 'help', title: 'Help Articles', subtitle: 'Browse our knowledge base', action: 'open_help' }
-    ]).map((qa: any) => ({
+    ]) as QuickAction[]).map((qa: QuickAction) => ({
       id: qa.id || qa.action,
       label: qa.title || qa.label, // Support both label and title
       title: qa.title || qa.label, // Support both label and title

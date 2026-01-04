@@ -9,7 +9,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders } from "../cors.ts";
-import type { ConversationMetadata, ShownProperty } from "../types.ts";
+import type { ConversationMetadata, ShownProperty, CallAction, ChatMessage, PageVisit } from "../types.ts";
 import { moderateContent } from "../security/moderation.ts";
 import { sanitizeAiOutput } from "../security/sanitization.ts";
 import { splitResponseIntoChunks } from "../utils/response-chunking.ts";
@@ -274,8 +274,8 @@ export async function updateConversationMetadata(options: UpdateMetadataOptions)
   // Merge page visits
   let mergedPageVisits = currentMetadata.visited_pages || [];
   if (pageVisits && Array.isArray(pageVisits)) {
-    const existingUrls = new Set(mergedPageVisits.map((v: any) => `${v.url}-${v.entered_at}`));
-    const newVisits = pageVisits.filter((v: any) => !existingUrls.has(`${v.url}-${v.entered_at}`));
+    const existingUrls = new Set(mergedPageVisits.map((v: PageVisit) => `${v.url}-${v.entered_at}`));
+    const newVisits = pageVisits.filter((v: PageVisit) => !existingUrls.has(`${v.url}-${v.entered_at}`));
     mergedPageVisits = [...mergedPageVisits, ...newVisits];
     console.log(`Merged ${newVisits.length} new page visits, total: ${mergedPageVisits.length}`);
   }
@@ -286,8 +286,8 @@ export async function updateConversationMetadata(options: UpdateMetadataOptions)
 
   if (!existingLangCode) {
     const userMsgsForDetection = (messagesToSend || [])
-      .filter((m: any) => m.role === 'user')
-      .map((m: any) => m.content || '')
+      .filter((m: ChatMessage) => m.role === 'user')
+      .map((m: ChatMessage) => m.content || '')
       .slice(-3);
 
     if (userMsgsForDetection.length > 0) {
@@ -391,7 +391,7 @@ export function extractMemories(options: ExtractMemoriesOptions): void {
 
   if (previewMode || isGreetingRequest || !messages || messages.length === 0) return;
 
-  const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop();
+  const lastUserMsg = messages.filter((m: ChatMessage) => m.role === 'user').pop();
   if (!lastUserMsg?.content || !assistantContent) return;
 
   const leadId = conversationMetadata?.lead_id as string | undefined;
@@ -505,7 +505,7 @@ export function buildFinalResponse(options: BuildResponseOptions): Response {
         if (callActionsResult.length > 0) {
           log.debug('Phone numbers detected', {
             count: callActionsResult.length,
-            numbers: callActionsResult.map((a) => a.displayNumber),
+            numbers: callActionsResult.map((a: CallAction) => a.displayNumber),
           });
         }
         return callActionsResult.length > 0 ? callActionsResult : undefined;

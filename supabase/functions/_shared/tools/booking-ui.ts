@@ -20,9 +20,27 @@
  * ```
  */
 
+import type { ChatMessage } from "../types.ts";
+
 // ============================================
 // TYPES - Must match src/widget/types.ts
 // ============================================
+
+/** Available slot from calendar API */
+interface AvailableSlot {
+  start: string;
+  end: string;
+}
+
+/** Calendar availability tool result */
+interface CalendarToolResult {
+  available_slots?: AvailableSlot[];
+  location?: {
+    id: string;
+    name: string;
+    phone?: string;
+  };
+}
 
 export interface BookingDay {
   date: string;
@@ -117,13 +135,13 @@ export function transformToDayPickerData(toolResult: any): DayPickerData | null 
  * @param selectedDate - Date to show times for (YYYY-MM-DD format)
  * @returns TimePickerData or null if no times available for date
  */
-export function transformToTimePickerData(toolResult: any, selectedDate: string): TimePickerData | null {
+export function transformToTimePickerData(toolResult: CalendarToolResult, selectedDate: string): TimePickerData | null {
   if (!toolResult?.available_slots?.length || !toolResult?.location) return null;
   
   const times = toolResult.available_slots
-    .filter((slot: any) => slot.start.startsWith(selectedDate))
-    .map((slot: any) => ({
-      time: new Date(slot.start).toLocaleTimeString('en-US', { 
+    .filter((slot: AvailableSlot) => slot.start.startsWith(selectedDate))
+    .map((slot: AvailableSlot) => ({
+      time: new Date(slot.start).toLocaleTimeString('en-US', {
         hour: 'numeric', 
         minute: '2-digit',
         hour12: true 
@@ -189,12 +207,12 @@ export function transformToBookingConfirmedData(toolResult: any): BookingConfirm
  * @param messages - Recent conversation messages
  * @returns Selected date in YYYY-MM-DD format or null
  */
-export function detectSelectedDateFromMessages(messages: any[]): string | null {
+export function detectSelectedDateFromMessages(messages: ChatMessage[]): string | null {
   // Get last 3 user messages
   const recentUserMessages = messages
-    .filter((m: any) => m.role === 'user')
+    .filter((m: ChatMessage) => m.role === 'user')
     .slice(-3)
-    .map((m: any) => m.content?.toLowerCase() || '');
+    .map((m: ChatMessage) => m.content?.toLowerCase() || '');
   
   const fullContent = recentUserMessages.join(' ');
   

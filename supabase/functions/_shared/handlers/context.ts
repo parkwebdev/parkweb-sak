@@ -8,7 +8,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import type { ConversationMetadata, ShownProperty } from "../types.ts";
+import type { ConversationMetadata, ShownProperty, ChatMessage } from "../types.ts";
 import { 
   generateEmbedding, 
   getCachedEmbedding, 
@@ -17,7 +17,8 @@ import {
 import { 
   searchKnowledge, 
   getCachedResponse, 
-  cacheResponse 
+  cacheResponse,
+  type KnowledgeResult 
 } from "../ai/rag.ts";
 import { 
   searchSemanticMemories, 
@@ -92,7 +93,7 @@ export async function buildContext(
   }
 
   // Get the last user message for RAG search
-  const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop();
+  const lastUserMessage = messages.filter((m: ChatMessage) => m.role === 'user').pop();
 
   if (!lastUserMessage?.content) {
     return buildFinalPrompt({
@@ -189,20 +190,20 @@ export async function buildContext(
 
     // Inject knowledge context into system prompt
     if (knowledgeResults && knowledgeResults.length > 0) {
-      maxSimilarity = Math.max(...knowledgeResults.map((r: any) => r.similarity));
+      maxSimilarity = Math.max(...knowledgeResults.map((r: KnowledgeResult) => r.similarity));
 
-      sources = knowledgeResults.map((result: any) => ({
+      sources = knowledgeResults.map((result: KnowledgeResult) => ({
         source: result.source,
         type: result.type,
         similarity: result.similarity,
         url: result.sourceUrl,
       }));
 
-      const relevantChunks = knowledgeResults.filter((r: any) => r.similarity > 0.35);
+      const relevantChunks = knowledgeResults.filter((r: KnowledgeResult) => r.similarity > 0.35);
 
       if (relevantChunks.length > 0) {
         const knowledgeContext = relevantChunks
-          .map((result: any, index: number) => {
+          .map((result: KnowledgeResult, index: number) => {
             const chunkInfo = result.chunkIndex !== undefined ? ` - Section ${result.chunkIndex + 1}` : '';
             const urlInfo = result.sourceUrl ? ` | URL: ${result.sourceUrl}` : '';
             return `[Source ${index + 1}: ${result.source}${chunkInfo}${urlInfo} (${result.type}, relevance: ${(result.similarity * 100).toFixed(0)}%)]
@@ -403,7 +404,7 @@ function appendPropertyToolsContext(
 RECENTLY SHOWN PROPERTIES (use these for booking/reference):
 ${shownProperties
   .map(
-    (p) =>
+    (p: ShownProperty) =>
       `${p.index}. ${p.address}, ${p.city}, ${p.state} - ${p.beds || '?'}bed/${p.baths || '?'}bath ${p.price_formatted} (ID: ${p.id})${p.community ? ` [${p.community}]` : ''}${p.location_id ? ` (Location: ${p.location_id})` : ''}`
   )
   .join('\n')}
