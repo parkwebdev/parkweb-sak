@@ -138,7 +138,7 @@ toastImpl.loading = (message: string, options?: ToastOptions) => {
 
 toastImpl.saving = (message: string = 'Saving...') => {
   return sonnerToast.loading(message, {
-    duration: 800,
+    duration: Infinity, // Controlled by useAutoSave with minimum display time
   });
 };
 

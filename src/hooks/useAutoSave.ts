@@ -26,7 +26,7 @@ import { getErrorMessage } from '@/types/errors';
 interface UseAutoSaveOptions<T> {
   /** Function to call when saving */
   onSave: (value: T) => Promise<void>;
-  /** Debounce delay in milliseconds (default: 2000) */
+  /** Debounce delay in milliseconds (default: 500) */
   debounceMs?: number;
   /** Custom error handler (defaults to toast) */
   onError?: (error: unknown) => void;
@@ -47,9 +47,12 @@ interface UseAutoSaveReturn<T> {
  * @param options - Configuration options
  * @returns Object with save function
  */
+/** Minimum time the saving toast should be visible (2 seconds) */
+const MINIMUM_TOAST_DURATION = 2000;
+
 export function useAutoSave<T>({
   onSave,
-  debounceMs = 2000,
+  debounceMs = 500,
   onError,
   savingMessage = 'Saving...',
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn<T> {
@@ -82,9 +85,18 @@ export function useAutoSave<T>({
 
   const executeSave = useCallback(async (value: T) => {
     const toastId = toast.saving(savingMessageRef.current);
+    const startTime = Date.now();
+    
     try {
       await onSaveRef.current(value);
-      toast.dismiss(toastId);
+      
+      // Ensure toast is visible for minimum duration
+      const elapsed = Date.now() - startTime;
+      const remainingTime = Math.max(0, MINIMUM_TOAST_DURATION - elapsed);
+      
+      setTimeout(() => {
+        toast.dismiss(toastId);
+      }, remainingTime);
     } catch (error: unknown) {
       toast.dismiss(toastId);
       if (onErrorRef.current) {
