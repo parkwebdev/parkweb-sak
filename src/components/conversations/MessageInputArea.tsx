@@ -190,7 +190,7 @@ export const MessageInputArea = memo(function MessageInputArea({
             onKeyDown={handleKeyDown}
             disabled={isSending}
             rows={1}
-            className="min-h-[40px] max-h-[120px] py-2.5 pr-12 resize-none"
+            className="!min-h-[40px] max-h-[120px] py-2.5 pr-12 resize-none"
           />
           <Button 
             type="submit" 
