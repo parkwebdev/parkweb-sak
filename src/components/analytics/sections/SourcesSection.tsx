@@ -55,7 +55,7 @@ export function SourcesSection({
               data={trafficSources} 
               loading={trafficLoading || (comparisonMode && comparisonTrafficLoading)}
               comparisonData={comparisonMode ? comparisonTrafficSources : undefined}
-              engagement={engagement}
+              engagement={engagement ?? undefined}
             />
             <LeadSourceBreakdownCard
               data={leadsBySource}

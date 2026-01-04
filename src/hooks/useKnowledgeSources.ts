@@ -500,7 +500,7 @@ export const useKnowledgeSources = (agentId?: string) => {
     const { error: updateError } = await supabase
       .from('knowledge_sources')
       .update({ status: 'processing' })
-      .eq('agent_id', agentId)
+      .eq('agent_id', agentId ?? '')
       .in('id', sourcesToRetrain.map(s => s.id));
 
     if (updateError) {

@@ -101,11 +101,11 @@ export const useTeam = () => {
       }
 
       // Combine profile and role data
-      return profiles.map((profile) => {
+      return profiles.map((profile): TeamMember => {
         const roleData = rolesData?.find(r => r.user_id === profile.user_id);
         return {
           ...profile,
-          email: profile.user_id === user.id ? user.email : null, // Only show own email
+          email: profile.user_id === user.id ? (user.email ?? null) : null, // Only show own email
           role: roleData?.role || 'member',
           permissions: roleData?.permissions || [],
         };

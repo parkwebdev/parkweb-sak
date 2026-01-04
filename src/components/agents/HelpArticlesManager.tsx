@@ -159,7 +159,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           categoryIcon: category?.icon || 'book',
           orderIndex: article.order,
           featuredImage: article.featured_image || null,
-          hasEmbedding: article.has_embedding,
+          hasEmbedding: article.has_embedding ?? false,
           createdAt: article.created_at || null,
           updatedAt: null,
         };

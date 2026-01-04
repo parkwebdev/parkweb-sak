@@ -73,7 +73,7 @@ export interface UseWidgetMessagingProps {
   /** Ref for current page info */
   currentPageRef: React.MutableRefObject<{ url: string; entered_at: string }>;
   /** Browser language ref */
-  browserLanguageRef: React.MutableRefObject<string>;
+  browserLanguageRef: React.MutableRefObject<string | null>;
   /** Callback to trigger rating prompt (from useWidgetRating) */
   triggerRating?: (type: 'team_closed' | 'ai_marked_complete') => void;
   /** Callback to set human takeover state (from useWidgetTakeover) */

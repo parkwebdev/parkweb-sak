@@ -163,7 +163,7 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
       setPageVisits(prev => [...prev, newVisit]);
       
       // Send real-time update if we have an active conversation
-      if (sendRealtime && isValidUUID(activeConversationId)) {
+      if (sendRealtime && activeConversationId && isValidUUID(activeConversationId)) {
         updatePageVisit(activeConversationId, {
           ...newVisit,
           previous_duration_ms: previousDuration,

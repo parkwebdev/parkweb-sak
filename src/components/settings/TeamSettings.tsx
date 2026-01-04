@@ -114,7 +114,7 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
       <TeamMembersTable
         teamMembers={teamMembers}
         currentUserId={user?.id}
-        currentUserRole={currentUserRole}
+        currentUserRole={currentUserRole ?? undefined}
         canManageRoles={canManageRoles}
         onEditRole={handleEditRole}
         onEditProfile={isAdmin ? handleEditProfile : undefined}

@@ -62,7 +62,7 @@ const AUTH_TYPES = [
 ];
 
 export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebhookDialogProps) => {
-  const { createWebhook } = useWebhooks(agentId);
+  const { createWebhook } = useWebhooks(agentId ?? '');
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');

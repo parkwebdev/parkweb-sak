@@ -117,13 +117,13 @@ const AriConfigurator = () => {
 
   // Widget preview hooks
   logger.debug('AriConfigurator: Initializing widget preview hooks', { agentId });
-  const { config: embedConfig } = useEmbeddedChatConfig(agentId);
+  const { config: embedConfig } = useEmbeddedChatConfig(agentId ?? '');
   logger.debug('AriConfigurator: useEmbeddedChatConfig complete');
   
-  const { articles: helpArticles, categories: helpCategories } = useHelpArticles(agentId);
+  const { articles: helpArticles, categories: helpCategories } = useHelpArticles(agentId ?? '');
   logger.debug('AriConfigurator: useHelpArticles complete', { articleCount: helpArticles?.length });
   
-  const { announcements: allAnnouncements } = useAnnouncements(agentId);
+  const { announcements: allAnnouncements } = useAnnouncements(agentId ?? '');
   logger.debug('AriConfigurator: useAnnouncements complete', { announcementCount: allAnnouncements?.length });
 
   const handleUpdate = async (_id: string, updates: Partial<Agent>): Promise<Agent | null> => {
@@ -306,7 +306,7 @@ const AriConfigurator = () => {
       </main>
 
       {/* Right: Widget Preview (desktop only) */}
-      <AriPreviewColumn agentId={agentId} primaryColor={embedConfig?.primaryColor} />
+      <AriPreviewColumn agentId={agentId ?? ''} primaryColor={embedConfig?.primaryColor} />
 
       {/* Mobile/Tablet: Floating widget preview */}
       {widgetConfig && (

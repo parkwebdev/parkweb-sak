@@ -94,7 +94,7 @@ export function useConversationStatus(options: UseConversationStatusOptions) {
       statusChannelRef.current = null;
     }
 
-    statusChannelRef.current = subscribeToConversationStatus(activeConversationId, async (status) => {
+    statusChannelRef.current = subscribeToConversationStatus(activeConversationId!, async (status) => {
       logger.debug('[Widget] Status changed to:', status);
       const wasTakeover = isHumanTakeover;
       setIsHumanTakeover(status === 'human_takeover');
@@ -108,22 +108,22 @@ export function useConversationStatus(options: UseConversationStatusOptions) {
       
       // Clear the takeover notice flag when returning to AI so next takeover shows notice again
       if (status !== 'human_takeover') {
-        resetTakeoverNotice(activeConversationId);
+        resetTakeoverNotice(activeConversationId!);
         return;
       }
       
       // When takeover starts, show a system notice only once (persisted across page navigations)
       if (status === 'human_takeover' && !wasTakeover) {
         // Check if we already showed a notice for this conversation (persisted in localStorage)
-        if (checkTakeoverNoticeShown(activeConversationId)) {
+        if (checkTakeoverNoticeShown(activeConversationId!)) {
           return;
         }
         
         // Mark that we've shown the notice for this conversation (persisted)
-        markTakeoverNoticeShown(activeConversationId);
+        markTakeoverNoticeShown(activeConversationId!);
         
         // Fetch agent info for personalized message
-        const agent = await fetchTakeoverAgent(activeConversationId);
+        const agent = await fetchTakeoverAgent(activeConversationId!);
         const agentName = agent?.name || 'A team member';
         setTakeoverAgentName(agent?.name);
         setTakeoverAgentAvatar(agent?.avatar);

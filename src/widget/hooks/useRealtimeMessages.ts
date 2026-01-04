@@ -94,7 +94,7 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
 
     // Subscribe to new messages and updates
     realtimeChannelRef.current = subscribeToMessages(
-      activeConversationId, 
+      activeConversationId!, 
       (newMessage) => {
         // Type the metadata
         const metadata = (newMessage.metadata || {}) as WidgetMessageMetadata;

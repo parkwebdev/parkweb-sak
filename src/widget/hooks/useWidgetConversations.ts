@@ -141,7 +141,7 @@ export function useWidgetConversations(options: UseWidgetConversationsOptions) {
               role: msg.role as 'user' | 'assistant',
               content: msg.content,
               timestamp: new Date(msg.created_at),
-              type: files?.length > 0 ? 'file' as const : 'text' as const,
+              type: (files?.length ?? 0) > 0 ? 'file' as const : 'text' as const,
               files: files,
               reactions: metadata?.reactions || [],
               isHuman: metadata?.sender_type === 'human',
@@ -245,7 +245,7 @@ export function useWidgetConversations(options: UseWidgetConversationsOptions) {
       
       // Then sync with server
       const timer = setTimeout(async () => {
-        const result = await markMessagesRead(activeConversationId, 'user');
+        const result = await markMessagesRead(activeConversationId!, 'user');
         if (result.success && result.updated && result.updated > 0) {
           logger.debug(`[Widget] Server confirmed ${result.updated} messages as read`);
         }

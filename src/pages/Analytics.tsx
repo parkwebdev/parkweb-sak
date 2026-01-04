@@ -183,7 +183,7 @@ function Analytics() {
             />
           )}
 
-          {activeTab === 'pages' && (
+          {activeTab === 'pages' && data.engagement && (
             <PagesSection
               engagement={data.engagement}
               landingPages={data.landingPages}

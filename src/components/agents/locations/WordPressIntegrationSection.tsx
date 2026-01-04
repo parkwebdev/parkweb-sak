@@ -401,9 +401,9 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                     </Button>
                   </div>
 
-                  {formatLastSync(connectionLastSync) && (
+                  {formatLastSync(connectionLastSync ?? null) && (
                     <p className="text-xs text-muted-foreground">
-                      Last synced {formatLastSync(connectionLastSync)}
+                      Last synced {formatLastSync(connectionLastSync ?? null)}
                     </p>
                   )}
                 </div>

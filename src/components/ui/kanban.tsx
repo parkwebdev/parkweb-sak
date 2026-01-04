@@ -408,14 +408,14 @@ export const KanbanProvider = <
         }
 
         lastOverId.current = overId;
-        return [{ id: overId }];
+        return overId != null ? [{ id: overId }] : [];
       }
 
       if (recentlyMovedToNewContainer.current) {
         lastOverId.current = active.id;
       }
 
-      return lastOverId.current ? [{ id: lastOverId.current }] : [];
+      return lastOverId.current != null ? [{ id: lastOverId.current }] : [];
     },
     [columnItemIdsMap, isColumnId]
   );

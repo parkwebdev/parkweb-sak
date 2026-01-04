@@ -13,7 +13,7 @@ export type Lead = Tables<'leads'> & {
     id: string;
     created_at: string;
     metadata?: unknown;
-  };
+  } | null;
 };
 
 interface LeadsColumnsProps {

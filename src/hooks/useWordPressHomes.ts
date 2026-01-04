@@ -137,7 +137,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
       if (error) throw error;
 
       if (data.success) {
-        const parts = [];
+        const parts: string[] = [];
         if (data.created > 0) parts.push(`${data.created} new`);
         if (data.updated > 0) parts.push(`${data.updated} updated`);
         if (data.deleted > 0) parts.push(`${data.deleted} removed`);

@@ -67,8 +67,8 @@ export function PermissionGuard({
     }
 
     // Check if user has any of the required permissions
-    const permissions = Array.isArray(permission) ? permission : [permission];
-    const hasAccess = permissions.some(p => hasPermission(p));
+    const permissions = Array.isArray(permission) ? permission : (permission ? [permission] : []);
+    const hasAccess = permissions.length > 0 && permissions.some(p => hasPermission(p));
     
     if (hasAccess) {
       return <>{children}</>;

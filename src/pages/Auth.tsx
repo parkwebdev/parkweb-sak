@@ -190,7 +190,7 @@ const Auth = () => {
 
   // Helper to detect rate limit errors from Supabase
   const isRateLimitError = (error: { message?: string; status?: number }): boolean => {
-    return (
+    return Boolean(
       error.status === 429 ||
       error.message?.toLowerCase().includes('rate limit') ||
       error.message?.toLowerCase().includes('too many requests') ||
