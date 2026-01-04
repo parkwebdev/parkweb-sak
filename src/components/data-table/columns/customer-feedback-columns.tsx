@@ -26,7 +26,7 @@ const getSentimentClasses = (rating: number) => {
     return "text-status-active"; // Green for positive
   }
   if (rating === 3) {
-    return "text-yellow-500"; // Yellow for neutral
+    return "text-warning"; // Yellow for neutral
   }
   return "text-destructive"; // Red for negative
 };

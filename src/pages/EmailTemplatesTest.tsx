@@ -811,7 +811,7 @@ export default function EmailTemplatesTest() {
               <p className="text-sm text-muted-foreground mt-0.5">
                 Preview and test email templates
                 {isEdgeBacked && !supabaseExportMode && (
-                  <span className="ml-2 text-xs text-green-600 dark:text-green-400">• Using Edge Function</span>
+                  <span className="ml-2 text-xs text-status-active">• Using Edge Function</span>
                 )}
               </p>
             </div>
@@ -850,7 +850,7 @@ export default function EmailTemplatesTest() {
 
           {/* Supabase Export Info */}
           {supabaseExportMode && (
-            <Card className="border-blue-500/20 bg-blue-500/5">
+            <Card className="border-primary/20 bg-primary/5">
               <CardContent className="py-3 px-4">
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">Supabase Export Mode:</span> Template uses variables like <code className="px-1 py-0.5 bg-muted rounded text-xs font-mono">{'{{ .ConfirmationURL }}'}</code>. Copy and paste into Supabase Dashboard → Auth → Email Templates.

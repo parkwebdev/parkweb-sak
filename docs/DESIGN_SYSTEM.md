@@ -1339,6 +1339,93 @@ try {
 
 ---
 
+## Loading States & Status Indicators
+
+| Pattern | Class/Component | Use Case |
+|---------|-----------------|----------|
+| Skeleton placeholder | `<Skeleton>` component | Content loading states |
+| Pulse animation | `animate-pulse` | Active processing (retraining, syncing) |
+| Pulse ring | `animate-pulse-ring` | Live presence indicators |
+| Slow pulse | `animate-pulse-slow` | Online/availability status (widget) |
+
+**Guidelines:**
+- Use the `<Skeleton>` component for all loading placeholders
+- Use `animate-pulse` directly ONLY for real-time status indicators (not loading states)
+- Status indicators (syncing, processing) may pulse to indicate active operation
+- Widget uses `animate-pulse-slow` for subtle online status indication
+
+---
+
+## Viewport-Relative Heights (Allowed Exceptions)
+
+These patterns are intentional and do not violate the design system:
+
+| Pattern | Use Case | Notes |
+|---------|----------|-------|
+| `max-h-[80vh]` | Compact dialogs | With overflow handling |
+| `max-h-[85vh]` | Standard dialogs | Most common |
+| `max-h-[90vh]` | Large dialogs | Maximum comfortable height |
+| `h-[94vh]` | Full-height sheets | Lead details, conversation panels |
+| `min-h-[280px]` | Video containers | Minimum visible height |
+| `min-h-[400px]` | Charts/maps | Data visualization minimum |
+| `h-[calc(100vh-Xpx)]` | Responsive layouts | Account for fixed headers |
+
+**Guidelines:**
+- Always pair `max-h-[*vh]` with `overflow-y-auto` or `overflow-hidden flex flex-col`
+- Use calc() for layouts that need to account for fixed headers/footers
+- Prefer token-based heights for fixed-size elements (buttons, inputs, avatars)
+
+---
+
+## Spacing Patterns
+
+**Primary spacing tokens (preferred):**
+- `space-y-2` / `gap-2` - Tight groupings (8px)
+- `space-y-4` / `gap-4` - Standard sections (16px)
+- `space-y-6` / `gap-6` - Major sections (24px)
+
+**Contextual variations (allowed when visually appropriate):**
+- `space-y-1` / `gap-1` - Very compact lists (4px)
+- `space-y-1.5` - Label-to-input spacing (6px)
+- `space-y-3` - Medium density content (12px)
+- `space-y-5` - Between major card groups (20px)
+
+**Form field patterns:**
+- Label to input: `space-y-1.5` or `space-y-2`
+- Between form fields: `space-y-4`
+- Form sections: `space-y-6`
+
+The system prefers even values (2, 4, 6) but allows intermediate values when visual balance requires it.
+
+---
+
+## Form Accessibility Patterns
+
+**Required for all form inputs:**
+
+```tsx
+<Input 
+  id="field-name"
+  aria-describedby="field-name-hint" // Links to helper text
+/>
+<FormHint id="field-name-hint">Helper text explaining the field</FormHint>
+```
+
+**Current coverage (reference implementations):**
+- `CreateToolDialog.tsx` - Full aria-describedby on all fields
+- `EditToolDialog.tsx` - Full aria-describedby on all fields
+
+**Files that would benefit from enhanced accessibility:**
+- ProfileSettings form fields
+- NotificationSettings form fields
+- Agent personality/behavior configuration
+- Lead capture form settings
+- Webhook configuration forms
+
+> **Note:** This is an enhancement to be applied incrementally. New forms should follow this pattern.
+
+---
+
 ## Related Documentation
 
 - [Component Patterns](./COMPONENT_PATTERNS.md) - Component patterns and motion
