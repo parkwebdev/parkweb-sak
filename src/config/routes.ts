@@ -183,7 +183,7 @@ export const SETTINGS_TABS: readonly SettingsTabConfig[] = [
     label: 'Usage',
     tabParam: 'usage',
     requiredPermission: 'view_billing',
-    iconName: 'HorizontalBarChart02',
+    iconName: 'PieChart03',
     description: 'View usage metrics',
   },
   {
