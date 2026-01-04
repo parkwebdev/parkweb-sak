@@ -186,7 +186,7 @@ Output ONLY valid JSON array, no other text.`;
       // Handle potential markdown code blocks
       const jsonStr = content.replace(/```json\n?|\n?```/g, '').trim();
       memories = JSON.parse(jsonStr);
-    } catch (e) {
+    } catch (e: unknown) {
       console.log('No memories to extract or invalid JSON');
       return;
     }

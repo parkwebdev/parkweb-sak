@@ -1295,7 +1295,7 @@ Deno.serve(async (req) => {
           })
           .eq('id', sourceId);
         console.log('Updated source status to error');
-      } catch (e) {
+      } catch (e: unknown) {
         console.error('Failed to update error status:', e);
       }
     }

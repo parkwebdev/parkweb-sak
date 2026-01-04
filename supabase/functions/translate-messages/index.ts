@@ -115,8 +115,8 @@ Do not add any explanation or commentary. Only output the JSON array.`
         cleanContent = cleanContent.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
       }
       translatedTexts = JSON.parse(cleanContent);
-    } catch (parseError) {
-      console.error('Failed to parse translation response:', aiContent);
+    } catch (parseError: unknown) {
+      console.error('Failed to parse translation response:', aiContent, parseError);
       return new Response(
         JSON.stringify({ error: 'Failed to parse translation response' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -353,7 +353,7 @@ Deno.serve(async (req) => {
               }),
             });
             console.log(`[google-calendar-auth] Webhook stopped for account ${accountId}`);
-          } catch (e) {
+          } catch (e: unknown) {
             console.warn('[google-calendar-auth] Webhook stop failed (non-critical):', e);
           }
         }
@@ -365,7 +365,7 @@ Deno.serve(async (req) => {
               method: 'POST',
             });
             console.log(`[google-calendar-auth] Token revoked for account ${accountId}`);
-          } catch (e) {
+          } catch (e: unknown) {
             console.warn('[google-calendar-auth] Token revocation failed (non-critical):', e);
           }
         }
@@ -552,7 +552,7 @@ Deno.serve(async (req) => {
                 resourceId: account.webhook_resource_id,
               }),
             });
-          } catch (e) {
+          } catch (e: unknown) {
             console.warn('[google-calendar-auth] Existing webhook stop failed:', e);
           }
         }
@@ -580,7 +580,7 @@ Deno.serve(async (req) => {
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
-        } catch (e) {
+        } catch (e: unknown) {
           console.error('[google-calendar-auth] Webhook refresh failed:', e);
         }
 
