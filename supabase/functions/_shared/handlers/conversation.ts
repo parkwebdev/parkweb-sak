@@ -9,13 +9,21 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders } from "../cors.ts";
-import type { ConversationMetadata } from "../types.ts";
+import type { ConversationMetadata, ReferrerJourney, ChatMessage } from "../types.ts";
 import { moderateContent } from "../security/moderation.ts";
+
+/** File attachment structure */
+interface FileAttachment {
+  url: string;
+  name?: string;
+  type?: string;
+  size?: number;
+}
 
 /** Conversation state after checks */
 export interface ConversationState {
   conversationId: string;
-  conversation: { status: string; metadata: any } | null;
+  conversation: { status: string; metadata: ConversationMetadata } | null;
   isNew: boolean;
 }
 
@@ -29,7 +37,7 @@ export interface TakeoverInfo {
 export interface ConversationCheckResult {
   shouldReturn: boolean;
   response?: Response;
-  conversation?: { status: string; metadata: any };
+  conversation?: { status: string; metadata: ConversationMetadata };
 }
 
 /**
@@ -54,7 +62,7 @@ export async function getOrCreateConversation(
     referer: string | null;
     leadId: string | undefined;
     visitorId: string | undefined;
-    referrerJourney: any;
+    referrerJourney: ReferrerJourney | undefined;
   }
 ): Promise<{ conversationId: string; isNew: boolean }> {
   const {
@@ -96,7 +104,7 @@ export async function getOrCreateConversation(
   }
 
   // Create a new conversation
-  const conversationMetadata: any = {
+  const conversationMetadata: Partial<ConversationMetadata> & { messages_count: number; visited_pages: Array<{ url: string; entered_at: string; duration_ms: number }>; tags: string[] } = {
     ip_address: ipAddress,
     country,
     city,
@@ -156,7 +164,7 @@ export async function getOrCreateConversation(
 export async function checkConversationStatus(
   supabase: ReturnType<typeof createClient>,
   conversationId: string,
-  messages: any[],
+  messages: ChatMessage[],
   previewMode: boolean
 ): Promise<ConversationCheckResult> {
   if (previewMode) {
@@ -303,12 +311,12 @@ export async function saveUserMessage(
   supabase: ReturnType<typeof createClient>,
   options: {
     conversationId: string;
-    message: { role: string; content: string; files?: any[] } | undefined;
+    message: { role: string; content: string; files?: FileAttachment[] } | undefined;
     isGreetingRequest: boolean;
     previewMode: boolean;
     requestId: string;
     agentId: string;
-    conversationMetadata: any;
+    conversationMetadata: ConversationMetadata | null;
   }
 ): Promise<{
   userMessageId: string | undefined;

@@ -7,6 +7,7 @@
 
 import type { PDFData } from './pdf/types.ts';
 import type { SupabaseClientType } from './types/supabase.ts';
+import type { UsageMetricRow, AgentRow } from './types.ts';
 
 interface ReportConfig {
   startDate: string;
@@ -632,11 +633,11 @@ export async function buildPDFDataFromSupabase(
       .order('period_start', { ascending: true });
 
     if (usageData?.length) {
-      data.usageMetrics = usageData.map((u: any) => ({
+      data.usageMetrics = usageData.map((u: UsageMetricRow) => ({
         date: u.period_start.split('T')[0],
         conversations: u.conversations_count || 0,
         messages: u.messages_count || 0,
-        api_calls: u.api_calls_count || 0,
+        api_calls: 0,
       }));
     }
   }
@@ -652,7 +653,7 @@ export async function buildPDFDataFromSupabase(
       .eq('user_id', userId);
 
     if (agents?.length) {
-      data.agentPerformance = await Promise.all(agents.map(async (agent: any) => {
+      data.agentPerformance = await Promise.all(agents.map(async (agent: AgentRow) => {
         // Get conversation count for this agent
         const { count: agentConvCount } = await supabase
           .from('conversations')

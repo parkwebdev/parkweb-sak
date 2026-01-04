@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import type { SupabaseClientType } from '../_shared/types/supabase.ts';
+import type { BusinessHoursConfig, ScheduleItem } from '../_shared/types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,7 +62,7 @@ interface BusyPeriod {
 }
 
 // Parse business hours from location metadata
-function parseBusinessHours(businessHours: any, timezone: string): Map<number, { open: string; close: string } | null> {
+function parseBusinessHours(businessHours: BusinessHoursConfig | null, timezone: string): Map<number, { open: string; close: string } | null> {
   const hours = new Map<number, { open: string; close: string } | null>();
   
   // Days: 0=Sunday, 1=Monday, ... 6=Saturday
@@ -84,12 +85,13 @@ function parseBusinessHours(businessHours: any, timezone: string): Map<number, {
     const dayNum = dayMap[day.toLowerCase()];
     if (dayNum === undefined) continue;
     
-    if (!schedule || (schedule as any).closed) {
+    const scheduleObj = schedule as { open?: string; close?: string; closed?: boolean } | null;
+    if (!scheduleObj || scheduleObj.closed) {
       hours.set(dayNum, null);
     } else {
       hours.set(dayNum, {
-        open: (schedule as any).open || '09:00',
-        close: (schedule as any).close || '17:00',
+        open: scheduleObj.open || '09:00',
+        close: scheduleObj.close || '17:00',
       });
     }
   }
@@ -269,8 +271,8 @@ async function getOutlookBusyTimes(
   const scheduleItems = data.value?.[0]?.scheduleItems || [];
   
   return scheduleItems
-    .filter((item: any) => item.status !== 'free')
-    .map((item: any) => ({
+    .filter((item: ScheduleItem) => item.status !== 'free')
+    .map((item: ScheduleItem) => ({
       start: new Date(item.start.dateTime + 'Z'),
       end: new Date(item.end.dateTime + 'Z'),
     }));

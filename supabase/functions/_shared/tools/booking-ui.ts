@@ -21,6 +21,7 @@
  */
 
 import type { ChatMessage } from "../types.ts";
+import type { BookingToolResult } from "../types/tools.ts";
 
 // ============================================
 // TYPES - Must match src/widget/types.ts
@@ -32,7 +33,7 @@ interface AvailableSlot {
   end: string;
 }
 
-/** Calendar availability tool result */
+/** Calendar availability tool result - extends BookingToolResult */
 interface CalendarToolResult {
   available_slots?: AvailableSlot[];
   location?: {
@@ -94,7 +95,7 @@ export interface BookingConfirmationData {
  * @param toolResult - Result from check_calendar_availability tool
  * @returns DayPickerData or null if no available slots
  */
-export function transformToDayPickerData(toolResult: any): DayPickerData | null {
+export function transformToDayPickerData(toolResult: BookingToolResult | null): DayPickerData | null {
   if (!toolResult?.available_slots?.length || !toolResult?.location) return null;
   
   const today = new Date().toISOString().split('T')[0];
@@ -173,7 +174,7 @@ export function transformToTimePickerData(toolResult: CalendarToolResult, select
  * @param toolResult - Result from book_appointment tool
  * @returns BookingConfirmationData or null if no booking data
  */
-export function transformToBookingConfirmedData(toolResult: any): BookingConfirmationData | null {
+export function transformToBookingConfirmedData(toolResult: BookingToolResult | null): BookingConfirmationData | null {
   if (!toolResult?.booking) return null;
   
   const booking = toolResult.booking;

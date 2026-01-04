@@ -52,7 +52,7 @@ export async function buildContext(
   options: {
     agentId: string;
     baseSystemPrompt: string;
-    messages: any[];
+    messages: ChatMessage[];
     isGreetingRequest: boolean;
     previewMode: boolean;
     conversationMetadata: ConversationMetadata | null;

@@ -4,8 +4,8 @@ interface EventPayload {
   type: 'insert' | 'update' | 'delete';
   table: string;
   schema: string;
-  record: any;
-  old_record?: any;
+  record: Record<string, unknown>;
+  old_record?: Record<string, unknown>;
 }
 
 Deno.serve(async (req) => {
