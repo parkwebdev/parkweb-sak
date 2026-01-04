@@ -25,7 +25,8 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { IconButton } from '@/components/ui/icon-button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { sendChatMessage, type ChatResponse } from '@/widget/api';
@@ -84,7 +85,7 @@ export function PreviewChat({
   
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -419,28 +420,33 @@ export function PreviewChat({
       </div>
 
       {/* Input Area */}
-      <div className="p-3 border-t">
-        <div className="flex items-center gap-2">
-          <Input
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <IconButton
-            variant="default"
-            size="icon"
-            label="Send message"
-            onClick={handleSendMessage}
-            disabled={!inputValue.trim() || isLoading}
-            className="h-10 w-10"
-          >
-            <Send01 size={16} />
-          </IconButton>
-        </div>
+      <div className="px-6 py-4 border-t bg-background shrink-0">
+        <form 
+          onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
+          className="flex items-center"
+        >
+          <div className="relative flex-1">
+            <Textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              disabled={isLoading}
+              rows={1}
+              className="!min-h-0 max-h-[120px] py-2 pr-12 resize-none leading-tight"
+            />
+            <Button 
+              type="submit" 
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+              disabled={!inputValue.trim() || isLoading}
+              aria-label="Send message"
+            >
+              <Send01 size={16} aria-hidden="true" />
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );
