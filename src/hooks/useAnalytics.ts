@@ -103,8 +103,8 @@ interface ContainmentTrendPoint {
  * @returns {SparklineDataPoint[]} bookingTrend - Daily booking totals for sparkline
  * @returns {SparklineDataPoint[]} satisfactionTrend - Daily avg satisfaction for sparkline
  * @returns {SparklineDataPoint[]} containmentTrend - Daily containment rate for sparkline
- * @returns {any[]} conversations - Raw conversation data for tables
- * @returns {any[]} leads - Raw lead data for tables
+ * @returns {unknown[]} conversations - Raw conversation data for tables
+ * @returns {unknown[]} leads - Raw lead data for tables
  * @returns {boolean} loading - Loading state
  * @returns {Function} refetch - Manually refresh all analytics
  */

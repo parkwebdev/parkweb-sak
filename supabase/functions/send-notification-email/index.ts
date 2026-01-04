@@ -27,12 +27,19 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60000;
 const RATE_LIMIT_MAX_REQUESTS = 10;
 
+/** Additional data for email content customization */
+interface EmailData {
+  sowId?: string;
+  additionalInfo?: string;
+  [key: string]: string | undefined;
+}
+
 interface EmailRequest {
   to: string;
   type: 'scope_work' | 'onboarding' | 'system' | 'team' | 'security';
   title: string;
   message: string;
-  data?: any;
+  data?: EmailData;
 }
 
 // =============================================================================
@@ -101,26 +108,18 @@ const checkRateLimit = (clientIP: string): boolean => {
   return true;
 };
 
-const sanitizeData = (data: any): any => {
+const sanitizeData = (data: EmailData | undefined): EmailData | undefined => {
   if (!data) return data;
   
-  if (typeof data === 'string') {
-    return data.replace(/<[^>]*>/g, '').trim();
-  }
-  
-  if (typeof data === 'object' && data !== null) {
-    const sanitized: any = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (typeof value === 'string') {
-        sanitized[key] = value.replace(/<[^>]*>/g, '').trim();
-      } else {
-        sanitized[key] = value;
-      }
+  const sanitized: EmailData = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === 'string') {
+      sanitized[key] = value.replace(/<[^>]*>/g, '').trim();
+    } else {
+      sanitized[key] = value;
     }
-    return sanitized;
   }
-  
-  return data;
+  return sanitized;
 };
 
 // =============================================================================
@@ -131,7 +130,7 @@ function generateEmailContent(
   type: string,
   title: string,
   message: string,
-  data?: any
+  data?: EmailData
 ): { subject: string; html: string } {
   const baseUrl = Deno.env.get('APP_URL') || 'https://getpilot.io';
   

@@ -87,7 +87,7 @@ const App = () => (
         <TooltipProvider>
           <GlobalSearchProvider>
             <Toaster />
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <AuthProvider>
                 <GlobalSearch />
                 <Routes>

@@ -49,6 +49,8 @@ export const RichTextEditor = ({
         heading: {
           levels: [1, 2, 3],
         },
+        // Disable extensions we configure separately to prevent duplicate warnings
+        strike: false,
       }),
       Image.configure({
         inline: false,

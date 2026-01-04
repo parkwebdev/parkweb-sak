@@ -1,4 +1,15 @@
-/* MapLibre GL Map Component - Free unlimited maps with CARTO basemaps */
+/**
+ * MapLibre GL Map Component - Free unlimited maps with CARTO basemaps
+ * 
+ * NOTE: This file uses `as any` casts in several places due to MapLibre GL's
+ * incomplete TypeScript definitions. Specifically:
+ * - GeoJSON geometry coordinates are typed as Position but require [number, number]
+ * - Layer specifications use complex union types that don't fully match runtime API
+ * - fitBounds accepts LngLatBoundsLike but inference fails with tuple literals
+ * 
+ * These casts are intentional and safe given the runtime validation MapLibre performs.
+ * See: https://github.com/maplibre/maplibre-gl-js/issues/1424
+ */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as React from "react";
