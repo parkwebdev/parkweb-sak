@@ -349,7 +349,7 @@ export const HelpView = ({
           </div>
           
           {/* Feedback Section - pinned at bottom of container */}
-          <div className="flex-shrink-0 p-4 border-t bg-muted/30">
+          <div className="flex-shrink-0 p-4 border-t bg-muted/30 animate-fade-in">
             {feedbackSubmitted ? (
               <div className="text-center py-4">
                 <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
