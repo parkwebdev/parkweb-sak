@@ -439,7 +439,7 @@ export function PreviewChat({
               disabled={isLoading}
               size="compact"
               rows={1}
-              className="h-9 max-h-[120px] pr-11 resize-none"
+              className="!min-h-0 max-h-[120px] py-2 pr-11 resize-none leading-tight"
             />
             <Button 
               type="submit" 
