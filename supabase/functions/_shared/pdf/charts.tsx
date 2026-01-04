@@ -57,13 +57,13 @@ export function PDFLineChart({ data, series, width = CHART_DIMS.width, height = 
   const yScale = scaleLinear([yTicks[0], yTicks[yTicks.length - 1]], [plotHeight, 0]);
   const xStep = plotWidth / (sampledData.length - 1 || 1);
 
-  const paths = series.map(s => {
-    const points = sampledData.map((d, i) => ({ x: padding.left + i * xStep, y: padding.top + yScale(Number(d[s.key]) || 0) }));
+  const paths = series.map((s: { key: string; color: string; label?: string }) => {
+    const points = sampledData.map((d: { date: string; [key: string]: string | number }, i: number) => ({ x: padding.left + i * xStep, y: padding.top + yScale(Number(d[s.key]) || 0) }));
     return { ...s, path: buildLinePath(points) };
   });
 
   const xLabelStep = Math.max(1, Math.floor(sampledData.length / 6));
-  const xLabels = sampledData.filter((_, i) => i % xLabelStep === 0 || i === sampledData.length - 1).map((d) => ({ label: formatDateLabel(d.date), x: padding.left + sampledData.indexOf(d) * xStep }));
+  const xLabels = sampledData.filter((_: { date: string; [key: string]: string | number }, i: number) => i % xLabelStep === 0 || i === sampledData.length - 1).map((d: { date: string; [key: string]: string | number }) => ({ label: formatDateLabel(d.date), x: padding.left + sampledData.indexOf(d) * xStep }));
 
   return React.createElement(View, { style: { width, height, marginBottom: 8 }, wrap: false },
     React.createElement(Svg, { width, height },

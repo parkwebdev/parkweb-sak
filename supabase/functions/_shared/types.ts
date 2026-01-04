@@ -97,6 +97,27 @@ export interface CallAction {
 }
 
 // ============================================
+// CHAT MESSAGE TYPES
+// ============================================
+
+/**
+ * Basic chat message structure for OpenAI-style conversations.
+ */
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string;
+}
+
+/**
+ * Page visit structure for tracking visitor journey.
+ */
+export interface PageVisit {
+  url: string;
+  entered_at: string;
+  title?: string;
+}
+
+// ============================================
 // REGEX PATTERNS
 // ============================================
 
