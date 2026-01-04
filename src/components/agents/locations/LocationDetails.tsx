@@ -14,6 +14,7 @@ import { ChevronDown, ChevronRight } from '@untitledui/icons';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { BusinessHoursEditor } from './BusinessHoursEditor';
 import { CalendarConnections } from './CalendarConnections';
+import { SocialConnections } from './SocialConnections';
 import { US_TIMEZONES, type BusinessHours, type LocationFormData } from '@/types/locations';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -113,6 +114,17 @@ export function LocationDetails({
         <div className="space-y-3">
           <span className="text-xs text-muted-foreground uppercase tracking-wide">Connected Calendars</span>
           <CalendarConnections
+            locationId={location.id}
+            agentId={agentId}
+          />
+        </div>
+      </AnimatedItem>
+
+      {/* Social Accounts - Always visible */}
+      <AnimatedItem>
+        <div className="space-y-3">
+          <span className="text-xs text-muted-foreground uppercase tracking-wide">Social Accounts</span>
+          <SocialConnections
             locationId={location.id}
             agentId={agentId}
           />
