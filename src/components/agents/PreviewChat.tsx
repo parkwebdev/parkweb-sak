@@ -16,6 +16,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
+import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { logger } from '@/utils/logger';
 import { DotsVertical, RefreshCw01, Send01 } from '@untitledui/icons';
 import { 
@@ -86,6 +87,9 @@ export function PreviewChat({
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea as user types
+  useAutoResizeTextarea(inputRef, inputValue, { minRows: 1, maxRows: 5, lineHeight: 26 });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
