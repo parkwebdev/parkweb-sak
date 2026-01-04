@@ -102,7 +102,7 @@ export function SessionsSection() {
     <AnimatedList className="space-y-4" staggerDelay={0.1}>
       <AnimatedItem>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardHeader className="flex flex-row items-end justify-between space-y-0">
             <div className="space-y-1">
             <CardTitle className="text-base font-semibold">
                 Active Sessions

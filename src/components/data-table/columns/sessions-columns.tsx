@@ -9,8 +9,8 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { IconButton } from '@/components/ui/icon-button';
-import { Monitor01, Phone01, LogOut01 } from '@untitledui/icons';
+import { Button } from '@/components/ui/button';
+import { Monitor01, Phone01 } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 
 export interface SessionData {
@@ -94,9 +94,9 @@ export const createSessionColumns = ({
   },
   {
     id: 'actions',
-    size: 80,
-    minSize: 60,
-    maxSize: 100,
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: () => <span className="text-xs font-medium sr-only">Actions</span>,
     cell: ({ row }) => {
       const session = row.original;
@@ -105,15 +105,15 @@ export const createSessionColumns = ({
       if (session.is_current) return null;
       
       return (
-        <IconButton
-          label="Sign out this session"
+        <Button
           variant="ghost"
-          size="icon-sm"
+          size="sm"
           onClick={() => onRevoke(session.id)}
           disabled={isRevoking === session.id}
+          className="text-destructive hover:text-destructive"
         >
-          <LogOut01 size={16} className="text-destructive" aria-hidden="true" />
-        </IconButton>
+          Remove
+        </Button>
       );
     },
   },
