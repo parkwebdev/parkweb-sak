@@ -4,12 +4,13 @@
  * System prompt editor for defining agent personality.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import { AriSectionHeader } from './AriSectionHeader';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -28,30 +29,22 @@ const PROMPT_TIPS = [
 ];
 
 export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSectionProps) {
-  const [showSaved, setShowSaved] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState(agent.system_prompt);
   const [isHoveringTip, setIsHoveringTip] = useState(false);
-  const saveTimerRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     setSystemPrompt(agent.system_prompt);
   }, [agent.id, agent.system_prompt]);
 
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+  const { save, isSaving } = useAutoSave({
+    onSave: async (value: string) => {
+      await onUpdate(agent.id, { system_prompt: value });
+    },
+  });
 
   const handleChange = (value: string) => {
     setSystemPrompt(value);
-
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(async () => {
-      await onUpdate(agent.id, { system_prompt: value });
-      setShowSaved(true);
-      setTimeout(() => setShowSaved(false), 2000);
-    }, 1000);
+    save(value);
   };
 
   return (
@@ -59,7 +52,7 @@ export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSecti
       <AriSectionHeader
         title="System Prompt"
         description="Define your agent's personality, role, and communication style"
-        showSaved={showSaved}
+        isSaving={isSaving}
       />
 
       <div className="space-y-4">
@@ -113,4 +106,4 @@ export function AriSystemPromptSection({ agent, onUpdate }: AriSystemPromptSecti
       </div>
     </div>
   );
-};
+}

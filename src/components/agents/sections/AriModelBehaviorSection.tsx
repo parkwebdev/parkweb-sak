@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -365,7 +365,6 @@ const calculateEstimatedCost = (model: string, maxTokens: number) => {
 };
 
 export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSectionProps) {
-  const [showSaved, setShowSaved] = useState(false);
   const [activeSlider, setActiveSlider] = useState<string | null>(null);
   const deploymentConfig = (agent.deployment_config || {}) as AgentDeploymentConfig;
   const { planName } = usePlanLimits();
@@ -404,25 +403,21 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
     });
   }, [agent.id]);
 
-  const saveToDatabase = async (data: typeof formData) => {
-    const { top_p, top_k, presence_penalty, frequency_penalty, response_length_preset, ...coreFields } = data;
-    await onUpdate(agent.id, {
-      ...coreFields,
-      deployment_config: {
-        ...deploymentConfig,
-        top_p,
-        top_k,
-        presence_penalty,
-        frequency_penalty,
-      },
-    });
-    setShowSaved(true);
-    setTimeout(() => setShowSaved(false), 2000);
-  };
-
-  const debouncedSave = useDebouncedCallback((data: typeof formData) => {
-    saveToDatabase(data);
-  }, 1000);
+  const { save: autoSave, isSaving } = useAutoSave({
+    onSave: async (data: typeof formData) => {
+      const { top_p, top_k, presence_penalty, frequency_penalty, response_length_preset, ...coreFields } = data;
+      await onUpdate(agent.id, {
+        ...coreFields,
+        deployment_config: {
+          ...deploymentConfig,
+          top_p,
+          top_k,
+          presence_penalty,
+          frequency_penalty,
+        },
+      });
+    },
+  });
 
   const handleUpdate = (updates: Partial<typeof formData>) => {
     let newFormData = { ...formData, ...updates };
@@ -446,7 +441,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
     }
     
     setFormData(newFormData);
-    debouncedSave(newFormData);
+    autoSave(newFormData);
   };
 
   const capabilities = getModelCapabilities(formData.model);
@@ -481,7 +476,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
       <AriSectionHeader
         title="Model & Behavior"
         description="Choose your AI model and fine-tune response creativity"
-        showSaved={showSaved}
+        isSaving={isSaving}
       />
 
       <div className="flex gap-8">

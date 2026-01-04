@@ -1,6 +1,6 @@
 /**
  * @fileoverview Profile settings with avatar upload and password management.
- * Features auto-save for profile changes and password strength indicator.
+ * Features silent auto-save for profile changes (no visual saved indicators).
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Button } from '@/components/ui/button';
-import { SavedIndicator } from './SavedIndicator';
+import { SavingIndicator } from '@/components/ui/saving-indicator';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { uploadAvatar } from '@/lib/avatar-upload';
@@ -37,9 +37,10 @@ export function ProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [savedFields, setSavedFields] = useState<Record<string, boolean>>({});
+  const [savingFields, setSavingFields] = useState<Record<string, boolean>>({});
   const [initialProfile, setInitialProfile] = useState<typeof profile | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
   const { user } = useAuth();
 
   useEffect(() => {
@@ -84,25 +85,26 @@ export function ProfileSettings() {
     }
   };
 
-  const showSaved = (field: string) => {
-    setSavedFields(prev => ({ ...prev, [field]: true }));
-    setTimeout(() => {
-      setSavedFields(prev => ({ ...prev, [field]: false }));
-    }, 2000);
-  };
-
   useEffect(() => {
     if (!loading && profile.display_name && !initialProfile) {
       setInitialProfile(profile);
     }
   }, [loading, profile.display_name]);
 
-  // Auto-save display_name changes
+  // Auto-save display_name changes with 500ms debounce
   useEffect(() => {
     if (loading || !user || !initialProfile || !profile.display_name) return;
     if (profile.display_name === initialProfile.display_name) return;
     
-    const timer = setTimeout(async () => {
+    // Clear existing timer
+    if (saveTimers.current.display_name) {
+      clearTimeout(saveTimers.current.display_name);
+    }
+
+    // Mark as saving
+    setSavingFields(prev => ({ ...prev, display_name: true }));
+
+    saveTimers.current.display_name = setTimeout(async () => {
       try {
         await supabase
           .from('profiles')
@@ -110,22 +112,36 @@ export function ProfileSettings() {
             display_name: profile.display_name,
           })
           .eq('user_id', user.id);
-        showSaved('display_name');
         setInitialProfile(profile);
       } catch (error: unknown) {
         logger.error('Error auto-saving display name:', error);
+        toast.error('Failed to save', { description: getErrorMessage(error) });
+      } finally {
+        setSavingFields(prev => ({ ...prev, display_name: false }));
       }
-    }, 1000);
+    }, 500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (saveTimers.current.display_name) {
+        clearTimeout(saveTimers.current.display_name);
+      }
+    };
   }, [profile.display_name, loading, user, initialProfile]);
 
-  // Auto-save email changes
+  // Auto-save email changes with 500ms debounce
   useEffect(() => {
     if (loading || !user || !initialProfile || !profile.email) return;
     if (profile.email === initialProfile.email) return;
     
-    const timer = setTimeout(async () => {
+    // Clear existing timer
+    if (saveTimers.current.email) {
+      clearTimeout(saveTimers.current.email);
+    }
+
+    // Mark as saving
+    setSavingFields(prev => ({ ...prev, email: true }));
+
+    saveTimers.current.email = setTimeout(async () => {
       try {
         await supabase
           .from('profiles')
@@ -133,14 +149,20 @@ export function ProfileSettings() {
             email: profile.email,
           })
           .eq('user_id', user.id);
-        showSaved('email');
         setInitialProfile(profile);
       } catch (error: unknown) {
         logger.error('Error auto-saving email:', error);
+        toast.error('Failed to save', { description: getErrorMessage(error) });
+      } finally {
+        setSavingFields(prev => ({ ...prev, email: false }));
       }
-    }, 1000);
+    }, 500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (saveTimers.current.email) {
+        clearTimeout(saveTimers.current.email);
+      }
+    };
   }, [profile.email, loading, user, initialProfile]);
 
   const handleSave = async () => {
@@ -338,7 +360,10 @@ export function ProfileSettings() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
-              <Label htmlFor="display_name" className="text-xs">Display Name</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="display_name" className="text-xs">Display Name</Label>
+                <SavingIndicator isSaving={savingFields.display_name} />
+              </div>
               <Input
                 id="display_name"
                 value={profile.display_name}
@@ -347,10 +372,12 @@ export function ProfileSettings() {
                 className="text-sm"
                 autoComplete="name"
               />
-              <SavedIndicator show={savedFields.display_name} />
             </div>
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
-              <Label htmlFor="email" className="text-xs">Email Address</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="email" className="text-xs">Email Address</Label>
+                <SavingIndicator isSaving={savingFields.email} />
+              </div>
               <Input
                 id="email"
                 type="email"
@@ -360,7 +387,6 @@ export function ProfileSettings() {
                 className="text-sm"
                 autoComplete="email"
               />
-              <SavedIndicator show={savedFields.email} />
             </div>
           </div>
         </CardContent>
@@ -434,4 +460,4 @@ export function ProfileSettings() {
       </AnimatedItem>
     </AnimatedList>
   );
-};
+}

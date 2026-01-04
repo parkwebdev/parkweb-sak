@@ -9,7 +9,7 @@ import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { AppearanceSection } from '@/components/agents/embed/sections/AppearanceSection';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonFormSection } from '@/components/ui/skeleton';
-import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
+import { useAutoSave } from '@/hooks/useAutoSave';
 
 interface AriAppearanceSectionProps {
   agentId: string;
@@ -18,22 +18,21 @@ interface AriAppearanceSectionProps {
 export function AriAppearanceSection({ agentId }: AriAppearanceSectionProps) {
   const { config, loading, saveConfig } = useEmbeddedChatConfig(agentId);
   const [localConfig, setLocalConfig] = useState(config);
-  const [showSaved, setShowSaved] = useState(false);
 
   useEffect(() => {
     setLocalConfig(config);
   }, [config]);
 
-  const debouncedSave = useDebouncedCallback(async (updates: Partial<typeof config>) => {
-    await saveConfig(updates);
-    setShowSaved(true);
-    setTimeout(() => setShowSaved(false), 2000);
-  }, 1000);
+  const { save, isSaving } = useAutoSave({
+    onSave: async (updates: Partial<typeof config>) => {
+      await saveConfig(updates);
+    },
+  });
 
   const handleConfigChange = (updates: Partial<typeof config>) => {
     const newConfig = { ...localConfig, ...updates };
     setLocalConfig(newConfig);
-    debouncedSave(updates);
+    save(updates);
   };
 
   if (loading) {
@@ -45,9 +44,9 @@ export function AriAppearanceSection({ agentId }: AriAppearanceSectionProps) {
       <AriSectionHeader
         title="Appearance"
         description="Customize colors and visual styling"
-        showSaved={showSaved}
+        isSaving={isSaving}
       />
       <AppearanceSection config={localConfig} onConfigChange={handleConfigChange} />
     </div>
   );
-};
+}

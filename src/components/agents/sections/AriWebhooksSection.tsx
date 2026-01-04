@@ -19,7 +19,7 @@ import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { DebugConsole } from '@/components/agents/DebugConsole';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonListSection } from '@/components/ui/skeleton';
-import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { SavingIndicator } from '@/components/ui/saving-indicator';
 import { toast } from '@/lib/toast';
 
 interface DebugLog {
@@ -199,7 +199,7 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
                           onCheckedChange={(checked) => handleToggle(webhook.id, checked)}
                         />
                         {savedWebhookId === webhook.id && (
-                          <SavedIndicator show={true} />
+                          <SavingIndicator isSaving={true} />
                         )}
                       </div>
                     )}

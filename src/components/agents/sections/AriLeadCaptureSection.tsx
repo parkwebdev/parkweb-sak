@@ -4,11 +4,12 @@
  * Contact form and lead capture settings.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ContactFormSection } from '@/components/agents/embed/sections/ContactFormSection';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonFormSection } from '@/components/ui/skeleton';
+import { useAutoSave } from '@/hooks/useAutoSave';
 
 interface AriLeadCaptureSectionProps {
   agentId: string;
@@ -17,29 +18,21 @@ interface AriLeadCaptureSectionProps {
 export function AriLeadCaptureSection({ agentId }: AriLeadCaptureSectionProps) {
   const { config, loading, saveConfig } = useEmbeddedChatConfig(agentId);
   const [localConfig, setLocalConfig] = useState(config);
-  const [showSaved, setShowSaved] = useState(false);
-  const saveTimerRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     setLocalConfig(config);
   }, [config]);
 
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+  const { save, isSaving } = useAutoSave({
+    onSave: async (updates: Partial<typeof config>) => {
+      await saveConfig(updates);
+    },
+  });
 
   const handleConfigChange = (updates: Partial<typeof config>) => {
     const newConfig = { ...localConfig, ...updates };
     setLocalConfig(newConfig);
-
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(async () => {
-      await saveConfig(updates);
-      setShowSaved(true);
-      setTimeout(() => setShowSaved(false), 2000);
-    }, 1000);
+    save(updates);
   };
 
   if (loading) {
@@ -51,9 +44,9 @@ export function AriLeadCaptureSection({ agentId }: AriLeadCaptureSectionProps) {
       <AriSectionHeader
         title="Lead Capture"
         description="Set up contact form to collect user information"
-        showSaved={showSaved}
+        isSaving={isSaving}
       />
       <ContactFormSection config={localConfig} onConfigChange={handleConfigChange} />
     </div>
   );
-};
+}

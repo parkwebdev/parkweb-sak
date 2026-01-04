@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
-import { SavedIndicator } from './SavedIndicator';
+import { toast } from '@/lib/toast';
 import { 
   TeamMember, 
   UserRole,
@@ -22,6 +22,7 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
 } from '@/types/team';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 
 interface RoleManagementDialogProps {
   member: TeamMember | null;
@@ -56,7 +57,6 @@ export function RoleManagementDialog({
   const [role, setRole] = useState<UserRole>('member');
   const [permissions, setPermissions] = useState<AppPermission[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showSaved, setShowSaved] = useState(false);
   const { user } = useAuth();
   const { logRoleChange } = useSecurityLog();
 
@@ -181,13 +181,11 @@ export function RoleManagementDialog({
         logRoleChange(member.user_id, oldRole, role, true);
       }
       
-      setShowSaved(true);
-      setTimeout(() => {
-        setShowSaved(false);
-        onClose();
-      }, 1500);
+      toast.success('Changes saved');
+      onClose();
     } catch (error: unknown) {
       logger.error('Error in handleSave:', error);
+      toast.error('Failed to save', { description: getErrorMessage(error) });
       
       if (oldRole !== role) {
         logRoleChange(member.user_id, oldRole, role, false);
@@ -345,16 +343,13 @@ export function RoleManagementDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-border mt-4">
-          <SavedIndicator show={showSaved} />
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} disabled={loading}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} loading={loading}>
-              Save Changes
-            </Button>
-          </div>
+        <div className="flex items-center justify-end pt-4 border-t border-border mt-4 gap-2">
+          <Button variant="outline" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} loading={loading}>
+            Save Changes
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

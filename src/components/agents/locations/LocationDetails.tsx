@@ -1,11 +1,11 @@
 /**
  * LocationDetails Component
  * 
- * Clean, minimal form for viewing and editing location details with auto-save.
- * Uses light visual hierarchy and generous whitespace.
+ * Clean, minimal form for viewing and editing location details with silent auto-save.
+ * Uses 500ms debounce standard - no visual saved indicators.
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,7 +17,7 @@ import { CalendarConnections } from './CalendarConnections';
 import { SocialConnections } from './SocialConnections';
 import { US_TIMEZONES, type BusinessHours, type LocationFormData } from '@/types/locations';
 import type { Tables } from '@/integrations/supabase/types';
-import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
+import { useAutoSave } from '@/hooks/useAutoSave';
 
 type Location = Tables<'locations'>;
 
@@ -47,7 +47,7 @@ export function LocationDetails({
   });
   const [hoursOpen, setHoursOpen] = useState(false);
 
-  // Use ref to avoid recreating debouncedSave when onUpdate changes
+  // Use ref to avoid recreating save when onUpdate changes
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
 
@@ -68,18 +68,16 @@ export function LocationDetails({
     });
   }, [location.id]);
 
-  // Debounced save - stable reference via hook
-  const debouncedSave = useDebouncedCallback(
-    (data: Partial<LocationFormData>) => {
-      onUpdateRef.current(location.id, data);
+  const { save } = useAutoSave({
+    onSave: async (data: Partial<LocationFormData>) => {
+      await onUpdateRef.current(location.id, data);
     },
-    1000
-  );
+  });
 
   const handleChange = (field: keyof LocationFormData, value: string | BusinessHours | string[]) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
-    debouncedSave({ [field]: value });
+    save({ [field]: value });
   };
 
   return (
@@ -245,4 +243,4 @@ export function LocationDetails({
       </AnimatedItem>
     </div>
   );
-};
+}
