@@ -431,10 +431,10 @@ serve(async (req) => {
     // DATABASE-FIRST MESSAGE FETCHING
     // Fetch conversation history from database (source of truth)
     // ============================================
-    let dbConversationHistory: any[] = [];
+    let dbConversationHistory: ChatMessage[] = [];
     if (activeConversationId && !isGreetingRequest && !previewMode) {
       dbConversationHistory = await fetchConversationHistory(supabase, activeConversationId);
-      console.log(`Fetched ${dbConversationHistory.length} messages from database (including ${dbConversationHistory.filter((m: ChatMessage) => m.role === 'tool').length} tool results)`);
+      console.log(`Fetched ${dbConversationHistory.length} messages from database (including ${dbConversationHistory.filter((m) => m.role === 'tool').length} tool results)`);
     }
     
     const { data: subscription } = await supabase
@@ -528,7 +528,7 @@ serve(async (req) => {
     // MESSAGE HISTORY PROCESSING
     // ============================================
     // Merge client-provided messages with database history for preview mode
-    let rawHistory: any[];
+    let rawHistory: ChatMessage[];
     if (previewMode) {
       // Preview mode: use client-provided messages (no database history)
       rawHistory = messages.map((m: ChatMessage) => ({
@@ -654,7 +654,7 @@ Generate a warm, personalized greeting using the user information provided above
 
     // Build the initial AI request with only SUPPORTED behavior settings
     const modelCaps = getModelCapabilities(selectedModel);
-    const aiRequestBody: any = {
+    const aiRequestBody: Record<string, unknown> = {
       model: selectedModel,
       messages: [
         {

@@ -8,7 +8,8 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import type { ShownProperty } from "../types.ts";
+import type { ShownProperty, ConversationMetadata } from "../types.ts";
+import type { BookingToolResult, ToolMessage } from "../types/tools.ts";
 import { findCachedToolResult, getRecentToolCalls } from "../memory/tool-cache.ts";
 import { persistToolCall, persistToolResult } from "../memory/conversation-history.ts";
 import { searchProperties, lookupProperty, getLocations } from "../tools/property-tools.ts";
@@ -22,8 +23,8 @@ export interface ToolExecutionResult {
   quickReplies: string[];
   aiMarkedComplete: boolean;
   storedShownProperties?: ShownProperty[];
-  lastCalendarResult: any;
-  lastBookingResult: any;
+  lastCalendarResult: BookingToolResult | null;
+  lastBookingResult: BookingToolResult | null;
 }
 
 /** Tool call from AI response */
@@ -40,9 +41,9 @@ export interface EnabledTool {
   id: string;
   name: string;
   description: string;
-  parameters: any;
+  parameters: Record<string, unknown>;
   endpoint_url: string | null;
-  headers: any;
+  headers: Record<string, string> | null;
   timeout_ms: number | null;
 }
 
@@ -53,15 +54,15 @@ export interface EnabledTool {
 export async function executeToolCalls(
   supabase: ReturnType<typeof createClient>,
   options: {
-    assistantMessage: any;
+    assistantMessage: { tool_calls?: ToolCall[]; content?: string | null } | null;
     assistantContent: string;
-    aiRequestBody: any;
+    aiRequestBody: Record<string, unknown>;
     activeConversationId: string;
     agentId: string;
     supabaseUrl: string;
     enabledTools: EnabledTool[];
     previewMode: boolean;
-    conversationMetadata: any;
+    conversationMetadata: ConversationMetadata;
     openRouterApiKey: string;
   }
 ): Promise<ToolExecutionResult> {
@@ -83,8 +84,8 @@ export async function executeToolCalls(
   let quickReplies: string[] = [];
   let aiMarkedComplete = false;
   let storedShownProperties: ShownProperty[] | undefined;
-  let lastCalendarResult: any = null;
-  let lastBookingResult: any = null;
+  let lastCalendarResult: BookingToolResult | null = null;
+  let lastBookingResult: BookingToolResult | null = null;
 
   // No tool calls to process
   if (!assistantMessage?.tool_calls || assistantMessage.tool_calls.length === 0) {
@@ -102,7 +103,7 @@ export async function executeToolCalls(
   console.log(`AI requested ${assistantMessage.tool_calls.length} tool call(s)`);
 
   // Fetch recent tool calls for redundancy check
-  const recentToolMessages = previewMode
+  const recentToolMessages: ToolMessage[] = previewMode
     ? []
     : await getRecentToolCalls(supabase, activeConversationId, 5);
   console.log(`Found ${recentToolMessages.length} recent tool calls for caching check`);
@@ -112,7 +113,7 @@ export async function executeToolCalls(
 
   for (const toolCall of assistantMessage.tool_calls as ToolCall[]) {
     const toolName = toolCall.function.name;
-    let toolArgs: any;
+    let toolArgs: Record<string, unknown>;
 
     try {
       toolArgs = JSON.parse(toolCall.function.arguments);
@@ -334,8 +335,8 @@ async function executePropertySearch(
   agentId: string,
   conversationId: string,
   toolCall: ToolCall,
-  toolArgs: any,
-  recentToolMessages: any[],
+  toolArgs: Record<string, unknown>,
+  recentToolMessages: ToolMessage[],
   previewMode: boolean
 ) {
   const cachedResult = findCachedToolResult(recentToolMessages, 'search_properties', toolArgs, 10);
@@ -382,8 +383,8 @@ async function executeLookupProperty(
   agentId: string,
   conversationId: string,
   toolCall: ToolCall,
-  toolArgs: any,
-  recentToolMessages: any[],
+  toolArgs: Record<string, unknown>,
+  recentToolMessages: ToolMessage[],
   previewMode: boolean
 ) {
   const cachedResult = findCachedToolResult(recentToolMessages, 'lookup_property', toolArgs, 10);
@@ -427,8 +428,8 @@ async function executeGetLocations(
   agentId: string,
   conversationId: string,
   toolCall: ToolCall,
-  toolArgs: any,
-  recentToolMessages: any[],
+  toolArgs: Record<string, unknown>,
+  recentToolMessages: ToolMessage[],
   previewMode: boolean
 ) {
   const cachedResult = findCachedToolResult(recentToolMessages, 'get_locations', toolArgs, 10);
@@ -472,8 +473,8 @@ async function executeCalendarCheck(
   supabaseUrl: string,
   conversationId: string,
   toolCall: ToolCall,
-  toolArgs: any,
-  recentToolMessages: any[],
+  toolArgs: Record<string, unknown>,
+  recentToolMessages: ToolMessage[],
   previewMode: boolean
 ) {
   const cachedResult = findCachedToolResult(recentToolMessages, 'check_calendar_availability', toolArgs, 5);
@@ -518,9 +519,9 @@ async function executeBookAppointment(
   supabase: ReturnType<typeof createClient>,
   supabaseUrl: string,
   conversationId: string,
-  conversationMetadata: any,
+  conversationMetadata: ConversationMetadata,
   toolCall: ToolCall,
-  toolArgs: any,
+  toolArgs: Record<string, unknown>,
   previewMode: boolean
 ) {
   // Never cache book_appointment - each booking is unique
@@ -551,8 +552,8 @@ async function executeCustomTool(
   conversationId: string,
   tool: EnabledTool,
   toolCall: ToolCall,
-  toolArgs: any,
-  recentToolMessages: any[],
+  toolArgs: Record<string, unknown>,
+  recentToolMessages: ToolMessage[],
   previewMode: boolean
 ) {
   const cachedResult = findCachedToolResult(recentToolMessages, tool.name, toolArgs, 10);

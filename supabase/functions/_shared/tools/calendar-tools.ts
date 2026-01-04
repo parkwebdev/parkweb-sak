@@ -113,10 +113,12 @@ export async function checkCalendarAvailability(
  * @param args - Booking parameters
  * @returns Booking confirmation
  */
+import type { ConversationMetadata } from '../types.ts';
+
 export async function bookAppointment(
   supabaseUrl: string,
   conversationId: string,
-  conversationMetadata: any,
+  conversationMetadata: ConversationMetadata,
   args: BookAppointmentArgs
 ): Promise<ToolResult> {
   try {

@@ -131,7 +131,7 @@ export interface ToolConfig {
 /** Result from calling a tool endpoint */
 export interface ToolEndpointResult {
   success: boolean;
-  result?: any;
+  result?: unknown;
   error?: string;
 }
 
@@ -147,9 +147,9 @@ export interface ToolEndpointResult {
  * @returns Tool execution result
  */
 export async function callToolEndpoint(
-  tool: { name: string; endpoint_url: string; headers: any; timeout_ms: number },
-  args: any
-): Promise<{ success: boolean; result?: any; error?: string }> {
+  tool: { name: string; endpoint_url: string; headers: Record<string, string> | null; timeout_ms: number },
+  args: Record<string, unknown>
+): Promise<ToolEndpointResult> {
   // SSRF Protection: Validate URL before making request
   if (isBlockedUrl(tool.endpoint_url)) {
     console.error(`Tool ${tool.name} blocked: URL fails SSRF validation`, { url: tool.endpoint_url });
