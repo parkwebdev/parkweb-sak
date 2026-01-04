@@ -50,8 +50,8 @@ export const MessageInputArea = memo(function MessageInputArea({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Auto-resize message textarea
-  useAutoResizeTextarea(messageTextareaRef, value, { minRows: 1, maxRows: 5 });
+  // Auto-resize message textarea - use smaller line height for compact input
+  useAutoResizeTextarea(messageTextareaRef, value, { minRows: 1, maxRows: 5, lineHeight: 18 });
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -190,7 +190,7 @@ export const MessageInputArea = memo(function MessageInputArea({
             onKeyDown={handleKeyDown}
             disabled={isSending}
             rows={1}
-            className="!min-h-[40px] max-h-[120px] py-2.5 pr-12 resize-none"
+            className="!min-h-0 max-h-[120px] py-1.5 pr-12 resize-none leading-tight"
           />
           <Button 
             type="submit" 

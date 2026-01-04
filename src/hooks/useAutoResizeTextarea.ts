@@ -31,9 +31,9 @@ export function useAutoResizeTextarea(
     // Reset height to auto to get the correct scrollHeight
     textarea.style.height = 'auto';
 
-    // Calculate min and max heights
-    const minHeight = minRows * lineHeight + 16; // 16px for padding
-    const maxHeight = maxRows * lineHeight + 16;
+    // Calculate min and max heights - use 12px padding (py-1.5 equivalent)
+    const minHeight = minRows * lineHeight + 12;
+    const maxHeight = maxRows * lineHeight + 12;
 
     // Get the scroll height and clamp it
     const scrollHeight = textarea.scrollHeight;
