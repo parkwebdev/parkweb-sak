@@ -158,7 +158,7 @@ export const SETTINGS_TABS: readonly SettingsTabConfig[] = [
     id: 'settings-profile',
     label: 'Profile',
     tabParam: 'profile',
-    iconName: 'User01',
+    iconName: 'UserCircle',
     description: 'Manage your profile',
     // No permission - always visible
   },
