@@ -166,7 +166,6 @@ export async function searchKnowledge(
         type: 'help_article',
         similarity: article.similarity,
       })));
-      })));
     }
   } catch (helpSearchError) {
     console.error('Help article search error (continuing without):', helpSearchError);
