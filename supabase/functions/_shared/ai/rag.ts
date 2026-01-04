@@ -30,6 +30,39 @@ export interface KnowledgeResult {
   sourceUrl?: string;
 }
 
+/** Knowledge chunk from search_knowledge_chunks RPC */
+interface KnowledgeChunkResult {
+  source_id: string;
+  source_name: string;
+  source_type: string;
+  content: string;
+  similarity: number;
+  chunk_index: number;
+}
+
+/** Knowledge source record */
+interface KnowledgeSourceRecord {
+  id: string;
+  source: string;
+  type: string;
+}
+
+/** Help article from search_help_articles RPC */
+interface HelpArticleResult {
+  title: string;
+  content: string;
+  category_name?: string;
+  similarity: number;
+}
+
+/** Legacy document search result */
+interface LegacyDocumentResult {
+  content: string;
+  source: string;
+  type: string;
+  similarity: number;
+}
+
 // ============================================
 // KNOWLEDGE SEARCH
 // ============================================
@@ -66,15 +99,15 @@ export async function searchKnowledge(
     console.log(`Found ${chunkData.length} relevant chunks via chunk-level search`);
     
     // Get source URLs for the chunks
-    const sourceIds = [...new Set(chunkData.map((c: any) => c.source_id))];
+    const sourceIds = [...new Set(chunkData.map((c: KnowledgeChunkResult) => c.source_id))];
     const { data: sourceData } = await supabase
       .from('knowledge_sources')
       .select('id, source, type')
       .in('id', sourceIds);
     
-    const sourceMap = new Map(sourceData?.map((s: any) => [s.id, s]) || []);
+    const sourceMap = new Map((sourceData as KnowledgeSourceRecord[] | null)?.map((s) => [s.id, s]) || []);
     
-    results.push(...chunkData.map((chunk: any) => {
+    results.push(...chunkData.map((chunk: KnowledgeChunkResult) => {
       const sourceInfo = sourceMap.get(chunk.source_id);
       // Include the source URL for URL-type sources
       const sourceUrl = sourceInfo?.type === 'url' ? sourceInfo.source : undefined;
@@ -98,7 +131,7 @@ export async function searchKnowledge(
     });
 
     if (!error && data) {
-      results.push(...data.map((d: any) => ({
+      results.push(...(data as LegacyDocumentResult[]).map((d) => ({
         content: d.content,
         source: d.source,
         type: d.type,
@@ -124,13 +157,15 @@ export async function searchKnowledge(
     } else if (!helpArticles || helpArticles.length === 0) {
       console.log('No help articles found above threshold');
     } else {
-      console.log(`Found ${helpArticles.length} relevant help articles:`, 
-        helpArticles.map((a: any) => ({ title: a.title, similarity: a.similarity?.toFixed(3) })));
-      results.push(...helpArticles.map((article: any) => ({
+      const articles = helpArticles as HelpArticleResult[];
+      console.log(`Found ${articles.length} relevant help articles:`, 
+        articles.map((a) => ({ title: a.title, similarity: a.similarity?.toFixed(3) })));
+      results.push(...articles.map((article) => ({
         content: article.content,
         source: `Help: ${article.title}${article.category_name ? ` (${article.category_name})` : ''}`,
         type: 'help_article',
         similarity: article.similarity,
+      })));
       })));
     }
   } catch (helpSearchError) {
