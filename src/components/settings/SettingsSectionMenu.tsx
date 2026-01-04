@@ -29,8 +29,8 @@ import {
   UserCircleIconFilled,
   UsersIconFilled,
   CreditCardIconFilled,
-  HorizontalBarChart02Icon,
-  HorizontalBarChart02IconFilled,
+  PieChart03Icon,
+  PieChart03IconFilled,
   BellIconFilled,
   ShieldIconFilled,
 } from '@/components/ui/settings-icon';
@@ -44,7 +44,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   UserCircle: UserCircleIcon,
   Users01,
   CreditCard01,
-  HorizontalBarChart02: HorizontalBarChart02Icon,
+  PieChart03: PieChart03Icon,
   Bell01,
   Shield01,
 };
@@ -55,7 +55,7 @@ const FILLED_ICON_MAP: Record<string, React.ComponentType<{ size?: number; class
   UserCircle: UserCircleIconFilled,
   Users01: UsersIconFilled,
   CreditCard01: CreditCardIconFilled,
-  HorizontalBarChart02: HorizontalBarChart02IconFilled,
+  PieChart03: PieChart03IconFilled,
   Bell01: BellIconFilled,
   Shield01: ShieldIconFilled,
 };
