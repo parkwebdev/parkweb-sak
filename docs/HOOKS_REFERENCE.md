@@ -116,7 +116,39 @@ function useStableArray<T>(arr: T[]): T[];
 
 ---
 
-### useSupabaseQuery (`src/hooks/useSupabaseQuery.ts`)
+### useDebouncedCallback (`src/hooks/useDebouncedCallback.ts`)
+
+Creates a debounced version of a callback function with automatic cleanup on unmount.
+
+```tsx
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
+
+// Auto-save with 1 second debounce
+const debouncedSave = useDebouncedCallback(async (data: FormData) => {
+  await saveToDatabase(data);
+}, 1000);
+
+// Call on every change - only executes after 1s of no calls
+const handleChange = (value: string) => {
+  setLocalValue(value);
+  debouncedSave({ field: value });
+};
+```
+
+**Signature:**
+```tsx
+function useDebouncedCallback<T extends (...args: any[]) => any>(
+  callback: T,
+  delay?: number  // default: 500ms
+): (...args: Parameters<T>) => void;
+```
+
+**Key Features:**
+- Timer automatically cleared on component unmount
+- Each call resets the timer
+- Callback reference can change without resetting debounce
+
+---
 
 Centralized query key factory for type-safe cache management. All query keys are defined here.
 

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DotsHorizontal, Settings01, X } from '@untitledui/icons';
 import { TeamMember } from '@/types/team';
+import { getInitials } from '@/lib/formatting-utils';
 
 interface TeamColumnsProps {
   currentUserId?: string;
@@ -36,21 +37,6 @@ const formatRole = (role: string) => {
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
-};
-
-const getInitials = (displayName: string | null, email: string | null) => {
-  if (displayName) {
-    return displayName
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-  if (email) {
-    return email.slice(0, 2).toUpperCase();
-  }
-  return 'U';
 };
 
 export const createTeamColumns = ({

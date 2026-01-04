@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { optimizeImage } from '@/lib/image-utils';
 
 /**
  * Configuration for avatar image optimization
@@ -38,56 +39,11 @@ const AVATAR_CONFIG = {
  * - Reduces typical avatar sizes from 1-5MB to 10-40KB
  */
 export const optimizeAvatar = async (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    img.onload = () => {
-      URL.revokeObjectURL(img.src);
-      
-      const { width, height } = img;
-      
-      // Center-crop to square
-      const size = Math.min(width, height);
-      const cropX = (width - size) / 2;
-      const cropY = (height - size) / 2;
-      
-      // Output is always 256x256 square
-      canvas.width = AVATAR_CONFIG.maxSize;
-      canvas.height = AVATAR_CONFIG.maxSize;
-      
-      // Draw center-cropped square, scaled to 256x256
-      ctx?.drawImage(
-        img,
-        cropX, cropY, size, size,
-        0, 0, AVATAR_CONFIG.maxSize, AVATAR_CONFIG.maxSize
-      );
-      
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const optimizedFile = new File(
-              [blob], 
-              file.name.replace(/\.[^/.]+$/, '.webp'),
-              { type: 'image/webp' }
-            );
-            resolve(optimizedFile);
-          } else {
-            resolve(file);
-          }
-        },
-        'image/webp',
-        AVATAR_CONFIG.quality
-      );
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src);
-      reject(new Error('Failed to load image'));
-    };
-    
-    img.src = URL.createObjectURL(file);
+  return optimizeImage(file, {
+    maxWidth: AVATAR_CONFIG.maxSize,
+    maxHeight: AVATAR_CONFIG.maxSize,
+    quality: AVATAR_CONFIG.quality,
+    cropToSquare: true,
   });
 };
 

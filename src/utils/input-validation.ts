@@ -8,6 +8,7 @@
  */
 
 import DOMPurify from 'isomorphic-dompurify';
+import { isValidEmail } from '@/utils/validation';
 
 /**
  * Result type for email validation.
@@ -54,9 +55,8 @@ export const validateAndSanitizeEmail = (email: string): EmailValidationResult =
     return { isValid: false, sanitized: '', error: 'Email too long' };
   }
   
-  // Basic email regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(trimmed)) {
+  // Use canonical email validation
+  if (!isValidEmail(trimmed)) {
     return { isValid: false, sanitized: '', error: 'Invalid email format' };
   }
   

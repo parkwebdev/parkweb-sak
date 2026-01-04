@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/popover';
 import { useTeam } from '@/hooks/useTeam';
 import { cn } from '@/lib/utils';
+import { getInitials } from '@/lib/formatting-utils';
 
 interface LeadAssigneePickerProps {
   leadId: string;
@@ -22,16 +23,6 @@ interface LeadAssigneePickerProps {
   size?: 'sm' | 'default';
   maxVisible?: number;
   disabled?: boolean;
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return '?';
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
 }
 
 export function LeadAssigneePicker({

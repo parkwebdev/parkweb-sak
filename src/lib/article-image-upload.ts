@@ -9,6 +9,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
+import { optimizeImage } from '@/lib/image-utils';
 
 /**
  * Configuration for inline article image optimization
@@ -37,132 +38,6 @@ const FEATURED_IMAGE_CONFIG = {
 };
 
 /**
- * Optimizes an inline article image by resizing and converting to WebP.
- * Maintains aspect ratio while fitting within max dimensions.
- * 
- * @param file - Original image file
- * @returns Promise resolving to optimized File object
- * @throws Error if image fails to load
- * @internal
- */
-const optimizeImage = async (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    img.onload = () => {
-      URL.revokeObjectURL(img.src);
-      
-      let { width, height } = img;
-      
-      // Calculate new dimensions maintaining aspect ratio
-      if (width > IMAGE_CONFIG.maxWidth) {
-        height = (height * IMAGE_CONFIG.maxWidth) / width;
-        width = IMAGE_CONFIG.maxWidth;
-      }
-      if (height > IMAGE_CONFIG.maxHeight) {
-        width = (width * IMAGE_CONFIG.maxHeight) / height;
-        height = IMAGE_CONFIG.maxHeight;
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      ctx?.drawImage(img, 0, 0, width, height);
-      
-      // Convert to WebP
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const optimizedFile = new File(
-              [blob], 
-              file.name.replace(/\.[^/.]+$/, '.webp'),
-              { type: 'image/webp' }
-            );
-            resolve(optimizedFile);
-          } else {
-            // Fallback: return original file if conversion fails
-            resolve(file);
-          }
-        },
-        'image/webp',
-        IMAGE_CONFIG.quality
-      );
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src);
-      reject(new Error('Failed to load image'));
-    };
-    
-    img.src = URL.createObjectURL(file);
-  });
-};
-
-/**
- * Optimizes a featured/hero image for article display.
- * Uses larger dimensions than inline images for hero sections.
- * 
- * @param file - Original image file
- * @returns Promise resolving to optimized File object
- * @throws Error if image fails to load
- * @internal
- */
-const optimizeFeaturedImage = async (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    img.onload = () => {
-      URL.revokeObjectURL(img.src);
-      
-      let { width, height } = img;
-      
-      // Calculate new dimensions maintaining aspect ratio
-      if (width > FEATURED_IMAGE_CONFIG.maxWidth) {
-        height = (height * FEATURED_IMAGE_CONFIG.maxWidth) / width;
-        width = FEATURED_IMAGE_CONFIG.maxWidth;
-      }
-      if (height > FEATURED_IMAGE_CONFIG.maxHeight) {
-        width = (width * FEATURED_IMAGE_CONFIG.maxHeight) / height;
-        height = FEATURED_IMAGE_CONFIG.maxHeight;
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      ctx?.drawImage(img, 0, 0, width, height);
-      
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const optimizedFile = new File(
-              [blob], 
-              file.name.replace(/\.[^/.]+$/, '.webp'),
-              { type: 'image/webp' }
-            );
-            resolve(optimizedFile);
-          } else {
-            resolve(file);
-          }
-        },
-        'image/webp',
-        FEATURED_IMAGE_CONFIG.quality
-      );
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src);
-      reject(new Error('Failed to load image'));
-    };
-    
-    img.src = URL.createObjectURL(file);
-  });
-};
-
-/**
  * Uploads an optimized inline image to Supabase storage.
  * Images are resized to max 800x600 and converted to WebP.
  * 
@@ -182,7 +57,11 @@ export const uploadArticleImage = async (
   agentId: string
 ): Promise<string> => {
   // Optimize image before upload
-  const optimizedFile = await optimizeImage(file);
+  const optimizedFile = await optimizeImage(file, {
+    maxWidth: IMAGE_CONFIG.maxWidth,
+    maxHeight: IMAGE_CONFIG.maxHeight,
+    quality: IMAGE_CONFIG.quality,
+  });
   
   const fileExt = optimizedFile.name.split('.').pop()?.toLowerCase() || 'webp';
   const fileName = `${userId}/${agentId}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
@@ -225,7 +104,11 @@ export const uploadFeaturedImage = async (
   userId: string,
   agentId: string
 ): Promise<string> => {
-  const optimizedFile = await optimizeFeaturedImage(file);
+  const optimizedFile = await optimizeImage(file, {
+    maxWidth: FEATURED_IMAGE_CONFIG.maxWidth,
+    maxHeight: FEATURED_IMAGE_CONFIG.maxHeight,
+    quality: FEATURED_IMAGE_CONFIG.quality,
+  });
   
   const fileExt = optimizedFile.name.split('.').pop()?.toLowerCase() || 'webp';
   const fileName = `${userId}/${agentId}/featured-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;

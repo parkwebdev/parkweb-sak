@@ -101,6 +101,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata, VisitedPage, ReferrerJourney } from '@/types/metadata';
 import { cn } from '@/lib/utils';
+import { copyToClipboard } from '@/lib/clipboard';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -655,10 +656,7 @@ export function ConversationMetadataPanel({
                         {conversation.id}
                       </span>
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(conversation.id);
-                          toast.success('Chat ID copied to clipboard');
-                        }}
+                        onClick={() => copyToClipboard(conversation.id, 'Chat ID')}
                         className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
                       >
                         <Copy01 className="h-3 w-3 text-muted-foreground" />

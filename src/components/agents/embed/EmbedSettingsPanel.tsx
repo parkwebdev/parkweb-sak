@@ -11,7 +11,6 @@ import { CopyButton } from '@/components/ui/copy-button';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { ColorPicker } from '@/components/ui/color-picker';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
-import { toast } from '@/lib/toast';
 
 interface EmbedSettingsPanelProps {
   config: EmbeddedChatConfig;
@@ -22,11 +21,6 @@ interface EmbedSettingsPanelProps {
 export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedSettingsPanelProps) => {
   const [newFieldLabel, setNewFieldLabel] = useState('');
   const [newFieldType, setNewFieldType] = useState<'text' | 'email' | 'phone' | 'textarea' | 'select'>('text');
-  
-  const copyEmbedCode = () => {
-    navigator.clipboard.writeText(embedCode);
-    toast.success('Embed code copied to clipboard');
-  };
 
   const addCustomField = () => {
     if (!newFieldLabel.trim()) return;

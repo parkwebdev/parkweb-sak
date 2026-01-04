@@ -15,6 +15,7 @@ import { hexToRgbObject } from '@/lib/color-utils';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getInitials } from '@/lib/formatting-utils';
 import type { LeadStage } from '@/hooks/useLeadStages';
 import type { TeamMember } from '@/types/team';
 
@@ -93,11 +94,6 @@ export const LeadsActiveFilters = React.memo(function LeadsActiveFilters({
     onDateRangeChange('all');
     onAssigneeFilterChange?.([]);
     setOpen(false);
-  };
-
-  const getInitials = (name: string | null) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   // Filter button - no chips shown

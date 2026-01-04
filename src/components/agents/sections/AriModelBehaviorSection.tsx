@@ -4,8 +4,9 @@
  * Model selection and behavior parameters with full feature parity from AgentConfigureTab.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -366,7 +367,6 @@ const calculateEstimatedCost = (model: string, maxTokens: number) => {
 export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSectionProps) {
   const [showSaved, setShowSaved] = useState(false);
   const [activeSlider, setActiveSlider] = useState<string | null>(null);
-  const saveTimerRef = useRef<NodeJS.Timeout>();
   const deploymentConfig = (agent.deployment_config || {}) as AgentDeploymentConfig;
   const { planName } = usePlanLimits();
   const isEnterprise = planName?.toLowerCase() === 'enterprise';
@@ -404,12 +404,6 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
     });
   }, [agent.id]);
 
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
-
   const saveToDatabase = async (data: typeof formData) => {
     const { top_p, top_k, presence_penalty, frequency_penalty, response_length_preset, ...coreFields } = data;
     await onUpdate(agent.id, {
@@ -425,6 +419,10 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
     setShowSaved(true);
     setTimeout(() => setShowSaved(false), 2000);
   };
+
+  const debouncedSave = useDebouncedCallback((data: typeof formData) => {
+    saveToDatabase(data);
+  }, 1000);
 
   const handleUpdate = (updates: Partial<typeof formData>) => {
     let newFormData = { ...formData, ...updates };
@@ -448,9 +446,7 @@ export function AriModelBehaviorSection({ agent, onUpdate }: AriModelBehaviorSec
     }
     
     setFormData(newFormData);
-
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => saveToDatabase(newFormData), 1000);
+    debouncedSave(newFormData);
   };
 
   const capabilities = getModelCapabilities(formData.model);

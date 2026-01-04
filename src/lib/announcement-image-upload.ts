@@ -8,6 +8,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
+import { optimizeImage } from '@/lib/image-utils';
 
 /**
  * Configuration for announcement image optimization
@@ -20,70 +21,6 @@ const IMAGE_CONFIG = {
   maxHeight: 400,
   /** WebP compression quality (0-1) */
   quality: 0.6,
-};
-
-/**
- * Optimizes an announcement image by resizing and converting to WebP.
- * Maintains aspect ratio while fitting within max dimensions.
- * 
- * @param file - Original image file
- * @returns Promise resolving to optimized File object
- * @throws Error if image fails to load
- * @internal
- */
-const optimizeAnnouncementImage = async (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    img.onload = () => {
-      URL.revokeObjectURL(img.src);
-      
-      let { width, height } = img;
-      
-      // Calculate new dimensions maintaining aspect ratio
-      if (width > IMAGE_CONFIG.maxWidth) {
-        height = (height * IMAGE_CONFIG.maxWidth) / width;
-        width = IMAGE_CONFIG.maxWidth;
-      }
-      if (height > IMAGE_CONFIG.maxHeight) {
-        width = (width * IMAGE_CONFIG.maxHeight) / height;
-        height = IMAGE_CONFIG.maxHeight;
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      ctx?.drawImage(img, 0, 0, width, height);
-      
-      // Convert to WebP
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const optimizedFile = new File(
-              [blob], 
-              file.name.replace(/\.[^/.]+$/, '.webp'),
-              { type: 'image/webp' }
-            );
-            resolve(optimizedFile);
-          } else {
-            // Fallback: return original file if conversion fails
-            resolve(file);
-          }
-        },
-        'image/webp',
-        IMAGE_CONFIG.quality
-      );
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src);
-      reject(new Error('Failed to load image'));
-    };
-    
-    img.src = URL.createObjectURL(file);
-  });
 };
 
 /**
@@ -102,7 +39,11 @@ export const uploadAnnouncementImage = async (
   agentId: string
 ): Promise<string> => {
   // Optimize image before upload
-  const optimizedFile = await optimizeAnnouncementImage(file);
+  const optimizedFile = await optimizeImage(file, {
+    maxWidth: IMAGE_CONFIG.maxWidth,
+    maxHeight: IMAGE_CONFIG.maxHeight,
+    quality: IMAGE_CONFIG.quality,
+  });
   
   const fileExt = optimizedFile.name.split('.').pop()?.toLowerCase() || 'webp';
   const fileName = `${userId}/${agentId}/announcements/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;

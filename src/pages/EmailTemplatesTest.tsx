@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Copy01, Send01, Loading02, ChevronDown, RefreshCw02 } from '@untitledui/icons';
 import { toast } from '@/lib/toast';
+import { copyToClipboard } from '@/lib/clipboard';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
 import { EmailPreviewModeToggle, type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
@@ -80,9 +81,8 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
   const [testEmail, setTestEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  const copyHtml = () => {
-    navigator.clipboard.writeText(html);
-    toast.success('HTML copied to clipboard');
+  const copyHtml = async () => {
+    await copyToClipboard(html, 'HTML');
   };
 
   const sendTestEmail = async () => {
