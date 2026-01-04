@@ -272,7 +272,7 @@ Sections filtered by permission; API key actions require `manage_ari`.
 
 ## 7. TypeScript Strict Mode Preparation
 
-> **Status**: Phase 4.1 Complete ✓  
+> **Status**: Phases 4.1 & 4.5 Complete ✓  
 > **Completed**: January 2026
 
 ### Error Handling Standard
@@ -308,7 +308,7 @@ function processData(data: Record<string, unknown>) { ... }
 function processData(data: Record<string, any>) { ... }
 ```
 
-### Phase 4.1 Completion Verification
+### Phase 4.1: Frontend Type Safety
 
 ```bash
 # Verify no untyped catch blocks (should only find JSDoc examples)
@@ -320,7 +320,7 @@ grep -rn "catch (err) {" src/ --include="*.ts" --include="*.tsx"
 grep -rn "Record<string, any>" src/ --include="*.ts" --include="*.tsx"
 ```
 
-### Files Updated in Phase 4.1
+**Files Updated in Phase 4.1:**
 
 | File | Changes |
 |------|---------|
@@ -337,6 +337,56 @@ grep -rn "Record<string, any>" src/ --include="*.ts" --include="*.tsx"
 | `src/widget/hooks/useWidgetMessaging.ts` | Already typed ✓ |
 | `src/components/pdf/PdfJsViewer.tsx` | 2 catch blocks typed |
 | `src/widget/api.ts` | `Record<string, any>` → `Record<string, unknown>` |
+
+### Phase 4.5: Edge Functions Type Safety
+
+All edge functions now follow strict TypeScript standards:
+
+1. **No `: any` annotations** - All parameters and return types explicitly typed
+2. **`catch (error: unknown)`** - All error handlers use unknown type
+3. **Shared types** - Canonical types in `_shared/types.ts`
+
+```bash
+# Verify no untyped catch blocks in edge functions
+grep -rn "catch (error: any)" supabase/functions/
+grep -rn "catch (error) {" supabase/functions/ --include="*.ts"
+
+# Verify no : any type annotations
+grep -rn ": any" supabase/functions/ --include="*.ts"
+```
+
+**Files Updated in Phase 4.5:**
+
+| File | Changes |
+|------|---------|
+| `supabase/functions/_shared/types.ts` | Consolidated shared types with JSDoc |
+| `supabase/functions/_shared/errors.ts` | Type-safe `getErrorMessage()` |
+| `supabase/functions/_shared/ai/rag.ts` | Fixed `: any` → explicit types |
+| `supabase/functions/_shared/ai/embeddings.ts` | Typed catch blocks |
+| `supabase/functions/_shared/handlers/context.ts` | Typed arrays and records |
+| `supabase/functions/_shared/handlers/response-builder.ts` | Fixed implicit any params |
+| `supabase/functions/_shared/memory/semantic-memory.ts` | Typed memory operations |
+| `supabase/functions/_shared/tools/property-tools.ts` | Typed property interfaces |
+| `supabase/functions/_shared/tools/custom-tools.ts` | Typed tool execution |
+| `supabase/functions/_shared/security/guardrails.ts` | Typed security checks |
+| `supabase/functions/widget-chat/index.ts` | Typed request/response |
+
+**Shared Types Reference** (`_shared/types.ts`):
+
+| Type | Purpose |
+|------|---------|
+| `ChatMessage` | OpenAI-style message structure |
+| `ConversationMetadata` | Metadata stored with conversations |
+| `PageVisit` | Visitor page tracking |
+| `ReferrerJourney` | Traffic source tracking |
+| `ShownProperty` | Property context for multi-property |
+| `CallAction` | Phone number extraction for calls |
+| `KnowledgeSourceResult` | RAG search results |
+| `ToolUsage` | Tool execution tracking |
+| `LinkPreview` | URL preview metadata |
+| `BusinessHoursConfig` | Location business hours |
+| `GoogleCalendarEventBody` | Google Calendar API payload |
+| `MicrosoftCalendarEventBody` | Microsoft Graph API payload |
 
 ---
 
