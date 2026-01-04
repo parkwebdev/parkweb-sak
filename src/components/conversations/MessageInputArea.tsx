@@ -51,7 +51,7 @@ export const MessageInputArea = memo(function MessageInputArea({
   const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Auto-resize message textarea
-  useAutoResizeTextarea(messageTextareaRef, value, { minRows: 1, maxRows: 5, lineHeight: 24 });
+  useAutoResizeTextarea(messageTextareaRef, value, { minRows: 1, maxRows: 5, lineHeight: 26 });
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
