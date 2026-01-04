@@ -17,3 +17,6 @@ export { createHelpArticlesColumns, type HelpArticleWithMeta, type HelpArticlesC
 
 // Export history table columns
 export { createExportHistoryColumns, type ExportHistoryColumnsProps } from './export-history-columns';
+
+// Sessions table columns
+export { createSessionColumns, type SessionData } from './sessions-columns';
