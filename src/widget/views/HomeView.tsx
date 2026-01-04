@@ -135,7 +135,7 @@ export const HomeView = ({
               <>
                 {/* Announcements - show if there are active announcements */}
                 {config.announcements && config.announcements.length > 0 && (
-                  <CSSAnimatedList className="space-y-3" staggerDelay={0.1}>
+                  <CSSAnimatedList className="space-y-2" staggerDelay={0.1}>
                     {config.announcements.map((announcement) => (
                       <CSSAnimatedItem key={announcement.id}>
                         <div 
@@ -148,12 +148,12 @@ export const HomeView = ({
                             }
                           }}
                         >
-                          <div className="p-4 flex items-center gap-4">
+                          <div className="px-3 py-2.5 flex items-center gap-3">
                             {announcement.image_url && (
                               <img 
                                 src={announcement.image_url} 
                                 alt="" 
-                                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                                className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                               />
                             )}
                             <div className="flex-1 min-w-0">
@@ -174,26 +174,24 @@ export const HomeView = ({
                   </CSSAnimatedList>
                 )}
 
-                <CSSAnimatedList className="space-y-3" staggerDelay={0.1}>
+                <CSSAnimatedList className="space-y-2" staggerDelay={0.1}>
                   {config.quickActions.map((action) => (
                     <CSSAnimatedItem key={action.id}>
                       <div
-                        className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
+                        className="px-3 py-2.5 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
                         onClick={() => onQuickActionClick(action.action || action.actionType)}
                       >
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-muted text-foreground">
                             {getQuickActionIcon(action.icon)}
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <h4 className="font-medium text-sm">{action.title || action.label}</h4>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm">{action.title || action.label}</h4>
                             {action.subtitle && (
                               <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
                             )}
                           </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         </div>
                       </div>
                     </CSSAnimatedItem>
