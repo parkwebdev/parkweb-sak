@@ -72,6 +72,59 @@ try {
 
 **See**: [DESIGN_SYSTEM.md#error-handling-pattern](./DESIGN_SYSTEM.md#error-handling-pattern) for the complete pattern.
 
+### Type Safety Standards
+
+Edge functions follow strict TypeScript standards (Phase 4.5):
+
+1. **No `: any` annotations** - All parameters explicitly typed
+2. **`catch (error: unknown)`** - All error handlers use unknown type
+3. **Shared types** - Import from `_shared/types.ts`
+
+```typescript
+// Import shared types
+import type { 
+  ChatMessage, 
+  ConversationMetadata, 
+  PageVisit,
+  ReferrerJourney 
+} from '../_shared/types.ts';
+import { getErrorMessage } from '../_shared/errors.ts';
+
+// Type-safe function
+async function processMessage(message: ChatMessage): Promise<string> {
+  try {
+    // ... logic
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+```
+
+**Available Shared Types** (`_shared/types.ts`):
+
+| Type | Purpose |
+|------|---------|
+| `ChatMessage` | OpenAI-style message (`role`, `content`) |
+| `ConversationMetadata` | Conversation metadata fields |
+| `PageVisit` | Page visit tracking (`url`, `entered_at`, `title`) |
+| `ReferrerJourney` | Traffic source with UTM params |
+| `ShownProperty` | Property data for multi-property chat |
+| `CallAction` | Phone number for call buttons |
+| `KnowledgeSourceResult` | RAG search result |
+| `ToolUsage` | Tool execution tracking |
+| `LinkPreview` | URL preview metadata |
+| `BusinessHoursConfig` | Location business hours |
+| `GoogleCalendarEventBody` | Google Calendar event payload |
+| `MicrosoftCalendarEventBody` | Microsoft Graph event payload |
+| `UsageMetricRow` | Usage metrics from database |
+| `AgentRow` | Agent basic fields |
+| `ScheduleItem` | Microsoft Graph schedule item |
+| `Logger` | Structured logging interface |
+
+**Regex Patterns** (also exported):
+- `URL_REGEX` - Extract URLs from content
+- `PHONE_REGEX` - Extract US phone numbers
+
 ---
 
 ## Widget Functions

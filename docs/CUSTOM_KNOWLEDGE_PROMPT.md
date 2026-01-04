@@ -209,6 +209,27 @@ try {
 }
 ```
 
+### Shared Types (CRITICAL)
+Import canonical types from `_shared/types.ts` - never create local interfaces:
+```tsx
+import type { 
+  ChatMessage, 
+  ConversationMetadata, 
+  PageVisit,
+  ReferrerJourney,
+  CallAction,
+  KnowledgeSourceResult 
+} from '../_shared/types.ts';
+```
+
+Key types:
+- `ChatMessage` - OpenAI-style message structure
+- `ConversationMetadata` - Conversation metadata fields
+- `PageVisit` - Page visit tracking
+- `ReferrerJourney` - Traffic source with UTM params
+- `CallAction` - Phone number extraction
+- `BusinessHoursConfig` - Location business hours
+
 ### Rate Limit Handling
 Always handle 429 (rate limit) and 402 (payment required) errors:
 - Surface these to users with clear toast messages
