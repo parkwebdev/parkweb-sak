@@ -19,7 +19,6 @@ import { SETTINGS_TABS, type SettingsTabParam } from '@/config/routes';
 import {
   Users01,
   CreditCard01,
-  BarChart01,
   Bell01,
   Shield01,
 } from '@untitledui/icons';
@@ -30,6 +29,10 @@ import {
   UserCircleIconFilled,
   UsersIconFilled,
   CreditCardIconFilled,
+  HorizontalBarChart02Icon,
+  HorizontalBarChart02IconFilled,
+  BellIconFilled,
+  ShieldIconFilled,
 } from '@/components/ui/settings-icon';
 
 // Re-export the tab type from routes.ts
@@ -41,7 +44,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   UserCircle: UserCircleIcon,
   Users01,
   CreditCard01,
-  BarChart01,
+  HorizontalBarChart02: HorizontalBarChart02Icon,
   Bell01,
   Shield01,
 };
@@ -52,6 +55,9 @@ const FILLED_ICON_MAP: Record<string, React.ComponentType<{ size?: number; class
   UserCircle: UserCircleIconFilled,
   Users01: UsersIconFilled,
   CreditCard01: CreditCardIconFilled,
+  HorizontalBarChart02: HorizontalBarChart02IconFilled,
+  Bell01: BellIconFilled,
+  Shield01: ShieldIconFilled,
 };
 
 function getIcon(iconName: string, isActive: boolean = false): React.ComponentType<{ size?: number; className?: string }> {
