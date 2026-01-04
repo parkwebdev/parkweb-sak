@@ -11,8 +11,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
 } from '@/components/ui/sheet';
 import { LocationDetails } from './LocationDetails';
 import { SkeletonLocationDetails } from '@/components/ui/page-skeleton';
@@ -51,10 +49,7 @@ export function LocationDetailsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-xl overflow-y-auto">
-        <SheetHeader className="mb-6">
-          <SheetTitle>{location?.name || 'Location Details'}</SheetTitle>
-        </SheetHeader>
+      <SheetContent side="right" className="sm:max-w-xl overflow-y-auto pt-8">
         
         {!contentReady || !location ? (
           <SkeletonLocationDetails />
