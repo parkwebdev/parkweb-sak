@@ -20,6 +20,8 @@
  * ```
  */
 
+import type { SupabaseClientType } from '../types/supabase.ts';
+
 // ============================================
 // TYPES
 // ============================================
@@ -50,10 +52,10 @@ export interface DbMessage {
  * @returns OpenAI-formatted message array
  */
 export async function fetchConversationHistory(
-  supabase: any,
+  supabase: SupabaseClientType,
   conversationId: string,
   limit: number = 50
-): Promise<any[]> {
+): Promise<unknown[]> {
   const { data: dbMessages, error } = await supabase
     .from('messages')
     .select('id, role, content, metadata, created_at, tool_call_id, tool_name, tool_arguments, tool_result')
@@ -142,11 +144,11 @@ export function convertDbMessagesToOpenAI(dbMessages: DbMessage[]): any[] {
  * @returns Message ID or null on error
  */
 export async function persistToolCall(
-  supabase: any,
+  supabase: SupabaseClientType,
   conversationId: string,
   toolCallId: string,
   toolName: string,
-  toolArguments: any
+  toolArguments: unknown
 ): Promise<string | null> {
   const { data, error } = await supabase.from('messages').insert({
     conversation_id: conversationId,
@@ -183,11 +185,11 @@ export async function persistToolCall(
  * @returns Message ID or null on error
  */
 export async function persistToolResult(
-  supabase: any,
+  supabase: SupabaseClientType,
   conversationId: string,
   toolCallId: string,
   toolName: string,
-  result: any,
+  result: unknown,
   success: boolean
 ): Promise<string | null> {
   const { data, error } = await supabase.from('messages').insert({

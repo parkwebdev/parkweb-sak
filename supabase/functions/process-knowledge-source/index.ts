@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Readability } from "npm:@mozilla/readability@0.5.0";
 import { DOMParser } from "npm:linkedom@0.18.4";
+import type { SupabaseClientType } from '../_shared/types/supabase.ts';
 
 // Local type for knowledge source metadata (edge functions can't import from src/)
 interface KnowledgeSourceMetadata {
@@ -253,7 +254,7 @@ function extractSitemapUrls(xml: string): string[] {
 
 // Process a single URL source (fetch, chunk, embed, store)
 async function processUrlSource(
-  supabase: any,
+  supabase: SupabaseClientType,
   sourceId: string,
   agentId: string,
   url: string
@@ -417,7 +418,7 @@ async function triggerNextBatch(
 }
 
 // Helper function to sync urls_found with actual child count
-async function syncUrlsFound(supabase: any, parentSourceId: string): Promise<number> {
+async function syncUrlsFound(supabase: SupabaseClientType, parentSourceId: string): Promise<number> {
   const { count } = await supabase
     .from('knowledge_sources')
     .select('id', { count: 'exact', head: true })
@@ -427,7 +428,7 @@ async function syncUrlsFound(supabase: any, parentSourceId: string): Promise<num
 
 // Mark stalled processing sources as errors (stuck for > 5 minutes)
 async function markStalledSourcesAsError(
-  supabase: any,
+  supabase: SupabaseClientType,
   batchId: string
 ): Promise<number> {
   const STALLED_THRESHOLD_MINUTES = 5;
@@ -477,7 +478,7 @@ async function markStalledSourcesAsError(
 
 // Process pending child sources in small batches with self-chaining
 async function processBatchAndContinue(
-  supabase: any,
+  supabase: SupabaseClientType,
   parentSourceId: string,
   batchId: string,
   agentId: string
@@ -754,7 +755,7 @@ function filterUrls(
 
 // Process a sitemap URL and create child sources
 async function processSitemap(
-  supabase: any,
+  supabase: SupabaseClientType,
   sourceId: string,
   agentId: string,
   userId: string,
@@ -961,7 +962,7 @@ Deno.serve(async (req) => {
 
   // Track sourceId for error handling
   let sourceId: string | null = null;
-  let supabase: any = null;
+  let supabase: SupabaseClientType | null = null;
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

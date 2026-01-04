@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import type { SupabaseClientType } from '../_shared/types/supabase.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -116,8 +117,8 @@ function formatSlotTime(date: Date, timezone: string): string {
 
 // Refresh OAuth token if needed
 async function refreshTokenIfNeeded(
-  supabase: any, 
-  account: any
+  supabase: SupabaseClientType, 
+  account: { id: string; provider: string; refresh_token: string; access_token: string; token_expires_at: string | null }
 ): Promise<string> {
   const now = new Date();
   const expiresAt = account.token_expires_at ? new Date(account.token_expires_at) : null;

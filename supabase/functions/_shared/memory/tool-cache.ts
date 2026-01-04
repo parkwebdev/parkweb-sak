@@ -18,6 +18,7 @@
  */
 
 import type { DbMessage } from './conversation-history.ts';
+import type { SupabaseClientType } from '../types/supabase.ts';
 
 // ============================================
 // TYPES
@@ -148,7 +149,7 @@ export function findCachedToolResult(
  * @returns Array of recent messages with tool data
  */
 export async function getRecentToolCalls(
-  supabase: any,
+  supabase: SupabaseClientType,
   conversationId: string,
   maxAgeMinutes: number = 10
 ): Promise<DbMessage[]> {

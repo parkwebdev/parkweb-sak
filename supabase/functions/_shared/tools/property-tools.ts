@@ -17,12 +17,13 @@
 
 import { normalizeState } from '../utils/state-mapping.ts';
 import { getErrorMessage } from '../errors.ts';
+import type { SupabaseClientType } from '../types/supabase.ts';
 
 // ============================================
 // TYPES
 // ============================================
 
-export interface ToolResult<T = any> {
+export interface ToolResult<T = unknown> {
   success: boolean;
   result?: T;
   error?: string;
@@ -71,7 +72,7 @@ export interface LookupPropertyArgs {
  * @returns Search results with properties and shown_properties for context
  */
 export async function searchProperties(
-  supabase: any,
+  supabase: SupabaseClientType,
   agentId: string,
   args: SearchPropertiesArgs
 ): Promise<ToolResult> {
@@ -195,7 +196,7 @@ export async function searchProperties(
  * @returns Property details
  */
 export async function lookupProperty(
-  supabase: any,
+  supabase: SupabaseClientType,
   agentId: string,
   conversationId: string,
   args: LookupPropertyArgs
@@ -340,7 +341,7 @@ export async function lookupProperty(
  * @returns Location list with contact details
  */
 export async function getLocations(
-  supabase: any,
+  supabase: SupabaseClientType,
   agentId: string
 ): Promise<ToolResult> {
   try {

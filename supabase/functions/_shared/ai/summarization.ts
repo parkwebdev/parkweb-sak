@@ -18,6 +18,7 @@
 
 import { MODEL_TIERS } from './model-routing.ts';
 import { SUMMARIZATION_THRESHOLD } from './config.ts';
+import type { SupabaseClientType } from '../types/supabase.ts';
 
 // ============================================
 // TYPES
@@ -159,10 +160,10 @@ Return ONLY the bullet points, no introduction or conclusion.`;
  * @param currentMetadata - Current conversation metadata
  */
 export async function storeConversationSummary(
-  supabase: any,
+  supabase: SupabaseClientType,
   conversationId: string,
   summary: string,
-  currentMetadata: any
+  currentMetadata: Record<string, unknown>
 ): Promise<void> {
   try {
     await supabase.from('conversations').update({
