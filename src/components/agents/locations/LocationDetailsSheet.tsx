@@ -49,7 +49,7 @@ export function LocationDetailsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-xl overflow-y-auto pt-8">
+      <SheetContent side="right" className="sm:max-w-xl overflow-y-auto pt-4">
         
         {!contentReady || !location ? (
           <SkeletonLocationDetails />
