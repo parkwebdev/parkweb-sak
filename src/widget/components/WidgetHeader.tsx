@@ -83,7 +83,7 @@ export const WidgetHeader = ({
   onSettingsToggle,
 }: WidgetHeaderProps) => {
   return (
-    <div className="px-4 py-2.5 flex items-center justify-between relative bg-background border-b">
+    <div className="p-4 flex items-center justify-between relative bg-background border-b">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted">
           <ChatBubbleIcon className="h-5 w-5 text-foreground" />
