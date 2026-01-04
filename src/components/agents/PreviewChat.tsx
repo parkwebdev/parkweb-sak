@@ -434,7 +434,7 @@ export function PreviewChat({
               placeholder="Type a message..."
               disabled={isLoading}
               rows={1}
-              className="min-h-[44px] max-h-[120px] py-2.5 pr-12 resize-none leading-normal"
+              className="min-h-[44px] max-h-[120px] py-[7px] pr-12 resize-none leading-normal"
             />
             <Button 
               type="submit" 
