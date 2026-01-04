@@ -306,7 +306,7 @@ export function ManageStagesDialog({ open, onOpenChange, canManage = true }: Man
 
         {/* Add new stage - only show if can manage */}
         {canManage && (
-          <div className="flex gap-2 pt-4 border-t">
+          <div className="flex gap-2 pt-4">
             <Input
               value={newStageName}
               onChange={(e) => setNewStageName(e.target.value)}
