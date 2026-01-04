@@ -153,7 +153,7 @@ export const HomeView = ({
                               <img 
                                 src={announcement.image_url} 
                                 alt="" 
-                                className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                                className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
                               />
                             )}
                             <div className="flex-1 min-w-0">
