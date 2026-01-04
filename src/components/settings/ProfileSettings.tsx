@@ -1,6 +1,6 @@
 /**
  * @fileoverview Profile settings with avatar upload and password management.
- * Features silent auto-save for profile changes (no visual saved indicators).
+ * Features silent auto-save for profile changes with toast feedback.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -14,7 +14,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Button } from '@/components/ui/button';
-import { SavingIndicator } from '@/components/ui/saving-indicator';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { uploadAvatar } from '@/lib/avatar-upload';
@@ -37,7 +36,6 @@ export function ProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [savingFields, setSavingFields] = useState<Record<string, boolean>>({});
   const [initialProfile, setInitialProfile] = useState<typeof profile | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
@@ -101,10 +99,8 @@ export function ProfileSettings() {
       clearTimeout(saveTimers.current.display_name);
     }
 
-    // Mark as saving
-    setSavingFields(prev => ({ ...prev, display_name: true }));
-
     saveTimers.current.display_name = setTimeout(async () => {
+      const toastId = toast.saving();
       try {
         await supabase
           .from('profiles')
@@ -117,7 +113,7 @@ export function ProfileSettings() {
         logger.error('Error auto-saving display name:', error);
         toast.error('Failed to save', { description: getErrorMessage(error) });
       } finally {
-        setSavingFields(prev => ({ ...prev, display_name: false }));
+        toast.dismiss(toastId);
       }
     }, 500);
 
@@ -138,10 +134,8 @@ export function ProfileSettings() {
       clearTimeout(saveTimers.current.email);
     }
 
-    // Mark as saving
-    setSavingFields(prev => ({ ...prev, email: true }));
-
     saveTimers.current.email = setTimeout(async () => {
+      const toastId = toast.saving();
       try {
         await supabase
           .from('profiles')
@@ -154,7 +148,7 @@ export function ProfileSettings() {
         logger.error('Error auto-saving email:', error);
         toast.error('Failed to save', { description: getErrorMessage(error) });
       } finally {
-        setSavingFields(prev => ({ ...prev, email: false }));
+        toast.dismiss(toastId);
       }
     }, 500);
 
@@ -360,10 +354,7 @@ export function ProfileSettings() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="display_name" className="text-xs">Display Name</Label>
-                <SavingIndicator isSaving={savingFields.display_name} />
-              </div>
+              <Label htmlFor="display_name" className="text-xs">Display Name</Label>
               <Input
                 id="display_name"
                 value={profile.display_name}
@@ -374,10 +365,7 @@ export function ProfileSettings() {
               />
             </div>
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="email" className="text-xs">Email Address</Label>
-                <SavingIndicator isSaving={savingFields.email} />
-              </div>
+              <Label htmlFor="email" className="text-xs">Email Address</Label>
               <Input
                 id="email"
                 type="email"

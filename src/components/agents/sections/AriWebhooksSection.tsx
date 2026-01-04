@@ -19,7 +19,7 @@ import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { DebugConsole } from '@/components/agents/DebugConsole';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonListSection } from '@/components/ui/skeleton';
-import { SavingIndicator } from '@/components/ui/saving-indicator';
+
 import { toast } from '@/lib/toast';
 
 interface DebugLog {
@@ -48,8 +48,6 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
   // Test states
   const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
   
-  // Saved indicator per webhook
-  const [savedWebhookId, setSavedWebhookId] = useState<string | null>(null);
   
   // Debug mode
   const [debugMode, setDebugMode] = useState(false);
@@ -90,9 +88,9 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
 
   const handleToggle = async (id: string, active: boolean) => {
     addDebugLog('info', `${active ? 'Enabling' : 'Disabling'} webhook...`);
+    const toastId = toast.saving();
     await updateWebhook(id, { active });
-    setSavedWebhookId(id);
-    setTimeout(() => setSavedWebhookId(null), 2000);
+    toast.dismiss(toastId);
   };
 
   const handleDelete = async () => {
@@ -198,9 +196,6 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
                           checked={webhook.active ?? true}
                           onCheckedChange={(checked) => handleToggle(webhook.id, checked)}
                         />
-                        {savedWebhookId === webhook.id && (
-                          <SavingIndicator isSaving={true} />
-                        )}
                       </div>
                     )}
                     {canManageWebhooks && (

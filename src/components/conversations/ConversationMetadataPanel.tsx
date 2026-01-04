@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { SavingIndicator } from '@/components/ui/saving-indicator';
+
 import {
   Select,
   SelectContent,
@@ -1002,7 +1002,6 @@ export function ConversationMetadataPanel({
                   placeholder="Add internal notes about this conversation..."
                   className="min-h-[80px] text-sm resize-none"
                 />
-                <SavingIndicator isSaving={notesSaving} />
               </div>
             </AccordionContent>
           </AccordionItem>

@@ -15,7 +15,7 @@ import { Trash01, Clock } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
-import { SavingIndicator } from '@/components/ui/saving-indicator';
+import { toast } from '@/lib/toast';
 
 interface ScheduledReportsManagerProps {
   /** Optional external loading state override */
@@ -26,7 +26,7 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
   const { reports, loading: internalLoading, toggleReportStatus, deleteReport } = useScheduledReports();
   const loading = externalLoading ?? internalLoading;
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [savedReportIds, setSavedReportIds] = useState<Set<string>>(new Set());
+  
 
   const getFrequencyDisplay = (report: typeof reports[number]) => {
     const timeStr = report.time_of_day?.substring(0, 5) || '09:00';
@@ -52,15 +52,9 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
   };
 
   const handleToggle = async (id: string, checked: boolean) => {
+    const toastId = toast.saving();
     await toggleReportStatus(id, checked);
-    setSavedReportIds(prev => new Set(prev).add(id));
-    setTimeout(() => {
-      setSavedReportIds(prev => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }, 2000);
+    toast.dismiss(toastId);
   };
 
   const handleDelete = async () => {
@@ -106,12 +100,11 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
                     </p>
                   </div>
                   <div className="flex items-center gap-3 ml-4">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                       <Switch
                         checked={report.active}
                         onCheckedChange={(checked) => handleToggle(report.id, checked)}
                       />
-                      <SavingIndicator isSaving={savedReportIds.has(report.id)} />
                     </div>
                     <Button
                       variant="ghost"

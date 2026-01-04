@@ -23,7 +23,7 @@ export function AriWelcomeMessagesSection({ agentId }: AriWelcomeMessagesSection
     setLocalConfig(config);
   }, [config]);
 
-  const { save, isSaving } = useAutoSave({
+  const { save } = useAutoSave({
     onSave: async (updates: Partial<typeof config>) => {
       await saveConfig(updates);
     },
@@ -44,7 +44,6 @@ export function AriWelcomeMessagesSection({ agentId }: AriWelcomeMessagesSection
       <AriSectionHeader
         title="Welcome & Messages"
         description="Configure welcome messages and navigation"
-        isSaving={isSaving}
       />
       <ContentSection config={localConfig} onConfigChange={handleConfigChange} />
     </div>

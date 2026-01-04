@@ -1,6 +1,6 @@
 /**
  * @fileoverview General application settings with theme and preferences.
- * Silent auto-save with 500ms debouncing - no visual saved indicators.
+ * Silent auto-save with 500ms debouncing with toast feedback.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/lib/toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { SavingIndicator } from '@/components/ui/saving-indicator';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -31,7 +30,6 @@ export function GeneralSettings() {
     company_address: '',
     company_phone: '',
   });
-  const [savingFields, setSavingFields] = useState<{ [key: string]: boolean }>({});
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
@@ -100,11 +98,9 @@ export function GeneralSettings() {
       clearTimeout(saveTimers.current[key]);
     }
 
-    // Mark as saving
-    setSavingFields(prev => ({ ...prev, [key]: true }));
-
     // Debounce the save operation (500ms standard)
     saveTimers.current[key] = setTimeout(async () => {
+      const toastId = toast.saving();
       try {
         // Use UPDATE instead of UPSERT to avoid duplicate key issues
         const { data: existingData } = await supabase
@@ -150,7 +146,7 @@ export function GeneralSettings() {
           description: getErrorMessage(error),
         });
       } finally {
-        setSavingFields(prev => ({ ...prev, [key]: false }));
+        toast.dismiss(toastId);
       }
     }, 500);
   };
@@ -174,11 +170,9 @@ export function GeneralSettings() {
       clearTimeout(saveTimers.current[key]);
     }
 
-    // Mark as saving
-    setSavingFields(prev => ({ ...prev, [key]: true }));
-
     // Debounce the save operation (500ms standard)
     saveTimers.current[key] = setTimeout(async () => {
+      const toastId = toast.saving();
       try {
         const { error } = await supabase
           .from('profiles')
@@ -199,7 +193,7 @@ export function GeneralSettings() {
           description: getErrorMessage(error),
         });
       } finally {
-        setSavingFields(prev => ({ ...prev, [key]: false }));
+        toast.dismiss(toastId);
       }
     }, 500);
   };
@@ -223,10 +217,7 @@ export function GeneralSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="company_name" className="text-sm font-medium">Company Name</Label>
-                <SavingIndicator isSaving={savingFields.company_name} />
-              </div>
+              <Label htmlFor="company_name" className="text-sm font-medium">Company Name</Label>
               <Input
                 id="company_name"
                 value={company.company_name}
@@ -236,10 +227,7 @@ export function GeneralSettings() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="company_address" className="text-sm font-medium">Company Address</Label>
-                <SavingIndicator isSaving={savingFields.company_address} />
-              </div>
+              <Label htmlFor="company_address" className="text-sm font-medium">Company Address</Label>
               <Input
                 id="company_address"
                 value={company.company_address}
@@ -249,10 +237,7 @@ export function GeneralSettings() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="company_phone" className="text-sm font-medium">Company Phone</Label>
-                <SavingIndicator isSaving={savingFields.company_phone} />
-              </div>
+              <Label htmlFor="company_phone" className="text-sm font-medium">Company Phone</Label>
               <PhoneInputField
                 name="company_phone"
                 value={company.company_phone}
@@ -273,9 +258,7 @@ export function GeneralSettings() {
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Theme</label>
-              </div>
+              <label className="text-sm font-medium">Theme</label>
               <p className="text-xs text-muted-foreground">Choose your preferred color scheme</p>
             </div>
             <ThemeToggle />
@@ -294,10 +277,7 @@ export function GeneralSettings() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm font-medium">Default View</Label>
-                <SavingIndicator isSaving={savingFields.default_project_view} />
-              </div>
+              <Label className="text-sm font-medium">Default View</Label>
               <p className="text-xs text-muted-foreground">Choose which page loads first when opening the application</p>
             </div>
             <Select 

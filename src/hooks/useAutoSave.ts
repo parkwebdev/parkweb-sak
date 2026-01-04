@@ -1,28 +1,25 @@
 /**
  * useAutoSave Hook
  * 
- * Unified auto-save hook with 500ms debounce, saving state, and error handling.
+ * Unified auto-save hook with 500ms debounce, toast feedback, and error handling.
  * Standard for all auto-save behavior across the app.
  * 
  * @module hooks/useAutoSave
  * 
  * @example
  * ```tsx
- * const { save, isSaving } = useAutoSave({
+ * const { save } = useAutoSave({
  *   onSave: async (value) => {
  *     await updateSettings(value);
  *   },
  * });
  * 
- * // Call on every change
+ * // Call on every change - shows toast automatically
  * <Input onChange={(e) => save(e.target.value)} />
- * 
- * // Optional: show saving indicator
- * <SavingIndicator isSaving={isSaving} />
  * ```
  */
 
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 
@@ -33,33 +30,33 @@ interface UseAutoSaveOptions<T> {
   debounceMs?: number;
   /** Custom error handler (defaults to toast) */
   onError?: (error: unknown) => void;
+  /** Custom saving message (default: "Saving...") */
+  savingMessage?: string;
 }
 
 interface UseAutoSaveReturn<T> {
   /** Call this on every change - it will debounce and save */
   save: (value: T) => void;
-  /** True while save is in progress */
-  isSaving: boolean;
   /** Force immediate save (bypasses debounce) */
   saveNow: (value: T) => Promise<void>;
 }
 
 /**
- * Creates an auto-save handler with debouncing and error handling.
+ * Creates an auto-save handler with debouncing, toast feedback, and error handling.
  * 
  * @param options - Configuration options
- * @returns Object with save function and isSaving state
+ * @returns Object with save function
  */
 export function useAutoSave<T>({
   onSave,
   debounceMs = 500,
   onError,
+  savingMessage = 'Saving...',
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn<T> {
-  const [isSaving, setIsSaving] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const onSaveRef = useRef(onSave);
   const onErrorRef = useRef(onError);
-  const pendingValueRef = useRef<T | null>(null);
+  const savingMessageRef = useRef(savingMessage);
 
   // Keep refs up to date
   useEffect(() => {
@@ -69,6 +66,10 @@ export function useAutoSave<T>({
   useEffect(() => {
     onErrorRef.current = onError;
   }, [onError]);
+
+  useEffect(() => {
+    savingMessageRef.current = savingMessage;
+  }, [savingMessage]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -80,24 +81,22 @@ export function useAutoSave<T>({
   }, []);
 
   const executeSave = useCallback(async (value: T) => {
-    setIsSaving(true);
+    const toastId = toast.saving(savingMessageRef.current);
     try {
       await onSaveRef.current(value);
+      toast.dismiss(toastId);
     } catch (error: unknown) {
+      toast.dismiss(toastId);
       if (onErrorRef.current) {
         onErrorRef.current(error);
       } else {
         toast.error('Failed to save', { description: getErrorMessage(error) });
       }
-    } finally {
-      setIsSaving(false);
     }
   }, []);
 
   const save = useCallback(
     (value: T) => {
-      pendingValueRef.current = value;
-
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -119,5 +118,5 @@ export function useAutoSave<T>({
     [executeSave]
   );
 
-  return { save, isSaving, saveNow };
+  return { save, saveNow };
 }

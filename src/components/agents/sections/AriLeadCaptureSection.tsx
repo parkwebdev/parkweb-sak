@@ -23,7 +23,7 @@ export function AriLeadCaptureSection({ agentId }: AriLeadCaptureSectionProps) {
     setLocalConfig(config);
   }, [config]);
 
-  const { save, isSaving } = useAutoSave({
+  const { save } = useAutoSave({
     onSave: async (updates: Partial<typeof config>) => {
       await saveConfig(updates);
     },
@@ -44,7 +44,6 @@ export function AriLeadCaptureSection({ agentId }: AriLeadCaptureSectionProps) {
       <AriSectionHeader
         title="Lead Capture"
         description="Set up contact form to collect user information"
-        isSaving={isSaving}
       />
       <ContactFormSection config={localConfig} onConfigChange={handleConfigChange} />
     </div>
