@@ -150,6 +150,57 @@ function useDebouncedCallback<T extends (...args: any[]) => any>(
 
 ---
 
+### useAutoSave (`src/hooks/useAutoSave.ts`)
+
+Unified auto-save hook with debounce, toast feedback, and error handling. **Standard for all auto-save behavior across the app.**
+
+```tsx
+import { useAutoSave } from '@/hooks/useAutoSave';
+
+const { save } = useAutoSave({
+  onSave: async (value) => {
+    await updateSettings(value);
+  },
+});
+
+// Call on every change - shows "Saving..." toast automatically
+<Input onChange={(e) => save(e.target.value)} />
+```
+
+**Signature:**
+```tsx
+interface UseAutoSaveOptions<T> {
+  onSave: (value: T) => Promise<void>;
+  debounceMs?: number;           // Default: 2000ms (2 seconds)
+  onError?: (error: unknown) => void;
+  savingMessage?: string;        // Default: "Saving..."
+}
+
+function useAutoSave<T>(options: UseAutoSaveOptions<T>): {
+  save: (value: T) => void;           // Debounced save
+  saveNow: (value: T) => Promise<void>;  // Immediate save (bypasses debounce)
+};
+```
+
+**Key Features:**
+- 2-second debounce by default (industry standard for auto-save)
+- Automatic `toast.saving()` feedback during save
+- Error toast on failure with `getErrorMessage()`
+- Cleanup on unmount (pending saves cancelled)
+- `saveNow()` for immediate save (bypasses debounce)
+
+**When to Use:**
+- Text inputs, textareas, sliders that should auto-save on change
+- Any field where explicit "Save" button is not appropriate
+
+**When NOT to Use:**
+- Button-triggered actions (use immediate save with `isSaving` state)
+- Form submissions (use `react-hook-form` with explicit submit)
+
+**File**: `src/hooks/useAutoSave.ts`
+
+---
+
 Centralized query key factory for type-safe cache management. All query keys are defined here.
 
 ```tsx

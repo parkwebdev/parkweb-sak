@@ -1,7 +1,7 @@
 /**
  * useAutoSave Hook
  * 
- * Unified auto-save hook with 500ms debounce, toast feedback, and error handling.
+ * Unified auto-save hook with 2-second debounce, toast feedback, and error handling.
  * Standard for all auto-save behavior across the app.
  * 
  * @module hooks/useAutoSave
@@ -26,7 +26,7 @@ import { getErrorMessage } from '@/types/errors';
 interface UseAutoSaveOptions<T> {
   /** Function to call when saving */
   onSave: (value: T) => Promise<void>;
-  /** Debounce delay in milliseconds (default: 500) */
+  /** Debounce delay in milliseconds (default: 2000) */
   debounceMs?: number;
   /** Custom error handler (defaults to toast) */
   onError?: (error: unknown) => void;
@@ -49,7 +49,7 @@ interface UseAutoSaveReturn<T> {
  */
 export function useAutoSave<T>({
   onSave,
-  debounceMs = 500,
+  debounceMs = 2000,
   onError,
   savingMessage = 'Saving...',
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn<T> {

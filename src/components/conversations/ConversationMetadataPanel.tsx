@@ -4,7 +4,8 @@
  * Collapsible accordion sections with auto-save for notes and tags.
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import DOMPurify from 'isomorphic-dompurify';
 import { getLanguageFlag } from '@/lib/language-utils';
 import { isPhoneFieldKey, isConsentFieldKey } from '@/lib/field-keys';
@@ -169,44 +170,25 @@ export function ConversationMetadataPanel({
   const metadata = (conversation.metadata || {}) as ConversationMetadata;
   const [newTag, setNewTag] = useState('');
   const [notes, setNotes] = useState(metadata.notes || '');
-  const [notesSaving, setNotesSaving] = useState(false);
-  const notesDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Auto-save for notes using unified hook
+  const { save: saveNotes } = useAutoSave({
+    onSave: async (value: string) => {
+      await onUpdateMetadata(conversation.id, { notes: value }, { silent: true });
+    },
+  });
   
   // Sync notes state when conversation changes
   useEffect(() => {
     setNotes((conversation.metadata as ConversationMetadata)?.notes || '');
-    setNotesSaving(false);
   }, [conversation.id]);
   
-  // Debounced auto-save for notes
+  // Handle notes change with auto-save
   const handleNotesChange = useCallback((value: string) => {
     setNotes(value);
-    setNotesSaving(false);
-    
-    // Clear existing debounce timer
-    if (notesDebounceRef.current) {
-      clearTimeout(notesDebounceRef.current);
-    }
-    
-    // Mark as saving
-    setNotesSaving(true);
-    
-    // Debounce save (500ms standard)
-    notesDebounceRef.current = setTimeout(async () => {
-      await onUpdateMetadata(conversation.id, { notes: value }, { silent: true });
-      setNotesSaving(false);
-    }, 500);
-  }, [conversation.id, onUpdateMetadata]);
-  
-  // Cleanup debounce timer on unmount
-  useEffect(() => {
-    return () => {
-      if (notesDebounceRef.current) {
-        clearTimeout(notesDebounceRef.current);
-      }
-    };
-  }, []);
+    saveNotes(value);
+  }, [saveNotes]);
 
   const handleAddTag = async (tag: string) => {
     if (!tag.trim()) return;
