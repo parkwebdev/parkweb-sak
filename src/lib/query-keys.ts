@@ -225,6 +225,12 @@ export const queryKeys = {
     all: ['onboarding'] as const,
     progress: (userId: string) => [...queryKeys.onboarding.all, 'progress', userId] as const,
   },
+
+  // Knowledge base
+  kb: {
+    all: ['kb'] as const,
+    popularity: (categoryId: string) => [...queryKeys.kb.all, 'popularity', categoryId] as const,
+  },
 } as const;
 
 /** Type helper for query keys */

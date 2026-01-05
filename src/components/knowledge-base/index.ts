@@ -13,3 +13,4 @@ export { KBArticleView } from './KBArticleView';
 export { KBCategoryView } from './KBCategoryView';
 export { KBArticleCard } from './KBArticleCard';
 export { KBTableOfContents } from './KBTableOfContents';
+export { KBPopularArticles } from './KBPopularArticles';

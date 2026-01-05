@@ -819,6 +819,33 @@ export type Database = {
           },
         ]
       }
+      kb_article_views: {
+        Row: {
+          article_slug: string
+          category_id: string
+          id: string
+          session_id: string
+          user_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          article_slug: string
+          category_id: string
+          id?: string
+          session_id: string
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          article_slug?: string
+          category_id?: string
+          id?: string
+          session_id?: string
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
       knowledge_chunks: {
         Row: {
           agent_id: string
@@ -2222,6 +2249,15 @@ export type Database = {
       }
     }
     Views: {
+      kb_article_popularity: {
+        Row: {
+          article_slug: string | null
+          category_id: string | null
+          unique_views: number | null
+          view_count: number | null
+        }
+        Relationships: []
+      }
       widget_conversations_secure: {
         Row: {
           agent_id: string | null

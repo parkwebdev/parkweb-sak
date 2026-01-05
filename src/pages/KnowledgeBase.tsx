@@ -14,6 +14,7 @@ import { KBSidebar } from '@/components/knowledge-base/KBSidebar';
 import { KBArticleView } from '@/components/knowledge-base/KBArticleView';
 import { KBCategoryView } from '@/components/knowledge-base/KBCategoryView';
 import { KBTableOfContents } from '@/components/knowledge-base/KBTableOfContents';
+import { KBPopularArticles } from '@/components/knowledge-base/KBPopularArticles';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
@@ -172,9 +173,16 @@ export default function KnowledgeBase() {
         </AnimatePresence>
       </main>
       
-      {/* Right Sidebar - Table of Contents */}
+      {/* Right Sidebar - Table of Contents or Popular Articles */}
       <aside className="w-[200px] border-l border-border hidden lg:block overflow-y-auto">
-        <KBTableOfContents headings={headings} />
+        {isCategoryView && currentCategory ? (
+          <KBPopularArticles
+            categoryId={currentCategory.id}
+            onSelectArticle={handleSelectArticleFromCategory}
+          />
+        ) : (
+          <KBTableOfContents headings={headings} />
+        )}
       </aside>
     </div>
   );
