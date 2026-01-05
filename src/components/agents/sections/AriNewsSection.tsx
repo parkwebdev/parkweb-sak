@@ -13,11 +13,12 @@ import { useCanManage } from '@/hooks/useCanManage';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trash01, Edit02, Image03, Upload01, XClose, Plus } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -30,7 +31,7 @@ import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog'
 import { uploadFeaturedImage, deleteArticleImage } from '@/lib/article-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
-import { SkeletonCard } from '@/components/ui/skeleton';
+import { SkeletonCard, Skeleton } from '@/components/ui/skeleton';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { logger } from '@/utils/logger';
 import { format } from 'date-fns';
@@ -175,7 +176,7 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete, canManage = true }: {
   );
 };
 
-const NewsDialog = ({ 
+const NewsSheet = ({ 
   newsItem, 
   onSave, 
   onClose,
@@ -196,6 +197,7 @@ const NewsDialog = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(newsItem?.featured_image_url || null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(newsItem?.featured_image_url || null);
+  const [contentReady, setContentReady] = useState(false);
   
   const [formData, setFormData] = useState<NewsFormData>({
     title: '',
@@ -209,6 +211,16 @@ const NewsDialog = ({
     cta_secondary_label: '',
     cta_secondary_url: '',
   });
+
+  // Deferred content mounting for smooth animation
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => setContentReady(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setContentReady(false);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (newsItem) {
@@ -316,189 +328,214 @@ const NewsDialog = ({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{newsItem ? 'Edit' : 'Create'} News Item</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onClose}>
+      <SheetContent side="right" className="sm:max-w-xl overflow-y-auto">
+        <SheetHeader className="mb-6">
+          <SheetTitle>{newsItem ? 'Edit' : 'Create'} News Item</SheetTitle>
+          <p className="text-sm text-muted-foreground">
             Create a blog-style update to share with your users
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="news-title">Title *</Label>
-            <Input
-              id="news-title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Introducing Our New Feature"
-              required
-            />
+        {!contentReady ? (
+          <div className="space-y-6">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
-
-          {/* Featured Image Upload */}
-          <div className="space-y-2">
-            <Label>Featured Image</Label>
-            {imagePreview ? (
-              <div className="relative w-full h-40 rounded-lg overflow-hidden border bg-muted">
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  className="w-full h-full object-cover"
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">News Details</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="news-title">Title *</Label>
+                <Input
+                  id="news-title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Introducing Our New Feature"
+                  required
                 />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="icon"
-                  className="absolute top-2 right-2 h-7 w-7"
-                  aria-label="Remove image"
-                  onClick={handleRemoveImage}
-                >
-                  <XClose className="h-4 w-4" aria-hidden="true" />
-                </Button>
               </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
-                <Upload01 className="h-8 w-8 text-muted-foreground mb-2" />
-                <span className="text-sm text-muted-foreground">Click to upload featured image</span>
-                <span className="text-xs text-muted-foreground mt-1">Recommended: 1200×600</span>
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleFileSelect}
-                  className="hidden"
+
+              {/* Featured Image Upload */}
+              <div className="space-y-2">
+                <Label>Featured Image</Label>
+                {imagePreview ? (
+                  <div className="relative w-full h-40 rounded-lg overflow-hidden border bg-muted">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="absolute top-2 right-2 h-7 w-7"
+                      aria-label="Remove image"
+                      onClick={handleRemoveImage}
+                    >
+                      <XClose className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
+                    <Upload01 className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">Click to upload featured image</span>
+                    <span className="text-xs text-muted-foreground mt-1">Recommended: 1200×600</span>
+                    <input 
+                      ref={fileInputRef}
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Rich Text Editor for Body */}
+              <div className="space-y-2">
+                <Label>Content *</Label>
+                <RichTextEditor
+                  content={formData.body}
+                  onChange={(html) => setFormData({ ...formData, body: html })}
+                  placeholder="Write your news article content here..."
+                  agentId={agentId}
+                  userId={userId}
+                  minHeight="200px"
                 />
-              </label>
-            )}
-          </div>
+              </div>
+            </section>
 
-          {/* Rich Text Editor for Body */}
-          <div className="space-y-2">
-            <Label>Content *</Label>
-            <RichTextEditor
-              content={formData.body}
-              onChange={(html) => setFormData({ ...formData, body: html })}
-              placeholder="Write your news article content here..."
-              agentId={agentId}
-              userId={userId}
-              minHeight="200px"
-            />
-          </div>
+            <Separator />
 
-          {/* Author Selection */}
-          <div className="space-y-2">
-            <Label>Author</Label>
-            <Select
-              value={currentAuthorMember?.user_id || ''}
-              onValueChange={handleAuthorSelect}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select an author">
-                  {currentAuthorMember ? (
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage src={currentAuthorMember.avatar_url || undefined} />
-                        <AvatarFallback className="text-2xs">
-                          {currentAuthorMember.display_name?.[0] || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{formatAuthorName(currentAuthorMember.display_name)}</span>
-                    </div>
-                  ) : formData.author_name ? (
-                    <span>{formData.author_name}</span>
-                  ) : null}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {teamMembers.map((member) => (
-                  <SelectItem key={member.user_id} value={member.user_id}>
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage src={member.avatar_url || undefined} />
-                        <AvatarFallback className="text-2xs">
-                          {member.display_name?.[0] || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{formatAuthorName(member.display_name)}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Author</h3>
+              
+              <Select
+                value={currentAuthorMember?.user_id || ''}
+                onValueChange={handleAuthorSelect}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an author">
+                    {currentAuthorMember ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={currentAuthorMember.avatar_url || undefined} />
+                          <AvatarFallback className="text-2xs">
+                            {currentAuthorMember.display_name?.[0] || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{formatAuthorName(currentAuthorMember.display_name)}</span>
+                      </div>
+                    ) : formData.author_name ? (
+                      <span>{formData.author_name}</span>
+                    ) : null}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.user_id} value={member.user_id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={member.avatar_url || undefined} />
+                          <AvatarFallback className="text-2xs">
+                            {member.display_name?.[0] || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{formatAuthorName(member.display_name)}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </section>
 
-          {/* Call to Action Buttons */}
-          <div className="space-y-4">
-            <Label className="text-base font-medium">Call to Action Buttons</Label>
-            <div className="grid grid-cols-2 gap-4">
-              {/* Primary CTA */}
-              <div className="space-y-3 p-4 border rounded-lg">
-                <Label className="text-sm font-medium">Primary Button</Label>
-                <div className="space-y-2">
-                  <Input
-                    value={formData.cta_primary_label}
-                    onChange={(e) => setFormData({ ...formData, cta_primary_label: e.target.value })}
-                    placeholder="Button label"
-                  />
-                  <Input
-                    value={formData.cta_primary_url}
-                    onChange={(e) => setFormData({ ...formData, cta_primary_url: e.target.value })}
-                    placeholder="https://example.com"
-                    type="url"
-                  />
+            <Separator />
+
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Call to Action</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Primary CTA */}
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <Label className="text-sm font-medium">Primary Button</Label>
+                  <div className="space-y-2">
+                    <Input
+                      value={formData.cta_primary_label}
+                      onChange={(e) => setFormData({ ...formData, cta_primary_label: e.target.value })}
+                      placeholder="Button label"
+                    />
+                    <Input
+                      value={formData.cta_primary_url}
+                      onChange={(e) => setFormData({ ...formData, cta_primary_url: e.target.value })}
+                      placeholder="https://example.com"
+                      type="url"
+                    />
+                  </div>
+                </div>
+                {/* Secondary CTA */}
+                <div className="space-y-3 p-4 border rounded-lg">
+                  <Label className="text-sm font-medium">Secondary Button</Label>
+                  <div className="space-y-2">
+                    <Input
+                      value={formData.cta_secondary_label}
+                      onChange={(e) => setFormData({ ...formData, cta_secondary_label: e.target.value })}
+                      placeholder="Button label"
+                    />
+                    <Input
+                      value={formData.cta_secondary_url}
+                      onChange={(e) => setFormData({ ...formData, cta_secondary_url: e.target.value })}
+                      placeholder="https://example.com"
+                      type="url"
+                    />
+                  </div>
                 </div>
               </div>
-              {/* Secondary CTA */}
-              <div className="space-y-3 p-4 border rounded-lg">
-                <Label className="text-sm font-medium">Secondary Button</Label>
-                <div className="space-y-2">
-                  <Input
-                    value={formData.cta_secondary_label}
-                    onChange={(e) => setFormData({ ...formData, cta_secondary_label: e.target.value })}
-                    placeholder="Button label"
-                  />
-                  <Input
-                    value={formData.cta_secondary_url}
-                    onChange={(e) => setFormData({ ...formData, cta_secondary_url: e.target.value })}
-                    placeholder="https://example.com"
-                    type="url"
-                  />
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Both label and URL are required for a button to appear
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="space-y-0.5">
-              <Label htmlFor="is_published">Published</Label>
-              <p className="text-sm text-muted-foreground">
-                Make this news item visible to users
+              <p className="text-xs text-muted-foreground">
+                Both label and URL are required for a button to appear
               </p>
-            </div>
-            <Switch
-              id="is_published"
-              checked={formData.is_published}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
-            />
-          </div>
+            </section>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isUploading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isUploading}>
-              {isUploading && <Spinner className="mr-2 h-4 w-4" />}
-              {newsItem ? 'Save Changes' : 'Create News Item'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <Separator />
+
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Settings</h3>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is_published">Published</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Make this news item visible to users
+                  </p>
+                </div>
+                <Switch
+                  id="is_published"
+                  checked={formData.is_published}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
+                />
+              </div>
+            </section>
+
+            <Separator />
+
+            <section className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isUploading} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isUploading} className="flex-1">
+                {isUploading && <Spinner className="mr-2 h-4 w-4" />}
+                {newsItem ? 'Save Changes' : 'Create News Item'}
+              </Button>
+            </section>
+          </form>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 };
 
@@ -603,7 +640,7 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
         )}
       </div>
 
-      <NewsDialog
+      <NewsSheet
         newsItem={editingNewsItem || undefined}
         onSave={handleSave}
         onClose={() => {
