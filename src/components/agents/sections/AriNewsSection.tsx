@@ -509,7 +509,6 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
   const [editingNewsItem, setEditingNewsItem] = useState<NewsItem | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const sensors = useSensors(
@@ -555,7 +554,6 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
     if (!deleteId) return;
     await deleteNewsItem(deleteId);
     setDeleteId(null);
-    setDeleteConfirmation('');
   };
 
   return (
@@ -619,19 +617,10 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
 
       <DeleteConfirmationDialog
         open={!!deleteId}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteId(null);
-            setDeleteConfirmation('');
-          }
-        }}
-        confirmationValue={deleteConfirmation}
-        onConfirmationValueChange={setDeleteConfirmation}
+        onOpenChange={(open) => !open && setDeleteId(null)}
         onConfirm={handleDelete}
         title="Delete News Item"
-        description={'Are you sure you want to delete this news item? Type "DELETE" to confirm.'}
-        confirmationText="DELETE"
-        isDeleting={false}
+        description="Are you sure you want to delete this news item? This action cannot be undone."
       />
     </div>
   );

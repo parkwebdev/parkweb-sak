@@ -28,7 +28,6 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
   const { role: currentUserRole, hasPermission, isAdmin } = useRoleAuthorization();
@@ -68,7 +67,6 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
 
   const handleRemoveMember = (member: TeamMember) => {
     setMemberToDelete(member);
-    setDeleteConfirmText('');
     setIsDeleteDialogOpen(true);
   };
 
@@ -82,7 +80,6 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
     if (success) {
       setIsDeleteDialogOpen(false);
       setMemberToDelete(null);
-      setDeleteConfirmText('');
     }
   };
 
@@ -159,18 +156,13 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
         open={isDeleteDialogOpen}
         onOpenChange={(open) => {
           setIsDeleteDialogOpen(open);
-          if (!open) {
-            setMemberToDelete(null);
-            setDeleteConfirmText('');
-          }
+          if (!open) setMemberToDelete(null);
         }}
         title="Remove Team Member"
         description={`This will permanently remove ${memberToDelete?.display_name || memberToDelete?.email || 'this member'} from your team. They will lose access to all team resources.`}
-        confirmationText="delete"
-        confirmationValue={deleteConfirmText}
-        onConfirmationValueChange={setDeleteConfirmText}
         onConfirm={handleConfirmDelete}
         isDeleting={isDeleting}
+        actionLabel="Remove"
       />
     </div>
   );

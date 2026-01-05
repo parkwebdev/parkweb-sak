@@ -15,7 +15,7 @@ import { useWebhooks } from '@/hooks/useWebhooks';
 import { WebhookLogsDialog } from '@/components/agents/webhooks/WebhookLogsDialog';
 import { CreateWebhookDialog } from '@/components/agents/webhooks/CreateWebhookDialog';
 import { EditWebhookDialog } from '@/components/agents/webhooks/EditWebhookDialog';
-import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { DebugConsole } from '@/components/agents/DebugConsole';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonListSection } from '@/components/ui/skeleton';
@@ -260,12 +260,12 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
         webhookId={selectedWebhookForLogs}
       />
 
-      <SimpleDeleteDialog
+      <DeleteConfirmationDialog
         open={!!deleteWebhookId}
-        onOpenChange={(open) => !open && setDeleteWebhookId(null)}
+        onOpenChange={(open: boolean) => !open && setDeleteWebhookId(null)}
         onConfirm={handleDelete}
         title="Delete Webhook"
-        description="This will permanently delete this webhook."
+        description="This will permanently delete this webhook. This action cannot be undone."
       />
     </div>
   );

@@ -45,7 +45,7 @@ import { ArticleDetailsSheet } from './articles/ArticleDetailsSheet';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
 import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
-import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { 
   createHelpArticlesColumns, 
   type HelpArticleWithMeta 
@@ -1186,16 +1186,16 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       )}
 
       {/* Delete confirmation dialog */}
-      <SimpleDeleteDialog
+      <DeleteConfirmationDialog
         open={!!deleteArticle_}
-        onOpenChange={(open) => !open && setDeleteArticle(null)}
+        onOpenChange={(open: boolean) => !open && setDeleteArticle(null)}
         title="Delete Article"
         description="Are you sure you want to delete this article? This action cannot be undone."
         onConfirm={handleDeleteConfirm}
       />
 
       {/* Bulk delete confirmation dialog */}
-      <SimpleDeleteDialog
+      <DeleteConfirmationDialog
         open={bulkDeletePending}
         onOpenChange={setBulkDeletePending}
         title="Delete Selected Articles"

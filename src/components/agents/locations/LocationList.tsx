@@ -11,7 +11,7 @@ import { Building01, MarkerPin01, Trash01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Location = Tables<'locations'>;
@@ -77,9 +77,9 @@ export function LocationList({
         </div>
       </ScrollArea>
 
-      <SimpleDeleteDialog
+      <DeleteConfirmationDialog
         open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
+        onOpenChange={(open: boolean) => !open && setDeleteId(null)}
         title="Delete Location"
         description={`Are you sure you want to delete "${locationToDelete?.name}"? This will also remove all connected calendars and properties linked to this location.`}
         onConfirm={() => {

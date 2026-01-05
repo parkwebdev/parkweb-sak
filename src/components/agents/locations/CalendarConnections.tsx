@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { useConnectedAccounts, ConnectedAccount } from '@/hooks/useConnectedAccounts';
 import { CalendarSyncStatus } from './CalendarSyncStatus';
 import { supabase } from '@/integrations/supabase/client';
@@ -276,14 +276,13 @@ export function CalendarConnections({
         Connected calendars sync appointments in real-time and enable booking through Ari.
       </p>
 
-      <SimpleDeleteDialog
+      <DeleteConfirmationDialog
         open={!!disconnectId}
-        onOpenChange={(open) => !open && setDisconnectId(null)}
+        onOpenChange={(open: boolean) => !open && setDisconnectId(null)}
         title="Disconnect Calendar"
         description={`Are you sure you want to disconnect "${accountToDisconnect?.account_email}"? Synced events will remain but new events won't be created.`}
         onConfirm={handleDisconnect}
         actionLabel="Disconnect"
-        destructive={false}
       />
     </div>
   );
