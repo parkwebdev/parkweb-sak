@@ -86,10 +86,10 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete, canManage = true }: {
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="cursor-move hover:shadow-md transition-shadow">
+      <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={onEdit}>
         <CardContent className="p-4">
           <div className="flex gap-4">
-            <div {...attributes} {...listeners} className="flex-shrink-0">
+            <div {...attributes} {...listeners} className="flex-shrink-0 cursor-move">
               {newsItem.featured_image_url ? (
                 <img 
                   src={newsItem.featured_image_url} 
@@ -105,7 +105,7 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete, canManage = true }: {
             
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0" {...attributes} {...listeners}>
+                <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-base truncate">
                     {newsItem.title}
                   </h3>
