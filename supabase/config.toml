@@ -54,6 +54,8 @@ verify_jwt = true
 verify_jwt = false
 schedule = "0 * * * *"
 
+[functions.download-report]
+verify_jwt = false
 [functions.get-takeover-agent]
 verify_jwt = false
 
