@@ -203,13 +203,13 @@ export const LeadCardContent = React.memo(function LeadCardContent({
   onAddAssignee?: (userId: string) => void;
   onRemoveAssignee?: (userId: string) => void;
 }) {
-  // Build display name from first/last name fields
+  // Build display name from first/last name fields (always shown, not toggleable)
   const displayName = useMemo(() => {
     const parts: string[] = [];
-    if (visibleFields.has('firstName') && lead.firstName) parts.push(lead.firstName);
-    if (visibleFields.has('lastName') && lead.lastName) parts.push(lead.lastName);
+    if (lead.firstName) parts.push(lead.firstName);
+    if (lead.lastName) parts.push(lead.lastName);
     return parts.length > 0 ? parts.join(' ') : lead.name || 'Unnamed Lead';
-  }, [lead.firstName, lead.lastName, lead.name, visibleFields]);
+  }, [lead.firstName, lead.lastName, lead.name]);
 
   // Default field order if not provided
   const orderedFields = fieldOrder || CARD_FIELDS.map(f => f.key);
@@ -293,8 +293,8 @@ export const LeadCardContent = React.memo(function LeadCardContent({
     ),
   }), [lead, assignees, onAddAssignee, onRemoveAssignee]);
 
-  // Static header fields (not sortable): priority, tags
-  const STATIC_HEADER_KEYS: CardFieldKey[] = ['firstName', 'lastName', 'priority', 'tags'];
+  // Static header fields (not sortable): priority, tags (firstName/lastName always shown separately)
+  const STATIC_HEADER_KEYS: CardFieldKey[] = ['priority', 'tags'];
   // Footer fields (not sortable): createdAt, lastUpdated
   const FOOTER_KEYS: CardFieldKey[] = ['createdAt', 'lastUpdated'];
 

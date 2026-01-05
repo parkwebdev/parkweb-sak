@@ -202,9 +202,9 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
       .filter(key => fieldMap.has(key))
       .map(key => fieldMap.get(key)!);
     
-    // Sortable body fields: everything except firstName, lastName, header, and footer
+    // Sortable body fields: everything except header and footer fields
+    // (firstName/lastName are always visible and not part of the field system)
     const excludeFromSortable = new Set<CardFieldKey>([
-      'firstName', 'lastName',
       ...KANBAN_HEADER_KEYS,
       ...KANBAN_FOOTER_KEYS,
     ]);
@@ -231,8 +231,8 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
     const newSortableOrder = arrayMove(sortableKeys, oldIndex, newIndex);
     
     // Reconstruct full order: keep non-sortable positions, update sortable positions
+    // (firstName/lastName are always visible and not part of the field system)
     const excludeFromSortable = new Set<CardFieldKey>([
-      'firstName', 'lastName',
       ...KANBAN_HEADER_KEYS,
       ...KANBAN_FOOTER_KEYS,
     ]);
