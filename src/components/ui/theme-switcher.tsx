@@ -101,7 +101,7 @@ export function ThemeSwitcher({ className }: ThemeSwitcherProps) {
             }}
             aria-label={label}
             className={cn(
-              'relative flex h-6 w-6 items-center justify-center rounded-sm transition-colors',
+              'relative flex h-6 items-center justify-center gap-1 px-2 rounded-sm transition-colors',
               isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
             onClick={(e) => handleThemeClick(key, e)}
@@ -115,6 +115,7 @@ export function ThemeSwitcher({ className }: ThemeSwitcherProps) {
               />
             )}
             <Icon size={12} className="relative z-10" />
+            <span className="relative z-10 text-2xs">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
           </button>
         );
       })}
