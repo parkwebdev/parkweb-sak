@@ -413,7 +413,7 @@ const AnnouncementSheet = ({
             <section className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Preview</h3>
               
-              <div className="rounded-lg overflow-hidden cursor-pointer transition-colors bg-card border shadow-sm hover:bg-accent/50">
+              <div className="rounded-lg overflow-hidden bg-card border shadow-sm">
                 <div className="px-3 py-2.5 flex items-center gap-3">
                   {imagePreview && (
                     <img 
