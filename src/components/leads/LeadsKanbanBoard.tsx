@@ -280,14 +280,14 @@ export const LeadCardContent = React.memo(function LeadCardContent({
       </div>
     ),
     createdAt: () => (
-      <div key="createdAt" className="flex items-center gap-1 text-2xs text-muted-foreground">
-        <Calendar size={10} aria-hidden="true" />
+      <div key="createdAt" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Calendar size={12} aria-hidden="true" />
         <span>{formatDistanceToNow(new Date(lead.created_at), { addSuffix: true })}</span>
       </div>
     ),
     lastUpdated: () => (
-      <div key="lastUpdated" className="flex items-center gap-1 text-2xs text-muted-foreground">
-        <Clock size={10} aria-hidden="true" />
+      <div key="lastUpdated" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Clock size={12} aria-hidden="true" />
         <span>Updated {formatDistanceToNow(new Date(lead.updated_at), { addSuffix: true })}</span>
       </div>
     ),
@@ -315,32 +315,34 @@ export const LeadCardContent = React.memo(function LeadCardContent({
 
   return (
     <div className="space-y-2">
-      {/* Header: Name + Priority + Tags (static, inline) */}
-      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+      {/* Header: Name on left, Priority + Tags on right */}
+      <div className="flex items-center justify-between gap-2 min-w-0">
         <p className="truncate text-sm font-medium text-foreground">
           {displayName}
         </p>
-        {visibleFields.has('priority') && lead.priority && (
-          <PriorityBadge priority={lead.priority} />
-        )}
-        {visibleFields.has('tags') && lead.tags.length > 0 && (
-          <>
-            {lead.tags.slice(0, 2).map((tag) => (
-              <Badge 
-                key={tag} 
-                variant="secondary" 
-                className="h-5 text-2xs px-1.5"
-              >
-                {tag}
-              </Badge>
-            ))}
-            {lead.tags.length > 2 && (
-              <span className="text-2xs text-muted-foreground">
-                +{lead.tags.length - 2}
-              </span>
-            )}
-          </>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {visibleFields.has('priority') && lead.priority && (
+            <PriorityBadge priority={lead.priority} />
+          )}
+          {visibleFields.has('tags') && lead.tags.length > 0 && (
+            <>
+              {lead.tags.slice(0, 2).map((tag) => (
+                <Badge 
+                  key={tag} 
+                  variant="secondary" 
+                  className="h-5 text-xs px-1.5"
+                >
+                  {tag}
+                </Badge>
+              ))}
+              {lead.tags.length > 2 && (
+                <span className="text-xs text-muted-foreground">
+                  +{lead.tags.length - 2}
+                </span>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Body: Sortable fields in user's custom order */}
