@@ -202,9 +202,8 @@ export const KanbanCard = <T extends KanbanItemProps>({
       {...listeners}
       onClick={handleClick}
       className={cn(
-        "cursor-grab rounded-md border bg-card p-3 shadow-sm active:cursor-grabbing transition-shadow duration-200",
+        "cursor-grab rounded-md border bg-card p-3 active:cursor-grabbing transition-colors duration-200 hover:border-muted-foreground/30",
         isDragging && "opacity-50 shadow-lg",
-        !isDragging && "hover:shadow-lg",
         className
       )}
     >
