@@ -118,7 +118,7 @@ export default function QuickStartArticle() {
       <KBRelatedArticles
         articles={[
           { categoryId: 'getting-started', articleSlug: 'welcome', title: 'Welcome to Pilot' },
-          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Knowledge Sources' },
           { categoryId: 'ari', articleSlug: 'installation', title: 'Installing the Widget' },
         ]}
       />

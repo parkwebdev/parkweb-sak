@@ -126,7 +126,7 @@ export default function HelpArticlesArticle() {
 
       <KBRelatedArticles
         articles={[
-          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Knowledge Sources' },
           { categoryId: 'ari', articleSlug: 'announcements', title: 'Announcements' },
         ]}
       />

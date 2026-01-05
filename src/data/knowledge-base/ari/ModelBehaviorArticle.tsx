@@ -169,7 +169,7 @@ export default function ModelBehaviorArticle() {
       <KBRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'system-prompt', title: 'System Prompt' },
-          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Knowledge Sources' },
           { categoryId: 'ari', articleSlug: 'overview', title: 'Understanding Ari' },
         ]}
       />

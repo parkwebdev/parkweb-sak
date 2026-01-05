@@ -137,7 +137,7 @@ export default function PlannerOverviewArticle() {
       </ul>
       <p>
         Configure Ari's booking behavior in the{' '}
-        <KBArticleLink categoryId="ari" articleSlug="tools">
+        <KBArticleLink categoryId="ari" articleSlug="custom-tools">
           Custom Tools
         </KBArticleLink>{' '}
         section.
@@ -201,7 +201,7 @@ export default function PlannerOverviewArticle() {
 
       <KBRelatedArticles
         articles={[
-          { categoryId: 'ari', articleSlug: 'tools', title: 'Custom Tools' },
+          { categoryId: 'ari', articleSlug: 'custom-tools', title: 'Custom Tools' },
           { categoryId: 'leads', articleSlug: 'overview', title: 'Lead Management' },
           { categoryId: 'settings', articleSlug: 'notifications', title: 'Notification Preferences' },
         ]}

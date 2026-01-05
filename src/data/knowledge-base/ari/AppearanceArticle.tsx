@@ -55,17 +55,17 @@ export default function AppearanceArticle() {
         you can configure:
       </p>
       <ul>
-        <li>Widget greeting and subtitle text</li>
-        <li>Placeholder text in the message input</li>
-        <li>Quick action buttons for common requests</li>
-        <li>Agent avatar and display name</li>
+        <li>Welcome title with optional emoji</li>
+        <li>Welcome subtitle text</li>
+        <li>Quick Reply Suggestions toggle</li>
+        <li>Bottom navigation tabs (Messages, News, Help)</li>
       </ul>
 
       <KBRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'welcome-messages', title: 'Welcome & Messages' },
           { categoryId: 'ari', articleSlug: 'installation', title: 'Installing the Widget' },
-          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Knowledge Sources' },
         ]}
       />
     </>
