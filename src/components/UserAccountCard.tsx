@@ -11,11 +11,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { LogOut01 as LogOut, Users01, Keyboard01 } from '@untitledui/icons';
+import { LogOut01 as LogOut, Users01, Keyboard01, CreditCard01 } from '@untitledui/icons';
 import { 
   Settings02Icon, 
-  UserCircleIcon, 
-  CreditCardIconFilled,
+  UserCircleIcon,
   PieChart03Icon,
 } from '@/components/ui/settings-icon';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -210,7 +209,7 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
             {canView('view_billing') && (
               <DropdownMenuItem asChild>
                 <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
-                  <CreditCardIconFilled size={15} />
+                  <CreditCard01 size={15} />
                   Billing
                 </Link>
               </DropdownMenuItem>
