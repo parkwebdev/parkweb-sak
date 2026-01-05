@@ -80,10 +80,10 @@ export function KBArticleView({
   }, [article.id]);
 
   return (
-    <div>
+    <div className="px-8">
       {/* Sticky Breadcrumb */}
       <nav 
-        className="sticky top-0 z-10 flex items-center gap-2 text-sm text-muted-foreground px-8 py-3 bg-background border-b border-border" 
+        className="sticky top-0 z-10 flex items-center gap-2 text-sm text-muted-foreground py-3 -mx-8 px-8 bg-background border-b border-border" 
         aria-label="Breadcrumb"
       >
         <span className={cn('w-2 h-2 rounded-full', category.color)} aria-hidden="true" />
@@ -94,67 +94,63 @@ export function KBArticleView({
       
       {/* Header with gradient background */}
       <header className={cn(
-        'bg-gradient-to-b py-8 px-8',
+        'bg-gradient-to-b py-8 -mx-8 px-8',
         gradientClasses
       )}>
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-semibold text-foreground mb-2">
-            {article.title}
-          </h1>
-          {article.description && (
-            <p className="text-muted-foreground text-base">
-              {article.description}
-            </p>
-          )}
-        </div>
+        <h1 className="text-2xl font-semibold text-foreground mb-2">
+          {article.title}
+        </h1>
+        {article.description && (
+          <p className="text-muted-foreground text-base">
+            {article.description}
+          </p>
+        )}
       </header>
       
-      <div className="max-w-3xl mx-auto px-8 py-8">
-        {/* Article Content */}
-        <div 
-          ref={contentRef}
-          className="prose prose-sm dark:prose-invert max-w-none kb-article-content"
-        >
-          <ArticleComponent />
-        </div>
-        
-        {/* Navigation */}
-        <footer className="mt-12 pt-6 border-t border-border">
-          <div className="flex items-center justify-between">
-            {onPrevious && prevArticle ? (
-              <Button
-                variant="ghost"
-                onClick={onPrevious}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-              >
-                <ChevronLeft size={16} aria-hidden="true" />
-                <div className="text-left">
-                  <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Previous</div>
-                  <div className="text-sm font-medium">{prevArticle.title}</div>
-                </div>
-              </Button>
-            ) : (
-              <div />
-            )}
-            
-            {onNext && nextArticle ? (
-              <Button
-                variant="ghost"
-                onClick={onNext}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-              >
-                <div className="text-right">
-                  <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Next</div>
-                  <div className="text-sm font-medium">{nextArticle.title}</div>
-                </div>
-                <ChevronRight size={16} aria-hidden="true" />
-              </Button>
-            ) : (
-              <div />
-            )}
-          </div>
-        </footer>
+      {/* Article Content */}
+      <div 
+        ref={contentRef}
+        className="prose prose-sm dark:prose-invert max-w-none kb-article-content py-8"
+      >
+        <ArticleComponent />
       </div>
+      
+      {/* Navigation */}
+      <footer className="mt-4 py-6 border-t border-border">
+        <div className="flex items-center justify-between">
+          {onPrevious && prevArticle ? (
+            <Button
+              variant="ghost"
+              onClick={onPrevious}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft size={16} aria-hidden="true" />
+              <div className="text-left">
+                <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Previous</div>
+                <div className="text-sm font-medium">{prevArticle.title}</div>
+              </div>
+            </Button>
+          ) : (
+            <div />
+          )}
+          
+          {onNext && nextArticle ? (
+            <Button
+              variant="ghost"
+              onClick={onNext}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <div className="text-right">
+                <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Next</div>
+                <div className="text-sm font-medium">{nextArticle.title}</div>
+              </div>
+              <ChevronRight size={16} aria-hidden="true" />
+            </Button>
+          ) : (
+            <div />
+          )}
+        </div>
+      </footer>
     </div>
   );
 }
