@@ -67,14 +67,19 @@ export function KBArticleView({
   }, [article.id]);
 
   return (
-    <div className="max-w-3xl mx-auto px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4" aria-label="Breadcrumb">
+    <div>
+      {/* Sticky Breadcrumb */}
+      <nav 
+        className="sticky top-0 z-10 flex items-center gap-2 text-sm text-muted-foreground px-8 py-3 bg-background border-b border-border" 
+        aria-label="Breadcrumb"
+      >
         <span className={cn('w-2 h-2 rounded-full', category.color)} aria-hidden="true" />
         <span>{category.label}</span>
         <span aria-hidden="true">/</span>
         <span className="text-foreground font-medium">{article.title}</span>
       </nav>
+      
+      <div className="max-w-3xl mx-auto px-8 py-8">
       
       {/* Header */}
       <header className="mb-8">
@@ -132,6 +137,7 @@ export function KBArticleView({
           )}
         </div>
       </footer>
+      </div>
     </div>
   );
 }
