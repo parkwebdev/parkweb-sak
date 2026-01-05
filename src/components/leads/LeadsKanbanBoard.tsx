@@ -29,7 +29,7 @@ import {
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { StageProgressIcon } from "./StageProgressIcon";
 import { useTeam } from '@/hooks/useTeam';
-import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
+import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from "./KanbanCardFields";
 import { LeadAssigneePicker } from './LeadAssigneePicker';
 import { PriorityBadge } from "@/components/ui/priority-badge";
 import { SkeletonKanbanColumn } from "@/components/ui/skeleton";
@@ -77,6 +77,8 @@ interface LeadsKanbanBoardProps {
   onRemoveAssignee?: (leadId: string, userId: string) => void;
   getAssignees: (leadId: string) => string[];
   visibleFields?: Set<CardFieldKey>;
+  /** Order of fields to display on cards */
+  fieldOrder?: CardFieldKey[];
   /** Whether the user can manage (edit, drag) leads. Controls DnD and stage editing. */
   canManage?: boolean;
   /** Sort option for ordering leads within each column */
@@ -188,12 +190,14 @@ function formatEntryPage(url: string | undefined): string | null {
 export const LeadCardContent = React.memo(function LeadCardContent({ 
   lead,
   visibleFields = getDefaultVisibleFields(),
+  fieldOrder,
   assignees = [],
   onAddAssignee,
   onRemoveAssignee,
 }: { 
   lead: KanbanLead;
   visibleFields?: Set<CardFieldKey>;
+  fieldOrder?: CardFieldKey[];
   assignees?: string[];
   onAddAssignee?: (userId: string) => void;
   onRemoveAssignee?: (userId: string) => void;
@@ -206,6 +210,94 @@ export const LeadCardContent = React.memo(function LeadCardContent({
     return parts.length > 0 ? parts.join(' ') : lead.name || 'Unnamed Lead';
   }, [lead.firstName, lead.lastName, lead.name, visibleFields]);
 
+  // Default field order if not provided
+  const orderedFields = fieldOrder || CARD_FIELDS.map(f => f.key);
+
+  // Field renderers map
+  const fieldRenderers: Partial<Record<CardFieldKey, () => React.ReactNode>> = useMemo(() => ({
+    email: () => lead.email && (
+      <div key="email" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Mail01 size={12} className="shrink-0" aria-hidden="true" />
+        <span className="truncate">{lead.email}</span>
+      </div>
+    ),
+    phone: () => lead.phone && (
+      <div key="phone" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Phone size={12} className="shrink-0" aria-hidden="true" />
+        <span className="truncate">{lead.phone}</span>
+      </div>
+    ),
+    location: () => lead.location && (
+      <div key="location" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <MarkerPin01 size={12} className="shrink-0" aria-hidden="true" />
+        <span className="truncate">{lead.location}</span>
+      </div>
+    ),
+    entryPage: () => lead.entryPage && (
+      <div key="entryPage" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Globe01 size={12} className="shrink-0" aria-hidden="true" />
+        <span className="truncate">{lead.entryPage}</span>
+      </div>
+    ),
+    priority: () => lead.priority && (
+      <PriorityBadge key="priority" priority={lead.priority} />
+    ),
+    tags: () => lead.tags.length > 0 && (
+      <React.Fragment key="tags">
+        {lead.tags.slice(0, 3).map((tag) => (
+          <Badge 
+            key={tag} 
+            variant="secondary" 
+            className="h-5 text-2xs px-1.5"
+          >
+            {tag}
+          </Badge>
+        ))}
+        {lead.tags.length > 3 && (
+          <span className="text-2xs text-muted-foreground">
+            +{lead.tags.length - 3}
+          </span>
+        )}
+      </React.Fragment>
+    ),
+    assignee: () => (
+      <div key="assignee" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+        <LeadAssigneePicker
+          leadId={lead.id}
+          assignees={assignees}
+          onAdd={(userId) => onAddAssignee?.(userId)}
+          onRemove={(userId) => onRemoveAssignee?.(userId)}
+          size="sm"
+          disabled={!onAddAssignee}
+        />
+      </div>
+    ),
+    notes: () => lead.notes && (
+      <div key="notes" className="flex items-start gap-1.5 text-xs text-muted-foreground">
+        <Edit05 size={12} className="shrink-0 mt-0.5" aria-hidden="true" />
+        <span className="line-clamp-2">{lead.notes}</span>
+      </div>
+    ),
+    createdAt: () => (
+      <div key="createdAt" className="flex items-center gap-1 text-2xs text-muted-foreground">
+        <Calendar size={10} aria-hidden="true" />
+        <span>{formatDistanceToNow(new Date(lead.created_at), { addSuffix: true })}</span>
+      </div>
+    ),
+    lastUpdated: () => (
+      <div key="lastUpdated" className="flex items-center gap-1 text-2xs text-muted-foreground">
+        <Clock size={10} aria-hidden="true" />
+        <span>Updated {formatDistanceToNow(new Date(lead.updated_at), { addSuffix: true })}</span>
+      </div>
+    ),
+  }), [lead, assignees, onAddAssignee, onRemoveAssignee]);
+
+  // Render fields in order, filtering by visibility
+  const renderedFields = orderedFields
+    .filter(key => visibleFields.has(key) && !['firstName', 'lastName'].includes(key))
+    .map(key => fieldRenderers[key]?.())
+    .filter(Boolean);
+
   return (
     <div className="space-y-2">
       {/* Header: Name */}
@@ -215,102 +307,10 @@ export const LeadCardContent = React.memo(function LeadCardContent({
         </p>
       </div>
 
-      {/* Contact Info */}
-      <div className="space-y-1">
-        {visibleFields.has('email') && lead.email && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Mail01 size={12} className="shrink-0" />
-            <span className="truncate">{lead.email}</span>
-          </div>
-        )}
-        {visibleFields.has('phone') && lead.phone && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Phone size={12} className="shrink-0" />
-            <span className="truncate">{lead.phone}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Session Details */}
-      {(visibleFields.has('location') || visibleFields.has('entryPage')) && (
-        <div className="space-y-1">
-          {visibleFields.has('location') && lead.location && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <MarkerPin01 size={12} className="shrink-0" />
-              <span className="truncate">{lead.location}</span>
-            </div>
-          )}
-          {visibleFields.has('entryPage') && lead.entryPage && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Globe01 size={12} className="shrink-0" />
-              <span className="truncate">{lead.entryPage}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Priority, Tags & Assignee */}
-      {(visibleFields.has('priority') || visibleFields.has('tags') || visibleFields.has('assignee')) && (
+      {/* Dynamic field rendering in order */}
+      {renderedFields.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">
-          {visibleFields.has('priority') && lead.priority && (
-            <PriorityBadge priority={lead.priority} />
-          )}
-          {visibleFields.has('tags') && lead.tags.length > 0 && (
-            <>
-              {lead.tags.slice(0, 3).map((tag) => (
-                <Badge 
-                  key={tag} 
-                  variant="secondary" 
-                  className="h-5 text-2xs px-1.5"
-                >
-                  {tag}
-                </Badge>
-              ))}
-              {lead.tags.length > 3 && (
-                <span className="text-2xs text-muted-foreground">
-                  +{lead.tags.length - 3}
-                </span>
-              )}
-            </>
-          )}
-          {visibleFields.has('assignee') && (
-            <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-              <LeadAssigneePicker
-                leadId={lead.id}
-                assignees={assignees}
-                onAdd={(userId) => onAddAssignee?.(userId)}
-                onRemove={(userId) => onRemoveAssignee?.(userId)}
-                size="sm"
-                disabled={!onAddAssignee}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Notes Preview */}
-      {visibleFields.has('notes') && lead.notes && (
-        <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-          <Edit05 size={12} className="shrink-0 mt-0.5" />
-          <span className="line-clamp-2">{lead.notes}</span>
-        </div>
-      )}
-
-      {/* Timestamps */}
-      {(visibleFields.has('createdAt') || visibleFields.has('lastUpdated')) && (
-        <div className="flex flex-wrap gap-2 text-2xs text-muted-foreground">
-          {visibleFields.has('createdAt') && (
-            <div className="flex items-center gap-1">
-              <Calendar size={10} />
-              <span>{formatDistanceToNow(new Date(lead.created_at), { addSuffix: true })}</span>
-            </div>
-          )}
-          {visibleFields.has('lastUpdated') && (
-            <div className="flex items-center gap-1">
-              <Clock size={10} />
-              <span>Updated {formatDistanceToNow(new Date(lead.updated_at), { addSuffix: true })}</span>
-            </div>
-          )}
+          {renderedFields}
         </div>
       )}
     </div>
@@ -326,6 +326,7 @@ export function LeadsKanbanBoard({
   onRemoveAssignee,
   getAssignees,
   visibleFields = getDefaultVisibleFields(),
+  fieldOrder,
   canManage = true,
   sortOption,
 }: LeadsKanbanBoardProps) {
@@ -500,10 +501,10 @@ export function LeadsKanbanBoard({
   const renderCardOverlay = useCallback(
     (lead: KanbanLead) => (
       <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-md">
-        <LeadCardContent lead={lead} visibleFields={visibleFields} assignees={getAssignees(lead.id)} />
+        <LeadCardContent lead={lead} visibleFields={visibleFields} fieldOrder={fieldOrder} assignees={getAssignees(lead.id)} />
       </Card>
     ),
-    [visibleFields, getAssignees]
+    [visibleFields, fieldOrder, getAssignees]
   );
 
   // Handle stage name updates
@@ -567,7 +568,8 @@ export function LeadsKanbanBoard({
                     >
                       <LeadCardContent 
                         lead={lead} 
-                        visibleFields={visibleFields} 
+                        visibleFields={visibleFields}
+                        fieldOrder={fieldOrder}
                         assignees={getAssignees(lead.id)}
                         onAddAssignee={canManage && onAddAssignee ? (userId) => onAddAssignee(lead.id, userId) : undefined}
                         onRemoveAssignee={canManage && onRemoveAssignee ? (userId) => onRemoveAssignee(lead.id, userId) : undefined}
