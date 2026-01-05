@@ -65,6 +65,7 @@ const shortcuts: KeyboardShortcut[] = [
   { key: 'y', altKey: true, description: 'Analytics' },
   { key: 'p', altKey: true, description: 'Planner' },
   { key: 's', altKey: true, description: 'Settings' },
+  { key: 'h', altKey: true, description: 'Knowledge Base' },
 ];
 
 const formatShortcut = (shortcut: KeyboardShortcut): string[] => {
