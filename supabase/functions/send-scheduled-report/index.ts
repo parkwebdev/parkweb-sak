@@ -337,7 +337,7 @@ async function uploadReportToStorage(
   report: ScheduledReport,
   fileData: Uint8Array | string,
   format: 'pdf' | 'csv'
-): Promise<{ filePath: string; signedUrl: string } | null> {
+): Promise<{ filePath: string } | null> {
   const timestamp = Date.now();
   const fileName = `${report.user_id}/scheduled/${report.id}/${timestamp}.${format}`;
   
@@ -358,30 +358,7 @@ async function uploadReportToStorage(
     return null;
   }
   
-  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-    .from('report-exports')
-    .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
-  
-  if (signedUrlError) {
-    console.error('[uploadReportToStorage] Error creating signed URL:', signedUrlError);
-    return null;
-  }
-  
-  // Rewrite Supabase storage URL to use custom domain via Cloudflare Worker
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-  const supabaseStoragePrefix = `${supabaseUrl}/storage/v1/`;
-  let brandedUrl = signedUrlData.signedUrl;
-
-  if (signedUrlData.signedUrl.startsWith(supabaseStoragePrefix)) {
-    const storagePath = signedUrlData.signedUrl.replace(supabaseStoragePrefix, '');
-    brandedUrl = `https://app.getpilot.io/storage/${storagePath}`;
-    console.log(`[uploadReportToStorage] Rewriting URL to branded domain: ${brandedUrl}`);
-  }
-
-  return {
-    filePath: fileName,
-    signedUrl: brandedUrl,
-  };
+  return { filePath: fileName };
 }
 
 async function createExportRecord(
@@ -389,10 +366,10 @@ async function createExportRecord(
   report: ScheduledReport,
   filePath: string,
   fileSize: number
-): Promise<void> {
+): Promise<string | null> {
   const config = report.report_config;
   
-  await supabase.from('report_exports').insert({
+  const { data, error } = await supabase.from('report_exports').insert({
     user_id: report.user_id,
     created_by: report.user_id,
     name: `${report.name} (Scheduled)`,
@@ -402,7 +379,14 @@ async function createExportRecord(
     date_range_start: config.startDate,
     date_range_end: config.endDate,
     report_config: config,
-  });
+  }).select('id').single();
+  
+  if (error) {
+    console.error('[createExportRecord] Error creating export record:', error);
+    return null;
+  }
+  
+  return data?.id || null;
 }
 
 // =============================================================================
@@ -502,12 +486,21 @@ serve(async (req: Request): Promise<Response> => {
         
         console.log(`[send-scheduled-report] Report uploaded to ${uploadResult.filePath}`);
         
-        // Create export record
+        // Create export record and get its ID
         const fileSize = typeof fileData === 'string' ? fileData.length : fileData.byteLength;
-        await createExportRecord(supabase, report, uploadResult.filePath, fileSize);
+        const exportId = await createExportRecord(supabase, report, uploadResult.filePath, fileSize);
+        
+        if (!exportId) {
+          console.error(`[send-scheduled-report] Failed to create export record for report ${report.id}, skipping...`);
+          continue;
+        }
+        
+        // Generate download URL using the new proxy endpoint
+        const downloadUrl = `${appUrl}/api/download-report?exportId=${exportId}`;
+        console.log(`[send-scheduled-report] Download URL: ${downloadUrl}`);
         
         // Generate and send email
-        const emailContent = generateReportEmail(report, uploadResult.signedUrl);
+        const emailContent = generateReportEmail(report, downloadUrl);
 
         for (const recipient of report.recipients) {
           console.log(`[send-scheduled-report] Sending report to ${recipient}...`);
