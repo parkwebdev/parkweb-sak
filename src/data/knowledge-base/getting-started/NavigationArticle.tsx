@@ -5,6 +5,7 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
 
 export default function NavigationArticle() {
   return (
@@ -26,6 +27,7 @@ export default function NavigationArticle() {
         <li><strong>Planner</strong> – Calendar and booking management</li>
         <li><strong>Leads</strong> – Track and organize captured leads</li>
         <li><strong>Analytics</strong> – Insights and performance metrics</li>
+        <li><strong>Knowledge Base</strong> – Documentation and help articles (you're here!)</li>
       </ul>
 
       <KBCallout variant="tip" title="Collapse the Sidebar">
@@ -58,31 +60,35 @@ export default function NavigationArticle() {
         </thead>
         <tbody>
           <tr>
-            <td><kbd>⌘K</kbd></td>
+            <td><kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd></td>
             <td>Open global search</td>
           </tr>
           <tr>
-            <td><kbd>⌥A</kbd></td>
+            <td><kbd>⌥D</kbd> / <kbd>Alt+D</kbd></td>
+            <td>Go to Dashboard</td>
+          </tr>
+          <tr>
+            <td><kbd>⌥A</kbd> / <kbd>Alt+A</kbd></td>
             <td>Go to Ari configuration</td>
           </tr>
           <tr>
-            <td><kbd>⌥C</kbd></td>
+            <td><kbd>⌥C</kbd> / <kbd>Alt+C</kbd></td>
             <td>Go to Inbox (Conversations)</td>
           </tr>
           <tr>
-            <td><kbd>⌥L</kbd></td>
+            <td><kbd>⌥L</kbd> / <kbd>Alt+L</kbd></td>
             <td>Go to Leads</td>
           </tr>
           <tr>
-            <td><kbd>⌥P</kbd></td>
+            <td><kbd>⌥P</kbd> / <kbd>Alt+P</kbd></td>
             <td>Go to Planner</td>
           </tr>
           <tr>
-            <td><kbd>⌥Y</kbd></td>
+            <td><kbd>⌥Y</kbd> / <kbd>Alt+Y</kbd></td>
             <td>Go to Analytics</td>
           </tr>
           <tr>
-            <td><kbd>⌥S</kbd></td>
+            <td><kbd>⌥S</kbd> / <kbd>Alt+S</kbd></td>
             <td>Go to Settings</td>
           </tr>
         </tbody>
@@ -90,7 +96,7 @@ export default function NavigationArticle() {
 
       <h2 id="settings-menu">Settings & Account</h2>
       <p>
-        Click on your profile in the bottom of the sidebar to access:
+        Click on your profile avatar in the bottom of the sidebar to access:
       </p>
       <ul>
         <li><strong>Profile settings</strong> – Update your personal information</li>
@@ -100,16 +106,30 @@ export default function NavigationArticle() {
         <li><strong>Theme</strong> – Switch between light and dark mode</li>
       </ul>
 
+      <p>
+        You can also access Settings by clicking the gear icon in the sidebar or 
+        using the keyboard shortcut.
+      </p>
+
       <h2 id="mobile-access">Mobile Access</h2>
       <p>
         Pilot is fully responsive and works on mobile devices. The sidebar becomes a 
         slide-out menu on smaller screens, and all features remain accessible.
       </p>
 
-      <KBCallout variant="note">
+      <KBCallout variant="info">
         For the best experience on mobile, consider adding Pilot to your home screen 
-        as a Progressive Web App (PWA).
+        as a Progressive Web App (PWA). This gives you a native app-like experience 
+        with quick access from your device.
       </KBCallout>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'getting-started', articleSlug: 'welcome', title: 'Welcome to Pilot' },
+          { categoryId: 'getting-started', articleSlug: 'quick-start', title: 'Quick Start Guide' },
+          { categoryId: 'getting-started', articleSlug: 'dashboard', title: 'Dashboard Overview' },
+        ]}
+      />
     </>
   );
 }

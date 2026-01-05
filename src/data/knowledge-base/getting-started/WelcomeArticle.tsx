@@ -5,6 +5,9 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBFeatureCard, KBFeatureGrid } from '@/components/knowledge-base/KBFeatureCard';
+import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
+import { MessageChatCircle, MessageSquare01, Users01, Calendar, BarChart01 } from '@untitledui/icons';
 
 export default function WelcomeArticle() {
   return (
@@ -31,40 +34,40 @@ export default function WelcomeArticle() {
 
       <h2 id="key-features">Key Features</h2>
       
-      <h3 id="ai-agent">AI Agent (Ari)</h3>
-      <p>
-        Ari is your always-on assistant that learns from your knowledge base to provide 
-        accurate, helpful responses to customer inquiries. Configure Ari's personality, 
-        appearance, and capabilities to match your brand.
-      </p>
-
-      <h3 id="inbox">Unified Inbox</h3>
-      <p>
-        All conversations flow into a single inbox where you can monitor, take over, 
-        or review interactions. Never miss an important message from a potential customer.
-      </p>
-
-      <h3 id="lead-management">Lead Management</h3>
-      <p>
-        Automatically capture visitor information and organize leads through customizable 
-        stages. Track the journey from first contact to conversion.
-      </p>
-
-      <h3 id="planner">Planner & Bookings</h3>
-      <p>
-        Let Ari schedule appointments directly into your calendar. Integrate with 
-        Google Calendar and manage all your bookings in one place.
-      </p>
-
-      <h3 id="analytics">Analytics & Insights</h3>
-      <p>
-        Understand how your AI is performing with detailed metrics on conversations, 
-        response times, customer satisfaction, and more.
-      </p>
+      <KBFeatureGrid columns={2}>
+        <KBFeatureCard
+          title="AI Agent (Ari)"
+          description="Your always-on assistant that learns from your knowledge base to provide accurate, helpful responses."
+          icon={<MessageChatCircle size={20} aria-hidden="true" />}
+        />
+        <KBFeatureCard
+          title="Unified Inbox"
+          description="All conversations flow into a single inbox where you can monitor, take over, or review interactions."
+          icon={<MessageSquare01 size={20} aria-hidden="true" />}
+        />
+        <KBFeatureCard
+          title="Lead Management"
+          description="Automatically capture visitor information and organize leads through customizable stages."
+          icon={<Users01 size={20} aria-hidden="true" />}
+        />
+        <KBFeatureCard
+          title="Planner & Bookings"
+          description="Let Ari schedule appointments directly into your calendar with Google Calendar integration."
+          icon={<Calendar size={20} aria-hidden="true" />}
+        />
+        <KBFeatureCard
+          title="Analytics & Insights"
+          description="Understand how your AI is performing with detailed metrics on conversations and satisfaction."
+          icon={<BarChart01 size={20} aria-hidden="true" />}
+        />
+      </KBFeatureGrid>
 
       <KBCallout variant="tip" title="Getting Started">
-        Ready to set up your first AI agent? Head to the <strong>Quick Start Guide</strong> to 
-        get Ari up and running in minutes.
+        Ready to set up your first AI agent? Head to the{' '}
+        <KBArticleLink categoryId="getting-started" articleSlug="quick-start">
+          Quick Start Guide
+        </KBArticleLink>{' '}
+        to get Ari up and running in minutes.
       </KBCallout>
 
       <h2 id="next-steps">Next Steps</h2>
@@ -72,16 +75,45 @@ export default function WelcomeArticle() {
         Now that you understand what Pilot can do, here's how to get started:
       </p>
       <ol>
-        <li>Complete the <strong>Quick Start Guide</strong> to configure Ari</li>
-        <li>Add knowledge sources so Ari can answer questions about your business</li>
-        <li>Customize the chat widget to match your brand</li>
-        <li>Install the widget on your website</li>
+        <li>
+          Complete the{' '}
+          <KBArticleLink categoryId="getting-started" articleSlug="quick-start">
+            Quick Start Guide
+          </KBArticleLink>{' '}
+          to configure Ari
+        </li>
+        <li>
+          <KBArticleLink categoryId="ari" articleSlug="knowledge-sources">
+            Add knowledge sources
+          </KBArticleLink>{' '}
+          so Ari can answer questions about your business
+        </li>
+        <li>
+          <KBArticleLink categoryId="ari" articleSlug="appearance">
+            Customize the chat widget
+          </KBArticleLink>{' '}
+          to match your brand
+        </li>
+        <li>
+          <KBArticleLink categoryId="ari" articleSlug="installation">
+            Install the widget
+          </KBArticleLink>{' '}
+          on your website
+        </li>
         <li>Monitor conversations and refine Ari's responses</li>
       </ol>
 
       <p>
         Have questions? Our support team is here to help you succeed with Pilot.
       </p>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'getting-started', articleSlug: 'quick-start', title: 'Quick Start Guide' },
+          { categoryId: 'ari', articleSlug: 'overview', title: 'Understanding Ari' },
+          { categoryId: 'getting-started', articleSlug: 'navigation', title: 'Navigating the App' },
+        ]}
+      />
     </>
   );
 }

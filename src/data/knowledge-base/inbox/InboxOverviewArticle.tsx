@@ -3,6 +3,7 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
 
 export default function InboxOverviewArticle() {
   return (
@@ -15,11 +16,12 @@ export default function InboxOverviewArticle() {
 
       <h2 id="inbox-layout">Inbox Layout</h2>
       <p>
-        The Inbox is divided into two main areas:
+        The Inbox uses a three-panel layout for efficient conversation management:
       </p>
       <ul>
-        <li><strong>Conversation List</strong> – All active and recent conversations on the left</li>
-        <li><strong>Conversation View</strong> – The selected conversation's full history on the right</li>
+        <li><strong>Sidebar</strong> – Filter conversations by status, date, or location</li>
+        <li><strong>Conversation List</strong> – All conversations matching your filters, sorted by recency</li>
+        <li><strong>Conversation Detail</strong> – Full message history and visitor information for the selected conversation</li>
       </ul>
 
       <h2 id="conversation-status">Conversation Status</h2>
@@ -51,12 +53,15 @@ export default function InboxOverviewArticle() {
         <li>All messages between Ari and the visitor</li>
         <li>Timestamps for each message</li>
         <li>Any actions taken (lead capture, booking, etc.)</li>
-        <li>Visitor information in the sidebar</li>
+        <li>Visitor information in the right sidebar</li>
       </ul>
 
       <KBCallout variant="tip">
         Use the Inbox to identify common questions that might need better coverage 
-        in your knowledge base.
+        in your{' '}
+        <KBArticleLink categoryId="ari" articleSlug="knowledge-sources">
+          knowledge sources
+        </KBArticleLink>.
       </KBCallout>
 
       <h2 id="unread-badge">Unread Conversations</h2>
@@ -75,6 +80,22 @@ export default function InboxOverviewArticle() {
         <li>Page they started the conversation on</li>
         <li>Previous conversations with the same visitor</li>
       </ul>
+
+      <h2 id="taking-over">Taking Over Conversations</h2>
+      <p>
+        When Ari can't fully resolve an issue, you can step in. Learn more in the{' '}
+        <KBArticleLink categoryId="inbox" articleSlug="takeover">
+          Human Takeover guide
+        </KBArticleLink>.
+      </p>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'inbox', articleSlug: 'takeover', title: 'Human Takeover' },
+          { categoryId: 'leads', articleSlug: 'overview', title: 'Lead Management' },
+          { categoryId: 'analytics', articleSlug: 'overview', title: 'Understanding Your Data' },
+        ]}
+      />
     </>
   );
 }

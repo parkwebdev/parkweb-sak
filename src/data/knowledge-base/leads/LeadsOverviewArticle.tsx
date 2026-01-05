@@ -3,79 +3,108 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
 
 export default function LeadsOverviewArticle() {
   return (
     <>
       <p>
-        Pilot automatically captures lead information from conversations. 
-        The Leads section helps you organize, track, and follow up with 
-        potential customers.
+        Pilot automatically captures leads when visitors share their contact information 
+        during conversations. The Leads section helps you organize, track, and manage 
+        these potential customers.
       </p>
 
-      <h2 id="how-leads-are-captured">How Leads Are Captured</h2>
+      <h2 id="how-leads-captured">How Leads Are Captured</h2>
       <p>
-        Leads are created when visitors share their contact information with Ari:
+        Ari collects visitor information when:
       </p>
       <ul>
-        <li>Name</li>
-        <li>Email address</li>
-        <li>Phone number</li>
-        <li>Company name</li>
-        <li>Any custom fields you've configured</li>
+        <li>A visitor proactively shares their email or phone</li>
+        <li>Ari asks for contact info based on your lead capture settings</li>
+        <li>A visitor fills out a contact form in the widget</li>
+        <li>A booking is made (visitor info is saved)</li>
       </ul>
 
       <KBCallout variant="tip">
-        Configure when and how Ari collects visitor information in <strong>Ari → Lead Capture</strong>. 
-        You can set required fields, enable or disable lead collection, and customize the capture form behavior.
+        Configure when and how Ari collects visitor information in{' '}
+        <KBArticleLink categoryId="ari" articleSlug="lead-capture">
+          Ari → Lead Capture
+        </KBArticleLink>. 
+        You can set required fields, enable/disable lead collection, and customize 
+        the form behavior.
       </KBCallout>
 
-      <h2 id="leads-view">Viewing Leads</h2>
+      <h2 id="viewing-leads">Viewing Leads</h2>
       <p>
-        The Leads section offers two views:
+        Access your leads from <strong>Leads</strong> in the sidebar. You'll see two view options 
+        in the header:
       </p>
       <ul>
-        <li><strong>Table View</strong> – A spreadsheet-like view for quick scanning</li>
-        <li><strong>Kanban View</strong> – Visual cards organized by stage</li>
+        <li>
+          <strong>Table View</strong> – Sortable list with columns for name, email, phone, 
+          stage, and date. Great for bulk actions and data export.
+        </li>
+        <li>
+          <strong>Kanban View</strong> – Visual board organized by stage. Perfect for 
+          tracking lead progression and drag-and-drop stage changes.
+        </li>
       </ul>
+
+      <p>
+        Toggle between views using the icons in the header bar.
+      </p>
 
       <h2 id="lead-details">Lead Details</h2>
       <p>
-        Click on any lead to see:
+        Click on any lead to see their full profile:
       </p>
       <ul>
-        <li>Contact information</li>
-        <li>Conversation history</li>
+        <li>Contact information (name, email, phone)</li>
+        <li>Company name (if provided)</li>
+        <li>Current stage in your pipeline</li>
+        <li>Linked conversation history</li>
         <li>Activity timeline</li>
         <li>Notes and comments from your team</li>
-        <li>Associated bookings or events</li>
       </ul>
 
-      <h2 id="filtering-leads">Filtering & Sorting</h2>
+      <h2 id="lead-stages">Lead Stages</h2>
       <p>
-        Find the leads you need:
+        Organize leads through customizable stages. See the{' '}
+        <KBArticleLink categoryId="leads" articleSlug="stages">
+          Lead Stages guide
+        </KBArticleLink>{' '}
+        for instructions on customizing your pipeline.
+      </p>
+
+      <h2 id="filtering-sorting">Filtering & Sorting</h2>
+      <p>
+        Find leads quickly with filters:
       </p>
       <ul>
+        <li>Filter by stage, date range, or assignee</li>
         <li>Search by name, email, or company</li>
-        <li>Filter by stage or status</li>
-        <li>Filter by date created</li>
-        <li>Sort by any column</li>
+        <li>Sort by date, name, or stage</li>
+        <li>Save filter presets for quick access</li>
       </ul>
 
       <h2 id="exporting">Exporting Leads</h2>
       <p>
-        Export your leads to a CSV file for use in other tools or for backup:
+        Export your leads for use in other tools:
       </p>
       <ol>
-        <li>Apply any filters you want</li>
-        <li>Click the Export button</li>
-        <li>Download the CSV file</li>
+        <li>Apply any filters to narrow down the leads you want</li>
+        <li>Click the <strong>Export</strong> button in the header</li>
+        <li>Choose CSV format</li>
+        <li>Download the file</li>
       </ol>
 
-      <KBCallout variant="info">
-        Leads are automatically linked to their conversation history, making it 
-        easy to see the full context of each potential customer.
-      </KBCallout>
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'leads', articleSlug: 'stages', title: 'Lead Stages' },
+          { categoryId: 'ari', articleSlug: 'lead-capture', title: 'Lead Capture Settings' },
+          { categoryId: 'inbox', articleSlug: 'overview', title: 'Managing Conversations' },
+        ]}
+      />
     </>
   );
 }

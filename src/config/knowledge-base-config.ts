@@ -273,6 +273,13 @@ export const KB_CATEGORIES: readonly KBCategory[] = [
         description: 'Gain insights from your conversation analytics.',
         component: lazy(() => import('@/data/knowledge-base/analytics/AnalyticsOverviewArticle')),
       },
+      {
+        id: 'report-builder',
+        slug: 'report-builder',
+        title: 'Report Builder',
+        description: 'Create and schedule custom reports.',
+        component: lazy(() => import('@/data/knowledge-base/analytics/ReportBuilderArticle')),
+      },
     ],
   },
   {
