@@ -12,6 +12,7 @@ import { useTeam } from '@/hooks/useTeam';
 import { useCanManage } from '@/hooks/useCanManage';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
@@ -126,13 +127,16 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete, canManage = true }: {
                         </span>
                       </div>
                     )}
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      newsItem.is_published 
-                        ? 'bg-status-published/10 text-status-published-foreground dark:bg-status-published/20 dark:text-status-published' 
-                        : 'bg-status-draft/10 text-status-draft-foreground dark:bg-status-draft/20 dark:text-status-draft'
-                    }`}>
+                    <Badge 
+                      variant="secondary" 
+                      size="sm"
+                      className={newsItem.is_published 
+                        ? 'bg-status-published/10 text-status-published-foreground border-status-published/20' 
+                        : 'bg-status-draft/10 text-status-draft-foreground border-status-draft/20'
+                      }
+                    >
                       {newsItem.is_published ? 'Published' : 'Draft'}
-                    </span>
+                    </Badge>
                     {newsItem.published_at && (
                       <span className="text-xs text-muted-foreground">
                         {format(new Date(newsItem.published_at), 'MMM d, yyyy')}
