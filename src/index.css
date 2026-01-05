@@ -693,6 +693,26 @@ html::view-transition {
     print-color-adjust: exact !important;
   }
 
+  /* Remove layout constraints for full content printing */
+  * {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Reset flex containers */
+  .flex-1 {
+    flex: none !important;
+  }
+
+  /* Remove sticky/fixed positioning */
+  .sticky,
+  .fixed,
+  [class*="sticky"],
+  [class*="fixed"] {
+    position: static !important;
+  }
+
   /* Full width content */
   main,
   article,

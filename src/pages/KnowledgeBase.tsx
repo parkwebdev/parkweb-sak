@@ -118,7 +118,7 @@ export default function KnowledgeBase() {
   };
 
   return (
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="flex h-full overflow-hidden bg-background print:h-auto print:overflow-visible print:block">
       {/* Left Sidebar - Category Navigation */}
       <KBSidebar
         categories={KB_CATEGORIES as unknown as KBCategory[]}
@@ -130,7 +130,7 @@ export default function KnowledgeBase() {
       />
       
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto print:overflow-visible">
         <AnimatePresence mode="wait">
           {isCategoryView && currentCategory ? (
             // Category landing page
