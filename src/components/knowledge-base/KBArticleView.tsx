@@ -59,9 +59,6 @@ export function KBArticleView({
   
   const gradientClasses = GRADIENT_MAP[category.color] || 'from-muted/10 to-transparent';
   
-  // Detect mobile/touch device for native share support
-  const isMobileOrTouch = typeof window !== 'undefined' && 
-    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   
   // Get the current article URL for sharing
   const articleUrl = typeof window !== 'undefined' 
@@ -116,16 +113,39 @@ export function KBArticleView({
 
   return (
     <div className="px-8">
-      {/* Sticky Breadcrumb */}
+      {/* Sticky Breadcrumb with actions */}
       <nav 
-        className="sticky top-0 z-10 flex items-center gap-2 text-sm text-muted-foreground py-3 -mx-8 px-8 bg-background border-b border-border" 
+        className="sticky top-0 z-10 flex items-center justify-between gap-2 text-sm text-muted-foreground py-3 -mx-8 px-8 bg-background border-b border-border" 
         aria-label="Breadcrumb"
         data-print="hide"
       >
-        <span className={cn('w-2 h-2 rounded-full', category.color)} aria-hidden="true" />
-        <span>{category.label}</span>
-        <span aria-hidden="true">/</span>
-        <span className="text-foreground font-medium">{article.title}</span>
+        <div className="flex items-center gap-2">
+          <span className={cn('w-2 h-2 rounded-full', category.color)} aria-hidden="true" />
+          <span>{category.label}</span>
+          <span aria-hidden="true">/</span>
+          <span className="text-foreground font-medium">{article.title}</span>
+        </div>
+        
+        {/* Share/Copy actions */}
+        <div className="flex items-center gap-1 no-print">
+          <CopyButton
+            content={articleUrl}
+            showToast
+            toastMessage="Article link copied!"
+            variant="ghost"
+            size="sm"
+          />
+          {typeof navigator.share === 'function' && (
+            <IconButton
+              label="Share article"
+              variant="ghost"
+              size="sm"
+              onClick={handleShare}
+            >
+              <Share07 size={16} />
+            </IconButton>
+          )}
+        </div>
       </nav>
       
       {/* Header with gradient background */}
@@ -133,46 +153,23 @@ export function KBArticleView({
         'bg-gradient-to-b py-8 -mx-8 px-8',
         gradientClasses
       )}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <h1 className="text-2xl font-semibold text-foreground mb-2">
-              {article.title}
-            </h1>
-            {article.description && (
-              <p className="text-muted-foreground text-base">
-                {article.description}
-              </p>
-            )}
-            
-            {/* Reading time */}
-            {readingTime > 0 && (
-              <div className="flex items-center gap-1.5 mt-3 text-xs text-muted-foreground">
-                <Clock size={14} aria-hidden="true" />
-                <span>{readingTime} min read</span>
-              </div>
-            )}
-          </div>
+        <div className="flex-1">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">
+            {article.title}
+          </h1>
+          {article.description && (
+            <p className="text-muted-foreground text-base">
+              {article.description}
+            </p>
+          )}
           
-          {/* Share/Copy actions */}
-          <div className="flex items-center gap-1 no-print" data-print="hide">
-            <CopyButton
-              content={articleUrl}
-              showToast
-              toastMessage="Article link copied!"
-              variant="ghost"
-              size="sm"
-            />
-            {isMobileOrTouch && typeof navigator.share === 'function' && (
-              <IconButton
-                label="Share article"
-                variant="ghost"
-                size="sm"
-                onClick={handleShare}
-              >
-                <Share07 size={16} />
-              </IconButton>
-            )}
-          </div>
+          {/* Reading time */}
+          {readingTime > 0 && (
+            <div className="flex items-center gap-1.5 mt-3 text-xs text-muted-foreground">
+              <Clock size={14} aria-hidden="true" />
+              <span>{readingTime} min read</span>
+            </div>
+          )}
         </div>
       </header>
       
