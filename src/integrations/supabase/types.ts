@@ -819,6 +819,39 @@ export type Database = {
           },
         ]
       }
+      kb_article_feedback: {
+        Row: {
+          article_slug: string
+          category_id: string
+          created_at: string | null
+          feedback_text: string | null
+          id: string
+          is_helpful: boolean
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          article_slug: string
+          category_id: string
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          is_helpful: boolean
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          article_slug?: string
+          category_id?: string
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          is_helpful?: boolean
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       kb_article_views: {
         Row: {
           article_slug: string

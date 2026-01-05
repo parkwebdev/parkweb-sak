@@ -8,10 +8,14 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from '@untitledui/icons';
+import { ChevronLeft, ChevronRight, Clock, Share07, Link01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
+import { CopyButton } from '@/components/ui/copy-button';
+import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 import { useTrackArticleView } from '@/hooks/useKBArticleViews';
+import { useReadingTime } from '@/hooks/useReadingTime';
+import { KBArticleFeedback } from './KBArticleFeedback';
 import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
 
 /** Map category bg colors to gradient CSS variables */
@@ -50,7 +54,30 @@ export function KBArticleView({
   // Track article view
   useTrackArticleView(category.id, article.slug);
   
+  // Calculate reading time
+  const readingTime = useReadingTime(contentRef);
+  
   const gradientClasses = GRADIENT_MAP[category.color] || 'from-muted/10 to-transparent';
+  
+  // Get the current article URL for sharing
+  const articleUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/knowledge-base?category=${category.id}&article=${article.slug}`
+    : '';
+  
+  // Handle native share
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: article.title,
+          text: article.description,
+          url: articleUrl,
+        });
+      } catch {
+        // User cancelled or share failed - ignore
+      }
+    }
+  };
   
   // Extract headings from content for ToC
   useEffect(() => {
@@ -89,6 +116,7 @@ export function KBArticleView({
       <nav 
         className="sticky top-0 z-10 flex items-center gap-2 text-sm text-muted-foreground py-3 -mx-8 px-8 bg-background border-b border-border" 
         aria-label="Breadcrumb"
+        data-print="hide"
       >
         <span className={cn('w-2 h-2 rounded-full', category.color)} aria-hidden="true" />
         <span>{category.label}</span>
@@ -101,14 +129,47 @@ export function KBArticleView({
         'bg-gradient-to-b py-8 -mx-8 px-8',
         gradientClasses
       )}>
-        <h1 className="text-2xl font-semibold text-foreground mb-2">
-          {article.title}
-        </h1>
-        {article.description && (
-          <p className="text-muted-foreground text-base">
-            {article.description}
-          </p>
-        )}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-2xl font-semibold text-foreground mb-2">
+              {article.title}
+            </h1>
+            {article.description && (
+              <p className="text-muted-foreground text-base">
+                {article.description}
+              </p>
+            )}
+            
+            {/* Reading time */}
+            {readingTime > 0 && (
+              <div className="flex items-center gap-1.5 mt-3 text-xs text-muted-foreground">
+                <Clock size={14} aria-hidden="true" />
+                <span>{readingTime} min read</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Share/Copy actions */}
+          <div className="flex items-center gap-1 no-print" data-print="hide">
+            <CopyButton
+              content={articleUrl}
+              showToast
+              toastMessage="Article link copied!"
+              variant="ghost"
+              size="sm"
+            />
+            {typeof navigator !== 'undefined' && 'share' in navigator && (
+              <IconButton
+                label="Share article"
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+              >
+                <Share07 size={16} />
+              </IconButton>
+            )}
+          </div>
+        </div>
       </header>
       
       {/* Article Content */}
@@ -119,8 +180,11 @@ export function KBArticleView({
         <ArticleComponent />
       </div>
       
+      {/* Article Feedback */}
+      <KBArticleFeedback categoryId={category.id} articleSlug={article.slug} />
+      
       {/* Navigation */}
-      <footer className="mt-4 py-6 border-t border-border">
+      <footer className="mt-4 py-6 border-t border-border no-print" data-print="hide">
         <div className="flex items-center justify-between">
           {onPrevious && prevArticle ? (
             <Button
