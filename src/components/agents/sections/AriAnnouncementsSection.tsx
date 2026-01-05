@@ -413,37 +413,29 @@ const AnnouncementSheet = ({
             <section className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Preview</h3>
               
-              <div 
-                className="rounded-lg overflow-hidden border"
-                style={{ backgroundColor: formData.background_color }}
-              >
-                {imagePreview && (
-                  <div className="h-32 overflow-hidden">
+              <div className="rounded-lg overflow-hidden cursor-pointer transition-colors bg-card border shadow-sm hover:bg-accent/50">
+                <div className="px-3 py-2.5 flex items-center gap-3">
+                  {imagePreview && (
                     <img 
                       src={imagePreview} 
                       alt="" 
-                      className="w-full h-full object-cover"
+                      className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
                     />
-                  </div>
-                )}
-                <div className="p-4 flex items-center justify-between">
-                  <div>
-                    <h3 
-                      className="font-semibold text-base"
-                      style={{ color: formData.title_color }}
-                    >
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm line-clamp-2 text-foreground">
                       {formData.title || 'Announcement Title'}
-                    </h3>
+                    </h4>
                     {formData.subtitle && (
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs mt-0.5 line-clamp-2 text-muted-foreground">
                         {formData.subtitle}
                       </p>
                     )}
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" aria-hidden="true" />
                 </div>
               </div>
             </section>
