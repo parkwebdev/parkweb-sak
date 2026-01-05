@@ -53,30 +53,21 @@ export function KBCategoryView({ category, onSelectArticle }: KBCategoryViewProp
 
   return (
     <div className="px-8">
-      {/* Header with gradient background */}
+      {/* Sticky Breadcrumb - matches article view */}
+      <nav 
+        className="sticky top-0 z-10 flex items-center gap-2 text-sm text-muted-foreground py-3 -mx-8 px-8 bg-background border-b border-border" 
+        aria-label="Breadcrumb"
+      >
+        <span className={cn('w-2 h-2 rounded-full', category.color)} aria-hidden="true" />
+        <span className="text-foreground font-medium">{category.label}</span>
+      </nav>
+      
+      {/* Header with gradient background - matches article view sizing */}
       <header className={cn('bg-gradient-to-b py-8 -mx-8 px-8', gradientClasses)}>
-        {/* Breadcrumb */}
-        <nav className="mb-4" aria-label="Breadcrumb">
-          <ol className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <li>Knowledge Base</li>
-            <li aria-hidden="true">/</li>
-            <li className="text-foreground font-medium">{category.label}</li>
-          </ol>
-        </nav>
-        
-        {/* Category Title */}
-        <div className="flex items-center gap-3 mb-2">
-          <span 
-            className={cn('w-2.5 h-2.5 rounded-full', category.color)} 
-            aria-hidden="true" 
-          />
-          <h1 className="text-base font-semibold text-foreground">
-            {category.label}
-          </h1>
-        </div>
-        
-        {/* Article count */}
-        <p className="text-sm text-muted-foreground pl-5">
+        <h1 className="text-2xl font-semibold text-foreground mb-2">
+          {category.label}
+        </h1>
+        <p className="text-muted-foreground text-base">
           {category.articles.length} article{category.articles.length !== 1 ? 's' : ''} in this category
         </p>
       </header>
