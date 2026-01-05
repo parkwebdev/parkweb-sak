@@ -3,6 +3,7 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
 
 export default function LeadStagesArticle() {
   return (
@@ -15,14 +16,13 @@ export default function LeadStagesArticle() {
 
       <h2 id="default-stages">Default Stages</h2>
       <p>
-        Pilot comes with default stages that work for most businesses:
+        Pilot comes with five default stages that work for most businesses:
       </p>
       <ul>
-        <li><strong>New</strong> – Freshly captured leads</li>
-        <li><strong>Contacted</strong> – Initial outreach made</li>
-        <li><strong>Qualified</strong> – Confirmed as a good fit</li>
-        <li><strong>Proposal</strong> – Proposal or quote sent</li>
-        <li><strong>Won</strong> – Successfully converted</li>
+        <li><strong>New</strong> – Freshly captured leads (default for new leads)</li>
+        <li><strong>Contacted</strong> – Initial outreach has been made</li>
+        <li><strong>Qualified</strong> – Confirmed as a good fit for your business</li>
+        <li><strong>Converted</strong> – Successfully converted to a customer</li>
         <li><strong>Lost</strong> – Did not convert</li>
       </ul>
 
@@ -30,16 +30,40 @@ export default function LeadStagesArticle() {
       <p>
         Create stages that match your specific sales process:
       </p>
-      <ol>
-        <li>Go to Settings → Leads</li>
-        <li>Add, edit, or remove stages</li>
-        <li>Set colors for easy visual identification</li>
-        <li>Drag to reorder stages</li>
-      </ol>
+
+      <KBStepByStep
+        steps={[
+          {
+            title: 'Open the Manage Stages dialog',
+            description: 'Navigate to the Leads page and click the Manage Stages button (stacked layers icon) in the header toolbar.',
+          },
+          {
+            title: 'Add a new stage',
+            description: 'Click the "Add Stage" button, enter a name, and choose a color for the stage.',
+          },
+          {
+            title: 'Edit existing stages',
+            description: 'Click on any stage name to rename it, or click the color swatch to change its color.',
+          },
+          {
+            title: 'Set a default stage',
+            description: 'Click the star icon next to a stage to make it the default for new leads.',
+          },
+          {
+            title: 'Reorder stages',
+            description: 'Drag and drop stages using the handle on the left to change their order.',
+          },
+        ]}
+      />
 
       <KBCallout variant="tip">
         Keep your stage count manageable – 5-7 stages usually provides good 
         visibility without overwhelming complexity.
+      </KBCallout>
+
+      <KBCallout variant="warning">
+        You can only delete a stage if no leads are currently assigned to it. 
+        Move or reassign leads first before deleting a stage.
       </KBCallout>
 
       <h2 id="moving-leads">Moving Leads Between Stages</h2>
@@ -47,35 +71,26 @@ export default function LeadStagesArticle() {
         Update a lead's stage in several ways:
       </p>
       <ul>
-        <li><strong>Kanban view</strong> – Drag and drop cards between columns</li>
-        <li><strong>Lead detail</strong> – Select a new stage from the dropdown</li>
-        <li><strong>Bulk action</strong> – Select multiple leads and update together</li>
+        <li><strong>Kanban view</strong> – Drag and drop cards between stage columns</li>
+        <li><strong>Lead detail panel</strong> – Select a new stage from the dropdown in the lead's detail view</li>
+        <li><strong>Bulk actions</strong> – Select multiple leads in the table view and update their stage together</li>
       </ul>
 
-      <h2 id="stage-automation">Stage-Based Actions</h2>
+      <h2 id="viewing-stages">Viewing by Stage</h2>
       <p>
-        Use stages to trigger notifications and workflows:
+        The Leads page offers two views to see your leads organized by stage:
       </p>
       <ul>
-        <li>Get notified when a lead moves to a specific stage</li>
-        <li>Send automatic follow-up reminders</li>
-        <li>Track conversion rates between stages</li>
+        <li><strong>Kanban view</strong> – Visual columns for each stage, perfect for pipeline management</li>
+        <li><strong>Table view</strong> – Spreadsheet-style view with a stage column for quick sorting and filtering</li>
       </ul>
-
-      <h2 id="analytics">Stage Analytics</h2>
       <p>
-        The Analytics section shows insights about your pipeline:
+        Toggle between views using the view switcher in the header toolbar.
       </p>
-      <ul>
-        <li>How many leads are in each stage</li>
-        <li>Average time in each stage</li>
-        <li>Conversion rates between stages</li>
-        <li>Stage movement over time</li>
-      </ul>
 
       <KBCallout variant="info">
-        Regularly review your stage analytics to identify bottlenecks in 
-        your sales process.
+        The Kanban view automatically groups leads by stage and shows the count 
+        of leads in each column, giving you a quick overview of your pipeline.
       </KBCallout>
     </>
   );
