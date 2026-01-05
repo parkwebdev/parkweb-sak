@@ -101,7 +101,7 @@ export function ThemeSwitcher({ className }: ThemeSwitcherProps) {
             }}
             aria-label={label}
             className={cn(
-              'relative flex h-7 w-7 items-center justify-center rounded-full transition-colors',
+              'relative flex h-6 w-6 items-center justify-center rounded-full transition-colors',
               isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
             onClick={(e) => handleThemeClick(key, e)}
@@ -114,7 +114,7 @@ export function ThemeSwitcher({ className }: ThemeSwitcherProps) {
                 transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
               />
             )}
-            <Icon size={14} className="relative z-10" />
+            <Icon size={12} className="relative z-10" />
           </button>
         );
       })}
