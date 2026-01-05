@@ -59,14 +59,18 @@ export function KBArticleView({
   
   const gradientClasses = GRADIENT_MAP[category.color] || 'from-muted/10 to-transparent';
   
+  // Detect mobile/touch device for native share support
+  const isMobileOrTouch = typeof window !== 'undefined' && 
+    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  
   // Get the current article URL for sharing
   const articleUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/knowledge-base?category=${category.id}&article=${article.slug}`
     : '';
   
-  // Handle native share
+  // Handle native share (only reliable on mobile)
   const handleShare = async () => {
-    if (navigator.share) {
+    if (typeof navigator.share === 'function') {
       try {
         await navigator.share({
           title: article.title,
@@ -158,7 +162,7 @@ export function KBArticleView({
               variant="ghost"
               size="sm"
             />
-            {typeof navigator !== 'undefined' && 'share' in navigator && (
+            {isMobileOrTouch && typeof navigator.share === 'function' && (
               <IconButton
                 label="Share article"
                 variant="ghost"
