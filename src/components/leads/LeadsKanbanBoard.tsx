@@ -298,6 +298,18 @@ export const LeadCardContent = React.memo(function LeadCardContent({
     .map(key => fieldRenderers[key]?.())
     .filter(Boolean);
 
+  // Group inline fields (priority, tags, assignee) vs block fields
+  const inlineFieldKeys: CardFieldKey[] = ['priority', 'tags', 'assignee'];
+  const inlineFields = orderedFields
+    .filter(key => visibleFields.has(key) && inlineFieldKeys.includes(key))
+    .map(key => fieldRenderers[key]?.())
+    .filter(Boolean);
+  
+  const blockFields = orderedFields
+    .filter(key => visibleFields.has(key) && !inlineFieldKeys.includes(key) && !['firstName', 'lastName'].includes(key))
+    .map(key => fieldRenderers[key]?.())
+    .filter(Boolean);
+
   return (
     <div className="space-y-2">
       {/* Header: Name */}
@@ -307,10 +319,17 @@ export const LeadCardContent = React.memo(function LeadCardContent({
         </p>
       </div>
 
-      {/* Dynamic field rendering in order */}
-      {renderedFields.length > 0 && (
+      {/* Block fields (each on its own row) */}
+      {blockFields.length > 0 && (
+        <div className="space-y-1">
+          {blockFields}
+        </div>
+      )}
+
+      {/* Inline fields (priority, tags, assignee - grouped together) */}
+      {inlineFields.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">
-          {renderedFields}
+          {inlineFields}
         </div>
       )}
     </div>
