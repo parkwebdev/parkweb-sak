@@ -2,7 +2,7 @@
  * Notifications Settings Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function NotificationsArticle() {
   return (
@@ -118,6 +118,13 @@ export default function NotificationsArticle() {
         <li>Check spam/junk folders for email notifications</li>
         <li>Ensure the notification category is enabled</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'settings', articleSlug: 'team', title: 'Managing Your Team' },
+          { categoryId: 'inbox', articleSlug: 'overview', title: 'Inbox Overview' },
+        ]}
+      />
     </>
   );
 }

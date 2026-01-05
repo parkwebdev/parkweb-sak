@@ -2,7 +2,7 @@
  * API Access Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function ApiAccessArticle() {
   return (
@@ -143,6 +143,14 @@ export default function ApiAccessArticle() {
         <li>Check the API documentation for detailed endpoint info</li>
         <li>Contact support for integration assistance</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'webhooks', title: 'Webhooks' },
+          { categoryId: 'ari', articleSlug: 'custom-tools', title: 'Custom Tools' },
+          { categoryId: 'ari', articleSlug: 'integrations', title: 'Integrations' },
+        ]}
+      />
     </>
   );
 }

@@ -2,7 +2,7 @@
  * Billing & Subscription Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function BillingArticle() {
   return (
@@ -90,6 +90,13 @@ export default function BillingArticle() {
         Your account remains active until the end of your current billing 
         period. You can reactivate anytime before then.
       </KBCallout>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'settings', articleSlug: 'usage', title: 'Usage' },
+          { categoryId: 'settings', articleSlug: 'team', title: 'Managing Your Team' },
+        ]}
+      />
     </>
   );
 }

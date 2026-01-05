@@ -2,8 +2,7 @@
  * Lead Stages Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
-import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
+import { KBCallout, KBStepByStep, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function LeadStagesArticle() {
   return (
@@ -92,6 +91,13 @@ export default function LeadStagesArticle() {
         The Kanban view automatically groups leads by stage and shows the count 
         of leads in each column, giving you a quick overview of your pipeline.
       </KBCallout>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'leads', articleSlug: 'overview', title: 'Lead Management' },
+          { categoryId: 'ari', articleSlug: 'lead-capture', title: 'Lead Capture' },
+        ]}
+      />
     </>
   );
 }

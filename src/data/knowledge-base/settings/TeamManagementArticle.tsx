@@ -2,7 +2,7 @@
  * Managing Your Team Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function TeamManagementArticle() {
   return (
@@ -138,6 +138,13 @@ export default function TeamManagementArticle() {
         <li>Remove access immediately when team members leave</li>
         <li>Have at least two Admins for business continuity</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'settings', articleSlug: 'general', title: 'General Settings' },
+          { categoryId: 'settings', articleSlug: 'billing', title: 'Billing & Subscription' },
+        ]}
+      />
     </>
   );
 }

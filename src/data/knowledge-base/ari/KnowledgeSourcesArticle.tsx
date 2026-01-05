@@ -2,8 +2,7 @@
  * Adding Knowledge Sources Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
-import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function KnowledgeSourcesArticle() {
   return (
@@ -86,6 +85,14 @@ export default function KnowledgeSourcesArticle() {
         It may take a few minutes for new knowledge sources to be processed 
         and available to Ari.
       </KBCallout>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'overview', title: 'Understanding Ari' },
+          { categoryId: 'ari', articleSlug: 'model-behavior', title: 'Model & Behavior Settings' },
+          { categoryId: 'getting-started', articleSlug: 'quick-start', title: 'Quick Start Guide' },
+        ]}
+      />
     </>
   );
 }

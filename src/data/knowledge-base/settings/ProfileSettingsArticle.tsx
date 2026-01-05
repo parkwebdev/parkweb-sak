@@ -2,7 +2,7 @@
  * Profile Settings Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function ProfileSettingsArticle() {
   return (
@@ -77,6 +77,13 @@ export default function ProfileSettingsArticle() {
         <li>Your display name is visible to all team members</li>
         <li>Your avatar appears in conversations you handle</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'settings', articleSlug: 'general', title: 'General Settings' },
+          { categoryId: 'settings', articleSlug: 'notifications', title: 'Notification Settings' },
+        ]}
+      />
     </>
   );
 }

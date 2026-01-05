@@ -2,7 +2,7 @@
  * Dashboard Overview Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function DashboardOverviewArticle() {
   return (
@@ -86,6 +86,13 @@ export default function DashboardOverviewArticle() {
         The Dashboard is visible to users with the <strong>View Dashboard</strong> 
         permission. All roles have this permission by default.
       </p>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'analytics', articleSlug: 'overview', title: 'Analytics Overview' },
+          { categoryId: 'inbox', articleSlug: 'overview', title: 'Inbox Overview' },
+        ]}
+      />
     </>
   );
 }

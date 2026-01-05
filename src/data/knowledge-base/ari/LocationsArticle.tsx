@@ -2,7 +2,7 @@
  * Locations Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function LocationsArticle() {
   return (
@@ -117,6 +117,13 @@ export default function LocationsArticle() {
         <li>Appointments sync automatically</li>
         <li>Availability is checked per location</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'integrations', title: 'Integrations' },
+          { categoryId: 'planner', articleSlug: 'overview', title: 'Using the Planner' },
+        ]}
+      />
     </>
   );
 }
