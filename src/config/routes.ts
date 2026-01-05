@@ -100,6 +100,15 @@ export const ROUTE_CONFIG: readonly RouteConfig[] = [
   },
   // Bottom navigation routes
   {
+    id: 'knowledge-base',
+    label: 'Knowledge Base',
+    path: '/knowledge-base',
+    iconName: 'BookOpen01',
+    shortcut: '⌥K',
+    description: 'Learn how to use Pilot',
+    showInBottomNav: true,
+  },
+  {
     id: 'get-set-up',
     label: 'Get set up',
     path: '/',

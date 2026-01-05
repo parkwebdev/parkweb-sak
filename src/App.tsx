@@ -41,7 +41,7 @@ import PlannerWrapper from "./pages/PlannerWrapper";
 import BookingComponentsTest from "./pages/BookingComponentsTest";
 import EmailTemplatesTest from "./pages/EmailTemplatesTest";
 import ReportBuilder from "./pages/ReportBuilder";
-
+import KnowledgeBaseWrapper from "./pages/KnowledgeBaseWrapper";
 /**
  * Gets PermissionGuard props from centralized route configuration.
  * Ensures consistency between routing, sidebar, and search.
@@ -175,6 +175,12 @@ const App = () => (
                           <SettingsWrapper />
                         </PermissionGuard>
                       } 
+                    />
+                    
+                    {/* Knowledge Base - accessible to all authenticated users */}
+                    <Route 
+                      path="/knowledge-base" 
+                      element={<KnowledgeBaseWrapper />} 
                     />
                     
                     {/* Report Builder - requires view_dashboard permission */}

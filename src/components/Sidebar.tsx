@@ -9,7 +9,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd, BookOpen01 } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from './icons/DashboardIcon';
 import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
@@ -61,6 +61,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   TrendUp01: PieChart01,
   Circle: Circle,
   Settings01: Settings,
+  BookOpen01: BookOpen01,
 };
 
 /** Active icon mapping from route config iconName to filled component */
