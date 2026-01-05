@@ -87,7 +87,7 @@ export function ThemeSwitcher({ className }: ThemeSwitcherProps) {
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1 rounded-full bg-muted p-1',
+        'inline-flex items-center gap-1 rounded-md bg-muted p-1',
         className
       )}
     >
@@ -101,7 +101,7 @@ export function ThemeSwitcher({ className }: ThemeSwitcherProps) {
             }}
             aria-label={label}
             className={cn(
-              'relative flex h-6 w-6 items-center justify-center rounded-full transition-colors',
+              'relative flex h-6 w-6 items-center justify-center rounded-sm transition-colors',
               isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
             onClick={(e) => handleThemeClick(key, e)}
@@ -110,7 +110,7 @@ export function ThemeSwitcher({ className }: ThemeSwitcherProps) {
             {isActive && (
               <motion.div
                 layoutId="theme-switcher-active"
-                className="absolute inset-0 rounded-full bg-background shadow-sm"
+                className="absolute inset-0 rounded-sm bg-background shadow-sm"
                 transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
               />
             )}
