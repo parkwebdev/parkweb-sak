@@ -903,7 +903,7 @@ export function LeadsViewSettingsSheet({
                                     checked={isChecked}
                                     onCheckedChange={() => onToggleField(field.key)}
                                   />
-                                  <Icon size={16} className="text-muted-foreground" />
+                                  {Icon && <Icon size={16} className="text-muted-foreground" />}
                                   <span className="text-sm">{field.label}</span>
                                 </label>
                               );
