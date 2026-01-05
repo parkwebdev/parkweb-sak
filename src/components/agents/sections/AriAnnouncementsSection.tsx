@@ -19,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Trash01, Edit02, Image03, ChevronRight, Upload01, XClose, Plus } from '@untitledui/icons';
+import { Trash01, Image03, ChevronRight, Upload01, XClose, Plus } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -107,30 +107,18 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete, canManage = 
                 </div>
                 
                 {canManage && (
-                  <div className="flex gap-1 flex-shrink-0">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit();
-                      }}
-                      aria-label={`Edit announcement: ${announcement.title}`}
-                    >
-                      <Edit02 className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete();
-                      }}
-                      aria-label={`Delete announcement: ${announcement.title}`}
-                    >
-                      <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete();
+                    }}
+                    aria-label={`Delete announcement: ${announcement.title}`}
+                  >
+                    <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  </Button>
                 )}
               </div>
             </div>
