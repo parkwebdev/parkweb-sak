@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { SearchMd } from '@untitledui/icons';
+import { SearchMd, XClose } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { KBArticleCard } from './KBArticleCard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -81,13 +81,23 @@ export function KBCategoryView({ category, onSelectArticle }: KBCategoryViewProp
             aria-hidden="true"
           />
           <Input
-            type="search"
+            type="text"
             placeholder={`Search in ${category.label}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-9 pr-8"
             size="sm"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Clear search"
+            >
+              <XClose size={14} aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
       

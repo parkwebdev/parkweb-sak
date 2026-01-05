@@ -9,7 +9,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { SearchMd, ChevronDown } from '@untitledui/icons';
+import { SearchMd, ChevronDown, XClose } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
@@ -119,13 +119,23 @@ export function KBSidebar({
             aria-hidden="true"
           />
           <Input
-            type="search"
+            type="text"
             placeholder="Search articles..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-9 pr-8"
             size="sm"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Clear search"
+            >
+              <XClose size={14} aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
       
