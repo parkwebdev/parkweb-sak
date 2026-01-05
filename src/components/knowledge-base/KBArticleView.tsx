@@ -8,8 +8,10 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Share07, Link01 } from '@untitledui/icons';
+import { useSearchParams } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Clock, Share07 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
@@ -48,6 +50,7 @@ export function KBArticleView({
   prevArticle,
   nextArticle,
 }: KBArticleViewProps) {
+  const [, setSearchParams] = useSearchParams();
   const contentRef = useRef<HTMLDivElement>(null);
   const ArticleComponent = article.component;
   
@@ -121,7 +124,12 @@ export function KBArticleView({
       >
         <div className="flex items-center gap-2">
           <span className={cn('w-2 h-2 rounded-full', category.color)} aria-hidden="true" />
-          <span>{category.label}</span>
+          <button
+            onClick={() => setSearchParams({ category: category.id })}
+            className="hover:text-foreground hover:underline transition-colors"
+          >
+            {category.label}
+          </button>
           <span aria-hidden="true">/</span>
           <span className="text-foreground font-medium">{article.title}</span>
         </div>
@@ -163,12 +171,12 @@ export function KBArticleView({
             </p>
           )}
           
-          {/* Reading time */}
+          {/* Reading time badge */}
           {readingTime > 0 && (
-            <div className="flex items-center gap-1.5 mt-3 text-xs text-muted-foreground">
-              <Clock size={14} aria-hidden="true" />
-              <span>{readingTime} min read</span>
-            </div>
+            <Badge variant="secondary" className="mt-3 gap-1.5">
+              <Clock size={12} aria-hidden="true" />
+              {readingTime} min read
+            </Badge>
           )}
         </div>
       </header>
