@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTrackArticleView } from '@/hooks/useKBArticleViews';
 import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
 
 /** Map category bg colors to gradient CSS variables */
@@ -45,6 +46,9 @@ export function KBArticleView({
 }: KBArticleViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const ArticleComponent = article.component;
+  
+  // Track article view
+  useTrackArticleView(category.id, article.slug);
   
   const gradientClasses = GRADIENT_MAP[category.color] || 'from-muted/10 to-transparent';
   
