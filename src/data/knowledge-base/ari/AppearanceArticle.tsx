@@ -12,57 +12,33 @@ export default function AppearanceArticle() {
         its appearance to match your brand.
       </p>
 
-      <h2 id="brand-colors">Brand Colors</h2>
+      <h2 id="gradient-header">Gradient Header</h2>
       <p>
-        Set your primary brand color to style the widget header, buttons, and accents. 
-        The widget automatically generates complementary colors for a cohesive look.
-      </p>
-
-      <h2 id="avatar-logo">Avatar & Logo</h2>
-      <p>
-        Upload a custom avatar or logo to represent Ari in conversations. This appears:
+        Enable the gradient header to give your widget a more dynamic, modern look. 
+        When enabled, the widget header displays a smooth gradient using your brand colors.
       </p>
       <ul>
-        <li>In the chat header</li>
-        <li>Next to Ari's messages</li>
-        <li>On the launcher button (optional)</li>
+        <li><strong>Enabled</strong> – Header shows a gradient from primary to secondary color</li>
+        <li><strong>Disabled</strong> – Header uses a solid primary color</li>
+      </ul>
+
+      <h2 id="brand-colors">Brand Colors</h2>
+      <p>
+        Set your brand colors to style the widget header, buttons, and accents:
+      </p>
+      <ul>
+        <li><strong>Primary Brand Color</strong> – The main color used for headers and buttons. 
+        When gradient is enabled, this is the starting color.</li>
+        <li><strong>Secondary Brand Color</strong> – Used as the ending color when gradient 
+        header is enabled.</li>
       </ul>
 
       <KBCallout variant="tip">
-        Use a square image (at least 200x200px) for best results. 
-        PNG with transparency works great.
+        Choose colors with good contrast. The widget automatically adjusts text colors 
+        to ensure readability against your chosen background.
       </KBCallout>
 
-      <h2 id="welcome-messages">Welcome Messages</h2>
-      <p>
-        Configure what visitors see when they first open the widget:
-      </p>
-      <ul>
-        <li><strong>Greeting</strong> – A friendly hello message</li>
-        <li><strong>Subtitle</strong> – Additional context or tagline</li>
-        <li><strong>Quick Actions</strong> – Preset buttons for common requests</li>
-      </ul>
-
-      <h2 id="widget-position">Widget Position</h2>
-      <p>
-        Choose where the chat launcher appears on your website:
-      </p>
-      <ul>
-        <li>Bottom right (default)</li>
-        <li>Bottom left</li>
-      </ul>
-
-      <h2 id="launcher-style">Launcher Style</h2>
-      <p>
-        Customize the floating button that opens the chat:
-      </p>
-      <ul>
-        <li>Show/hide the launcher button</li>
-        <li>Use icon only or icon with text</li>
-        <li>Customize the button text</li>
-      </ul>
-
-      <h2 id="preview">Live Preview</h2>
+      <h2 id="widget-preview">Live Preview</h2>
       <p>
         As you make changes, the preview on the right side of the screen updates 
         in real-time so you can see exactly how your widget will look.
@@ -72,6 +48,18 @@ export default function AppearanceArticle() {
         Changes to appearance are saved automatically and take effect immediately 
         on your live widget.
       </KBCallout>
+
+      <h2 id="additional-styling">Additional Styling Options</h2>
+      <p>
+        For more customization options, check the Welcome & Messages section where 
+        you can configure:
+      </p>
+      <ul>
+        <li>Widget greeting and subtitle text</li>
+        <li>Placeholder text in the message input</li>
+        <li>Quick action buttons for common requests</li>
+        <li>Agent avatar and display name</li>
+      </ul>
 
       <KBRelatedArticles
         articles={[

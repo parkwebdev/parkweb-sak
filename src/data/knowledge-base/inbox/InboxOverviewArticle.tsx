@@ -1,93 +1,184 @@
 /**
- * Managing Conversations Article
+ * Inbox Overview Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
-import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
+import { KBCallout, KBRelatedArticles, KBArticleLink } from '@/components/knowledge-base';
 
 export default function InboxOverviewArticle() {
   return (
     <>
       <p>
-        The Inbox is your central hub for managing all conversations between Ari and 
-        your website visitors. Here you can monitor, review, and take over conversations 
-        when needed.
+        The Inbox is where you manage all conversations between Ari and your 
+        visitors. Monitor active chats, take over when needed, and review 
+        conversation history.
       </p>
 
-      <h2 id="inbox-layout">Inbox Layout</h2>
+      <h2 id="layout">Inbox Layout</h2>
       <p>
-        The Inbox uses a three-panel layout for efficient conversation management:
+        The Inbox has three main areas:
       </p>
       <ul>
-        <li><strong>Sidebar</strong> – Filter conversations by status, date, or location</li>
-        <li><strong>Conversation List</strong> – All conversations matching your filters, sorted by recency</li>
-        <li><strong>Conversation Detail</strong> – Full message history and visitor information for the selected conversation</li>
+        <li><strong>Sidebar</strong> – Filters and navigation</li>
+        <li><strong>Conversation List</strong> – All conversations matching your filters</li>
+        <li><strong>Conversation Detail</strong> – The selected conversation's messages</li>
       </ul>
 
       <h2 id="conversation-status">Conversation Status</h2>
       <p>
-        Each conversation has a status indicator:
+        Conversations have three statuses:
       </p>
       <ul>
-        <li><strong>Active</strong> – Ongoing conversation with recent activity</li>
-        <li><strong>Taken Over</strong> – A team member is handling this conversation</li>
-        <li><strong>Closed</strong> – Conversation has ended</li>
+        <li><strong>Active</strong> – Ari is handling the conversation</li>
+        <li><strong>Taken Over</strong> – A team member is responding</li>
+        <li><strong>Closed</strong> – The conversation has ended</li>
+      </ul>
+      <p>
+        Use the status tabs to filter conversations by their current state.
+      </p>
+
+      <h2 id="channels">Channel Filtering</h2>
+      <p>
+        Filter conversations by their source channel:
+      </p>
+      <ul>
+        <li><strong>All</strong> – Show conversations from all channels</li>
+        <li><strong>Widget</strong> – Website chat widget conversations</li>
+        <li><strong>Facebook</strong> – Facebook Messenger conversations</li>
+        <li><strong>Instagram</strong> – Instagram DM conversations</li>
+        <li><strong>X (Twitter)</strong> – X/Twitter DM conversations</li>
       </ul>
 
-      <h2 id="filtering">Filtering & Search</h2>
+      <KBCallout variant="info">
+        Channel availability depends on which integrations you've connected 
+        in your agent settings.
+      </KBCallout>
+
+      <h2 id="sorting">Sorting Options</h2>
       <p>
-        Find specific conversations quickly:
+        Sort your conversation list to find what matters most:
       </p>
       <ul>
-        <li>Search by visitor name, email, or message content</li>
-        <li>Filter by status (active, taken over, closed)</li>
-        <li>Filter by date range</li>
-        <li>Filter by location (if using multiple locations)</li>
+        <li><strong>Last Activity</strong> – Most recently active first (default)</li>
+        <li><strong>Newest</strong> – Most recently created first</li>
+        <li><strong>Oldest</strong> – Oldest conversations first</li>
+      </ul>
+
+      <h2 id="your-inbox">Your Inbox</h2>
+      <p>
+        Toggle "Your Inbox" to see only conversations you've personally taken over. 
+        This helps you focus on chats you're actively managing without seeing 
+        everyone's takeovers.
+      </p>
+
+      <h2 id="search">Search</h2>
+      <p>
+        Use the search bar to find conversations by:
+      </p>
+      <ul>
+        <li>Visitor name or email</li>
+        <li>Message content</li>
+        <li>Keywords or phrases</li>
       </ul>
 
       <h2 id="reading-conversations">Reading Conversations</h2>
       <p>
-        Click on any conversation to see the full message history. You'll see:
+        Click any conversation to view its full message history. Messages are 
+        color-coded by sender:
       </p>
       <ul>
-        <li>All messages between Ari and the visitor</li>
-        <li>Timestamps for each message</li>
-        <li>Any actions taken (lead capture, booking, etc.)</li>
-        <li>Visitor information in the right sidebar</li>
+        <li><strong>Visitor messages</strong> – Shown on the left</li>
+        <li><strong>Ari's responses</strong> – Shown on the right with AI indicator</li>
+        <li><strong>Team messages</strong> – Shown on the right during takeover</li>
       </ul>
 
+      <h2 id="translation">Translation</h2>
+      <p>
+        For conversations in other languages:
+      </p>
+      <ul>
+        <li><strong>Translate to English</strong> – View visitor messages in English</li>
+        <li><strong>Translate Outbound</strong> – Automatically translate your messages 
+        to the visitor's language during takeover</li>
+      </ul>
+      <p>
+        Click the translate button in the conversation toolbar to toggle translation.
+      </p>
+
       <KBCallout variant="tip">
-        Use the Inbox to identify common questions that might need better coverage 
-        in your{' '}
-        <KBArticleLink categoryId="ari" articleSlug="knowledge-sources">
-          knowledge sources
-        </KBArticleLink>.
+        Translation works automatically based on detected language. You can 
+        communicate with visitors in any language without leaving the inbox.
       </KBCallout>
 
-      <h2 id="unread-badge">Unread Conversations</h2>
+      <h2 id="visitor-presence">Visitor Presence</h2>
       <p>
-        The sidebar shows a badge with the number of unread conversations. A conversation 
-        is marked as unread when there's new visitor activity since you last viewed it.
+        See when visitors are online:
+      </p>
+      <ul>
+        <li><strong>Green dot</strong> – Visitor is currently online</li>
+        <li><strong>No indicator</strong> – Visitor is offline or has left</li>
+      </ul>
+      <p>
+        Presence updates in real-time, helping you know when to respond quickly.
+      </p>
+
+      <h2 id="typing-indicators">Typing Indicators</h2>
+      <p>
+        See when visitors are typing their message. A typing indicator appears 
+        in the conversation when the visitor is actively composing a message.
+      </p>
+      <p>
+        During takeover, visitors can also see when you're typing a response.
+      </p>
+
+      <h2 id="file-attachments">File Attachments</h2>
+      <p>
+        During takeover, you can send files to visitors:
+      </p>
+      <ul>
+        <li>Click the attachment button in the message composer</li>
+        <li>Select a file from your computer</li>
+        <li>The file is uploaded and sent to the visitor</li>
+      </ul>
+      <p>
+        Supported file types include images, PDFs, and documents.
       </p>
 
       <h2 id="visitor-info">Visitor Information</h2>
       <p>
-        For each conversation, you can see:
+        The sidebar shows visitor details when available:
       </p>
       <ul>
-        <li>Name and contact information (if captured)</li>
-        <li>Location and device information</li>
-        <li>Page they started the conversation on</li>
-        <li>Previous conversations with the same visitor</li>
+        <li>Name and email (if captured via lead form)</li>
+        <li>Location (city, country)</li>
+        <li>Browser and device information</li>
+        <li>Current page URL</li>
+        <li>Conversation history</li>
       </ul>
 
-      <h2 id="taking-over">Taking Over Conversations</h2>
+      <KBCallout variant="tip">
+        If a visitor hasn't submitted a contact form, encourage them to share 
+        their email so you can follow up later. Add this to your{' '}
+        <KBArticleLink categoryId="ari" articleSlug="knowledge">
+          knowledge sources
+        </KBArticleLink>{' '}
+        as a best practice.
+      </KBCallout>
+
+      <h2 id="unread-badges">Unread Indicators</h2>
       <p>
-        When Ari can't fully resolve an issue, you can step in. Learn more in the{' '}
-        <KBArticleLink categoryId="inbox" articleSlug="takeover">
-          Human Takeover guide
-        </KBArticleLink>.
+        Unread conversations are highlighted in the list. The Inbox icon in the 
+        sidebar shows a badge with the count of unread conversations.
       </p>
+
+      <h2 id="closing-conversations">Closing Conversations</h2>
+      <p>
+        Close a conversation when it's resolved:
+      </p>
+      <ol>
+        <li>Click the <strong>Close</strong> button in the toolbar</li>
+        <li>The conversation moves to the Closed tab</li>
+        <li>You can reopen it later if needed</li>
+      </ol>
 
       <KBRelatedArticles
         articles={[
