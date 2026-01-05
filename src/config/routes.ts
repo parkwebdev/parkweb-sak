@@ -104,7 +104,7 @@ export const ROUTE_CONFIG: readonly RouteConfig[] = [
     label: 'Knowledge Base',
     path: '/knowledge-base',
     iconName: 'BookOpen01',
-    shortcut: '⌥K',
+    shortcut: '⌥H',
     description: 'Learn how to use Pilot',
     showInBottomNav: true,
   },
