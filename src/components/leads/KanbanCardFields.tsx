@@ -17,10 +17,8 @@ import {
   Edit05
 } from "@untitledui/icons";
 
-/** Available field keys for Kanban card display */
+/** Available field keys for Kanban card display (toggleable fields) */
 export type CardFieldKey = 
-  | 'firstName' 
-  | 'lastName' 
   | 'email' 
   | 'phone' 
   | 'location' 
@@ -31,6 +29,11 @@ export type CardFieldKey =
   | 'lastUpdated' 
   | 'notes'
   | 'assignee';
+
+/** 
+ * Static fields that are always visible on kanban cards (firstName, lastName).
+ * These are NOT part of CardFieldKey and cannot be toggled or reordered.
+ */
 
 /** Field group for organizing in dropdown */
 export type FieldGroup = 'contact' | 'session' | 'organization' | 'timestamps' | 'notes';
@@ -54,11 +57,9 @@ export const FIELD_GROUP_LABELS: Record<FieldGroup, string> = {
   notes: 'Notes',
 };
 
-/** All available card fields with their configuration */
+/** All available card fields with their configuration (excludes static fields like firstName/lastName which are always visible) */
 export const CARD_FIELDS: CardFieldConfig[] = [
-  // Contact Info
-  { key: 'firstName', label: 'First Name', icon: User01, defaultVisible: true, group: 'contact' },
-  { key: 'lastName', label: 'Last Name', icon: User01, defaultVisible: false, group: 'contact' },
+  // Contact Info (firstName/lastName are always visible, not listed here)
   { key: 'email', label: 'Email', icon: Mail01, defaultVisible: true, group: 'contact' },
   { key: 'phone', label: 'Phone', icon: Phone, defaultVisible: true, group: 'contact' },
   
