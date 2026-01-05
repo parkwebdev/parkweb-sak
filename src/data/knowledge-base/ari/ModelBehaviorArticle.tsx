@@ -2,7 +2,7 @@
  * Model & Behavior Settings Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function ModelBehaviorArticle() {
   return (
@@ -57,6 +57,14 @@ export default function ModelBehaviorArticle() {
         Avoid including sensitive information in the system prompt as it may be 
         referenced in responses.
       </KBCallout>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'system-prompt', title: 'System Prompt' },
+          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'overview', title: 'Understanding Ari' },
+        ]}
+      />
     </>
   );
 }

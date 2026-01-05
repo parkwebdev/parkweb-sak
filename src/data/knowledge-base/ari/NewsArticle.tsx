@@ -2,7 +2,7 @@
  * News Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function NewsArticle() {
   return (
@@ -113,6 +113,13 @@ export default function NewsArticle() {
         <li>News content is indexed for relevant responses</li>
         <li>Keep news current so Ari provides accurate information</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'announcements', title: 'Announcements' },
+          { categoryId: 'ari', articleSlug: 'appearance', title: 'Customizing Appearance' },
+        ]}
+      />
     </>
   );
 }

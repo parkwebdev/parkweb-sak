@@ -2,7 +2,7 @@
  * General Settings Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function GeneralSettingsArticle() {
   return (
@@ -86,6 +86,13 @@ export default function GeneralSettingsArticle() {
         Most settings save automatically when you make changes. 
         You'll see a confirmation message when changes are saved.
       </p>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'settings', articleSlug: 'profile', title: 'Profile Settings' },
+          { categoryId: 'settings', articleSlug: 'team', title: 'Managing Your Team' },
+        ]}
+      />
     </>
   );
 }

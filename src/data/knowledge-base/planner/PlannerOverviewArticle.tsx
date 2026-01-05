@@ -2,7 +2,7 @@
  * Using the Planner Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function PlannerOverviewArticle() {
   return (
@@ -137,6 +137,13 @@ export default function PlannerOverviewArticle() {
         <li><strong>Manage Bookings:</strong> Create, edit, reschedule, and cancel events</li>
         <li><strong>Manage Integrations:</strong> Connect external calendars</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'integrations', title: 'Integrations' },
+          { categoryId: 'inbox', articleSlug: 'overview', title: 'Inbox Overview' },
+        ]}
+      />
     </>
   );
 }

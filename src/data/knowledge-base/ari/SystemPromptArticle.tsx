@@ -2,7 +2,7 @@
  * System Prompt Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function SystemPromptArticle() {
   return (
@@ -109,6 +109,13 @@ export default function SystemPromptArticle() {
         <li>Test different scenarios to see how Ari responds</li>
         <li>Refine your prompt based on the results</li>
       </ol>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'model-behavior', title: 'Model & Behavior Settings' },
+          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+        ]}
+      />
     </>
   );
 }

@@ -2,7 +2,7 @@
  * Lead Capture Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function LeadCaptureArticle() {
   return (
@@ -108,6 +108,13 @@ export default function LeadCaptureArticle() {
         <li>In-app notifications in the sidebar</li>
         <li>Webhook integrations for external systems</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'leads', articleSlug: 'overview', title: 'Lead Management' },
+          { categoryId: 'ari', articleSlug: 'welcome-messages', title: 'Welcome & Messages' },
+        ]}
+      />
     </>
   );
 }

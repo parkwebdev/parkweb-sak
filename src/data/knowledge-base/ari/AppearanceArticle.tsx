@@ -2,7 +2,7 @@
  * Customizing Appearance Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function AppearanceArticle() {
   return (
@@ -72,6 +72,14 @@ export default function AppearanceArticle() {
         Changes to appearance are saved automatically and take effect immediately 
         on your live widget.
       </KBCallout>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'welcome-messages', title: 'Welcome & Messages' },
+          { categoryId: 'ari', articleSlug: 'installation', title: 'Installing the Widget' },
+          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+        ]}
+      />
     </>
   );
 }

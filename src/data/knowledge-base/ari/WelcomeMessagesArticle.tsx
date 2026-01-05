@@ -2,7 +2,7 @@
  * Welcome & Messages Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function WelcomeMessagesArticle() {
   return (
@@ -102,6 +102,13 @@ export default function WelcomeMessagesArticle() {
         <li>Test messages on mobile devices (shorter is better)</li>
         <li>Include a human handoff option for complex issues</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'appearance', title: 'Customizing Appearance' },
+          { categoryId: 'ari', articleSlug: 'lead-capture', title: 'Lead Capture' },
+        ]}
+      />
     </>
   );
 }

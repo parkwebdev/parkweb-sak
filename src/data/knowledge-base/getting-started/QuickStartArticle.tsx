@@ -4,8 +4,7 @@
  * Get up and running with Pilot quickly.
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
-import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
+import { KBCallout, KBStepByStep, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function QuickStartArticle() {
   return (
@@ -115,6 +114,14 @@ export default function QuickStartArticle() {
         Continue exploring the knowledge base to learn about advanced features like 
         lead capture, human takeover, and custom integrations.
       </p>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'getting-started', articleSlug: 'welcome', title: 'Welcome to Pilot' },
+          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'installation', title: 'Installing the Widget' },
+        ]}
+      />
     </>
   );
 }

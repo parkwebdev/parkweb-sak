@@ -2,7 +2,7 @@
  * Help Articles Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function HelpArticlesArticle() {
   return (
@@ -123,6 +123,13 @@ export default function HelpArticlesArticle() {
         <li>Keep articles focused on one topic each</li>
         <li>Use consistent formatting across all articles</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'knowledge', title: 'Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'announcements', title: 'Announcements' },
+        ]}
+      />
     </>
   );
 }

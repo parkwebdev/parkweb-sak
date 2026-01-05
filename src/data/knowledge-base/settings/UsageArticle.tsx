@@ -2,7 +2,7 @@
  * Usage Settings Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function UsageArticle() {
   return (
@@ -106,6 +106,13 @@ export default function UsageArticle() {
         <li>Include in business reports</li>
         <li>Track ROI of your Ari deployment</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'settings', articleSlug: 'billing', title: 'Billing & Subscription' },
+          { categoryId: 'analytics', articleSlug: 'overview', title: 'Analytics Overview' },
+        ]}
+      />
     </>
   );
 }

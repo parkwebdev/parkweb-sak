@@ -2,8 +2,7 @@
  * Report Builder Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
-import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
+import { KBCallout, KBStepByStep, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function ReportBuilderArticle() {
   return (
@@ -145,6 +144,13 @@ export default function ReportBuilderArticle() {
         <li>Include only relevant sections to keep reports focused</li>
         <li>Review scheduled reports periodically to ensure they're still useful</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'analytics', articleSlug: 'overview', title: 'Analytics Overview' },
+          { categoryId: 'leads', articleSlug: 'overview', title: 'Lead Management' },
+        ]}
+      />
     </>
   );
 }

@@ -2,7 +2,7 @@
  * Sessions Settings Article
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
 
 export default function SessionsArticle() {
   return (
@@ -101,6 +101,12 @@ export default function SessionsArticle() {
         <li>Enable two-factor authentication when available</li>
         <li>Don't stay logged in on shared computers</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'settings', articleSlug: 'profile', title: 'Profile Settings' },
+        ]}
+      />
     </>
   );
 }
