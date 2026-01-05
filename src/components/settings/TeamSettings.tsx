@@ -11,6 +11,7 @@ import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
 import { TeamMembersTable } from '@/components/team/TeamMembersTable';
 import { InviteMemberDialog } from '@/components/team/InviteMemberDialog';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { useCanManage } from '@/hooks/useCanManage';
@@ -103,24 +104,34 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   }
 
   return (
-    <div className="space-y-6">
-      {canManageTeam && (
-        <div className="flex justify-end mb-6">
-          <InviteMemberDialog onInvite={handleInviteMember} />
-        </div>
-      )}
-
-      {/* Team Members Table */}
-      <TeamMembersTable
-        teamMembers={teamMembers}
-        currentUserId={user?.id}
-        currentUserRole={currentUserRole ?? undefined}
-        canManageRoles={canManageRoles}
-        onEditRole={handleEditRole}
-        onEditProfile={isAdmin ? handleEditProfile : undefined}
-        onRemove={handleRemoveMember}
-        loading={loading}
-      />
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex flex-row items-end justify-between space-y-0">
+          <div className="space-y-1">
+            <CardTitle className="text-base font-semibold">
+              Team Members
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Manage your team members, roles, and permissions
+            </CardDescription>
+          </div>
+          {canManageTeam && (
+            <InviteMemberDialog onInvite={handleInviteMember} />
+          )}
+        </CardHeader>
+        <CardContent>
+          <TeamMembersTable
+            teamMembers={teamMembers}
+            currentUserId={user?.id}
+            currentUserRole={currentUserRole ?? undefined}
+            canManageRoles={canManageRoles}
+            onEditRole={handleEditRole}
+            onEditProfile={isAdmin ? handleEditProfile : undefined}
+            onRemove={handleRemoveMember}
+            loading={loading}
+          />
+        </CardContent>
+      </Card>
 
       <RoleManagementDialog
         member={selectedMember}
