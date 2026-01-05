@@ -32,26 +32,62 @@ Comprehensive design system documentation for consistent UI development.
 
 ### Font Family
 
-Pilot uses **Geist** as the primary font family with **Geist Mono** for code.
+Pilot uses **Inter** as the primary font family with system monospace for code.
 
 ```css
-/* Primary font */
-font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 
+/* Primary font (defined in tailwind.config.ts) */
+font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 
              'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
 /* Monospace font */
-font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 
              Consolas, 'Liberation Mono', 'Courier New', monospace;
 ```
 
+### Variable Font Implementation
+
+We use **Inter as a variable font** for optimal performance and typography control:
+
+- **Weight range**: 400–700 (Regular → Bold)
+- **Optical sizing**: Enabled via `font-optical-sizing: auto`
+- **Font smoothing**: Antialiased for crisp rendering
+
+**Benefits of variable fonts:**
+- Single font file instead of multiple weight files
+- Smaller total download size (~100KB vs ~400KB for 4 weights)
+- Smooth weight interpolation if needed
+- Better performance with font preloading
+
 ### Font Loading
 
-Geist is loaded via Google Fonts in `index.html`:
+Inter variable font is loaded via Google Fonts in `index.html` with optimized preloading:
 
 ```html
+<!-- Preconnect for faster DNS resolution -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Preload the primary woff2 file for fastest loading -->
+<link rel="preload" href="https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- Variable font with weight range 400-700 -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet">
+```
+
+### Font CSS Configuration
+
+Applied globally in `src/index.css`:
+
+```css
+body {
+  @apply font-sans;                /* Uses Inter from tailwind.config.ts */
+  letter-spacing: -0.011em;        /* Tighter tracking for Inter */
+  line-height: 1.6;
+  font-optical-sizing: auto;       /* Enable optical sizing for variable font */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 ```
 
 ### Type Scale
