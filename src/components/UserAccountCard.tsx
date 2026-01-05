@@ -251,7 +251,7 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
               <div className="space-y-2 px-2 pt-1">
                 {shortcuts.map((shortcut, index) => (
                   <div key={index} className="flex items-center justify-between w-full">
-                    <span className="text-sm text-foreground">{shortcut.description}</span>
+                    <span className="text-xs text-foreground">{shortcut.description}</span>
                     <div className="flex items-center gap-0.5 ml-auto">
                       {formatShortcut(shortcut).map((key, keyIndex) => (
                         <Badge 
