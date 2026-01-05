@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCanManage } from '@/hooks/useCanManage';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
@@ -93,13 +94,16 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete, canManage = 
                     </p>
                   )}
                   <div className="flex items-center gap-3 mt-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      announcement.is_active 
-                        ? 'bg-status-active/10 text-status-active-foreground dark:bg-status-active/20 dark:text-status-active' 
-                        : 'bg-status-inactive/10 text-status-inactive-foreground dark:bg-status-inactive/20 dark:text-status-inactive'
-                    }`}>
+                    <Badge 
+                      variant="secondary" 
+                      size="sm"
+                      className={announcement.is_active 
+                        ? 'bg-status-active/10 text-status-active-foreground border-status-active/20' 
+                        : 'bg-status-inactive/10 text-status-inactive-foreground border-status-inactive/20'
+                      }
+                    >
                       {announcement.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    </Badge>
                     <span className="text-xs text-muted-foreground">
                       {announcement.action_type?.replace('_', ' ') || 'open url'}
                     </span>
