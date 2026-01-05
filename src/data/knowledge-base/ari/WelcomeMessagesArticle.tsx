@@ -8,105 +8,115 @@ export default function WelcomeMessagesArticle() {
   return (
     <>
       <p>
-        First impressions matter. Configure Ari's welcome message and quick action 
-        buttons to greet visitors and guide them to common tasks.
+        First impressions matter. Configure Ari's welcome message and widget content 
+        to greet visitors and guide them through your chat experience.
       </p>
 
-      <h2 id="welcome-message">Welcome Message</h2>
+      <h2 id="welcome-title">Welcome Title</h2>
       <p>
-        The welcome message appears when a visitor opens the chat widget. 
-        This is your chance to:
+        The welcome title is the first thing visitors see when they open the chat widget. 
+        It appears prominently at the top of the chat interface.
       </p>
       <ul>
-        <li>Greet visitors warmly</li>
-        <li>Introduce what Ari can help with</li>
-        <li>Set expectations for the conversation</li>
+        <li><strong>Title Text</strong> – A short greeting or headline (e.g., "Welcome to [Company]!")</li>
+        <li><strong>Emoji</strong> – Add an optional emoji to make the greeting more friendly and eye-catching</li>
       </ul>
 
-      <h3 id="editing-welcome">Editing the Welcome Message</h3>
+      <h3 id="editing-welcome-title">Editing the Welcome Title</h3>
       <ol>
         <li>Navigate to <strong>Ari</strong> from the sidebar</li>
         <li>Select <strong>Welcome & Messages</strong></li>
-        <li>Edit the text in the Welcome Message field</li>
+        <li>Edit the Title and Emoji fields</li>
         <li>Your changes save automatically</li>
       </ol>
 
       <KBCallout variant="tip">
-        Keep your welcome message short and action-oriented. 
-        Example: "Hi! I'm Ari. I can help you schedule a tour, answer questions, 
-        or find the perfect home. What would you like to do?"
+        Keep your welcome title short and action-oriented. 
+        Example: "Hi there! 👋" or "Welcome to Sunshine Homes!"
       </KBCallout>
 
-      <h2 id="quick-actions">Quick Action Buttons</h2>
+      <h2 id="welcome-subtitle">Welcome Subtitle</h2>
       <p>
-        Quick actions are clickable buttons that appear below the welcome message. 
-        They help visitors start common tasks with a single tap.
-      </p>
-
-      <h3 id="default-actions">Common Quick Actions</h3>
-      <ul>
-        <li><strong>Schedule a Tour</strong> – Opens the booking flow</li>
-        <li><strong>View Available Homes</strong> – Shows property listings</li>
-        <li><strong>Contact Us</strong> – Initiates a conversation about contacting the team</li>
-        <li><strong>Get Directions</strong> – Provides location information</li>
-      </ul>
-
-      <h3 id="managing-actions">Managing Quick Actions</h3>
-      <ol>
-        <li>Go to <strong>Ari → Welcome & Messages</strong></li>
-        <li>Find the Quick Actions section</li>
-        <li>Add, edit, or reorder actions as needed</li>
-        <li>Toggle actions on or off</li>
-      </ol>
-
-      <h2 id="booking-confirmation">Booking Confirmation Message</h2>
-      <p>
-        When a visitor books an appointment, they receive a confirmation message. 
-        Customize this to:
+        The subtitle appears below the welcome title and provides additional context 
+        or instructions for visitors.
       </p>
       <ul>
-        <li>Confirm the booking details</li>
-        <li>Explain what happens next</li>
-        <li>Provide contact information for changes</li>
-      </ul>
-
-      <h2 id="reminder-messages">Reminder Messages</h2>
-      <p>
-        Set up automated reminders to reduce no-shows:
-      </p>
-      <ul>
-        <li><strong>24-hour reminder</strong> – Sent the day before</li>
-        <li><strong>1-hour reminder</strong> – Sent shortly before the appointment</li>
+        <li>Introduce what Ari can help with</li>
+        <li>Set expectations for the conversation</li>
+        <li>Encourage visitors to ask questions</li>
       </ul>
 
       <KBCallout variant="info">
-        Reminder messages are sent via the same channel the visitor used to book 
-        (usually the chat widget or email if provided).
+        Example subtitle: "I'm here to help you find your perfect home, schedule tours, 
+        and answer any questions you have."
       </KBCallout>
 
-      <h2 id="fallback-messages">Fallback Messages</h2>
+      <h2 id="quick-reply-suggestions">Quick Reply Suggestions</h2>
       <p>
-        Configure what Ari says when it can't help:
+        Enable this toggle to show suggested quick replies in the chat interface. 
+        These help visitors start conversations with common questions or requests.
       </p>
       <ul>
-        <li><strong>Unknown question:</strong> "I'm not sure about that. Would you like me to connect you with someone who can help?"</li>
-        <li><strong>Technical error:</strong> "Sorry, I'm having trouble right now. Please try again in a moment."</li>
-        <li><strong>Outside business hours:</strong> Custom message for after-hours inquiries</li>
+        <li><strong>Enabled</strong> – Shows contextual quick reply buttons based on the conversation</li>
+        <li><strong>Disabled</strong> – Visitors type all messages manually</li>
       </ul>
+
+      <h2 id="bottom-navigation">Bottom Navigation Tabs</h2>
+      <p>
+        Control which tabs appear at the bottom of your chat widget. Each tab provides 
+        different functionality for your visitors:
+      </p>
+
+      <h3 id="messages-tab">Messages Tab</h3>
+      <p>
+        The primary chat interface where visitors converse with Ari. This tab is 
+        always visible and cannot be disabled.
+      </p>
+
+      <h3 id="news-tab">News Tab</h3>
+      <p>
+        Display announcements, updates, and news items to visitors. Toggle this off 
+        if you don't want to show news content in your widget.
+      </p>
+      <ul>
+        <li><strong>Enabled</strong> – News tab appears in the widget navigation</li>
+        <li><strong>Disabled</strong> – News tab is hidden from visitors</li>
+      </ul>
+
+      <h3 id="help-tab">Help Tab</h3>
+      <p>
+        Provide self-service help articles for visitors. Toggle this off if you 
+        prefer visitors to only interact with Ari directly.
+      </p>
+      <ul>
+        <li><strong>Enabled</strong> – Help tab appears with your help articles</li>
+        <li><strong>Disabled</strong> – Help tab is hidden from visitors</li>
+      </ul>
+
+      <KBCallout variant="tip">
+        If you have extensive help documentation, keep the Help tab enabled. 
+        It helps visitors find answers quickly without waiting for a response.
+      </KBCallout>
 
       <h2 id="best-practices">Best Practices</h2>
       <ul>
-        <li>Keep messages concise and scannable</li>
+        <li>Keep the welcome title under 30 characters for best display</li>
         <li>Use friendly, conversational language</li>
-        <li>Limit quick actions to 3-4 most common tasks</li>
+        <li>Match the tone of your brand</li>
         <li>Test messages on mobile devices (shorter is better)</li>
-        <li>Include a human handoff option for complex issues</li>
+        <li>Use emojis sparingly – one in the title is usually enough</li>
       </ul>
+
+      <KBCallout variant="info">
+        Changes to welcome messages are saved automatically and take effect 
+        immediately on your live widget.
+      </KBCallout>
 
       <KBRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'appearance', title: 'Customizing Appearance' },
           { categoryId: 'ari', articleSlug: 'lead-capture', title: 'Lead Capture' },
+          { categoryId: 'ari', articleSlug: 'help-articles', title: 'Help Articles' },
         ]}
       />
     </>
