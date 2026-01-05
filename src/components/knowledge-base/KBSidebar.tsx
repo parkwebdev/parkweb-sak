@@ -15,6 +15,27 @@ import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
 import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
 
+/** Map category bg colors to ring/border colors for active states */
+const ACTIVE_RING_MAP: Record<string, string> = {
+  'bg-info': 'ring-info/40 bg-info/10',
+  'bg-accent-purple': 'ring-accent-purple/40 bg-accent-purple/10',
+  'bg-success': 'ring-success/40 bg-success/10',
+  'bg-warning': 'ring-warning/40 bg-warning/10',
+  'bg-status-active': 'ring-status-active/40 bg-status-active/10',
+  'bg-destructive': 'ring-destructive/40 bg-destructive/10',
+  'bg-muted-foreground': 'ring-muted-foreground/40 bg-muted-foreground/10',
+};
+
+const HOVER_MAP: Record<string, string> = {
+  'bg-info': 'hover:bg-info/5',
+  'bg-accent-purple': 'hover:bg-accent-purple/5',
+  'bg-success': 'hover:bg-success/5',
+  'bg-warning': 'hover:bg-warning/5',
+  'bg-status-active': 'hover:bg-status-active/5',
+  'bg-destructive': 'hover:bg-destructive/5',
+  'bg-muted-foreground': 'hover:bg-muted-foreground/5',
+};
+
 interface KBSidebarProps {
   categories: KBCategory[];
   selectedCategoryId?: string;
@@ -88,8 +109,10 @@ export function KBSidebar({
               onClick={() => onSelectCategory(category)}
               className={cn(
                 'w-full flex items-center gap-2 px-2.5 py-1.5 mb-1 rounded-md transition-colors',
-                'hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                isCategoryView && category.id === selectedCategoryId && 'bg-accent/50'
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                isCategoryView && category.id === selectedCategoryId
+                  ? cn('ring-1', ACTIVE_RING_MAP[category.color] || 'ring-border bg-accent/50')
+                  : cn(HOVER_MAP[category.color] || 'hover:bg-accent/30')
               )}
             >
               <span 
