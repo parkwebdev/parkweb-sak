@@ -11,7 +11,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { User01 as User, Settings04 as Settings, LogOut01 as LogOut, CreditCard01, Users01, Keyboard01, PieChart01 } from '@untitledui/icons';
+import { LogOut01 as LogOut, Users01, Keyboard01 } from '@untitledui/icons';
+import { 
+  Settings02Icon, 
+  UserCircleIcon, 
+  CreditCardIconFilled,
+  PieChart03Icon,
+} from '@/components/ui/settings-icon';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate } from 'react-router-dom';
@@ -181,14 +187,14 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
             <DropdownMenuSeparator className="mb-1" />
             <DropdownMenuItem asChild>
               <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
-                <User size={16} />
+                <UserCircleIcon size={15} />
                 Profile
               </Link>
             </DropdownMenuItem>
             {canView('view_team') && (
               <DropdownMenuItem asChild>
                 <Link to="/settings?tab=team" className="w-full flex items-center gap-2">
-                  <Users01 size={16} />
+                  <Users01 size={15} />
                   Team
                 </Link>
               </DropdownMenuItem>
@@ -196,7 +202,7 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
             {canView('view_billing') && (
               <DropdownMenuItem asChild>
                 <Link to="/settings?tab=usage" className="w-full flex items-center gap-2">
-                  <PieChart01 size={16} />
+                  <PieChart03Icon size={15} />
                   Usage
                 </Link>
               </DropdownMenuItem>
@@ -204,14 +210,14 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
             {canView('view_billing') && (
               <DropdownMenuItem asChild>
                 <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
-                  <CreditCard01 size={16} />
+                  <CreditCardIconFilled size={15} />
                   Billing
                 </Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
               <Link to="/settings" className="w-full flex items-center gap-2">
-                <Settings size={16} />
+                <Settings02Icon size={15} />
                 Settings
               </Link>
             </DropdownMenuItem>
