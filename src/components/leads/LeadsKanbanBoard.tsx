@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from "react";
+import { Separator } from "@/components/ui/separator";
 import { formatDistanceToNow } from "date-fns";
 import { 
   Mail01, 
@@ -292,26 +293,72 @@ export const LeadCardContent = React.memo(function LeadCardContent({
     ),
   }), [lead, assignees, onAddAssignee, onRemoveAssignee]);
 
-  // Render fields in order, filtering by visibility
-  const renderedFields = orderedFields
-    .filter(key => visibleFields.has(key) && !['firstName', 'lastName'].includes(key))
+  // Static header fields (not sortable): priority, tags
+  const STATIC_HEADER_KEYS: CardFieldKey[] = ['firstName', 'lastName', 'priority', 'tags'];
+  // Footer fields (not sortable): createdAt, lastUpdated
+  const FOOTER_KEYS: CardFieldKey[] = ['createdAt', 'lastUpdated'];
+
+  // Render sortable body fields (excludes header and footer fields)
+  const bodyFields = orderedFields.filter(
+    key => !STATIC_HEADER_KEYS.includes(key) && !FOOTER_KEYS.includes(key)
+  );
+
+  const renderedBodyFields = bodyFields
+    .filter(key => visibleFields.has(key))
     .map(key => fieldRenderers[key]?.())
     .filter(Boolean);
 
+  // Check if footer should be shown
+  const showCreated = visibleFields.has('createdAt');
+  const showLastUpdated = visibleFields.has('lastUpdated');
+  const hasFooter = showCreated || showLastUpdated;
+
   return (
     <div className="space-y-2">
-      {/* Header: Name */}
-      <div className="min-w-0">
+      {/* Header: Name + Priority + Tags (static, inline) */}
+      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
         <p className="truncate text-sm font-medium text-foreground">
           {displayName}
         </p>
+        {visibleFields.has('priority') && lead.priority && (
+          <PriorityBadge priority={lead.priority} />
+        )}
+        {visibleFields.has('tags') && lead.tags.length > 0 && (
+          <>
+            {lead.tags.slice(0, 2).map((tag) => (
+              <Badge 
+                key={tag} 
+                variant="secondary" 
+                className="h-5 text-2xs px-1.5"
+              >
+                {tag}
+              </Badge>
+            ))}
+            {lead.tags.length > 2 && (
+              <span className="text-2xs text-muted-foreground">
+                +{lead.tags.length - 2}
+              </span>
+            )}
+          </>
+        )}
       </div>
 
-      {/* All fields rendered in user's custom order, each on its own row */}
-      {renderedFields.length > 0 && (
+      {/* Body: Sortable fields in user's custom order */}
+      {renderedBodyFields.length > 0 && (
         <div className="space-y-1">
-          {renderedFields}
+          {renderedBodyFields}
         </div>
+      )}
+
+      {/* Footer: Created/Last Updated with divider (only if either is visible) */}
+      {hasFooter && (
+        <>
+          <Separator className="!my-2" />
+          <div className="flex items-center gap-3">
+            {showCreated && fieldRenderers.createdAt?.()}
+            {showLastUpdated && fieldRenderers.lastUpdated?.()}
+          </div>
+        </>
       )}
     </div>
   );
