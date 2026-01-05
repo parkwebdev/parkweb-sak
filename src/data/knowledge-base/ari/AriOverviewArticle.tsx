@@ -68,7 +68,7 @@ export default function AriOverviewArticle() {
       </p>
       <ul>
         <li><strong>Personality</strong> – Define how Ari communicates (formal, friendly, professional)</li>
-        <li><strong>Appearance</strong> – Match your brand colors and add your logo</li>
+        <li><strong>Appearance</strong> – Match your brand colors with gradient headers</li>
         <li><strong>Behavior</strong> – Control when Ari asks for information or offers assistance</li>
         <li><strong>Knowledge</strong> – Add content from websites, documents, or manual entries</li>
       </ul>

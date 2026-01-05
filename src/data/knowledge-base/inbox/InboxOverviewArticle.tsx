@@ -158,7 +158,7 @@ export default function InboxOverviewArticle() {
       <KBCallout variant="tip">
         If a visitor hasn't submitted a contact form, encourage them to share 
         their email so you can follow up later. Add this to your{' '}
-        <KBArticleLink categoryId="ari" articleSlug="knowledge">
+        <KBArticleLink categoryId="ari" articleSlug="knowledge-sources">
           knowledge sources
         </KBArticleLink>{' '}
         as a best practice.

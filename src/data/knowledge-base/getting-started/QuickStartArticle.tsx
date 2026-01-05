@@ -27,7 +27,7 @@ export default function QuickStartArticle() {
           },
           {
             title: 'Customize Appearance',
-            description: 'Match the chat widget to your brand with custom colors, avatar, and welcome messages.',
+            description: 'Match the chat widget to your brand with custom colors and welcome messages.',
           },
           {
             title: 'Install the Widget',
@@ -48,7 +48,7 @@ export default function QuickStartArticle() {
       <ul>
         <li><strong>Model & Behavior</strong> – Choose the AI model and set response parameters</li>
         <li><strong>System Prompt</strong> – Define Ari's personality and instructions</li>
-        <li><strong>Appearance</strong> – Customize colors, avatar, and branding</li>
+        <li><strong>Appearance</strong> – Customize colors and branding</li>
         <li><strong>Welcome Messages</strong> – Set up greeting messages and quick actions</li>
       </ul>
 
@@ -77,10 +77,10 @@ export default function QuickStartArticle() {
         Make the chat widget feel like part of your brand:
       </p>
       <ul>
-        <li>Set your <strong>primary color</strong> to match your brand</li>
-        <li>Upload a custom <strong>avatar</strong> or logo</li>
+        <li>Enable <strong>gradient header</strong> for a modern look</li>
+        <li>Set your <strong>primary and secondary brand colors</strong></li>
         <li>Write a friendly <strong>welcome message</strong></li>
-        <li>Configure <strong>quick action buttons</strong> for common queries</li>
+        <li>Configure <strong>bottom navigation tabs</strong> (Messages, News, Help)</li>
       </ul>
 
       <h2 id="step-4-install-widget">Step 4: Install the Widget</h2>
