@@ -68,6 +68,12 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
       altKey: true,
       description: 'Go to Settings',
       action: () => navigate('/settings')
+    },
+    {
+      key: 'h',
+      altKey: true,
+      description: 'Go to Knowledge Base',
+      action: () => navigate('/knowledge-base')
     }
   ];
 
