@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { LogOut01 as LogOut, Users01, Keyboard01, CreditCard01 } from '@untitledui/icons';
+import { LogOut01 as LogOut, Users01, Keyboard01, CreditCard01, BookOpen01 } from '@untitledui/icons';
 import { 
   Settings02Icon, 
   UserCircleIcon,
@@ -218,6 +218,12 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
               <Link to="/settings" className="w-full flex items-center gap-2">
                 <Settings02Icon size={15} />
                 Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/knowledge-base" className="w-full flex items-center gap-2">
+                <BookOpen01 size={15} />
+                Knowledge Base
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem 
