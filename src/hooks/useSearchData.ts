@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { ROUTE_CONFIG, SETTINGS_TABS } from '@/config/routes';
+import { KB_CATEGORIES } from '@/config/knowledge-base-config';
 import type { 
   SearchDataMap, 
   ConversationWithAgent, 
@@ -318,6 +319,20 @@ export const useSearchData = () => {
           category: 'Settings',
           iconName: tab.iconName,
           action: () => navigate(`/settings?tab=${tab.tabParam}`),
+        });
+      });
+
+      // Knowledge Base Articles (no permission required - public docs)
+      KB_CATEGORIES.forEach(category => {
+        category.articles.forEach(article => {
+          results.push({
+            id: `kb-${category.id}-${article.id}`,
+            title: article.title,
+            description: `${category.label} • Knowledge Base`,
+            category: 'Knowledge Base',
+            iconName: 'BookOpen01',
+            action: () => navigate(`/knowledge-base?category=${category.id}&article=${article.slug}`),
+          });
         });
       });
 
