@@ -13,6 +13,17 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
 
+/** Map category bg colors to gradient CSS variables */
+const GRADIENT_MAP: Record<string, string> = {
+  'bg-info': 'from-info/15 via-info/5 to-transparent',
+  'bg-accent-purple': 'from-accent-purple/15 via-accent-purple/5 to-transparent',
+  'bg-success': 'from-success/15 via-success/5 to-transparent',
+  'bg-warning': 'from-warning/15 via-warning/5 to-transparent',
+  'bg-status-active': 'from-status-active/15 via-status-active/5 to-transparent',
+  'bg-destructive': 'from-destructive/15 via-destructive/5 to-transparent',
+  'bg-muted-foreground': 'from-muted-foreground/10 via-muted-foreground/3 to-transparent',
+};
+
 interface KBArticleViewProps {
   category: KBCategory;
   article: KBArticle;
@@ -34,6 +45,8 @@ export function KBArticleView({
 }: KBArticleViewProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const ArticleComponent = article.component;
+  
+  const gradientClasses = GRADIENT_MAP[category.color] || 'from-muted/10 to-transparent';
   
   // Extract headings from content for ToC
   useEffect(() => {
@@ -79,64 +92,68 @@ export function KBArticleView({
         <span className="text-foreground font-medium">{article.title}</span>
       </nav>
       
-      <div className="max-w-3xl mx-auto px-8 py-8">
-      
-      {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold text-foreground mb-2">
-          {article.title}
-        </h1>
-        {article.description && (
-          <p className="text-muted-foreground text-base">
-            {article.description}
-          </p>
-        )}
-      </header>
-      
-      {/* Article Content */}
-      <div 
-        ref={contentRef}
-        className="prose prose-sm dark:prose-invert max-w-none kb-article-content"
-      >
-        <ArticleComponent />
-      </div>
-      
-      {/* Navigation */}
-      <footer className="mt-12 pt-6 border-t border-border">
-        <div className="flex items-center justify-between">
-          {onPrevious && prevArticle ? (
-            <Button
-              variant="ghost"
-              onClick={onPrevious}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <ChevronLeft size={16} aria-hidden="true" />
-              <div className="text-left">
-                <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Previous</div>
-                <div className="text-sm font-medium">{prevArticle.title}</div>
-              </div>
-            </Button>
-          ) : (
-            <div />
-          )}
-          
-          {onNext && nextArticle ? (
-            <Button
-              variant="ghost"
-              onClick={onNext}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <div className="text-right">
-                <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Next</div>
-                <div className="text-sm font-medium">{nextArticle.title}</div>
-              </div>
-              <ChevronRight size={16} aria-hidden="true" />
-            </Button>
-          ) : (
-            <div />
+      {/* Header with gradient background */}
+      <header className={cn(
+        'bg-gradient-to-b py-8 px-8',
+        gradientClasses
+      )}>
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">
+            {article.title}
+          </h1>
+          {article.description && (
+            <p className="text-muted-foreground text-base">
+              {article.description}
+            </p>
           )}
         </div>
-      </footer>
+      </header>
+      
+      <div className="max-w-3xl mx-auto px-8 py-8">
+        {/* Article Content */}
+        <div 
+          ref={contentRef}
+          className="prose prose-sm dark:prose-invert max-w-none kb-article-content"
+        >
+          <ArticleComponent />
+        </div>
+        
+        {/* Navigation */}
+        <footer className="mt-12 pt-6 border-t border-border">
+          <div className="flex items-center justify-between">
+            {onPrevious && prevArticle ? (
+              <Button
+                variant="ghost"
+                onClick={onPrevious}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <ChevronLeft size={16} aria-hidden="true" />
+                <div className="text-left">
+                  <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Previous</div>
+                  <div className="text-sm font-medium">{prevArticle.title}</div>
+                </div>
+              </Button>
+            ) : (
+              <div />
+            )}
+            
+            {onNext && nextArticle ? (
+              <Button
+                variant="ghost"
+                onClick={onNext}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <div className="text-right">
+                  <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Next</div>
+                  <div className="text-sm font-medium">{nextArticle.title}</div>
+                </div>
+                <ChevronRight size={16} aria-hidden="true" />
+              </Button>
+            ) : (
+              <div />
+            )}
+          </div>
+        </footer>
       </div>
     </div>
   );
