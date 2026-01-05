@@ -104,8 +104,8 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete, canManage = 
                     >
                       {announcement.is_active ? 'Active' : 'Inactive'}
                     </Badge>
-                    <Badge variant="secondary" size="sm">
-                      {announcement.action_type?.replace('_', ' ') || 'open url'}
+                    <Badge variant="secondary" size="sm" className="capitalize">
+                      {(announcement.action_type?.replace('_', ' ') || 'open url')}
                     </Badge>
                   </div>
                 </div>
