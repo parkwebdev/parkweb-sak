@@ -10,4 +10,6 @@ export { KBFeatureCard, KBFeatureGrid } from './KBFeatureCard';
 export { KBArticleLink, KBRelatedArticles } from './KBArticleLink';
 export { KBSidebar } from './KBSidebar';
 export { KBArticleView } from './KBArticleView';
+export { KBCategoryView } from './KBCategoryView';
+export { KBArticleCard } from './KBArticleCard';
 export { KBTableOfContents } from './KBTableOfContents';

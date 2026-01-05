@@ -19,6 +19,9 @@ interface KBSidebarProps {
   categories: KBCategory[];
   selectedCategoryId?: string;
   selectedArticleId?: string;
+  /** True when viewing a category landing page (no article selected) */
+  isCategoryView?: boolean;
+  onSelectCategory: (category: KBCategory) => void;
   onSelectArticle: (category: KBCategory, article: KBArticle) => void;
 }
 
@@ -26,6 +29,8 @@ export function KBSidebar({
   categories,
   selectedCategoryId,
   selectedArticleId,
+  isCategoryView,
+  onSelectCategory,
   onSelectArticle,
 }: KBSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,16 +83,28 @@ export function KBSidebar({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: categoryIndex * 0.05, ...springs.smooth }}
           >
-            {/* Category Header */}
-            <div className="flex items-center gap-2 px-2.5 py-1.5 mb-1">
+            {/* Category Header - Clickable */}
+            <button
+              onClick={() => onSelectCategory(category)}
+              className={cn(
+                'w-full flex items-center gap-2 px-2.5 py-1.5 mb-1 rounded-md transition-colors',
+                'hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                isCategoryView && category.id === selectedCategoryId && 'bg-accent/50'
+              )}
+            >
               <span 
                 className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', category.color)} 
                 aria-hidden="true"
               />
-              <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <span className={cn(
+                'text-2xs font-semibold uppercase tracking-wider',
+                isCategoryView && category.id === selectedCategoryId
+                  ? 'text-foreground'
+                  : 'text-muted-foreground/60 hover:text-muted-foreground'
+              )}>
                 {category.label}
               </span>
-            </div>
+            </button>
             
             {/* Articles */}
             <div className="space-y-0.5">

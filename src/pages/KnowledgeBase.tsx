@@ -12,6 +12,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { KBSidebar } from '@/components/knowledge-base/KBSidebar';
 import { KBArticleView } from '@/components/knowledge-base/KBArticleView';
+import { KBCategoryView } from '@/components/knowledge-base/KBCategoryView';
 import { KBTableOfContents } from '@/components/knowledge-base/KBTableOfContents';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -54,19 +55,28 @@ export default function KnowledgeBase() {
   const [currentCategory, setCurrentCategory] = useState<KBCategory | undefined>();
   const [currentArticle, setCurrentArticle] = useState<KBArticle | undefined>();
   
+  // Determine if we're in category view (no article param)
+  const isCategoryView = categoryId && !articleSlug;
+  
   useEffect(() => {
     if (categoryId && articleSlug) {
+      // Article view
       const category = getKBCategoryById(categoryId);
       const article = getKBArticleBySlug(categoryId, articleSlug);
       setCurrentCategory(category);
       setCurrentArticle(article);
+    } else if (categoryId && !articleSlug) {
+      // Category view - just set category, no article
+      const category = getKBCategoryById(categoryId);
+      setCurrentCategory(category);
+      setCurrentArticle(undefined);
     } else {
-      // Default to first article
+      // Default to first category landing page
       const first = getFirstKBArticle();
       if (first) {
         setCurrentCategory(first.category);
-        setCurrentArticle(first.article);
-        setSearchParams({ category: first.category.id, article: first.article.slug }, { replace: true });
+        setCurrentArticle(undefined);
+        setSearchParams({ category: first.category.id }, { replace: true });
       }
     }
   }, [categoryId, articleSlug, setSearchParams]);
@@ -76,9 +86,21 @@ export default function KnowledgeBase() {
     ? getAdjacentArticles(currentCategory.id, currentArticle.id)
     : { prev: undefined, next: undefined };
   
+  // Handle category selection (goes to category landing page)
+  const handleSelectCategory = (category: KBCategory) => {
+    setSearchParams({ category: category.id });
+  };
+  
   // Handle article selection
   const handleSelectArticle = (category: KBCategory, article: KBArticle) => {
     setSearchParams({ category: category.id, article: article.slug });
+  };
+  
+  // Handle article selection from category view (just needs article)
+  const handleSelectArticleFromCategory = (article: KBArticle) => {
+    if (currentCategory) {
+      setSearchParams({ category: currentCategory.id, article: article.slug });
+    }
   };
   
   // Handle previous/next navigation
@@ -101,13 +123,30 @@ export default function KnowledgeBase() {
         categories={KB_CATEGORIES as unknown as KBCategory[]}
         selectedCategoryId={currentCategory?.id}
         selectedArticleId={currentArticle?.id}
+        isCategoryView={!!isCategoryView}
+        onSelectCategory={handleSelectCategory}
         onSelectArticle={handleSelectArticle}
       />
       
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
-          {currentCategory && currentArticle ? (
+          {isCategoryView && currentCategory ? (
+            // Category landing page
+            <motion.div
+              key={`category-${currentCategory.id}`}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+              transition={springs.smooth}
+            >
+              <KBCategoryView
+                category={currentCategory}
+                onSelectArticle={handleSelectArticleFromCategory}
+              />
+            </motion.div>
+          ) : currentCategory && currentArticle ? (
+            // Article detail view
             <motion.div
               key={`${currentCategory.id}-${currentArticle.id}`}
               initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
