@@ -5,6 +5,7 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
 
 export default function QuickStartArticle() {
   return (
@@ -13,6 +14,32 @@ export default function QuickStartArticle() {
         This guide will walk you through setting up Pilot and getting your AI agent 
         live on your website in just a few minutes.
       </p>
+
+      <h2 id="setup-overview">Setup Overview</h2>
+      <KBStepByStep
+        steps={[
+          {
+            title: 'Configure Ari',
+            description: 'Set up your AI agent\'s personality, model, and behavior in the Ari section.',
+          },
+          {
+            title: 'Add Knowledge Sources',
+            description: 'Give Ari information about your business by adding website URLs, documents, or text.',
+          },
+          {
+            title: 'Customize Appearance',
+            description: 'Match the chat widget to your brand with custom colors, avatar, and welcome messages.',
+          },
+          {
+            title: 'Install the Widget',
+            description: 'Copy the embed code and add it to your website to go live.',
+          },
+          {
+            title: 'Monitor & Improve',
+            description: 'Review conversations and analytics to continuously improve Ari\'s performance.',
+          },
+        ]}
+      />
 
       <h2 id="step-1-configure-ari">Step 1: Configure Ari</h2>
       <p>

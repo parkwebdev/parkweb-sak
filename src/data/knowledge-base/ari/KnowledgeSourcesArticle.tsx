@@ -3,6 +3,7 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
 
 export default function KnowledgeSourcesArticle() {
   return (
@@ -11,6 +12,16 @@ export default function KnowledgeSourcesArticle() {
         Knowledge sources are how Ari learns about your business. The more relevant 
         information you provide, the better Ari can assist your visitors.
       </p>
+
+      <h2 id="accessing-knowledge">Accessing Knowledge Sources</h2>
+      <p>
+        To manage your knowledge sources:
+      </p>
+      <ol>
+        <li>Navigate to <strong>Ari</strong> in the sidebar</li>
+        <li>Click on the <strong>Knowledge</strong> section</li>
+        <li>Here you can view, add, refresh, or delete knowledge sources</li>
+      </ol>
 
       <h2 id="types-of-sources">Types of Knowledge Sources</h2>
 

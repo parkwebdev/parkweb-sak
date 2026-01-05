@@ -26,8 +26,8 @@ export default function LeadsOverviewArticle() {
       </ul>
 
       <KBCallout variant="tip">
-        Configure lead capture settings in <strong>Ari → Lead Capture</strong> to 
-        control when and how Ari collects visitor information.
+        Configure when and how Ari collects visitor information in <strong>Ari → Lead Capture</strong>. 
+        You can set required fields, enable or disable lead collection, and customize the capture form behavior.
       </KBCallout>
 
       <h2 id="leads-view">Viewing Leads</h2>
