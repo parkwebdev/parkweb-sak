@@ -19,16 +19,7 @@ import { useReportExports, type ReportExport } from '@/hooks/useReportExports';
 import { downloadFile } from '@/lib/file-download';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { FileX02 } from '@untitledui/icons';
 
 interface ExportHistoryTableProps {
@@ -153,46 +144,23 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
       />
 
       {/* Delete confirmation dialog */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Export</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{deleteTarget?.name}"? This will permanently remove the file and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmationDialog
+        open={!!deleteTarget}
+        onOpenChange={() => setDeleteTarget(null)}
+        title="Delete Export"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This will permanently remove the file.`}
+        onConfirm={handleDeleteConfirm}
+      />
 
       {/* Bulk delete confirmation dialog */}
-      <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedCount} Exports</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete {selectedCount} export{selectedCount > 1 ? 's' : ''}? This will permanently remove the files and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBulkDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete {selectedCount} Export{selectedCount > 1 ? 's' : ''}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmationDialog
+        open={isBulkDeleteOpen}
+        onOpenChange={setIsBulkDeleteOpen}
+        title={`Delete ${selectedCount} Export${selectedCount > 1 ? 's' : ''}`}
+        description={`Are you sure you want to delete ${selectedCount} export${selectedCount > 1 ? 's' : ''}? This will permanently remove the files.`}
+        onConfirm={handleBulkDelete}
+        actionLabel={`Delete ${selectedCount} Export${selectedCount > 1 ? 's' : ''}`}
+      />
     </>
   );
 }
