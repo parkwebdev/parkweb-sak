@@ -12,12 +12,13 @@ import { useCanManage } from '@/hooks/useCanManage';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { Trash01, Edit02, Image03, ChevronRight, Upload01, XClose, Plus } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -29,7 +30,7 @@ import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog'
 import { uploadAnnouncementImage, deleteAnnouncementImage } from '@/lib/announcement-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
-import { SkeletonCard } from '@/components/ui/skeleton';
+import { SkeletonCard, Skeleton } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 
 interface AriAnnouncementsSectionProps {
@@ -140,7 +141,7 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete, canManage = 
   );
 };
 
-const AnnouncementDialog = ({ 
+const AnnouncementSheet = ({ 
   announcement, 
   onSave, 
   onClose,
@@ -160,6 +161,7 @@ const AnnouncementDialog = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(announcement?.image_url || null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(announcement?.image_url || null);
+  const [contentReady, setContentReady] = useState(false);
   
   const [formData, setFormData] = useState<AnnouncementFormData>({
     title: '',
@@ -171,6 +173,16 @@ const AnnouncementDialog = ({
     action_url: '',
     is_active: true,
   });
+
+  // Deferred content mounting for smooth animation
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => setContentReady(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setContentReady(false);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (announcement) {
@@ -259,169 +271,198 @@ const AnnouncementDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{announcement ? 'Edit' : 'Create'} Announcement</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onClose}>
+      <SheetContent side="right" className="sm:max-w-xl overflow-y-auto">
+        <SheetHeader className="mb-6">
+          <SheetTitle>{announcement ? 'Edit' : 'Create'} Announcement</SheetTitle>
+          <p className="text-sm text-muted-foreground">
             Configure how this announcement appears in your chat widget
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="New Feature Available"
-              required
-            />
+        {!contentReady ? (
+          <div className="space-y-6">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="subtitle">Subtitle</Label>
-            <Textarea
-              id="subtitle"
-              value={formData.subtitle}
-              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-              placeholder="Check out our latest updates and improvements"
-              rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Image</Label>
-            {imagePreview ? (
-              <div className="relative w-full h-32 rounded-lg overflow-hidden border bg-muted">
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  className="w-full h-full object-cover"
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Announcement Details</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="New Feature Available"
+                  required
                 />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="icon"
-                  className="absolute top-2 right-2 h-7 w-7"
-                  aria-label="Remove image"
-                  onClick={handleRemoveImage}
-                >
-                  <XClose className="h-4 w-4" aria-hidden="true" />
-                </Button>
               </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
-                <Upload01 className="h-8 w-8 text-muted-foreground mb-2" />
-                <span className="text-sm text-muted-foreground">Click to upload</span>
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleFileSelect}
-                  className="hidden"
+
+              <div className="space-y-2">
+                <Label htmlFor="subtitle">Subtitle</Label>
+                <Textarea
+                  id="subtitle"
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  placeholder="Check out our latest updates and improvements"
+                  rows={2}
                 />
-              </label>
-            )}
-          </div>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="action_type">Action Type</Label>
-            <Select
-              value={formData.action_type}
-              onValueChange={(value: 'open_url' | 'start_chat' | 'open_help') => 
-                setFormData({ ...formData, action_type: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="open_url">Open URL</SelectItem>
-                <SelectItem value="start_chat">Start Chat</SelectItem>
-                <SelectItem value="open_help">Open Help Center</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="action_type">Action Type</Label>
+                <Select
+                  value={formData.action_type}
+                  onValueChange={(value: 'open_url' | 'start_chat' | 'open_help') => 
+                    setFormData({ ...formData, action_type: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open_url">Open URL</SelectItem>
+                    <SelectItem value="start_chat">Start Chat</SelectItem>
+                    <SelectItem value="open_help">Open Help Center</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {formData.action_type === 'open_url' && (
-            <div className="space-y-2">
-              <Label htmlFor="action_url">Action URL</Label>
-              <Input
-                id="action_url"
-                type="url"
-                value={formData.action_url}
-                onChange={(e) => setFormData({ ...formData, action_url: e.target.value })}
-                placeholder="https://example.com/feature"
-              />
-            </div>
-          )}
-
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="space-y-0.5">
-              <Label htmlFor="is_active">Active</Label>
-              <p className="text-sm text-muted-foreground">
-                Show this announcement in the chat widget
-              </p>
-            </div>
-            <Switch
-              id="is_active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-            />
-          </div>
-
-          {/* Preview */}
-          <div className="space-y-2">
-            <Label>Preview</Label>
-            <div 
-              className="rounded-lg overflow-hidden border"
-              style={{ backgroundColor: formData.background_color }}
-            >
-              {imagePreview && (
-                <div className="h-32 overflow-hidden">
-                  <img 
-                    src={imagePreview} 
-                    alt="" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
+              {formData.action_type === 'open_url' && (
+                <div className="space-y-2">
+                  <Label htmlFor="action_url">Action URL</Label>
+                  <Input
+                    id="action_url"
+                    type="url"
+                    value={formData.action_url}
+                    onChange={(e) => setFormData({ ...formData, action_url: e.target.value })}
+                    placeholder="https://example.com/feature"
                   />
                 </div>
               )}
-              <div className="p-4 flex items-center justify-between">
-                <div>
-                  <h3 
-                    className="font-semibold text-base"
-                    style={{ color: formData.title_color }}
-                  >
-                    {formData.title || 'Announcement Title'}
-                  </h3>
-                  {formData.subtitle && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {formData.subtitle}
-                    </p>
-                  )}
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              </div>
-            </div>
-          </div>
+            </section>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isUploading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isUploading}>
-              {isUploading && <Spinner className="mr-2 h-4 w-4" />}
-              {announcement ? 'Save Changes' : 'Create Announcement'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <Separator />
+
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Appearance</h3>
+              
+              <div className="space-y-2">
+                <Label>Image</Label>
+                {imagePreview ? (
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden border bg-muted">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      className="absolute top-2 right-2 h-7 w-7"
+                      aria-label="Remove image"
+                      onClick={handleRemoveImage}
+                    >
+                      <XClose className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
+                    <Upload01 className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground">Click to upload</span>
+                    <input 
+                      ref={fileInputRef}
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+            </section>
+
+            <Separator />
+
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Settings</h3>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is_active">Active</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Show this announcement in the chat widget
+                  </p>
+                </div>
+                <Switch
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                />
+              </div>
+            </section>
+
+            <Separator />
+
+            <section className="space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground">Preview</h3>
+              
+              <div 
+                className="rounded-lg overflow-hidden border"
+                style={{ backgroundColor: formData.background_color }}
+              >
+                {imagePreview && (
+                  <div className="h-32 overflow-hidden">
+                    <img 
+                      src={imagePreview} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                <div className="p-4 flex items-center justify-between">
+                  <div>
+                    <h3 
+                      className="font-semibold text-base"
+                      style={{ color: formData.title_color }}
+                    >
+                      {formData.title || 'Announcement Title'}
+                    </h3>
+                    {formData.subtitle && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {formData.subtitle}
+                      </p>
+                    )}
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                </div>
+              </div>
+            </section>
+
+            <Separator />
+
+            <section className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isUploading} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isUploading} className="flex-1">
+                {isUploading && <Spinner className="mr-2 h-4 w-4" />}
+                {announcement ? 'Save Changes' : 'Create Announcement'}
+              </Button>
+            </section>
+          </form>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 };
 
@@ -522,7 +563,7 @@ export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSec
         )}
       </div>
 
-      <AnnouncementDialog
+      <AnnouncementSheet
         announcement={editingAnnouncement || undefined}
         onSave={handleSave}
         onClose={() => {
