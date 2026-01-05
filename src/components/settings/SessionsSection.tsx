@@ -8,10 +8,12 @@
  * @module components/settings/SessionsSection
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useReactTable, getCoreRowModel } from '@tanstack/react-table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +36,15 @@ import { toast } from '@/lib/toast';
 export function SessionsSection() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
+  const [confirmValue, setConfirmValue] = useState('');
+  const confirmationText = 'SIGN OUT';
+
+  // Clear confirmation when dialog closes
+  useEffect(() => {
+    if (!showConfirmDialog) {
+      setConfirmValue('');
+    }
+  }, [showConfirmDialog]);
   
   const { 
     sessions, 
@@ -136,9 +147,23 @@ export function SessionsSection() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Sign out of other devices?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will sign you out of all other browsers and devices where you're currently logged in. 
-              Your current session will remain active.
+            <AlertDialogDescription className="space-y-4">
+              <p>
+                This will sign you out of all other browsers and devices where you're currently logged in. 
+                Your current session will remain active.
+              </p>
+              <div className="space-y-2">
+                <Label>
+                  Type <span className="font-mono font-semibold text-foreground">{confirmationText}</span> to confirm:
+                </Label>
+                <Input
+                  value={confirmValue}
+                  onChange={(e) => setConfirmValue(e.target.value)}
+                  placeholder={confirmationText}
+                  className="font-mono"
+                  aria-label="Confirmation text"
+                />
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -148,7 +173,7 @@ export function SessionsSection() {
                 revokeOthers();
                 setShowConfirmDialog(false);
               }}
-              disabled={isRevokingOthers}
+              disabled={isRevokingOthers || confirmValue !== confirmationText}
             >
               {isRevokingOthers ? 'Signing out...' : 'Sign out other sessions'}
             </AlertDialogAction>

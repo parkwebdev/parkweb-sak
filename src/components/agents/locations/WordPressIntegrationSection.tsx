@@ -78,6 +78,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
   const [useAiExtraction, setUseAiExtraction] = useState(false);
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
   const [deleteOnDisconnect, setDeleteOnDisconnect] = useState(false);
+  const [disconnectConfirmValue, setDisconnectConfirmValue] = useState('');
 
   const {
     siteUrl,
@@ -702,7 +703,13 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
       </AnimatePresence>
 
       {/* Disconnect Confirmation Dialog */}
-      <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+      <AlertDialog open={showDisconnectDialog} onOpenChange={(open) => {
+        setShowDisconnectDialog(open);
+        if (!open) {
+          setDeleteOnDisconnect(false);
+          setDisconnectConfirmValue('');
+        }
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Disconnect WordPress?</AlertDialogTitle>
@@ -710,21 +717,40 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
               This will remove the WordPress connection from this agent.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="flex items-center gap-2 py-2">
-            <Switch
-              id="delete-locations"
-              checked={deleteOnDisconnect}
-              onCheckedChange={setDeleteOnDisconnect}
-            />
-            <Label htmlFor="delete-locations" className="text-sm cursor-pointer">
-              Also delete all synced locations ({communityCount || 0} communities)
-            </Label>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="delete-locations"
+                checked={deleteOnDisconnect}
+                onCheckedChange={(checked) => {
+                  setDeleteOnDisconnect(checked);
+                  if (!checked) setDisconnectConfirmValue('');
+                }}
+              />
+              <Label htmlFor="delete-locations" className="text-sm cursor-pointer">
+                Also delete all synced locations ({communityCount || 0} communities)
+              </Label>
+            </div>
+            {deleteOnDisconnect && (
+              <div className="space-y-2 pt-2 border-t">
+                <Label>
+                  Type <span className="font-mono font-semibold text-foreground">DELETE</span> to confirm deletion:
+                </Label>
+                <Input
+                  value={disconnectConfirmValue}
+                  onChange={(e) => setDisconnectConfirmValue(e.target.value)}
+                  placeholder="DELETE"
+                  className="font-mono"
+                  aria-label="Confirmation text"
+                />
+              </div>
+            )}
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDisconnect}
-              disabled={isSaving}
+              disabled={isSaving || (deleteOnDisconnect && disconnectConfirmValue !== 'DELETE')}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isSaving ? 'Disconnecting...' : 'Disconnect'}
