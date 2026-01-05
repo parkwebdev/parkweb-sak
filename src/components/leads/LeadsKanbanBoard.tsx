@@ -330,13 +330,13 @@ export const LeadCardContent = React.memo(function LeadCardContent({
                 <Badge 
                   key={tag} 
                   variant="secondary" 
-                  className="h-5 text-xs px-1.5"
+                  className="h-5 text-2xs px-1.5"
                 >
                   {tag}
                 </Badge>
               ))}
               {lead.tags.length > 2 && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-2xs text-muted-foreground">
                   +{lead.tags.length - 2}
                 </span>
               )}
