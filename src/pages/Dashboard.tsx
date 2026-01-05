@@ -8,6 +8,7 @@
  */
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowUpRight } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { Separator } from '@/components/ui/separator';
@@ -87,10 +88,8 @@ export function Dashboard() {
                   You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
                 </motion.p>
                 <motion.div variants={itemVariants} className="mb-4">
-                  <a 
-                    href="https://docs.lovable.dev" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
+                  <Link 
+                    to="/knowledge-base"
                     className="group inline-flex items-center gap-1.5 text-sm text-primary hover:underline transition-colors"
                   >
                     Explore the Help Center
@@ -101,7 +100,7 @@ export function Dashboard() {
                     >
                       <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </motion.span>
-                  </a>
+                  </Link>
                 </motion.div>
 
                 {/* Divider and Invite Team inline */}
