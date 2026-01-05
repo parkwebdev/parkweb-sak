@@ -367,9 +367,20 @@ async function uploadReportToStorage(
     return null;
   }
   
+  // Rewrite Supabase storage URL to use custom domain via Cloudflare Worker
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const supabaseStoragePrefix = `${supabaseUrl}/storage/v1/`;
+  let brandedUrl = signedUrlData.signedUrl;
+
+  if (signedUrlData.signedUrl.startsWith(supabaseStoragePrefix)) {
+    const storagePath = signedUrlData.signedUrl.replace(supabaseStoragePrefix, '');
+    brandedUrl = `https://app.getpilot.io/storage/${storagePath}`;
+    console.log(`[uploadReportToStorage] Rewriting URL to branded domain: ${brandedUrl}`);
+  }
+
   return {
     filePath: fileName,
-    signedUrl: signedUrlData.signedUrl,
+    signedUrl: brandedUrl,
   };
 }
 
