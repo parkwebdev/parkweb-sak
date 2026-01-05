@@ -3,6 +3,8 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
+import { KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
 
 export default function AnnouncementsArticle() {
   return (
@@ -24,12 +26,38 @@ export default function AnnouncementsArticle() {
       </ul>
 
       <h2 id="creating-announcement">Creating an Announcement</h2>
-      <ol>
-        <li>Navigate to <strong>Ari → Announcements</strong></li>
-        <li>Click <strong>Add Announcement</strong></li>
-        <li>Configure the announcement details</li>
-        <li>Save and activate</li>
-      </ol>
+      <KBStepByStep
+        steps={[
+          {
+            title: 'Navigate to Ari → Announcements',
+            description: 'Open the Ari configurator and select the Announcements section.',
+          },
+          {
+            title: 'Click Add Announcement',
+            description: 'Click the Add Announcement button to create a new announcement.',
+          },
+          {
+            title: 'Enter Title and Subtitle',
+            description: 'Add a compelling headline (5-7 words max) and optional subtitle.',
+          },
+          {
+            title: 'Add an Image (Optional)',
+            description: 'Upload a background or featured image that matches your brand.',
+          },
+          {
+            title: 'Set Colors',
+            description: 'Choose background and text colors for high contrast and readability.',
+          },
+          {
+            title: 'Add Action URL (Optional)',
+            description: 'Enter a URL to open when visitors click the announcement.',
+          },
+          {
+            title: 'Save and Activate',
+            description: 'Save the announcement and toggle it on to make it visible.',
+          },
+        ]}
+      />
 
       <h3 id="announcement-fields">Announcement Fields</h3>
       <ul>
@@ -110,6 +138,14 @@ export default function AnnouncementsArticle() {
         <li>Update announcements as dates approach</li>
         <li>Archive past seasonal content for next year</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'appearance', title: 'Customizing Appearance' },
+          { categoryId: 'ari', articleSlug: 'welcome-messages', title: 'Welcome & Messages' },
+          { categoryId: 'ari', articleSlug: 'news', title: 'News' },
+        ]}
+      />
     </>
   );
 }

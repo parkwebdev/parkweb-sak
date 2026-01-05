@@ -3,6 +3,7 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
 
 export default function TakeoverArticle() {
   return (
@@ -27,8 +28,12 @@ export default function TakeoverArticle() {
 
       <h2 id="how-to-takeover">How to Take Over</h2>
       <ol>
-        <li>Open the conversation in the Inbox</li>
-        <li>Click the <strong>Take Over</strong> button</li>
+        <li>Open the conversation in the{' '}
+          <KBArticleLink categoryId="inbox" articleSlug="overview">
+            Inbox
+          </KBArticleLink>
+        </li>
+        <li>Click the <strong>Take Over</strong> button in the toolbar</li>
         <li>The visitor will see that a human has joined</li>
         <li>Start typing your response</li>
       </ol>
@@ -74,8 +79,19 @@ export default function TakeoverArticle() {
         <li>High-priority conversations need attention</li>
       </ul>
       <p>
-        Set up notifications in Settings → Notifications.
+        Set up notifications in{' '}
+        <KBArticleLink categoryId="settings" articleSlug="notifications">
+          Settings → Notifications
+        </KBArticleLink>.
       </p>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'inbox', articleSlug: 'overview', title: 'Managing Conversations' },
+          { categoryId: 'settings', articleSlug: 'notifications', title: 'Notification Preferences' },
+          { categoryId: 'leads', articleSlug: 'overview', title: 'Lead Management' },
+        ]}
+      />
     </>
   );
 }

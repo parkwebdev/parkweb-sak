@@ -3,6 +3,8 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
+import { KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
 
 export default function CustomToolsArticle() {
   return (
@@ -39,12 +41,38 @@ export default function CustomToolsArticle() {
       </ol>
 
       <h2 id="creating-tool">Creating a Custom Tool</h2>
-      <ol>
-        <li>Navigate to <strong>Ari → Custom Tools</strong></li>
-        <li>Click <strong>Add Tool</strong></li>
-        <li>Configure the tool settings</li>
-        <li>Test and enable the tool</li>
-      </ol>
+      <KBStepByStep
+        steps={[
+          {
+            title: 'Navigate to Ari → Custom Tools',
+            description: 'Open the Ari configurator and select the Custom Tools section.',
+          },
+          {
+            title: 'Click Add Tool',
+            description: 'Click the Add Tool button to create a new custom tool.',
+          },
+          {
+            title: 'Enter Tool Details',
+            description: 'Provide a name and a clear description of what the tool does (Ari uses this to decide when to call it).',
+          },
+          {
+            title: 'Set the Endpoint URL',
+            description: 'Enter the URL of your API endpoint that will handle the tool\'s logic.',
+          },
+          {
+            title: 'Define Parameters',
+            description: 'Add the input parameters Ari should collect and pass to your endpoint.',
+          },
+          {
+            title: 'Configure Authentication',
+            description: 'Add any required headers (API keys, tokens) for your endpoint.',
+          },
+          {
+            title: 'Test and Enable',
+            description: 'Use the test feature to verify it works, then enable the tool.',
+          },
+        ]}
+      />
 
       <h3 id="tool-configuration">Tool Configuration</h3>
       <ul>
@@ -124,6 +152,14 @@ export default function CustomToolsArticle() {
         <li>Set appropriate timeouts (5-10 seconds max)</li>
         <li>Monitor tool performance and errors</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'webhooks', title: 'Webhooks' },
+          { categoryId: 'ari', articleSlug: 'api-access', title: 'API Access' },
+          { categoryId: 'ari', articleSlug: 'integrations', title: 'Integrations' },
+        ]}
+      />
     </>
   );
 }

@@ -3,6 +3,8 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
+import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
 
 export default function IntegrationsArticle() {
   return (
@@ -46,22 +48,56 @@ export default function IntegrationsArticle() {
       </ul>
 
       <h2 id="connecting-integration">Connecting an Integration</h2>
-      <ol>
-        <li>Navigate to <strong>Ari → Integrations</strong></li>
-        <li>Find the integration you want to connect</li>
-        <li>Click <strong>Connect</strong></li>
-        <li>Follow the authentication prompts</li>
-        <li>Configure integration settings</li>
-      </ol>
+      <KBStepByStep
+        steps={[
+          {
+            title: 'Navigate to Ari → Integrations',
+            description: 'Open the Ari configurator and select the Integrations section.',
+          },
+          {
+            title: 'Find Your Integration',
+            description: 'Browse the available integrations and find the one you want to connect.',
+          },
+          {
+            title: 'Click Connect',
+            description: 'Click the Connect button for your chosen integration.',
+          },
+          {
+            title: 'Authenticate',
+            description: 'Follow the prompts to sign in and authorize the connection.',
+          },
+          {
+            title: 'Configure Settings',
+            description: 'Set up sync preferences and field mappings as needed.',
+          },
+        ]}
+      />
 
       <h2 id="google-calendar">Google Calendar Setup</h2>
-      <ol>
-        <li>Click <strong>Connect Google Calendar</strong></li>
-        <li>Sign in with your Google account</li>
-        <li>Grant permission to access your calendar</li>
-        <li>Select which calendar to sync with Pilot</li>
-        <li>Configure sync settings</li>
-      </ol>
+      <KBStepByStep
+        steps={[
+          {
+            title: 'Click Connect Google Calendar',
+            description: 'In the Integrations section, click Connect next to Google Calendar.',
+          },
+          {
+            title: 'Sign In with Google',
+            description: 'Sign in with your Google account that has the calendar you want to use.',
+          },
+          {
+            title: 'Grant Permissions',
+            description: 'Allow Pilot to access your calendar for reading and creating events.',
+          },
+          {
+            title: 'Select Your Calendar',
+            description: 'Choose which calendar to sync with Pilot (you can use a shared team calendar).',
+          },
+          {
+            title: 'Configure Sync Settings',
+            description: 'Set your availability hours and booking preferences.',
+          },
+        ]}
+      />
 
       <KBCallout variant="tip">
         Use a dedicated calendar for Pilot bookings rather than your personal 
@@ -138,6 +174,14 @@ export default function IntegrationsArticle() {
         <li>Minimal permission scopes requested</li>
         <li>Regular token refresh</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'planner', articleSlug: 'overview', title: 'Using the Planner' },
+          { categoryId: 'ari', articleSlug: 'webhooks', title: 'Webhooks' },
+          { categoryId: 'leads', articleSlug: 'overview', title: 'Lead Management' },
+        ]}
+      />
     </>
   );
 }

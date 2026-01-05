@@ -5,6 +5,9 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBFeatureCard, KBFeatureGrid } from '@/components/knowledge-base/KBFeatureCard';
+import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
+import { MessageTextCircle01, Users01, Calendar, Repeat04 } from '@untitledui/icons';
 
 export default function AriOverviewArticle() {
   return (
@@ -20,30 +23,28 @@ export default function AriOverviewArticle() {
         Ari is designed to handle a wide range of customer interactions:
       </p>
 
-      <h3 id="answer-questions">Answer Questions</h3>
-      <p>
-        Using your knowledge base, Ari can answer questions about your products, services, 
-        pricing, policies, and more. The responses are natural and conversational, not 
-        robotic or scripted.
-      </p>
-
-      <h3 id="capture-leads">Capture Leads</h3>
-      <p>
-        Ari can collect visitor information like name, email, and phone number when 
-        appropriate, automatically creating leads in your CRM.
-      </p>
-
-      <h3 id="schedule-appointments">Schedule Appointments</h3>
-      <p>
-        When integrated with your calendar, Ari can check availability and book 
-        appointments directly during conversations.
-      </p>
-
-      <h3 id="handoff">Hand Off to Humans</h3>
-      <p>
-        For complex issues that require human attention, Ari can seamlessly transfer 
-        the conversation to your team while providing full context.
-      </p>
+      <KBFeatureGrid columns={2}>
+        <KBFeatureCard
+          title="Answer Questions"
+          description="Using your knowledge base, Ari provides natural, conversational responses about your products, services, and policies."
+          icon={<MessageTextCircle01 size={20} aria-hidden="true" />}
+        />
+        <KBFeatureCard
+          title="Capture Leads"
+          description="Ari collects visitor information like name, email, and phone, automatically creating leads in your CRM."
+          icon={<Users01 size={20} aria-hidden="true" />}
+        />
+        <KBFeatureCard
+          title="Schedule Appointments"
+          description="When integrated with your calendar, Ari checks availability and books appointments during conversations."
+          icon={<Calendar size={20} aria-hidden="true" />}
+        />
+        <KBFeatureCard
+          title="Hand Off to Humans"
+          description="For complex issues, Ari seamlessly transfers conversations to your team with full context."
+          icon={<Repeat04 size={20} aria-hidden="true" />}
+        />
+      </KBFeatureGrid>
 
       <KBCallout variant="tip" title="Best Practice">
         Start with a focused set of knowledge sources and gradually expand. 
@@ -77,11 +78,39 @@ export default function AriOverviewArticle() {
         Ready to configure your AI agent? Start with these sections:
       </p>
       <ul>
-        <li><strong>Model & Behavior</strong> – Choose the AI model and set response parameters</li>
-        <li><strong>System Prompt</strong> – Define Ari's personality and guidelines</li>
-        <li><strong>Knowledge</strong> – Add sources for Ari to learn from</li>
-        <li><strong>Appearance</strong> – Customize the look of the chat widget</li>
+        <li>
+          <KBArticleLink categoryId="ari" articleSlug="model-behavior">
+            Model & Behavior
+          </KBArticleLink>{' '}
+          – Choose the AI model and set response parameters
+        </li>
+        <li>
+          <KBArticleLink categoryId="ari" articleSlug="system-prompt">
+            System Prompt
+          </KBArticleLink>{' '}
+          – Define Ari's personality and guidelines
+        </li>
+        <li>
+          <KBArticleLink categoryId="ari" articleSlug="knowledge-sources">
+            Knowledge
+          </KBArticleLink>{' '}
+          – Add sources for Ari to learn from
+        </li>
+        <li>
+          <KBArticleLink categoryId="ari" articleSlug="appearance">
+            Appearance
+          </KBArticleLink>{' '}
+          – Customize the look of the chat widget
+        </li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'model-behavior', title: 'Model & Behavior Settings' },
+          { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Adding Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'installation', title: 'Installing the Widget' },
+        ]}
+      />
     </>
   );
 }

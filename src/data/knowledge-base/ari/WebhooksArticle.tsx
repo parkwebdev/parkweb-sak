@@ -3,6 +3,8 @@
  */
 
 import { KBCallout } from '@/components/knowledge-base/KBCallout';
+import { KBStepByStep } from '@/components/knowledge-base/KBStepByStep';
+import { KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
 
 export default function WebhooksArticle() {
   return (
@@ -30,12 +32,30 @@ export default function WebhooksArticle() {
       </KBCallout>
 
       <h2 id="creating-webhook">Creating a Webhook</h2>
-      <ol>
-        <li>Navigate to <strong>Ari → Webhooks</strong></li>
-        <li>Click <strong>Add Webhook</strong></li>
-        <li>Configure the webhook settings</li>
-        <li>Save and activate</li>
-      </ol>
+      <KBStepByStep
+        steps={[
+          {
+            title: 'Navigate to Ari → Webhooks',
+            description: 'Open the Ari configurator and select the Webhooks section.',
+          },
+          {
+            title: 'Click Add Webhook',
+            description: 'Click the Add Webhook button to create a new webhook.',
+          },
+          {
+            title: 'Enter Webhook Details',
+            description: 'Provide a name, endpoint URL, and select which events trigger the webhook.',
+          },
+          {
+            title: 'Configure Authentication',
+            description: 'Add any required headers for your endpoint (API keys, tokens, etc.).',
+          },
+          {
+            title: 'Save and Activate',
+            description: 'Save the webhook and toggle it on to start receiving events.',
+          },
+        ]}
+      />
 
       <h3 id="webhook-settings">Webhook Settings</h3>
       <ul>
@@ -141,6 +161,14 @@ export default function WebhooksArticle() {
         <li><strong>Analytics:</strong> Track events in your data warehouse</li>
         <li><strong>Automation:</strong> Trigger Zapier workflows</li>
       </ul>
+
+      <KBRelatedArticles
+        articles={[
+          { categoryId: 'ari', articleSlug: 'custom-tools', title: 'Custom Tools' },
+          { categoryId: 'ari', articleSlug: 'integrations', title: 'Integrations' },
+          { categoryId: 'ari', articleSlug: 'api-access', title: 'API Access' },
+        ]}
+      />
     </>
   );
 }
