@@ -26,7 +26,7 @@ import { LocationDetailsSheet } from '@/components/agents/locations/LocationDeta
 import { WordPressIntegrationSection } from '@/components/agents/locations/WordPressIntegrationSection';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonTableSection } from '@/components/ui/skeleton';
-import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
 import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
@@ -809,20 +809,20 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
           onUpdate={updateLocation}
         />
 
-        <SimpleDeleteDialog
+        <DeleteConfirmationDialog
           open={!!deleteLocation_}
-          onOpenChange={(open) => !open && setDeleteLocation(null)}
+          onOpenChange={(open: boolean) => !open && setDeleteLocation(null)}
           onConfirm={handleDeleteLocation}
           title="Delete Location"
-          description="This will permanently delete this location."
+          description="This will permanently delete this location. This action cannot be undone."
         />
 
-        <SimpleDeleteDialog
+        <DeleteConfirmationDialog
           open={!!deleteProperty_}
-          onOpenChange={(open) => !open && setDeleteProperty(null)}
+          onOpenChange={(open: boolean) => !open && setDeleteProperty(null)}
           onConfirm={handleDeleteProperty}
           title="Delete Property"
-          description="This will permanently delete this property."
+          description="This will permanently delete this property. This action cannot be undone."
         />
       </div>
     </div>

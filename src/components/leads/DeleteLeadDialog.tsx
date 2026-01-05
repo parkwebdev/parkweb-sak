@@ -1,9 +1,9 @@
 /**
  * @fileoverview Delete lead confirmation dialog with conversation handling.
- * Supports bulk deletion with type confirmation and conversation cleanup options.
+ * Requires typing "DELETE" to confirm and supports conversation cleanup options.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,26 +41,23 @@ export const DeleteLeadDialog = ({
   
   const count = leadIds.length;
   const isBulk = count > 1;
-  const requiresConfirmation = isBulk;
-  const confirmationText = 'delete';
-  const isConfirmed = !requiresConfirmation || confirmValue.toLowerCase() === confirmationText;
+  const confirmationText = 'DELETE';
+  const isConfirmed = confirmValue === confirmationText;
 
-  const handleConfirm = async () => {
-    await onConfirm(deleteOption === 'lead-and-conversation');
-    setDeleteOption('lead-only');
-    setConfirmValue('');
-  };
-
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
+  // Clear state when dialog closes
+  useEffect(() => {
+    if (!open) {
       setDeleteOption('lead-only');
       setConfirmValue('');
     }
-    onOpenChange(newOpen);
+  }, [open]);
+
+  const handleConfirm = async () => {
+    await onConfirm(deleteOption === 'lead-and-conversation');
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -117,19 +114,18 @@ export const DeleteLeadDialog = ({
                 </div>
               )}
               
-              {requiresConfirmation && (
-                <div className="space-y-2">
-                  <p className="text-sm">
-                    Type <span className="font-mono font-semibold">{confirmationText}</span> to confirm:
-                  </p>
-                  <Input
-                    value={confirmValue}
-                    onChange={(e) => setConfirmValue(e.target.value)}
-                    placeholder={confirmationText}
-                    className="font-mono"
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label>
+                  Type <span className="font-mono font-semibold text-foreground">{confirmationText}</span> to confirm:
+                </Label>
+                <Input
+                  value={confirmValue}
+                  onChange={(e) => setConfirmValue(e.target.value)}
+                  placeholder={confirmationText}
+                  className="font-mono"
+                  aria-label="Confirmation text"
+                />
+              </div>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>

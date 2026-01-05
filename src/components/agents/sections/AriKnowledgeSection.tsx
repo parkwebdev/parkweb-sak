@@ -36,7 +36,7 @@ import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
 import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
 import { createKnowledgeColumns, type KnowledgeSourceWithMeta } from '@/components/data-table/columns';
-import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import type { KnowledgeSourceMetadata } from '@/types/metadata';
 
 interface AriKnowledgeSectionProps {
@@ -642,9 +642,9 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
         />
 
         {/* Delete confirmation dialog */}
-        <SimpleDeleteDialog
+        <DeleteConfirmationDialog
           open={!!deleteSource_}
-          onOpenChange={(open) => !open && setDeleteSource(null)}
+          onOpenChange={(open: boolean) => !open && setDeleteSource(null)}
           title="Delete Knowledge Source"
           description="Are you sure you want to delete this knowledge source? This action cannot be undone."
           onConfirm={handleDeleteConfirm}

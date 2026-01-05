@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CopyButton } from '@/components/ui/copy-button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { SkeletonListSection } from '@/components/ui/skeleton';
 import { Trash01, Key01, AlertCircle, Edit03 } from '@untitledui/icons';
 import { useAgentApiKeys } from '@/hooks/useAgentApiKeys';
@@ -283,13 +283,13 @@ export const AgentApiKeyManager = ({ agentId, canManage = true }: AgentApiKeyMan
       </Dialog>
 
       {/* Revoke Confirmation */}
-      <SimpleDeleteDialog
+      <DeleteConfirmationDialog
         open={!!keyToRevoke}
         onOpenChange={() => setKeyToRevoke(null)}
         title="Revoke API Key?"
         description="This action cannot be undone. Any applications using this key will immediately lose access."
         onConfirm={handleRevokeKey}
-        actionLabel="Revoke Key"
+        actionLabel="Revoke"
       />
     </div>
   );

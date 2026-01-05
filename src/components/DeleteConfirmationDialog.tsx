@@ -2,12 +2,15 @@
  * Delete Confirmation Dialog Component
  * 
  * A reusable confirmation dialog for destructive delete operations.
- * Requires user to type a confirmation word before allowing deletion.
+ * Requires user to type "DELETE" before allowing deletion.
+ * 
+ * This is the STANDARD delete confirmation component for the entire app.
+ * All delete operations should use this component.
  * 
  * @module components/DeleteConfirmationDialog
  */
 
-import React from 'react';
+import { useState, useEffect } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,21 +36,19 @@ interface DeleteConfirmationDialogProps {
   title: string;
   /** Description explaining what will be deleted */
   description: string;
-  /** Word that must be typed to confirm (default: "delete") */
+  /** Word that must be typed to confirm (default: "DELETE") */
   confirmationText?: string;
-  /** Current value of the confirmation input */
-  confirmationValue?: string;
-  /** Callback when confirmation input changes */
-  onConfirmationValueChange?: (value: string) => void;
   /** Callback when deletion is confirmed */
   onConfirm: () => void;
   /** Whether deletion is in progress */
   isDeleting?: boolean;
+  /** Custom action button label (default: "Delete") */
+  actionLabel?: string;
 }
 
 /**
  * Delete confirmation dialog with text verification.
- * User must type the exact confirmation text to enable the delete button.
+ * User must type "DELETE" (or custom text) to enable the delete button.
  * 
  * @example
  * <DeleteConfirmationDialog
@@ -55,8 +56,6 @@ interface DeleteConfirmationDialogProps {
  *   onOpenChange={setShowDeleteDialog}
  *   title="Delete Agent"
  *   description="This will permanently delete the agent and all its data."
- *   confirmationValue={confirmText}
- *   onConfirmationValueChange={setConfirmText}
  *   onConfirm={handleDelete}
  *   isDeleting={deleting}
  * />
@@ -66,13 +65,21 @@ export function DeleteConfirmationDialog({
   onOpenChange,
   title,
   description,
-  confirmationText = "delete",
-  confirmationValue = "",
-  onConfirmationValueChange,
+  confirmationText = "DELETE",
   onConfirm,
   isDeleting = false,
+  actionLabel = "Delete",
 }: DeleteConfirmationDialogProps) {
-  const isConfirmDisabled = confirmationValue !== confirmationText;
+  const [confirmValue, setConfirmValue] = useState('');
+  
+  // Clear confirmation value when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setConfirmValue('');
+    }
+  }, [open]);
+
+  const isConfirmDisabled = confirmValue !== confirmationText;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -83,12 +90,13 @@ export function DeleteConfirmationDialog({
             <p>{description}</p>
             <div className="space-y-2">
               <Label>
-                Type <span className="font-semibold text-foreground">{confirmationText}</span> to confirm:
+                Type <span className="font-mono font-semibold text-foreground">{confirmationText}</span> to confirm:
               </Label>
               <Input
-                value={confirmationValue}
-                onChange={(e) => onConfirmationValueChange?.(e.target.value)}
+                value={confirmValue}
+                onChange={(e) => setConfirmValue(e.target.value)}
                 placeholder={confirmationText}
+                className="font-mono"
                 aria-label="Confirmation text"
               />
             </div>
@@ -101,7 +109,7 @@ export function DeleteConfirmationDialog({
             disabled={isConfirmDisabled || isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            {isDeleting ? 'Deleting...' : actionLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

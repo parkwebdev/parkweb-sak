@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trash01, Clock } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
-import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { toast } from '@/lib/toast';
 
@@ -122,7 +122,7 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
         </CardContent>
       </Card>
 
-      <SimpleDeleteDialog
+      <DeleteConfirmationDialog
         open={!!deleteId}
         onOpenChange={() => setDeleteId(null)}
         title="Delete Scheduled Report"

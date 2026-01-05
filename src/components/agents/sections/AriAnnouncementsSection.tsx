@@ -432,7 +432,6 @@ export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSec
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [showSaved, setShowSaved] = useState(false);
 
   const sensors = useSensors(
@@ -474,7 +473,6 @@ export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSec
     if (!deleteId) return;
     await deleteAnnouncement(deleteId);
     setDeleteId(null);
-    setDeleteConfirmation('');
   };
 
   return (
@@ -538,19 +536,10 @@ export function AriAnnouncementsSection({ agentId, userId }: AriAnnouncementsSec
 
       <DeleteConfirmationDialog
         open={!!deleteId}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteId(null);
-            setDeleteConfirmation('');
-          }
-        }}
-        confirmationValue={deleteConfirmation}
-        onConfirmationValueChange={setDeleteConfirmation}
+        onOpenChange={(open) => !open && setDeleteId(null)}
         onConfirm={handleDelete}
         title="Delete Announcement"
-        description={'Are you sure you want to delete this announcement? Type "DELETE" to confirm.'}
-        confirmationText="DELETE"
-        isDeleting={false}
+        description="Are you sure you want to delete this announcement? This action cannot be undone."
       />
     </div>
   );
