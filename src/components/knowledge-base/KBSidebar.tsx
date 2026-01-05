@@ -2,13 +2,14 @@
  * Knowledge Base Sidebar
  * 
  * Left navigation sidebar with search and categorized article list.
+ * Categories are collapsible accordion-style for better navigation.
  * 
  * @module components/knowledge-base/KBSidebar
  */
 
-import { useState, useMemo } from 'react';
-import { motion } from 'motion/react';
-import { SearchMd } from '@untitledui/icons';
+import { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { SearchMd, ChevronDown } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
@@ -55,7 +56,32 @@ export function KBSidebar({
   onSelectArticle,
 }: KBSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const prefersReducedMotion = useReducedMotion();
+  
+  // Auto-expand the selected category
+  useEffect(() => {
+    if (selectedCategoryId) {
+      setExpandedCategories(prev => {
+        const next = new Set(prev);
+        next.add(selectedCategoryId);
+        return next;
+      });
+    }
+  }, [selectedCategoryId]);
+  
+  // Toggle category expansion
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  };
   
   // Filter articles based on search query
   const filteredCategories = useMemo(() => {
@@ -73,6 +99,14 @@ export function KBSidebar({
       }))
       .filter(category => category.articles.length > 0);
   }, [categories, searchQuery]);
+  
+  // When searching, expand all matching categories
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const matchingIds = new Set(filteredCategories.map(c => c.id));
+      setExpandedCategories(matchingIds);
+    }
+  }, [searchQuery, filteredCategories]);
 
   return (
     <aside className="w-[260px] border-r border-border flex flex-col h-full bg-background">
@@ -96,68 +130,105 @@ export function KBSidebar({
       </div>
       
       {/* Categories and Articles */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-4" aria-label="Knowledge Base navigation">
-        {filteredCategories.map((category, categoryIndex) => (
-          <motion.div
-            key={category.id}
-            initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: categoryIndex * 0.05, ...springs.smooth }}
-          >
-            {/* Category Header - Clickable */}
-            <button
-              onClick={() => onSelectCategory(category)}
-              className={cn(
-                'w-full flex items-center gap-2 px-2.5 py-1.5 mb-1 rounded-md transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                isCategoryView && category.id === selectedCategoryId
-                  ? cn('ring-1', ACTIVE_RING_MAP[category.color] || 'ring-border bg-accent/50')
-                  : cn(HOVER_MAP[category.color] || 'hover:bg-accent/30')
-              )}
+      <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Knowledge Base navigation">
+        {filteredCategories.map((category, categoryIndex) => {
+          const isExpanded = expandedCategories.has(category.id);
+          const isCategoryActive = isCategoryView && category.id === selectedCategoryId;
+          
+          return (
+            <motion.div
+              key={category.id}
+              initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: categoryIndex * 0.05, ...springs.smooth }}
             >
-              <span 
-                className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', category.color)} 
-                aria-hidden="true"
-              />
-              <span className={cn(
-                'text-2xs font-semibold uppercase tracking-wider',
-                isCategoryView && category.id === selectedCategoryId
-                  ? 'text-foreground'
-                  : 'text-muted-foreground/60 hover:text-muted-foreground'
-              )}>
-                {category.label}
-              </span>
-            </button>
-            
-            {/* Articles */}
-            <div className="space-y-0.5">
-              {category.articles.map((article, articleIndex) => {
-                const isSelected = 
-                  category.id === selectedCategoryId && article.id === selectedArticleId;
-                
-                return (
-                  <motion.button
-                    key={article.id}
-                    onClick={() => onSelectArticle(category, article)}
+              {/* Category Header */}
+              <div className="flex items-center gap-1">
+                {/* Expand/Collapse Toggle */}
+                <button
+                  onClick={() => toggleCategory(category.id)}
+                  className={cn(
+                    'p-1 rounded transition-colors',
+                    'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                  )}
+                  aria-expanded={isExpanded}
+                  aria-label={isExpanded ? `Collapse ${category.label}` : `Expand ${category.label}`}
+                >
+                  <ChevronDown 
+                    size={14} 
                     className={cn(
-                      'w-full text-left px-2.5 py-2 rounded-md text-sm transition-colors',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                      isSelected
-                        ? 'bg-accent text-accent-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                      'text-muted-foreground/50 transition-transform duration-200',
+                      isExpanded ? 'rotate-0' : '-rotate-90'
                     )}
-                    aria-current={isSelected ? 'page' : undefined}
-                    initial={prefersReducedMotion ? false : { opacity: 0, x: -4 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: (categoryIndex * 0.05) + (articleIndex * 0.02), ...springs.smooth }}
+                    aria-hidden="true"
+                  />
+                </button>
+                
+                {/* Category Label - Navigates to category page */}
+                <button
+                  onClick={() => onSelectCategory(category)}
+                  className={cn(
+                    'flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-left',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                    isCategoryActive
+                      ? cn('ring-1', ACTIVE_RING_MAP[category.color] || 'ring-border bg-accent/50')
+                      : cn(HOVER_MAP[category.color] || 'hover:bg-accent/30')
+                  )}
+                >
+                  <span 
+                    className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', category.color)} 
+                    aria-hidden="true"
+                  />
+                  <span className={cn(
+                    'text-2xs font-semibold uppercase tracking-wider',
+                    isCategoryActive
+                      ? 'text-foreground'
+                      : 'text-muted-foreground/60 hover:text-muted-foreground'
+                  )}>
+                    {category.label}
+                  </span>
+                </button>
+              </div>
+              
+              {/* Articles - Collapsible */}
+              <AnimatePresence initial={false}>
+                {isExpanded && (
+                  <motion.div
+                    initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    style={{ overflow: 'hidden' }}
                   >
-                    {article.title}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
-        ))}
+                    <div className="space-y-0.5 mt-0.5 ml-5">
+                      {category.articles.map((article) => {
+                        const isSelected = 
+                          category.id === selectedCategoryId && article.id === selectedArticleId;
+                        
+                        return (
+                          <button
+                            key={article.id}
+                            onClick={() => onSelectArticle(category, article)}
+                            className={cn(
+                              'w-full text-left px-2.5 py-1.5 rounded-md text-sm transition-colors',
+                              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                              isSelected
+                                ? 'bg-accent text-accent-foreground font-medium'
+                                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                            )}
+                            aria-current={isSelected ? 'page' : undefined}
+                          >
+                            {article.title}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
         
         {/* Empty state */}
         {filteredCategories.length === 0 && (
