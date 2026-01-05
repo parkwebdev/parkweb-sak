@@ -347,7 +347,7 @@ export const LeadCardContent = React.memo(function LeadCardContent({
 
       {/* Body: Sortable fields in user's custom order */}
       {renderedBodyFields.length > 0 && (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {renderedBodyFields}
         </div>
       )}
