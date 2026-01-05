@@ -10,7 +10,6 @@
 import { useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
 
@@ -79,9 +78,6 @@ export function KBArticleView({
       
       {/* Header */}
       <header className="mb-8">
-        <Badge variant="secondary" className="mb-3">
-          {category.label}
-        </Badge>
         <h1 className="text-2xl font-semibold text-foreground mb-2">
           {article.title}
         </h1>
