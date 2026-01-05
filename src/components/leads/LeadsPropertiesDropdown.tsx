@@ -1,7 +1,7 @@
 /**
  * @fileoverview Icon-only dropdown for toggling field/column visibility.
  * Shows kanban card fields or table columns based on view mode.
- * Table columns support drag-to-reorder.
+ * Both views support drag-to-reorder.
  */
 
 import React from 'react';
@@ -13,7 +13,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   DndContext,
@@ -34,10 +33,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { 
   CARD_FIELDS, 
-  FIELD_GROUP_LABELS, 
-  getFieldsByGroup,
   type CardFieldKey,
-  type FieldGroup,
 } from '@/components/leads/KanbanCardFields';
 import { TABLE_COLUMNS } from '@/components/leads/LeadsViewSettingsSheet';
 import type { VisibilityState } from '@tanstack/react-table';
@@ -49,6 +45,10 @@ interface LeadsPropertiesDropdownProps {
   visibleCardFields: Set<CardFieldKey>;
   /** Handler for toggling kanban card fields */
   onToggleCardField: (field: CardFieldKey) => void;
+  /** Kanban field order */
+  kanbanFieldOrder: CardFieldKey[];
+  /** Handler for kanban field order changes */
+  onKanbanFieldOrderChange: (order: CardFieldKey[]) => void;
   /** Table column visibility (table mode) */
   columnVisibility: VisibilityState;
   /** Handler for column visibility changes */
@@ -59,15 +59,14 @@ interface LeadsPropertiesDropdownProps {
   onColumnOrderChange: (order: string[]) => void;
 }
 
-const GROUP_ORDER: FieldGroup[] = ['contact', 'session', 'organization', 'timestamps', 'notes'];
-
-interface SortableColumnItemProps {
-  column: { id: string; label: string };
+interface SortableItemProps {
+  id: string;
+  label: string;
   isVisible: boolean;
   onToggle: () => void;
 }
 
-function SortableColumnItem({ column, isVisible, onToggle }: SortableColumnItemProps) {
+function SortableItem({ id, label, isVisible, onToggle }: SortableItemProps) {
   const {
     attributes,
     listeners,
@@ -75,7 +74,7 @@ function SortableColumnItem({ column, isVisible, onToggle }: SortableColumnItemP
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: column.id });
+  } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -98,16 +97,16 @@ function SortableColumnItem({ column, isVisible, onToggle }: SortableColumnItemP
         <DotsGrid size={12} className="text-muted-foreground/60" />
       </button>
       <Checkbox
-        id={`col-${column.id}`}
+        id={`item-${id}`}
         checked={isVisible}
         onCheckedChange={onToggle}
         className="h-4 w-4"
       />
       <label
-        htmlFor={`col-${column.id}`}
+        htmlFor={`item-${id}`}
         className="text-sm cursor-pointer flex-1 select-none"
       >
-        {column.label}
+        {label}
       </label>
     </div>
   );
@@ -117,13 +116,13 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
   viewMode,
   visibleCardFields,
   onToggleCardField,
+  kanbanFieldOrder,
+  onKanbanFieldOrderChange,
   columnVisibility,
   onColumnVisibilityChange,
   tableColumnOrder,
   onColumnOrderChange,
 }: LeadsPropertiesDropdownProps) {
-  const fieldsByGroup = getFieldsByGroup();
-
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -142,7 +141,7 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
     });
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleTableDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
@@ -153,6 +152,17 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
     }
   };
 
+  const handleKanbanDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = kanbanFieldOrder.indexOf(active.id as CardFieldKey);
+      const newIndex = kanbanFieldOrder.indexOf(over.id as CardFieldKey);
+      const newOrder = arrayMove(kanbanFieldOrder, oldIndex, newIndex);
+      onKanbanFieldOrderChange(newOrder);
+    }
+  };
+
   // Get ordered columns based on tableColumnOrder
   const orderedColumns = React.useMemo(() => {
     const columnMap = new Map(TABLE_COLUMNS.map(col => [col.id, col]));
@@ -160,6 +170,14 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
       .filter(id => columnMap.has(id))
       .map(id => columnMap.get(id)!);
   }, [tableColumnOrder]);
+
+  // Get ordered fields based on kanbanFieldOrder
+  const orderedFields = React.useMemo(() => {
+    const fieldMap = new Map(CARD_FIELDS.map(field => [field.key, field]));
+    return kanbanFieldOrder
+      .filter(key => fieldMap.has(key))
+      .map(key => fieldMap.get(key)!);
+  }, [kanbanFieldOrder]);
 
   return (
     <DropdownMenu>
@@ -176,53 +194,41 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52 bg-popover max-h-80 overflow-y-auto">
         {viewMode === 'kanban' ? (
-          // Kanban: Show card field toggles grouped
+          // Kanban: Sortable field toggles
           <>
-            {GROUP_ORDER.map((group, groupIndex) => {
-              const fields = fieldsByGroup[group];
-              if (!fields?.length) return null;
-              
-              return (
-                <React.Fragment key={group}>
-                  {groupIndex > 0 && <DropdownMenuSeparator />}
-                  <DropdownMenuLabel className="text-xs">
-                    {FIELD_GROUP_LABELS[group]}
-                  </DropdownMenuLabel>
-                  {fields.map(field => {
-                    const isSelected = visibleCardFields.has(field.key);
-                    return (
-                      <div
-                        key={field.key}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-muted/50 transition-colors"
-                      >
-                        <field.icon size={14} className="text-muted-foreground/60" />
-                        <Checkbox
-                          id={`field-${field.key}`}
-                          checked={isSelected}
-                          onCheckedChange={() => onToggleCardField(field.key)}
-                          className="h-4 w-4"
-                        />
-                        <label
-                          htmlFor={`field-${field.key}`}
-                          className="text-sm cursor-pointer flex-1 select-none"
-                        >
-                          {field.label}
-                        </label>
-                      </div>
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
+            <DropdownMenuLabel className="text-xs">Fields</DropdownMenuLabel>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleKanbanDragEnd}
+            >
+              <SortableContext
+                items={orderedFields.map(f => f.key)}
+                strategy={verticalListSortingStrategy}
+              >
+                {orderedFields.map(field => {
+                  const isVisible = visibleCardFields.has(field.key);
+                  return (
+                    <SortableItem
+                      key={field.key}
+                      id={field.key}
+                      label={field.label}
+                      isVisible={isVisible}
+                      onToggle={() => onToggleCardField(field.key)}
+                    />
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
           </>
         ) : (
-          // Table: Show sortable column toggles
+          // Table: Sortable column toggles
           <>
             <DropdownMenuLabel className="text-xs">Columns</DropdownMenuLabel>
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
+              onDragEnd={handleTableDragEnd}
             >
               <SortableContext
                 items={orderedColumns.map(col => col.id)}
@@ -231,9 +237,10 @@ export const LeadsPropertiesDropdown = React.memo(function LeadsPropertiesDropdo
                 {orderedColumns.map(column => {
                   const isVisible = columnVisibility[column.id] !== false;
                   return (
-                    <SortableColumnItem
+                    <SortableItem
                       key={column.id}
-                      column={column}
+                      id={column.id}
+                      label={column.label}
                       isVisible={isVisible}
                       onToggle={() => handleTableColumnToggle(column.id)}
                     />

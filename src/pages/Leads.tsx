@@ -26,7 +26,7 @@ import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
 import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
-import { type CardFieldKey, getDefaultVisibleFields } from '@/components/leads/KanbanCardFields';
+import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
 import { type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -36,6 +36,7 @@ import type { VisibilityState } from '@tanstack/react-table';
 const VIEW_MODE_KEY = 'leads-view-mode';
 const KANBAN_FIELDS_KEY = 'leads-kanban-fields';
 const KANBAN_FIELDS_VERSION_KEY = 'leads-kanban-fields-version';
+const KANBAN_FIELD_ORDER_KEY = 'leads-kanban-field-order';
 const TABLE_COLUMNS_KEY = 'leads-table-columns';
 const TABLE_COLUMN_ORDER_KEY = 'leads-table-column-order';
 const DEFAULT_SORT_KEY = 'leads-default-sort';
@@ -59,6 +60,9 @@ const DEFAULT_TABLE_COLUMNS: VisibilityState = {
 
 // Default table column order
 const DEFAULT_TABLE_COLUMN_ORDER = ['name', 'email', 'phone', 'stage_id', 'priority', 'assignees', 'location', 'source', 'created_at', 'updated_at'];
+
+// Default kanban field order
+const DEFAULT_KANBAN_FIELD_ORDER: CardFieldKey[] = CARD_FIELDS.map(f => f.key);
 
 /** Props for the Leads page */
 interface LeadsProps {
@@ -147,6 +151,17 @@ function Leads({ onMenuClick }: LeadsProps) {
     return DEFAULT_TABLE_COLUMN_ORDER;
   });
 
+  // Per-user kanban field order
+  const [kanbanFieldOrder, setKanbanFieldOrder] = useState<CardFieldKey[]>(() => {
+    try {
+      const stored = localStorage.getItem(KANBAN_FIELD_ORDER_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e: unknown) {
+      console.warn('Failed to read kanban field order from localStorage:', e);
+    }
+    return DEFAULT_KANBAN_FIELD_ORDER;
+  });
+
   // Per-user default sort preference
   const [defaultSort, setDefaultSort] = useState<SortOption | null>(() => {
     try {
@@ -185,6 +200,11 @@ function Leads({ onMenuClick }: LeadsProps) {
   const handleColumnOrderChange = useCallback((order: string[]) => {
     setTableColumnOrder(order);
     localStorage.setItem(TABLE_COLUMN_ORDER_KEY, JSON.stringify(order));
+  }, []);
+
+  const handleKanbanFieldOrderChange = useCallback((order: CardFieldKey[]) => {
+    setKanbanFieldOrder(order);
+    localStorage.setItem(KANBAN_FIELD_ORDER_KEY, JSON.stringify(order));
   }, []);
 
   const handleDefaultSortChange = useCallback((sort: SortOption | null) => {
@@ -345,6 +365,8 @@ function Leads({ onMenuClick }: LeadsProps) {
         onSortChange={handleDefaultSortChange}
         visibleCardFields={visibleCardFields}
         onToggleCardField={handleToggleField}
+        kanbanFieldOrder={kanbanFieldOrder}
+        onKanbanFieldOrderChange={handleKanbanFieldOrderChange}
         columnVisibility={tableColumnVisibility}
         onColumnVisibilityChange={handleColumnVisibilityChange}
         tableColumnOrder={tableColumnOrder}

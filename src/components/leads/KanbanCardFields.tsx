@@ -39,7 +39,8 @@ export type FieldGroup = 'contact' | 'session' | 'organization' | 'timestamps' |
 export interface CardFieldConfig {
   key: CardFieldKey;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  /** @deprecated Icons no longer shown in dropdown */
+  icon?: React.ComponentType<{ size?: number; className?: string }>;
   defaultVisible: boolean;
   group: FieldGroup;
 }

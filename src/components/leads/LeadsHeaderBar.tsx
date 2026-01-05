@@ -51,6 +51,10 @@ interface LeadsHeaderBarProps {
   visibleCardFields: Set<CardFieldKey>;
   /** Handler for toggling kanban card fields */
   onToggleCardField: (field: CardFieldKey) => void;
+  /** Kanban field order */
+  kanbanFieldOrder: CardFieldKey[];
+  /** Handler for kanban field order changes */
+  onKanbanFieldOrderChange: (order: CardFieldKey[]) => void;
   /** Table column visibility */
   columnVisibility: VisibilityState;
   /** Handler for column visibility changes */
@@ -84,6 +88,8 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
   onSortChange,
   visibleCardFields,
   onToggleCardField,
+  kanbanFieldOrder,
+  onKanbanFieldOrderChange,
   columnVisibility,
   onColumnVisibilityChange,
   tableColumnOrder,
@@ -171,6 +177,8 @@ export const LeadsHeaderBar = React.memo(function LeadsHeaderBar({
             viewMode={viewMode}
             visibleCardFields={visibleCardFields}
             onToggleCardField={onToggleCardField}
+            kanbanFieldOrder={kanbanFieldOrder}
+            onKanbanFieldOrderChange={onKanbanFieldOrderChange}
             columnVisibility={columnVisibility}
             onColumnVisibilityChange={onColumnVisibilityChange}
             tableColumnOrder={tableColumnOrder}
