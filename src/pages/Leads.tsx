@@ -400,6 +400,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
                   getAssignees={getAssignees}
                   visibleFields={visibleCardFields}
+                  fieldOrder={kanbanFieldOrder}
                   canManage={canManageLeads}
                   sortOption={defaultSort}
                 />
