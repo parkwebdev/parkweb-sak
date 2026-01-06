@@ -154,7 +154,7 @@ interface ConversationMetadataPanelProps {
   onToggleCollapse?: () => void;
 }
 
-import { PRIORITY_OPTIONS } from '@/lib/priority-config';
+import { PRIORITY_OPTIONS, PRIORITY_CONFIG, normalizePriority } from '@/lib/priority-config';
 
 const PRESET_TAGS = [
   'Follow-up', 'Bug Report', 'Feature Request', 'Billing', 
@@ -878,13 +878,18 @@ export function ConversationMetadataPanel({
                 disabled={isSaving}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <Flag01 size={12} className={PRIORITY_CONFIG[normalizePriority(metadata.priority)].badgeClass.includes('text-') ? '' : 'text-muted-foreground'} />
+                      {PRIORITY_CONFIG[normalizePriority(metadata.priority)].label}
+                    </div>
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {PRIORITY_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${option.dotColor}`} />
+                        <Flag01 size={12} />
                         {option.label}
                       </div>
                     </SelectItem>
@@ -909,15 +914,16 @@ export function ConversationMetadataPanel({
                   <Badge
                     key={tag}
                     variant="secondary"
-                    className="gap-1 pr-1"
+                    className="gap-1 pr-1 text-2xs h-5"
                   >
                     {tag}
                     <button
                       onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 hover:bg-destructive/20 rounded p-0.5"
+                      className="ml-0.5 hover:bg-muted rounded p-0.5"
                       disabled={isSaving}
+                      aria-label={`Remove ${tag} tag`}
                     >
-                      <XClose className="h-3 w-3" />
+                      <XClose className="h-2.5 w-2.5" />
                     </button>
                   </Badge>
                 ))}
@@ -959,9 +965,9 @@ export function ConversationMetadataPanel({
                     key={tag}
                     onClick={() => handleAddTag(tag)}
                     disabled={isSaving}
-                    className="text-xs px-2 py-0.5 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+                    className="text-2xs px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
                   >
-                    + {tag}
+                    {tag}
                   </button>
                 ))}
               </div>
