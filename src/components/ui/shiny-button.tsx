@@ -51,21 +51,22 @@ export function ShinyButton({
       }
       disabled={disabled || loading}
       className={cn(
-        // Base styles
-        "relative inline-flex h-11 items-center justify-center gap-2 rounded-md px-8 text-sm font-medium",
-        // Use existing btn-primary styling
-        "btn-primary text-primary-foreground",
+        // Base styles matching Button size="lg"
+        "inline-flex items-center justify-center gap-2 whitespace-nowrap text-xs font-medium leading-none",
+        "h-11 px-6 rounded-md",
+        // Use existing btn-primary styling (gradient + box-shadow defined in index.css)
+        "btn-primary text-primary-foreground border-[1.5px] border-[#171717]",
         // Focus and disabled states
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:pointer-events-none disabled:opacity-50",
-        // Radii for shine effect
-        "overflow-hidden",
+        // For shine effect
+        "relative overflow-hidden",
         className
       )}
     >
       {/* Text with shine sweep effect */}
       <span
-        className="relative z-10 flex items-center justify-center gap-2 tracking-tight"
+        className="relative z-10 flex items-center justify-center gap-2"
         style={{
           maskImage:
             "linear-gradient(-75deg, hsl(var(--primary)) calc(var(--x) + 20%), transparent calc(var(--x) + 30%), hsl(var(--primary)) calc(var(--x) + 100%))",
@@ -78,7 +79,7 @@ export function ShinyButton({
 
       {/* Shine border overlay */}
       <span
-        className="absolute inset-0 z-10 block rounded-md"
+        className="absolute inset-0 z-10 block rounded-md pointer-events-none"
         style={{
           background:
             "linear-gradient(-75deg, rgba(255,255,255,0) calc(var(--x) + 20%), rgba(255,255,255,0.3) calc(var(--x) + 25%), rgba(255,255,255,0) calc(var(--x) + 100%))",
