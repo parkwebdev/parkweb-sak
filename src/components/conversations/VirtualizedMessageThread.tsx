@@ -184,14 +184,7 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
               </div>
             ))}
           </div>
-        ) : filteredMessages.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center py-12">
-            <div className="text-center">
-              <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">No messages yet</p>
-            </div>
-          </div>
-        ) : (
+        ) : filteredMessages.length > 0 ? (
           <div
             style={{
               height: `${virtualizer.getTotalSize()}px`,
@@ -252,6 +245,13 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
                 </div>
               );
             })}
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <div className="text-center">
+              <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">No messages yet</p>
+            </div>
           </div>
         )}
       </div>
