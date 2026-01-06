@@ -13,6 +13,7 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
 import { Loading02 } from '@untitledui/icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
@@ -30,8 +31,11 @@ import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
 import { type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
-import type { Tables } from '@/integrations/supabase/types';
+import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/query-keys';
+import type { Tables, Json } from '@/integrations/supabase/types';
 import type { VisibilityState } from '@tanstack/react-table';
+import type { ConversationMetadata } from '@/types/metadata';
 
 // localStorage keys for per-user preferences
 const VIEW_MODE_KEY = 'leads-view-mode';
@@ -113,11 +117,35 @@ function Leads({ onMenuClick }: LeadsProps) {
   const { stages } = useLeadStages();
   const { getAssignees, addAssignee, removeAssignee, assigneesByLead } = useLeadAssignees();
   const { teamMembers } = useTeam();
+  const queryClient = useQueryClient();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
   // Check if user can manage leads (delete, edit stage, etc.)
   const canManageLeads = useCanManage('manage_leads');
+
+  // Handle priority change from table dropdown
+  const handlePriorityChange = useCallback(async (leadId: string, conversationId: string, priority: string) => {
+    // Fetch current conversation metadata
+    const { data: conversation } = await supabase
+      .from('conversations')
+      .select('metadata')
+      .eq('id', conversationId)
+      .single();
+
+    const currentMetadata = (conversation?.metadata || {}) as ConversationMetadata;
+    const newPriority = priority === 'none' ? undefined : priority;
+    const newMetadata = { ...currentMetadata, priority: newPriority };
+
+    await supabase
+      .from('conversations')
+      .update({ metadata: newMetadata as unknown as Json })
+      .eq('id', conversationId);
+
+    // Invalidate queries to refresh data
+    queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  }, [queryClient]);
   
   // Per-user view mode preference (localStorage)
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>(() => {
@@ -449,6 +477,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   selectedIds={selectedLeadIds}
                   onView={handleViewLead}
                   onStageChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
+                  onPriorityChange={canManageLeads ? handlePriorityChange : undefined}
                   onAddAssignee={canManageLeads ? addAssignee : undefined}
                   onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
                   getAssignees={getAssignees}

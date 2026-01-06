@@ -3,7 +3,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { LeadAssigneePicker } from '@/components/leads/LeadAssigneePicker';
-import { PriorityBadge } from '@/components/ui/priority-badge';
 import { normalizePriority, PRIORITY_CONFIG } from '@/lib/priority-config';
 import { PHONE_FIELD_KEYS } from '@/lib/field-keys';
 import type { Tables } from '@/integrations/supabase/types';
@@ -19,18 +18,22 @@ export type Lead = Tables<'leads'> & {
 interface LeadsColumnsProps {
   onView: (lead: Lead) => void;
   onStageChange: (leadId: string, stageId: string) => void;
+  onPriorityChange?: (leadId: string, conversationId: string, priority: string) => void;
   onAddAssignee?: (leadId: string, userId: string) => void;
   onRemoveAssignee?: (leadId: string, userId: string) => void;
   getAssignees: (leadId: string) => string[];
   StatusDropdown: React.ComponentType<{ stageId: string | null; onStageChange: (stageId: string) => void }>;
+  PriorityDropdown: React.ComponentType<{ priority: string | null | undefined; onPriorityChange: (priority: string) => void }>;
 }
 
 export const createLeadsColumns = ({
   onStageChange,
+  onPriorityChange,
   onAddAssignee,
   onRemoveAssignee,
   getAssignees,
   StatusDropdown,
+  PriorityDropdown,
 }: LeadsColumnsProps): ColumnDef<Lead>[] => [
   {
     id: 'select',
@@ -144,7 +147,20 @@ export const createLeadsColumns = ({
     cell: ({ row }) => {
       const metadata = row.original.conversations?.metadata as Record<string, unknown> | undefined;
       const priority = metadata?.priority as string | undefined;
-      return <PriorityBadge priority={priority} size="sm" />;
+      const conversationId = row.original.conversation_id;
+      
+      return (
+        <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+          <PriorityDropdown
+            priority={priority}
+            onPriorityChange={(newPriority) => {
+              if (conversationId && onPriorityChange) {
+                onPriorityChange(row.original.id, conversationId, newPriority);
+              }
+            }}
+          />
+        </div>
+      );
     },
     sortingFn: (rowA, rowB) => {
       const priorityOrder = { urgent: 4, high: 3, normal: 2, low: 1, none: 0 };
