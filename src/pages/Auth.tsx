@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FormHint } from '@/components/ui/form-hint';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { ShinyButton } from '@/components/ui/shiny-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -1084,9 +1085,9 @@ const Auth = () => {
                         onExpire={handleCaptchaExpire}
                       />
 
-                      <Button type="submit" size="lg" className="w-full" loading={isLoading}>
+                      <ShinyButton type="submit" className="w-full" loading={isLoading}>
                         Sign in
-                      </Button>
+                      </ShinyButton>
 
                       <Button 
                         type="button" 
