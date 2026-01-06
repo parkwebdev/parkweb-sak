@@ -67,15 +67,19 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
       getItemKey: (index) => filteredMessages[index]?.id || index,
     });
 
-    // Scroll to bottom function
+    // Store virtualizer in a ref to avoid dependency issues in callbacks
+    const virtualizerRef = useRef(virtualizer);
+    virtualizerRef.current = virtualizer;
+
+    // Scroll to bottom function - uses ref to avoid unstable dependencies
     const scrollToBottom = useCallback(() => {
       if (filteredMessages.length > 0) {
-        virtualizer.scrollToIndex(filteredMessages.length - 1, {
+        virtualizerRef.current.scrollToIndex(filteredMessages.length - 1, {
           align: 'end',
           behavior: 'smooth',
         });
       }
-    }, [virtualizer, filteredMessages.length]);
+    }, [filteredMessages.length]);
 
     // Expose scroll to bottom via ref
     useImperativeHandle(ref, () => ({
@@ -85,7 +89,8 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
       scrollToBottom();
-    }, [filteredMessages.length, scrollToBottom]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filteredMessages.length]);
 
     // Handle adding reactions with optimistic update
     const handleAddReaction = useCallback((messageId: string, emoji: string) => {
