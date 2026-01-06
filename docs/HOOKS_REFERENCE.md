@@ -3010,6 +3010,177 @@ const {
 
 ---
 
+### useInfiniteLeads
+
+Implements cursor-based pagination with infinite scroll for leads. Uses `usePaginatedQuery` foundation.
+
+```tsx
+import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
+
+const {
+  leads,                    // Lead[] - All loaded leads (flattened from pages)
+  loading,                  // boolean - Initial loading state
+  isLoading,                // boolean - Query loading state
+  isFetching,               // boolean - Background fetching
+  isFetchingNextPage,       // boolean - Loading more pages
+  hasNextPage,              // boolean - More pages available
+  fetchNextPage,            // () => void - Load next page
+  refetch,                  // () => void - Refresh all pages
+  // CRUD operations (same API as useLeads)
+  createLead,
+  updateLead,
+  updateLeadOrders,
+  deleteLead,
+  deleteLeads,
+  getLeadsWithConversations,
+} = useInfiniteLeads({ enabled: true });
+```
+
+**Key Features**:
+- Cursor-based pagination (25 items per page)
+- Real-time updates via RealtimeManager
+- Automatic cache invalidation
+- Same mutation API as useLeads for compatibility
+- Memory-efficient (only renders visible items when combined with virtualization)
+
+**File**: `src/hooks/useInfiniteLeads.ts`
+
+---
+
+### useInfiniteConversations
+
+Implements cursor-based pagination with infinite scroll for conversations. Uses `usePaginatedQuery` foundation.
+
+```tsx
+import { useInfiniteConversations } from '@/hooks/useInfiniteConversations';
+
+const {
+  conversations,            // Conversation[] - All loaded conversations
+  loading,                  // boolean - Initial loading state
+  isLoading,                // boolean - Query loading state
+  isFetching,               // boolean - Background fetching
+  isFetchingNextPage,       // boolean - Loading more pages
+  hasNextPage,              // boolean - More pages available
+  fetchNextPage,            // () => void - Load next page
+  refetch,                  // () => void - Refresh all pages
+  // Operations (same API as useConversations)
+  fetchMessages,
+  updateConversationStatus,
+  updateConversationMetadata,
+  takeover,
+  returnToAI,
+  sendHumanMessage,
+  reopenConversation,
+} = useInfiniteConversations({ enabled: true });
+```
+
+**Key Features**:
+- Cursor-based pagination (25 items per page)
+- Real-time updates via RealtimeManager
+- Notification sounds for new messages
+- Same operations API as useConversations for compatibility
+
+**File**: `src/hooks/useInfiniteConversations.ts`
+
+---
+
+### usePaginatedQuery
+
+Foundation hook for implementing infinite scroll with cursor-based pagination. Used by `useInfiniteLeads` and `useInfiniteConversations`.
+
+```tsx
+import { usePaginatedQuery, flattenPages, DEFAULT_PAGE_SIZE } from '@/hooks/usePaginatedQuery';
+
+const {
+  data,                     // InfiniteData - Paginated data structure
+  isLoading,
+  isFetchingNextPage,
+  hasNextPage,
+  fetchNextPage,
+} = usePaginatedQuery<MyItem>({
+  queryKey: ['my-items', accountOwnerId],
+  queryFn: async (cursor) => {
+    let query = supabase
+      .from('my_table')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(25);
+    
+    if (cursor) {
+      query = query.lt('created_at', cursor);
+    }
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    
+    return {
+      data: data || [],
+      nextCursor: data?.length === 25 ? data.at(-1)?.created_at : null,
+    };
+  },
+  enabled: !!accountOwnerId,
+});
+
+// Flatten pages for rendering
+const allItems = flattenPages(data);
+```
+
+**File**: `src/hooks/usePaginatedQuery.ts`
+
+---
+
+## Realtime Manager
+
+### RealtimeManager (`src/lib/realtime-manager.ts`)
+
+Centralized singleton manager for Supabase real-time subscriptions. Reduces connection overhead by consolidating subscriptions.
+
+```tsx
+import { RealtimeManager } from '@/lib/realtime-manager';
+
+// Subscribe to table changes
+useEffect(() => {
+  const unsubscribe = RealtimeManager.subscribe(
+    { 
+      table: 'leads', 
+      filter: `user_id=eq.${userId}`,
+      event: '*',  // 'INSERT' | 'UPDATE' | 'DELETE' | '*'
+    },
+    (payload) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+    },
+    userId  // For channel naming
+  );
+  
+  return () => unsubscribe();
+}, [userId]);
+```
+
+**Key Features**:
+- Separate channels per table/filter combination
+- Automatic cleanup on unsubscribe
+- Prevents ERR_INSUFFICIENT_RESOURCES errors
+- Supports multiple callbacks per table
+- Singleton pattern for memory efficiency
+
+**API**:
+```tsx
+// Subscribe to changes
+subscribe(config: TableSubscription, callback: RealtimeCallback, userId: string): () => void
+
+// Cleanup all channels
+cleanup(): Promise<void>
+
+// Debug helpers
+getSubscriptionCount(): number
+getChannelCount(): number
+isActive(): boolean
+```
+
+**File**: `src/lib/realtime-manager.ts`
+
+---
+
 ## Related Documentation
 
 - [Database Schema](./DATABASE_SCHEMA.md) - Data fetching patterns
