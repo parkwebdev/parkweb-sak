@@ -27,6 +27,7 @@ import {
 } from '@/components/data-table';
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
+import { LeadPriorityDropdown } from './LeadPriorityDropdown';
 import { Button } from '@/components/ui/button';
 import type { SortOption } from './LeadsViewSettingsSheet';
 
@@ -35,6 +36,7 @@ interface LeadsTableProps {
   selectedIds: Set<string>;
   onView: (lead: Lead) => void;
   onStageChange?: (leadId: string, stageId: string) => void;
+  onPriorityChange?: (leadId: string, conversationId: string, priority: string) => void;
   onAddAssignee?: (leadId: string, userId: string) => void;
   onRemoveAssignee?: (leadId: string, userId: string) => void;
   getAssignees: (leadId: string) => string[];
@@ -59,6 +61,7 @@ export const LeadsTable = React.memo(function LeadsTable({
   selectedIds,
   onView,
   onStageChange,
+  onPriorityChange,
   onAddAssignee,
   onRemoveAssignee,
   getAssignees,
@@ -103,12 +106,14 @@ export const LeadsTable = React.memo(function LeadsTable({
       createLeadsColumns({
         onView,
         onStageChange: onStageChange || (() => {}),
+        onPriorityChange,
         onAddAssignee,
         onRemoveAssignee,
         getAssignees,
         StatusDropdown: LeadStatusDropdown,
+        PriorityDropdown: LeadPriorityDropdown,
       }),
-    [onView, onStageChange, onAddAssignee, onRemoveAssignee, getAssignees]
+    [onView, onStageChange, onPriorityChange, onAddAssignee, onRemoveAssignee, getAssignees]
   );
 
   // Reorder columns based on columnOrder prop
