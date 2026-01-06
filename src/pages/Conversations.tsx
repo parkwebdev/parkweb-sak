@@ -183,14 +183,16 @@ function Conversations() {
   }, [searchParams, conversations, loading, setSearchParams]);
 
   // Update selected conversation when conversations list updates
+  // Guard against setting state when reference hasn't changed to prevent loops
   useEffect(() => {
     if (selectedConversation) {
       const updated = conversations.find(c => c.id === selectedConversation.id);
-      if (updated) {
+      if (updated && updated !== selectedConversation) {
         setSelectedConversation(updated);
       }
     }
-  }, [conversations, selectedConversation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations]);
 
   // Track admin_last_read_at when conversation is selected
   useEffect(() => {

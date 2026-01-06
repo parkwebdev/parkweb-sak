@@ -8,7 +8,7 @@
  * @see docs/DEVELOPMENT_STANDARDS.md
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
@@ -243,8 +243,8 @@ export function useInfiniteConversations(options: UseInfiniteConversationsOption
     };
   }, [accountOwnerId, user?.id, queryClient, fetchSoundPreference]);
 
-  // Flatten pages into single array
-  const conversations = flattenPages(data);
+  // Flatten pages into single array - memoized to prevent unnecessary re-renders
+  const conversations = useMemo(() => flattenPages(data), [data]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId: string): Promise<Message[]> => {
