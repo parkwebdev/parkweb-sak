@@ -4,10 +4,15 @@
  * Virtualized message thread using @tanstack/react-virtual.
  * Only renders visible messages for improved performance with long conversations.
  * 
+ * ARCHITECTURE NOTE: This component is PURELY PRESENTATIONAL.
+ * - No internal auto-scroll logic (parent controls scrolling via ref)
+ * - Virtualizer config is stabilized to prevent re-render loops
+ * - Parent should remount via key={conversationId} when switching conversations
+ * 
  * @component
  */
 
-import React, { memo, useCallback, useMemo, useRef, useEffect, useLayoutEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { memo, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { AdminMessageBubble } from './AdminMessageBubble';
@@ -58,40 +63,31 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
       });
     }, [messages]);
 
+    // Stabilize virtualizer config callbacks to prevent re-creation on each render
+    const getScrollElement = useCallback(() => parentRef.current, []);
+    const estimateSize = useCallback(() => ESTIMATED_MESSAGE_HEIGHT, []);
+    const getItemKey = useCallback(
+      (index: number) => filteredMessages[index]?.id ?? index,
+      [filteredMessages]
+    );
+
     // Dynamic size cache for variable height messages
     const virtualizer = useVirtualizer({
       count: filteredMessages.length,
-      getScrollElement: () => parentRef.current,
-      estimateSize: () => ESTIMATED_MESSAGE_HEIGHT,
+      getScrollElement,
+      estimateSize,
       overscan: 10, // Render 10 items above and below viewport
-      getItemKey: (index) => filteredMessages[index]?.id || index,
+      getItemKey,
     });
 
-    // Store virtualizer in a ref to avoid dependency issues in callbacks
-    const virtualizerRef = useRef(virtualizer);
-    virtualizerRef.current = virtualizer;
-
-    // Track message count for stable scroll logic
-    const messageCountRef = useRef(0);
-    const prevMessageCountRef = useRef(0);
-    const isScrollingRef = useRef(false);
-    const hasInitialScrolledRef = useRef(false);
-
-    // Update message count ref (outside of callbacks to avoid stale closures)
-    messageCountRef.current = filteredMessages.length;
-
-    // Scroll to bottom function - uses refs to avoid unstable dependencies
+    // Scroll to bottom using direct DOM manipulation (avoids virtualizer re-render loops)
     const scrollToBottom = useCallback(() => {
-      if (messageCountRef.current > 0 && !isScrollingRef.current) {
-        isScrollingRef.current = true;
-        virtualizerRef.current.scrollToIndex(messageCountRef.current - 1, {
-          align: 'end',
-          behavior: 'smooth',
+      const el = parentRef.current;
+      if (el) {
+        // Use requestAnimationFrame to ensure DOM has painted
+        requestAnimationFrame(() => {
+          el.scrollTop = el.scrollHeight;
         });
-        // Reset flag after scroll animation completes
-        setTimeout(() => {
-          isScrollingRef.current = false;
-        }, 300);
       }
     }, []);
 
@@ -99,27 +95,6 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
     useImperativeHandle(ref, () => ({
       scrollToBottom,
     }), [scrollToBottom]);
-
-    // Initial scroll to bottom (synchronous, no animation)
-    useLayoutEffect(() => {
-      if (filteredMessages.length > 0 && !hasInitialScrolledRef.current) {
-        hasInitialScrolledRef.current = true;
-        virtualizerRef.current.scrollToIndex(filteredMessages.length - 1, {
-          align: 'end',
-          behavior: 'auto', // Instant, not smooth
-        });
-        prevMessageCountRef.current = filteredMessages.length;
-      }
-    }, [filteredMessages.length]);
-
-    // Auto-scroll to bottom ONLY when new messages arrive (not on initial load)
-    useEffect(() => {
-      // Skip if this is the initial load or count decreased
-      if (prevMessageCountRef.current > 0 && filteredMessages.length > prevMessageCountRef.current) {
-        scrollToBottom();
-      }
-      prevMessageCountRef.current = filteredMessages.length;
-    }, [filteredMessages.length, scrollToBottom]);
 
     // Handle adding reactions with optimistic update
     const handleAddReaction = useCallback((messageId: string, emoji: string) => {

@@ -117,9 +117,11 @@ function Conversations() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslatingOutbound, setIsTranslatingOutbound] = useState(false);
 
-  // Refs
-  const messagesScrollRef = useRef<VirtualizedMessageThreadRef>(null);
-  const lastMarkedReadRef = useRef<string | null>(null);
+    // Refs
+    const messagesScrollRef = useRef<VirtualizedMessageThreadRef>(null);
+    const lastMarkedReadRef = useRef<string | null>(null);
+    const lastScrolledConversationIdRef = useRef<string | null>(null);
+    const prevMessageCountRef = useRef(0);
 
   // === EXTRACTED HOOKS (Phase 5 Section 1) ===
   
@@ -204,7 +206,43 @@ function Conversations() {
     }
   }, [selectedConversation?.id, updateConversationMetadata]);
 
-  // Note: Auto-scroll is handled internally by VirtualizedMessageThread
+  // Parent-controlled scroll logic (VirtualizedMessageThread is purely presentational)
+  // Scroll on: 1) initial load of a conversation, 2) new messages appended
+  useEffect(() => {
+    const conversationId = selectedConversation?.id;
+    const messageCount = messages.length;
+    
+    // Skip if no conversation or still loading
+    if (!conversationId || loadingMessages) {
+      return;
+    }
+    
+    // Case 1: New conversation selected - scroll once after messages load
+    if (conversationId !== lastScrolledConversationIdRef.current) {
+      if (messageCount > 0) {
+        lastScrolledConversationIdRef.current = conversationId;
+        prevMessageCountRef.current = messageCount;
+        // Delay scroll slightly to ensure virtualizer has rendered
+        requestAnimationFrame(() => {
+          messagesScrollRef.current?.scrollToBottom();
+        });
+      }
+      return;
+    }
+    
+    // Case 2: New messages appended to current conversation
+    if (messageCount > prevMessageCountRef.current) {
+      prevMessageCountRef.current = messageCount;
+      messagesScrollRef.current?.scrollToBottom();
+    }
+  }, [selectedConversation?.id, messages.length, loadingMessages]);
+
+  // Reset message count when conversation changes
+  useEffect(() => {
+    if (!selectedConversation?.id) {
+      prevMessageCountRef.current = 0;
+    }
+  }, [selectedConversation?.id]);
 
   // === QUERIES ===
   
@@ -508,6 +546,7 @@ function Conversations() {
             })()}
             
             <VirtualizedMessageThread
+              key={selectedConversation.id}
               ref={messagesScrollRef}
               messages={messages}
               setMessages={setMessages}
