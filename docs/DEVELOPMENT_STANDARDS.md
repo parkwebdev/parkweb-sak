@@ -390,6 +390,205 @@ grep -rn ": any" supabase/functions/ --include="*.ts"
 
 ---
 
+## 8. Performance Patterns
+
+> **Status**: Implemented ✓  
+> **Completed**: January 2026
+
+Performance optimizations for handling large data sets and high user loads.
+
+### React Query Global Configuration
+
+Global defaults are set in `src/App.tsx`. Individual hooks should only override when necessary:
+
+```typescript
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,           // 30s - default for most data
+      gcTime: 5 * 60 * 1000,       // 5 min garbage collection
+      retry: 2,
+      refetchOnWindowFocus: false, // Reduce unnecessary refetches
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+```
+
+**StaleTime Guidelines:**
+| Value | Use Case |
+|-------|----------|
+| `30_000` (30s) | Default - most user data |
+| `5 * 60 * 1000` (5min) | Rarely-changing data (agent config, locations) |
+| `2 * 60 * 1000` (2min) | Analytics data |
+| `10 * 60 * 1000` (10min) | Plans, static configuration |
+
+### Column Selection Optimization
+
+**ALWAYS** use specific columns instead of `select('*')` for list views:
+
+```typescript
+import { LEAD_LIST_COLUMNS, CONVERSATION_LIST_COLUMNS } from '@/lib/db-selects';
+
+// ✅ CORRECT: Use predefined columns
+const { data } = await supabase
+  .from('leads')
+  .select(LEAD_LIST_COLUMNS)
+  .eq('user_id', accountOwnerId);
+
+// ❌ WRONG: Fetches unnecessary data
+const { data } = await supabase
+  .from('leads')
+  .select('*')
+  .eq('user_id', accountOwnerId);
+```
+
+**Benefits:**
+- Reduces payload size by 40-60%
+- Faster query execution
+- Less memory usage on client
+
+**Available Columns** (`src/lib/db-selects.ts`):
+| Constant | Table | Use Case |
+|----------|-------|----------|
+| `LEAD_LIST_COLUMNS` | leads | Kanban, table views |
+| `LEAD_DETAIL_COLUMNS` | leads | Detail sheets |
+| `CONVERSATION_LIST_COLUMNS` | conversations | Inbox list |
+| `MESSAGE_LIST_COLUMNS` | messages | Chat display |
+| `WEBHOOK_LOG_COLUMNS` | webhook_logs | Monitoring |
+| `CALENDAR_EVENT_LIST_COLUMNS` | calendar_events | Planner |
+| `KNOWLEDGE_SOURCE_LIST_COLUMNS` | knowledge_sources | Knowledge management |
+
+### Image Optimization
+
+Use `<OptimizedImage>` component or add `loading="lazy"` and `decoding="async"` to all images:
+
+```tsx
+import { OptimizedImage } from '@/components/ui/optimized-image';
+
+// Regular image (lazy loaded)
+<OptimizedImage src="/image.jpg" alt="Description" />
+
+// Priority image (above-the-fold, loads immediately)
+<OptimizedImage src="/hero.jpg" alt="Hero" priority />
+
+// Or use native attributes directly
+<img 
+  src="/image.jpg" 
+  alt="Description"
+  loading="lazy"
+  decoding="async"
+/>
+```
+
+**Guidelines:**
+- Use `priority` prop for above-the-fold images (hero, logo)
+- All other images should use lazy loading (default)
+- Always include `alt` text for accessibility
+
+### Batch Operations
+
+For bulk updates (drag-and-drop, multi-select actions), use RPC functions instead of multiple individual calls:
+
+```typescript
+// ✅ CORRECT: Single RPC call
+const { error } = await supabase.rpc('batch_update_lead_orders', {
+  updates: JSON.stringify(updates),
+});
+
+// ❌ WRONG: N individual calls
+const results = await Promise.all(
+  updates.map(u => supabase.from('leads').update(u).eq('id', u.id))
+);
+```
+
+**Available Batch Functions:**
+| Function | Purpose |
+|----------|---------|
+| `batch_update_lead_orders` | Kanban drag-and-drop reordering |
+
+### Infinite Scroll (Foundation)
+
+For large data lists, use cursor-based pagination with `usePaginatedQuery`:
+
+```typescript
+import { usePaginatedQuery, flattenPages } from '@/hooks/usePaginatedQuery';
+
+const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = usePaginatedQuery({
+  queryKey: ['leads', accountOwnerId],
+  queryFn: async (cursor) => {
+    let query = supabase
+      .from('leads')
+      .select(LEAD_LIST_COLUMNS)
+      .eq('user_id', accountOwnerId)
+      .order('created_at', { ascending: false })
+      .limit(25);
+    
+    if (cursor) {
+      query = query.lt('created_at', cursor);
+    }
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    
+    return {
+      data: data || [],
+      nextCursor: data?.length === 25 ? data.at(-1)?.created_at : null,
+    };
+  },
+  enabled: !!accountOwnerId,
+});
+
+// Flatten for rendering
+const leads = flattenPages(data);
+```
+
+### Bundle Analysis
+
+Bundle analyzer generates `dist/stats.html` on production builds:
+
+```bash
+npm run build
+# Open dist/stats.html to view bundle composition
+```
+
+**Optimization Targets:**
+- Main chunk < 200KB gzipped
+- Widget chunk < 50KB gzipped
+- Vendor chunks split by usage
+
+### Database Indexes
+
+Performance-critical indexes added:
+
+```sql
+-- Lead queries
+CREATE INDEX idx_leads_user_status_created ON leads(user_id, status, created_at DESC);
+CREATE INDEX idx_leads_user_kanban_order ON leads(user_id, stage_id, kanban_order);
+
+-- Conversation queries
+CREATE INDEX idx_conversations_user_updated ON conversations(user_id, updated_at DESC);
+
+-- Message queries  
+CREATE INDEX idx_messages_conversation_created ON messages(conversation_id, created_at);
+```
+
+### Performance Checklist
+
+When adding new data features:
+
+- [ ] Use column selection from `db-selects.ts` (not `select('*')`)
+- [ ] Set appropriate `staleTime` for query caching
+- [ ] Add `loading="lazy"` to images
+- [ ] Consider pagination for lists > 50 items
+- [ ] Use batch RPC for bulk updates
+- [ ] Add database indexes for common query patterns
+- [ ] Include `accountOwnerId` in query keys for cache consistency
+
+---
+
 ## Related Documentation
 
 - [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Tables and RLS policies

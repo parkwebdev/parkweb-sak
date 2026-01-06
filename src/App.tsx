@@ -60,8 +60,26 @@ function getGuardProps(routeId: string): {
   };
 }
 
-/** React Query client instance with default configuration */
-const queryClient = new QueryClient();
+/**
+ * React Query client instance with optimized global defaults.
+ * Individual hooks can override these values when needed.
+ * 
+ * @see docs/DEVELOPMENT_STANDARDS.md for staleTime guidelines
+ */
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000, // 30 seconds - data considered fresh
+      gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false, // Reduce unnecessary refetches
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 /**
  * Layout wrapper for protected routes.

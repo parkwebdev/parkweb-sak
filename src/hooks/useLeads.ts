@@ -195,17 +195,17 @@ export const useLeads = () => {
     });
 
     try {
-      // Batch update using Promise.all for efficiency
-      const updatePromises = updates.map(({ id, kanban_order, status, stage_id }) => 
-        supabase
-          .from('leads')
-          .update({ kanban_order, ...(status && { status }), ...(stage_id && { stage_id }) })
-          .eq('id', id)
-      );
+      // Use batch RPC for efficiency (single call instead of N updates)
+      const { error } = await supabase.rpc('batch_update_lead_orders', {
+        updates: JSON.stringify(updates.map(({ id, kanban_order, status, stage_id }) => ({
+          id,
+          kanban_order,
+          ...(status && { status }),
+          ...(stage_id && { stage_id }),
+        }))),
+      });
       
-      const results = await Promise.all(updatePromises);
-      const firstError = results.find(r => r.error);
-      if (firstError?.error) throw firstError.error;
+      if (error) throw error;
       
       // Don't refetch - we already updated optimistically
     } catch (error: unknown) {
