@@ -230,10 +230,10 @@ function Conversations() {
       return;
     }
     
-    // Case 2: New messages appended to current conversation
+    // Case 2: New messages appended to current conversation - use smooth scroll
     if (messageCount > prevMessageCountRef.current) {
       prevMessageCountRef.current = messageCount;
-      messagesScrollRef.current?.scrollToBottom();
+      messagesScrollRef.current?.scrollToBottom(true);
     }
   }, [selectedConversation?.id, messages.length, loadingMessages]);
 
