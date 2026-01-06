@@ -37,7 +37,16 @@ export function useLeadStages() {
       
       const { data, error } = await supabase
         .from('lead_stages')
-        .select('*')
+        .select(`
+          id,
+          user_id,
+          name,
+          color,
+          order_index,
+          is_default,
+          created_at,
+          updated_at
+        `)
         .eq('user_id', accountOwnerId)
         .order('order_index', { ascending: true });
 

@@ -210,7 +210,18 @@ export const useConversations = () => {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select('*')
+        .select(`
+          id,
+          conversation_id,
+          role,
+          content,
+          created_at,
+          metadata,
+          tool_arguments,
+          tool_call_id,
+          tool_name,
+          tool_result
+        `)
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 

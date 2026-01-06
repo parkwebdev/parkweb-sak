@@ -37,7 +37,25 @@ export const useNewsItems = (agentId: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('news_items')
-        .select('*')
+        .select(`
+          id,
+          agent_id,
+          user_id,
+          title,
+          body,
+          featured_image_url,
+          author_name,
+          author_avatar,
+          cta_primary_label,
+          cta_primary_url,
+          cta_secondary_label,
+          cta_secondary_url,
+          is_published,
+          published_at,
+          order_index,
+          created_at,
+          updated_at
+        `)
         .eq('agent_id', agentId)
         .order('order_index', { ascending: true });
 

@@ -35,7 +35,26 @@ export const useKnowledgeSources = (agentId?: string) => {
       
       const { data, error } = await supabase
         .from('knowledge_sources')
-        .select('*')
+        .select(`
+          id,
+          agent_id,
+          user_id,
+          source,
+          type,
+          source_type,
+          status,
+          content,
+          content_hash,
+          embedding,
+          metadata,
+          refresh_strategy,
+          default_location_id,
+          extraction_config,
+          last_fetched_at,
+          next_refresh_at,
+          created_at,
+          updated_at
+        `)
         .eq('agent_id', agentId)
         .order('created_at', { ascending: false });
 

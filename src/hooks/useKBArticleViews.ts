@@ -101,7 +101,12 @@ export function usePopularArticles(categoryId: string | undefined, limit = 5) {
       
       const { data, error } = await supabase
         .from('kb_article_popularity')
-        .select('*')
+        .select(`
+          article_slug,
+          category_id,
+          view_count,
+          unique_views
+        `)
         .eq('category_id', categoryId)
         .limit(limit);
       

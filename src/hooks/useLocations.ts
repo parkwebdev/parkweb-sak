@@ -41,7 +41,30 @@ export const useLocations = (agentId?: string) => {
       
       const { data, error } = await supabase
         .from('locations')
-        .select('*')
+        .select(`
+          id,
+          agent_id,
+          user_id,
+          name,
+          address,
+          city,
+          state,
+          zip,
+          country,
+          phone,
+          email,
+          timezone,
+          business_hours,
+          is_active,
+          wordpress_slug,
+          wordpress_community_id,
+          wordpress_community_term_id,
+          url_patterns,
+          metadata,
+          content_hash,
+          created_at,
+          updated_at
+        `)
         .eq('agent_id', agentId)
         .order('name', { ascending: true });
 

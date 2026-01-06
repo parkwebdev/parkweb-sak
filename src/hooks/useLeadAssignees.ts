@@ -41,7 +41,13 @@ export function useLeadAssignees(): UseLeadAssigneesReturn {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lead_assignees')
-        .select('*')
+        .select(`
+          id,
+          lead_id,
+          user_id,
+          assigned_at,
+          assigned_by
+        `)
         .order('assigned_at', { ascending: true });
 
       if (error) throw error;

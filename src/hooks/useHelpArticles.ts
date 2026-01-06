@@ -50,19 +50,39 @@ export const useHelpArticles = (agentId: string) => {
         return { articles: [], categories: [] };
       }
 
-      // Fetch categories
+      // Fetch categories with specific columns
       const { data: categoriesData, error: catError } = await supabase
         .from('help_categories')
-        .select('*')
+        .select(`
+          id,
+          agent_id,
+          name,
+          description,
+          icon,
+          order_index,
+          created_at
+        `)
         .eq('agent_id', agentId)
         .order('order_index');
 
       if (catError) throw catError;
 
-      // Fetch articles
+      // Fetch articles with specific columns
       const { data: articlesData, error: artError } = await supabase
         .from('help_articles')
-        .select('*')
+        .select(`
+          id,
+          agent_id,
+          category_id,
+          title,
+          content,
+          featured_image,
+          icon,
+          order_index,
+          embedding,
+          created_at,
+          updated_at
+        `)
         .eq('agent_id', agentId)
         .order('order_index');
 
