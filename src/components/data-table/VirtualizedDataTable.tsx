@@ -129,7 +129,8 @@ export function VirtualizedDataTable<TData, TValue>({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-hidden">
+      {/* Fixed header */}
       <UITable>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -155,49 +156,54 @@ export function VirtualizedDataTable<TData, TValue>({
         className="overflow-auto"
         style={{ maxHeight }}
       >
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          <UITable>
-            <TableBody>
-              {items.map((virtualItem) => {
-                const row = rows[virtualItem.index];
-                return (
-                  <TableRow
-                    key={row.id}
-                    data-index={virtualItem.index}
-                    ref={virtualizer.measureElement}
-                    data-state={row.getIsSelected() && 'selected'}
-                    onClick={() => onRowClick?.(row.original)}
-                    className={cn(
-                      onRowClick && 'cursor-pointer hover:bg-muted/50'
-                    )}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      transform: `translateY(${virtualItem.start}px)`,
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </UITable>
-        </div>
+        <UITable>
+          <TableBody
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+              display: 'block',
+            }}
+          >
+            {items.map((virtualItem) => {
+              const row = rows[virtualItem.index];
+              return (
+                <TableRow
+                  key={row.id}
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
+                  data-state={row.getIsSelected() && 'selected'}
+                  onClick={() => onRowClick?.(row.original)}
+                  className={cn(
+                    onRowClick && 'cursor-pointer hover:bg-muted/50',
+                    'flex w-full'
+                  )}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${rowHeight}px`,
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell 
+                      key={cell.id}
+                      className="flex items-center"
+                      style={{ flex: 1 }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </UITable>
       </div>
     </div>
   );

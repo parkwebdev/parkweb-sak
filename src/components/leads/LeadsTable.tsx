@@ -12,6 +12,7 @@ import {
   getFilteredRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
+  getPaginationRowModel,
   SortingState,
   RowSelectionState,
   ColumnFiltersState,
@@ -20,10 +21,10 @@ import {
 import { useState } from 'react';
 import { Trash01 } from '@untitledui/icons';
 import {
+  DataTable,
   DataTablePagination,
   DataTableFloatingBar,
 } from '@/components/data-table';
-import { VirtualizedDataTable } from '@/components/data-table/VirtualizedDataTable';
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 import { Button } from '@/components/ui/button';
@@ -177,7 +178,7 @@ export const LeadsTable = React.memo(function LeadsTable({
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    // Remove getPaginationRowModel - virtualization handles this
+    getPaginationRowModel: getPaginationRowModel(),
     filterFns: {
       arrIncludesSome: (row, columnId, filterValue: string[]) => {
         const value = row.getValue(columnId) as string;
@@ -198,22 +199,16 @@ export const LeadsTable = React.memo(function LeadsTable({
 
   return (
     <div className="space-y-4">
-      <VirtualizedDataTable
+      <DataTable
         table={table}
         columns={orderedColumns}
         onRowClick={handleRowClick}
         emptyMessage="No leads found"
         isLoading={isLoading}
-        maxHeight="calc(100vh - 280px)"
       />
-      {/* Show row count instead of pagination */}
+      {/* Pagination */}
       {leads.length > 0 && (
-        <div className="flex items-center justify-between px-2">
-          <div className="text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} lead{table.getFilteredRowModel().rows.length !== 1 ? 's' : ''}
-            {selectedIds.size > 0 && canManage && ` • ${selectedIds.size} selected`}
-          </div>
-        </div>
+        <DataTablePagination table={table} />
       )}
       {canManage && (
         <DataTableFloatingBar table={table}>
