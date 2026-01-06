@@ -879,21 +879,24 @@ export function ConversationMetadataPanel({
               >
                 <SelectTrigger className="w-full">
                   <SelectValue>
-                    <div className="flex items-center gap-2">
-                      <Flag01 size={12} className={PRIORITY_CONFIG[normalizePriority(metadata.priority)].badgeClass.includes('text-') ? '' : 'text-muted-foreground'} />
+                    <div className={cn("flex items-center gap-2", PRIORITY_CONFIG[normalizePriority(metadata.priority)].badgeClass.split(' ').find(c => c.startsWith('text-')))}>
+                      <Flag01 size={12} />
                       {PRIORITY_CONFIG[normalizePriority(metadata.priority)].label}
                     </div>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {PRIORITY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center gap-2">
-                        <Flag01 size={12} />
-                        {option.label}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {PRIORITY_OPTIONS.map((option) => {
+                    const textColorClass = PRIORITY_CONFIG[option.value as keyof typeof PRIORITY_CONFIG].badgeClass.split(' ').find(c => c.startsWith('text-'));
+                    return (
+                      <SelectItem key={option.value} value={option.value}>
+                        <div className={cn("flex items-center gap-2", textColorClass)}>
+                          <Flag01 size={12} />
+                          {option.label}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </AccordionContent>
