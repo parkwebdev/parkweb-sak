@@ -7,7 +7,7 @@
  * @component
  */
 
-import React, { memo, useCallback, useMemo, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { memo, useCallback, useMemo, useRef, useEffect, useLayoutEffect, forwardRef, useImperativeHandle } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { AdminMessageBubble } from './AdminMessageBubble';
@@ -71,26 +71,55 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
     const virtualizerRef = useRef(virtualizer);
     virtualizerRef.current = virtualizer;
 
-    // Scroll to bottom function - uses ref to avoid unstable dependencies
+    // Track message count for stable scroll logic
+    const messageCountRef = useRef(0);
+    const prevMessageCountRef = useRef(0);
+    const isScrollingRef = useRef(false);
+    const hasInitialScrolledRef = useRef(false);
+
+    // Update message count ref (outside of callbacks to avoid stale closures)
+    messageCountRef.current = filteredMessages.length;
+
+    // Scroll to bottom function - uses refs to avoid unstable dependencies
     const scrollToBottom = useCallback(() => {
-      if (filteredMessages.length > 0) {
-        virtualizerRef.current.scrollToIndex(filteredMessages.length - 1, {
+      if (messageCountRef.current > 0 && !isScrollingRef.current) {
+        isScrollingRef.current = true;
+        virtualizerRef.current.scrollToIndex(messageCountRef.current - 1, {
           align: 'end',
           behavior: 'smooth',
         });
+        // Reset flag after scroll animation completes
+        setTimeout(() => {
+          isScrollingRef.current = false;
+        }, 300);
       }
-    }, [filteredMessages.length]);
+    }, []);
 
     // Expose scroll to bottom via ref
     useImperativeHandle(ref, () => ({
       scrollToBottom,
     }), [scrollToBottom]);
 
-    // Auto-scroll to bottom when new messages arrive
-    useEffect(() => {
-      scrollToBottom();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Initial scroll to bottom (synchronous, no animation)
+    useLayoutEffect(() => {
+      if (filteredMessages.length > 0 && !hasInitialScrolledRef.current) {
+        hasInitialScrolledRef.current = true;
+        virtualizerRef.current.scrollToIndex(filteredMessages.length - 1, {
+          align: 'end',
+          behavior: 'auto', // Instant, not smooth
+        });
+        prevMessageCountRef.current = filteredMessages.length;
+      }
     }, [filteredMessages.length]);
+
+    // Auto-scroll to bottom ONLY when new messages arrive (not on initial load)
+    useEffect(() => {
+      // Skip if this is the initial load or count decreased
+      if (prevMessageCountRef.current > 0 && filteredMessages.length > prevMessageCountRef.current) {
+        scrollToBottom();
+      }
+      prevMessageCountRef.current = filteredMessages.length;
+    }, [filteredMessages.length, scrollToBottom]);
 
     // Handle adding reactions with optimistic update
     const handleAddReaction = useCallback((messageId: string, emoji: string) => {
