@@ -24,9 +24,9 @@ import {
   KanbanProvider,
   KanbanBoard,
   KanbanHeader,
-  KanbanCards,
   KanbanCard,
 } from "@/components/ui/kanban";
+import { VirtualizedKanbanCards } from "@/components/ui/virtualized-kanban-cards";
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { StageProgressIcon } from "./StageProgressIcon";
 import { useTeam } from '@/hooks/useTeam';
@@ -601,7 +601,7 @@ export function LeadsKanbanBoard({
                     onUpdate={canManage ? handleStageUpdate : undefined as unknown as typeof handleStageUpdate}
                   />
                 </KanbanHeader>
-                <KanbanCards id={column.id}>
+                <VirtualizedKanbanCards id={column.id} estimatedCardHeight={140}>
                   {(lead: KanbanLead) => (
                     <KanbanCard
                       key={lead.id}
@@ -625,7 +625,7 @@ export function LeadsKanbanBoard({
                       />
                     </KanbanCard>
                   )}
-                </KanbanCards>
+                </VirtualizedKanbanCards>
               </KanbanBoard>
             );
           }}
