@@ -99,7 +99,7 @@ type KanbanContextProps<
   activeCardContent: ReactNode | null;
 };
 
-const KanbanContext = createContext<KanbanContextProps>({
+export const KanbanContext = createContext<KanbanContextProps>({
   columns: [],
   data: [],
   activeCardId: null,
