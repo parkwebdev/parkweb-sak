@@ -5,23 +5,175 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash01 } from '@untitledui/icons';
+import { Trash01, DotsGrid } from '@untitledui/icons';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { cn } from '@/lib/utils';
 
 interface ContactFormSectionProps {
   config: EmbeddedChatConfig;
   onConfigChange: (updates: Partial<EmbeddedChatConfig>) => void;
 }
 
+interface SortableFieldCardProps {
+  field: CustomField;
+  onUpdate: (updates: Partial<CustomField>) => void;
+  onRemove: () => void;
+}
+
+function SortableFieldCard({ field, onUpdate, onRemove }: SortableFieldCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "p-3 border rounded-lg space-y-2 bg-muted/50",
+        isDragging && "opacity-50 shadow-lg z-50"
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 flex-1">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 -ml-1 hover:bg-muted rounded"
+          >
+            <DotsGrid size={16} className="text-muted-foreground" aria-hidden="true" />
+          </div>
+          <Input
+            value={field.label}
+            onChange={(e) => onUpdate({ label: e.target.value })}
+            className="text-sm flex-1"
+            placeholder="Field label"
+          />
+        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onRemove}
+        >
+          <Trash01 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <Select
+          value={field.fieldType}
+          onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') =>
+            onUpdate({
+              fieldType: value,
+              placeholder: value === 'checkbox' ? undefined : (field.placeholder || ''),
+              richTextContent: value === 'checkbox' ? (field.richTextContent || '') : undefined,
+            })
+          }
+        >
+          <SelectTrigger className="text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="text">Text</SelectItem>
+            <SelectItem value="email">Email</SelectItem>
+            <SelectItem value="phone">Phone</SelectItem>
+            <SelectItem value="textarea">Text Area</SelectItem>
+            <SelectItem value="select">Select</SelectItem>
+            <SelectItem value="checkbox">Checkbox</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={field.required}
+            onCheckedChange={(checked) => onUpdate({ required: checked })}
+          />
+          <Label className="text-xs">Required</Label>
+        </div>
+      </div>
+
+      {/* Placeholder - hidden for checkbox */}
+      {field.fieldType !== 'checkbox' && (
+        <Input
+          value={field.placeholder || ''}
+          onChange={(e) => onUpdate({ placeholder: e.target.value })}
+          placeholder="Placeholder text"
+          className="text-sm"
+        />
+      )}
+
+      {/* Rich text editor for checkbox text */}
+      {field.fieldType === 'checkbox' && (
+        <div className="space-y-2">
+          <RichTextEditor
+            content={field.richTextContent || ''}
+            onChange={(html) => onUpdate({ richTextContent: html })}
+            placeholder="By submitting, you agree to our Terms of Service..."
+            minHeight="80px"
+            minimalMode={true}
+          />
+        </div>
+      )}
+
+      {/* Options for select fields */}
+      {field.fieldType === 'select' && (
+        <div className="space-y-2">
+          <Label className="text-xs">Options (comma-separated)</Label>
+          <Input
+            value={field.options?.join(', ') || ''}
+            onChange={(e) => onUpdate({
+              options: e.target.value.split(',').map(o => o.trim()).filter(Boolean)
+            })}
+            placeholder="Option 1, Option 2, Option 3"
+            className="text-sm"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectionProps) => {
   const [newFieldLabel, setNewFieldLabel] = useState('');
   const [newFieldType, setNewFieldType] = useState<'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox'>('text');
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = config.customFields.findIndex(f => f.id === active.id);
+      const newIndex = config.customFields.findIndex(f => f.id === over.id);
+
+      const reorderedFields = arrayMove(config.customFields, oldIndex, newIndex);
+      onConfigChange({ customFields: reorderedFields });
+    }
+  };
+
   const addCustomField = () => {
     if (!newFieldLabel.trim()) return;
-    
+
     const newField: CustomField = {
       id: `field-${Date.now()}`,
       label: newFieldLabel,
@@ -31,11 +183,11 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
       options: newFieldType === 'select' ? [] : undefined,
       richTextContent: newFieldType === 'checkbox' ? '' : undefined,
     };
-    
+
     onConfigChange({
       customFields: [...config.customFields, newField],
     });
-    
+
     setNewFieldLabel('');
     setNewFieldType('text');
   };
@@ -48,7 +200,7 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
 
   const updateCustomField = (fieldId: string, updates: Partial<CustomField>) => {
     onConfigChange({
-      customFields: config.customFields.map(f => 
+      customFields: config.customFields.map(f =>
         f.id === fieldId ? { ...f, ...updates } : f
       ),
     });
@@ -93,98 +245,28 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
               <p className="text-xs text-muted-foreground">First, Last, Email are default</p>
             </div>
 
-            {/* Existing Custom Fields */}
-            {config.customFields.map((field) => (
-              <div key={field.id} className="p-3 border rounded-lg space-y-2 bg-muted/50">
-                <div className="flex items-center justify-between">
-                  <Input
-                    value={field.label}
-                    onChange={(e) => updateCustomField(field.id, { label: e.target.value })}
-                    className="text-sm flex-1 mr-2"
-                    placeholder="Field label"
-                  />
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => removeCustomField(field.id)}
-                  >
-                    <Trash01 className="h-4 w-4 text-destructive" />
-                  </Button>
+            {/* Sortable Custom Fields */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={config.customFields.map(f => f.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-3">
+                  {config.customFields.map((field) => (
+                    <SortableFieldCard
+                      key={field.id}
+                      field={field}
+                      onUpdate={(updates) => updateCustomField(field.id, updates)}
+                      onRemove={() => removeCustomField(field.id)}
+                    />
+                  ))}
                 </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Select
-                    value={field.fieldType}
-                    onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') => 
-                      updateCustomField(field.id, { 
-                        fieldType: value,
-                        // Clear placeholder for checkbox, set richTextContent
-                        placeholder: value === 'checkbox' ? undefined : (field.placeholder || ''),
-                        richTextContent: value === 'checkbox' ? (field.richTextContent || '') : undefined,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="text">Text</SelectItem>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="phone">Phone</SelectItem>
-                      <SelectItem value="textarea">Text Area</SelectItem>
-                      <SelectItem value="select">Select</SelectItem>
-                      <SelectItem value="checkbox">Checkbox</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={field.required}
-                      onCheckedChange={(checked) => updateCustomField(field.id, { required: checked })}
-                    />
-                    <Label className="text-xs">Required</Label>
-                  </div>
-                </div>
-
-                {/* Placeholder - hidden for checkbox */}
-                {field.fieldType !== 'checkbox' && (
-                  <Input
-                    value={field.placeholder || ''}
-                    onChange={(e) => updateCustomField(field.id, { placeholder: e.target.value })}
-                    placeholder="Placeholder text"
-                    className="text-sm"
-                  />
-                )}
-
-                {/* Rich text editor for checkbox text */}
-                {field.fieldType === 'checkbox' && (
-                  <div className="space-y-2">
-                    <RichTextEditor
-                      content={field.richTextContent || ''}
-                      onChange={(html) => updateCustomField(field.id, { richTextContent: html })}
-                      placeholder="By submitting, you agree to our Terms of Service..."
-                      minHeight="80px"
-                      minimalMode={true}
-                    />
-                  </div>
-                )}
-
-                {/* Options for select fields */}
-                {field.fieldType === 'select' && (
-                  <div className="space-y-2">
-                    <Label className="text-xs">Options (comma-separated)</Label>
-                    <Input
-                      value={field.options?.join(', ') || ''}
-                      onChange={(e) => updateCustomField(field.id, { 
-                        options: e.target.value.split(',').map(o => o.trim()).filter(Boolean) 
-                      })}
-                      placeholder="Option 1, Option 2, Option 3"
-                      className="text-sm"
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
+              </SortableContext>
+            </DndContext>
 
             {/* Add New Field */}
             <div className="p-3 bg-muted/30 rounded-lg space-y-2">
@@ -198,7 +280,7 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                 />
                 <Select
                   value={newFieldType}
-                  onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') => 
+                  onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') =>
                     setNewFieldType(value)
                   }
                 >
