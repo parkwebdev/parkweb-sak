@@ -36,7 +36,7 @@
   
   /* Premium destructive button styling - Light mode */
   .btn-destructive {
-    background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+    background: linear-gradient(180deg, #dc2626 0%, #e53e3e 100%);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
     border-color: #dc2626;
   }
@@ -46,12 +46,12 @@
   }
   
   .btn-destructive:disabled {
-    background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+    background: linear-gradient(180deg, #dc2626 0%, #e53e3e 100%);
   }
   
   /* Premium destructive button styling - Dark mode */
   .dark .btn-destructive {
-    background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+    background: linear-gradient(180deg, #dc2626 0%, #e53e3e 100%);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
     border-color: #b91c1c;
   }
@@ -61,7 +61,7 @@
   }
   
   .dark .btn-destructive:disabled {
-    background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+    background: linear-gradient(180deg, #dc2626 0%, #e53e3e 100%);
   }
 }
 
