@@ -20,6 +20,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { queryKeys } from '@/lib/query-keys';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { AGENT_COLUMNS } from '@/lib/db-selects';
 import type { Tables, TablesUpdate, Json } from '@/integrations/supabase/types';
 import type { AgentDeploymentConfig } from '@/types/metadata';
 
@@ -32,7 +33,7 @@ type AgentUpdate = TablesUpdate<'agents'>;
 async function fetchAgent(accountOwnerId: string): Promise<Agent | null> {
   const { data, error } = await supabase
     .from('agents')
-    .select('*')
+    .select(AGENT_COLUMNS)
     .eq('user_id', accountOwnerId)
     .maybeSingle();
 

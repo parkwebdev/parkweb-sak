@@ -460,6 +460,7 @@ function Leads({ onMenuClick }: LeadsProps) {
                   columnOrder={tableColumnOrder}
                   defaultSort={defaultSort}
                   canManage={canManageLeads}
+                  isLoading={isFetchingNextPage}
                 />
               </motion.div>
             )}
