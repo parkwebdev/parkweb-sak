@@ -37,7 +37,7 @@ export interface VirtualizedMessageThreadProps {
 }
 
 export interface VirtualizedMessageThreadRef {
-  scrollToBottom: () => void;
+  scrollToBottom: (smooth?: boolean) => void;
 }
 
 export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThreadRef, VirtualizedMessageThreadProps>(
@@ -80,13 +80,17 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
       getItemKey,
     });
 
-    // Scroll to bottom using direct DOM manipulation (avoids virtualizer re-render loops)
-    const scrollToBottom = useCallback(() => {
+    // Scroll to bottom using direct DOM manipulation with smooth behavior
+    const scrollToBottom = useCallback((smooth = false) => {
       const el = parentRef.current;
       if (el) {
         // Use requestAnimationFrame to ensure DOM has painted
         requestAnimationFrame(() => {
-          el.scrollTop = el.scrollHeight;
+          if (smooth) {
+            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+          } else {
+            el.scrollTop = el.scrollHeight;
+          }
         });
       }
     }, []);
@@ -180,7 +184,7 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
               </div>
             ))}
           </div>
-        ) : messages.length === 0 ? (
+        ) : filteredMessages.length === 0 ? (
           <div className="flex-1 flex items-center justify-center py-12">
             <div className="text-center">
               <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
