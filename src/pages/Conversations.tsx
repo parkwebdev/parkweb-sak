@@ -30,8 +30,9 @@ import {
   VirtualizedConversationsList,
   ChatHeader,
   TranslationBanner,
-  MessageThread,
+  VirtualizedMessageThread,
   MessageInputArea,
+  type VirtualizedMessageThreadRef,
 } from '@/components/conversations';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
@@ -117,7 +118,7 @@ function Conversations() {
   const [isTranslatingOutbound, setIsTranslatingOutbound] = useState(false);
 
   // Refs
-  const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<VirtualizedMessageThreadRef>(null);
   const lastMarkedReadRef = useRef<string | null>(null);
 
   // === EXTRACTED HOOKS (Phase 5 Section 1) ===
@@ -203,9 +204,7 @@ function Conversations() {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    if (messagesScrollRef.current) {
-      messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
-    }
+    messagesScrollRef.current?.scrollToBottom();
   }, [messages]);
 
   // === QUERIES ===
@@ -509,7 +508,7 @@ function Conversations() {
               );
             })()}
             
-            <MessageThread
+            <VirtualizedMessageThread
               ref={messagesScrollRef}
               messages={messages}
               setMessages={setMessages}
