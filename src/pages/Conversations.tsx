@@ -202,10 +202,7 @@ function Conversations() {
     }
   }, [selectedConversation?.id, updateConversationMetadata]);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesScrollRef.current?.scrollToBottom();
-  }, [messages]);
+  // Note: Auto-scroll is handled internally by VirtualizedMessageThread
 
   // === QUERIES ===
   
