@@ -20,8 +20,8 @@ export const PRIORITY_CONFIG = {
   low: {
     label: 'Low',
     value: 'low',
-    dotColor: 'bg-muted-foreground',
-    badgeClass: 'bg-muted text-muted-foreground border-border',
+    dotColor: 'bg-success',
+    badgeClass: 'bg-success/10 text-success border-success/20',
   },
   normal: {
     label: 'Normal',
