@@ -14,7 +14,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01, Mail01, ChevronDown } from '@untitledui/icons';
+import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01, Mail01, ChevronDown, Flag01 } from '@untitledui/icons';
 import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFromLeadData } from '@/lib/field-keys';
 import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
@@ -741,7 +741,7 @@ export const LeadDetailsSheet = ({
                               variant="outline" 
                               className={PRIORITY_CONFIG[normalizePriority(conversationMetadata.priority)].badgeClass}
                             >
-                              <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${PRIORITY_CONFIG[normalizePriority(conversationMetadata.priority)].dotColor}`} />
+                              <Flag01 size={10} className="mr-1" />
                               {PRIORITY_CONFIG[normalizePriority(conversationMetadata.priority)].label}
                             </Badge>
                             <ChevronDown className="h-3 w-3 text-muted-foreground" />
@@ -757,7 +757,7 @@ export const LeadDetailsSheet = ({
                                 variant="outline"
                                 className={PRIORITY_CONFIG[option.value as keyof typeof PRIORITY_CONFIG].badgeClass}
                               >
-                                <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${option.dotColor}`} />
+                                <Flag01 size={10} className="mr-1" />
                                 {option.label}
                               </Badge>
                             </DropdownMenuItem>

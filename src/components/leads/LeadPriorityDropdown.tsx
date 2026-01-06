@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown } from '@untitledui/icons';
+import { ChevronDown, Flag01 } from '@untitledui/icons';
 import { PRIORITY_CONFIG, PRIORITY_OPTIONS, normalizePriority, type PriorityValue } from '@/lib/priority-config';
 import { useCanManage } from '@/hooks/useCanManage';
 
@@ -31,7 +31,7 @@ export function LeadPriorityDropdown({ priority, onPriorityChange }: LeadPriorit
         variant="outline" 
         className={config.badgeClass}
       >
-        <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${config.dotColor}`} />
+        <Flag01 size={10} className="mr-1" />
         {config.label}
       </Badge>
     );
@@ -45,7 +45,7 @@ export function LeadPriorityDropdown({ priority, onPriorityChange }: LeadPriorit
             variant="outline" 
             className={config.badgeClass}
           >
-            <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${config.dotColor}`} />
+            <Flag01 size={10} className="mr-1" />
             {config.label}
           </Badge>
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
@@ -61,7 +61,7 @@ export function LeadPriorityDropdown({ priority, onPriorityChange }: LeadPriorit
               variant="outline"
               className={PRIORITY_CONFIG[option.value as PriorityValue].badgeClass}
             >
-              <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${option.dotColor}`} />
+              <Flag01 size={10} className="mr-1" />
               {option.label}
             </Badge>
           </DropdownMenuItem>
