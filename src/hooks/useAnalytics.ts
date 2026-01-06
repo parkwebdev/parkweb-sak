@@ -367,7 +367,17 @@ export const useAnalytics = (
     try {
       const { data, error } = await supabase
         .from('usage_metrics')
-        .select('*')
+        .select(`
+          id,
+          user_id,
+          period_start,
+          period_end,
+          conversations_count,
+          messages_count,
+          api_calls_count,
+          tokens_used,
+          created_at
+        `)
         .eq('user_id', accountOwnerId)
         .gte('period_start', startDate.toISOString())
         .lte('period_end', endDate.toISOString())

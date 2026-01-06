@@ -8,6 +8,7 @@ import { logger } from '@/utils/logger';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
 import type { TeamProfile } from '@/types/report';
+import { PROFILE_LIST_COLUMNS } from '@/lib/db-selects';
 
 /**
  * Hook for managing team members and roles.
@@ -67,7 +68,7 @@ export const useTeam = () => {
         // Fallback to direct query if user is viewing their own profile only
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('profiles')
-          .select('*')
+          .select(PROFILE_LIST_COLUMNS)
           .eq('user_id', user.id);
           
         if (fallbackError) {

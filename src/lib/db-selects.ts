@@ -323,10 +323,12 @@ export const SCHEDULED_REPORT_COLUMNS = `
  * Columns for profile list views.
  */
 export const PROFILE_LIST_COLUMNS = `
+  id,
   user_id,
   display_name,
   avatar_url,
-  email
+  email,
+  created_at
 `;
 
 /**
