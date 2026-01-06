@@ -12,10 +12,11 @@
  * @component
  */
 
-import React, { memo, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { memo, useCallback, useMemo, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { AdminMessageBubble } from './AdminMessageBubble';
+import { ScrollToBottomButton } from './ScrollToBottomButton';
 import { updateMessageReaction } from '@/lib/conversation-utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -51,6 +52,7 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
     loadingMessages,
   }, ref) {
     const parentRef = useRef<HTMLDivElement>(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
 
     // Filter out tool call placeholder messages
     const filteredMessages = useMemo(() => {
@@ -93,6 +95,16 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
           }
         });
       }
+    }, []);
+
+    // Track scroll position to show/hide scroll-to-bottom button
+    const handleScroll = useCallback(() => {
+      const el = parentRef.current;
+      if (!el) return;
+      
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      setShowScrollButton(distanceFromBottom > 200);
     }, []);
 
     // Expose scroll to bottom via ref
@@ -171,7 +183,8 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
     return (
       <div 
         ref={parentRef} 
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4 relative"
+        onScroll={handleScroll}
       >
         {loadingMessages ? (
           <div className="space-y-4 max-w-4xl mx-auto">
@@ -254,6 +267,12 @@ export const VirtualizedMessageThread = memo(forwardRef<VirtualizedMessageThread
             </div>
           </div>
         )}
+        
+        {/* Scroll to bottom FAB */}
+        <ScrollToBottomButton
+          visible={showScrollButton && !loadingMessages && filteredMessages.length > 10}
+          onClick={() => scrollToBottom(true)}
+        />
       </div>
     );
   }

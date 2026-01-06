@@ -160,7 +160,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Check if profile exists
       const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id')
         .eq('user_id', user.id)
         .single();
 
@@ -182,7 +182,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Check if notification preferences exist
       const { data: existingPrefs } = await supabase
         .from('notification_preferences')
-        .select('*')
+        .select('id, user_id')
         .eq('user_id', user.id)
         .single();
 

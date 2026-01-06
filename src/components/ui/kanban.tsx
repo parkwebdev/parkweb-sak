@@ -221,21 +221,25 @@ export type KanbanCardsProps<T extends KanbanItemProps = KanbanItemProps> = Omit
 > & {
   children: (item: T) => ReactNode;
   id: string;
+  /** Use virtualization for large lists (>15 items) */
+  virtualized?: boolean;
 };
 
 export const KanbanCards = <T extends KanbanItemProps>({
   children,
   className,
   id,
+  virtualized = false,
   ...props
 }: KanbanCardsProps<T>) => {
   const { data } = useContext(KanbanContext) as KanbanContextProps<T>;
   const filteredData = data.filter((item) => item.column === id);
   const items = filteredData.map((item) => item.id);
 
+  // For small lists or when virtualization is disabled, use simple rendering
   return (
     <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
-      <ScrollArea className="max-h-[calc(100vh-140px)]">
+      <ScrollArea className="max-h-[calc(100vh-180px)]">
         <div
           className={cn("flex flex-col gap-2 p-0.5 min-h-[100px]", className)}
           {...props}

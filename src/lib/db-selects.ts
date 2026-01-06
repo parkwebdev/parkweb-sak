@@ -408,3 +408,51 @@ export const KB_ARTICLE_POPULARITY_COLUMNS = `
   view_count,
   unique_views
 `;
+
+/**
+ * Columns for agent views.
+ * Core agent data without large JSONB fields.
+ */
+export const AGENT_COLUMNS = `
+  id,
+  user_id,
+  name,
+  description,
+  model,
+  status,
+  temperature,
+  max_tokens,
+  system_prompt,
+  deployment_config,
+  enable_news_tab,
+  has_viewed_installation,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for conversation views (used in search).
+ */
+export const CONVERSATION_SEARCH_COLUMNS = `
+  id,
+  agent_id,
+  status,
+  channel,
+  created_at,
+  updated_at,
+  metadata,
+  agents!fk_conversations_agent(name)
+`;
+
+/**
+ * Columns for lead search views.
+ */
+export const LEAD_SEARCH_COLUMNS = `
+  id,
+  name,
+  email,
+  phone,
+  company,
+  status,
+  created_at
+`;

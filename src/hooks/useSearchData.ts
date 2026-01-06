@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { LEAD_SEARCH_COLUMNS, PROFILE_LIST_COLUMNS } from '@/lib/db-selects';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { ROUTE_CONFIG, SETTINGS_TABS } from '@/config/routes';
 import { KB_CATEGORIES } from '@/config/knowledge-base-config';
@@ -93,7 +94,7 @@ export const useSearchData = () => {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('leads')
-            .select('*')
+            .select(LEAD_SEARCH_COLUMNS)
             .order('created_at', { ascending: false })
             .limit(50);
           dataMap.leads = (res.data ?? []) as LeadRecord[];
@@ -164,7 +165,7 @@ export const useSearchData = () => {
         fetchPromises.push((async () => {
           const res = await supabase
             .from('profiles')
-            .select('*')
+            .select(PROFILE_LIST_COLUMNS)
             .order('display_name')
             .limit(50);
           dataMap.teamMembers = (res.data ?? []) as ProfileRecord[];

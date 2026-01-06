@@ -1,6 +1,7 @@
 /**
- * @fileoverview Leads data table with sorting, selection, filtering, and pagination.
+ * @fileoverview Leads data table with sorting, selection, filtering, and virtualization.
  * Integrates with TanStack Table for row selection, faceted filters, and bulk actions.
+ * Uses VirtualizedDataTable for efficient rendering of large datasets.
  */
 
 import React, { useMemo, useCallback, useEffect } from 'react';
@@ -11,20 +12,18 @@ import {
   getFilteredRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
-  getPaginationRowModel,
   SortingState,
   RowSelectionState,
   ColumnFiltersState,
   VisibilityState,
-  ColumnOrderState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
 import { Trash01 } from '@untitledui/icons';
 import {
-  DataTable,
   DataTablePagination,
   DataTableFloatingBar,
 } from '@/components/data-table';
+import { VirtualizedDataTable } from '@/components/data-table/VirtualizedDataTable';
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 import { Button } from '@/components/ui/button';
@@ -50,6 +49,8 @@ interface LeadsTableProps {
   defaultSort: SortOption | null;
   /** Whether the user can manage leads (select for bulk actions, etc.) */
   canManage?: boolean;
+  /** Whether data is loading */
+  isLoading?: boolean;
 }
 
 export const LeadsTable = React.memo(function LeadsTable({
@@ -68,6 +69,7 @@ export const LeadsTable = React.memo(function LeadsTable({
   columnOrder,
   defaultSort,
   canManage = true,
+  isLoading = false,
 }: LeadsTableProps) {
   // Initialize sorting from defaultSort
   const [sorting, setSorting] = useState<SortingState>(() => {
@@ -175,7 +177,7 @@ export const LeadsTable = React.memo(function LeadsTable({
     getFilteredRowModel: getFilteredRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // Remove getPaginationRowModel - virtualization handles this
     filterFns: {
       arrIncludesSome: (row, columnId, filterValue: string[]) => {
         const value = row.getValue(columnId) as string;
@@ -196,14 +198,22 @@ export const LeadsTable = React.memo(function LeadsTable({
 
   return (
     <div className="space-y-4">
-      <DataTable
+      <VirtualizedDataTable
         table={table}
         columns={orderedColumns}
         onRowClick={handleRowClick}
         emptyMessage="No leads found"
+        isLoading={isLoading}
+        maxHeight="calc(100vh - 280px)"
       />
-      {leads.length > 10 && (
-        <DataTablePagination table={table} showSelectedCount={canManage} />
+      {/* Show row count instead of pagination */}
+      {leads.length > 0 && (
+        <div className="flex items-center justify-between px-2">
+          <div className="text-sm text-muted-foreground">
+            {table.getFilteredRowModel().rows.length} lead{table.getFilteredRowModel().rows.length !== 1 ? 's' : ''}
+            {selectedIds.size > 0 && canManage && ` • ${selectedIds.size} selected`}
+          </div>
+        </div>
       )}
       {canManage && (
         <DataTableFloatingBar table={table}>

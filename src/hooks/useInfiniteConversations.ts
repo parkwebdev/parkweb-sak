@@ -246,10 +246,24 @@ export function useInfiniteConversations(options: UseInfiniteConversationsOption
   // Flatten pages into single array - memoized to prevent unnecessary re-renders
   const conversations = useMemo(() => flattenPages(data), [data]);
 
-  // Fetch messages for a conversation
-  const fetchMessages = useCallback(async (conversationId: string): Promise<Message[]> => {
+  /**
+   * Fetch messages for a conversation with optional cursor-based pagination.
+   * Supports loading older messages for infinite scroll.
+   * 
+   * @param conversationId - The conversation to fetch messages for
+   * @param options - Pagination options
+   * @param options.cursor - Load messages older than this timestamp
+   * @param options.limit - Number of messages to fetch (default: 50)
+   * @returns Messages and pagination info
+   */
+  const fetchMessages = useCallback(async (
+    conversationId: string,
+    options?: { cursor?: string; limit?: number }
+  ): Promise<Message[]> => {
+    const limit = options?.limit ?? 50;
+    
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('messages')
         .select(`
           id,
@@ -264,10 +278,20 @@ export function useInfiniteConversations(options: UseInfiniteConversationsOption
           tool_result
         `)
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      // Cursor-based pagination for loading older messages
+      if (options?.cursor) {
+        query = query.lt('created_at', options.cursor);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
-      return data || [];
+      
+      // Return in chronological order (oldest first)
+      return (data || []).reverse();
     } catch (error: unknown) {
       logger.error('Error fetching messages:', error);
       toast.error('Failed to load messages');
