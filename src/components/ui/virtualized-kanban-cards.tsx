@@ -7,7 +7,7 @@
  * @component
  */
 
-import { useRef, useCallback, useContext, type HTMLAttributes, type ReactNode } from 'react';
+import { useRef, useCallback, useContext, useMemo, type HTMLAttributes, type ReactNode } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -51,8 +51,8 @@ export function VirtualizedKanbanCards<T extends KanbanItemProps>({
   ...props
 }: VirtualizedKanbanCardsProps<T>) {
   const { data } = useContext(KanbanContext) as KanbanContextData<T>;
-  const filteredData = data.filter((item: T) => item.column === id);
-  const items = filteredData.map((item: T) => item.id);
+  const filteredData = useMemo(() => data.filter((item: T) => item.column === id), [data, id]);
+  const items = useMemo(() => filteredData.map((item: T) => item.id), [filteredData]);
   
   const parentRef = useRef<HTMLDivElement>(null);
   
