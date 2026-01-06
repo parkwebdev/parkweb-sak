@@ -100,12 +100,12 @@ export const VirtualizedConversationsList = memo(function VirtualizedConversatio
 
   const openCount = allConversations.filter(c => c.status === 'active' || c.status === 'human_takeover').length;
 
-  // Set up virtualizer
+  // Set up virtualizer with dynamic measurement
   const virtualizer = useVirtualizer({
     count: hasNextPage ? conversations.length + 1 : conversations.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => ITEM_HEIGHT,
-    overscan: 5, // Render 5 items above and below viewport
+    overscan: 5,
   });
 
   const items = virtualizer.getVirtualItems();
@@ -266,12 +266,14 @@ export const VirtualizedConversationsList = memo(function VirtualizedConversatio
                 return (
                   <div
                     key={conv.id}
+                    data-index={virtualItem.index}
+                    ref={virtualizer.measureElement}
+                    className="border-b border-border"
                     style={{
                       position: 'absolute',
                       top: 0,
                       left: 0,
                       width: '100%',
-                      height: `${virtualItem.size}px`,
                       transform: `translateY(${virtualItem.start}px)`,
                     }}
                   >

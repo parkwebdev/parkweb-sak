@@ -50,7 +50,7 @@ export const ConversationItem = memo(function ConversationItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-4 hover:bg-accent/30 transition-colors border-b ${
+      className={`w-full text-left p-4 hover:bg-accent/30 transition-colors ${
         isSelected ? 'bg-accent/50' : ''
       }`}
     >
