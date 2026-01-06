@@ -222,9 +222,13 @@ function Conversations() {
       if (messageCount > 0) {
         lastScrolledConversationIdRef.current = conversationId;
         prevMessageCountRef.current = messageCount;
-        // Delay scroll slightly to ensure virtualizer has rendered
+        // Double RAF ensures virtualizer has measured items and calculated total height
+        // Frame 1: React commits, virtualizer renders visible items
+        // Frame 2: Virtualizer measures, we scroll to the now-correct scrollHeight
         requestAnimationFrame(() => {
-          messagesScrollRef.current?.scrollToBottom();
+          requestAnimationFrame(() => {
+            messagesScrollRef.current?.scrollToBottom();
+          });
         });
       }
       return;
