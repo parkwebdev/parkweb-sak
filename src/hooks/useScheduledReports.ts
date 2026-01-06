@@ -33,7 +33,23 @@ export const useScheduledReports = () => {
       
       const { data, error } = await supabase
         .from('scheduled_reports')
-        .select('*')
+        .select(`
+          id,
+          user_id,
+          name,
+          frequency,
+          day_of_week,
+          day_of_month,
+          time_of_day,
+          timezone,
+          recipients,
+          report_config,
+          active,
+          last_sent_at,
+          created_at,
+          created_by,
+          updated_at
+        `)
         .eq('user_id', accountOwnerId)
         .order('created_at', { ascending: false });
 

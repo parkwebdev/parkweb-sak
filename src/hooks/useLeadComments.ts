@@ -31,7 +31,14 @@ export function useLeadComments(leadId: string | undefined) {
       
       const { data, error } = await supabase
         .from('lead_comments')
-        .select('*')
+        .select(`
+          id,
+          lead_id,
+          user_id,
+          content,
+          created_at,
+          updated_at
+        `)
         .eq('lead_id', leadId)
         .order('created_at', { ascending: true });
 

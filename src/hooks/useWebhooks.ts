@@ -45,7 +45,23 @@ export const useWebhooks = (agentId: string) => {
       
       const { data, error } = await supabase
         .from('webhooks')
-        .select('*')
+        .select(`
+          id,
+          agent_id,
+          user_id,
+          name,
+          url,
+          method,
+          events,
+          headers,
+          auth_type,
+          auth_config,
+          conditions,
+          response_actions,
+          active,
+          created_at,
+          updated_at
+        `)
         .eq('agent_id', agentId)
         .order('created_at', { ascending: false });
 
@@ -70,7 +86,19 @@ export const useWebhooks = (agentId: string) => {
     try {
       let query = supabase
         .from('webhook_logs')
-        .select('*')
+        .select(`
+          id,
+          webhook_id,
+          event_type,
+          payload,
+          response_status,
+          response_body,
+          error_message,
+          retry_count,
+          delivered,
+          created_at,
+          delivered_at
+        `)
         .order('created_at', { ascending: false })
         .limit(100);
 

@@ -153,3 +153,258 @@ export const TEAM_MEMBER_LIST_COLUMNS = `
   role,
   created_at
 `;
+
+/**
+ * Columns for announcement list views.
+ */
+export const ANNOUNCEMENT_LIST_COLUMNS = `
+  id,
+  agent_id,
+  title,
+  subtitle,
+  image_url,
+  action_type,
+  action_url,
+  background_color,
+  title_color,
+  is_active,
+  order_index,
+  created_at,
+  updated_at,
+  user_id
+`;
+
+/**
+ * Columns for agent API key list views.
+ */
+export const AGENT_API_KEY_COLUMNS = `
+  id,
+  agent_id,
+  key_prefix,
+  name,
+  requests_per_minute,
+  requests_per_day,
+  current_minute_requests,
+  current_day_requests,
+  last_used_at,
+  created_at,
+  revoked_at
+`;
+
+/**
+ * Columns for lead stage list views.
+ */
+export const LEAD_STAGE_COLUMNS = `
+  id,
+  user_id,
+  name,
+  color,
+  order_index,
+  is_default,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for lead activity list views.
+ */
+export const LEAD_ACTIVITY_COLUMNS = `
+  id,
+  lead_id,
+  action_type,
+  action_data,
+  user_id,
+  created_at
+`;
+
+/**
+ * Columns for lead comment list views.
+ */
+export const LEAD_COMMENT_COLUMNS = `
+  id,
+  lead_id,
+  user_id,
+  content,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for lead assignee list views.
+ */
+export const LEAD_ASSIGNEE_COLUMNS = `
+  id,
+  lead_id,
+  user_id,
+  assigned_at,
+  assigned_by
+`;
+
+/**
+ * Columns for news item list views.
+ */
+export const NEWS_ITEM_COLUMNS = `
+  id,
+  agent_id,
+  user_id,
+  title,
+  body,
+  featured_image_url,
+  author_name,
+  author_avatar,
+  cta_primary_label,
+  cta_primary_url,
+  cta_secondary_label,
+  cta_secondary_url,
+  is_published,
+  published_at,
+  order_index,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for location list views.
+ */
+export const LOCATION_COLUMNS = `
+  id,
+  agent_id,
+  user_id,
+  name,
+  address,
+  city,
+  state,
+  zip,
+  country,
+  phone,
+  email,
+  timezone,
+  business_hours,
+  is_active,
+  wordpress_slug,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for help category list views.
+ */
+export const HELP_CATEGORY_COLUMNS = `
+  id,
+  agent_id,
+  name,
+  description,
+  icon,
+  order_index,
+  created_at
+`;
+
+/**
+ * Columns for scheduled report list views.
+ */
+export const SCHEDULED_REPORT_COLUMNS = `
+  id,
+  user_id,
+  name,
+  frequency,
+  day_of_week,
+  day_of_month,
+  time_of_day,
+  timezone,
+  recipients,
+  report_config,
+  active,
+  last_sent_at,
+  created_at,
+  created_by
+`;
+
+/**
+ * Columns for profile list views.
+ */
+export const PROFILE_LIST_COLUMNS = `
+  user_id,
+  display_name,
+  avatar_url,
+  email
+`;
+
+/**
+ * Columns for report export list views.
+ */
+export const REPORT_EXPORT_COLUMNS = `
+  id,
+  user_id,
+  agent_id,
+  name,
+  format,
+  file_path,
+  file_size,
+  date_range_start,
+  date_range_end,
+  report_config,
+  created_at,
+  created_by
+`;
+
+/**
+ * Columns for property list views.
+ */
+export const PROPERTY_LIST_COLUMNS = `
+  id,
+  agent_id,
+  knowledge_source_id,
+  location_id,
+  external_id,
+  lot_number,
+  address,
+  city,
+  state,
+  zip,
+  beds,
+  baths,
+  sqft,
+  price,
+  price_type,
+  status,
+  description,
+  features,
+  images,
+  listing_url,
+  year_built,
+  first_seen_at,
+  last_seen_at,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for webhook list views.
+ */
+export const WEBHOOK_COLUMNS = `
+  id,
+  agent_id,
+  user_id,
+  name,
+  url,
+  method,
+  events,
+  headers,
+  auth_type,
+  auth_config,
+  conditions,
+  response_actions,
+  active,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for KB article popularity views.
+ */
+export const KB_ARTICLE_POPULARITY_COLUMNS = `
+  article_slug,
+  category_id,
+  view_count,
+  unique_views
+`;

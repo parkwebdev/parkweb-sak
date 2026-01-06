@@ -460,6 +460,24 @@ const { data } = await supabase
 | `WEBHOOK_LOG_COLUMNS` | webhook_logs | Monitoring |
 | `CALENDAR_EVENT_LIST_COLUMNS` | calendar_events | Planner |
 | `KNOWLEDGE_SOURCE_LIST_COLUMNS` | knowledge_sources | Knowledge management |
+| `HELP_ARTICLE_LIST_COLUMNS` | help_articles | Help center |
+| `NOTIFICATION_LIST_COLUMNS` | notifications | Notification list |
+| `TEAM_MEMBER_LIST_COLUMNS` | team_members | Team management |
+| `ANNOUNCEMENT_LIST_COLUMNS` | announcements | Widget announcements |
+| `AGENT_API_KEY_COLUMNS` | agent_api_keys | API key management |
+| `LEAD_STAGE_COLUMNS` | lead_stages | Pipeline stages |
+| `LEAD_ACTIVITY_COLUMNS` | lead_activities | Activity timeline |
+| `LEAD_COMMENT_COLUMNS` | lead_comments | Comment threads |
+| `LEAD_ASSIGNEE_COLUMNS` | lead_assignees | Assignee management |
+| `NEWS_ITEM_COLUMNS` | news_items | News/updates feed |
+| `LOCATION_COLUMNS` | locations | Location management |
+| `HELP_CATEGORY_COLUMNS` | help_categories | Help categories |
+| `SCHEDULED_REPORT_COLUMNS` | scheduled_reports | Scheduled reports |
+| `PROFILE_LIST_COLUMNS` | profiles | Profile lookups |
+| `REPORT_EXPORT_COLUMNS` | report_exports | Export history |
+| `PROPERTY_LIST_COLUMNS` | properties | Property listings |
+| `WEBHOOK_COLUMNS` | webhooks | Webhook configuration |
+| `KB_ARTICLE_POPULARITY_COLUMNS` | kb_article_popularity | Article analytics |
 
 ### Image Optimization
 

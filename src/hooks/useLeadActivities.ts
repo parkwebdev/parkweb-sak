@@ -49,7 +49,14 @@ export function useLeadActivities(leadId: string | undefined) {
 
       const { data, error } = await supabase
         .from('lead_activities')
-        .select('*')
+        .select(`
+          id,
+          lead_id,
+          action_type,
+          action_data,
+          user_id,
+          created_at
+        `)
         .eq('lead_id', leadId)
         .order('created_at', { ascending: false })
         .limit(50);

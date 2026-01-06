@@ -63,7 +63,20 @@ export const useReportExports = () => {
 
       const { data, error } = await supabase
         .from('report_exports')
-        .select('*')
+        .select(`
+          id,
+          user_id,
+          agent_id,
+          name,
+          format,
+          file_path,
+          file_size,
+          date_range_start,
+          date_range_end,
+          report_config,
+          created_at,
+          created_by
+        `)
         .eq('user_id', accountOwnerId)
         .order('created_at', { ascending: false });
 

@@ -73,7 +73,19 @@ export const useAgentApiKeys = (agentId: string) => {
       
       const { data, error } = await supabase
         .from('agent_api_keys')
-        .select('*')
+        .select(`
+          id,
+          agent_id,
+          key_prefix,
+          name,
+          requests_per_minute,
+          requests_per_day,
+          current_minute_requests,
+          current_day_requests,
+          last_used_at,
+          created_at,
+          revoked_at
+        `)
         .eq('agent_id', agentId)
         .is('revoked_at', null)
         .order('created_at', { ascending: false });
