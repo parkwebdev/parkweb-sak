@@ -11,9 +11,10 @@
  * @page
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useLeads } from '@/hooks/useLeads';
+import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
+import { Loading02 } from '@untitledui/icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
 import { useTeam } from '@/hooks/useTeam';
@@ -78,7 +79,37 @@ const DATE_FILTER_DAYS: Record<Exclude<DateRangeFilter, 'all'>, number> = {
 };
 
 function Leads({ onMenuClick }: LeadsProps) {
-  const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
+  const { 
+    leads, 
+    loading, 
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    updateLead, 
+    updateLeadOrders, 
+    deleteLead, 
+    deleteLeads, 
+    getLeadsWithConversations 
+  } = useInfiniteLeads();
+  
+  // Infinite scroll intersection observer
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+    
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
   const { stages } = useLeadStages();
   const { getAssignees, addAssignee, removeAssignee, assigneesByLead } = useLeadAssignees();
   const { teamMembers } = useTeam();
@@ -438,6 +469,17 @@ function Leads({ onMenuClick }: LeadsProps) {
         {!loading && leads.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             No leads captured yet. Leads are automatically added when visitors submit the contact form in your widget.
+          </div>
+        )}
+        
+        {/* Infinite scroll trigger */}
+        <div ref={loadMoreRef} className="h-4" aria-hidden="true" />
+        
+        {/* Loading indicator for infinite scroll */}
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <Loading02 size={20} className="animate-spin text-muted-foreground" aria-hidden="true" />
+            <span className="sr-only">Loading more leads</span>
           </div>
         )}
       </div>

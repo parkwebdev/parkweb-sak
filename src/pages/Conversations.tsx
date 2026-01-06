@@ -18,7 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import { validateFiles } from '@/lib/file-validation';
 import { useCanManage } from '@/hooks/useCanManage';
 
-import { useConversations } from '@/hooks/useConversations';
+import { useInfiniteConversations } from '@/hooks/useInfiniteConversations';
 import { useAgent } from '@/hooks/useAgent';
 import { useVisitorPresence } from '@/hooks/useVisitorPresence';
 import { useTypingPresence } from '@/hooks/useTypingPresence';
@@ -27,7 +27,7 @@ import {
   ConversationMetadataPanel,
   InboxNavSidebar, 
   type InboxFilter,
-  ConversationsList,
+  VirtualizedConversationsList,
   ChatHeader,
   TranslationBanner,
   MessageThread,
@@ -60,7 +60,10 @@ function Conversations() {
   // === DATA HOOKS ===
   const {
     conversations, 
-    loading, 
+    loading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
     fetchMessages, 
     updateConversationStatus,
     updateConversationMetadata,
@@ -68,7 +71,7 @@ function Conversations() {
     returnToAI,
     sendHumanMessage,
     reopenConversation,
-  } = useConversations();
+  } = useInfiniteConversations();
 
   const { agent } = useAgent();
   const agentId = agent?.id;
@@ -457,8 +460,8 @@ function Conversations() {
         onSelectConversation={setSelectedConversation}
       />
       
-      {/* Conversations List Sidebar */}
-      <ConversationsList
+      {/* Conversations List Sidebar - Virtualized for performance */}
+      <VirtualizedConversationsList
         conversations={filteredConversations}
         allConversations={conversations}
         selectedId={selectedConversation?.id || null}
@@ -470,6 +473,9 @@ function Conversations() {
         activeFilterLabel={activeFilter.label}
         getVisitorPresence={getVisitorPresence}
         loading={loading}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={fetchNextPage}
       />
 
       {/* Chat Area */}
