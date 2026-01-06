@@ -887,9 +887,16 @@ export function ConversationMetadataPanel({
                 </SelectTrigger>
                 <SelectContent>
                   {PRIORITY_OPTIONS.map((option) => {
-                    const textColorClass = PRIORITY_CONFIG[option.value as keyof typeof PRIORITY_CONFIG].badgeClass.split(' ').find(c => c.startsWith('text-'));
+                    const config = PRIORITY_CONFIG[option.value as keyof typeof PRIORITY_CONFIG];
+                    const textColorClass = config.badgeClass.split(' ').find(c => c.startsWith('text-'));
+                    const bgColorClass = config.badgeClass.split(' ').find(c => c.startsWith('bg-'));
+                    const isSelected = (metadata.priority || 'none') === option.value;
                     return (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem 
+                        key={option.value} 
+                        value={option.value}
+                        className={isSelected ? bgColorClass : undefined}
+                      >
                         <div className={cn("flex items-center gap-2", textColorClass)}>
                           <Flag01 size={12} />
                           {option.label}
