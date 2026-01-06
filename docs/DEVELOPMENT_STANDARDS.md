@@ -593,6 +593,30 @@ CREATE INDEX idx_conversations_user_updated ON conversations(user_id, updated_at
 CREATE INDEX idx_messages_conversation_created ON messages(conversation_id, created_at);
 ```
 
+### List Virtualization
+
+For long lists (100+ items), use `@tanstack/react-virtual` for performance:
+
+```tsx
+import { VirtualizedConversationsList } from '@/components/conversations';
+import { VirtualizedMessageThread } from '@/components/conversations';
+
+// Use virtualized components for large lists
+<VirtualizedConversationsList
+  conversations={conversations}
+  hasNextPage={hasNextPage}
+  fetchNextPage={fetchNextPage}
+  isFetchingNextPage={isFetchingNextPage}
+  {...otherProps}
+/>
+```
+
+**Available Virtualized Components:**
+| Component | Use Case |
+|-----------|----------|
+| `VirtualizedConversationsList` | Inbox conversation list with infinite scroll |
+| `VirtualizedMessageThread` | Long message threads (100+ messages) |
+
 ### Performance Checklist
 
 When adding new data features:
@@ -604,6 +628,8 @@ When adding new data features:
 - [ ] Use batch RPC for bulk updates
 - [ ] Add database indexes for common query patterns
 - [ ] Include `accountOwnerId` in query keys for cache consistency
+- [ ] Use virtualization for lists > 100 items
+- [ ] Use RealtimeManager for real-time subscriptions
 
 ---
 
