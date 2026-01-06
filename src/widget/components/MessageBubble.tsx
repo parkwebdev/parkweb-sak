@@ -180,7 +180,9 @@ export const MessageBubble = React.memo(function MessageBubble({
                           <img 
                             src={file.url} 
                             alt={file.name} 
-                            className="w-12 h-12 object-cover rounded-md" 
+                            className="w-12 h-12 object-cover rounded-md"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </a>
                         <div className="flex-1 min-w-0">

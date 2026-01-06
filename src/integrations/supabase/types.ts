@@ -2337,6 +2337,7 @@ export type Database = {
       }
     }
     Functions: {
+      batch_update_lead_orders: { Args: { updates: Json }; Returns: undefined }
       cleanup_expired_caches: { Args: never; Returns: undefined }
       filter_widget_conversation_metadata: {
         Args: { raw_metadata: Json }

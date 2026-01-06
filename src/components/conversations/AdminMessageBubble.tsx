@@ -102,6 +102,8 @@ export const AdminMessageBubble = memo(function AdminMessageBubble({
               src={msgMetadata.sender_avatar} 
               alt={msgMetadata?.sender_name || 'Team member'} 
               className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1"
+              loading="lazy"
+              decoding="async"
             />
           ) : isHumanSent ? (
             <div className="w-8 h-8 rounded-full bg-info/10 flex items-center justify-center flex-shrink-0 mt-1">
@@ -177,7 +179,9 @@ export const AdminMessageBubble = memo(function AdminMessageBubble({
                           <img 
                             src={file.url} 
                             alt={file.name} 
-                            className="w-12 h-12 object-cover rounded-md" 
+                            className="w-12 h-12 object-cover rounded-md"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </a>
                         <div className="flex-1 min-w-0">

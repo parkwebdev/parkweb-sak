@@ -154,11 +154,15 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
                 src={integration.logo} 
                 alt={`${integration.name} logo`}
                 className="h-5 w-5 object-contain dark:hidden"
+                loading="lazy"
+                decoding="async"
               />
               <img 
                 src={integration.logoDark} 
                 alt={`${integration.name} logo`}
                 className="h-5 w-5 object-contain hidden dark:block"
+                loading="lazy"
+                decoding="async"
               />
             </>
           ) : (
@@ -166,6 +170,8 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
               src={integration.logo} 
               alt={`${integration.name} logo`}
               className="h-5 w-5 object-contain"
+              loading="lazy"
+              decoding="async"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}

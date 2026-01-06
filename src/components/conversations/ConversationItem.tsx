@@ -86,7 +86,9 @@ export const ConversationItem = memo(function ConversationItem({
                 {takeoverAvatarUrl && (
                   <img 
                     src={takeoverAvatarUrl} 
-                    alt="" 
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
                     className="w-4 h-4 rounded-full object-cover"
                   />
                 )}

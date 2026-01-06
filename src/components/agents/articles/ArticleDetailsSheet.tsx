@@ -206,6 +206,8 @@ export function ArticleDetailsSheet({
                   src={featuredImage} 
                   alt="" 
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             ) : (
@@ -303,11 +305,13 @@ export function ArticleDetailsSheet({
               </p>
               
               {featuredImage ? (
-                <div className="relative rounded-lg overflow-hidden">
+              <div className="relative rounded-lg overflow-hidden">
                   <img 
                     src={featuredImage} 
                     alt="Featured" 
                     className="w-full h-32 object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <Button 
