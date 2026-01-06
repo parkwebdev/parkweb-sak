@@ -3,10 +3,11 @@
 @tailwind utilities;
 
 @layer components {
-  /* Premium primary button styling */
+  /* Premium primary button styling - Light mode */
   .btn-primary {
     background: linear-gradient(180deg, #171717 0%, #333333 100%);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+    border-color: #171717;
   }
   
   .btn-primary:hover:not(:disabled) {
@@ -15,6 +16,22 @@
   
   .btn-primary:disabled {
     background: linear-gradient(180deg, #171717 0%, #333333 100%);
+  }
+  
+  /* Premium primary button styling - Dark mode */
+  .dark .btn-primary {
+    background: linear-gradient(180deg, #fafafa 0%, #e5e5e5 100%);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    border-color: #e5e5e5;
+    color: #171717;
+  }
+  
+  .dark .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(180deg, #f5f5f5 0%, #d4d4d4 100%);
+  }
+  
+  .dark .btn-primary:disabled {
+    background: linear-gradient(180deg, #fafafa 0%, #e5e5e5 100%);
   }
 }
 
