@@ -42,7 +42,7 @@
   }
   
   .btn-destructive:hover:not(:disabled) {
-    background: linear-gradient(180deg, #b91c1c 0%, #dc2626 100%);
+    background: linear-gradient(180deg, #c92525 0%, #e02e2e 100%);
   }
   
   .btn-destructive:disabled {
@@ -57,7 +57,7 @@
   }
   
   .dark .btn-destructive:hover:not(:disabled) {
-    background: linear-gradient(180deg, #b91c1c 0%, #dc2626 100%);
+    background: linear-gradient(180deg, #c92525 0%, #e02e2e 100%);
   }
   
   .dark .btn-destructive:disabled {
