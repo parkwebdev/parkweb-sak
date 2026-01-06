@@ -13,6 +13,8 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
+import { KanbanContext } from '@/components/ui/kanban';
+
 // Re-use the base item type from kanban
 type KanbanItemProps = {
   id: string;
@@ -20,26 +22,13 @@ type KanbanItemProps = {
   column: string;
 } & Record<string, unknown>;
 
-// Context type matches kanban.tsx
-type KanbanContextProps<T extends KanbanItemProps = KanbanItemProps> = {
+// Context type for type assertion
+type KanbanContextData<T extends KanbanItemProps = KanbanItemProps> = {
   columns: { id: string; name: string }[];
   data: T[];
   activeCardId: string | null;
   activeCardContent: ReactNode | null;
 };
-
-// Import context from kanban - we need to use the same context
-import { createContext } from 'react';
-
-// Create a local context that matches the structure (will be provided by KanbanProvider)
-const KanbanContext = createContext<KanbanContextProps>({
-  columns: [],
-  data: [],
-  activeCardId: null,
-  activeCardContent: null,
-});
-
-export { KanbanContext };
 
 export type VirtualizedKanbanCardsProps<T extends KanbanItemProps = KanbanItemProps> = Omit<
   HTMLAttributes<HTMLDivElement>,
@@ -61,9 +50,9 @@ export function VirtualizedKanbanCards<T extends KanbanItemProps>({
   overscan = 3,
   ...props
 }: VirtualizedKanbanCardsProps<T>) {
-  const { data } = useContext(KanbanContext) as KanbanContextProps<T>;
-  const filteredData = data.filter((item) => item.column === id);
-  const items = filteredData.map((item) => item.id);
+  const { data } = useContext(KanbanContext) as KanbanContextData<T>;
+  const filteredData = data.filter((item: T) => item.column === id);
+  const items = filteredData.map((item: T) => item.id);
   
   const parentRef = useRef<HTMLDivElement>(null);
   
