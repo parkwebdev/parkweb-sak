@@ -12,9 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01, Mail01 } from '@untitledui/icons';
+import { Trash02, LinkExternal02, InfoCircle, Globe01, Clock, XClose, Copy01, Phone01, Link01, Mail01, ChevronDown } from '@untitledui/icons';
 import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFromLeadData } from '@/lib/field-keys';
 import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
@@ -35,7 +35,7 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import { copyToClipboard } from '@/lib/clipboard';
 import { IconButton } from '@/components/ui/icon-button';
-import { PRIORITY_OPTIONS } from '@/lib/priority-config';
+import { PRIORITY_OPTIONS, PRIORITY_CONFIG, normalizePriority } from '@/lib/priority-config';
 
 interface LeadDetailsSheetProps {
   lead: Tables<'leads'> | null;
@@ -734,35 +734,36 @@ export const LeadDetailsSheet = ({
                     />
                     
                     {lead.conversation_id && (
-                      <div className="flex items-center gap-1 rounded transition-all duration-200">
-                        <Select
-                          value={conversationMetadata.priority || 'none'}
-                          onValueChange={handlePriorityChange}
-                        >
-                          <SelectTrigger size="sm" className="w-auto min-w-[80px] text-xs border-none bg-muted/50 hover:bg-muted px-2">
-                            <SelectValue>
-                              <div className="flex items-center gap-1.5">
-                                <span
-                                  className={`h-1.5 w-1.5 rounded-full ${
-                                    PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.dotColor || 'bg-muted'
-                                  }`}
-                                />
-                                <span className="text-xs">{PRIORITY_OPTIONS.find(p => p.value === (conversationMetadata.priority || 'none'))?.label || 'Not Set'}</span>
-                              </div>
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PRIORITY_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                <div className="flex items-center gap-2">
-                                  <span className={`h-2 w-2 rounded-full ${option.dotColor}`} />
-                                  {option.label}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="flex items-center gap-1">
+                            <Badge 
+                              variant="outline" 
+                              className={PRIORITY_CONFIG[normalizePriority(conversationMetadata.priority)].badgeClass}
+                            >
+                              <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${PRIORITY_CONFIG[normalizePriority(conversationMetadata.priority)].dotColor}`} />
+                              {PRIORITY_CONFIG[normalizePriority(conversationMetadata.priority)].label}
+                            </Badge>
+                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="bg-background z-50">
+                          {PRIORITY_OPTIONS.map((option) => (
+                            <DropdownMenuItem
+                              key={option.value}
+                              onClick={() => handlePriorityChange(option.value)}
+                            >
+                              <Badge 
+                                variant="outline"
+                                className={PRIORITY_CONFIG[option.value as keyof typeof PRIORITY_CONFIG].badgeClass}
+                              >
+                                <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${option.dotColor}`} />
+                                {option.label}
+                              </Badge>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                     
                     <span className="ml-auto text-2xs text-muted-foreground">
