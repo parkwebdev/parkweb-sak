@@ -617,6 +617,59 @@ import { VirtualizedMessageThread } from '@/components/conversations';
 | `VirtualizedConversationsList` | Inbox conversation list with infinite scroll |
 | `VirtualizedMessageThread` | Long message threads (100+ messages) |
 
+### Infinite Scroll Page Integration (Section 6 - Verified Complete)
+
+Pages using infinite scroll should follow this pattern:
+
+```tsx
+// 1. Import the infinite hook
+import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
+
+// 2. Destructure pagination controls
+const { 
+  leads, 
+  loading,
+  hasNextPage, 
+  fetchNextPage, 
+  isFetchingNextPage 
+} = useInfiniteLeads();
+
+// 3. Set up intersection observer for auto-loading
+const loadMoreRef = useRef<HTMLDivElement>(null);
+
+useEffect(() => {
+  if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+  
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    { threshold: 0.1, rootMargin: '100px' }
+  );
+  
+  observer.observe(loadMoreRef.current);
+  return () => observer.disconnect();
+}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+// 4. Add trigger element and loading indicator at end of list
+<div ref={loadMoreRef} className="h-4" aria-hidden="true" />
+
+{isFetchingNextPage && (
+  <div className="flex justify-center py-4">
+    <Loading02 size={20} className="animate-spin text-muted-foreground" aria-hidden="true" />
+    <span className="sr-only">Loading more items</span>
+  </div>
+)}
+```
+
+**Completed Integrations:**
+| Page | Hook Used | Status |
+|------|-----------|--------|
+| `src/pages/Leads.tsx` | `useInfiniteLeads` | ✅ Verified Complete |
+| `src/pages/Conversations.tsx` | `useInfiniteConversations` + `VirtualizedConversationsList` | ✅ Verified Complete |
+
 ### Performance Checklist
 
 When adding new data features:
@@ -630,6 +683,7 @@ When adding new data features:
 - [ ] Include `accountOwnerId` in query keys for cache consistency
 - [ ] Use virtualization for lists > 100 items
 - [ ] Use RealtimeManager for real-time subscriptions
+- [ ] Use infinite scroll hooks for paginated data
 
 ---
 
