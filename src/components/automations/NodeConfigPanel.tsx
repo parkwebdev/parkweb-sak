@@ -87,12 +87,13 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
       <div className="h-12 px-4 border-b border-border flex items-center justify-between">
         <h3 className="text-sm font-medium">Node Settings</h3>
         <IconButton
-          icon={X}
           label="Close panel"
           variant="ghost"
           size="sm"
           onClick={onClose}
-        />
+        >
+          <X size={16} aria-hidden="true" />
+        </IconButton>
       </div>
 
       {/* Content */}
