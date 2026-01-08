@@ -76,7 +76,7 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
         {/* Type selector - compact */}
         <Select
           value={field.fieldType}
-          onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') =>
+          onValueChange={(value: 'text' | 'name' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') =>
             onUpdate({
               fieldType: value,
               placeholder: value === 'checkbox' ? undefined : (field.placeholder || ''),
@@ -89,9 +89,10 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="text">Text</SelectItem>
+            <SelectItem value="name">Name</SelectItem>
             <SelectItem value="email">Email</SelectItem>
             <SelectItem value="phone">Phone</SelectItem>
+            <SelectItem value="text">Text</SelectItem>
             <SelectItem value="textarea">Text Area</SelectItem>
             <SelectItem value="select">Select</SelectItem>
             <SelectItem value="checkbox">Checkbox</SelectItem>
@@ -442,18 +443,12 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                 <CardTitle className="text-sm font-medium">
                   Step {activeStep} Fields
                 </CardTitle>
-                {activeStep === 1 && (
-                  <span className="text-xs text-muted-foreground">First, Last, Email are default</span>
-                )}
               </div>
             </CardHeader>
             <CardContent className="pt-0">
               {currentStepFields.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  {activeStep === 1 
-                    ? 'No custom fields yet (First, Last, Email are always shown)'
-                    : 'No fields in this step yet'
-                  }
+                  No fields in this step yet. Add Name, Email, or other fields below.
                 </p>
               ) : (
                 <DndContext

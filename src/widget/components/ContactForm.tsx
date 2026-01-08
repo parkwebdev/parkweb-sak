@@ -29,7 +29,7 @@ interface CustomField {
   /** Display label for the field */
   label: string;
   /** Field input type */
-  fieldType: 'text' | 'email' | 'phone' | 'select' | 'textarea' | 'checkbox';
+  fieldType: 'text' | 'name' | 'email' | 'phone' | 'select' | 'textarea' | 'checkbox';
   /** Whether field is required */
   required: boolean;
   /** Options for select fields */
@@ -107,9 +107,6 @@ export const ContactForm = ({
     return customFields.filter(field => (field.step || 1) === currentStep);
   }, [customFields, currentStep]);
   
-  // Default fields (First, Last, Email) are always on Step 1
-  const showDefaultFields = currentStep === 1;
-  
   // Get display title/subtitle - use step config if available, otherwise form defaults
   const displayTitle = currentStepConfig?.title || title;
   const displaySubtitle = currentStepConfig?.subtitle || (currentStep === 1 ? subtitle : undefined);
@@ -119,23 +116,6 @@ export const ContactForm = ({
    */
   const validateCurrentStep = (formData: FormData): Record<string, string> => {
     const errors: Record<string, string> = {};
-    
-    // Step 1 always has default fields
-    if (currentStep === 1) {
-      const firstName = (formData.get('firstName') as string || '').trim();
-      const lastName = (formData.get('lastName') as string || '').trim();
-      const email = (formData.get('email') as string || '').trim();
-      
-      if (!firstName || firstName.length > 50) {
-        errors.firstName = 'First name is required (max 50 chars)';
-      }
-      if (!lastName || lastName.length > 50) {
-        errors.lastName = 'Last name is required (max 50 chars)';
-      }
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {
-        errors.email = 'Valid email is required';
-      }
-    }
     
     // Validate required custom fields for current step
     currentStepFields.forEach(field => {
@@ -147,6 +127,13 @@ export const ContactForm = ({
         const value = formData.get(field.id) as string;
         if (!value || !value.trim()) {
           errors[field.id] = `${field.label} is required`;
+        }
+        
+        // Additional validation for email type
+        if (field.fieldType === 'email' && value && value.trim()) {
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || value.length > 255) {
+            errors[field.id] = 'Please enter a valid email address';
+          }
         }
       }
     });
@@ -182,9 +169,6 @@ export const ContactForm = ({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const firstName = formData.get('firstName') as string;
-    const lastName = formData.get('lastName') as string;
-    const email = formData.get('email') as string;
     const honeypot = formData.get('website') as string;
     const customFieldData: Record<string, { value: unknown; type: string }> = {};
 
@@ -226,23 +210,35 @@ export const ContactForm = ({
 
     try {
       setFormErrors({});
-      const trimmedFirstName = firstName.trim();
-      const trimmedLastName = lastName.trim();
-      const trimmedEmail = email.trim();
 
       const { leadId, conversationId } = await createLead(agentId, { 
-        firstName: trimmedFirstName, 
-        lastName: trimmedLastName, 
-        email: trimmedEmail, 
         customFields: customFieldData, 
         _formLoadTime: formLoadTime,
         turnstileToken: turnstileToken,
       });
       
+      // Extract name and email from custom fields for ChatUser
+      let extractedFirstName = '';
+      let extractedLastName = '';
+      let extractedEmail = '';
+      
+      customFields.forEach(field => {
+        const value = formData.get(field.id) as string;
+        if (field.fieldType === 'name' && value) {
+          // Split name into first/last (simple split on first space)
+          const parts = value.trim().split(/\s+/);
+          extractedFirstName = parts[0] || '';
+          extractedLastName = parts.slice(1).join(' ') || '';
+        }
+        if (field.fieldType === 'email' && value) {
+          extractedEmail = value.trim();
+        }
+      });
+      
       const userData: ChatUser = { 
-        firstName: trimmedFirstName, 
-        lastName: trimmedLastName, 
-        email: trimmedEmail, 
+        firstName: extractedFirstName, 
+        lastName: extractedLastName, 
+        email: extractedEmail, 
         leadId, 
         conversationId: conversationId ?? undefined 
       };
@@ -297,13 +293,24 @@ export const ContactForm = ({
             />
           </Suspense>
         );
-      default:
+      case 'name':
+        return (
+          <WidgetInput 
+            name={field.id} 
+            type="text" 
+            placeholder={field.label} 
+            required={field.required}
+            autoComplete="name"
+          />
+        );
+      default: // text, email
         return (
           <WidgetInput 
             name={field.id} 
             type={field.fieldType === 'email' ? 'email' : 'text'} 
             placeholder={field.label} 
-            required={field.required} 
+            required={field.required}
+            autoComplete={field.fieldType === 'email' ? 'email' : undefined}
           />
         );
     }
@@ -347,27 +354,6 @@ export const ContactForm = ({
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
           />
-          
-          {/* Default fields - only on step 1 */}
-          {showDefaultFields && (
-            <>
-              <WidgetInput name="firstName" placeholder="First name" required autoComplete="given-name" />
-              {formErrors.firstName && <p className="text-xs text-destructive" role="alert">{formErrors.firstName}</p>}
-              <WidgetInput name="lastName" placeholder="Last name" required autoComplete="family-name" />
-              {formErrors.lastName && <p className="text-xs text-destructive" role="alert">{formErrors.lastName}</p>}
-              <WidgetInput name="email" type="email" placeholder="Email" required autoComplete="email" />
-              {formErrors.email && <p className="text-xs text-destructive" role="alert">{formErrors.email}</p>}
-            </>
-          )}
-          
-          {/* Hidden fields to preserve values from previous steps */}
-          {!showDefaultFields && (
-            <>
-              <input type="hidden" name="firstName" />
-              <input type="hidden" name="lastName" />
-              <input type="hidden" name="email" />
-            </>
-          )}
           
           {/* Custom fields for current step */}
           {currentStepFields.map(field => (

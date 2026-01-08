@@ -155,7 +155,7 @@ export interface WidgetConfig {
   customFields: Array<{
     id: string;
     label: string;
-    fieldType: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox';
+    fieldType: 'text' | 'name' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox';
     required: boolean;
     options?: string[];
     richTextContent?: string;
@@ -301,9 +301,6 @@ export const fetchWidgetConfig = async (agentId: string): Promise<WidgetConfig> 
  * ```
  */
 export async function createLead(agentId: string, data: {
-  firstName: string;
-  lastName: string;
-  email: string;
   customFields: Record<string, unknown>;
   _formLoadTime?: number; // Spam protection: timestamp when form was loaded
   turnstileToken?: string | null; // Bot protection: Cloudflare Turnstile token
