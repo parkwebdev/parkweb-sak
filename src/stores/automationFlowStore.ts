@@ -50,6 +50,14 @@ interface FlowActions {
   addNode: (type: AutomationNodeType, position: { x: number; y: number }, data?: Partial<AutomationNodeData>) => string;
   /** Delete a node by ID */
   deleteNode: (nodeId: string) => void;
+  /** Duplicate a node and return new node ID */
+  duplicateNode: (nodeId: string) => string | null;
+  /** Toggle node disabled state */
+  toggleNodeDisabled: (nodeId: string) => void;
+  /** Select all nodes */
+  selectAllNodes: () => void;
+  /** Deselect all nodes */
+  deselectAllNodes: () => void;
   /** Update node data */
   updateNodeData: (nodeId: string, data: Partial<AutomationNodeData>) => void;
   /** Set viewport */
@@ -136,6 +144,54 @@ export const useFlowStore = create<FlowStore>()(
           nodes: get().nodes.filter((n) => n.id !== nodeId),
           edges: get().edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
           isDirty: true,
+        });
+      },
+
+      duplicateNode: (nodeId) => {
+        const node = get().nodes.find((n) => n.id === nodeId);
+        if (!node) return null;
+
+        const newId = `node-${nanoid(8)}`;
+        const newNode: AutomationNode = {
+          ...node,
+          id: newId,
+          position: {
+            x: node.position.x + 50,
+            y: node.position.y + 50,
+          },
+          selected: true,
+        };
+
+        set({
+          nodes: [
+            ...get().nodes.map((n) => ({ ...n, selected: false })),
+            newNode,
+          ],
+          isDirty: true,
+        });
+        return newId;
+      },
+
+      toggleNodeDisabled: (nodeId) => {
+        set({
+          nodes: get().nodes.map((node) =>
+            node.id === nodeId
+              ? { ...node, data: { ...node.data, disabled: !node.data.disabled } }
+              : node
+          ),
+          isDirty: true,
+        });
+      },
+
+      selectAllNodes: () => {
+        set({
+          nodes: get().nodes.map((n) => ({ ...n, selected: true })),
+        });
+      },
+
+      deselectAllNodes: () => {
+        set({
+          nodes: get().nodes.map((n) => ({ ...n, selected: false })),
         });
       },
 
