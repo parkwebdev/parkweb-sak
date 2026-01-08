@@ -264,7 +264,17 @@ const AriConfigurator = () => {
       </main>
 
       {/* Right: Widget Preview (desktop only) */}
-      <AriPreviewColumn agentId={agentId ?? ''} primaryColor={embedConfig?.primaryColor} />
+      <AriPreviewColumn 
+        agentId={agentId ?? ''} 
+        primaryColor={embedConfig?.primaryColor}
+        contactFormPreview={activeSection === 'lead-capture' ? {
+          enabled: embedConfig.enableContactForm,
+          title: embedConfig.contactFormTitle,
+          subtitle: embedConfig.contactFormSubtitle,
+          customFields: embedConfig.customFields,
+          primaryColor: embedConfig.primaryColor,
+        } : null}
+      />
 
       {/* Mobile/Tablet: Floating widget preview */}
       {widgetConfig && (

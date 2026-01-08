@@ -47,14 +47,24 @@ import type {
   BookingTime 
 } from '@/widget/types';
 import type { LinkPreviewData } from '@/components/chat/LinkPreviewCard';
+import { ContactFormPreview } from './sections/ContactFormPreview';
+import type { CustomField } from '@/hooks/useEmbeddedChatConfig';
 
 // ============================================
 // TYPES
 // ============================================
 
+interface ContactFormConfig {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  customFields: CustomField[];
+}
+
 interface PreviewChatProps {
   agentId: string;
   primaryColor?: string;
+  contactFormPreview?: ContactFormConfig;
 }
 
 interface Message {
@@ -78,6 +88,7 @@ interface Message {
 export function PreviewChat({
   agentId,
   primaryColor = '#8B5CF6',
+  contactFormPreview,
 }: PreviewChatProps) {
   // State (no conversationId - preview mode is ephemeral)
   const [messages, setMessages] = useState<Message[]>([]);
@@ -250,16 +261,28 @@ export function PreviewChat({
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <ChatBubbleIcon className="h-10 w-10 text-foreground mb-4" />
-            <p className="text-sm text-muted-foreground mb-1">
-              Ask Ari a question your customers would ask to see how it will respond.
-            </p>
-            <p className="text-xs text-muted-foreground/60">
-              Preview chats do not count toward your usage.
-            </p>
-          </div>
+          /* Empty State - Show Contact Form Preview if provided */
+          contactFormPreview ? (
+            <div className="flex flex-col h-full">
+              <ContactFormPreview
+                title={contactFormPreview.title}
+                subtitle={contactFormPreview.subtitle}
+                customFields={contactFormPreview.customFields}
+                primaryColor={primaryColor}
+                enabled={contactFormPreview.enabled}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-center px-6">
+              <ChatBubbleIcon className="h-10 w-10 text-foreground mb-4" />
+              <p className="text-sm text-muted-foreground mb-1">
+                Ask Ari a question your customers would ask to see how it will respond.
+              </p>
+              <p className="text-xs text-muted-foreground/60">
+                Preview chats do not count toward your usage.
+              </p>
+            </div>
+          )
         ) : (
           /* Messages List */
           <div className="space-y-4">
