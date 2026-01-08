@@ -42,15 +42,15 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
   };
 
   return (
-    <Collapsible asChild>
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={cn(
-          "border-b last:border-b-0",
-          isDragging && "opacity-50 bg-muted z-50"
-        )}
-      >
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "border-b last:border-b-0",
+        isDragging && "opacity-50 bg-muted z-50"
+      )}
+    >
+      <Collapsible>
         {/* Main row - always visible */}
         <div className="flex items-center gap-2 py-2">
           {/* Drag handle */}
@@ -171,8 +171,8 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
             </div>
           )}
         </CollapsibleContent>
-      </div>
-    </Collapsible>
+      </Collapsible>
+    </div>
   );
 }
 
