@@ -3,11 +3,12 @@
  * 
  * React Flow canvas for the automation builder.
  * Uses Zustand store for state management.
+ * Includes context menus and keyboard shortcuts.
  * 
  * @module components/automations/FlowEditor
  */
 
-import { useCallback, useRef, useMemo } from 'react';
+import { useCallback, useRef, useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -18,7 +19,26 @@ import {
 import '@xyflow/react/dist/style.css';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { nodeTypes } from './nodes';
+import { NodeContextMenu } from './NodeContextMenu';
+import { PaneContextMenu } from './PaneContextMenu';
 import { NODE_CATEGORIES, type AutomationNodeType, type AutomationNode, type AutomationEdge } from '@/types/automations';
+
+/** Context menu state for nodes */
+interface NodeMenuState {
+  nodeId: string;
+  nodeType: AutomationNodeType;
+  isDisabled: boolean;
+  x: number;
+  y: number;
+}
+
+/** Context menu state for pane */
+interface PaneMenuState {
+  screenX: number;
+  screenY: number;
+  flowX: number;
+  flowY: number;
+}
 
 /**
  * Get default node data for a given node type.
@@ -48,10 +68,108 @@ export function FlowEditor() {
     onConnect,
     setViewport,
     addNode,
+    duplicateNode,
+    selectAllNodes,
+    deselectAllNodes,
   } = useFlowStore();
+
+  // Context menu states
+  const [nodeMenu, setNodeMenu] = useState<NodeMenuState | null>(null);
+  const [paneMenu, setPaneMenu] = useState<PaneMenuState | null>(null);
 
   // Memoize nodeTypes to prevent React Flow warnings
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
+
+  // Close menus
+  const closeMenus = useCallback(() => {
+    setNodeMenu(null);
+    setPaneMenu(null);
+  }, []);
+
+  // Node context menu handler
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: AutomationNode) => {
+      event.preventDefault();
+      setPaneMenu(null); // Close pane menu if open
+      
+      setNodeMenu({
+        nodeId: node.id,
+        nodeType: node.type as AutomationNodeType,
+        isDisabled: !!node.data.disabled,
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    []
+  );
+
+  // Pane context menu handler
+  const onPaneContextMenu = useCallback(
+    (event: MouseEvent | React.MouseEvent) => {
+      event.preventDefault();
+      setNodeMenu(null); // Close node menu if open
+      
+      const position = reactFlowInstance.current?.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      
+      setPaneMenu({
+        screenX: event.clientX,
+        screenY: event.clientY,
+        flowX: position?.x ?? 0,
+        flowY: position?.y ?? 0,
+      });
+    },
+    []
+  );
+
+  // Close menus on pane click
+  const onPaneClick = useCallback(() => {
+    closeMenus();
+  }, [closeMenus]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Don't trigger if typing in an input
+      const target = event.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // Escape - close menus and deselect
+      if (event.key === 'Escape') {
+        closeMenus();
+        deselectAllNodes();
+        return;
+      }
+
+      // Ctrl/Cmd + D - Duplicate selected node
+      if (event.key === 'd' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        const selectedNode = nodes.find((n) => n.selected);
+        if (selectedNode) {
+          duplicateNode(selectedNode.id);
+        }
+        return;
+      }
+
+      // Ctrl/Cmd + A - Select all nodes
+      if (event.key === 'a' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        selectAllNodes();
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [nodes, duplicateNode, selectAllNodes, deselectAllNodes, closeMenus]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -100,6 +218,10 @@ export function FlowEditor() {
         onInit={onInit}
         onDragOver={onDragOver}
         onDrop={onDrop}
+        onNodeContextMenu={onNodeContextMenu}
+        onPaneContextMenu={onPaneContextMenu}
+        onPaneClick={onPaneClick}
+        deleteKeyCode={['Backspace', 'Delete']}
         fitView
         className="bg-background"
         proOptions={{ hideAttribution: true }}
@@ -121,6 +243,26 @@ export function FlowEditor() {
           maskColor="hsl(var(--background) / 0.8)"
         />
       </ReactFlow>
+
+      {/* Node Context Menu */}
+      {nodeMenu && (
+        <NodeContextMenu
+          nodeId={nodeMenu.nodeId}
+          nodeType={nodeMenu.nodeType}
+          position={{ x: nodeMenu.x, y: nodeMenu.y }}
+          isDisabled={nodeMenu.isDisabled}
+          onClose={() => setNodeMenu(null)}
+        />
+      )}
+
+      {/* Pane Context Menu */}
+      {paneMenu && (
+        <PaneContextMenu
+          screenPosition={{ x: paneMenu.screenX, y: paneMenu.screenY }}
+          flowPosition={{ x: paneMenu.flowX, y: paneMenu.flowY }}
+          onClose={() => setPaneMenu(null)}
+        />
+      )}
     </div>
   );
 }
