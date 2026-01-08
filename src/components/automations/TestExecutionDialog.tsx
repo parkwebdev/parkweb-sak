@@ -17,9 +17,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertCircle } from '@untitledui/icons/react/line';
-import type { Automation } from '@/types/automations';
-import type { TriggerEventConfig } from '@/types/automations';
+import { AlertCircle } from '@untitledui/icons';
+import type { Automation, TriggerEventConfig } from '@/types/automations';
 
 interface TestExecutionDialogProps {
   open: boolean;
@@ -38,7 +37,7 @@ function generateSampleData(automation: Automation): Record<string, unknown> {
 
   if (triggerType === 'event') {
     const eventConfig = triggerConfig as TriggerEventConfig | null;
-    const event = (eventConfig as Record<string, unknown>)?.event as string || 'lead.created';
+    const event = (eventConfig as unknown as Record<string, unknown>)?.event as string || 'lead.created';
 
     // Generate sample data based on event type
     if (event.startsWith('lead.')) {

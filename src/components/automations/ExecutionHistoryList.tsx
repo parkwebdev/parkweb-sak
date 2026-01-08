@@ -6,7 +6,7 @@
  */
 
 import { formatDistanceToNow } from 'date-fns';
-import { CheckCircle, XCircle, Clock, PlayCircle } from '@untitledui/icons/react/line';
+import { CheckCircle, XCircle, Clock, PlayCircle } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';

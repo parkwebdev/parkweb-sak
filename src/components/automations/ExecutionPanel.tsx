@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { X, Play, History, RefreshCw } from '@untitledui/icons/react/line';
+import { X, Play, ClockRewind, RefreshCw01 as RefreshCw } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -55,7 +55,7 @@ export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <History size={16} className="text-muted-foreground" aria-hidden="true" />
+          <ClockRewind size={16} className="text-muted-foreground" aria-hidden="true" />
           <h3 className="text-sm font-medium">Executions</h3>
         </div>
         

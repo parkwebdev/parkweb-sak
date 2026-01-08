@@ -6,7 +6,7 @@
  */
 
 import { format } from 'date-fns';
-import { CheckCircle, XCircle, AlertCircle, Clock, ChevronDown, ChevronRight } from '@untitledui/icons/react/line';
+import { CheckCircle, XCircle, AlertCircle, Clock, ChevronDown, ChevronRight } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
