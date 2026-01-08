@@ -6,7 +6,7 @@
  * @module components/automations/FlowToolbar
  */
 
-import { ArrowLeft, ReverseLeft, ReverseRight, Save01 } from '@untitledui/icons';
+import { ArrowLeft, ReverseLeft, ReverseRight, Save01, PlayCircle, ClockRewind } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,8 @@ interface FlowToolbarProps {
   saveError?: boolean;
   onSave: () => void;
   onClose: () => void;
+  onTestClick?: () => void;
+  onHistoryClick?: () => void;
 }
 
 export function FlowToolbar({ 
@@ -31,7 +33,9 @@ export function FlowToolbar({
   lastSavedAt,
   saveError = false,
   onSave, 
-  onClose 
+  onClose,
+  onTestClick,
+  onHistoryClick,
 }: FlowToolbarProps) {
   const { undo, redo, canUndo, canRedo } = useFlowHistory();
 
@@ -67,6 +71,31 @@ export function FlowToolbar({
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Test & History buttons */}
+      <div className="flex items-center gap-1">
+        {onTestClick && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={onTestClick}
+            disabled={isDirty}
+          >
+            <PlayCircle size={16} className="mr-1.5" aria-hidden="true" />
+            Test
+          </Button>
+        )}
+        {onHistoryClick && (
+          <IconButton
+            label="Execution history"
+            variant="ghost"
+            size="sm"
+            onClick={onHistoryClick}
+          >
+            <ClockRewind size={16} />
+          </IconButton>
+        )}
+      </div>
 
       {/* Undo/Redo */}
       <div className="flex items-center gap-1">
