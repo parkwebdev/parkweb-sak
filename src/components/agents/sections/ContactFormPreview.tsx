@@ -44,7 +44,8 @@ export function ContactFormPreview({
   const currentStepConfig = formSteps[previewStep - 1];
   
   // Theme-aware button colors (matches widget behavior)
-  const isDark = resolvedTheme === 'dark';
+  // Check both resolvedTheme and document class for dark mode
+  const isDark = resolvedTheme === 'dark' || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark'));
   const buttonBgColor = isDark ? '#FFFFFF' : (primaryColor || 'hsl(var(--primary))');
   const buttonTextColor = isDark ? '#000000' : '#FFFFFF';
   
