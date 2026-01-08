@@ -23,6 +23,9 @@ import {
   ActionSupabaseConfigPanel,
   ActionTaskConfigPanel,
   ActionNotifyConfigPanel,
+  LogicConditionConfigPanel,
+  LogicDelayConfigPanel,
+  LogicStopConfigPanel,
 } from './panels';
 import type {
   AutomationNode,
@@ -36,6 +39,9 @@ import type {
   ActionSupabaseNodeData,
   ActionTaskNodeData,
   ActionNotifyNodeData,
+  LogicConditionNodeData,
+  LogicDelayNodeData,
+  LogicStopNodeData,
 } from '@/types/automations';
 
 interface NodeConfigPanelProps {
@@ -124,6 +130,27 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
           <ActionNotifyConfigPanel
             nodeId={selectedNode.id}
             data={selectedNode.data as ActionNotifyNodeData}
+          />
+        );
+      case 'logic-condition':
+        return (
+          <LogicConditionConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as LogicConditionNodeData}
+          />
+        );
+      case 'logic-delay':
+        return (
+          <LogicDelayConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as LogicDelayNodeData}
+          />
+        );
+      case 'logic-stop':
+        return (
+          <LogicStopConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as LogicStopNodeData}
           />
         );
       default:

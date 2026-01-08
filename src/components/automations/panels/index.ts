@@ -16,3 +16,6 @@ export { ActionUpdateLeadConfigPanel } from './ActionUpdateLeadConfigPanel';
 export { ActionSupabaseConfigPanel } from './ActionSupabaseConfigPanel';
 export { ActionTaskConfigPanel } from './ActionTaskConfigPanel';
 export { ActionNotifyConfigPanel } from './ActionNotifyConfigPanel';
+export { LogicConditionConfigPanel } from './LogicConditionConfigPanel';
+export { LogicDelayConfigPanel } from './LogicDelayConfigPanel';
+export { LogicStopConfigPanel } from './LogicStopConfigPanel';
