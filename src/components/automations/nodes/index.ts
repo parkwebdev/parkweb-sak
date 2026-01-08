@@ -17,6 +17,9 @@ export { ActionUpdateLeadNode } from './ActionUpdateLeadNode';
 export { ActionSupabaseNode } from './ActionSupabaseNode';
 export { ActionTaskNode } from './ActionTaskNode';
 export { ActionNotifyNode } from './ActionNotifyNode';
+export { LogicConditionNode } from './LogicConditionNode';
+export { LogicDelayNode } from './LogicDelayNode';
+export { LogicStopNode } from './LogicStopNode';
 
 // Node type registry for React Flow
 import { TriggerEventNode } from './TriggerEventNode';
@@ -29,6 +32,9 @@ import { ActionUpdateLeadNode } from './ActionUpdateLeadNode';
 import { ActionSupabaseNode } from './ActionSupabaseNode';
 import { ActionTaskNode } from './ActionTaskNode';
 import { ActionNotifyNode } from './ActionNotifyNode';
+import { LogicConditionNode } from './LogicConditionNode';
+import { LogicDelayNode } from './LogicDelayNode';
+import { LogicStopNode } from './LogicStopNode';
 
 export const nodeTypes = {
   'trigger-event': TriggerEventNode,
@@ -41,4 +47,7 @@ export const nodeTypes = {
   'action-supabase': ActionSupabaseNode,
   'action-task': ActionTaskNode,
   'action-notify': ActionNotifyNode,
+  'logic-condition': LogicConditionNode,
+  'logic-delay': LogicDelayNode,
+  'logic-stop': LogicStopNode,
 } as const;

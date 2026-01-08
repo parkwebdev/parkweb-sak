@@ -262,6 +262,14 @@ export interface LogicDelayNodeData extends BaseNodeData {
 }
 
 /**
+ * Stop logic node configuration.
+ */
+export interface LogicStopNodeData extends BaseNodeData {
+  /** Optional reason for stopping */
+  reason?: string;
+}
+
+/**
  * Set variable transform node configuration.
  */
 export interface TransformSetVariableNodeData extends BaseNodeData {
@@ -288,6 +296,7 @@ export type AutomationNodeData =
   | ActionNotifyNodeData
   | LogicConditionNodeData
   | LogicDelayNodeData
+  | LogicStopNodeData
   | TransformSetVariableNodeData;
 
 // ============================================================================
