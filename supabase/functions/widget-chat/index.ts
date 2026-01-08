@@ -82,6 +82,7 @@ import {
 } from "../_shared/tools/property-tools.ts";
 import { checkCalendarAvailability, bookAppointment } from "../_shared/tools/calendar-tools.ts";
 import { callToolEndpoint, isBlockedUrl, MAX_RESPONSE_SIZE_BYTES, MAX_RETRIES, INITIAL_RETRY_DELAY_MS } from "../_shared/tools/custom-tools.ts";
+import { fetchAutomationTools } from "../_shared/tools/automation-tools.ts";
 
 // Phase 3: Memory
 import { 
@@ -333,6 +334,9 @@ serve(async (req) => {
     const hasLocations = agentLocations && agentLocations.length > 0;
     console.log(`Agent has locations: ${hasLocations}`);
 
+    // Fetch automation tools (ai_tool triggered automations)
+    const { tools: automationTools, automationMap: automationToolMap } = await fetchAutomationTools(supabase, agentId);
+
     // Format tools for OpenAI/Lovable AI API
     // Include booking tools if agent has locations configured
     const userDefinedTools = enabledTools.length > 0 ? enabledTools.map(tool => ({
@@ -344,9 +348,14 @@ serve(async (req) => {
       }
     })) : [];
     
-    const formattedTools = hasLocations 
-      ? [...userDefinedTools, ...BOOKING_TOOLS]
-      : userDefinedTools.length > 0 ? userDefinedTools : undefined;
+    // Combine all tool sources
+    const allTools = [
+      ...userDefinedTools,
+      ...(hasLocations ? BOOKING_TOOLS : []),
+      ...automationTools,
+    ];
+    
+    const formattedTools = allTools.length > 0 ? allTools : undefined;
 
     // Capture request metadata
     const ipAddress = req.headers.get('cf-connecting-ip') || 
@@ -859,6 +868,8 @@ NEVER mark complete when:
         previewMode: !!previewMode,
         conversationMetadata,
         openRouterApiKey: OPENROUTER_API_KEY,
+        automationToolMap,
+        leadId,
       });
 
       assistantContent = toolResult.assistantContent;

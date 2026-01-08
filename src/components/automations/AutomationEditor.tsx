@@ -10,12 +10,15 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAutomations } from '@/hooks/useAutomations';
 import { useAutomationAutoSave } from '@/hooks/useAutomationAutoSave';
+import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { FlowEditor } from '@/components/automations/FlowEditor';
 import { FlowToolbar } from '@/components/automations/FlowToolbar';
 import { NodeSidebar } from '@/components/automations/NodeSidebar';
 import { AutomationErrorBoundary } from '@/components/automations/AutomationErrorBoundary';
 import { NodeConfigPanel } from '@/components/automations/NodeConfigPanel';
+import { ExecutionPanel } from '@/components/automations/ExecutionPanel';
+import { TestExecutionDialog } from '@/components/automations/TestExecutionDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Automation } from '@/types/automations';
 
@@ -31,11 +34,18 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
   
   const { nodes, edges, viewport, isDirty, loadFlow, markClean } = useFlowStore();
   const [configPanelOpen, setConfigPanelOpen] = useState(false);
+  const [executionPanelOpen, setExecutionPanelOpen] = useState(false);
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
 
   // Auto-save hook
   const { saving, lastSavedAt, saveNow, saveError } = useAutomationAutoSave({
     automation,
     enabled: true,
+  });
+
+  // Execution hook for test runs (only initialize when automation is loaded)
+  const { triggerExecution, triggering } = useAutomationExecutions({ 
+    automationId: automationId 
   });
 
   // Detect selected node
@@ -73,6 +83,23 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
   const handleSave = useCallback(async () => {
     await saveNow();
   }, [saveNow]);
+
+  // Test/History handlers
+  const handleTestClick = useCallback(() => {
+    setTestDialogOpen(true);
+  }, []);
+
+  const handleTestSubmit = useCallback(async (testData: Record<string, unknown>) => {
+    await triggerExecution({
+      triggerData: testData,
+      testMode: true,
+    });
+    setTestDialogOpen(false);
+  }, [triggerExecution]);
+
+  const handleHistoryClick = useCallback(() => {
+    setExecutionPanelOpen(true);
+  }, []);
 
   // Error reset handler - must be before early returns
   const handleErrorReset = useCallback(() => {
@@ -115,6 +142,8 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
           saveError={saveError}
           onSave={handleSave}
           onClose={onClose}
+          onTestClick={handleTestClick}
+          onHistoryClick={handleHistoryClick}
         />
 
         {/* Editor area */}
@@ -131,8 +160,25 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
           {configPanelOpen && selectedNode && (
             <NodeConfigPanel onClose={() => setConfigPanelOpen(false)} />
           )}
+
+          {/* Execution panel */}
+          {executionPanelOpen && (
+            <ExecutionPanel 
+              automation={automation} 
+              onClose={() => setExecutionPanelOpen(false)} 
+            />
+          )}
         </div>
       </div>
+
+      {/* Test execution dialog */}
+      <TestExecutionDialog
+        open={testDialogOpen}
+        onOpenChange={setTestDialogOpen}
+        automation={automation}
+        onSubmit={handleTestSubmit}
+        loading={triggering}
+      />
     </AutomationErrorBoundary>
   );
 }
