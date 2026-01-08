@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useTheme } from 'next-themes';
 import DOMPurify from 'isomorphic-dompurify';
 import type { CustomField, FormStep } from '@/hooks/useEmbeddedChatConfig';
 
@@ -38,8 +39,14 @@ export function ContactFormPreview({
   formSteps = [{ id: 'step-1' }],
 }: ContactFormPreviewProps) {
   const [previewStep, setPreviewStep] = useState(1);
+  const { resolvedTheme } = useTheme();
   const totalSteps = formSteps.length;
   const currentStepConfig = formSteps[previewStep - 1];
+  
+  // Theme-aware button colors (matches widget behavior)
+  const isDark = resolvedTheme === 'dark';
+  const buttonBgColor = isDark ? '#FFFFFF' : (primaryColor || 'hsl(var(--primary))');
+  const buttonTextColor = isDark ? '#000000' : '#FFFFFF';
   
   // Filter fields for current preview step (multi-step is always enabled)
   const currentStepFields = customFields.filter(f => (f.step || 1) === previewStep);
@@ -206,16 +213,18 @@ export function ContactFormPreview({
           <div className="flex items-center gap-2 pt-1">
             {previewStep > 1 && (
               <button
-                disabled
-                className="h-10 px-4 rounded-md text-sm font-medium border border-input bg-background disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={() => setPreviewStep(prev => Math.max(prev - 1, 1))}
+                className="h-10 px-4 rounded-md text-sm font-medium border border-input bg-background hover:bg-muted transition-colors"
               >
                 ← Back
               </button>
             )}
             <button
-              disabled
-              className="flex-1 h-10 rounded-md text-sm font-medium text-white disabled:cursor-not-allowed"
-              style={{ backgroundColor: primaryColor || 'hsl(var(--primary))' }}
+              type="button"
+              onClick={() => previewStep < totalSteps && setPreviewStep(prev => prev + 1)}
+              className="flex-1 h-10 rounded-md text-sm font-medium transition-colors hover:opacity-90"
+              style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
             >
               {previewStep < totalSteps ? 'Next →' : 'Start Chat'}
             </button>
@@ -223,8 +232,8 @@ export function ContactFormPreview({
         ) : (
           <button
             disabled
-            className="w-full h-10 rounded-md text-sm font-medium text-white disabled:cursor-not-allowed"
-            style={{ backgroundColor: primaryColor || 'hsl(var(--primary))' }}
+            className="w-full h-10 rounded-md text-sm font-medium disabled:cursor-not-allowed"
+            style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
           >
             Start Chat
           </button>
