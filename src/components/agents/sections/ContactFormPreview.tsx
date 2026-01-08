@@ -4,10 +4,10 @@
  * A visual-only preview of the contact form as it appears in the widget.
  * All inputs are disabled - this is purely for visualization.
  */
-
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
-import type { CustomField } from '@/hooks/useEmbeddedChatConfig';
+import type { CustomField, FormStep } from '@/hooks/useEmbeddedChatConfig';
 
 interface ContactFormPreviewProps {
   title: string;
@@ -15,6 +15,8 @@ interface ContactFormPreviewProps {
   customFields: CustomField[];
   primaryColor: string;
   enabled: boolean;
+  enableMultiStepForm?: boolean;
+  formSteps?: FormStep[];
 }
 
 export function ContactFormPreview({
@@ -23,7 +25,25 @@ export function ContactFormPreview({
   customFields,
   primaryColor,
   enabled,
+  enableMultiStepForm = false,
+  formSteps = [{ id: 'step-1' }],
 }: ContactFormPreviewProps) {
+  const [previewStep, setPreviewStep] = useState(1);
+  const totalSteps = enableMultiStepForm ? formSteps.length : 1;
+  const currentStepConfig = formSteps[previewStep - 1];
+  
+  // Filter fields for current preview step
+  const currentStepFields = enableMultiStepForm
+    ? customFields.filter(f => (f.step || 1) === previewStep)
+    : customFields;
+  
+  const showDefaultFields = previewStep === 1;
+  const displayTitle = enableMultiStepForm && currentStepConfig?.title 
+    ? currentStepConfig.title 
+    : title;
+  const displaySubtitle = enableMultiStepForm && currentStepConfig?.subtitle 
+    ? currentStepConfig.subtitle 
+    : (previewStep === 1 ? subtitle : undefined);
   const inputClasses = cn(
     'w-full h-9 px-3 text-sm rounded-md border border-input bg-background',
     'text-muted-foreground placeholder:text-muted-foreground/60',
@@ -126,48 +146,93 @@ export function ContactFormPreview({
 
   return (
     <div className="bg-muted rounded-lg p-4">
+      {/* Step indicator for multi-step forms */}
+      {enableMultiStepForm && totalSteps > 1 && (
+        <div className="flex items-center justify-center gap-1.5 mb-3">
+          {Array.from({ length: totalSteps }).map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setPreviewStep(index + 1)}
+              className={cn(
+                "h-1.5 rounded-full transition-all duration-200",
+                index + 1 === previewStep 
+                  ? 'w-4 bg-foreground' 
+                  : index + 1 < previewStep
+                  ? 'w-1.5 bg-foreground/60'
+                  : 'w-1.5 bg-foreground/20'
+              )}
+            />
+          ))}
+        </div>
+      )}
+      
       {/* Title */}
-      {title && (
-        <p className="text-base font-semibold mb-0.5">{title}</p>
+      {displayTitle && (
+        <p className="text-base font-semibold mb-0.5">{displayTitle}</p>
       )}
       
       {/* Subtitle */}
-      {subtitle && (
-        <p className="text-sm text-muted-foreground mb-4">{subtitle}</p>
+      {displaySubtitle && (
+        <p className="text-sm text-muted-foreground mb-4">{displaySubtitle}</p>
       )}
 
       <div className="space-y-3">
-        {/* Default fields */}
-        <input
-          type="text"
-          disabled
-          placeholder="First name"
-          className={inputClasses}
-        />
-        <input
-          type="text"
-          disabled
-          placeholder="Last name"
-          className={inputClasses}
-        />
-        <input
-          type="email"
-          disabled
-          placeholder="Email"
-          className={inputClasses}
-        />
+        {/* Default fields - only on step 1 */}
+        {showDefaultFields && (
+          <>
+            <input
+              type="text"
+              disabled
+              placeholder="First name"
+              className={inputClasses}
+            />
+            <input
+              type="text"
+              disabled
+              placeholder="Last name"
+              className={inputClasses}
+            />
+            <input
+              type="email"
+              disabled
+              placeholder="Email"
+              className={inputClasses}
+            />
+          </>
+        )}
 
-        {/* Custom fields */}
-        {customFields.map(renderFieldPreview)}
+        {/* Custom fields for current step */}
+        {currentStepFields.map(renderFieldPreview)}
 
-        {/* Submit button */}
-        <button
-          disabled
-          className="w-full h-10 rounded-md text-sm font-medium text-white disabled:cursor-not-allowed"
-          style={{ backgroundColor: primaryColor || 'hsl(var(--primary))' }}
-        >
-          Start Chat
-        </button>
+        {/* Navigation buttons for multi-step */}
+        {enableMultiStepForm && totalSteps > 1 ? (
+          <div className="flex items-center gap-2 pt-1">
+            {previewStep > 1 && (
+              <button
+                disabled
+                className="h-10 px-4 rounded-md text-sm font-medium border border-input bg-background disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                ← Back
+              </button>
+            )}
+            <button
+              disabled
+              className="flex-1 h-10 rounded-md text-sm font-medium text-white disabled:cursor-not-allowed"
+              style={{ backgroundColor: primaryColor || 'hsl(var(--primary))' }}
+            >
+              {previewStep < totalSteps ? 'Next →' : 'Start Chat'}
+            </button>
+          </div>
+        ) : (
+          <button
+            disabled
+            className="w-full h-10 rounded-md text-sm font-medium text-white disabled:cursor-not-allowed"
+            style={{ backgroundColor: primaryColor || 'hsl(var(--primary))' }}
+          >
+            Start Chat
+          </button>
+        )}
       </div>
     </div>
   );

@@ -159,6 +159,15 @@ export interface WidgetConfig {
     required: boolean;
     options?: string[];
     richTextContent?: string;
+    step?: number; // Which step this field belongs to (1-based)
+  }>;
+  
+  // Multi-step form configuration
+  enableMultiStepForm?: boolean;
+  formSteps?: Array<{
+    id: string;
+    title?: string;
+    subtitle?: string;
   }>;
   
   // Quick actions
