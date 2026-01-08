@@ -14,6 +14,8 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'motion/react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface ContactFormSectionProps {
   config: EmbeddedChatConfig;
@@ -28,6 +30,7 @@ interface SortableFieldRowProps {
 
 function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
   const {
     attributes,
     listeners,
@@ -139,45 +142,55 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
       </div>
 
       {/* Expanded settings */}
-      {isExpanded && (
-        <div className="pb-3 pl-8 pr-10 space-y-2">
-          {/* Placeholder - hidden for checkbox */}
-          {field.fieldType !== 'checkbox' && (
-            <Input
-              value={field.placeholder || ''}
-              onChange={(e) => onUpdate({ placeholder: e.target.value })}
-              placeholder="Placeholder text"
-              className="h-8 text-sm"
-            />
-          )}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            initial={prefersReducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { height: 'auto', opacity: 1 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="pb-3 pl-8 pr-10 space-y-2">
+              {/* Placeholder - hidden for checkbox */}
+              {field.fieldType !== 'checkbox' && (
+                <Input
+                  value={field.placeholder || ''}
+                  onChange={(e) => onUpdate({ placeholder: e.target.value })}
+                  placeholder="Placeholder text"
+                  className="h-8 text-sm"
+                />
+              )}
 
-          {/* Rich text editor for checkbox text */}
-          {field.fieldType === 'checkbox' && (
-            <RichTextEditor
-              content={field.richTextContent || ''}
-              onChange={(html) => onUpdate({ richTextContent: html })}
-              placeholder="By submitting, you agree to our Terms of Service..."
-              minHeight="80px"
-              minimalMode={true}
-            />
-          )}
+              {/* Rich text editor for checkbox text */}
+              {field.fieldType === 'checkbox' && (
+                <RichTextEditor
+                  content={field.richTextContent || ''}
+                  onChange={(html) => onUpdate({ richTextContent: html })}
+                  placeholder="By submitting, you agree to our Terms of Service..."
+                  minHeight="80px"
+                  minimalMode={true}
+                />
+              )}
 
-          {/* Options for select fields */}
-          {field.fieldType === 'select' && (
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Options (comma-separated)</Label>
-              <Input
-                value={field.options?.join(', ') || ''}
-                onChange={(e) => onUpdate({
-                  options: e.target.value.split(',').map(o => o.trim()).filter(Boolean)
-                })}
-                placeholder="Option 1, Option 2, Option 3"
-                className="h-8 text-sm"
-              />
+              {/* Options for select fields */}
+              {field.fieldType === 'select' && (
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Options (comma-separated)</Label>
+                  <Input
+                    value={field.options?.join(', ') || ''}
+                    onChange={(e) => onUpdate({
+                      options: e.target.value.split(',').map(o => o.trim()).filter(Boolean)
+                    })}
+                    placeholder="Option 1, Option 2, Option 3"
+                    className="h-8 text-sm"
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
