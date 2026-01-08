@@ -17,6 +17,9 @@ import {
   TriggerScheduleConfigPanel,
   TriggerManualConfigPanel,
   TriggerAIToolConfigPanel,
+  ActionHttpConfigPanel,
+  ActionEmailConfigPanel,
+  ActionUpdateLeadConfigPanel,
 } from './panels';
 import type {
   AutomationNode,
@@ -24,6 +27,9 @@ import type {
   TriggerScheduleNodeData,
   TriggerManualNodeData,
   TriggerAIToolNodeData,
+  ActionHttpNodeData,
+  ActionEmailNodeData,
+  ActionUpdateLeadNodeData,
 } from '@/types/automations';
 
 interface NodeConfigPanelProps {
@@ -70,6 +76,27 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
           <TriggerAIToolConfigPanel
             nodeId={selectedNode.id}
             data={selectedNode.data as TriggerAIToolNodeData}
+          />
+        );
+      case 'action-http':
+        return (
+          <ActionHttpConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as ActionHttpNodeData}
+          />
+        );
+      case 'action-email':
+        return (
+          <ActionEmailConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as ActionEmailNodeData}
+          />
+        );
+      case 'action-update-lead':
+        return (
+          <ActionUpdateLeadConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as ActionUpdateLeadNodeData}
           />
         );
       default:

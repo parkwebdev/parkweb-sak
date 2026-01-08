@@ -147,6 +147,42 @@ export interface ActionHttpNodeData extends BaseNodeData {
 }
 
 /**
+ * Email action node configuration.
+ */
+export interface ActionEmailNodeData extends BaseNodeData {
+  /** Recipient email */
+  to: string;
+  /** Sender name */
+  fromName?: string;
+  /** Email subject */
+  subject: string;
+  /** Email body (HTML) */
+  body: string;
+  /** Reply-to email */
+  replyTo?: string;
+}
+
+/**
+ * Lead field update definition.
+ */
+export interface LeadFieldUpdate {
+  /** Field to update */
+  field: string;
+  /** New value (can include variable interpolation) */
+  value: string;
+}
+
+/**
+ * Update lead action node configuration.
+ */
+export interface ActionUpdateLeadNodeData extends BaseNodeData {
+  /** Lead ID or variable reference */
+  leadId?: string;
+  /** Fields to update */
+  fields?: LeadFieldUpdate[];
+}
+
+/**
  * Condition logic node configuration.
  */
 export interface LogicConditionNodeData extends BaseNodeData {
@@ -188,6 +224,8 @@ export type AutomationNodeData =
   | TriggerManualNodeData
   | TriggerAIToolNodeData
   | ActionHttpNodeData
+  | ActionEmailNodeData
+  | ActionUpdateLeadNodeData
   | LogicConditionNodeData
   | LogicDelayNodeData
   | TransformSetVariableNodeData;

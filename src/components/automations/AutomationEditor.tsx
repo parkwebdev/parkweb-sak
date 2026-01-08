@@ -81,6 +81,13 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
     }
   }, [automation, nodes, edges, viewport, updateAutomation, markClean]);
 
+  // Error reset handler - must be before early returns
+  const handleErrorReset = useCallback(() => {
+    if (automation) {
+      loadFlow(automation.nodes, automation.edges, automation.viewport);
+    }
+  }, [automation, loadFlow]);
+
   if (loading) {
     return (
       <div className="h-full flex flex-col">
@@ -102,11 +109,6 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
       </div>
     );
   }
-
-  const handleErrorReset = useCallback(() => {
-    // Reload automation data on error reset
-    loadFlow(automation.nodes, automation.edges, automation.viewport);
-  }, [automation, loadFlow]);
 
   return (
     <AutomationErrorBoundary onReset={handleErrorReset}>

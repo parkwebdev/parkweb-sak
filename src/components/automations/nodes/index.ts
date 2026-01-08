@@ -11,16 +11,25 @@ export { TriggerEventNode } from './TriggerEventNode';
 export { TriggerScheduleNode } from './TriggerScheduleNode';
 export { TriggerManualNode } from './TriggerManualNode';
 export { TriggerAIToolNode } from './TriggerAIToolNode';
+export { ActionHttpNode } from './ActionHttpNode';
+export { ActionEmailNode } from './ActionEmailNode';
+export { ActionUpdateLeadNode } from './ActionUpdateLeadNode';
 
 // Node type registry for React Flow
 import { TriggerEventNode } from './TriggerEventNode';
 import { TriggerScheduleNode } from './TriggerScheduleNode';
 import { TriggerManualNode } from './TriggerManualNode';
 import { TriggerAIToolNode } from './TriggerAIToolNode';
+import { ActionHttpNode } from './ActionHttpNode';
+import { ActionEmailNode } from './ActionEmailNode';
+import { ActionUpdateLeadNode } from './ActionUpdateLeadNode';
 
 export const nodeTypes = {
   'trigger-event': TriggerEventNode,
   'trigger-schedule': TriggerScheduleNode,
   'trigger-manual': TriggerManualNode,
   'trigger-ai-tool': TriggerAIToolNode,
+  'action-http': ActionHttpNode,
+  'action-email': ActionEmailNode,
+  'action-update-lead': ActionUpdateLeadNode,
 } as const;
