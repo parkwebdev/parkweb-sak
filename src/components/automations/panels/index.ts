@@ -19,3 +19,6 @@ export { ActionNotifyConfigPanel } from './ActionNotifyConfigPanel';
 export { LogicConditionConfigPanel } from './LogicConditionConfigPanel';
 export { LogicDelayConfigPanel } from './LogicDelayConfigPanel';
 export { LogicStopConfigPanel } from './LogicStopConfigPanel';
+export { AIGenerateConfigPanel } from './AIGenerateConfigPanel';
+export { AIClassifyConfigPanel } from './AIClassifyConfigPanel';
+export { AIExtractConfigPanel } from './AIExtractConfigPanel';

@@ -279,6 +279,78 @@ export interface TransformSetVariableNodeData extends BaseNodeData {
   valueExpression: string;
 }
 
+// ============================================================================
+// AI Node Data Types
+// ============================================================================
+
+/**
+ * AI generate text node configuration.
+ */
+export interface AIGenerateNodeData extends BaseNodeData {
+  /** Prompt template with variable interpolation */
+  prompt: string;
+  /** AI model to use */
+  model?: string;
+  /** Temperature (creativity) */
+  temperature?: number;
+  /** Max tokens to generate */
+  maxTokens?: number;
+  /** Output format */
+  outputFormat?: 'text' | 'json';
+  /** Variable name to store the result */
+  outputVariable: string;
+}
+
+/**
+ * AI classification category.
+ */
+export interface AIClassifyCategory {
+  /** Category name */
+  name: string;
+  /** Category description for AI */
+  description?: string;
+}
+
+/**
+ * AI classify node configuration.
+ */
+export interface AIClassifyNodeData extends BaseNodeData {
+  /** Input text to classify (variable reference) */
+  input: string;
+  /** Categories to classify into */
+  categories: AIClassifyCategory[];
+  /** Variable name to store the result */
+  outputVariable: string;
+  /** Whether to include confidence score */
+  includeConfidence?: boolean;
+}
+
+/**
+ * AI extraction field definition.
+ */
+export interface AIExtractField {
+  /** Field name */
+  name: string;
+  /** Field data type */
+  type: 'string' | 'number' | 'boolean' | 'date' | 'email' | 'phone' | 'url';
+  /** Field description for AI */
+  description?: string;
+  /** Whether field is required */
+  required: boolean;
+}
+
+/**
+ * AI extract node configuration.
+ */
+export interface AIExtractNodeData extends BaseNodeData {
+  /** Input text to extract from (variable reference) */
+  input: string;
+  /** Fields to extract */
+  fields: AIExtractField[];
+  /** Variable name to store the result */
+  outputVariable: string;
+}
+
 /**
  * Union of all node data types.
  */
@@ -297,7 +369,10 @@ export type AutomationNodeData =
   | LogicConditionNodeData
   | LogicDelayNodeData
   | LogicStopNodeData
-  | TransformSetVariableNodeData;
+  | TransformSetVariableNodeData
+  | AIGenerateNodeData
+  | AIClassifyNodeData
+  | AIExtractNodeData;
 
 // ============================================================================
 // React Flow Types
@@ -634,6 +709,37 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: 'Variable',
         color: 'cyan',
         defaultData: { label: 'Set Variable' },
+      },
+    ],
+  },
+  {
+    id: 'ai',
+    label: 'AI',
+    description: 'AI-powered actions',
+    nodes: [
+      {
+        type: 'ai-generate',
+        label: 'Generate Text',
+        description: 'Generate text with AI',
+        icon: 'Sparkles',
+        color: 'violet',
+        defaultData: { label: 'AI Generate', model: 'google/gemini-2.5-flash', outputVariable: 'ai_response' },
+      },
+      {
+        type: 'ai-classify',
+        label: 'Classify',
+        description: 'Classify input into categories',
+        icon: 'Tag',
+        color: 'violet',
+        defaultData: { label: 'AI Classify', categories: [], outputVariable: 'classification' },
+      },
+      {
+        type: 'ai-extract',
+        label: 'Extract Data',
+        description: 'Extract structured data from text',
+        icon: 'Search',
+        color: 'violet',
+        defaultData: { label: 'AI Extract', fields: [], outputVariable: 'extracted' },
       },
     ],
   },
