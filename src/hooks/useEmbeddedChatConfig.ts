@@ -18,6 +18,16 @@ export interface CustomField {
   placeholder?: string;
   options?: string[]; // For select fields
   richTextContent?: string; // HTML content displayed below checkbox (supports bold, italic, links)
+  step?: number; // Which step this field belongs to (1-based, undefined = step 1)
+}
+
+/**
+ * Form step configuration for multi-step contact forms.
+ */
+export interface FormStep {
+  id: string;
+  title?: string; // Optional step title
+  subtitle?: string; // Optional step description
 }
 
 export interface QuickAction {
@@ -86,6 +96,10 @@ export interface EmbeddedChatConfig {
   contactFormTitle: string;
   contactFormSubtitle: string;
   customFields: CustomField[];
+  
+  // Multi-Step Form
+  enableMultiStepForm: boolean;
+  formSteps: FormStep[];
   
   // Help Articles
   helpArticles: HelpArticle[];
@@ -162,6 +176,10 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     contactFormTitle: 'Get in touch',
     contactFormSubtitle: 'Fill out the form below and we\'ll get back to you',
     customFields: [],
+    
+    // Multi-Step Form
+    enableMultiStepForm: false,
+    formSteps: [{ id: 'step-1' }],
     
     // Help Articles
     helpArticles: [],
@@ -250,6 +268,12 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           placeholder: field.placeholder || '',
           options: field.options || [],
           richTextContent: field.richTextContent || '',
+          step: field.step || 1,
+        })),
+        formSteps: updatedConfig.formSteps.map(step => ({
+          id: step.id,
+          title: step.title || '',
+          subtitle: step.subtitle || '',
         })),
       };
 

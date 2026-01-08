@@ -175,6 +175,8 @@ export const ChatView = ({
             customFields={config.customFields}
             formLoadTime={formLoadTime}
             onSubmit={onFormSubmit}
+            enableMultiStepForm={config.enableMultiStepForm}
+            formSteps={config.formSteps}
           />
         )}
         

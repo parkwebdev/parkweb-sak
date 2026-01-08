@@ -2,12 +2,13 @@
  * ContactForm Component
  * 
  * Lead capture form displayed before chat begins. Collects first name, last name,
- * email, and custom fields. Includes honeypot spam protection and input validation.
+ * email, and custom fields. Supports multi-step form flow with per-step validation.
+ * Includes honeypot spam protection and input validation.
  * 
  * @module widget/components/ContactForm
  */
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { WidgetButton, WidgetInput, WidgetCheckbox, WidgetTextarea } from '../ui';
 import { WidgetSelect, WidgetSelectTrigger, WidgetSelectValue, WidgetSelectContent, WidgetSelectItem } from '../ui';
 import { PhoneInputField } from '../constants';
@@ -16,6 +17,7 @@ import { useSystemTheme } from '../hooks/useSystemTheme';
 import { TurnstileWidget } from './TurnstileWidget';
 import type { ChatUser } from '../types';
 import { logger } from '@/utils/logger';
+import { ChevronLeft, ChevronRight } from '../icons';
 
 // Turnstile site key from environment (public key, safe to expose)
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
@@ -34,6 +36,15 @@ interface CustomField {
   options?: string[];
   /** HTML content displayed below checkbox (supports bold, italic, links) */
   richTextContent?: string;
+  /** Which step this field belongs to (1-based, undefined = step 1) */
+  step?: number;
+}
+
+/** Form step configuration */
+interface FormStep {
+  id: string;
+  title?: string;
+  subtitle?: string;
 }
 
 /** Props for the ContactForm component */
@@ -52,16 +63,14 @@ interface ContactFormProps {
   formLoadTime: number;
   /** Form submission handler */
   onSubmit: (userData: ChatUser, conversationId?: string) => void;
+  /** Enable multi-step form mode */
+  enableMultiStepForm?: boolean;
+  /** Step configurations for multi-step forms */
+  formSteps?: FormStep[];
 }
 
 /**
- * Lead capture contact form component.
- * 
- * @param props - Component props
- * @returns Form element with input fields and submit button
- */
-/**
- * Lead capture contact form component.
+ * Lead capture contact form component with optional multi-step support.
  * 
  * NOTE: Hardcoded hex colors (#FFFFFF, #000000) are intentional.
  * The widget renders in an isolated iframe without access to the parent
@@ -76,15 +85,107 @@ export const ContactForm = ({
   customFields,
   formLoadTime,
   onSubmit,
+  enableMultiStepForm = false,
+  formSteps = [{ id: 'step-1' }],
 }: ContactFormProps) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [checkboxValues, setCheckboxValues] = useState<Record<string, boolean>>({});
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
   const systemTheme = useSystemTheme();
 
   // Theme-aware colors (hex intentional for iframe isolation - see component JSDoc)
   const buttonBgColor = systemTheme === 'dark' ? '#FFFFFF' : primaryColor;
   const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
+  
+  // Calculate total steps and current step config
+  const totalSteps = enableMultiStepForm ? formSteps.length : 1;
+  const currentStepConfig = formSteps[currentStep - 1];
+  
+  // Get fields for current step
+  const currentStepFields = useMemo(() => {
+    if (!enableMultiStepForm) {
+      return customFields;
+    }
+    return customFields.filter(field => (field.step || 1) === currentStep);
+  }, [customFields, currentStep, enableMultiStepForm]);
+  
+  // Default fields (First, Last, Email) are always on Step 1
+  const showDefaultFields = currentStep === 1;
+  
+  // Get display title/subtitle - use step config if available, otherwise form defaults
+  const displayTitle = enableMultiStepForm && currentStepConfig?.title 
+    ? currentStepConfig.title 
+    : title;
+  const displaySubtitle = enableMultiStepForm && currentStepConfig?.subtitle 
+    ? currentStepConfig.subtitle 
+    : (currentStep === 1 ? subtitle : undefined);
+
+  /**
+   * Validate fields for the current step only
+   */
+  const validateCurrentStep = (formData: FormData): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    
+    // Step 1 always has default fields
+    if (currentStep === 1) {
+      const firstName = (formData.get('firstName') as string || '').trim();
+      const lastName = (formData.get('lastName') as string || '').trim();
+      const email = (formData.get('email') as string || '').trim();
+      
+      if (!firstName || firstName.length > 50) {
+        errors.firstName = 'First name is required (max 50 chars)';
+      }
+      if (!lastName || lastName.length > 50) {
+        errors.lastName = 'Last name is required (max 50 chars)';
+      }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {
+        errors.email = 'Valid email is required';
+      }
+    }
+    
+    // Validate required custom fields for current step
+    currentStepFields.forEach(field => {
+      if (field.fieldType === 'checkbox' && field.required) {
+        if (!checkboxValues[field.id]) {
+          errors[field.id] = `${field.label} is required`;
+        }
+      } else if (field.required && field.fieldType !== 'checkbox') {
+        const value = formData.get(field.id) as string;
+        if (!value || !value.trim()) {
+          errors[field.id] = `${field.label} is required`;
+        }
+      }
+    });
+    
+    return errors;
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Get form data from the form element
+    const form = (e.target as HTMLElement).closest('form');
+    if (!form) return;
+    
+    const formData = new FormData(form);
+    const errors = validateCurrentStep(formData);
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    setFormErrors({});
+    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+  };
+
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setFormErrors({});
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -99,15 +200,20 @@ export const ContactForm = ({
       return;
     }
 
-    // Collect custom field values with type metadata for proper extraction
+    // Validate current step before final submission
+    const stepErrors = validateCurrentStep(formData);
+    if (Object.keys(stepErrors).length > 0) {
+      setFormErrors(stepErrors);
+      return;
+    }
+
+    // Collect ALL custom field values (from all steps) with type metadata
     customFields.forEach(field => {
       if (field.fieldType === 'checkbox') {
-        // Store checkbox value with type info
         customFieldData[field.label] = {
           value: checkboxValues[field.id] || false,
           type: 'checkbox'
         };
-        // Also store the rich text content for display in lead details
         if (field.richTextContent) {
           customFieldData[`${field.label}_content`] = {
             value: field.richTextContent,
@@ -126,35 +232,10 @@ export const ContactForm = ({
     });
 
     try {
-      const errors: Record<string, string> = {};
+      setFormErrors({});
       const trimmedFirstName = firstName.trim();
       const trimmedLastName = lastName.trim();
       const trimmedEmail = email.trim();
-      
-      if (!trimmedFirstName || trimmedFirstName.length > 50) {
-        errors.firstName = 'First name is required (max 50 chars)';
-      }
-      if (!trimmedLastName || trimmedLastName.length > 50) {
-        errors.lastName = 'Last name is required (max 50 chars)';
-      }
-      if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail) || trimmedEmail.length > 255) {
-        errors.email = 'Valid email is required';
-      }
-      
-      // Validate required checkboxes
-      customFields.forEach(field => {
-        if (field.fieldType === 'checkbox' && field.required) {
-          if (!checkboxValues[field.id]) {
-            errors[field.id] = `${field.label} is required`;
-          }
-        }
-      });
-      
-      if (Object.keys(errors).length > 0) {
-        setFormErrors(errors);
-        return;
-      }
-      setFormErrors({});
 
       const { leadId, conversationId } = await createLead(agentId, { 
         firstName: trimmedFirstName, 
@@ -179,13 +260,90 @@ export const ContactForm = ({
     }
   };
 
+  const renderField = (field: CustomField) => {
+    switch (field.fieldType) {
+      case 'checkbox':
+        return (
+          <>
+            <WidgetCheckbox
+              name={field.id}
+              label={field.label}
+              richTextContent={field.richTextContent}
+              required={field.required}
+              checked={checkboxValues[field.id] || false}
+              onChange={(checked) => setCheckboxValues(prev => ({ ...prev, [field.id]: checked }))}
+              error={!!formErrors[field.id]}
+            />
+            {formErrors[field.id] && (
+              <p className="text-xs text-destructive mt-1 pl-7" role="alert">{formErrors[field.id]}</p>
+            )}
+          </>
+        );
+      case 'select':
+        return (
+          <WidgetSelect name={field.id} required={field.required}>
+            <WidgetSelectTrigger>
+              <WidgetSelectValue placeholder={field.label} />
+            </WidgetSelectTrigger>
+            <WidgetSelectContent>
+              {field.options?.map(opt => (
+                <WidgetSelectItem key={opt} value={opt}>{opt}</WidgetSelectItem>
+              ))}
+            </WidgetSelectContent>
+          </WidgetSelect>
+        );
+      case 'textarea':
+        return <WidgetTextarea name={field.id} placeholder={field.label} required={field.required} />;
+      case 'phone':
+        return (
+          <Suspense fallback={<WidgetInput placeholder={field.label} disabled />}>
+            <PhoneInputField 
+              name={field.id}
+              placeholder={field.label}
+              required={field.required}
+            />
+          </Suspense>
+        );
+      default:
+        return (
+          <WidgetInput 
+            name={field.id} 
+            type={field.fieldType === 'email' ? 'email' : 'text'} 
+            placeholder={field.label} 
+            required={field.required} 
+          />
+        );
+    }
+  };
+
+  const isLastStep = currentStep === totalSteps;
+
   return (
     <div className="flex items-start">
       <div className="bg-muted rounded-lg p-3 w-full">
-        <p className="text-base font-semibold mb-0.5">{title}</p>
-        {subtitle && (
-          <p className="text-sm text-muted-foreground mb-4">{subtitle}</p>
+        {/* Step indicator for multi-step forms */}
+        {enableMultiStepForm && totalSteps > 1 && (
+          <div className="flex items-center justify-center gap-1.5 mb-3">
+            {Array.from({ length: totalSteps }).map((_, index) => (
+              <div
+                key={index}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  index + 1 === currentStep 
+                    ? 'w-4 bg-foreground' 
+                    : index + 1 < currentStep
+                    ? 'w-1.5 bg-foreground/60'
+                    : 'w-1.5 bg-foreground/20'
+                }`}
+              />
+            ))}
+          </div>
         )}
+        
+        <p className="text-base font-semibold mb-0.5">{displayTitle}</p>
+        {displaySubtitle && (
+          <p className="text-sm text-muted-foreground mb-4">{displaySubtitle}</p>
+        )}
+        
         <form className="space-y-2" onSubmit={handleSubmit}>
           {/* Honeypot field - hidden from users, bots fill it */}
           <input 
@@ -196,59 +354,40 @@ export const ContactForm = ({
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
           />
-          <WidgetInput name="firstName" placeholder="First name" required autoComplete="given-name" />
-          {formErrors.firstName && <p className="text-xs text-destructive" role="alert">{formErrors.firstName}</p>}
-          <WidgetInput name="lastName" placeholder="Last name" required autoComplete="family-name" />
-          {formErrors.lastName && <p className="text-xs text-destructive" role="alert">{formErrors.lastName}</p>}
-          <WidgetInput name="email" type="email" placeholder="Email" required autoComplete="email" />
-          {formErrors.email && <p className="text-xs text-destructive" role="alert">{formErrors.email}</p>}
           
-          {customFields.map(field => (
+          {/* Default fields - only on step 1 */}
+          {showDefaultFields && (
+            <>
+              <WidgetInput name="firstName" placeholder="First name" required autoComplete="given-name" />
+              {formErrors.firstName && <p className="text-xs text-destructive" role="alert">{formErrors.firstName}</p>}
+              <WidgetInput name="lastName" placeholder="Last name" required autoComplete="family-name" />
+              {formErrors.lastName && <p className="text-xs text-destructive" role="alert">{formErrors.lastName}</p>}
+              <WidgetInput name="email" type="email" placeholder="Email" required autoComplete="email" />
+              {formErrors.email && <p className="text-xs text-destructive" role="alert">{formErrors.email}</p>}
+            </>
+          )}
+          
+          {/* Hidden fields to preserve values from previous steps */}
+          {enableMultiStepForm && !showDefaultFields && (
+            <>
+              <input type="hidden" name="firstName" />
+              <input type="hidden" name="lastName" />
+              <input type="hidden" name="email" />
+            </>
+          )}
+          
+          {/* Custom fields for current step */}
+          {currentStepFields.map(field => (
             <div key={field.id}>
-              {field.fieldType === 'checkbox' ? (
-                <>
-                  <WidgetCheckbox
-                    name={field.id}
-                    label={field.label}
-                    richTextContent={field.richTextContent}
-                    required={field.required}
-                    checked={checkboxValues[field.id] || false}
-                    onChange={(checked) => setCheckboxValues(prev => ({ ...prev, [field.id]: checked }))}
-                    error={!!formErrors[field.id]}
-                  />
-                  {formErrors[field.id] && (
-                    <p className="text-xs text-destructive mt-1 pl-7" role="alert">{formErrors[field.id]}</p>
-                  )}
-                </>
-              ) : field.fieldType === 'select' ? (
-                <WidgetSelect name={field.id} required={field.required}>
-                  <WidgetSelectTrigger>
-                    <WidgetSelectValue placeholder={field.label} />
-                  </WidgetSelectTrigger>
-                  <WidgetSelectContent>
-                    {field.options?.map(opt => (
-                      <WidgetSelectItem key={opt} value={opt}>{opt}</WidgetSelectItem>
-                    ))}
-                  </WidgetSelectContent>
-                </WidgetSelect>
-              ) : field.fieldType === 'textarea' ? (
-                <WidgetTextarea name={field.id} placeholder={field.label} required={field.required} />
-              ) : field.fieldType === 'phone' ? (
-                <Suspense fallback={<WidgetInput placeholder={field.label} disabled />}>
-                  <PhoneInputField 
-                    name={field.id}
-                    placeholder={field.label}
-                    required={field.required}
-                  />
-                </Suspense>
-              ) : (
-                <WidgetInput name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} required={field.required} />
+              {renderField(field)}
+              {formErrors[field.id] && field.fieldType !== 'checkbox' && (
+                <p className="text-xs text-destructive mt-1" role="alert">{formErrors[field.id]}</p>
               )}
             </div>
           ))}
           
-          {/* Cloudflare Turnstile bot protection (invisible unless suspicious) */}
-          {TURNSTILE_SITE_KEY && (
+          {/* Cloudflare Turnstile bot protection (invisible unless suspicious) - only on last step */}
+          {TURNSTILE_SITE_KEY && isLastStep && (
             <TurnstileWidget
               siteKey={TURNSTILE_SITE_KEY}
               onVerify={(token) => setTurnstileToken(token)}
@@ -257,9 +396,54 @@ export const ContactForm = ({
             />
           )}
           
-          <WidgetButton type="submit" size="default" className="w-full" style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}>
-            Start Chat
-          </WidgetButton>
+          {/* Navigation buttons */}
+          {enableMultiStepForm && totalSteps > 1 ? (
+            <div className="flex items-center gap-2 pt-1">
+              {currentStep > 1 && (
+                <WidgetButton 
+                  type="button" 
+                  variant="outline" 
+                  size="default"
+                  onClick={handleBack}
+                  className="flex-shrink-0"
+                >
+                  <ChevronLeft size={16} aria-hidden="true" />
+                  Back
+                </WidgetButton>
+              )}
+              
+              {isLastStep ? (
+                <WidgetButton 
+                  type="submit" 
+                  size="default" 
+                  className="flex-1" 
+                  style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
+                >
+                  Start Chat
+                </WidgetButton>
+              ) : (
+                <WidgetButton 
+                  type="button" 
+                  size="default" 
+                  className="flex-1" 
+                  onClick={handleNext}
+                  style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
+                >
+                  Next
+                  <ChevronRight size={16} aria-hidden="true" />
+                </WidgetButton>
+              )}
+            </div>
+          ) : (
+            <WidgetButton 
+              type="submit" 
+              size="default" 
+              className="w-full" 
+              style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
+            >
+              Start Chat
+            </WidgetButton>
+          )}
         </form>
       </div>
     </div>
