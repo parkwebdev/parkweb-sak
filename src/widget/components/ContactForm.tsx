@@ -98,28 +98,21 @@ export const ContactForm = ({
   const buttonBgColor = systemTheme === 'dark' ? '#FFFFFF' : primaryColor;
   const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
   
-  // Calculate total steps and current step config
-  const totalSteps = enableMultiStepForm ? formSteps.length : 1;
+  // Calculate total steps and current step config (multi-step is always enabled)
+  const totalSteps = formSteps.length;
   const currentStepConfig = formSteps[currentStep - 1];
   
   // Get fields for current step
   const currentStepFields = useMemo(() => {
-    if (!enableMultiStepForm) {
-      return customFields;
-    }
     return customFields.filter(field => (field.step || 1) === currentStep);
-  }, [customFields, currentStep, enableMultiStepForm]);
+  }, [customFields, currentStep]);
   
   // Default fields (First, Last, Email) are always on Step 1
   const showDefaultFields = currentStep === 1;
   
   // Get display title/subtitle - use step config if available, otherwise form defaults
-  const displayTitle = enableMultiStepForm && currentStepConfig?.title 
-    ? currentStepConfig.title 
-    : title;
-  const displaySubtitle = enableMultiStepForm && currentStepConfig?.subtitle 
-    ? currentStepConfig.subtitle 
-    : (currentStep === 1 ? subtitle : undefined);
+  const displayTitle = currentStepConfig?.title || title;
+  const displaySubtitle = currentStepConfig?.subtitle || (currentStep === 1 ? subtitle : undefined);
 
   /**
    * Validate fields for the current step only
@@ -321,8 +314,8 @@ export const ContactForm = ({
   return (
     <div className="flex items-start">
       <div className="bg-muted rounded-lg p-3 w-full">
-        {/* Step indicator for multi-step forms */}
-        {enableMultiStepForm && totalSteps > 1 && (
+        {/* Step indicator */}
+        {totalSteps > 1 && (
           <div className="flex items-center justify-center gap-1.5 mb-3">
             {Array.from({ length: totalSteps }).map((_, index) => (
               <div
@@ -368,7 +361,7 @@ export const ContactForm = ({
           )}
           
           {/* Hidden fields to preserve values from previous steps */}
-          {enableMultiStepForm && !showDefaultFields && (
+          {!showDefaultFields && (
             <>
               <input type="hidden" name="firstName" />
               <input type="hidden" name="lastName" />
@@ -397,7 +390,7 @@ export const ContactForm = ({
           )}
           
           {/* Navigation buttons */}
-          {enableMultiStepForm && totalSteps > 1 ? (
+          {totalSteps > 1 ? (
             <div className="flex items-center gap-2 pt-1">
               {currentStep > 1 && (
                 <WidgetButton 

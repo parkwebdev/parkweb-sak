@@ -15,7 +15,6 @@ interface ContactFormPreviewProps {
   customFields: CustomField[];
   primaryColor: string;
   enabled: boolean;
-  enableMultiStepForm?: boolean;
   formSteps?: FormStep[];
 }
 
@@ -25,25 +24,18 @@ export function ContactFormPreview({
   customFields,
   primaryColor,
   enabled,
-  enableMultiStepForm = false,
   formSteps = [{ id: 'step-1' }],
 }: ContactFormPreviewProps) {
   const [previewStep, setPreviewStep] = useState(1);
-  const totalSteps = enableMultiStepForm ? formSteps.length : 1;
+  const totalSteps = formSteps.length;
   const currentStepConfig = formSteps[previewStep - 1];
   
-  // Filter fields for current preview step
-  const currentStepFields = enableMultiStepForm
-    ? customFields.filter(f => (f.step || 1) === previewStep)
-    : customFields;
+  // Filter fields for current preview step (multi-step is always enabled)
+  const currentStepFields = customFields.filter(f => (f.step || 1) === previewStep);
   
   const showDefaultFields = previewStep === 1;
-  const displayTitle = enableMultiStepForm && currentStepConfig?.title 
-    ? currentStepConfig.title 
-    : title;
-  const displaySubtitle = enableMultiStepForm && currentStepConfig?.subtitle 
-    ? currentStepConfig.subtitle 
-    : (previewStep === 1 ? subtitle : undefined);
+  const displayTitle = currentStepConfig?.title || title;
+  const displaySubtitle = currentStepConfig?.subtitle || (previewStep === 1 ? subtitle : undefined);
   const inputClasses = cn(
     'w-full h-9 px-3 text-sm rounded-md border border-input bg-background',
     'text-muted-foreground placeholder:text-muted-foreground/60',
@@ -146,8 +138,8 @@ export function ContactFormPreview({
 
   return (
     <div className="bg-muted rounded-lg p-4">
-      {/* Step indicator for multi-step forms */}
-      {enableMultiStepForm && totalSteps > 1 && (
+      {/* Step indicator */}
+      {totalSteps > 1 && (
         <div className="flex items-center justify-center gap-1.5 mb-3">
           {Array.from({ length: totalSteps }).map((_, index) => (
             <button
@@ -205,8 +197,8 @@ export function ContactFormPreview({
         {/* Custom fields for current step */}
         {currentStepFields.map(renderFieldPreview)}
 
-        {/* Navigation buttons for multi-step */}
-        {enableMultiStepForm && totalSteps > 1 ? (
+        {/* Navigation buttons */}
+        {totalSteps > 1 ? (
           <div className="flex items-center gap-2 pt-1">
             {previewStep > 1 && (
               <button
