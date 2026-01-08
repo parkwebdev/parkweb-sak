@@ -20,7 +20,8 @@ A comprehensive plan for implementing a visual automation/flow builder that will
 7. [Best Practices & Patterns](#7-best-practices--patterns)
 8. [Implementation Phases](#8-implementation-phases-temporary)
 9. [Migration Strategy](#9-migration-strategy)
-10. [Documentation Checklist](#10-documentation-checklist)
+10. [React Flow Patterns](#10-react-flow-patterns)
+11. [Documentation Checklist](#11-documentation-checklist)
 
 ---
 
@@ -2647,7 +2648,977 @@ const colorMode = theme === 'dark' ? 'dark' : 'light';
 
 ---
 
-## 10. Documentation Checklist
+## 10. React Flow Patterns
+
+Production-ready React Flow patterns following the official documentation and industry best practices.
+
+### Undo/Redo with Zustand Temporal
+
+Use `zustand` with `zundo` middleware for undo/redo history:
+
+```bash
+bun add zustand zundo
+```
+
+```typescript
+// src/stores/automationFlowStore.ts
+
+import { create } from 'zustand';
+import { temporal } from 'zundo';
+import type { Node, Edge, Connection, NodeChange, EdgeChange } from '@xyflow/react';
+import { applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
+
+interface FlowState {
+  nodes: Node[];
+  edges: Edge[];
+  // Actions
+  onNodesChange: (changes: NodeChange[]) => void;
+  onEdgesChange: (changes: EdgeChange[]) => void;
+  onConnect: (connection: Connection) => void;
+  addNode: (node: Node) => void;
+  deleteNode: (nodeId: string) => void;
+  updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
+  setNodes: (nodes: Node[]) => void;
+  setEdges: (edges: Edge[]) => void;
+  reset: () => void;
+}
+
+const initialState = {
+  nodes: [],
+  edges: [],
+};
+
+export const useFlowStore = create<FlowState>()(
+  temporal(
+    (set, get) => ({
+      ...initialState,
+      
+      onNodesChange: (changes) => {
+        set({ nodes: applyNodeChanges(changes, get().nodes) });
+      },
+      
+      onEdgesChange: (changes) => {
+        set({ edges: applyEdgeChanges(changes, get().edges) });
+      },
+      
+      onConnect: (connection) => {
+        set({ edges: addEdge(connection, get().edges) });
+      },
+      
+      addNode: (node) => {
+        set({ nodes: [...get().nodes, node] });
+      },
+      
+      deleteNode: (nodeId) => {
+        set({
+          nodes: get().nodes.filter((n) => n.id !== nodeId),
+          edges: get().edges.filter(
+            (e) => e.source !== nodeId && e.target !== nodeId
+          ),
+        });
+      },
+      
+      updateNodeData: (nodeId, data) => {
+        set({
+          nodes: get().nodes.map((n) =>
+            n.id === nodeId ? { ...n, data: { ...n.data, ...data } } : n
+          ),
+        });
+      },
+      
+      setNodes: (nodes) => set({ nodes }),
+      setEdges: (edges) => set({ edges }),
+      reset: () => set(initialState),
+    }),
+    {
+      // Limit history to 50 states
+      limit: 50,
+      // Debounce rapid changes (e.g., dragging)
+      handleSet: (handleSet) => {
+        let timeout: ReturnType<typeof setTimeout> | null = null;
+        return (state) => {
+          if (timeout) clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            handleSet(state);
+          }, 100);
+        };
+      },
+      // Partition functions for granular history (optional)
+      partialize: (state) => ({
+        nodes: state.nodes,
+        edges: state.edges,
+      }),
+    }
+  )
+);
+
+// Hook for undo/redo actions
+export function useFlowHistory() {
+  const { undo, redo, clear, pastStates, futureStates } = useFlowStore.temporal.getState();
+  
+  return {
+    undo,
+    redo,
+    clear,
+    canUndo: pastStates.length > 0,
+    canRedo: futureStates.length > 0,
+  };
+}
+```
+
+```tsx
+// Usage in FlowEditor.tsx
+import { useFlowStore, useFlowHistory } from '@/stores/automationFlowStore';
+
+function FlowToolbar() {
+  const { undo, redo, canUndo, canRedo } = useFlowHistory();
+  
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+  
+  return (
+    <div className="flex gap-1">
+      <IconButton
+        icon={ArrowUturnLeft}
+        label="Undo (⌘Z)"
+        onClick={undo}
+        disabled={!canUndo}
+        size="sm"
+      />
+      <IconButton
+        icon={ArrowUturnRight}
+        label="Redo (⌘⇧Z)"
+        onClick={redo}
+        disabled={!canRedo}
+        size="sm"
+      />
+    </div>
+  );
+}
+```
+
+### useFlowState Hook Implementation
+
+Controlled state hook for React Flow integration:
+
+```typescript
+// src/features/automations/hooks/useFlowState.ts
+
+import { useCallback, useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import type { 
+  Node, 
+  Edge, 
+  OnNodesChange, 
+  OnEdgesChange, 
+  OnConnect,
+  Connection,
+  NodeChange,
+  EdgeChange 
+} from '@xyflow/react';
+import { useFlowStore } from '@/stores/automationFlowStore';
+
+interface UseFlowStateReturn {
+  nodes: Node[];
+  edges: Edge[];
+  onNodesChange: OnNodesChange;
+  onEdgesChange: OnEdgesChange;
+  onConnect: OnConnect;
+  addNode: (node: Node) => void;
+  deleteNode: (nodeId: string) => void;
+  updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
+  selectedNodes: Node[];
+  selectedNodeIds: string[];
+}
+
+export function useFlowState(): UseFlowStateReturn {
+  const { 
+    nodes, 
+    edges, 
+    onNodesChange, 
+    onEdgesChange, 
+    onConnect,
+    addNode,
+    deleteNode,
+    updateNodeData,
+  } = useFlowStore(
+    useShallow((state) => ({
+      nodes: state.nodes,
+      edges: state.edges,
+      onNodesChange: state.onNodesChange,
+      onEdgesChange: state.onEdgesChange,
+      onConnect: state.onConnect,
+      addNode: state.addNode,
+      deleteNode: state.deleteNode,
+      updateNodeData: state.updateNodeData,
+    }))
+  );
+
+  const selectedNodes = useMemo(
+    () => nodes.filter((n) => n.selected),
+    [nodes]
+  );
+
+  const selectedNodeIds = useMemo(
+    () => selectedNodes.map((n) => n.id),
+    [selectedNodes]
+  );
+
+  return {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNode,
+    deleteNode,
+    updateNodeData,
+    selectedNodes,
+    selectedNodeIds,
+  };
+}
+```
+
+### nodeTypes Registry Memoization
+
+**CRITICAL**: `nodeTypes` must be defined outside the component or memoized to prevent React Flow from re-registering on every render:
+
+```typescript
+// src/features/automations/nodes/nodeTypes.ts
+
+import { memo } from 'react';
+import type { NodeTypes } from '@xyflow/react';
+import { TriggerNode } from './TriggerNode';
+import { ActionNode } from './ActionNode';
+import { ConditionNode } from './ConditionNode';
+import { DelayNode } from './DelayNode';
+import { AINode } from './AINode';
+import { LoopNode } from './LoopNode';
+import { ResponseNode } from './ResponseNode';
+
+// Define outside component - NEVER inside
+export const nodeTypes: NodeTypes = {
+  trigger: memo(TriggerNode),
+  action: memo(ActionNode),
+  condition: memo(ConditionNode),
+  delay: memo(DelayNode),
+  ai: memo(AINode),
+  loop: memo(LoopNode),
+  response: memo(ResponseNode),
+};
+
+// Edge types registry
+import type { EdgeTypes } from '@xyflow/react';
+import { CustomEdge } from './CustomEdge';
+
+export const edgeTypes: EdgeTypes = {
+  default: memo(CustomEdge),
+};
+```
+
+```tsx
+// src/features/automations/components/FlowEditor.tsx
+
+import { nodeTypes, edgeTypes } from '../nodes/nodeTypes';
+
+export function FlowEditor() {
+  // nodeTypes is stable reference from module scope
+  return (
+    <ReactFlow
+      nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
+      // ...
+    />
+  );
+}
+```
+
+### Connection Validation Rules
+
+Validate connections before allowing them:
+
+```typescript
+// src/features/automations/lib/connectionValidation.ts
+
+import type { Node, Edge, Connection, IsValidConnection } from '@xyflow/react';
+
+interface ConnectionRules {
+  // Which node types can connect to which
+  allowedConnections: Record<string, string[]>;
+  // Maximum outgoing edges per handle type
+  maxOutgoing: Record<string, number>;
+  // Prevent self-connections
+  preventSelfConnection: boolean;
+  // Prevent cycles
+  preventCycles: boolean;
+}
+
+const defaultRules: ConnectionRules = {
+  allowedConnections: {
+    trigger: ['action', 'condition', 'delay', 'ai'],
+    action: ['action', 'condition', 'delay', 'ai', 'response'],
+    condition: ['action', 'condition', 'delay', 'ai', 'response'],
+    delay: ['action', 'condition', 'ai', 'response'],
+    ai: ['action', 'condition', 'response'],
+    loop: ['action', 'condition', 'ai'],
+    response: [], // Terminal node
+  },
+  maxOutgoing: {
+    trigger: 1,
+    action: 1,
+    delay: 1,
+    ai: 1,
+    condition: 2, // true/false branches
+    loop: 2, // continue/complete branches
+    response: 0, // Terminal
+  },
+  preventSelfConnection: true,
+  preventCycles: true,
+};
+
+export function createConnectionValidator(
+  nodes: Node[],
+  edges: Edge[],
+  rules: ConnectionRules = defaultRules
+): IsValidConnection {
+  return (connection: Edge | Connection): boolean => {
+    const { source, target, sourceHandle } = connection;
+    
+    if (!source || !target) return false;
+    
+    // Prevent self-connections
+    if (rules.preventSelfConnection && source === target) {
+      return false;
+    }
+    
+    const sourceNode = nodes.find((n) => n.id === source);
+    const targetNode = nodes.find((n) => n.id === target);
+    
+    if (!sourceNode || !targetNode) return false;
+    
+    // Check allowed connections
+    const allowed = rules.allowedConnections[sourceNode.type || ''];
+    if (allowed && !allowed.includes(targetNode.type || '')) {
+      return false;
+    }
+    
+    // Check max outgoing from this handle
+    const existingFromHandle = edges.filter(
+      (e) => e.source === source && e.sourceHandle === sourceHandle
+    );
+    const maxFromHandle = sourceHandle?.includes('true') || sourceHandle?.includes('false')
+      ? 1  // Condition branches: 1 each
+      : rules.maxOutgoing[sourceNode.type || ''] ?? Infinity;
+    
+    if (existingFromHandle.length >= maxFromHandle) {
+      return false;
+    }
+    
+    // Prevent cycles (BFS)
+    if (rules.preventCycles) {
+      const visited = new Set<string>();
+      const queue = [target];
+      
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        if (current === source) return false; // Would create cycle
+        if (visited.has(current)) continue;
+        visited.add(current);
+        
+        edges
+          .filter((e) => e.source === current)
+          .forEach((e) => queue.push(e.target));
+      }
+    }
+    
+    return true;
+  };
+}
+```
+
+```tsx
+// Usage in FlowEditor.tsx
+const { nodes, edges } = useFlowState();
+const isValidConnection = useMemo(
+  () => createConnectionValidator(nodes, edges),
+  [nodes, edges]
+);
+
+<ReactFlow isValidConnection={isValidConnection} />
+```
+
+### Drag & Drop from Sidebar
+
+Complete drag-and-drop handler for adding nodes from sidebar:
+
+```tsx
+// src/features/automations/components/NodeSidebar.tsx
+
+import { DragEvent } from 'react';
+import type { NodeType } from '../types';
+
+interface NodeSidebarItemProps {
+  nodeType: NodeType;
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+  description: string;
+}
+
+export function NodeSidebarItem({ 
+  nodeType, 
+  label, 
+  icon: Icon, 
+  description 
+}: NodeSidebarItemProps) {
+  const onDragStart = (event: DragEvent<HTMLDivElement>) => {
+    event.dataTransfer.setData('application/reactflow', nodeType);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
+  return (
+    <div
+      className="flex items-center gap-3 p-3 rounded-lg border border-border 
+                 hover:border-primary/50 hover:bg-accent cursor-grab active:cursor-grabbing"
+      draggable
+      onDragStart={onDragStart}
+    >
+      <FeaturedIcon icon={Icon} size="sm" variant="secondary" />
+      <div className="flex flex-col min-w-0">
+        <span className="text-sm font-medium truncate">{label}</span>
+        <span className="text-xs text-muted-foreground truncate">{description}</span>
+      </div>
+    </div>
+  );
+}
+```
+
+```tsx
+// src/features/automations/components/FlowEditor.tsx
+
+import { useCallback, useRef, DragEvent } from 'react';
+import { useReactFlow } from '@xyflow/react';
+import { useFlowState } from '../hooks/useFlowState';
+import { useNodeAnnouncements } from '@/hooks/useNodeAnnouncements';
+import { nanoid } from 'nanoid';
+
+export function FlowEditor() {
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const { screenToFlowPosition, getViewport } = useReactFlow();
+  const { addNode, nodes } = useFlowState();
+  const { announceNodeAdded } = useNodeAnnouncements();
+
+  const onDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+
+      const type = event.dataTransfer.getData('application/reactflow');
+      if (!type) return;
+
+      // Get drop position in flow coordinates
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      // Create new node
+      const newNode = {
+        id: nanoid(),
+        type,
+        position,
+        data: { label: getNodeLabel(type) },
+      };
+
+      addNode(newNode);
+      announceNodeAdded(getNodeLabel(type));
+    },
+    [screenToFlowPosition, addNode, announceNodeAdded]
+  );
+
+  return (
+    <div ref={reactFlowWrapper} className="h-full w-full">
+      <ReactFlow
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        // ...
+      />
+    </div>
+  );
+}
+
+function getNodeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    trigger: 'Trigger',
+    action: 'HTTP Request',
+    condition: 'Condition',
+    delay: 'Delay',
+    ai: 'AI Action',
+    loop: 'Loop',
+    response: 'Response',
+  };
+  return labels[type] || 'Node';
+}
+```
+
+### Copy/Paste Nodes
+
+Clipboard support for copying and pasting nodes:
+
+```typescript
+// src/features/automations/hooks/useClipboard.ts
+
+import { useCallback, useState } from 'react';
+import type { Node, Edge } from '@xyflow/react';
+import { useFlowState } from './useFlowState';
+import { nanoid } from 'nanoid';
+
+interface ClipboardData {
+  nodes: Node[];
+  edges: Edge[];
+}
+
+const OFFSET = 50; // Paste offset from original position
+
+export function useClipboard() {
+  const { nodes, edges, addNode, onConnect } = useFlowState();
+  const [clipboard, setClipboard] = useState<ClipboardData | null>(null);
+
+  const copy = useCallback(() => {
+    const selectedNodes = nodes.filter((n) => n.selected);
+    if (selectedNodes.length === 0) return;
+
+    const selectedNodeIds = new Set(selectedNodes.map((n) => n.id));
+    
+    // Include edges between selected nodes
+    const selectedEdges = edges.filter(
+      (e) => selectedNodeIds.has(e.source) && selectedNodeIds.has(e.target)
+    );
+
+    setClipboard({ nodes: selectedNodes, edges: selectedEdges });
+    
+    // Also copy to system clipboard for cross-tab support
+    navigator.clipboard.writeText(
+      JSON.stringify({ nodes: selectedNodes, edges: selectedEdges })
+    );
+  }, [nodes, edges]);
+
+  const paste = useCallback(() => {
+    if (!clipboard || clipboard.nodes.length === 0) return;
+
+    // Create ID mapping for new nodes
+    const idMap = new Map<string, string>();
+    clipboard.nodes.forEach((n) => {
+      idMap.set(n.id, nanoid());
+    });
+
+    // Create new nodes with offset positions
+    const newNodes: Node[] = clipboard.nodes.map((n) => ({
+      ...n,
+      id: idMap.get(n.id)!,
+      position: {
+        x: n.position.x + OFFSET,
+        y: n.position.y + OFFSET,
+      },
+      selected: true,
+    }));
+
+    // Create new edges with updated IDs
+    const newEdges: Edge[] = clipboard.edges.map((e) => ({
+      ...e,
+      id: nanoid(),
+      source: idMap.get(e.source) || e.source,
+      target: idMap.get(e.target) || e.target,
+    }));
+
+    // Add nodes
+    newNodes.forEach(addNode);
+    
+    // Add edges
+    newEdges.forEach((e) => {
+      onConnect({
+        source: e.source,
+        target: e.target,
+        sourceHandle: e.sourceHandle,
+        targetHandle: e.targetHandle,
+      });
+    });
+
+    // Update clipboard for cascading pastes
+    setClipboard({ nodes: newNodes, edges: newEdges });
+  }, [clipboard, addNode, onConnect]);
+
+  const cut = useCallback(() => {
+    copy();
+    const selectedNodes = nodes.filter((n) => n.selected);
+    selectedNodes.forEach((n) => deleteNode(n.id));
+  }, [copy, nodes]);
+
+  return { copy, paste, cut, hasClipboard: clipboard !== null };
+}
+```
+
+```tsx
+// Keyboard shortcuts in FlowEditor.tsx
+useEffect(() => {
+  const { copy, paste, cut } = useClipboard();
+  
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!(e.metaKey || e.ctrlKey)) return;
+    
+    switch (e.key) {
+      case 'c':
+        e.preventDefault();
+        copy();
+        break;
+      case 'v':
+        e.preventDefault();
+        paste();
+        break;
+      case 'x':
+        e.preventDefault();
+        cut();
+        break;
+    }
+  };
+  
+  document.addEventListener('keydown', handleKeyDown);
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, []);
+```
+
+### Multi-Select Patterns
+
+Selection box and multi-select behavior:
+
+```tsx
+// src/features/automations/components/FlowEditor.tsx
+
+import { useCallback, useState } from 'react';
+import { 
+  ReactFlow, 
+  SelectionMode,
+  useOnSelectionChange,
+  type OnSelectionChangeParams,
+} from '@xyflow/react';
+
+export function FlowEditor() {
+  const [selectedCount, setSelectedCount] = useState(0);
+
+  // Track selection changes
+  const onSelectionChange = useCallback(
+    ({ nodes, edges }: OnSelectionChangeParams) => {
+      setSelectedCount(nodes.length);
+    },
+    []
+  );
+
+  // Delete selected nodes
+  const deleteSelected = useCallback(() => {
+    const selectedNodes = nodes.filter((n) => n.selected);
+    selectedNodes.forEach((n) => deleteNode(n.id));
+  }, [nodes, deleteNode]);
+
+  // Keyboard delete handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedCount > 0) {
+        // Don't delete if focus is in an input
+        if (
+          document.activeElement?.tagName === 'INPUT' ||
+          document.activeElement?.tagName === 'TEXTAREA'
+        ) {
+          return;
+        }
+        e.preventDefault();
+        deleteSelected();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCount, deleteSelected]);
+
+  return (
+    <ReactFlow
+      selectionMode={SelectionMode.Partial} // Select nodes partially in box
+      selectionOnDrag // Enable selection box
+      panOnDrag={[1, 2]} // Pan with middle/right mouse button
+      selectNodesOnDrag={false} // Don't select during pan
+      onSelectionChange={onSelectionChange}
+      multiSelectionKeyCode="Shift" // Hold Shift for multi-select
+      deleteKeyCode={null} // Handle delete manually (above)
+      // ...
+    />
+  );
+}
+```
+
+### Viewport Constraints
+
+Limit panning and zoom ranges:
+
+```tsx
+// src/features/automations/components/FlowEditor.tsx
+
+import { ReactFlow } from '@xyflow/react';
+
+// Viewport constraints
+const VIEWPORT_CONFIG = {
+  minZoom: 0.25,
+  maxZoom: 2,
+  defaultViewport: { x: 0, y: 0, zoom: 1 },
+  // Extent limits panning range [minX, minY, maxX, maxY]
+  translateExtent: [
+    [-2000, -2000],
+    [4000, 4000],
+  ] as [[number, number], [number, number]],
+  // Node placement constraints
+  nodeExtent: [
+    [-1500, -1500],
+    [3500, 3500],
+  ] as [[number, number], [number, number]],
+};
+
+export function FlowEditor() {
+  return (
+    <ReactFlow
+      minZoom={VIEWPORT_CONFIG.minZoom}
+      maxZoom={VIEWPORT_CONFIG.maxZoom}
+      defaultViewport={VIEWPORT_CONFIG.defaultViewport}
+      translateExtent={VIEWPORT_CONFIG.translateExtent}
+      nodeExtent={VIEWPORT_CONFIG.nodeExtent}
+      fitView
+      fitViewOptions={{
+        padding: 0.2,
+        maxZoom: 1.5,
+      }}
+      // ...
+    />
+  );
+}
+```
+
+### Auto-Layout with Dagre
+
+Automatic node positioning using dagre:
+
+```bash
+bun add @dagrejs/dagre
+```
+
+```typescript
+// src/features/automations/lib/autoLayout.ts
+
+import Dagre from '@dagrejs/dagre';
+import type { Node, Edge } from '@xyflow/react';
+
+interface LayoutOptions {
+  direction: 'TB' | 'LR' | 'BT' | 'RL';
+  nodeSpacing: number;
+  rankSpacing: number;
+}
+
+const defaultOptions: LayoutOptions = {
+  direction: 'TB', // Top to bottom
+  nodeSpacing: 80,
+  rankSpacing: 100,
+};
+
+export function getLayoutedElements(
+  nodes: Node[],
+  edges: Edge[],
+  options: Partial<LayoutOptions> = {}
+): { nodes: Node[]; edges: Edge[] } {
+  const opts = { ...defaultOptions, ...options };
+  
+  const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  
+  g.setGraph({
+    rankdir: opts.direction,
+    nodesep: opts.nodeSpacing,
+    ranksep: opts.rankSpacing,
+    marginx: 50,
+    marginy: 50,
+  });
+
+  // Add nodes to graph
+  nodes.forEach((node) => {
+    // Default node dimensions - adjust per node type if needed
+    const width = node.type === 'condition' ? 200 : 180;
+    const height = node.type === 'condition' ? 100 : 80;
+    g.setNode(node.id, { width, height });
+  });
+
+  // Add edges to graph
+  edges.forEach((edge) => {
+    g.setEdge(edge.source, edge.target);
+  });
+
+  // Run layout algorithm
+  Dagre.layout(g);
+
+  // Apply positions back to nodes
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = g.node(node.id);
+    const width = node.type === 'condition' ? 200 : 180;
+    const height = node.type === 'condition' ? 100 : 80;
+    
+    return {
+      ...node,
+      position: {
+        x: nodeWithPosition.x - width / 2,
+        y: nodeWithPosition.y - height / 2,
+      },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
+}
+```
+
+```tsx
+// Usage in FlowEditor.tsx
+import { useReactFlow } from '@xyflow/react';
+import { getLayoutedElements } from '../lib/autoLayout';
+
+function FlowToolbar() {
+  const { nodes, edges, setNodes, setEdges } = useFlowState();
+  const { fitView } = useReactFlow();
+
+  const onAutoLayout = useCallback(() => {
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      nodes,
+      edges,
+      { direction: 'TB' }
+    );
+    
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+    
+    // Fit view after layout with animation
+    window.requestAnimationFrame(() => {
+      fitView({ padding: 0.2, duration: 300 });
+    });
+  }, [nodes, edges, setNodes, setEdges, fitView]);
+
+  return (
+    <IconButton
+      icon={Grid3x3}
+      label="Auto-arrange nodes"
+      onClick={onAutoLayout}
+      size="sm"
+    />
+  );
+}
+```
+
+### Viewport Persistence
+
+Save and restore viewport position:
+
+```typescript
+// src/features/automations/hooks/useViewportPersistence.ts
+
+import { useCallback, useEffect, useRef } from 'react';
+import { useReactFlow, type Viewport } from '@xyflow/react';
+import { debounce } from '@/lib/utils';
+
+interface UseViewportPersistenceOptions {
+  automationId: string;
+  initialViewport?: Viewport;
+  onViewportChange?: (viewport: Viewport) => void;
+}
+
+export function useViewportPersistence({
+  automationId,
+  initialViewport,
+  onViewportChange,
+}: UseViewportPersistenceOptions) {
+  const { setViewport, getViewport } = useReactFlow();
+  const initialized = useRef(false);
+
+  // Restore viewport on mount
+  useEffect(() => {
+    if (initialViewport && !initialized.current) {
+      setViewport(initialViewport);
+      initialized.current = true;
+    }
+  }, [initialViewport, setViewport]);
+
+  // Debounced save
+  const debouncedSave = useCallback(
+    debounce((viewport: Viewport) => {
+      onViewportChange?.(viewport);
+    }, 500),
+    [onViewportChange]
+  );
+
+  // Handle viewport changes
+  const handleMoveEnd = useCallback(() => {
+    const viewport = getViewport();
+    debouncedSave(viewport);
+  }, [getViewport, debouncedSave]);
+
+  return { onMoveEnd: handleMoveEnd };
+}
+```
+
+```tsx
+// Usage in FlowEditor.tsx
+export function FlowEditor({ automation }: { automation: Automation }) {
+  const updateAutomation = useUpdateAutomation(automation.id);
+  
+  const { onMoveEnd } = useViewportPersistence({
+    automationId: automation.id,
+    initialViewport: automation.viewport,
+    onViewportChange: (viewport) => {
+      updateAutomation.mutate({ viewport });
+    },
+  });
+
+  return (
+    <ReactFlow
+      defaultViewport={automation.viewport}
+      onMoveEnd={onMoveEnd}
+      // ...
+    />
+  );
+}
+```
+
+### React Flow Performance Tips
+
+| Optimization | Implementation |
+|--------------|----------------|
+| Memoize nodeTypes/edgeTypes | Define outside component |
+| Memoize custom nodes | Wrap with `memo()` |
+| Use `useShallow` for store selectors | Prevent unnecessary re-renders |
+| Debounce position saves | 100-500ms debounce |
+| Limit history states | `limit: 50` in zundo |
+| Virtualization | Built into React Flow |
+| Lazy load node config panels | Dynamic imports |
+
+---
+
+## 11. Documentation Checklist
 
 When implementing automations, update these documentation files:
 
@@ -2705,3 +3676,4 @@ When implementing automations, update these documentation files:
 | 1.0 | Jan 2026 | - | Initial planning document |
 | 1.1 | Jan 2026 | - | Consolidated from 5 separate docs |
 | 1.2 | Jan 2026 | - | Added 12 missing patterns: skeletons, staleTime, optimistic updates, error boundaries, toast patterns, focus management, route config, useStableObject, icon imports, documentation checklist, component size guidelines, real-time subscriptions |
+| 1.3 | Jan 2026 | - | Added 10 React Flow patterns: undo/redo with zustand temporal, useFlowState hook, nodeTypes memoization, connection validation, drag & drop handlers, copy/paste nodes, multi-select patterns, viewport constraints, auto-layout with dagre, viewport persistence |
