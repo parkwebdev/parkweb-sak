@@ -3,12 +3,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
-import { TeamMember, InviteMemberData, UserRole, AppPermission } from '@/types/team';
+import { TeamMember, InviteMemberData, UserRole } from '@/types/team';
 import { logger } from '@/utils/logger';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
 import type { TeamProfile } from '@/types/report';
 import { PROFILE_LIST_COLUMNS } from '@/lib/db-selects';
+import type { Database } from '@/integrations/supabase/types';
 
 /**
  * Hook for managing team members and roles.
@@ -288,13 +289,14 @@ export const useTeam = () => {
 
       const { error } = await supabase
         .from('user_roles')
-        .upsert({
-          user_id: member.user_id,
-          role: role as 'admin' | 'manager' | 'member',
-          permissions: permissions as AppPermission[],
-        }, {
-          onConflict: 'user_id'
-        });
+        .upsert(
+          {
+            user_id: member.user_id,
+            role: role as 'admin' | 'manager' | 'member',
+            permissions: permissions as Database['public']['Enums']['app_permission'][],
+          } as Database['public']['Tables']['user_roles']['Insert'],
+          { onConflict: 'user_id' }
+        );
 
       if (error) {
         logger.error('Database error updating role', error);
