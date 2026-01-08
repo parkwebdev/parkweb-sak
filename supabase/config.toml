@@ -154,3 +154,13 @@ verify_jwt = true
 
 [functions.execute-automation]
 verify_jwt = true
+
+[functions.dispatch-automation-event]
+verify_jwt = false
+
+[functions.trigger-automation]
+verify_jwt = false
+
+[functions.trigger-automation.schedule]
+# Run every minute to check schedule-based automations
+schedule = "* * * * *"
