@@ -151,3 +151,6 @@ verify_jwt = false
 
 [functions.list-user-sessions]
 verify_jwt = true
+
+[functions.execute-automation]
+verify_jwt = true
