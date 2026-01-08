@@ -2,12 +2,14 @@
  * AutomationEditor Component
  * 
  * Editor wrapper that loads automation data and renders the flow editor.
+ * Includes auto-save with 3s debounce.
  * 
  * @module components/automations/AutomationEditor
  */
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAutomations } from '@/hooks/useAutomations';
+import { useAutomationAutoSave } from '@/hooks/useAutomationAutoSave';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { FlowEditor } from '@/components/automations/FlowEditor';
 import { FlowToolbar } from '@/components/automations/FlowToolbar';
@@ -15,8 +17,6 @@ import { NodeSidebar } from '@/components/automations/NodeSidebar';
 import { AutomationErrorBoundary } from '@/components/automations/AutomationErrorBoundary';
 import { NodeConfigPanel } from '@/components/automations/NodeConfigPanel';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/lib/toast';
-import { getErrorMessage } from '@/types/errors';
 import type { Automation } from '@/types/automations';
 
 interface AutomationEditorProps {
@@ -25,12 +25,18 @@ interface AutomationEditorProps {
 }
 
 export function AutomationEditor({ automationId, onClose }: AutomationEditorProps) {
-  const { getAutomation, updateAutomation, updating } = useAutomations();
+  const { getAutomation } = useAutomations();
   const [automation, setAutomation] = useState<Automation | null>(null);
   const [loading, setLoading] = useState(true);
   
   const { nodes, edges, viewport, isDirty, loadFlow, markClean } = useFlowStore();
   const [configPanelOpen, setConfigPanelOpen] = useState(false);
+
+  // Auto-save hook
+  const { saving, lastSavedAt, saveNow, saveError } = useAutomationAutoSave({
+    automation,
+    enabled: true,
+  });
 
   // Detect selected node
   const selectedNode = useMemo(() => nodes.find((n) => n.selected), [nodes]);
@@ -63,23 +69,10 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
     };
   }, [automationId, getAutomation, loadFlow]);
 
-  // Save handler
+  // Manual save handler (for save button)
   const handleSave = useCallback(async () => {
-    if (!automation) return;
-
-    try {
-      await updateAutomation({
-        id: automation.id,
-        nodes,
-        edges,
-        viewport,
-      });
-      markClean();
-      toast.success('Automation saved');
-    } catch (error: unknown) {
-      toast.error('Failed to save', { description: getErrorMessage(error) });
-    }
-  }, [automation, nodes, edges, viewport, updateAutomation, markClean]);
+    await saveNow();
+  }, [saveNow]);
 
   // Error reset handler - must be before early returns
   const handleErrorReset = useCallback(() => {
@@ -117,7 +110,9 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
         <FlowToolbar
           automation={automation}
           isDirty={isDirty}
-          saving={updating}
+          saving={saving}
+          lastSavedAt={lastSavedAt}
+          saveError={saveError}
           onSave={handleSave}
           onClose={onClose}
         />

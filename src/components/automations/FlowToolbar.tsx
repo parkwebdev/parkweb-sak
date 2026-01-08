@@ -10,6 +10,7 @@ import { ArrowLeft, ReverseLeft, ReverseRight, Save01 } from '@untitledui/icons'
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Badge } from '@/components/ui/badge';
+import { LastSavedIndicator } from '@/components/automations/LastSavedIndicator';
 import { useFlowHistory } from '@/stores/automationFlowStore';
 import type { Automation } from '@/types/automations';
 
@@ -17,6 +18,8 @@ interface FlowToolbarProps {
   automation: Automation;
   isDirty: boolean;
   saving: boolean;
+  lastSavedAt: Date | null;
+  saveError?: boolean;
   onSave: () => void;
   onClose: () => void;
 }
@@ -24,7 +27,9 @@ interface FlowToolbarProps {
 export function FlowToolbar({ 
   automation, 
   isDirty, 
-  saving, 
+  saving,
+  lastSavedAt,
+  saveError = false,
   onSave, 
   onClose 
 }: FlowToolbarProps) {
@@ -50,12 +55,15 @@ export function FlowToolbar({
         <Badge variant={automation.enabled ? 'default' : 'secondary'} size="sm">
           {automation.status}
         </Badge>
-        {isDirty && (
-          <Badge variant="outline" size="sm">
-            Unsaved
-          </Badge>
-        )}
       </div>
+
+      {/* Last saved indicator */}
+      <LastSavedIndicator
+        lastSavedAt={lastSavedAt}
+        saving={saving}
+        isDirty={isDirty}
+        saveError={saveError}
+      />
 
       {/* Spacer */}
       <div className="flex-1" />
