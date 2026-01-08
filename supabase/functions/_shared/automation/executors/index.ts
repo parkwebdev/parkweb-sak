@@ -14,6 +14,9 @@ import { executeStopNode } from "./stop.ts";
 import { executeAiGenerateNode } from "./ai-generate.ts";
 import { executeAiClassifyNode } from "./ai-classify.ts";
 import { executeAiExtractNode } from "./ai-extract.ts";
+import { executeEmailNode } from "./action-email.ts";
+import { executeUpdateLeadNode } from "./action-update-lead.ts";
+import { executeCreateBookingNode } from "./action-create-booking.ts";
 
 // Re-export individual executors
 export { executeHttpNode } from "./http.ts";
@@ -24,6 +27,9 @@ export { executeStopNode } from "./stop.ts";
 export { executeAiGenerateNode } from "./ai-generate.ts";
 export { executeAiClassifyNode } from "./ai-classify.ts";
 export { executeAiExtractNode } from "./ai-extract.ts";
+export { executeEmailNode } from "./action-email.ts";
+export { executeUpdateLeadNode } from "./action-update-lead.ts";
+export { executeCreateBookingNode } from "./action-create-booking.ts";
 
 // ============================================
 // EXECUTOR REGISTRY
@@ -39,6 +45,9 @@ const executorRegistry: Record<string, NodeExecutor> = {
   // Actions
   "action-http": executeHttpNode,
   "action-delay": executeDelayNode,
+  "action-email": executeEmailNode,
+  "action-update-lead": executeUpdateLeadNode,
+  "action-create-booking": executeCreateBookingNode,
   
   // Logic
   "logic-condition": executeConditionNode,
