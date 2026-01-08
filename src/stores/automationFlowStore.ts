@@ -8,6 +8,7 @@
  */
 
 import { create } from 'zustand';
+import { useStore } from 'zustand';
 import { temporal } from 'zundo';
 import {
   applyNodeChanges,
@@ -193,7 +194,7 @@ export const useFlowStore = create<FlowStore>()(
 );
 
 /**
- * Hook for accessing undo/redo functionality.
+ * Hook for accessing undo/redo functionality with reactive state.
  * 
  * @example
  * ```tsx
@@ -201,13 +202,15 @@ export const useFlowStore = create<FlowStore>()(
  * ```
  */
 export function useFlowHistory() {
-  const store = useFlowStore.temporal;
-  
+  const temporalStore = useFlowStore.temporal;
+  const pastStates = useStore(temporalStore, (state) => state.pastStates);
+  const futureStates = useStore(temporalStore, (state) => state.futureStates);
+
   return {
-    undo: () => store.getState().undo(),
-    redo: () => store.getState().redo(),
-    canUndo: store.getState().pastStates.length > 0,
-    canRedo: store.getState().futureStates.length > 0,
-    clear: () => store.getState().clear(),
+    undo: () => temporalStore.getState().undo(),
+    redo: () => temporalStore.getState().redo(),
+    canUndo: pastStates.length > 0,
+    canRedo: futureStates.length > 0,
+    clear: () => temporalStore.getState().clear(),
   };
 }
