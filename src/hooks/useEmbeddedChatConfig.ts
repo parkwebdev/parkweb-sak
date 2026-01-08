@@ -13,7 +13,7 @@ import { getErrorMessage } from '@/types/errors';
 export interface CustomField {
   id: string;
   label: string;
-  fieldType: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox';
+  fieldType: 'text' | 'name' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox';
   required: boolean;
   placeholder?: string;
   options?: string[]; // For select fields

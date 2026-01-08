@@ -55,6 +55,7 @@ async function verifyTurnstile(token: string | null): Promise<{ success: boolean
     return { success: true, failOpen: true }; // Fail open on exceptions
   }
 }
+
 // Geo-IP lookup using ip-api.com (free, no API key needed)
 async function getLocationFromIP(ip: string): Promise<{ country: string; city: string }> {
   if (!ip || ip === 'unknown') {
@@ -111,7 +112,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { agentId, firstName, lastName, email, customFields, _formLoadTime, referrerJourney, turnstileToken } = await req.json();
+    const { agentId, customFields, _formLoadTime, referrerJourney, turnstileToken } = await req.json();
 
     // Bot protection: Verify Turnstile token (runs before other checks for early rejection)
     const turnstileResult = await verifyTurnstile(turnstileToken);
@@ -140,26 +141,12 @@ serve(async (req) => {
       }
     }
 
-    if (!agentId || !firstName || !lastName || !email) {
+    if (!agentId) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Missing required field: agentId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid email format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Sanitize inputs (trim and limit length)
-    const sanitizedFirstName = String(firstName).trim().slice(0, 50);
-    const sanitizedLastName = String(lastName).trim().slice(0, 50);
-    const sanitizedEmail = String(email).trim().toLowerCase().slice(0, 255);
 
     // Get agent details to find user_id
     const { data: agent, error: agentError } = await supabase
@@ -176,22 +163,66 @@ serve(async (req) => {
       );
     }
 
-    // Rate limiting: Check for recent submissions from same email (within 1 minute)
-    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
-    const { data: recentLeads } = await supabase
-      .from('leads')
-      .select('id')
-      .eq('email', sanitizedEmail)
-      .gte('created_at', oneMinuteAgo)
-      .limit(1);
+    // Process custom fields: extract name, email, phone from type-tagged fields and flatten for storage
+    const rawCustomFields = customFields || {};
+    
+    let extractedName: string | null = null;
+    let extractedEmail: string | null = null;
+    let extractedPhone: string | null = null;
+    const flattenedCustomFields: Record<string, unknown> = {};
 
-    if (recentLeads && recentLeads.length > 0) {
-      console.log(`Rate limit: Email ${sanitizedEmail} submitted recently`);
-      // Return success to not tip off spammers
-      return new Response(
-        JSON.stringify({ leadId: 'rate-limited', conversationId: null }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    for (const [label, fieldData] of Object.entries(rawCustomFields)) {
+      if (typeof fieldData === 'object' && fieldData !== null && 'type' in fieldData && 'value' in fieldData) {
+        // New structured format with type metadata
+        const typedField = fieldData as { value: unknown; type: string };
+        flattenedCustomFields[label] = typedField.value;
+        
+        // Extract name value from any field with type: 'name'
+        if (typedField.type === 'name' && typedField.value) {
+          extractedName = String(typedField.value).trim().slice(0, 100);
+          console.log(`Extracted name from field "${label}": ${extractedName}`);
+        }
+        
+        // Extract email value from any field with type: 'email'
+        if (typedField.type === 'email' && typedField.value) {
+          const emailValue = String(typedField.value).trim().toLowerCase().slice(0, 255);
+          // Validate email format
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (emailRegex.test(emailValue)) {
+            extractedEmail = emailValue;
+            console.log(`Extracted email from field "${label}": ${extractedEmail}`);
+          }
+        }
+        
+        // Extract phone value from any field with type: 'phone'
+        if (typedField.type === 'phone' && typedField.value) {
+          extractedPhone = String(typedField.value);
+          console.log(`Extracted phone from field "${label}": ${extractedPhone}`);
+        }
+      } else {
+        // Legacy format (backward compatible)
+        flattenedCustomFields[label] = fieldData;
+      }
+    }
+
+    // Rate limiting: Check for recent submissions from same email (within 1 minute) - only if email provided
+    if (extractedEmail) {
+      const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+      const { data: recentLeads } = await supabase
+        .from('leads')
+        .select('id')
+        .eq('email', extractedEmail)
+        .gte('created_at', oneMinuteAgo)
+        .limit(1);
+
+      if (recentLeads && recentLeads.length > 0) {
+        console.log(`Rate limit: Email ${extractedEmail} submitted recently`);
+        // Return success to not tip off spammers
+        return new Response(
+          JSON.stringify({ leadId: 'rate-limited', conversationId: null }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Capture request metadata
@@ -217,7 +248,7 @@ serve(async (req) => {
       referrer_url: string | null;
       session_started_at: string;
       lead_name: string;
-      lead_email: string;
+      lead_email: string | null;
       custom_fields: Record<string, unknown>;
       tags: string[];
       messages_count: number;
@@ -234,35 +265,7 @@ serve(async (req) => {
       };
     }
 
-    // Process custom fields early: extract phone from type-tagged fields and flatten for storage
-    const { _formLoadTime: _, ...rawCustomFields } = customFields || {};
-    
-    let extractedPhone: string | null = null;
-    const flattenedCustomFields: Record<string, unknown> = {};
-
-    for (const [label, fieldData] of Object.entries(rawCustomFields)) {
-      if (typeof fieldData === 'object' && fieldData !== null && 'type' in fieldData && 'value' in fieldData) {
-        // New structured format with type metadata
-        const typedField = fieldData as { value: unknown; type: string };
-        flattenedCustomFields[label] = typedField.value;
-        
-        // Extract phone value from any field with type: 'phone'
-        if (typedField.type === 'phone' && typedField.value) {
-          extractedPhone = String(typedField.value);
-          console.log(`Extracted phone from field "${label}": ${extractedPhone}`);
-        }
-      } else {
-        // Legacy format (backward compatible) - also check for phone in field name
-        flattenedCustomFields[label] = fieldData;
-        
-        // Fallback: detect phone by common field names for legacy data
-        const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'Phone Number', 'telephone', 'mobile', 'Mobile'];
-        if (!extractedPhone && phoneKeys.some(k => label.toLowerCase().includes(k.toLowerCase()))) {
-          extractedPhone = String(fieldData);
-          console.log(`Extracted phone from legacy field "${label}": ${extractedPhone}`);
-        }
-      }
-    }
+    const leadName = extractedName || 'Anonymous Visitor';
 
     const conversationMetadata: ConversationMetadata = {
       ip_address: ipAddress,
@@ -273,8 +276,8 @@ serve(async (req) => {
       os,
       referrer_url: referer,
       session_started_at: new Date().toISOString(),
-      lead_name: `${sanitizedFirstName} ${sanitizedLastName}`,
-      lead_email: sanitizedEmail,
+      lead_name: leadName,
+      lead_email: extractedEmail,
       custom_fields: flattenedCustomFields,
       tags: [],
       messages_count: 0,
@@ -318,10 +321,10 @@ serve(async (req) => {
       .from('leads')
       .insert({
         user_id: agent.user_id,
-        name: `${sanitizedFirstName} ${sanitizedLastName}`,
-        email: sanitizedEmail,
+        name: leadName,
+        email: extractedEmail,
         phone: extractedPhone,
-        data: { firstName: sanitizedFirstName, lastName: sanitizedLastName, ...flattenedCustomFields },
+        data: flattenedCustomFields,
         status: 'new',
         conversation_id: conversationId,
       })
@@ -352,15 +355,13 @@ serve(async (req) => {
     console.log(`Lead created successfully: ${lead.id}, Conversation: ${conversationId}`);
 
     // Create notifications for lead and conversation (fire and forget)
-    const leadName = `${sanitizedFirstName} ${sanitizedLastName}`;
-    
     // Notification for new lead captured
     supabase.from('notifications').insert({
       user_id: agent.user_id,
       type: 'lead',
       title: 'New Lead Captured',
       message: `${leadName} submitted a contact form`,
-      data: { lead_id: lead.id, email: sanitizedEmail, conversation_id: conversationId },
+      data: { lead_id: lead.id, email: extractedEmail, conversation_id: conversationId },
       read: false
     }).then(() => console.log('Lead notification created'))
       .catch(err => console.error('Failed to create lead notification:', err));
@@ -387,8 +388,6 @@ serve(async (req) => {
           .single();
 
         if (profile?.email) {
-          const appUrl = Deno.env.get('APP_URL') || 'https://getpilot.io';
-          
           await fetch(`${supabaseUrl}/functions/v1/send-new-lead-email`, {
             method: 'POST',
             headers: {
@@ -398,7 +397,7 @@ serve(async (req) => {
             body: JSON.stringify({
               recipientEmail: profile.email,
               leadName,
-              leadEmail: sanitizedEmail,
+              leadEmail: extractedEmail,
               leadPhone: extractedPhone,
               leadId: lead.id,
               conversationId,

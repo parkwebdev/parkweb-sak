@@ -9,6 +9,17 @@ import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
 import type { CustomField, FormStep } from '@/hooks/useEmbeddedChatConfig';
 
+/** Placeholder text for each field type */
+const FIELD_PLACEHOLDERS: Record<string, string> = {
+  name: 'Full name',
+  email: 'Email',
+  phone: 'Phone number',
+  text: 'Enter text...',
+  textarea: 'Enter text...',
+  select: 'Select an option',
+  checkbox: '',
+};
+
 interface ContactFormPreviewProps {
   title: string;
   subtitle: string;
@@ -33,7 +44,6 @@ export function ContactFormPreview({
   // Filter fields for current preview step (multi-step is always enabled)
   const currentStepFields = customFields.filter(f => (f.step || 1) === previewStep);
   
-  const showDefaultFields = previewStep === 1;
   const displayTitle = currentStepConfig?.title || title;
   const displaySubtitle = currentStepConfig?.subtitle || (previewStep === 1 ? subtitle : undefined);
   const inputClasses = cn(
@@ -43,7 +53,7 @@ export function ContactFormPreview({
   );
 
   const renderFieldPreview = (field: CustomField) => {
-    const placeholder = field.placeholder || field.label;
+    const placeholder = field.placeholder || field.label || FIELD_PLACEHOLDERS[field.fieldType] || '';
 
     switch (field.fieldType) {
       case 'textarea':
@@ -170,32 +180,14 @@ export function ContactFormPreview({
       )}
 
       <div className="space-y-3">
-        {/* Default fields - only on step 1 */}
-        {showDefaultFields && (
-          <>
-            <input
-              type="text"
-              disabled
-              placeholder="First name"
-              className={inputClasses}
-            />
-            <input
-              type="text"
-              disabled
-              placeholder="Last name"
-              className={inputClasses}
-            />
-            <input
-              type="email"
-              disabled
-              placeholder="Email"
-              className={inputClasses}
-            />
-          </>
-        )}
-
         {/* Custom fields for current step */}
-        {currentStepFields.map(renderFieldPreview)}
+        {currentStepFields.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No fields added yet. Add Name, Email, or other fields in the configuration.
+          </p>
+        ) : (
+          currentStepFields.map(renderFieldPreview)
+        )}
 
         {/* Navigation buttons */}
         {totalSteps > 1 ? (
