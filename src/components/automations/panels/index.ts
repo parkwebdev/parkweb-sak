@@ -13,3 +13,6 @@ export { TriggerAIToolConfigPanel } from './TriggerAIToolConfigPanel';
 export { ActionHttpConfigPanel } from './ActionHttpConfigPanel';
 export { ActionEmailConfigPanel } from './ActionEmailConfigPanel';
 export { ActionUpdateLeadConfigPanel } from './ActionUpdateLeadConfigPanel';
+export { ActionSupabaseConfigPanel } from './ActionSupabaseConfigPanel';
+export { ActionTaskConfigPanel } from './ActionTaskConfigPanel';
+export { ActionNotifyConfigPanel } from './ActionNotifyConfigPanel';

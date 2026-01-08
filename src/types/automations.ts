@@ -30,6 +30,9 @@ export type AutomationNodeType =
   | 'action-update-lead'
   | 'action-create-booking'
   | 'action-send-message'
+  | 'action-supabase'
+  | 'action-task'
+  | 'action-notify'
   // Logic
   | 'logic-condition'
   | 'logic-switch'
@@ -183,6 +186,60 @@ export interface ActionUpdateLeadNodeData extends BaseNodeData {
 }
 
 /**
+ * Supabase database action node configuration.
+ */
+export interface ActionSupabaseNodeData extends BaseNodeData {
+  /** Database operation */
+  operation: 'select' | 'insert' | 'update' | 'delete' | 'upsert';
+  /** Target table */
+  table: string;
+  /** Query filters (for select, update, delete) */
+  filters?: Record<string, unknown>;
+  /** Data to insert/update */
+  data?: Record<string, unknown>;
+  /** Columns to select */
+  columns?: string;
+  /** Variable to store result */
+  responseVariable?: string;
+}
+
+/**
+ * Task creation action node configuration.
+ */
+export interface ActionTaskNodeData extends BaseNodeData {
+  /** Task title */
+  taskTitle: string;
+  /** Task description */
+  taskDescription?: string;
+  /** Priority level */
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  /** Assignee email or user ID */
+  assignee?: string;
+  /** Due date (relative, absolute, or variable) */
+  dueDate?: string;
+  /** Optional linked lead ID */
+  leadId?: string;
+}
+
+/**
+ * Team notification action node configuration.
+ */
+export interface ActionNotifyNodeData extends BaseNodeData {
+  /** Notification title */
+  notificationTitle: string;
+  /** Notification message */
+  message: string;
+  /** Notification type */
+  notificationType?: 'info' | 'success' | 'warning' | 'error';
+  /** Notification channel */
+  channel?: 'in_app' | 'email' | 'both';
+  /** Recipients (emails or user IDs) */
+  recipients?: string[];
+  /** Optional action URL */
+  actionUrl?: string;
+}
+
+/**
  * Condition logic node configuration.
  */
 export interface LogicConditionNodeData extends BaseNodeData {
@@ -226,6 +283,9 @@ export type AutomationNodeData =
   | ActionHttpNodeData
   | ActionEmailNodeData
   | ActionUpdateLeadNodeData
+  | ActionSupabaseNodeData
+  | ActionTaskNodeData
+  | ActionNotifyNodeData
   | LogicConditionNodeData
   | LogicDelayNodeData
   | TransformSetVariableNodeData;
@@ -495,6 +555,30 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: 'User',
         color: 'green',
         defaultData: { label: 'Update Lead' },
+      },
+      {
+        type: 'action-supabase',
+        label: 'Database Query',
+        description: 'Query or modify database',
+        icon: 'Database',
+        color: 'emerald',
+        defaultData: { label: 'Database Query', operation: 'select', table: '' },
+      },
+      {
+        type: 'action-task',
+        label: 'Create Task',
+        description: 'Create a task for the team',
+        icon: 'CheckSquare',
+        color: 'violet',
+        defaultData: { label: 'Create Task', priority: 'medium' },
+      },
+      {
+        type: 'action-notify',
+        label: 'Notify Team',
+        description: 'Send team notification',
+        icon: 'Bell',
+        color: 'orange',
+        defaultData: { label: 'Notify Team', notificationType: 'info', channel: 'in_app' },
       },
     ],
   },
