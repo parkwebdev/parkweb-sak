@@ -1,20 +1,19 @@
 /**
  * Execution Panel
- * Side panel showing execution history and details.
+ * Side panel showing execution history and details with real-time updates.
  * 
  * @module components/automations/ExecutionPanel
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Play, ClockRewind, RefreshCw01 as RefreshCw } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ExecutionHistoryList } from './ExecutionHistoryList';
 import { ExecutionDetail } from './ExecutionDetail';
 import { TestExecutionDialog } from './TestExecutionDialog';
-import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
-import type { Automation, AutomationExecution } from '@/types/automations';
+import { useAutomationExecutions, useAutomationExecution } from '@/hooks/useAutomationExecutions';
+import type { Automation } from '@/types/automations';
 
 interface ExecutionPanelProps {
   automation: Automation;
@@ -22,7 +21,7 @@ interface ExecutionPanelProps {
 }
 
 export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
-  const [selectedExecution, setSelectedExecution] = useState<AutomationExecution | null>(null);
+  const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null);
   const [testDialogOpen, setTestDialogOpen] = useState(false);
   
   const { 
@@ -35,19 +34,47 @@ export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
     automationId: automation.id 
   });
 
+  // Real-time hook for the selected execution
+  const { data: selectedExecution, isLoading: loadingDetail } = useAutomationExecution(selectedExecutionId);
+
+  // Auto-select the most recent execution when a new one is triggered
+  useEffect(() => {
+    if (triggering && executions.length > 0) {
+      // When trigger completes, the list will update and we'll see the new execution
+    }
+  }, [triggering, executions]);
+
+  // Update selected execution from the list if it changes (real-time sync)
+  useEffect(() => {
+    if (selectedExecutionId && executions.length > 0) {
+      const updatedExecution = executions.find(e => e.id === selectedExecutionId);
+      if (updatedExecution?.status === 'completed' || updatedExecution?.status === 'failed') {
+        // Execution finished, the useAutomationExecution hook will have the latest data
+      }
+    }
+  }, [executions, selectedExecutionId]);
+
   const handleRunTest = async (testData: Record<string, unknown>) => {
-    await triggerExecution({
+    const result = await triggerExecution({
       triggerData: testData,
       testMode: true,
     });
     setTestDialogOpen(false);
+    // Auto-select the new execution if returned
+    if (result?.executionId) {
+      setSelectedExecutionId(result.executionId);
+    }
   };
 
   const handleRunLive = async () => {
-    await triggerExecution({
+    const result = await triggerExecution({
       triggerData: {},
       testMode: false,
     });
+    // Auto-select the new execution if returned
+    if (result?.executionId) {
+      setSelectedExecutionId(result.executionId);
+    }
   };
 
   return (
@@ -57,6 +84,12 @@ export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
         <div className="flex items-center gap-2">
           <ClockRewind size={16} className="text-muted-foreground" aria-hidden="true" />
           <h3 className="text-sm font-medium">Executions</h3>
+          {selectedExecution?.status === 'running' && (
+            <span className="flex items-center gap-1 text-xs text-primary">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              Live
+            </span>
+          )}
         </div>
         
         <div className="flex items-center gap-1">
@@ -100,16 +133,19 @@ export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
       </div>
 
       {/* Content */}
-      {selectedExecution ? (
+      {selectedExecutionId && selectedExecution ? (
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center gap-2 p-3 border-b border-border">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSelectedExecution(null)}
+              onClick={() => setSelectedExecutionId(null)}
             >
               ← Back to list
             </Button>
+            {loadingDetail && (
+              <span className="text-xs text-muted-foreground animate-pulse">Updating...</span>
+            )}
           </div>
           <div className="flex-1 overflow-hidden">
             <ExecutionDetail execution={selectedExecution} />
@@ -121,7 +157,7 @@ export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
             executions={executions}
             loading={loading}
             selectedId={null}
-            onSelect={setSelectedExecution}
+            onSelect={(execution) => setSelectedExecutionId(execution.id)}
           />
         </div>
       )}

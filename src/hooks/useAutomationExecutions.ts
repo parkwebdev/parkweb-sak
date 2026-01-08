@@ -137,10 +137,12 @@ export function useAutomationExecutions({
 }
 
 /**
- * Fetch a single execution by ID
+ * Fetch a single execution by ID with real-time updates
  */
 export function useAutomationExecution(executionId: string | null) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: [...queryKeys.automations.all, 'execution', executionId],
     queryFn: async () => {
       if (!executionId) return null;
@@ -155,5 +157,42 @@ export function useAutomationExecution(executionId: string | null) {
       return data as AutomationExecution | null;
     },
     enabled: !!executionId,
+    // Refetch more frequently for running executions
+    refetchInterval: (query) => {
+      const data = query.state.data as AutomationExecution | null;
+      if (data?.status === 'running' || data?.status === 'pending') {
+        return 1000; // Poll every second for active executions
+      }
+      return false;
+    },
   });
+
+  // Real-time subscription for this specific execution
+  useEffect(() => {
+    if (!executionId) return;
+
+    const channel = supabase
+      .channel(`execution-${executionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'automation_executions',
+          filter: `id=eq.${executionId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({
+            queryKey: [...queryKeys.automations.all, 'execution', executionId],
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [executionId, queryClient]);
+
+  return query;
 }
