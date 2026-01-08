@@ -458,3 +458,95 @@ export const LEAD_SEARCH_COLUMNS = `
   status,
   created_at
 `;
+
+/**
+ * Columns for automation list views.
+ * Excludes nodes/edges for performance.
+ */
+export const AUTOMATION_LIST_COLUMNS = `
+  id,
+  agent_id,
+  user_id,
+  name,
+  description,
+  icon,
+  color,
+  status,
+  enabled,
+  trigger_type,
+  trigger_config,
+  execution_count,
+  last_executed_at,
+  last_execution_status,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for automation detail views.
+ * Includes full flow definition.
+ */
+export const AUTOMATION_DETAIL_COLUMNS = `
+  id,
+  agent_id,
+  user_id,
+  name,
+  description,
+  icon,
+  color,
+  status,
+  enabled,
+  trigger_type,
+  trigger_config,
+  nodes,
+  edges,
+  viewport,
+  execution_count,
+  last_executed_at,
+  last_execution_status,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for automation execution list views.
+ */
+export const AUTOMATION_EXECUTION_LIST_COLUMNS = `
+  id,
+  automation_id,
+  trigger_type,
+  trigger_data,
+  status,
+  error,
+  error_node_id,
+  started_at,
+  completed_at,
+  duration_ms,
+  test_mode,
+  triggered_by,
+  lead_id,
+  conversation_id
+`;
+
+/**
+ * Columns for automation execution detail views.
+ * Includes full execution data.
+ */
+export const AUTOMATION_EXECUTION_DETAIL_COLUMNS = `
+  id,
+  automation_id,
+  trigger_type,
+  trigger_data,
+  status,
+  nodes_executed,
+  variables,
+  error,
+  error_node_id,
+  started_at,
+  completed_at,
+  duration_ms,
+  test_mode,
+  triggered_by,
+  lead_id,
+  conversation_id
+`;

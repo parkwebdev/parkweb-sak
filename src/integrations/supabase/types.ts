@@ -265,6 +265,166 @@ export type Database = {
           },
         ]
       }
+      automation_executions: {
+        Row: {
+          automation_id: string
+          completed_at: string | null
+          conversation_id: string | null
+          duration_ms: number | null
+          error: string | null
+          error_node_id: string | null
+          id: string
+          lead_id: string | null
+          nodes_executed: Json | null
+          started_at: string
+          status: string
+          test_mode: boolean
+          trigger_data: Json | null
+          trigger_type: string
+          triggered_by: string | null
+          variables: Json | null
+        }
+        Insert: {
+          automation_id: string
+          completed_at?: string | null
+          conversation_id?: string | null
+          duration_ms?: number | null
+          error?: string | null
+          error_node_id?: string | null
+          id?: string
+          lead_id?: string | null
+          nodes_executed?: Json | null
+          started_at?: string
+          status?: string
+          test_mode?: boolean
+          trigger_data?: Json | null
+          trigger_type: string
+          triggered_by?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          automation_id?: string
+          completed_at?: string | null
+          conversation_id?: string | null
+          duration_ms?: number | null
+          error?: string | null
+          error_node_id?: string | null
+          id?: string
+          lead_id?: string | null
+          nodes_executed?: Json | null
+          started_at?: string
+          status?: string
+          test_mode?: boolean
+          trigger_data?: Json | null
+          trigger_type?: string
+          triggered_by?: string | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_executions_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_executions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_executions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "widget_conversations_secure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_executions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automations: {
+        Row: {
+          agent_id: string
+          color: string | null
+          created_at: string
+          description: string | null
+          edges: Json
+          enabled: boolean
+          execution_count: number
+          icon: string | null
+          id: string
+          last_executed_at: string | null
+          last_execution_status: string | null
+          name: string
+          nodes: Json
+          status: string
+          trigger_config: Json
+          trigger_type: string
+          updated_at: string
+          user_id: string
+          viewport: Json | null
+        }
+        Insert: {
+          agent_id: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          edges?: Json
+          enabled?: boolean
+          execution_count?: number
+          icon?: string | null
+          id?: string
+          last_executed_at?: string | null
+          last_execution_status?: string | null
+          name: string
+          nodes?: Json
+          status?: string
+          trigger_config?: Json
+          trigger_type: string
+          updated_at?: string
+          user_id: string
+          viewport?: Json | null
+        }
+        Update: {
+          agent_id?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          edges?: Json
+          enabled?: boolean
+          execution_count?: number
+          icon?: string | null
+          id?: string
+          last_executed_at?: string | null
+          last_execution_status?: string | null
+          name?: string
+          nodes?: Json
+          status?: string
+          trigger_config?: Json
+          trigger_type?: string
+          updated_at?: string
+          user_id?: string
+          viewport?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           all_day: boolean | null

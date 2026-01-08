@@ -98,6 +98,16 @@ export const ROUTE_CONFIG: readonly RouteConfig[] = [
     description: 'View insights and metrics',
     showInNav: true,
   },
+  {
+    id: 'automations',
+    label: 'Automations',
+    path: '/automations',
+    requiredPermission: 'manage_automations',
+    iconName: 'Dataflow02',
+    shortcut: '⌥U',
+    description: 'Create visual workflows and automations',
+    showInNav: true,
+  },
   // Bottom navigation routes
   {
     id: 'knowledge-base',

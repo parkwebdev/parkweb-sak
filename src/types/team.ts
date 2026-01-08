@@ -99,7 +99,10 @@ export type AppPermission =
   | 'manage_webhooks'
   // API Keys
   | 'view_api_keys'
-  | 'manage_api_keys';
+  | 'manage_api_keys'
+  // Automations
+  | 'view_automations'
+  | 'manage_automations';
 
 /**
  * Permission groups for UI organization.
@@ -119,6 +122,7 @@ export const PERMISSION_GROUPS: Record<string, readonly AppPermission[]> = {
   'Integrations': ['view_integrations', 'manage_integrations'],
   'Webhooks': ['view_webhooks', 'manage_webhooks'],
   'API Keys': ['view_api_keys', 'manage_api_keys'],
+  'Automations': ['view_automations', 'manage_automations'],
 } as const;
 
 /**
@@ -149,6 +153,8 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   'manage_webhooks': 'Manage Webhooks',
   'view_api_keys': 'View API Keys',
   'manage_api_keys': 'Manage API Keys',
+  'view_automations': 'View Automations',
+  'manage_automations': 'Manage Automations (create, edit, delete)',
 };
 
 /**
@@ -181,6 +187,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     'view_integrations',
     'view_webhooks',
     'view_api_keys',
+    'view_automations',
+    'manage_automations',
   ],
   member: [
     'view_dashboard',
@@ -193,6 +201,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     'view_help_articles',
     'view_team',
     'view_settings',
+    'view_automations',
   ],
 };
 
