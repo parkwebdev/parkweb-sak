@@ -17,8 +17,10 @@ A comprehensive plan for implementing a visual automation/flow builder that will
 4. [Execution Engine](#4-execution-engine)
 5. [Security](#5-security)
 6. [Frontend Implementation](#6-frontend-implementation)
-7. [Implementation Phases](#7-implementation-phases-temporary)
-8. [Migration Strategy](#8-migration-strategy)
+7. [Best Practices & Patterns](#7-best-practices--patterns)
+8. [Implementation Phases](#8-implementation-phases-temporary)
+9. [Migration Strategy](#9-migration-strategy)
+10. [Documentation Checklist](#10-documentation-checklist)
 
 ---
 
@@ -1074,31 +1076,68 @@ export interface VariableNamespaces {
 }
 ```
 
-### UntitledUI Icons
+### UntitledUI Icon Imports
 
-| Node Type | Icon Import |
-|-----------|-------------|
-| `trigger-event` | `Zap` |
-| `trigger-schedule` | `Clock` |
-| `trigger-manual` | `PlayCircle` |
-| `trigger-ai-tool` | `Stars02` |
-| `action-http` | `Globe02` |
-| `action-email` | `Mail01` |
-| `action-update-lead` | `User01` |
-| `action-create-booking` | `Calendar` |
-| `action-send-message` | `MessageSquare01` |
-| `logic-condition` | `GitBranch01` |
-| `logic-switch` | `SwitchHorizontal01` |
-| `logic-loop` | `RefreshCw01` |
-| `logic-delay` | `ClockStopwatch` |
-| `logic-stop` | `StopCircle` |
-| `transform-set-variable` | `Variable` |
-| `transform-map` | `Dataflow03` |
-| `transform-filter` | `FilterLines` |
-| `transform-aggregate` | `BarChart01` |
-| `ai-generate` | `Stars02` |
-| `ai-classify` | `Tag01` |
-| `ai-extract` | `FileSearch01` |
+All icons must be imported from `@untitledui/icons/react/icons`:
+
+```typescript
+// src/components/automations/nodes/icons.ts
+import {
+  Zap,
+  Clock,
+  PlayCircle,
+  Stars02,
+  Globe02,
+  Mail01,
+  User01,
+  Calendar,
+  MessageSquare01,
+  GitBranch01,
+  SwitchHorizontal01,
+  RefreshCw01,
+  ClockStopwatch,
+  StopCircle,
+  Variable,
+  Dataflow03,
+  FilterLines,
+  BarChart01,
+  Tag01,
+  FileSearch01,
+} from '@untitledui/icons/react/icons';
+
+export const nodeIcons = {
+  'trigger-event': Zap,
+  'trigger-schedule': Clock,
+  'trigger-manual': PlayCircle,
+  'trigger-ai-tool': Stars02,
+  'action-http': Globe02,
+  'action-email': Mail01,
+  'action-update-lead': User01,
+  'action-create-booking': Calendar,
+  'action-send-message': MessageSquare01,
+  'logic-condition': GitBranch01,
+  'logic-switch': SwitchHorizontal01,
+  'logic-loop': RefreshCw01,
+  'logic-delay': ClockStopwatch,
+  'logic-stop': StopCircle,
+  'transform-set-variable': Variable,
+  'transform-map': Dataflow03,
+  'transform-filter': FilterLines,
+  'transform-aggregate': BarChart01,
+  'ai-generate': Stars02,
+  'ai-classify': Tag01,
+  'ai-extract': FileSearch01,
+} as const;
+```
+
+Usage in components:
+
+```tsx
+import { nodeIcons } from './icons';
+
+const Icon = nodeIcons[nodeType];
+<Icon size={16} aria-hidden="true" />
+```
 
 ---
 
@@ -1453,33 +1492,40 @@ async function logSecurityEvent(
 
 ## 6. Frontend Implementation
 
-### File Structure
+### File Structure & Component Size Guidelines
 
 ```
 src/
 ├── pages/
-│   └── Automations.tsx                    # Main page (~150 lines)
+│   └── Automations.tsx                    # Main page (~150 lines max)
 │
 ├── components/automations/
-│   ├── AutomationsList.tsx                # DataTable list view
-│   ├── AutomationCard.tsx                 # Card for grid view
-│   ├── AutomationStatusBadge.tsx          # Status indicator
+│   ├── AutomationsList.tsx                # DataTable list view (~200 lines max)
+│   ├── AutomationCard.tsx                 # Card for grid view (~80 lines max)
+│   ├── AutomationStatusBadge.tsx          # Status indicator (~40 lines)
+│   ├── AutomationErrorBoundary.tsx        # Error boundary wrapper
+│   │
+│   ├── loading/
+│   │   ├── AutomationsListSkeleton.tsx    # List loading state
+│   │   ├── FlowEditorSkeleton.tsx         # Editor loading state
+│   │   └── NodeConfigSkeleton.tsx         # Config panel loading
 │   │
 │   ├── editor/
-│   │   ├── FlowEditor.tsx                 # React Flow wrapper
-│   │   ├── FlowCanvas.tsx                 # Canvas with controls
-│   │   ├── FlowToolbar.tsx                # Top toolbar
-│   │   ├── FlowMinimap.tsx                # Minimap wrapper
-│   │   └── FlowControls.tsx               # Zoom/fit controls
+│   │   ├── FlowEditor.tsx                 # React Flow wrapper (~150 lines max)
+│   │   ├── FlowCanvas.tsx                 # Canvas with controls (~100 lines max)
+│   │   ├── FlowToolbar.tsx                # Top toolbar (~80 lines max)
+│   │   ├── FlowMinimap.tsx                # Minimap wrapper (~40 lines)
+│   │   └── FlowControls.tsx               # Zoom/fit controls (~60 lines)
 │   │
 │   ├── sidebar/
-│   │   ├── NodeSidebar.tsx                # Draggable palette
-│   │   ├── NodeCategory.tsx               # Category group
-│   │   └── DraggableNode.tsx              # Draggable item
+│   │   ├── NodeSidebar.tsx                # Draggable palette (~120 lines max)
+│   │   ├── NodeCategory.tsx               # Category group (~60 lines)
+│   │   └── DraggableNode.tsx              # Draggable item (~50 lines)
 │   │
 │   ├── nodes/
-│   │   ├── BaseNode.tsx                   # Shared node wrapper
-│   │   ├── NodeHandle.tsx                 # Custom handle
+│   │   ├── BaseNode.tsx                   # Shared node wrapper (~80 lines max)
+│   │   ├── NodeHandle.tsx                 # Custom handle (~40 lines)
+│   │   ├── icons.ts                       # Icon registry (~50 lines)
 │   │   ├── index.ts                       # nodeTypes export
 │   │   ├── triggers/                      # Trigger node components
 │   │   ├── actions/                       # Action node components
@@ -1488,31 +1534,260 @@ src/
 │   │   └── ai/                            # AI node components
 │   │
 │   ├── panels/
-│   │   ├── NodeConfigPanel.tsx            # Right panel
-│   │   ├── TriggerConfigForm.tsx          # Trigger config
-│   │   ├── ActionConfigForm.tsx           # Action config
-│   │   ├── LogicConfigForm.tsx            # Logic config
-│   │   └── ConditionBuilder.tsx           # Condition UI
+│   │   ├── NodeConfigPanel.tsx            # Right panel (~200 lines max)
+│   │   ├── TriggerConfigForm.tsx          # Trigger config (~150 lines max)
+│   │   ├── ActionConfigForm.tsx           # Action config (~150 lines max)
+│   │   ├── LogicConfigForm.tsx            # Logic config (~150 lines max)
+│   │   └── ConditionBuilder.tsx           # Condition UI (~180 lines max)
 │   │
 │   ├── variables/
-│   │   ├── VariablePicker.tsx             # Variable selector
-│   │   ├── VariableChip.tsx               # Display chip
-│   │   └── VariableInput.tsx              # Input with picker
+│   │   ├── VariablePicker.tsx             # Variable selector (~100 lines max)
+│   │   ├── VariableChip.tsx               # Display chip (~40 lines)
+│   │   └── VariableInput.tsx              # Input with picker (~80 lines)
 │   │
 │   └── execution/
-│       ├── ExecutionHistory.tsx           # History list
-│       ├── ExecutionTimeline.tsx          # Visual timeline
-│       ├── ExecutionNodeStatus.tsx        # Node status
-│       └── TestRunDialog.tsx              # Test execution
+│       ├── ExecutionHistory.tsx           # History list (~150 lines max)
+│       ├── ExecutionTimeline.tsx          # Visual timeline (~120 lines max)
+│       ├── ExecutionNodeStatus.tsx        # Node status (~60 lines)
+│       └── TestRunDialog.tsx              # Test execution (~100 lines max)
 │
 ├── hooks/
 │   ├── useAutomations.ts                  # CRUD operations
+│   ├── useAutomationsRealtime.ts          # With real-time subscriptions
 │   ├── useAutomation.ts                   # Single automation
 │   ├── useAutomationExecutions.ts         # Execution history
-│   └── useFlowState.ts                    # React Flow state
+│   ├── useFlowState.ts                    # React Flow state
+│   └── useNodeAnnouncements.ts            # Screen reader announcements
 │
 └── types/
     └── automations.ts                     # All type definitions
+```
+
+**Component Size Rules:**
+- Page components: ~150 lines max
+- Complex feature components (editor, panels): ~200 lines max
+- Standard components: ~100 lines max
+- Simple components (badges, chips): ~50 lines max
+- If a component exceeds limits, extract sub-components
+
+### Loading States & Skeletons
+
+```tsx
+// src/components/automations/loading/AutomationsListSkeleton.tsx
+
+import { Skeleton } from '@/components/ui/skeleton';
+
+export function AutomationsListSkeleton() {
+  return (
+    <div className="space-y-4" role="status" aria-label="Loading automations">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      
+      {/* Table header */}
+      <div className="flex gap-4 p-4 border-b border-border">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-4 w-28" />
+      </div>
+      
+      {/* Table rows */}
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex gap-4 p-4 border-b border-border">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-24" />
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+```tsx
+// src/components/automations/loading/FlowEditorSkeleton.tsx
+
+import { Skeleton } from '@/components/ui/skeleton';
+
+export function FlowEditorSkeleton() {
+  return (
+    <div className="flex h-full" role="status" aria-label="Loading flow editor">
+      {/* Sidebar skeleton */}
+      <div className="w-64 border-r border-border p-4 space-y-4">
+        <Skeleton className="h-8 w-full" />
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+      
+      {/* Canvas skeleton */}
+      <div className="flex-1 bg-muted/30 relative">
+        <Skeleton className="absolute top-4 left-4 h-10 w-48" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <Skeleton className="h-24 w-48 rounded-lg" />
+        </div>
+        <Skeleton className="absolute bottom-4 right-4 h-32 w-40" />
+      </div>
+    </div>
+  );
+}
+```
+
+```tsx
+// src/components/automations/loading/NodeConfigSkeleton.tsx
+
+import { Skeleton } from '@/components/ui/skeleton';
+
+export function NodeConfigSkeleton() {
+  return (
+    <div className="p-4 space-y-4" role="status" aria-label="Loading configuration">
+      <Skeleton className="h-6 w-32" />
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      </div>
+      <Skeleton className="h-10 w-full" />
+    </div>
+  );
+}
+```
+
+### Error Boundary for Flow Canvas
+
+```tsx
+// src/components/automations/AutomationErrorBoundary.tsx
+
+import { Component, type ReactNode } from 'react';
+import { AlertCircle, RefreshCw } from '@untitledui/icons/react/icons';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FeaturedIcon } from '@/components/ui/featured-icon';
+import { logger } from '@/lib/logger';
+
+interface Props {
+  children: ReactNode;
+  fallbackMessage?: string;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class AutomationErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    logger.error('Automation flow error:', { error, errorInfo });
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card className="m-4">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <FeaturedIcon icon={AlertCircle} variant="error" size="md" />
+              <CardTitle className="text-base">
+                {this.props.fallbackMessage || 'Something went wrong'}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              The automation editor encountered an error. Your changes have been saved.
+            </p>
+            {process.env.NODE_ENV === 'development' && this.state.error && (
+              <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-32">
+                {this.state.error.message}
+              </pre>
+            )}
+            <Button onClick={this.handleRetry} size="sm">
+              <RefreshCw size={16} aria-hidden="true" className="mr-2" />
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+Usage:
+
+```tsx
+// In FlowEditor.tsx
+import { AutomationErrorBoundary } from './AutomationErrorBoundary';
+
+export function FlowEditor({ automationId }: { automationId: string }) {
+  return (
+    <AutomationErrorBoundary fallbackMessage="Flow editor failed to load">
+      <ReactFlowProvider>
+        <FlowCanvas automationId={automationId} />
+      </ReactFlowProvider>
+    </AutomationErrorBoundary>
+  );
+}
+```
+
+### Route Configuration Integration
+
+Add to `src/config/routes.ts`:
+
+```typescript
+// In ROUTE_CONFIG array
+{
+  id: 'automations',
+  label: 'Automations',
+  path: '/automations',
+  requiredPermission: 'manage_webhooks', // Reuse existing permission
+  adminOnly: false,
+  iconName: 'Zap',
+  shortcut: 'a',
+  description: 'Visual workflow automation builder',
+  showInNav: true,
+  showInBottomNav: false,
+},
+
+// In ARI_SECTIONS array (if automations become part of Ari config)
+{
+  id: 'automations',
+  label: 'Automations',
+  group: 'integrations',
+  requiredPermission: 'manage_webhooks',
+  iconName: 'Zap',
+  activeIconName: 'Zap',
+},
 ```
 
 ### Base Node Component
@@ -1649,29 +1924,44 @@ import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
 import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { useAgent } from '@/hooks/useAgent';
+import { useStableObject } from '@/hooks/useStableObject';
 import { getErrorMessage } from '@/types/errors';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { AUTOMATION_LIST_COLUMNS } from '@/lib/db-selects';
 import type { Automation, AutomationInsert, AutomationUpdate } from '@/types/automations';
 
-export function useAutomations() {
+interface UseAutomationsOptions {
+  status?: 'all' | 'draft' | 'active' | 'paused' | 'error';
+}
+
+export function useAutomations(options: UseAutomationsOptions = {}) {
   const queryClient = useQueryClient();
   const { accountOwnerId } = useAccountOwnerId();
   const { agent } = useAgent();
+  
+  // Stabilize options to prevent infinite loops
+  const stableOptions = useStableObject(options);
 
   const { data: automations, isLoading, error } = useQuery({
     queryKey: queryKeys.automations.list(agent?.id ?? ''),
     queryFn: async () => {
       if (!agent?.id) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from('automations')
         .select(AUTOMATION_LIST_COLUMNS)
         .eq('agent_id', agent.id)
         .order('created_at', { ascending: false });
+      
+      if (stableOptions.status && stableOptions.status !== 'all') {
+        query = query.eq('status', stableOptions.status);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data as Automation[];
     },
     enabled: !!agent?.id && !!accountOwnerId,
+    staleTime: 30 * 1000, // 30 seconds - consistent with useWebhooks
   });
 
   const createMutation = useMutation({
@@ -1694,16 +1984,79 @@ export function useAutomations() {
     },
   });
 
-  // ... updateMutation, deleteMutation, toggleMutation
+  const deleteMutation = useMutation({
+    mutationFn: async (automationId: string) => {
+      const { error } = await supabase
+        .from('automations')
+        .delete()
+        .eq('id', automationId);
+      if (error) throw error;
+    },
+    onSuccess: (_, automationId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.automations.list(agent?.id ?? '') });
+      toast.undo('Automation deleted', {
+        onUndo: async () => {
+          // Undo logic - would need to store deleted automation temporarily
+        },
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to delete automation', { description: getErrorMessage(error) });
+    },
+  });
 
   return {
     automations: automations ?? [],
     isLoading,
     error,
     createAutomation: createMutation.mutateAsync,
-    // ... other mutations
+    deleteAutomation: deleteMutation.mutateAsync,
+    isDeleting: deleteMutation.isPending,
   };
 }
+```
+
+### useAutomations with Real-Time Subscriptions
+
+```typescript
+// src/hooks/useAutomationsRealtime.ts
+
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
+import { useAgent } from '@/hooks/useAgent';
+import { AUTOMATION_LIST_COLUMNS } from '@/lib/db-selects';
+import type { Automation } from '@/types/automations';
+
+export function useAutomationsRealtime() {
+  const { accountOwnerId } = useAccountOwnerId();
+  const { agent } = useAgent();
+
+  const { data: automations, isLoading, error } = useSupabaseQuery<Automation[]>({
+    queryKey: queryKeys.automations.list(agent?.id ?? ''),
+    queryFn: async ({ supabase }) => {
+      if (!agent?.id) return [];
+      const { data, error } = await supabase
+        .from('automations')
+        .select(AUTOMATION_LIST_COLUMNS)
+        .eq('agent_id', agent.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Automation[];
+    },
+    enabled: !!agent?.id && !!accountOwnerId,
+    staleTime: 30 * 1000,
+    // Real-time subscription for live updates
+    realtime: {
+      table: 'automations',
+      filter: `agent_id=eq.${agent?.id}`,
+      event: '*', // INSERT, UPDATE, DELETE
+    },
+  });
+
+  return { automations: automations ?? [], isLoading, error };
+}
+```
 ```
 
 ### Accessibility Requirements
@@ -1808,7 +2161,301 @@ function FlowEditor() {
 
 ---
 
-## 7. Implementation Phases (TEMPORARY)
+## 7. Best Practices & Patterns
+
+### Optimistic Updates
+
+```typescript
+// src/hooks/useAutomationOptimistic.ts
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/query-keys';
+import { getErrorMessage } from '@/types/errors';
+import { toast } from '@/lib/toast';
+import type { Automation } from '@/types/automations';
+
+export function useToggleAutomation(agentId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('automations')
+        .update({ enabled, status: enabled ? 'active' : 'paused' })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    // Optimistic update
+    onMutate: async ({ id, enabled }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.automations.list(agentId) });
+      
+      const previousAutomations = queryClient.getQueryData<Automation[]>(
+        queryKeys.automations.list(agentId)
+      );
+      
+      queryClient.setQueryData<Automation[]>(
+        queryKeys.automations.list(agentId),
+        (old) => old?.map(a => 
+          a.id === id ? { ...a, enabled, status: enabled ? 'active' : 'paused' } : a
+        )
+      );
+      
+      return { previousAutomations };
+    },
+    // Rollback on error
+    onError: (error: unknown, _, context) => {
+      if (context?.previousAutomations) {
+        queryClient.setQueryData(
+          queryKeys.automations.list(agentId),
+          context.previousAutomations
+        );
+      }
+      toast.error('Failed to update automation', { description: getErrorMessage(error) });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.automations.list(agentId) });
+    },
+  });
+}
+
+// Optimistic node position update
+export function useUpdateNodePosition(automationId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      nodeId, 
+      position 
+    }: { 
+      nodeId: string; 
+      position: { x: number; y: number } 
+    }) => {
+      // Debounced save to DB
+      const automation = queryClient.getQueryData<Automation>(
+        queryKeys.automations.detail(automationId)
+      );
+      if (!automation) return;
+      
+      const updatedNodes = automation.nodes.map(n => 
+        n.id === nodeId ? { ...n, position } : n
+      );
+      
+      const { error } = await supabase
+        .from('automations')
+        .update({ nodes: updatedNodes })
+        .eq('id', automationId);
+      if (error) throw error;
+    },
+    // Immediately update local state (no server round-trip for position)
+    onMutate: async ({ nodeId, position }) => {
+      queryClient.setQueryData<Automation>(
+        queryKeys.automations.detail(automationId),
+        (old) => old ? {
+          ...old,
+          nodes: old.nodes.map(n => n.id === nodeId ? { ...n, position } : n)
+        } : old
+      );
+    },
+    onError: (error: unknown) => {
+      // Only show error for actual save failures, not position updates
+      console.error('Failed to save node position:', getErrorMessage(error));
+    },
+  });
+}
+```
+
+### Toast Patterns
+
+```typescript
+// Correct toast usage for automations
+
+import { toast } from '@/lib/toast';
+import { getErrorMessage } from '@/types/errors';
+
+// Success toast
+toast.success('Automation saved');
+
+// Error toast with description
+toast.error('Failed to save automation', { 
+  description: getErrorMessage(error) 
+});
+
+// Undo toast for delete operations
+toast.undo('Automation deleted', {
+  onUndo: async () => {
+    // Restore the automation
+    await restoreAutomation(automationId);
+    queryClient.invalidateQueries({ queryKey: queryKeys.automations.list(agentId) });
+  },
+});
+
+// Saving toast with minimum duration
+const savingToast = toast.saving('Saving changes...');
+try {
+  await saveAutomation(data);
+  savingToast.dismiss();
+  toast.success('Changes saved');
+} catch (error) {
+  savingToast.dismiss();
+  toast.error('Failed to save', { description: getErrorMessage(error) });
+}
+
+// Dedupe toast (prevent duplicate toasts)
+toast.dedupe('automation-test', 'Test execution started');
+
+// Silent auto-save (no toast unless error)
+async function autoSave(data: AutomationUpdate) {
+  try {
+    await supabase.from('automations').update(data).eq('id', automationId);
+  } catch (error) {
+    toast.error('Auto-save failed', { description: getErrorMessage(error) });
+  }
+}
+```
+
+### Focus Management & Accessibility
+
+```tsx
+// src/hooks/useNodeAnnouncements.ts
+
+import { useCallback, useRef } from 'react';
+
+export function useNodeAnnouncements() {
+  const announce = useCallback((message: string) => {
+    const el = document.getElementById('automation-announcer');
+    if (el) el.textContent = message;
+  }, []);
+
+  return {
+    announceNodeAdded: (label: string) => announce(`${label} node added to flow`),
+    announceNodeDeleted: (label: string) => announce(`${label} node deleted`),
+    announceNodeSelected: (label: string) => 
+      announce(`${label} node selected. Press Enter to configure, Delete to remove.`),
+    announceConnectionCreated: (source: string, target: string) => 
+      announce(`Connected ${source} to ${target}`),
+    announceExecutionStarted: () => announce('Automation test started'),
+    announceExecutionComplete: (status: 'success' | 'failed') => 
+      announce(`Automation test ${status}`),
+  };
+}
+```
+
+```tsx
+// Focus management for NodeConfigPanel
+
+import { useEffect, useRef } from 'react';
+
+interface NodeConfigPanelProps {
+  nodeId: string | null;
+  onClose: () => void;
+}
+
+export function NodeConfigPanel({ nodeId, onClose }: NodeConfigPanelProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Store previous focus and move to panel when opened
+  useEffect(() => {
+    if (nodeId) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      // Focus first focusable element in panel
+      const firstFocusable = panelRef.current?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      firstFocusable?.focus();
+    }
+  }, [nodeId]);
+
+  // Restore focus when panel closes
+  const handleClose = useCallback(() => {
+    previousFocusRef.current?.focus();
+    onClose();
+  }, [onClose]);
+
+  // Trap focus within panel
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      handleClose();
+      return;
+    }
+
+    if (event.key === 'Tab') {
+      const focusableElements = panelRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusableElements?.length) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+  }, [handleClose]);
+
+  if (!nodeId) return null;
+
+  return (
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-labelledby="node-config-title"
+      aria-describedby="node-config-description"
+      onKeyDown={handleKeyDown}
+      className="border-l border-border bg-card w-80"
+    >
+      <div className="p-4">
+        <h2 id="node-config-title" className="text-base font-semibold">
+          Configure Node
+        </h2>
+        <p id="node-config-description" className="sr-only">
+          Edit the configuration for this automation node
+        </p>
+        {/* Form fields with proper aria-describedby */}
+      </div>
+    </div>
+  );
+}
+```
+
+```tsx
+// Announcer component in Automations page
+
+export function Automations() {
+  return (
+    <div>
+      {/* Screen reader announcer */}
+      <div 
+        id="automation-announcer" 
+        role="status" 
+        aria-live="polite" 
+        className="sr-only" 
+      />
+      
+      <FlowEditor />
+    </div>
+  );
+}
+```
+
+### staleTime Configuration Reference
+
+| Hook | staleTime | Rationale |
+|------|-----------|-----------|
+| `useAutomations` | 30s | Consistent with `useWebhooks`, moderate refresh rate |
+| `useAutomation` (detail) | 60s | Single automation less volatile |
+| `useAutomationExecutions` | 10s | Executions update more frequently |
+| `useAgent` | 5 min | Agent config rarely changes |
+
+---
+
+## 8. Implementation Phases (TEMPORARY)
 
 > **Note:** This section will be removed after implementation is complete.
 
@@ -1820,11 +2467,15 @@ function FlowEditor() {
 - [ ] Create database migration for `automations` and `automation_executions` tables
 - [ ] Add types to `src/types/automations.ts` and `src/types/metadata.ts`
 - [ ] Add query keys to `src/lib/query-keys.ts`
-- [ ] Create `useAutomations` hook with CRUD operations
-- [ ] Add route to `src/config/routes.ts`
+- [ ] Add DB select columns to `src/lib/db-selects.ts`
+- [ ] Create `useAutomations` hook with CRUD operations + `staleTime: 30s`
+- [ ] Add route to `src/config/routes.ts` (ROUTE_CONFIG)
+- [ ] Create loading skeletons: `AutomationsListSkeleton`, `FlowEditorSkeleton`
+- [ ] Create `AutomationErrorBoundary.tsx`
 - [ ] Create basic `Automations.tsx` page with React Flow canvas
 - [ ] Create `FlowEditor.tsx` wrapper with drag-drop support
 - [ ] Create `NodeSidebar.tsx` with placeholder categories
+- [ ] Add screen reader announcer div
 
 **Deliverable:** Empty flow editor accessible at `/automations`
 
@@ -1892,13 +2543,13 @@ function FlowEditor() {
 - [ ] Implement remaining action nodes (email, lead update, etc.)
 - [ ] Add execution retry logic
 - [ ] Performance optimization
-- [ ] Documentation
+- [ ] Update documentation (see checklist below)
 
 **Deliverable:** Complete system ready for migration
 
 ---
 
-## 8. Migration Strategy
+## 9. Migration Strategy
 
 ### Phase 1: Parallel Operation
 
@@ -1996,9 +2647,61 @@ const colorMode = theme === 'dark' ? 'dark' : 'light';
 
 ---
 
+## 10. Documentation Checklist
+
+When implementing automations, update these documentation files:
+
+### Required Updates
+
+| File | What to Add |
+|------|-------------|
+| `docs/HOOKS_REFERENCE.md` | `useAutomations`, `useAutomation`, `useAutomationExecutions`, `useFlowState`, `useNodeAnnouncements` |
+| `docs/EDGE_FUNCTIONS.md` | `execute-automation`, `trigger-automation` function signatures and parameters |
+| `docs/DATABASE_SCHEMA.md` | `automations` and `automation_executions` tables, RLS policies, triggers |
+| `docs/ARCHITECTURE.md` | Automations system overview in Features section |
+| `src/config/routes.ts` | Add `automations` to ROUTE_CONFIG array |
+| `src/lib/query-keys.ts` | Add `automations` query key namespace |
+| `src/lib/db-selects.ts` | Add `AUTOMATION_*_COLUMNS` constants |
+| `src/types/metadata.ts` | Add `AutomationMetadata` if needed for JSONB fields |
+
+### Optional Updates
+
+| File | When to Update |
+|------|----------------|
+| `docs/SECURITY.md` | If new security patterns are introduced |
+| `docs/AI_ARCHITECTURE.md` | When AI tool trigger is implemented |
+| `docs/COMPONENT_PATTERNS.md` | If new reusable patterns emerge |
+
+### Checklist per Phase
+
+**Phase 1:**
+- [ ] Update DATABASE_SCHEMA.md with new tables
+- [ ] Update query-keys.ts
+- [ ] Update routes.ts
+- [ ] Update db-selects.ts
+
+**Phase 2:**
+- [ ] Update HOOKS_REFERENCE.md with useAutomations, useFlowState
+
+**Phase 3:**
+- [ ] Update EDGE_FUNCTIONS.md with execute-automation
+
+**Phase 4:**
+- [ ] Update EDGE_FUNCTIONS.md with trigger-automation
+
+**Phase 5:**
+- [ ] Update AI_ARCHITECTURE.md with AI tool integration
+
+**Phase 6:**
+- [ ] Final review of all documentation
+- [ ] Update ARCHITECTURE.md overview
+
+---
+
 ## Document History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | Jan 2026 | - | Initial planning document |
 | 1.1 | Jan 2026 | - | Consolidated from 5 separate docs |
+| 1.2 | Jan 2026 | - | Added 12 missing patterns: skeletons, staleTime, optimistic updates, error boundaries, toast patterns, focus management, route config, useStableObject, icon imports, documentation checklist, component size guidelines, real-time subscriptions |
