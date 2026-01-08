@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -5,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trash01, DotsGrid, ChevronDown, Plus } from '@untitledui/icons';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -27,6 +27,7 @@ interface SortableFieldRowProps {
 }
 
 function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const {
     attributes,
     listeners,
@@ -41,6 +42,9 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
     transition,
   };
 
+  const hasExpandableContent = field.fieldType === 'checkbox' || field.fieldType === 'select' || field.placeholder;
+  const needsExpansion = field.fieldType === 'checkbox' || field.fieldType === 'select';
+
   return (
     <div
       ref={setNodeRef}
@@ -50,91 +54,93 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
         isDragging && "opacity-50 bg-muted z-50"
       )}
     >
-      <Collapsible>
-        {/* Main row - always visible */}
-        <div className="flex items-center gap-2 py-2">
-          {/* Drag handle */}
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded flex-shrink-0"
-          >
-            <DotsGrid size={16} className="text-muted-foreground" aria-hidden="true" />
-          </div>
-
-          {/* Inline editable label */}
-          <Input
-            value={field.label}
-            onChange={(e) => onUpdate({ label: e.target.value })}
-            className="h-8 text-sm flex-1 min-w-0"
-            placeholder="Field label"
-          />
-
-          {/* Type selector - compact */}
-          <Select
-            value={field.fieldType}
-            onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') =>
-              onUpdate({
-                fieldType: value,
-                placeholder: value === 'checkbox' ? undefined : (field.placeholder || ''),
-                richTextContent: value === 'checkbox' ? (field.richTextContent || '') : undefined,
-                options: value === 'select' ? (field.options || []) : undefined,
-              })
-            }
-          >
-            <SelectTrigger className="h-8 w-[100px] text-xs flex-shrink-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="text">Text</SelectItem>
-              <SelectItem value="email">Email</SelectItem>
-              <SelectItem value="phone">Phone</SelectItem>
-              <SelectItem value="textarea">Text Area</SelectItem>
-              <SelectItem value="select">Select</SelectItem>
-              <SelectItem value="checkbox">Checkbox</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Required checkbox */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <Checkbox
-              id={`required-${field.id}`}
-              checked={field.required}
-              onCheckedChange={(checked) => onUpdate({ required: checked === true })}
-            />
-            <Label htmlFor={`required-${field.id}`} className="text-xs text-muted-foreground cursor-pointer">
-              Req
-            </Label>
-          </div>
-
-          {/* Expand button */}
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 flex-shrink-0"
-            >
-              <ChevronDown
-                size={16}
-                className="text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180"
-                aria-hidden="true"
-              />
-            </Button>
-          </CollapsibleTrigger>
-
-          {/* Delete */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 flex-shrink-0"
-            onClick={onRemove}
-          >
-            <Trash01 size={16} className="text-muted-foreground hover:text-destructive" aria-hidden="true" />
-          </Button>
+      {/* Main row - always visible */}
+      <div className="flex items-center gap-2 py-2">
+        {/* Drag handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded flex-shrink-0"
+        >
+          <DotsGrid size={16} className="text-muted-foreground" aria-hidden="true" />
         </div>
 
-        {/* Collapsible settings */}
-        <CollapsibleContent className="pb-3 pl-8 pr-10 space-y-2">
+        {/* Inline editable label */}
+        <Input
+          value={field.label}
+          onChange={(e) => onUpdate({ label: e.target.value })}
+          className="h-8 text-sm flex-1 min-w-0"
+          placeholder="Field label"
+        />
+
+        {/* Type selector - compact */}
+        <Select
+          value={field.fieldType}
+          onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') =>
+            onUpdate({
+              fieldType: value,
+              placeholder: value === 'checkbox' ? undefined : (field.placeholder || ''),
+              richTextContent: value === 'checkbox' ? (field.richTextContent || '') : undefined,
+              options: value === 'select' ? (field.options || []) : undefined,
+            })
+          }
+        >
+          <SelectTrigger className="h-8 w-[100px] text-xs flex-shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="text">Text</SelectItem>
+            <SelectItem value="email">Email</SelectItem>
+            <SelectItem value="phone">Phone</SelectItem>
+            <SelectItem value="textarea">Text Area</SelectItem>
+            <SelectItem value="select">Select</SelectItem>
+            <SelectItem value="checkbox">Checkbox</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Required checkbox */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <Checkbox
+            id={`required-${field.id}`}
+            checked={field.required}
+            onCheckedChange={(checked) => onUpdate({ required: checked === true })}
+          />
+          <Label htmlFor={`required-${field.id}`} className="text-xs text-muted-foreground cursor-pointer">
+            Req
+          </Label>
+        </div>
+
+        {/* Expand button - only show if has expandable content */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 flex-shrink-0"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <ChevronDown
+            size={16}
+            className={cn(
+              "text-muted-foreground transition-transform",
+              isExpanded && "rotate-180"
+            )}
+            aria-hidden="true"
+          />
+        </Button>
+
+        {/* Delete */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 flex-shrink-0"
+          onClick={onRemove}
+        >
+          <Trash01 size={16} className="text-muted-foreground hover:text-destructive" aria-hidden="true" />
+        </Button>
+      </div>
+
+      {/* Expanded settings */}
+      {isExpanded && (
+        <div className="pb-3 pl-8 pr-10 space-y-2">
           {/* Placeholder - hidden for checkbox */}
           {field.fieldType !== 'checkbox' && (
             <Input
@@ -170,8 +176,8 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
               />
             </div>
           )}
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      )}
     </div>
   );
 }
