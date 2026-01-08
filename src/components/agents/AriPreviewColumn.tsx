@@ -8,7 +8,7 @@
  */
 
 import { PreviewChat } from './PreviewChat';
-import type { CustomField } from '@/hooks/useEmbeddedChatConfig';
+import type { CustomField, FormStep } from '@/hooks/useEmbeddedChatConfig';
 
 interface ContactFormConfig {
   enabled: boolean;
@@ -16,6 +16,8 @@ interface ContactFormConfig {
   subtitle: string;
   customFields: CustomField[];
   primaryColor: string;
+  enableMultiStepForm?: boolean;
+  formSteps?: FormStep[];
 }
 
 interface AriPreviewColumnProps {

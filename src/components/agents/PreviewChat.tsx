@@ -48,7 +48,7 @@ import type {
 } from '@/widget/types';
 import type { LinkPreviewData } from '@/components/chat/LinkPreviewCard';
 import { ContactFormPreview } from './sections/ContactFormPreview';
-import type { CustomField } from '@/hooks/useEmbeddedChatConfig';
+import type { CustomField, FormStep } from '@/hooks/useEmbeddedChatConfig';
 
 // ============================================
 // TYPES
@@ -59,6 +59,8 @@ interface ContactFormConfig {
   title: string;
   subtitle: string;
   customFields: CustomField[];
+  enableMultiStepForm?: boolean;
+  formSteps?: FormStep[];
 }
 
 interface PreviewChatProps {
@@ -264,12 +266,14 @@ export function PreviewChat({
           /* Empty State - Show Contact Form Preview if provided */
           contactFormPreview ? (
             <div className="flex flex-col h-full">
-              <ContactFormPreview
+          <ContactFormPreview
                 title={contactFormPreview.title}
                 subtitle={contactFormPreview.subtitle}
                 customFields={contactFormPreview.customFields}
                 primaryColor={primaryColor}
                 enabled={contactFormPreview.enabled}
+                enableMultiStepForm={contactFormPreview.enableMultiStepForm}
+                formSteps={contactFormPreview.formSteps}
               />
             </div>
           ) : (

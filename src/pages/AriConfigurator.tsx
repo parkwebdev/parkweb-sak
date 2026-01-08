@@ -273,6 +273,8 @@ const AriConfigurator = () => {
           subtitle: embedConfig.contactFormSubtitle,
           customFields: embedConfig.customFields,
           primaryColor: embedConfig.primaryColor,
+          enableMultiStepForm: embedConfig.enableMultiStepForm,
+          formSteps: embedConfig.formSteps,
         } : null}
       />
 
