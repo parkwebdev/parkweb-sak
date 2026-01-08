@@ -106,8 +106,12 @@ export function useSupabaseQuery<TData, TError = Error>({
           filter,
         },
         () => {
-          // Invalidate the query to trigger a refetch
-          queryClient.invalidateQueries({ queryKey });
+          // Immediately refetch active queries when real-time changes occur
+          // Using refetchQueries instead of invalidateQueries to bypass staleTime
+          queryClient.refetchQueries({ 
+            queryKey, 
+            type: 'active',
+          });
         }
       )
       .subscribe();
