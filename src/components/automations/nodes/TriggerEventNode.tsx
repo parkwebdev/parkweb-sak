@@ -28,8 +28,13 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 
 export const TriggerEventNode = memo(function TriggerEventNode(props: NodeProps) {
   const data = props.data as TriggerEventNodeData;
-  const sourceLabel = EVENT_SOURCE_LABELS[data.eventSource] || data.eventSource;
-  const typeLabel = EVENT_TYPE_LABELS[data.eventType] || data.eventType;
+  
+  // Default to 'lead' and 'INSERT' if not set (handles legacy/incomplete data)
+  const eventSource = data.eventSource || 'lead';
+  const eventType = data.eventType || 'INSERT';
+  
+  const sourceLabel = EVENT_SOURCE_LABELS[eventSource] || eventSource;
+  const typeLabel = EVENT_TYPE_LABELS[eventType] || eventType;
   
   return (
     <BaseNode
