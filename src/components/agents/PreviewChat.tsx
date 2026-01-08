@@ -59,7 +59,6 @@ interface ContactFormConfig {
   title: string;
   subtitle: string;
   customFields: CustomField[];
-  enableMultiStepForm?: boolean;
   formSteps?: FormStep[];
 }
 
@@ -272,7 +271,6 @@ export function PreviewChat({
                 customFields={contactFormPreview.customFields}
                 primaryColor={primaryColor}
                 enabled={contactFormPreview.enabled}
-                enableMultiStepForm={contactFormPreview.enableMultiStepForm}
                 formSteps={contactFormPreview.formSteps}
               />
             </div>

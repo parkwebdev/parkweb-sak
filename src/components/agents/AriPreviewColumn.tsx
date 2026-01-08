@@ -16,7 +16,6 @@ interface ContactFormConfig {
   subtitle: string;
   customFields: CustomField[];
   primaryColor: string;
-  enableMultiStepForm?: boolean;
   formSteps?: FormStep[];
 }
 

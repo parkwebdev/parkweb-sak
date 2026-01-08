@@ -263,10 +263,8 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
   const formSteps = config.formSteps?.length ? config.formSteps : [{ id: 'step-1' }];
   const currentStepConfig = formSteps[activeStep - 1];
   
-  // Filter fields for current step (multi-step mode) or show all (single step mode)
-  const currentStepFields = config.enableMultiStepForm
-    ? config.customFields.filter(f => (f.step || 1) === activeStep)
-    : config.customFields;
+  // Filter fields for current step (multi-step is always enabled)
+  const currentStepFields = config.customFields.filter(f => (f.step || 1) === activeStep);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -294,7 +292,7 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
       fieldType: 'text',
       required: false,
       placeholder: '',
-      step: config.enableMultiStepForm ? activeStep : 1,
+      step: activeStep,
     };
 
     onConfigChange({
@@ -366,17 +364,6 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
     onConfigChange({ formSteps: newSteps });
   };
 
-  const handleMultiStepToggle = (enabled: boolean) => {
-    onConfigChange({ 
-      enableMultiStepForm: enabled,
-      // Ensure at least one step exists when enabling
-      formSteps: enabled && (!config.formSteps || config.formSteps.length === 0) 
-        ? [{ id: 'step-1' }] 
-        : config.formSteps,
-    });
-    setActiveStep(1);
-  };
-
   return (
     <div className="space-y-6">
       <ToggleSettingRow
@@ -389,18 +376,8 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
 
       {config.enableContactForm && (
         <div className="space-y-6 pl-4 border-l-2">
-          {/* Multi-Step Toggle */}
-          <ToggleSettingRow
-            id="multi-step-form"
-            label="Enable Multi-Step Form"
-            description="Split the form into multiple steps"
-            checked={config.enableMultiStepForm || false}
-            onCheckedChange={handleMultiStepToggle}
-          />
-
-          {/* Step Tabs - only show when multi-step is enabled */}
-          {config.enableMultiStepForm && (
-            <div className="flex items-center gap-2 flex-wrap">
+          {/* Step Tabs - always visible */}
+          <div className="flex items-center gap-2 flex-wrap">
               {formSteps.map((step, index) => (
                 <StepTab
                   key={step.id}
@@ -421,12 +398,10 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                 <Plus size={14} className="mr-1" aria-hidden="true" />
                 Add Step
               </Button>
-            </div>
-          )}
+          </div>
 
-          {/* Step Title & Subtitle - only in multi-step mode */}
-          {config.enableMultiStepForm && (
-            <Card>
+          {/* Step Title & Subtitle */}
+          <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">
                   Step {activeStep} Settings
@@ -459,43 +434,13 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                 </div>
               </CardContent>
             </Card>
-          )}
-
-          {/* Form Title - only show in single-step mode or as fallback */}
-          {!config.enableMultiStepForm && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="form-title" className="text-sm">Form Title</Label>
-                <Input
-                  id="form-title"
-                  value={config.contactFormTitle}
-                  onChange={(e) => onConfigChange({ contactFormTitle: e.target.value })}
-                  className="text-sm"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="form-subtitle" className="text-sm">Form Subtitle</Label>
-                <Textarea
-                  id="form-subtitle"
-                  value={config.contactFormSubtitle}
-                  onChange={(e) => onConfigChange({ contactFormSubtitle: e.target.value })}
-                  rows={2}
-                  className="text-sm"
-                />
-              </div>
-            </>
-          )}
 
           {/* Custom Fields Card */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium">
-                  {config.enableMultiStepForm 
-                    ? `Step ${activeStep} Fields`
-                    : 'Custom Fields'
-                  }
+                  Step {activeStep} Fields
                 </CardTitle>
                 {activeStep === 1 && (
                   <span className="text-xs text-muted-foreground">First, Last, Email are default</span>

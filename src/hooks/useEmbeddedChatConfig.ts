@@ -177,8 +177,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     contactFormSubtitle: 'Fill out the form below and we\'ll get back to you',
     customFields: [],
     
-    // Multi-Step Form
-    enableMultiStepForm: false,
+    // Multi-Step Form (always enabled)
+    enableMultiStepForm: true,
     formSteps: [{ id: 'step-1' }],
     
     // Help Articles
