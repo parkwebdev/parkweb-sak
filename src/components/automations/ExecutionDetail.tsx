@@ -1,17 +1,18 @@
 /**
  * Execution Detail
  * Shows node-by-node execution trace with variable values and errors.
+ * Memoized for performance.
  * 
  * @module components/automations/ExecutionDetail
  */
 
+import { memo, useState } from 'react';
 import { format } from 'date-fns';
 import { CheckCircle, XCircle, AlertCircle, Clock, ChevronDown, ChevronRight } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useState } from 'react';
 import type { AutomationExecution } from '@/types/automations';
 
 interface NodeExecutionResult {
@@ -125,7 +126,7 @@ function NodeResultRow({ node, index }: { node: NodeExecutionResult; index: numb
   );
 }
 
-export function ExecutionDetail({ execution }: ExecutionDetailProps) {
+export const ExecutionDetail = memo(function ExecutionDetail({ execution }: ExecutionDetailProps) {
   const nodesExecuted = (execution.nodes_executed as unknown as NodeExecutionResult[]) || [];
   const variables = execution.variables as Record<string, unknown> | null;
   const triggerData = execution.trigger_data as Record<string, unknown> | null;
@@ -222,4 +223,4 @@ export function ExecutionDetail({ execution }: ExecutionDetailProps) {
       </div>
     </ScrollArea>
   );
-}
+});

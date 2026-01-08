@@ -2,16 +2,19 @@
  * AutomationsList Component
  * 
  * Displays a list of automations with cards showing status and stats.
+ * Includes permission guard for create button.
  * 
  * @module components/automations/AutomationsList
  */
 
+import { memo } from 'react';
 import { Plus, Zap, Clock, Hand, Stars02 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { useCanManage } from '@/hooks/useCanManage';
 import type { AutomationListItem } from '@/types/automations';
 
 interface AutomationsListProps {
@@ -28,21 +31,25 @@ const TRIGGER_ICONS: Record<string, React.ComponentType<{ size?: number; classNa
   ai_tool: Stars02,
 };
 
-export function AutomationsList({ 
+export const AutomationsList = memo(function AutomationsList({ 
   automations, 
   selectedId, 
   onSelect, 
   onCreateClick 
 }: AutomationsListProps) {
+  const canManageAutomations = useCanManage('manage_ari');
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="text-base font-semibold text-foreground">Automations</h2>
-        <Button size="sm" onClick={onCreateClick}>
-          <Plus size={16} className="mr-1.5" aria-hidden="true" />
-          New
-        </Button>
+        {canManageAutomations && (
+          <Button size="sm" onClick={onCreateClick}>
+            <Plus size={16} className="mr-1.5" aria-hidden="true" />
+            New
+          </Button>
+        )}
       </div>
 
       {/* List */}
@@ -107,4 +114,4 @@ export function AutomationsList({
       </ScrollArea>
     </div>
   );
-}
+});

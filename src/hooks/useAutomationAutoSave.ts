@@ -3,6 +3,7 @@
  * 
  * Auto-save hook for automation flow changes with 3s debounce.
  * Tracks last saved time and provides save status.
+ * Uses refs to avoid infinite loops from flow state dependencies.
  * 
  * @module hooks/useAutomationAutoSave
  */
@@ -58,8 +59,20 @@ export function useAutomationAutoSave({
   
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const savingRef = useRef(false);
+  
+  // Use refs for flow state to avoid recreating executeSave on every change
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+  const viewportRef = useRef(viewport);
+  
+  // Keep refs updated
+  useEffect(() => {
+    nodesRef.current = nodes;
+    edgesRef.current = edges;
+    viewportRef.current = viewport;
+  }, [nodes, edges, viewport]);
 
-  // Execute save
+  // Execute save using refs (stable callback)
   const executeSave = useCallback(async () => {
     if (!automation || savingRef.current) return;
     
@@ -69,9 +82,9 @@ export function useAutomationAutoSave({
     try {
       await updateAutomation({
         id: automation.id,
-        nodes,
-        edges,
-        viewport,
+        nodes: nodesRef.current,
+        edges: edgesRef.current,
+        viewport: viewportRef.current,
       });
       markClean();
       setLastSavedAt(new Date());
@@ -81,9 +94,9 @@ export function useAutomationAutoSave({
     } finally {
       savingRef.current = false;
     }
-  }, [automation, nodes, edges, viewport, updateAutomation, markClean]);
+  }, [automation, updateAutomation, markClean]);
 
-  // Schedule auto-save when flow changes
+  // Schedule auto-save when flow changes (track isDirty only)
   useEffect(() => {
     if (!enabled || !automation || !isDirty) return;
 
@@ -102,7 +115,7 @@ export function useAutomationAutoSave({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [enabled, automation, isDirty, nodes, edges, viewport, executeSave]);
+  }, [enabled, automation, isDirty, executeSave]);
 
   // Cleanup on unmount
   useEffect(() => {

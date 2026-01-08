@@ -2,11 +2,12 @@
  * NodeSidebar Component
  * 
  * Displays draggable node categories for the automation builder.
- * Placeholder implementation for Phase 1.
+ * Memoized for performance.
  * 
  * @module components/automations/NodeSidebar
  */
 
+import { memo } from 'react';
 import { Zap, Play, GitBranch01, Variable } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NODE_CATEGORIES } from '@/types/automations';
@@ -19,7 +20,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ size?: number; classN
   transform: Variable,
 };
 
-export function NodeSidebar() {
+export const NodeSidebar = memo(function NodeSidebar() {
   return (
     <div className="w-56 border-r border-border bg-card flex flex-col">
       <div className="p-3 border-b border-border">
@@ -73,4 +74,4 @@ export function NodeSidebar() {
       </ScrollArea>
     </div>
   );
-}
+});

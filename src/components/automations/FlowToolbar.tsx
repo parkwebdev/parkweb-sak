@@ -2,10 +2,12 @@
  * FlowToolbar Component
  * 
  * Toolbar for the automation editor with save, undo/redo, and close actions.
+ * Memoized for performance.
  * 
  * @module components/automations/FlowToolbar
  */
 
+import { memo } from 'react';
 import { ArrowLeft, ReverseLeft, ReverseRight, Save01, PlayCircle, ClockRewind } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -26,7 +28,7 @@ interface FlowToolbarProps {
   onHistoryClick?: () => void;
 }
 
-export function FlowToolbar({ 
+export const FlowToolbar = memo(function FlowToolbar({
   automation, 
   isDirty, 
   saving,
@@ -130,4 +132,4 @@ export function FlowToolbar({
       </Button>
     </div>
   );
-}
+});
