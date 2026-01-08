@@ -7,6 +7,7 @@
  * @module hooks/useAutomations
  */
 
+import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseQuery, useSupabaseMutation } from '@/hooks/useSupabaseQuery';
@@ -87,8 +88,8 @@ export function useAutomations() {
     enabled: !!accountOwnerId,
   });
 
-  // Fetch single automation with full details
-  const getAutomation = async (id: string): Promise<Automation | null> => {
+  // Fetch single automation with full details - memoized to prevent infinite loops
+  const getAutomation = useCallback(async (id: string): Promise<Automation | null> => {
     const { data, error } = await supabase
       .from('automations')
       .select('*')
@@ -121,7 +122,7 @@ export function useAutomations() {
       created_at: data.created_at,
       updated_at: data.updated_at,
     };
-  };
+  }, []);
 
   // Create automation mutation
   const createMutation = useSupabaseMutation({
