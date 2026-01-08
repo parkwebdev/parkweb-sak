@@ -1,10 +1,12 @@
 /**
  * Execution History List
  * Displays a list of past automation executions.
+ * Memoized for performance.
  * 
  * @module components/automations/ExecutionHistoryList
  */
 
+import { memo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { CheckCircle, XCircle, Clock, PlayCircle } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
@@ -58,7 +60,7 @@ const statusConfig: Record<string, {
   },
 };
 
-function ExecutionRow({ 
+const ExecutionRow = memo(function ExecutionRow({ 
   execution, 
   isSelected,
   onClick 
@@ -109,7 +111,7 @@ function ExecutionRow({
       </div>
     </button>
   );
-}
+});
 
 function LoadingSkeleton() {
   return (

@@ -58,18 +58,23 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
     }
   }, [selectedNode?.id]);
 
-  // Load automation on mount
+  // Load automation on mount or when ID changes
   useEffect(() => {
     let cancelled = false;
 
+    // Reset state immediately when automation ID changes
+    setLoading(true);
+    setAutomation(null);
+
     async function load() {
-      setLoading(true);
       const data = await getAutomation(automationId);
       if (!cancelled && data) {
         setAutomation(data);
         loadFlow(data.nodes, data.edges, data.viewport);
       }
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     }
 
     load();

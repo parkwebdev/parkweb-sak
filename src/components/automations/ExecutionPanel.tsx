@@ -1,11 +1,12 @@
 /**
  * Execution Panel
  * Side panel showing execution history and details with real-time updates.
+ * Memoized for performance.
  * 
  * @module components/automations/ExecutionPanel
  */
 
-import { useState, useEffect } from 'react';
+import { memo, useState } from 'react';
 import { X, Play, ClockRewind, RefreshCw01 as RefreshCw } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
@@ -20,7 +21,7 @@ interface ExecutionPanelProps {
   onClose: () => void;
 }
 
-export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
+export const ExecutionPanel = memo(function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null);
   const [testDialogOpen, setTestDialogOpen] = useState(false);
   
@@ -36,23 +37,6 @@ export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
 
   // Real-time hook for the selected execution
   const { data: selectedExecution, isLoading: loadingDetail } = useAutomationExecution(selectedExecutionId);
-
-  // Auto-select the most recent execution when a new one is triggered
-  useEffect(() => {
-    if (triggering && executions.length > 0) {
-      // When trigger completes, the list will update and we'll see the new execution
-    }
-  }, [triggering, executions]);
-
-  // Update selected execution from the list if it changes (real-time sync)
-  useEffect(() => {
-    if (selectedExecutionId && executions.length > 0) {
-      const updatedExecution = executions.find(e => e.id === selectedExecutionId);
-      if (updatedExecution?.status === 'completed' || updatedExecution?.status === 'failed') {
-        // Execution finished, the useAutomationExecution hook will have the latest data
-      }
-    }
-  }, [executions, selectedExecutionId]);
 
   const handleRunTest = async (testData: Record<string, unknown>) => {
     const result = await triggerExecution({
@@ -172,4 +156,4 @@ export function ExecutionPanel({ automation, onClose }: ExecutionPanelProps) {
       />
     </div>
   );
-}
+});

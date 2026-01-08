@@ -5,7 +5,7 @@
  * @module components/automations/TestExecutionDialog
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -119,6 +119,12 @@ export function TestExecutionDialog({
   const sampleData = useMemo(() => generateSampleData(automation), [automation]);
   const [testDataJson, setTestDataJson] = useState(JSON.stringify(sampleData, null, 2));
   const [parseError, setParseError] = useState<string | null>(null);
+
+  // Reset test data when automation changes
+  useEffect(() => {
+    setTestDataJson(JSON.stringify(sampleData, null, 2));
+    setParseError(null);
+  }, [sampleData]);
 
   const handleSubmit = async () => {
     try {
