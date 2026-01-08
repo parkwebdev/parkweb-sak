@@ -175,12 +175,13 @@ export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPa
                   />
                 </div>
                 <IconButton
-                  icon={Trash01}
                   label="Remove parameter"
                   variant="ghost"
                   size="sm"
                   onClick={() => removeParameter(index)}
-                />
+                >
+                  <Trash01 size={16} aria-hidden="true" />
+                </IconButton>
               </div>
             </div>
           ))}
