@@ -14,12 +14,15 @@ import { AutomationEditor } from '@/components/automations/AutomationEditor';
 import { AutomationsEmptyState } from '@/components/automations/AutomationsEmptyState';
 import { AutomationsListSkeleton } from '@/components/automations/AutomationsListSkeleton';
 import { CreateAutomationDialog } from '@/components/automations/CreateAutomationDialog';
-import type { Automation, CreateAutomationData } from '@/types/automations';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import type { Automation, AutomationListItem, CreateAutomationData } from '@/types/automations';
 
 function Automations() {
-  const { automations, loading, createAutomation, creating } = useAutomations();
+  const { automations, loading, createAutomation, creating, deleteAutomation, deleting } = useAutomations();
   const [selectedAutomationId, setSelectedAutomationId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [automationToDelete, setAutomationToDelete] = useState<AutomationListItem | null>(null);
 
   const handleCreate = useCallback(async (data: CreateAutomationData) => {
     const automation = await createAutomation(data);
@@ -34,6 +37,25 @@ function Automations() {
   const handleCloseEditor = useCallback(() => {
     setSelectedAutomationId(null);
   }, []);
+
+  const handleDeleteFromList = useCallback((id: string) => {
+    const automation = automations.find((a) => a.id === id);
+    if (automation) {
+      setAutomationToDelete(automation);
+      setDeleteDialogOpen(true);
+    }
+  }, [automations]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!automationToDelete) return;
+    await deleteAutomation(automationToDelete.id);
+    setDeleteDialogOpen(false);
+    setAutomationToDelete(null);
+    // If deleted automation was selected, deselect it
+    if (selectedAutomationId === automationToDelete.id) {
+      setSelectedAutomationId(null);
+    }
+  }, [automationToDelete, deleteAutomation, selectedAutomationId]);
 
   // Loading state
   if (loading) {
@@ -73,6 +95,7 @@ function Automations() {
           selectedId={selectedAutomationId}
           onSelect={handleSelectAutomation}
           onCreateClick={() => setCreateDialogOpen(true)}
+          onDeleteClick={handleDeleteFromList}
         />
       </div>
 
@@ -99,6 +122,15 @@ function Automations() {
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreate}
         loading={creating}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete automation"
+        description={automationToDelete ? `This will permanently delete "${automationToDelete.name}" and all its execution history. This action cannot be undone.` : ''}
+        onConfirm={handleConfirmDelete}
+        isDeleting={deleting}
       />
     </div>
   );

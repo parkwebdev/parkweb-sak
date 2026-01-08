@@ -9,6 +9,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAutomations } from '@/hooks/useAutomations';
+import { useCanManage } from '@/hooks/useCanManage';
 import { useAutomationAutoSave } from '@/hooks/useAutomationAutoSave';
 import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { useFlowStore } from '@/stores/automationFlowStore';
@@ -19,6 +20,7 @@ import { AutomationErrorBoundary } from '@/components/automations/AutomationErro
 import { NodeConfigPanel } from '@/components/automations/NodeConfigPanel';
 import { ExecutionPanel } from '@/components/automations/ExecutionPanel';
 import { TestExecutionDialog } from '@/components/automations/TestExecutionDialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Automation } from '@/types/automations';
 
@@ -28,7 +30,8 @@ interface AutomationEditorProps {
 }
 
 export function AutomationEditor({ automationId, onClose }: AutomationEditorProps) {
-  const { getAutomation } = useAutomations();
+  const { getAutomation, deleteAutomation, deleting } = useAutomations();
+  const canManageAutomations = useCanManage('manage_ari');
   const [automation, setAutomation] = useState<Automation | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -36,6 +39,7 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
   const [configPanelOpen, setConfigPanelOpen] = useState(false);
   const [executionPanelOpen, setExecutionPanelOpen] = useState(false);
   const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Auto-save hook
   const { saving, lastSavedAt, saveNow, saveError } = useAutomationAutoSave({
@@ -106,6 +110,17 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
     setExecutionPanelOpen(true);
   }, []);
 
+  // Delete handlers
+  const handleDeleteClick = useCallback(() => {
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    await deleteAutomation(automationId);
+    setDeleteDialogOpen(false);
+    onClose();
+  }, [automationId, deleteAutomation, onClose]);
+
   // Error reset handler - must be before early returns
   const handleErrorReset = useCallback(() => {
     if (automation) {
@@ -149,6 +164,8 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
           onClose={onClose}
           onTestClick={handleTestClick}
           onHistoryClick={handleHistoryClick}
+          onDeleteClick={handleDeleteClick}
+          canDelete={canManageAutomations}
         />
 
         {/* Editor area */}
@@ -183,6 +200,16 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
         automation={automation}
         onSubmit={handleTestSubmit}
         loading={triggering}
+      />
+
+      {/* Delete confirmation dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete automation"
+        description={`This will permanently delete "${automation.name}" and all its execution history. This action cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        isDeleting={deleting}
       />
     </AutomationErrorBoundary>
   );

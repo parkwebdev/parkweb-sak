@@ -7,11 +7,18 @@
  * @module components/automations/AutomationsList
  */
 
-import { memo } from 'react';
-import { Plus, Zap, Clock, Hand, Stars02 } from '@untitledui/icons';
+import { memo, useState, useCallback } from 'react';
+import { Plus, Zap, Clock, Hand, Stars02, Edit03, Trash01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { useCanManage } from '@/hooks/useCanManage';
@@ -22,6 +29,7 @@ interface AutomationsListProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onCreateClick: () => void;
+  onDeleteClick?: (id: string) => void;
 }
 
 const TRIGGER_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -35,7 +43,8 @@ export const AutomationsList = memo(function AutomationsList({
   automations, 
   selectedId, 
   onSelect, 
-  onCreateClick 
+  onCreateClick,
+  onDeleteClick,
 }: AutomationsListProps) {
   const canManageAutomations = useCanManage('manage_ari');
 
@@ -60,54 +69,75 @@ export const AutomationsList = memo(function AutomationsList({
             const isSelected = automation.id === selectedId;
 
             return (
-              <button
-                key={automation.id}
-                onClick={() => onSelect(automation.id)}
-                className={cn(
-                  'w-full text-left p-3 rounded-lg transition-colors',
-                  'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  isSelected && 'bg-accent'
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Icon */}
-                  <div 
-                    className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 bg-primary/10"
-                  >
-                    <TriggerIcon size={16} className="text-foreground" />
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm text-foreground truncate">
-                        {automation.name}
-                      </span>
-                      <Badge 
-                        variant={automation.enabled ? 'default' : 'secondary'}
-                        size="sm"
-                      >
-                        {automation.enabled ? 'Active' : 'Draft'}
-                      </Badge>
-                    </div>
-                    
-                    {automation.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {automation.description}
-                      </p>
+              <ContextMenu key={automation.id}>
+                <ContextMenuTrigger asChild>
+                  <button
+                    onClick={() => onSelect(automation.id)}
+                    className={cn(
+                      'w-full text-left p-3 rounded-lg transition-colors',
+                      'hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      isSelected && 'bg-accent'
                     )}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div 
+                        className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 bg-primary/10"
+                      >
+                        <TriggerIcon size={16} className="text-foreground" />
+                      </div>
 
-                    <div className="flex items-center gap-3 mt-1.5 text-2xs text-muted-foreground">
-                      <span>{automation.execution_count} runs</span>
-                      {automation.last_executed_at && (
-                        <span>
-                          Last run {formatDistanceToNow(new Date(automation.last_executed_at), { addSuffix: true })}
-                        </span>
-                      )}
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm text-foreground truncate">
+                            {automation.name}
+                          </span>
+                          <Badge 
+                            variant={automation.enabled ? 'default' : 'secondary'}
+                            size="sm"
+                          >
+                            {automation.enabled ? 'Active' : 'Draft'}
+                          </Badge>
+                        </div>
+                        
+                        {automation.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {automation.description}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-3 mt-1.5 text-2xs text-muted-foreground">
+                          <span>{automation.execution_count} runs</span>
+                          {automation.last_executed_at && (
+                            <span>
+                              Last run {formatDistanceToNow(new Date(automation.last_executed_at), { addSuffix: true })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </button>
+                  </button>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => onSelect(automation.id)}>
+                    <Edit03 size={16} className="mr-2" aria-hidden="true" />
+                    Edit
+                  </ContextMenuItem>
+                  {canManageAutomations && onDeleteClick && (
+                    <>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem 
+                        onClick={() => onDeleteClick(automation.id)}
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                      >
+                        <Trash01 size={16} className="mr-2" aria-hidden="true" />
+                        Delete
+                      </ContextMenuItem>
+                    </>
+                  )}
+                </ContextMenuContent>
+              </ContextMenu>
             );
           })}
         </div>
