@@ -12,7 +12,7 @@ import React, { useMemo } from 'react';
 import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd, BookOpen01 } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from './icons/DashboardIcon';
-import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
+import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled, KnowledgeBaseFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -72,6 +72,7 @@ const ACTIVE_ICON_MAP: Record<string, React.ComponentType<{ size?: number; class
   Users01: LeadsFilled,
   TrendUp01: AnalyticsFilled,
   Settings01: SettingsFilled,
+  BookOpen01: KnowledgeBaseFilled,
 };
 
 /** Convert RouteConfig to NavigationItem */
