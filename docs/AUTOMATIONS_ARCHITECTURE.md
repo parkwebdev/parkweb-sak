@@ -1,12 +1,12 @@
 # Automations Architecture
 
-> **Version**: 1.5  
-> **Status**: Implementation (Phases 1-5 Complete, ~85%)  
+> **Version**: 1.6  
+> **Status**: Implementation Complete (95%)  
 > **Created**: January 2026  
-> **Last Updated**: January 2026  
+> **Last Updated**: January 8, 2026  
 > **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Security](./SECURITY.md)
 
-A visual automation/flow builder that replaces Custom Tools and Webhooks with a unified, node-based workflow system. **Implementation is ~85% complete with Phases 1-5 finished.**
+A visual automation/flow builder that replaces Custom Tools and Webhooks with a unified, node-based workflow system. **Implementation is 95% complete with Phases 1-6 finished.**
 
 ---
 
@@ -2539,19 +2539,20 @@ export function Automations() {
 
 **Deliverable:** ✅ AI can call automations, automations can call AI
 
-### Phase 6: Polish & Migration 🔄 IN PROGRESS
+### Phase 6: Polish & Migration ✅ COMPLETE
 
 **Goal:** Production-ready with migration path
 
-- [ ] Create migration tools for webhooks → automations
-- [ ] Create migration tools for tools → automations
-- [ ] Add automation templates
-- [ ] Implement remaining action nodes (email, update-lead, create-booking)
-- [ ] Add execution retry logic
-- [ ] Performance optimization
-- [ ] Final documentation review
+- [x] Create migration tools for webhooks → automations (`src/lib/automation-migration.ts`)
+- [x] Create migration tools for tools → automations (same file)
+- [x] Add automation templates (`src/lib/automation-templates.ts` - 8 templates)
+- [x] Implement remaining action nodes (`action-email`, `action-update-lead`, `action-create-booking`)
+- [x] Add execution retry logic (already in `http.ts` with exponential backoff)
+- [x] Performance optimization (React Flow memoization, debounced saves)
+- [ ] Real-time execution status updates (deferred to future release)
+- [x] Final documentation review
 
-**Deliverable:** Complete system ready for migration
+**Deliverable:** ✅ Complete system ready for migration
 
 ---
 
@@ -2566,21 +2567,24 @@ Both systems run simultaneously:
 
 ### Phase 2: Migration Tools
 
+**Implementation Complete:** See `src/lib/automation-migration.ts`
+
 ```typescript
-// src/lib/automation-migration.ts
-
-export async function migrateWebhookToAutomation(webhookId: string): Promise<Automation> {
-  // Load webhook
-  // Create automation with equivalent trigger/action
-  // Return new automation (webhook unchanged)
-}
-
-export async function migrateToolToAutomation(toolId: string): Promise<Automation> {
-  // Load agent_tool
-  // Create automation with AI tool trigger
-  // Return new automation (tool unchanged)
-}
+// Key functions implemented:
+export async function migrateWebhookToAutomation(webhook: Webhook, agentId: string): Promise<MigrationResult>
+export async function migrateToolToAutomation(tool: AgentTool, userId: string): Promise<MigrationResult>
+export async function migrateAllWebhooks(agentId: string): Promise<MigrationResult[]>
+export async function migrateAllTools(agentId: string, userId: string): Promise<MigrationResult[]>
+export async function getMigrationCounts(agentId: string): Promise<{ webhooks: number; tools: number }>
 ```
+
+**Automation Templates:** See `src/lib/automation-templates.ts`
+
+8 pre-built templates across 4 categories:
+- **lead-management**: New Lead Notification, Lead Scoring, Lead Follow-up
+- **notifications**: Slack Alert, Email Digest
+- **ai-workflows**: AI Lead Qualifier, Content Generator
+- **integrations**: CRM Sync
 
 ### Phase 3: Deprecation
 
@@ -3802,7 +3806,7 @@ When implementing automations, update these documentation files:
 
 | File | What to Add |
 |------|-------------|
-| `docs/HOOKS_REFERENCE.md` | `useAutomations`, `useAutomation`, `useAutomationExecutions`, `useFlowState`, `useNodeAnnouncements` |
+| `docs/HOOKS_REFERENCE.md` | `useAutomations`, `useAutomationExecutions`, `useAutomationAutoSave`, `useFlowStore`, `useFlowHistory` |
 | `docs/EDGE_FUNCTIONS.md` | `execute-automation`, `trigger-automation` function signatures and parameters |
 | `docs/DATABASE_SCHEMA.md` | `automations` and `automation_executions` tables, RLS policies, triggers |
 | `docs/ARCHITECTURE.md` | Automations system overview in Features section |
@@ -3843,10 +3847,12 @@ When implementing automations, update these documentation files:
 - [x] Create automation-tools.ts for AI integration
 - [x] Integrate with widget-chat and tool-executor
 
-**Phase 6:** 🔄 IN PROGRESS
-- [ ] Final review of all documentation
-- [ ] Update ARCHITECTURE.md overview
-- [ ] Migration tools for webhooks/tools
+**Phase 6:** ✅ COMPLETE
+- [x] Final review of all documentation
+- [x] Migration tools for webhooks/tools (`src/lib/automation-migration.ts`)
+- [x] Automation templates (`src/lib/automation-templates.ts` - 8 templates)
+- [x] Action executors (`action-email`, `action-update-lead`, `action-create-booking`)
+- [ ] Real-time execution updates (deferred)
 
 ---
 
@@ -3868,8 +3874,10 @@ When implementing automations, update these documentation files:
 | `_shared/automation/variable-resolver.ts` | Template variable resolution |
 | `_shared/automation/http-executor.ts` | SSRF-protected HTTP client |
 | `_shared/automation/trigger-matcher.ts` | Event matching logic |
-| `_shared/automation/executors/*.ts` | 9 node executor implementations |
+| `_shared/automation/executors/*.ts` | 11 node executor implementations |
 | `_shared/tools/automation-tools.ts` | AI tool registration |
+| `src/lib/automation-migration.ts` | Webhook/tool migration utilities |
+| `src/lib/automation-templates.ts` | 8 pre-built automation templates |
 
 ### Frontend Components Created
 
@@ -3903,14 +3911,14 @@ When implementing automations, update these documentation files:
 
 ---
 
-## Remaining Work (Phase 6)
+## Remaining Work
 
-1. **Missing Action Executors**: `action-email`, `action-update-lead`, `action-create-booking`
-2. **Migration Tools**: Webhook → Automation, Tool → Automation converters
-3. **Templates**: Pre-built automation templates for common use cases
-4. **Retry Logic**: Automatic retry with exponential backoff
-5. **Real-time Updates**: WebSocket updates for execution status
-6. **Documentation**: Final review of all related docs
+1. **Real-time Updates**: WebSocket updates for execution status (deferred to future release)
+2. **Optional Enhancements**:
+   - Schedule trigger testing UI
+   - Automation versioning/rollback
+   - Advanced condition builder UI
+   - Template marketplace
 
 ---
 
@@ -3924,3 +3932,4 @@ When implementing automations, update these documentation files:
 | 1.3 | Jan 2026 | - | Added 10 React Flow patterns: undo/redo with zustand temporal, useFlowState hook, nodeTypes memoization, connection validation, drag & drop handlers, copy/paste nodes, multi-select patterns, viewport constraints, auto-layout with dagre, viewport persistence |
 | 1.4 | Jan 2026 | - | Added 7 critical React Flow patterns from docs deep-dive: CSS stylesheet import, useUpdateNodeInternals hook, ariaLabelConfig for accessibility, ReactFlowProvider placement, handle ID uniqueness, common pitfalls table, handle visibility warning |
 | 1.5 | Jan 2026 | - | Updated status to Implementation (85% complete). Marked Phases 1-5 as complete with checkboxes. Added Implementation Summary section documenting all created files. Added Remaining Work section for Phase 6 items. |
+| 1.6 | Jan 2026 | - | Phase 6 complete (95% total). Added action executors (`action-email`, `action-update-lead`, `action-create-booking`). Added migration tools (`src/lib/automation-migration.ts`) and 8 templates (`src/lib/automation-templates.ts`). Updated all checklists. Deferred real-time updates to future release. |
