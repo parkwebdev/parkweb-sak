@@ -147,8 +147,12 @@ export const useLeads = () => {
               })
               .eq('id', currentLead.conversation_id);
             
-            // Invalidate conversations cache to reflect changes
-            queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
+            // Force refetch conversations to reflect changes immediately
+            // Using refetchQueries instead of invalidateQueries to bypass staleTime
+            await queryClient.refetchQueries({ 
+              queryKey: queryKeys.conversations.all,
+              type: 'active',
+            });
           }
         }
       }
