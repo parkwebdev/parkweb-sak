@@ -1,6 +1,6 @@
 # Automations Architecture
 
-> **Version**: 1.0  
+> **Version**: 1.4  
 > **Status**: Planning  
 > **Created**: January 2026  
 > **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Security](./SECURITY.md)
@@ -3604,6 +3604,177 @@ export function FlowEditor({ automation }: { automation: Automation }) {
 }
 ```
 
+### CSS Stylesheet Import (CRITICAL)
+
+**REQUIRED**: Without importing React Flow styles, edges will NOT render and nodes will have no styling:
+
+```tsx
+// REQUIRED: Import in FlowEditor.tsx or main entry point
+// Without this, edges will NOT render and nodes will have no styling!
+import '@xyflow/react/dist/style.css';
+
+// Alternative: Import only base styles for fully custom styling
+// import '@xyflow/react/dist/base.css';
+```
+
+### useUpdateNodeInternals Hook
+
+**REQUIRED** when adding/removing handles programmatically:
+
+```typescript
+// src/features/automations/hooks/useDynamicHandles.ts
+
+import { useCallback } from 'react';
+import { useUpdateNodeInternals } from '@xyflow/react';
+
+/**
+ * REQUIRED: Call after adding/removing handles programmatically
+ * Without this, edge positions won't update correctly
+ */
+export function useDynamicHandles(nodeId: string) {
+  const updateNodeInternals = useUpdateNodeInternals();
+  
+  const updateHandles = useCallback(() => {
+    updateNodeInternals(nodeId);
+  }, [updateNodeInternals, nodeId]);
+  
+  return { updateHandles };
+}
+```
+
+```tsx
+// Usage in a node that adds/removes handles dynamically
+function DynamicHandleNode({ id, data }: NodeProps) {
+  const updateNodeInternals = useUpdateNodeInternals();
+  
+  useEffect(() => {
+    // After handles are added/removed, update internals
+    updateNodeInternals(id);
+  }, [data.handleCount, id, updateNodeInternals]);
+  
+  return (/* ... */);
+}
+```
+
+### Accessibility Configuration (ariaLabelConfig)
+
+Localized accessibility messages for WCAG 2.2 compliance:
+
+```tsx
+// src/features/automations/lib/ariaLabels.ts
+
+export const ariaLabels = {
+  'node.a11yDescription.default': 
+    'Press enter or space to select. Press delete to remove.',
+  'node.a11yDescription.keyboardDisabled': 
+    'Use arrow keys to move. Press delete to remove.',
+  'controls.ariaLabel': 'Automation Controls',
+  'controls.zoomIn.ariaLabel': 'Zoom In',
+  'controls.zoomOut.ariaLabel': 'Zoom Out',
+  'controls.fitView.ariaLabel': 'Fit All Nodes',
+  'minimap.ariaLabel': 'Automation Overview',
+};
+```
+
+```tsx
+// Usage in FlowEditor.tsx
+import { ariaLabels } from '../lib/ariaLabels';
+
+<ReactFlow
+  ariaLabelConfig={ariaLabels}
+  // Explicit keyboard accessibility - REQUIRED for WCAG 2.2
+  nodesFocusable={true}       // Enable Tab navigation to nodes
+  edgesFocusable={true}       // Enable Tab navigation to edges
+  disableKeyboardA11y={false} // Keep arrow key node movement
+  autoPanOnNodeFocus={true}   // Auto-scroll to focused node
+  // ...
+/>
+```
+
+### ReactFlowProvider Placement (CRITICAL)
+
+`useReactFlow()` hook can ONLY be called inside ReactFlowProvider:
+
+```tsx
+// ❌ WRONG - will crash with "zustand provider" error
+function FlowEditor() {
+  const instance = useReactFlow(); // 💥 Crashes!
+  return (
+    <ReactFlowProvider>
+      <ReactFlow />
+    </ReactFlowProvider>
+  );
+}
+
+// ✅ CORRECT - provider wraps externally
+function FlowEditorWrapper() {
+  return (
+    <ReactFlowProvider>
+      <FlowCanvas /> {/* useReactFlow() works inside here */}
+    </ReactFlowProvider>
+  );
+}
+
+function FlowCanvas() {
+  const instance = useReactFlow(); // ✅ Works!
+  return <ReactFlow />;
+}
+```
+
+### Handle ID Uniqueness Rule
+
+When a node has MULTIPLE handles of the same type (source or target), each handle MUST have a unique `id` prop:
+
+```tsx
+// ❌ WRONG - ambiguous handles
+<Handle type="source" position={Position.Bottom} />
+<Handle type="source" position={Position.Right} />
+
+// ✅ CORRECT - unique IDs
+<Handle type="source" position={Position.Bottom} id="output-main" />
+<Handle type="source" position={Position.Right} id="output-error" />
+
+// Edge connections reference these IDs:
+const edge = {
+  id: 'edge-1',
+  source: 'node-1',
+  sourceHandle: 'output-main',  // References specific handle
+  target: 'node-2',
+  targetHandle: null,           // Uses default target handle
+};
+```
+
+### Common Pitfalls
+
+| Pitfall | Solution |
+|---------|----------|
+| Edges not rendering | Missing `@xyflow/react/dist/style.css` import |
+| `useReactFlow` crashes | Provider not wrapping component |
+| Handles not updating | Call `useUpdateNodeInternals(nodeId)` |
+| Duplicate handle errors | Add unique `id` to each handle |
+| Hidden handles breaking edges | Use `opacity: 0` NOT `display: none` |
+
+**Handle Visibility Warning:**
+
+```tsx
+// ❌ WRONG: display: none breaks edge rendering
+<Handle 
+  type="source" 
+  style={{ display: 'none' }}  // NEVER do this!
+/>
+
+// ✅ CORRECT: Use opacity or visibility
+<Handle 
+  type="source" 
+  style={{ opacity: 0 }}              // Invisible but functional
+  // OR
+  style={{ visibility: 'hidden' }}     // Hidden but functional
+/>
+
+// ✅ BEST: Conditional rendering
+{showHandle && <Handle type="source" position={Position.Right} />}
+```
+
 ### React Flow Performance Tips
 
 | Optimization | Implementation |
@@ -3677,3 +3848,4 @@ When implementing automations, update these documentation files:
 | 1.1 | Jan 2026 | - | Consolidated from 5 separate docs |
 | 1.2 | Jan 2026 | - | Added 12 missing patterns: skeletons, staleTime, optimistic updates, error boundaries, toast patterns, focus management, route config, useStableObject, icon imports, documentation checklist, component size guidelines, real-time subscriptions |
 | 1.3 | Jan 2026 | - | Added 10 React Flow patterns: undo/redo with zustand temporal, useFlowState hook, nodeTypes memoization, connection validation, drag & drop handlers, copy/paste nodes, multi-select patterns, viewport constraints, auto-layout with dagre, viewport persistence |
+| 1.4 | Jan 2026 | - | Added 7 critical React Flow patterns from docs deep-dive: CSS stylesheet import, useUpdateNodeInternals hook, ariaLabelConfig for accessibility, ReactFlowProvider placement, handle ID uniqueness, common pitfalls table, handle visibility warning |
