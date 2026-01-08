@@ -376,7 +376,7 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
       />
 
       {config.enableContactForm && (
-        <div className="space-y-6 pl-4 border-l-2">
+        <div className="space-y-6">
           {/* Step Tabs - always visible */}
           <div className="flex items-center gap-2 flex-wrap">
               {formSteps.map((step, index) => (
