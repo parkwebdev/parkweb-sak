@@ -131,14 +131,29 @@ export function useAutomations() {
         throw new Error('Missing account owner or agent');
       }
 
-      // Create default trigger node based on trigger type
+      // Create default trigger node with type-specific data
+      const baseLabel = `${data.trigger_type.charAt(0).toUpperCase() + data.trigger_type.slice(1)} Trigger`;
+      
+      const getTriggerNodeData = () => {
+        switch (data.trigger_type) {
+          case 'event':
+            return { label: baseLabel, eventSource: 'lead' as const, eventType: 'INSERT' as const };
+          case 'schedule':
+            return { label: baseLabel, cronExpression: '0 9 * * 1', timezone: 'UTC' };
+          case 'manual':
+            return { label: baseLabel, inputs: [] };
+          case 'ai_tool':
+            return { label: baseLabel, toolName: '', toolDescription: '', parameters: [] };
+          default:
+            return { label: baseLabel };
+        }
+      };
+
       const triggerNode: AutomationNode = {
         id: 'trigger-1',
         type: `trigger-${data.trigger_type === 'ai_tool' ? 'ai-tool' : data.trigger_type}` as AutomationNode['type'],
         position: { x: 250, y: 50 },
-        data: {
-          label: `${data.trigger_type.charAt(0).toUpperCase() + data.trigger_type.slice(1)} Trigger`,
-        },
+        data: getTriggerNodeData(),
       };
 
       const { data: created, error } = await supabase
