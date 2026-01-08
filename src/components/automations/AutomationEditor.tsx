@@ -6,13 +6,14 @@
  * @module components/automations/AutomationEditor
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAutomations } from '@/hooks/useAutomations';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { FlowEditor } from '@/components/automations/FlowEditor';
 import { FlowToolbar } from '@/components/automations/FlowToolbar';
 import { NodeSidebar } from '@/components/automations/NodeSidebar';
 import { AutomationErrorBoundary } from '@/components/automations/AutomationErrorBoundary';
+import { NodeConfigPanel } from '@/components/automations/NodeConfigPanel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
@@ -29,6 +30,17 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
   const [loading, setLoading] = useState(true);
   
   const { nodes, edges, viewport, isDirty, loadFlow, markClean } = useFlowStore();
+  const [configPanelOpen, setConfigPanelOpen] = useState(false);
+
+  // Detect selected node
+  const selectedNode = useMemo(() => nodes.find((n) => n.selected), [nodes]);
+
+  // Open config panel when a node is selected
+  useEffect(() => {
+    if (selectedNode) {
+      setConfigPanelOpen(true);
+    }
+  }, [selectedNode?.id]);
 
   // Load automation on mount
   useEffect(() => {
@@ -117,6 +129,11 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
           <div className="flex-1">
             <FlowEditor />
           </div>
+
+          {/* Node config panel */}
+          {configPanelOpen && selectedNode && (
+            <NodeConfigPanel onClose={() => setConfigPanelOpen(false)} />
+          )}
         </div>
       </div>
     </AutomationErrorBoundary>
