@@ -231,6 +231,22 @@ export const queryKeys = {
     all: ['kb'] as const,
     popularity: (categoryId: string) => [...queryKeys.kb.all, 'popularity', categoryId] as const,
   },
+
+  // Automations
+  automations: {
+    all: ['automations'] as const,
+    lists: () => [...queryKeys.automations.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.automations.lists(), agentId] as const,
+    details: () => [...queryKeys.automations.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.automations.details(), id] as const,
+    executions: {
+      all: (automationId: string) => [...queryKeys.automations.detail(automationId), 'executions'] as const,
+      list: (automationId: string, filters?: { status?: string }) =>
+        [...queryKeys.automations.executions.all(automationId), filters] as const,
+      detail: (executionId: string) =>
+        [...queryKeys.automations.all, 'execution', executionId] as const,
+    },
+  },
 } as const;
 
 /** Type helper for query keys */
