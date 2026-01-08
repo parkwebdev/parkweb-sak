@@ -1,12 +1,12 @@
 # Automations Architecture
 
-> **Version**: 1.6  
-> **Status**: Implementation Complete (95%)  
+> **Version**: 1.7  
+> **Status**: Implementation Complete (100%)  
 > **Created**: January 2026  
 > **Last Updated**: January 8, 2026  
 > **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Security](./SECURITY.md)
 
-A visual automation/flow builder that replaces Custom Tools and Webhooks with a unified, node-based workflow system. **Implementation is 95% complete with Phases 1-6 finished.**
+A visual automation/flow builder that replaces Custom Tools and Webhooks with a unified, node-based workflow system. **Implementation is 100% complete.**
 
 ---
 
@@ -2522,7 +2522,7 @@ export function Automations() {
 - [x] Add database triggers for events (lead.created, conversation.created, etc.)
 - [x] Implement condition node execution
 - [x] Add manual trigger via `TestExecutionDialog.tsx`
-- [ ] Real-time execution status updates (deferred)
+- [x] Real-time execution status updates (`useAutomationExecution` with Realtime + polling)
 
 **Deliverable:** ✅ Automations trigger on real events
 
@@ -2549,7 +2549,7 @@ export function Automations() {
 - [x] Implement remaining action nodes (`action-email`, `action-update-lead`, `action-create-booking`)
 - [x] Add execution retry logic (already in `http.ts` with exponential backoff)
 - [x] Performance optimization (React Flow memoization, debounced saves)
-- [ ] Real-time execution status updates (deferred to future release)
+- [x] Real-time execution status updates (`useAutomationExecution` hook with Realtime + polling)
 - [x] Final documentation review
 
 **Deliverable:** ✅ Complete system ready for migration
@@ -3911,14 +3911,12 @@ When implementing automations, update these documentation files:
 
 ---
 
-## Remaining Work
+## Future Enhancements (Optional)
 
-1. **Real-time Updates**: WebSocket updates for execution status (deferred to future release)
-2. **Optional Enhancements**:
-   - Schedule trigger testing UI
-   - Automation versioning/rollback
-   - Advanced condition builder UI
-   - Template marketplace
+1. Schedule trigger testing UI
+2. Automation versioning/rollback
+3. Advanced condition builder UI
+4. Template marketplace
 
 ---
 
@@ -3932,4 +3930,5 @@ When implementing automations, update these documentation files:
 | 1.3 | Jan 2026 | - | Added 10 React Flow patterns: undo/redo with zustand temporal, useFlowState hook, nodeTypes memoization, connection validation, drag & drop handlers, copy/paste nodes, multi-select patterns, viewport constraints, auto-layout with dagre, viewport persistence |
 | 1.4 | Jan 2026 | - | Added 7 critical React Flow patterns from docs deep-dive: CSS stylesheet import, useUpdateNodeInternals hook, ariaLabelConfig for accessibility, ReactFlowProvider placement, handle ID uniqueness, common pitfalls table, handle visibility warning |
 | 1.5 | Jan 2026 | - | Updated status to Implementation (85% complete). Marked Phases 1-5 as complete with checkboxes. Added Implementation Summary section documenting all created files. Added Remaining Work section for Phase 6 items. |
-| 1.6 | Jan 2026 | - | Phase 6 complete (95% total). Added action executors (`action-email`, `action-update-lead`, `action-create-booking`). Added migration tools (`src/lib/automation-migration.ts`) and 8 templates (`src/lib/automation-templates.ts`). Updated all checklists. Deferred real-time updates to future release. |
+| 1.6 | Jan 2026 | - | Phase 6 complete (95% total). Added action executors (`action-email`, `action-update-lead`, `action-create-booking`). Added migration tools (`src/lib/automation-migration.ts`) and 8 templates (`src/lib/automation-templates.ts`). Updated all checklists. |
+| 1.7 | Jan 2026 | - | **100% Complete.** Added real-time execution status updates via `useAutomationExecution` hook with Supabase Realtime subscription + polling for running executions. Updated `ExecutionPanel` with live status indicator. |
