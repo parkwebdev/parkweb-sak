@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash01, DotsGrid } from '@untitledui/icons';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Trash01, DotsGrid, ChevronDown, Plus } from '@untitledui/icons';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
@@ -19,13 +20,14 @@ interface ContactFormSectionProps {
   onConfigChange: (updates: Partial<EmbeddedChatConfig>) => void;
 }
 
-interface SortableFieldCardProps {
+interface SortableFieldRowProps {
   field: CustomField;
   onUpdate: (updates: Partial<CustomField>) => void;
   onRemove: () => void;
 }
 
-function SortableFieldCard({ field, onUpdate, onRemove }: SortableFieldCardProps) {
+function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const {
     attributes,
     listeners,
@@ -40,41 +42,38 @@ function SortableFieldCard({ field, onUpdate, onRemove }: SortableFieldCardProps
     transition,
   };
 
+  const hasExpandableContent = field.fieldType === 'checkbox' || field.fieldType === 'select' || field.placeholder;
+  const needsExpansion = field.fieldType === 'checkbox' || field.fieldType === 'select';
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        "p-3 border rounded-lg space-y-2 bg-muted/50",
-        isDragging && "opacity-50 shadow-lg z-50"
+        "border-b last:border-b-0",
+        isDragging && "opacity-50 bg-muted z-50"
       )}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 flex-1">
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 -ml-1 hover:bg-muted rounded"
-          >
-            <DotsGrid size={16} className="text-muted-foreground" aria-hidden="true" />
-          </div>
-          <Input
-            value={field.label}
-            onChange={(e) => onUpdate({ label: e.target.value })}
-            className="text-sm flex-1"
-            placeholder="Field label"
-          />
-        </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onRemove}
+      {/* Main row - always visible */}
+      <div className="flex items-center gap-2 py-2">
+        {/* Drag handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded flex-shrink-0"
         >
-          <Trash01 className="h-4 w-4 text-destructive" />
-        </Button>
-      </div>
+          <DotsGrid size={16} className="text-muted-foreground" aria-hidden="true" />
+        </div>
 
-      <div className="grid grid-cols-2 gap-2">
+        {/* Inline editable label */}
+        <Input
+          value={field.label}
+          onChange={(e) => onUpdate({ label: e.target.value })}
+          className="h-8 text-sm flex-1 min-w-0"
+          placeholder="Field label"
+        />
+
+        {/* Type selector - compact */}
         <Select
           value={field.fieldType}
           onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') =>
@@ -82,10 +81,11 @@ function SortableFieldCard({ field, onUpdate, onRemove }: SortableFieldCardProps
               fieldType: value,
               placeholder: value === 'checkbox' ? undefined : (field.placeholder || ''),
               richTextContent: value === 'checkbox' ? (field.richTextContent || '') : undefined,
+              options: value === 'select' ? (field.options || []) : undefined,
             })
           }
         >
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="h-8 w-[100px] text-xs flex-shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -98,50 +98,84 @@ function SortableFieldCard({ field, onUpdate, onRemove }: SortableFieldCardProps
           </SelectContent>
         </Select>
 
-        <div className="flex items-center gap-2">
-          <Switch
+        {/* Required checkbox */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <Checkbox
+            id={`required-${field.id}`}
             checked={field.required}
-            onCheckedChange={(checked) => onUpdate({ required: checked })}
+            onCheckedChange={(checked) => onUpdate({ required: checked === true })}
           />
-          <Label className="text-xs">Required</Label>
+          <Label htmlFor={`required-${field.id}`} className="text-xs text-muted-foreground cursor-pointer">
+            Req
+          </Label>
         </div>
+
+        {/* Expand button - only show if has expandable content */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 flex-shrink-0"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <ChevronDown
+            size={16}
+            className={cn(
+              "text-muted-foreground transition-transform",
+              isExpanded && "rotate-180"
+            )}
+            aria-hidden="true"
+          />
+        </Button>
+
+        {/* Delete */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 flex-shrink-0"
+          onClick={onRemove}
+        >
+          <Trash01 size={16} className="text-muted-foreground hover:text-destructive" aria-hidden="true" />
+        </Button>
       </div>
 
-      {/* Placeholder - hidden for checkbox */}
-      {field.fieldType !== 'checkbox' && (
-        <Input
-          value={field.placeholder || ''}
-          onChange={(e) => onUpdate({ placeholder: e.target.value })}
-          placeholder="Placeholder text"
-          className="text-sm"
-        />
-      )}
+      {/* Expanded settings */}
+      {isExpanded && (
+        <div className="pb-3 pl-8 pr-10 space-y-2">
+          {/* Placeholder - hidden for checkbox */}
+          {field.fieldType !== 'checkbox' && (
+            <Input
+              value={field.placeholder || ''}
+              onChange={(e) => onUpdate({ placeholder: e.target.value })}
+              placeholder="Placeholder text"
+              className="h-8 text-sm"
+            />
+          )}
 
-      {/* Rich text editor for checkbox text */}
-      {field.fieldType === 'checkbox' && (
-        <div className="space-y-2">
-          <RichTextEditor
-            content={field.richTextContent || ''}
-            onChange={(html) => onUpdate({ richTextContent: html })}
-            placeholder="By submitting, you agree to our Terms of Service..."
-            minHeight="80px"
-            minimalMode={true}
-          />
-        </div>
-      )}
+          {/* Rich text editor for checkbox text */}
+          {field.fieldType === 'checkbox' && (
+            <RichTextEditor
+              content={field.richTextContent || ''}
+              onChange={(html) => onUpdate({ richTextContent: html })}
+              placeholder="By submitting, you agree to our Terms of Service..."
+              minHeight="80px"
+              minimalMode={true}
+            />
+          )}
 
-      {/* Options for select fields */}
-      {field.fieldType === 'select' && (
-        <div className="space-y-2">
-          <Label className="text-xs">Options (comma-separated)</Label>
-          <Input
-            value={field.options?.join(', ') || ''}
-            onChange={(e) => onUpdate({
-              options: e.target.value.split(',').map(o => o.trim()).filter(Boolean)
-            })}
-            placeholder="Option 1, Option 2, Option 3"
-            className="text-sm"
-          />
+          {/* Options for select fields */}
+          {field.fieldType === 'select' && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Options (comma-separated)</Label>
+              <Input
+                value={field.options?.join(', ') || ''}
+                onChange={(e) => onUpdate({
+                  options: e.target.value.split(',').map(o => o.trim()).filter(Boolean)
+                })}
+                placeholder="Option 1, Option 2, Option 3"
+                className="h-8 text-sm"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -149,9 +183,6 @@ function SortableFieldCard({ field, onUpdate, onRemove }: SortableFieldCardProps
 }
 
 export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectionProps) => {
-  const [newFieldLabel, setNewFieldLabel] = useState('');
-  const [newFieldType, setNewFieldType] = useState<'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox'>('text');
-
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -172,24 +203,17 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
   };
 
   const addCustomField = () => {
-    if (!newFieldLabel.trim()) return;
-
     const newField: CustomField = {
       id: `field-${Date.now()}`,
-      label: newFieldLabel,
-      fieldType: newFieldType,
+      label: '',
+      fieldType: 'text',
       required: false,
-      placeholder: newFieldType === 'checkbox' ? undefined : '',
-      options: newFieldType === 'select' ? [] : undefined,
-      richTextContent: newFieldType === 'checkbox' ? '' : undefined,
+      placeholder: '',
     };
 
     onConfigChange({
       customFields: [...config.customFields, newField],
     });
-
-    setNewFieldLabel('');
-    setNewFieldType('text');
   };
 
   const removeCustomField = (fieldId: string) => {
@@ -239,74 +263,54 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
             />
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Custom Fields</Label>
-              <p className="text-xs text-muted-foreground">First, Last, Email are default</p>
-            </div>
-
-            {/* Sortable Custom Fields */}
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={config.customFields.map(f => f.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="space-y-3">
-                  {config.customFields.map((field) => (
-                    <SortableFieldCard
-                      key={field.id}
-                      field={field}
-                      onUpdate={(updates) => updateCustomField(field.id, updates)}
-                      onRemove={() => removeCustomField(field.id)}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-
-            {/* Add New Field */}
-            <div className="p-3 bg-muted/30 rounded-lg space-y-2">
-              <Label className="text-sm">Add Custom Field</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={newFieldLabel}
-                  onChange={(e) => setNewFieldLabel(e.target.value)}
-                  placeholder="Field label"
-                  className="text-sm"
-                />
-                <Select
-                  value={newFieldType}
-                  onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') =>
-                    setNewFieldType(value)
-                  }
-                >
-                  <SelectTrigger className="text-sm w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="phone">Phone</SelectItem>
-                    <SelectItem value="textarea">Text Area</SelectItem>
-                    <SelectItem value="select">Select</SelectItem>
-                    <SelectItem value="checkbox">Checkbox</SelectItem>
-                  </SelectContent>
-                </Select>
+          {/* Custom Fields Card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium">Custom Fields</CardTitle>
+                <span className="text-xs text-muted-foreground">First, Last, Email are default</span>
               </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {config.customFields.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No custom fields yet
+                </p>
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={config.customFields.map(f => f.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div>
+                      {config.customFields.map((field) => (
+                        <SortableFieldRow
+                          key={field.id}
+                          field={field}
+                          onUpdate={(updates) => updateCustomField(field.id, updates)}
+                          onRemove={() => removeCustomField(field.id)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              )}
+
               <Button
+                variant="ghost"
                 size="sm"
-                variant="outline"
                 onClick={addCustomField}
-                className="w-full"
+                className="w-full mt-2"
               >
+                <Plus size={16} className="mr-2" aria-hidden="true" />
                 Add Field
               </Button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
