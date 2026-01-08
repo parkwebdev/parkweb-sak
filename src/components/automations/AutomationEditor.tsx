@@ -12,6 +12,7 @@ import { useFlowStore } from '@/stores/automationFlowStore';
 import { FlowEditor } from '@/components/automations/FlowEditor';
 import { FlowToolbar } from '@/components/automations/FlowToolbar';
 import { NodeSidebar } from '@/components/automations/NodeSidebar';
+import { AutomationErrorBoundary } from '@/components/automations/AutomationErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
@@ -90,27 +91,34 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
     );
   }
 
+  const handleErrorReset = useCallback(() => {
+    // Reload automation data on error reset
+    loadFlow(automation.nodes, automation.edges, automation.viewport);
+  }, [automation, loadFlow]);
+
   return (
-    <div className="h-full flex flex-col">
-      {/* Toolbar */}
-      <FlowToolbar
-        automation={automation}
-        isDirty={isDirty}
-        saving={updating}
-        onSave={handleSave}
-        onClose={onClose}
-      />
+    <AutomationErrorBoundary onReset={handleErrorReset}>
+      <div className="h-full flex flex-col">
+        {/* Toolbar */}
+        <FlowToolbar
+          automation={automation}
+          isDirty={isDirty}
+          saving={updating}
+          onSave={handleSave}
+          onClose={onClose}
+        />
 
-      {/* Editor area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Node sidebar */}
-        <NodeSidebar />
+        {/* Editor area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Node sidebar */}
+          <NodeSidebar />
 
-        {/* Flow canvas */}
-        <div className="flex-1">
-          <FlowEditor />
+          {/* Flow canvas */}
+          <div className="flex-1">
+            <FlowEditor />
+          </div>
         </div>
       </div>
-    </div>
+    </AutomationErrorBoundary>
   );
 }

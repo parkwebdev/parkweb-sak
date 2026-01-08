@@ -3181,6 +3181,76 @@ isActive(): boolean
 
 ---
 
+## Automation Hooks
+
+### useAutomations (`src/hooks/useAutomations.ts`)
+
+Provides CRUD operations for automations with real-time updates. Uses `accountOwnerId` for proper data scoping.
+
+```tsx
+import { useAutomations } from '@/hooks/useAutomations';
+
+const { 
+  automations, 
+  loading, 
+  creating,
+  updating,
+  deleting,
+  createAutomation, 
+  updateAutomation,
+  deleteAutomation,
+  getAutomation,
+  refetch 
+} = useAutomations();
+```
+
+**Signature:**
+```tsx
+function useAutomations(): {
+  automations: AutomationListItem[];
+  loading: boolean;
+  creating: boolean;
+  updating: boolean;
+  deleting: boolean;
+  getAutomation: (id: string) => Promise<Automation | null>;
+  createAutomation: (data: CreateAutomationData) => Promise<Automation>;
+  updateAutomation: (updates: Partial<Automation> & { id: string }) => Promise<Automation>;
+  deleteAutomation: (id: string) => Promise<void>;
+  refetch: () => void;
+}
+```
+
+**Usage Example:**
+```tsx
+// Create new automation
+const newAutomation = await createAutomation({
+  name: 'Welcome Message',
+  triggerType: 'event',
+  triggerConfig: { event: 'conversation.started' },
+});
+
+// Update automation
+await updateAutomation({
+  id: automation.id,
+  name: 'Updated Name',
+  nodes: updatedNodes,
+  edges: updatedEdges,
+});
+
+// Delete automation
+await deleteAutomation(automation.id);
+```
+
+**Features:**
+- Real-time subscription for live updates
+- Uses `accountOwnerId` for proper data scoping
+- Integrates with `useAgent()` for agent context
+- Toast notifications on errors
+
+**File**: `src/hooks/useAutomations.ts`
+
+---
+
 ## Related Documentation
 
 - [Database Schema](./DATABASE_SCHEMA.md) - Data fetching patterns
