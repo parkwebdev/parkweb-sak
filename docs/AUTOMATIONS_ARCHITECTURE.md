@@ -1,4 +1,4 @@
-# Pilot Automations Architecture
+# Automations Architecture
 
 > **Version**: 1.0  
 > **Status**: Planning  
@@ -11,23 +11,18 @@ A comprehensive plan for implementing a visual automation/flow builder that will
 
 ## Table of Contents
 
-1. [Executive Summary](#executive-summary)
-2. [Goals & Non-Goals](#goals--non-goals)
-3. [System Architecture](#system-architecture)
-4. [Database Schema](#database-schema)
-5. [Node Types](#node-types)
-6. [Execution Engine](#execution-engine)
-7. [Security Considerations](#security-considerations)
-8. [Type Safety Requirements](#type-safety-requirements)
-9. [Frontend Implementation](#frontend-implementation)
-10. [Migration Strategy](#migration-strategy)
-11. [Implementation Phases](#implementation-phases)
-12. [Testing Strategy](#testing-strategy)
-13. [Performance Considerations](#performance-considerations)
+1. [Overview](#1-overview)
+2. [Database Schema](#2-database-schema)
+3. [Node Types](#3-node-types)
+4. [Execution Engine](#4-execution-engine)
+5. [Security](#5-security)
+6. [Frontend Implementation](#6-frontend-implementation)
+7. [Implementation Phases](#7-implementation-phases-temporary)
+8. [Migration Strategy](#8-migration-strategy)
 
 ---
 
-## Executive Summary
+## 1. Overview
 
 ### Current State
 
@@ -52,11 +47,9 @@ A unified **Automations** system using React Flow to create visual workflows tha
 - Provide visual debugging and testing
 - Support bi-directional AI integration (AI triggers flows, flows trigger AI)
 
----
+### Goals & Non-Goals
 
-## Goals & Non-Goals
-
-### Goals
+#### Goals
 
 | Goal | Description |
 |------|-------------|
@@ -69,7 +62,7 @@ A unified **Automations** system using React Flow to create visual workflows tha
 | **Composability** | Nodes can be chained, branched, and looped |
 | **Migration Path** | Existing tools/webhooks migrate to new system |
 
-### Non-Goals (v1)
+#### Non-Goals (v1)
 
 | Non-Goal | Rationale |
 |----------|-----------|
@@ -79,10 +72,6 @@ A unified **Automations** system using React Flow to create visual workflows tha
 | Real-time streaming | HTTP request/response model initially |
 | Workflow versioning | Track in v2 after core is stable |
 | Marketplace/sharing | Enterprise feature for later |
-
----
-
-## System Architecture
 
 ### High-Level Architecture
 
@@ -106,10 +95,10 @@ A unified **Automations** system using React Flow to create visual workflows tha
 ├────────────────────────────────┼────────────────────────────────────┤
 │   ┌────────────────────────────┴───────────────────────────────┐    │
 │   │                     Database (PostgreSQL)                   │    │
-│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │    │
-│   │  │ automations  │  │ automation_  │  │   automation_    │  │    │
-│   │  │   (flows)    │  │    nodes     │  │   executions     │  │    │
-│   │  └──────────────┘  └──────────────┘  └──────────────────┘  │    │
+│   │  ┌──────────────┐  ┌──────────────────┐                    │    │
+│   │  │ automations  │  │   automation_    │                    │    │
+│   │  │   (flows)    │  │   executions     │                    │    │
+│   │  └──────────────┘  └──────────────────┘                    │    │
 │   └────────────────────────────────────────────────────────────┘    │
 │                                                                      │
 │   ┌────────────────────────────────────────────────────────────┐    │
@@ -138,328 +127,984 @@ A unified **Automations** system using React Flow to create visual workflows tha
 
 ---
 
-## Database Schema
+## 2. Database Schema
 
 ### Tables
 
 #### `automations`
 
-Main automation/workflow definition.
+Stores automation flow definitions.
 
 ```sql
 CREATE TABLE public.automations (
-  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  agent_id uuid NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,  -- Owner for RLS
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  agent_id UUID NOT NULL REFERENCES public.agents(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
   
   -- Metadata
-  name text NOT NULL,
-  description text,
-  icon text,  -- Icon name for display
-  color text,  -- Accent color for display
+  name TEXT NOT NULL,
+  description TEXT,
+  icon TEXT DEFAULT 'Zap',
+  color TEXT DEFAULT 'blue',
   
   -- Status
-  status text NOT NULL DEFAULT 'draft',  -- 'draft' | 'active' | 'paused' | 'error'
-  enabled boolean NOT NULL DEFAULT false,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'error')),
+  enabled BOOLEAN NOT NULL DEFAULT false,
   
-  -- Trigger configuration (denormalized for query efficiency)
-  trigger_type text NOT NULL,  -- 'event' | 'schedule' | 'manual' | 'ai_tool'
-  trigger_config jsonb NOT NULL DEFAULT '{}',
+  -- Trigger configuration
+  trigger_type TEXT NOT NULL CHECK (trigger_type IN (
+    'event',      -- Lead/conversation events
+    'schedule',   -- Cron-based
+    'manual',     -- User-initiated
+    'ai_tool'     -- Called by AI as a tool
+  )),
+  trigger_config JSONB NOT NULL DEFAULT '{}',
   
-  -- React Flow data (serialized graph)
-  nodes jsonb NOT NULL DEFAULT '[]',
-  edges jsonb NOT NULL DEFAULT '[]',
-  viewport jsonb,  -- { x, y, zoom }
+  -- Flow definition (React Flow format)
+  nodes JSONB NOT NULL DEFAULT '[]',
+  edges JSONB NOT NULL DEFAULT '[]',
+  viewport JSONB DEFAULT '{"x": 0, "y": 0, "zoom": 1}',
   
-  -- Execution settings
-  timeout_ms integer DEFAULT 30000,
-  retry_config jsonb DEFAULT '{"maxRetries": 3, "backoffMs": 1000}',
-  
-  -- AI Tool exposure (if trigger_type = 'ai_tool')
-  tool_name text,  -- Function name for AI
-  tool_description text,  -- AI-readable description
-  tool_parameters jsonb,  -- JSON Schema for parameters
+  -- Execution stats
+  execution_count INTEGER NOT NULL DEFAULT 0,
+  last_executed_at TIMESTAMPTZ,
+  last_execution_status TEXT,
   
   -- Timestamps
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  last_executed_at timestamptz,
-  
-  -- Constraints
-  CONSTRAINT valid_status CHECK (status IN ('draft', 'active', 'paused', 'error')),
-  CONSTRAINT valid_trigger_type CHECK (trigger_type IN ('event', 'schedule', 'manual', 'ai_tool')),
-  CONSTRAINT tool_name_required CHECK (
-    trigger_type != 'ai_tool' OR (tool_name IS NOT NULL AND tool_description IS NOT NULL)
-  )
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Indexes
-CREATE INDEX idx_automations_agent ON automations(agent_id);
-CREATE INDEX idx_automations_user ON automations(user_id);
-CREATE INDEX idx_automations_trigger ON automations(trigger_type) WHERE enabled = true;
-CREATE INDEX idx_automations_tool_name ON automations(agent_id, tool_name) WHERE trigger_type = 'ai_tool' AND enabled = true;
+CREATE INDEX idx_automations_agent ON public.automations(agent_id);
+CREATE INDEX idx_automations_user ON public.automations(user_id);
+CREATE INDEX idx_automations_status ON public.automations(status) WHERE enabled = true;
+CREATE INDEX idx_automations_trigger ON public.automations(trigger_type) WHERE enabled = true;
 
--- RLS
-ALTER TABLE automations ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view accessible automations"
-ON automations FOR SELECT
-USING (has_account_access(user_id));
-
-CREATE POLICY "Users can create automations"
-ON automations FOR INSERT
-WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update accessible automations"
-ON automations FOR UPDATE
-USING (has_account_access(user_id));
-
-CREATE POLICY "Users can delete accessible automations"
-ON automations FOR DELETE
-USING (has_account_access(user_id));
+-- Trigger for updated_at
+CREATE TRIGGER update_automations_updated_at
+  BEFORE UPDATE ON public.automations
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at_column();
 ```
 
 #### `automation_executions`
 
-Execution history and logs.
+Stores execution history for debugging and analytics.
 
 ```sql
 CREATE TABLE public.automation_executions (
-  id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  automation_id uuid NOT NULL REFERENCES automations(id) ON DELETE CASCADE,
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  automation_id UUID NOT NULL REFERENCES public.automations(id) ON DELETE CASCADE,
   
-  -- Execution context
-  trigger_type text NOT NULL,
-  trigger_data jsonb,  -- Input data from trigger
-  conversation_id uuid REFERENCES conversations(id) ON DELETE SET NULL,
+  -- Trigger context
+  trigger_type TEXT NOT NULL,
+  trigger_data JSONB,
   
-  -- Status
-  status text NOT NULL DEFAULT 'running',  -- 'running' | 'completed' | 'failed' | 'timeout'
-  
-  -- Timing
-  started_at timestamptz NOT NULL DEFAULT now(),
-  completed_at timestamptz,
-  duration_ms integer,
+  -- Execution state
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN (
+    'pending',
+    'running',
+    'completed',
+    'failed',
+    'cancelled'
+  )),
   
   -- Results
-  output jsonb,  -- Final output data
-  error text,  -- Error message if failed
+  nodes_executed JSONB DEFAULT '[]',
+  variables JSONB DEFAULT '{}',
+  error TEXT,
+  error_node_id TEXT,
   
-  -- Step-by-step log
-  node_logs jsonb NOT NULL DEFAULT '[]',
-  /*
-   * Array of:
-   * {
-   *   nodeId: string,
-   *   nodeName: string,
-   *   nodeType: string,
-   *   status: 'running' | 'completed' | 'failed' | 'skipped',
-   *   startedAt: string,
-   *   completedAt: string,
-   *   input: Record<string, unknown>,
-   *   output: Record<string, unknown>,
-   *   error?: string
-   * }
-   */
+  -- Timing
+  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at TIMESTAMPTZ,
+  duration_ms INTEGER,
   
-  -- Test mode flag
-  test_mode boolean NOT NULL DEFAULT false,
+  -- Flags
+  test_mode BOOLEAN NOT NULL DEFAULT false,
   
-  -- Constraints
-  CONSTRAINT valid_status CHECK (status IN ('running', 'completed', 'failed', 'timeout'))
+  -- Context
+  triggered_by UUID, -- User ID if manual
+  lead_id UUID REFERENCES public.leads(id) ON DELETE SET NULL,
+  conversation_id UUID REFERENCES public.conversations(id) ON DELETE SET NULL
 );
 
 -- Indexes
-CREATE INDEX idx_executions_automation ON automation_executions(automation_id);
-CREATE INDEX idx_executions_status ON automation_executions(status) WHERE status = 'running';
-CREATE INDEX idx_executions_conversation ON automation_executions(conversation_id) WHERE conversation_id IS NOT NULL;
-CREATE INDEX idx_executions_started ON automation_executions(started_at DESC);
-
--- RLS (inherited from automation ownership)
-ALTER TABLE automation_executions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view execution logs"
-ON automation_executions FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM automations a 
-    WHERE a.id = automation_id AND has_account_access(a.user_id)
-  )
-);
-
--- Service role can insert (edge functions)
-CREATE POLICY "Service can insert executions"
-ON automation_executions FOR INSERT
-WITH CHECK (true);  -- Only service role can bypass RLS
-
-CREATE POLICY "Service can update executions"
-ON automation_executions FOR UPDATE
-USING (true);  -- Only service role can bypass RLS
+CREATE INDEX idx_executions_automation ON public.automation_executions(automation_id);
+CREATE INDEX idx_executions_status ON public.automation_executions(status);
+CREATE INDEX idx_executions_started ON public.automation_executions(started_at DESC);
+CREATE INDEX idx_executions_lead ON public.automation_executions(lead_id) WHERE lead_id IS NOT NULL;
 ```
 
-### JSONB Type Definitions
+### RLS Policies
 
-Add to `src/types/metadata.ts`:
+#### `automations` Policies
+
+```sql
+ALTER TABLE public.automations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view automations in their account"
+  ON public.automations FOR SELECT
+  USING (public.has_account_access(user_id));
+
+CREATE POLICY "Users can create automations in their account"
+  ON public.automations FOR INSERT
+  WITH CHECK (
+    public.has_account_access(user_id)
+    AND agent_id IN (
+      SELECT id FROM public.agents 
+      WHERE public.has_account_access(agents.user_id)
+    )
+  );
+
+CREATE POLICY "Users can update automations in their account"
+  ON public.automations FOR UPDATE
+  USING (public.has_account_access(user_id))
+  WITH CHECK (public.has_account_access(user_id));
+
+CREATE POLICY "Users can delete automations in their account"
+  ON public.automations FOR DELETE
+  USING (public.has_account_access(user_id));
+```
+
+#### `automation_executions` Policies
+
+```sql
+ALTER TABLE public.automation_executions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view executions for their automations"
+  ON public.automation_executions FOR SELECT
+  USING (
+    automation_id IN (
+      SELECT id FROM public.automations 
+      WHERE public.has_account_access(user_id)
+    )
+  );
+
+CREATE POLICY "Users can delete executions for their automations"
+  ON public.automation_executions FOR DELETE
+  USING (
+    automation_id IN (
+      SELECT id FROM public.automations 
+      WHERE public.has_account_access(user_id)
+    )
+  );
+```
+
+### DB Select Columns
+
+Add to `src/lib/db-selects.ts`:
 
 ```typescript
-/**
- * Automation node definition (stored in automations.nodes)
- */
-export interface AutomationNode {
-  id: string;
-  type: AutomationNodeType;
-  position: { x: number; y: number };
-  data: AutomationNodeData;
-  measured?: { width: number; height: number };
-}
+export const AUTOMATION_LIST_COLUMNS = `
+  id,
+  agent_id,
+  user_id,
+  name,
+  description,
+  icon,
+  color,
+  status,
+  enabled,
+  trigger_type,
+  trigger_config,
+  execution_count,
+  last_executed_at,
+  last_execution_status,
+  created_at,
+  updated_at
+`;
 
-export type AutomationNodeType = 
-  | 'trigger'
-  | 'action'
-  | 'condition'
-  | 'transform'
-  | 'ai'
-  | 'delay'
-  | 'loop';
+export const AUTOMATION_DETAIL_COLUMNS = `
+  id,
+  agent_id,
+  user_id,
+  name,
+  description,
+  icon,
+  color,
+  status,
+  enabled,
+  trigger_type,
+  trigger_config,
+  nodes,
+  edges,
+  viewport,
+  execution_count,
+  last_executed_at,
+  last_execution_status,
+  created_at,
+  updated_at
+`;
 
-export interface AutomationNodeData {
-  label: string;
-  config: Record<string, unknown>;
-  // Type-specific fields added by each node type
-}
+export const AUTOMATION_EXECUTION_LIST_COLUMNS = `
+  id,
+  automation_id,
+  trigger_type,
+  trigger_data,
+  status,
+  error,
+  error_node_id,
+  started_at,
+  completed_at,
+  duration_ms,
+  test_mode,
+  triggered_by,
+  lead_id,
+  conversation_id
+`;
 
-/**
- * Automation edge definition (stored in automations.edges)
- */
-export interface AutomationEdge {
-  id: string;
-  source: string;
-  target: string;
-  sourceHandle?: string;  // For condition branches
-  targetHandle?: string;
-  animated?: boolean;
-  data?: {
-    condition?: string;  // For condition edges
-  };
-}
+export const AUTOMATION_EXECUTION_DETAIL_COLUMNS = `
+  id,
+  automation_id,
+  trigger_type,
+  trigger_data,
+  status,
+  nodes_executed,
+  variables,
+  error,
+  error_node_id,
+  started_at,
+  completed_at,
+  duration_ms,
+  test_mode,
+  triggered_by,
+  lead_id,
+  conversation_id
+`;
+```
 
-/**
- * Trigger configuration by type
- */
-export interface TriggerConfigEvent {
-  eventType: AutomationEventType;
-  filters?: Record<string, unknown>;
-}
+### Query Keys
 
-export interface TriggerConfigSchedule {
-  cron: string;
-  timezone: string;
-}
+Add to `src/lib/query-keys.ts`:
 
-export interface TriggerConfigAITool {
-  toolName: string;
-  toolDescription: string;
-  parameters: JSONSchema;
-}
+```typescript
+automations: {
+  all: ['automations'] as const,
+  lists: () => [...queryKeys.automations.all, 'list'] as const,
+  list: (agentId: string) => [...queryKeys.automations.lists(), agentId] as const,
+  details: () => [...queryKeys.automations.all, 'detail'] as const,
+  detail: (id: string) => [...queryKeys.automations.details(), id] as const,
+  executions: {
+    all: (automationId: string) => [...queryKeys.automations.detail(automationId), 'executions'] as const,
+    list: (automationId: string, filters?: { status?: string }) => 
+      [...queryKeys.automations.executions.all(automationId), filters] as const,
+    detail: (executionId: string) => 
+      [...queryKeys.automations.all, 'execution', executionId] as const,
+  },
+},
+```
 
-export type AutomationEventType =
-  | 'conversation.created'
-  | 'conversation.closed'
-  | 'conversation.human_takeover'
-  | 'lead.created'
-  | 'lead.updated'
-  | 'lead.stage_changed'
-  | 'booking.created'
-  | 'booking.cancelled'
-  | 'message.received'
-  | 'message.sent';
+### Database Triggers
 
-/**
- * Retry configuration
- */
-export interface AutomationRetryConfig {
-  maxRetries: number;
-  backoffMs: number;
-  backoffMultiplier?: number;
-}
+#### Event-Based Automation Firing
 
-/**
- * Execution node log entry
- */
-export interface AutomationNodeLog {
-  nodeId: string;
-  nodeName: string;
-  nodeType: AutomationNodeType;
-  status: 'running' | 'completed' | 'failed' | 'skipped';
-  startedAt: string;
-  completedAt?: string;
-  durationMs?: number;
-  input?: Record<string, unknown>;
-  output?: Record<string, unknown>;
-  error?: string;
-}
+```sql
+CREATE OR REPLACE FUNCTION public.fire_lead_automations()
+RETURNS TRIGGER AS $$
+DECLARE
+  automation RECORD;
+  trigger_data JSONB;
+BEGIN
+  trigger_data := jsonb_build_object(
+    'event', TG_OP,
+    'table', TG_TABLE_NAME,
+    'old', CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD)::jsonb ELSE NULL END,
+    'new', CASE WHEN TG_OP != 'DELETE' THEN row_to_json(NEW)::jsonb ELSE NULL END,
+    'timestamp', now()
+  );
+
+  FOR automation IN
+    SELECT a.id
+    FROM public.automations a
+    WHERE a.enabled = true
+      AND a.status = 'active'
+      AND a.trigger_type = 'event'
+      AND a.trigger_config->>'event_source' = 'lead'
+      AND (
+        a.trigger_config->>'event_type' = TG_OP
+        OR a.trigger_config->>'event_type' = 'any'
+      )
+      AND a.user_id = COALESCE(NEW.user_id, OLD.user_id)
+  LOOP
+    PERFORM pg_notify(
+      'automation_trigger',
+      jsonb_build_object(
+        'automation_id', automation.id,
+        'trigger_data', trigger_data
+      )::text
+    );
+  END LOOP;
+
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER trigger_lead_automations
+  AFTER INSERT OR UPDATE OR DELETE ON public.leads
+  FOR EACH ROW
+  EXECUTE FUNCTION public.fire_lead_automations();
+```
+
+#### Conversation Event Trigger
+
+```sql
+CREATE OR REPLACE FUNCTION public.fire_conversation_automations()
+RETURNS TRIGGER AS $$
+DECLARE
+  automation RECORD;
+  trigger_data JSONB;
+  owner_id UUID;
+BEGIN
+  SELECT agents.user_id INTO owner_id
+  FROM public.agents
+  WHERE agents.id = COALESCE(NEW.agent_id, OLD.agent_id);
+
+  trigger_data := jsonb_build_object(
+    'event', TG_OP,
+    'table', TG_TABLE_NAME,
+    'old', CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD)::jsonb ELSE NULL END,
+    'new', CASE WHEN TG_OP != 'DELETE' THEN row_to_json(NEW)::jsonb ELSE NULL END,
+    'timestamp', now()
+  );
+
+  FOR automation IN
+    SELECT a.id
+    FROM public.automations a
+    WHERE a.enabled = true
+      AND a.status = 'active'
+      AND a.trigger_type = 'event'
+      AND a.trigger_config->>'event_source' = 'conversation'
+      AND (
+        a.trigger_config->>'event_type' = TG_OP
+        OR a.trigger_config->>'event_type' = 'any'
+      )
+      AND a.user_id = owner_id
+  LOOP
+    PERFORM pg_notify(
+      'automation_trigger',
+      jsonb_build_object(
+        'automation_id', automation.id,
+        'trigger_data', trigger_data
+      )::text
+    );
+  END LOOP;
+
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER trigger_conversation_automations
+  AFTER INSERT OR UPDATE ON public.conversations
+  FOR EACH ROW
+  EXECUTE FUNCTION public.fire_conversation_automations();
+```
+
+#### Execution Stats Update
+
+```sql
+CREATE OR REPLACE FUNCTION public.update_automation_stats()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status IN ('completed', 'failed') AND OLD.status = 'running' THEN
+    UPDATE public.automations
+    SET 
+      execution_count = execution_count + 1,
+      last_executed_at = NEW.completed_at,
+      last_execution_status = NEW.status
+    WHERE id = NEW.automation_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER trigger_update_automation_stats
+  AFTER UPDATE ON public.automation_executions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_automation_stats();
+```
+
+#### Cleanup Job
+
+```sql
+CREATE OR REPLACE FUNCTION public.cleanup_old_executions()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM public.automation_executions
+  WHERE completed_at < now() - INTERVAL '30 days'
+    AND status IN ('completed', 'cancelled');
+    
+  DELETE FROM public.automation_executions
+  WHERE completed_at < now() - INTERVAL '7 days'
+    AND status = 'failed';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Schedule: SELECT cron.schedule('cleanup-executions', '0 3 * * *', 'SELECT public.cleanup_old_executions()');
 ```
 
 ---
 
-## Node Types
+## 3. Node Types
 
-### 1. Trigger Nodes
+### Node Categories
 
-Entry points for automation execution.
+| Category | Purpose | Nodes |
+|----------|---------|-------|
+| Triggers | Start automation | Event, Schedule, Manual, AI Tool |
+| Actions | Perform operations | HTTP Request, Send Email, Update Lead, Create Booking |
+| Logic | Control flow | Condition, Switch, Loop, Delay, Stop |
+| Transform | Data manipulation | Set Variable, Map Data, Filter Array, Aggregate |
+| AI | AI operations | Generate Text, Classify, Extract |
 
-| Type | Description | Config |
-|------|-------------|--------|
-| **Event Trigger** | Fires on database/system events | `{ eventType, filters }` |
-| **Schedule Trigger** | Cron-based execution | `{ cron, timezone }` |
-| **Manual Trigger** | Button-click execution | `{ }` |
-| **AI Tool Trigger** | Exposed as AI function | `{ toolName, description, parameters }` |
+### Base Node Interface
 
-### 2. Action Nodes
+```typescript
+// src/types/automations.ts
 
-Perform operations.
+import type { Node, Edge } from '@xyflow/react';
 
-| Type | Description | Config |
-|------|-------------|--------|
-| **HTTP Request** | Call external API | `{ url, method, headers, body, auth }` |
-| **Send Email** | Send via Resend | `{ to, subject, template, variables }` |
-| **Send SMS** | Send via Twilio (future) | `{ to, message }` |
-| **Update Lead** | Modify lead data | `{ leadId, updates }` |
-| **Create Lead** | Create new lead | `{ name, email, phone, data }` |
-| **Update Conversation** | Modify conversation | `{ conversationId, updates }` |
-| **AI Generate** | Generate text with AI | `{ prompt, model, maxTokens }` |
-| **Notify Team** | Send in-app notification | `{ message, type }` |
+export interface BaseNodeData {
+  label: string;
+  description?: string;
+  disabled?: boolean;
+}
 
-### 3. Logic Nodes
+export type AutomationNodeType =
+  // Triggers
+  | 'trigger-event'
+  | 'trigger-schedule'
+  | 'trigger-manual'
+  | 'trigger-ai-tool'
+  // Actions
+  | 'action-http'
+  | 'action-email'
+  | 'action-update-lead'
+  | 'action-create-booking'
+  | 'action-send-message'
+  // Logic
+  | 'logic-condition'
+  | 'logic-switch'
+  | 'logic-loop'
+  | 'logic-delay'
+  | 'logic-stop'
+  // Transform
+  | 'transform-set-variable'
+  | 'transform-map'
+  | 'transform-filter'
+  | 'transform-aggregate'
+  // AI
+  | 'ai-generate'
+  | 'ai-classify'
+  | 'ai-extract';
 
-Control flow.
+export type AutomationNode = Node<AutomationNodeData, AutomationNodeType>;
 
-| Type | Description | Config |
-|------|-------------|--------|
-| **Condition** | If/else branching | `{ conditions: ConditionGroup[] }` |
-| **Switch** | Multi-branch by value | `{ field, cases }` |
-| **Loop** | Iterate over array | `{ collection, itemVar }` |
-| **Delay** | Wait before continuing | `{ durationMs }` |
-| **Stop** | End execution | `{ output }` |
+export type AutomationEdge = Edge<{
+  condition?: string;
+  label?: string;
+}>;
+```
 
-### 4. Transform Nodes
+### Trigger Nodes
 
-Data manipulation.
+#### Event Trigger
 
-| Type | Description | Config |
-|------|-------------|--------|
-| **Set Variable** | Define variables | `{ variables: Record<string, expression> }` |
-| **Map Data** | Transform object shape | `{ mapping }` |
-| **Filter Array** | Filter items | `{ condition }` |
-| **Aggregate** | Reduce/summarize | `{ operation, field }` |
+```typescript
+import { z } from 'zod';
+
+export const eventSourceSchema = z.enum(['lead', 'conversation', 'booking', 'message']);
+export const eventTypeSchema = z.enum(['INSERT', 'UPDATE', 'DELETE', 'any']);
+
+export const triggerEventConfigSchema = z.object({
+  type: z.literal('trigger-event'),
+  eventSource: eventSourceSchema,
+  eventType: eventTypeSchema,
+  conditions: z.array(z.object({
+    field: z.string().min(1),
+    operator: z.enum(['equals', 'not_equals', 'contains', 'gt', 'lt', 'gte', 'lte', 'is_null', 'is_not_null']),
+    value: z.unknown().optional(),
+  })).optional(),
+});
+
+export type TriggerEventConfig = z.infer<typeof triggerEventConfigSchema>;
+
+export interface TriggerEventNodeData extends BaseNodeData {
+  config: TriggerEventConfig;
+}
+```
+
+#### Schedule Trigger
+
+```typescript
+export const scheduleFrequencySchema = z.enum([
+  'every_minute', 'every_5_minutes', 'every_15_minutes', 'every_30_minutes',
+  'hourly', 'daily', 'weekly', 'monthly', 'custom',
+]);
+
+export const triggerScheduleConfigSchema = z.object({
+  type: z.literal('trigger-schedule'),
+  frequency: scheduleFrequencySchema,
+  cronExpression: z.string().optional(),
+  timezone: z.string().default('UTC'),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+});
+
+export type TriggerScheduleConfig = z.infer<typeof triggerScheduleConfigSchema>;
+
+export interface TriggerScheduleNodeData extends BaseNodeData {
+  config: TriggerScheduleConfig;
+}
+```
+
+#### Manual Trigger
+
+```typescript
+export const triggerManualConfigSchema = z.object({
+  type: z.literal('trigger-manual'),
+  requireConfirmation: z.boolean().default(false),
+  confirmationMessage: z.string().optional(),
+  inputFields: z.array(z.object({
+    name: z.string().min(1),
+    label: z.string().min(1),
+    type: z.enum(['text', 'number', 'boolean', 'select']),
+    required: z.boolean().default(false),
+    options: z.array(z.string()).optional(),
+  })).optional(),
+});
+
+export type TriggerManualConfig = z.infer<typeof triggerManualConfigSchema>;
+
+export interface TriggerManualNodeData extends BaseNodeData {
+  config: TriggerManualConfig;
+}
+```
+
+#### AI Tool Trigger
+
+```typescript
+export const triggerAIToolConfigSchema = z.object({
+  type: z.literal('trigger-ai-tool'),
+  toolName: z.string().min(1).max(64).regex(/^[a-z_][a-z0-9_]*$/, 
+    'Tool name must be lowercase with underscores'),
+  toolDescription: z.string().min(10).max(500),
+  parameters: z.array(z.object({
+    name: z.string().min(1),
+    type: z.enum(['string', 'number', 'boolean', 'array', 'object']),
+    description: z.string().min(1),
+    required: z.boolean().default(false),
+  })),
+  returnDescription: z.string().optional(),
+});
+
+export type TriggerAIToolConfig = z.infer<typeof triggerAIToolConfigSchema>;
+
+export interface TriggerAIToolNodeData extends BaseNodeData {
+  config: TriggerAIToolConfig;
+}
+```
+
+### Action Nodes
+
+#### HTTP Request
+
+```typescript
+export const httpMethodSchema = z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+export const actionHttpConfigSchema = z.object({
+  type: z.literal('action-http'),
+  method: httpMethodSchema,
+  url: z.string().url(),
+  headers: z.record(z.string()).optional(),
+  body: z.string().optional(),
+  bodyType: z.enum(['json', 'form', 'raw']).default('json'),
+  timeout: z.number().int().min(1000).max(30000).default(10000),
+  retryCount: z.number().int().min(0).max(3).default(0),
+  retryDelay: z.number().int().min(1000).max(60000).default(1000),
+  successStatusCodes: z.array(z.number().int()).default([200, 201, 202, 204]),
+  outputVariable: z.string().optional(),
+});
+
+export type ActionHttpConfig = z.infer<typeof actionHttpConfigSchema>;
+
+export interface ActionHttpNodeData extends BaseNodeData {
+  config: ActionHttpConfig;
+}
+```
+
+#### Send Email
+
+```typescript
+export const actionEmailConfigSchema = z.object({
+  type: z.literal('action-email'),
+  to: z.string().min(1),
+  subject: z.string().min(1).max(200),
+  body: z.string().min(1),
+  bodyType: z.enum(['text', 'html']).default('html'),
+  cc: z.string().optional(),
+  bcc: z.string().optional(),
+  replyTo: z.string().optional(),
+  templateId: z.string().uuid().optional(),
+});
+
+export type ActionEmailConfig = z.infer<typeof actionEmailConfigSchema>;
+
+export interface ActionEmailNodeData extends BaseNodeData {
+  config: ActionEmailConfig;
+}
+```
+
+#### Update Lead
+
+```typescript
+export const actionUpdateLeadConfigSchema = z.object({
+  type: z.literal('action-update-lead'),
+  leadId: z.string(),
+  updates: z.record(z.unknown()),
+  createIfNotExists: z.boolean().default(false),
+});
+
+export type ActionUpdateLeadConfig = z.infer<typeof actionUpdateLeadConfigSchema>;
+
+export interface ActionUpdateLeadNodeData extends BaseNodeData {
+  config: ActionUpdateLeadConfig;
+}
+```
+
+#### Create Booking
+
+```typescript
+export const actionCreateBookingConfigSchema = z.object({
+  type: z.literal('action-create-booking'),
+  title: z.string().min(1).max(200),
+  description: z.string().optional(),
+  startTime: z.string(),
+  duration: z.number().int().min(5).max(480),
+  locationId: z.string().uuid().optional(),
+  visitorName: z.string().optional(),
+  visitorEmail: z.string().optional(),
+  visitorPhone: z.string().optional(),
+  leadId: z.string().optional(),
+});
+
+export type ActionCreateBookingConfig = z.infer<typeof actionCreateBookingConfigSchema>;
+
+export interface ActionCreateBookingNodeData extends BaseNodeData {
+  config: ActionCreateBookingConfig;
+}
+```
+
+### Logic Nodes
+
+#### Condition
+
+```typescript
+export const conditionOperatorSchema = z.enum([
+  'equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with',
+  'gt', 'gte', 'lt', 'lte', 'is_empty', 'is_not_empty', 'is_null', 'is_not_null', 'matches_regex',
+]);
+
+export const conditionRuleSchema = z.object({
+  field: z.string().min(1),
+  operator: conditionOperatorSchema,
+  value: z.unknown().optional(),
+});
+
+export const logicConditionConfigSchema = z.object({
+  type: z.literal('logic-condition'),
+  rules: z.array(conditionRuleSchema).min(1),
+  logic: z.enum(['and', 'or']).default('and'),
+});
+
+export type LogicConditionConfig = z.infer<typeof logicConditionConfigSchema>;
+
+export interface LogicConditionNodeData extends BaseNodeData {
+  config: LogicConditionConfig;
+}
+```
+
+#### Switch
+
+```typescript
+export const switchCaseSchema = z.object({
+  label: z.string().min(1),
+  value: z.unknown(),
+  handleId: z.string(),
+});
+
+export const logicSwitchConfigSchema = z.object({
+  type: z.literal('logic-switch'),
+  expression: z.string().min(1),
+  cases: z.array(switchCaseSchema).min(1),
+  defaultHandleId: z.string(),
+});
+
+export type LogicSwitchConfig = z.infer<typeof logicSwitchConfigSchema>;
+
+export interface LogicSwitchNodeData extends BaseNodeData {
+  config: LogicSwitchConfig;
+}
+```
+
+#### Loop
+
+```typescript
+export const logicLoopConfigSchema = z.object({
+  type: z.literal('logic-loop'),
+  arrayExpression: z.string().min(1),
+  itemVariable: z.string().min(1).default('item'),
+  indexVariable: z.string().min(1).default('index'),
+  maxIterations: z.number().int().min(1).max(1000).default(100),
+  continueOnError: z.boolean().default(false),
+});
+
+export type LogicLoopConfig = z.infer<typeof logicLoopConfigSchema>;
+
+export interface LogicLoopNodeData extends BaseNodeData {
+  config: LogicLoopConfig;
+}
+```
+
+#### Delay
+
+```typescript
+export const delayUnitSchema = z.enum(['seconds', 'minutes', 'hours', 'days']);
+
+export const logicDelayConfigSchema = z.object({
+  type: z.literal('logic-delay'),
+  duration: z.number().int().min(1),
+  unit: delayUnitSchema,
+  maxDelay: z.number().int().optional(),
+});
+
+export type LogicDelayConfig = z.infer<typeof logicDelayConfigSchema>;
+
+export interface LogicDelayNodeData extends BaseNodeData {
+  config: LogicDelayConfig;
+}
+```
+
+#### Stop
+
+```typescript
+export const logicStopConfigSchema = z.object({
+  type: z.literal('logic-stop'),
+  status: z.enum(['success', 'failure', 'cancelled']).default('success'),
+  message: z.string().optional(),
+  outputVariable: z.string().optional(),
+});
+
+export type LogicStopConfig = z.infer<typeof logicStopConfigSchema>;
+
+export interface LogicStopNodeData extends BaseNodeData {
+  config: LogicStopConfig;
+}
+```
+
+### Transform Nodes
+
+#### Set Variable
+
+```typescript
+export const transformSetVariableConfigSchema = z.object({
+  type: z.literal('transform-set-variable'),
+  variables: z.array(z.object({
+    name: z.string().min(1).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/),
+    value: z.unknown(),
+    type: z.enum(['string', 'number', 'boolean', 'object', 'array']).optional(),
+  })).min(1),
+});
+
+export type TransformSetVariableConfig = z.infer<typeof transformSetVariableConfigSchema>;
+
+export interface TransformSetVariableNodeData extends BaseNodeData {
+  config: TransformSetVariableConfig;
+}
+```
+
+#### Map Data
+
+```typescript
+export const transformMapConfigSchema = z.object({
+  type: z.literal('transform-map'),
+  inputArray: z.string().min(1),
+  outputVariable: z.string().min(1),
+  mapping: z.record(z.string()),
+});
+
+export type TransformMapConfig = z.infer<typeof transformMapConfigSchema>;
+
+export interface TransformMapNodeData extends BaseNodeData {
+  config: TransformMapConfig;
+}
+```
+
+#### Filter Array
+
+```typescript
+export const transformFilterConfigSchema = z.object({
+  type: z.literal('transform-filter'),
+  inputArray: z.string().min(1),
+  outputVariable: z.string().min(1),
+  condition: z.string().min(1),
+});
+
+export type TransformFilterConfig = z.infer<typeof transformFilterConfigSchema>;
+
+export interface TransformFilterNodeData extends BaseNodeData {
+  config: TransformFilterConfig;
+}
+```
+
+### AI Nodes
+
+#### AI Generate
+
+```typescript
+export const aiGenerateConfigSchema = z.object({
+  type: z.literal('ai-generate'),
+  prompt: z.string().min(1),
+  model: z.enum(['gpt-4o-mini', 'gpt-4o', 'claude-3-haiku']).default('gpt-4o-mini'),
+  maxTokens: z.number().int().min(1).max(4096).default(500),
+  temperature: z.number().min(0).max(2).default(0.7),
+  outputVariable: z.string().min(1),
+  outputFormat: z.enum(['text', 'json']).default('text'),
+  jsonSchema: z.record(z.unknown()).optional(),
+});
+
+export type AIGenerateConfig = z.infer<typeof aiGenerateConfigSchema>;
+
+export interface AIGenerateNodeData extends BaseNodeData {
+  config: AIGenerateConfig;
+}
+```
+
+#### AI Classify
+
+```typescript
+export const aiClassifyConfigSchema = z.object({
+  type: z.literal('ai-classify'),
+  input: z.string().min(1),
+  categories: z.array(z.object({
+    name: z.string().min(1),
+    description: z.string().optional(),
+  })).min(2),
+  outputVariable: z.string().min(1),
+  includeConfidence: z.boolean().default(false),
+});
+
+export type AIClassifyConfig = z.infer<typeof aiClassifyConfigSchema>;
+
+export interface AIClassifyNodeData extends BaseNodeData {
+  config: AIClassifyConfig;
+}
+```
+
+#### AI Extract
+
+```typescript
+export const aiExtractConfigSchema = z.object({
+  type: z.literal('ai-extract'),
+  input: z.string().min(1),
+  fields: z.array(z.object({
+    name: z.string().min(1),
+    type: z.enum(['string', 'number', 'boolean', 'array']),
+    description: z.string().min(1),
+    required: z.boolean().default(false),
+  })).min(1),
+  outputVariable: z.string().min(1),
+});
+
+export type AIExtractConfig = z.infer<typeof aiExtractConfigSchema>;
+
+export interface AIExtractNodeData extends BaseNodeData {
+  config: AIExtractConfig;
+}
+```
+
+### Node Executor Interface
+
+```typescript
+export interface ExecutionContext {
+  automationId: string;
+  executionId: string;
+  agentId: string;
+  userId: string;
+  variables: Record<string, unknown>;
+  trigger: { type: string; data: unknown };
+  testMode: boolean;
+}
+
+export interface NodeExecutionResult {
+  success: boolean;
+  output?: unknown;
+  error?: string;
+  nextHandleId?: string;
+  variables?: Record<string, unknown>;
+  duration_ms: number;
+}
+
+export type NodeExecutor<T extends BaseNodeData> = (
+  node: Node<T>,
+  context: ExecutionContext,
+) => Promise<NodeExecutionResult>;
+
+export type NodeExecutorRegistry = {
+  [K in AutomationNodeType]: NodeExecutor<AutomationNodeData>;
+};
+```
+
+### Variable Resolution
+
+```typescript
+export function resolveTemplate(
+  template: string,
+  variables: Record<string, unknown>,
+): string;
+
+export interface VariableNamespaces {
+  trigger: { type: string; data: unknown; timestamp: string };
+  lead?: LeadData;
+  conversation?: ConversationData;
+  booking?: BookingData;
+  env: { now: string; today: string; agent_id: string };
+  [customVariable: string]: unknown;
+}
+```
+
+### UntitledUI Icons
+
+| Node Type | Icon Import |
+|-----------|-------------|
+| `trigger-event` | `Zap` |
+| `trigger-schedule` | `Clock` |
+| `trigger-manual` | `PlayCircle` |
+| `trigger-ai-tool` | `Stars02` |
+| `action-http` | `Globe02` |
+| `action-email` | `Mail01` |
+| `action-update-lead` | `User01` |
+| `action-create-booking` | `Calendar` |
+| `action-send-message` | `MessageSquare01` |
+| `logic-condition` | `GitBranch01` |
+| `logic-switch` | `SwitchHorizontal01` |
+| `logic-loop` | `RefreshCw01` |
+| `logic-delay` | `ClockStopwatch` |
+| `logic-stop` | `StopCircle` |
+| `transform-set-variable` | `Variable` |
+| `transform-map` | `Dataflow03` |
+| `transform-filter` | `FilterLines` |
+| `transform-aggregate` | `BarChart01` |
+| `ai-generate` | `Stars02` |
+| `ai-classify` | `Tag01` |
+| `ai-extract` | `FileSearch01` |
 
 ---
 
-## Execution Engine
+## 4. Execution Engine
 
-### Edge Function: `execute-automation`
-
-Core execution engine implemented as a Supabase Edge Function.
+### Edge Function Structure
 
 ```typescript
 // supabase/functions/execute-automation/index.ts
@@ -491,8 +1136,6 @@ interface ExecutionContext {
 
 ### Node Executor Pattern
 
-Each node type has a dedicated executor:
-
 ```typescript
 // supabase/functions/_shared/automation/executors/index.ts
 
@@ -506,17 +1149,13 @@ interface NodeExecutor<TConfig = unknown, TOutput = unknown> {
   validate?: (config: TConfig) => ValidationResult;
 }
 
-// Registry pattern
 const executors = new Map<string, NodeExecutor>();
 executors.set('http-request', httpRequestExecutor);
 executors.set('condition', conditionExecutor);
 executors.set('ai-generate', aiGenerateExecutor);
-// ...
 ```
 
 ### Variable Resolution
-
-Variables use a template syntax for dynamic values:
 
 ```typescript
 // Expression: "Hello {{lead.name}}, your status is {{lead.status}}"
@@ -535,317 +1174,643 @@ function resolveTemplate(
 
 ---
 
-## Security Considerations
+## 5. Security
 
-### 1. SSRF Protection
+### SSRF Protection
 
-All HTTP request nodes must validate URLs:
+#### Blocked URL Patterns
 
 ```typescript
-// supabase/functions/_shared/automation/security/url-validator.ts
+// supabase/functions/_shared/url-validator.ts
 
-const BLOCKED_PATTERNS = [
-  /^https?:\/\/localhost/i,
-  /^https?:\/\/127\./,
-  /^https?:\/\/0\./,
-  /^https?:\/\/10\./,
-  /^https?:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\./,
-  /^https?:\/\/192\.168\./,
-  /^https?:\/\/169\.254\./,  // AWS metadata
-  /^https?:\/\/\[::1\]/,
-  /^https?:\/\/metadata\.google/,
+const BLOCKED_HOSTS = [
+  'localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]',
+  '169.254.', '169.254.169.254',
+  'metadata.google.internal', 'metadata.gke.internal',
+  'supabase.co', 'supabase.com', 'supabase.net',
 ];
 
-export function validateUrl(url: string): ValidationResult {
-  for (const pattern of BLOCKED_PATTERNS) {
-    if (pattern.test(url)) {
-      return { valid: false, error: 'Internal/private URLs are not allowed' };
+const BLOCKED_IP_RANGES = [
+  { start: '10.0.0.0', end: '10.255.255.255' },
+  { start: '172.16.0.0', end: '172.31.255.255' },
+  { start: '192.168.0.0', end: '192.168.255.255' },
+  { start: '127.0.0.0', end: '127.255.255.255' },
+  { start: '169.254.0.0', end: '169.254.255.255' },
+  { start: '100.64.0.0', end: '100.127.255.255' },
+];
+
+const BLOCKED_PROTOCOLS = ['file:', 'ftp:', 'data:', 'javascript:'];
+
+export interface UrlValidationResult {
+  valid: boolean;
+  error?: string;
+  sanitizedUrl?: string;
+}
+
+export function validateUrl(url: string): UrlValidationResult {
+  try {
+    const parsed = new URL(url);
+
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return { valid: false, error: `Protocol ${parsed.protocol} is not allowed.` };
     }
+
+    const hostname = parsed.hostname.toLowerCase();
+    for (const blocked of BLOCKED_HOSTS) {
+      if (hostname === blocked || hostname.endsWith(`.${blocked}`)) {
+        return { valid: false, error: `Host ${hostname} is not allowed.` };
+      }
+    }
+
+    if (isPrivateIP(hostname)) {
+      return { valid: false, error: 'Private IP addresses are not allowed.' };
+    }
+
+    return { valid: true, sanitizedUrl: parsed.toString() };
+  } catch {
+    return { valid: false, error: 'Invalid URL format.' };
   }
-  return { valid: true };
 }
 ```
 
-### 2. Rate Limiting
-
-Protect against runaway automations:
+### Rate Limiting
 
 ```typescript
 const RATE_LIMITS = {
-  maxExecutionsPerMinute: 60,
-  maxNodesPerExecution: 50,
-  maxExecutionDurationMs: 30000,
-  maxHttpRequestsPerExecution: 10,
-};
+  event: { maxExecutionsPerMinute: 60, maxExecutionsPerHour: 1000, maxConcurrent: 10 },
+  schedule: { maxExecutionsPerMinute: 10, maxExecutionsPerHour: 100, maxConcurrent: 5 },
+  manual: { maxExecutionsPerMinute: 30, maxExecutionsPerHour: 500, maxConcurrent: 5 },
+  ai_tool: { maxExecutionsPerMinute: 100, maxExecutionsPerHour: 2000, maxConcurrent: 20 },
+} as const;
+
+interface RateLimitCheck {
+  allowed: boolean;
+  reason?: string;
+  retryAfter?: number;
+}
+
+async function checkRateLimit(
+  automationId: string,
+  triggerType: string,
+  supabaseClient: SupabaseClient
+): Promise<RateLimitCheck> {
+  const limits = RATE_LIMITS[triggerType as keyof typeof RATE_LIMITS];
+  if (!limits) return { allowed: true };
+
+  const now = new Date();
+  const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+  // Check concurrent, per-minute, and per-hour limits
+  // Return { allowed: false, reason, retryAfter } if exceeded
+}
 ```
 
-### 3. RLS Policies
-
-All tables use `has_account_access()` pattern:
-
-- Automations: User can only access their own or team's
-- Executions: Inherited from automation ownership
-- No cross-tenant data access
-
-### 4. Input Validation
-
-All node configs validated with Zod schemas:
+### Input Validation
 
 ```typescript
-const httpRequestConfigSchema = z.object({
-  url: z.string().url(),
-  method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
-  headers: z.record(z.string()).optional(),
-  body: z.unknown().optional(),
-  auth: z.discriminatedUnion('type', [
-    z.object({ type: z.literal('none') }),
-    z.object({ type: z.literal('bearer'), token: z.string() }),
-    z.object({ type: z.literal('basic'), username: z.string(), password: z.string() }),
-    z.object({ type: z.literal('api_key'), key: z.string(), header: z.string() }),
-  ]).optional(),
-  timeoutMs: z.number().min(1000).max(30000).optional(),
+// supabase/functions/_shared/automation-schemas.ts
+
+import { z } from 'zod';
+
+export const executeAutomationRequestSchema = z.object({
+  automationId: z.string().uuid(),
+  triggerData: z.record(z.unknown()).optional(),
+  testMode: z.boolean().default(false),
+  triggeredBy: z.string().uuid().optional(),
 });
-```
 
-### 5. Secret Management
+export const variableNameSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Invalid variable name');
 
-Sensitive values stored as references:
+export function validateTemplateString(template: string): boolean {
+  const templateRegex = /\{\{([a-zA-Z_][a-zA-Z0-9_.]*)\}\}/g;
+  const withoutTemplates = template.replace(templateRegex, '');
 
-```typescript
-// Node config stores reference, not value
-{
-  auth: {
-    type: 'bearer',
-    token: '{{secrets.EXTERNAL_API_KEY}}'  // Reference
+  if (withoutTemplates.includes('{{') || withoutTemplates.includes('}}')) {
+    return false;
   }
+
+  const dangerousPatterns = [
+    /eval\s*\(/i, /function\s*\(/i, /new\s+Function/i,
+    /<script/i, /javascript:/i, /on\w+\s*=/i,
+  ];
+
+  return !dangerousPatterns.some((pattern) => pattern.test(template));
+}
+```
+
+### Variable Resolution Security
+
+```typescript
+// supabase/functions/_shared/template-resolver.ts
+
+export function resolveTemplate(
+  template: string,
+  variables: Record<string, unknown>,
+  options: { maxDepth?: number; allowedNamespaces?: string[] } = {}
+): string {
+  const { maxDepth = 5, allowedNamespaces } = options;
+
+  if (!validateTemplateString(template)) {
+    throw new Error('Template contains invalid patterns');
+  }
+
+  return template.replace(/\{\{([a-zA-Z_][a-zA-Z0-9_.]*)\}\}/g, (match, path) => {
+    if (allowedNamespaces) {
+      const namespace = path.split('.')[0];
+      if (!allowedNamespaces.includes(namespace)) return match;
+    }
+
+    const value = getNestedValue(variables, path, maxDepth);
+    if (value === undefined) return match;
+
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+  });
 }
 
-// Edge function resolves from environment
-const token = Deno.env.get('EXTERNAL_API_KEY');
+function getNestedValue(obj: Record<string, unknown>, path: string, maxDepth: number): unknown {
+  const parts = path.split('.');
+  if (parts.length > maxDepth) throw new Error(`Path exceeds maximum depth of ${maxDepth}`);
+
+  let current: unknown = obj;
+
+  for (const part of parts) {
+    if (current === null || current === undefined) return undefined;
+    if (typeof current !== 'object') return undefined;
+    if (part === '__proto__' || part === 'constructor' || part === 'prototype') {
+      throw new Error('Invalid path: prototype access not allowed');
+    }
+    current = (current as Record<string, unknown>)[part];
+  }
+
+  return current;
+}
 ```
+
+### Secret Management
+
+```typescript
+// Secrets are referenced, not stored in configs
+const httpConfig = {
+  type: 'action-http',
+  url: 'https://api.example.com',
+  headers: { 'Authorization': '{{secrets.API_KEY}}' },
+};
+
+async function resolveSecrets(
+  config: Record<string, unknown>,
+  agentId: string,
+  supabaseClient: SupabaseClient
+): Promise<Record<string, unknown>> {
+  const secretPattern = /\{\{secrets\.([A-Z_][A-Z0-9_]*)\}\}/g;
+  const configStr = JSON.stringify(config);
+  const matches = [...configStr.matchAll(secretPattern)];
+
+  if (matches.length === 0) return config;
+
+  const secretNames = [...new Set(matches.map((m) => m[1]))];
+  const secrets = await fetchSecrets(agentId, secretNames, supabaseClient);
+
+  let resolved = configStr;
+  for (const [placeholder, name] of matches) {
+    const value = secrets[name];
+    if (!value) throw new Error(`Secret ${name} not found`);
+    resolved = resolved.replace(placeholder, value);
+  }
+
+  return JSON.parse(resolved);
+}
+```
+
+### Edge Function Error Handling
+
+```typescript
+// supabase/functions/_shared/cors.ts
+export const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+};
+
+// supabase/functions/_shared/errors.ts
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'An unknown error occurred';
+}
+
+export function createErrorResponse(status: number, message: string, details?: unknown): Response {
+  return new Response(
+    JSON.stringify({ error: message, ...(details ? { details } : {}) }),
+    { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+```
+
+### Audit Logging
+
+```typescript
+async function logSecurityEvent(
+  supabaseClient: SupabaseClient,
+  event: {
+    action: string;
+    resourceType: string;
+    resourceId: string;
+    userId?: string;
+    success: boolean;
+    details?: Record<string, unknown>;
+  }
+): Promise<void> {
+  await supabaseClient.from('security_logs').insert({
+    action: event.action,
+    resource_type: event.resourceType,
+    resource_id: event.resourceId,
+    user_id: event.userId,
+    success: event.success,
+    details: event.details,
+  });
+}
+```
+
+### Security Checklist
+
+- [ ] All node configs validated with Zod schemas
+- [ ] SSRF protection tested with private IPs and cloud metadata URLs
+- [ ] Rate limiting configured per trigger type
+- [ ] Secret references working (no plaintext secrets in configs)
+- [ ] RLS policies tested for all operations
+- [ ] Error messages don't leak sensitive information
+- [ ] Template resolution prevents code injection
+- [ ] Audit logging captures security events
+- [ ] CORS headers properly configured
+- [ ] Request timeouts configured on all HTTP calls
 
 ---
 
-## Type Safety Requirements
-
-### TypeScript Standards
-
-Following project standards from `DEVELOPMENT_STANDARDS.md`:
-
-1. **No `: any`** - All parameters explicitly typed
-2. **`catch (error: unknown)`** - Type-safe error handling
-3. **Shared types in `src/types/`** - Canonical metadata types
-4. **`getErrorMessage()`** - Consistent error extraction
-
-### Frontend Types
-
-```typescript
-// src/types/automations.ts
-
-import type { Tables } from '@/integrations/supabase/types';
-import type { Node, Edge } from '@xyflow/react';
-
-export type Automation = Tables<'automations'>;
-export type AutomationExecution = Tables<'automation_executions'>;
-
-// React Flow node with typed data
-export interface AutomationFlowNode extends Node {
-  type: AutomationNodeType;
-  data: AutomationNodeData;
-}
-
-// React Flow edge with typed data
-export interface AutomationFlowEdge extends Edge {
-  data?: {
-    condition?: string;
-    label?: string;
-  };
-}
-```
-
-### Edge Function Types
-
-```typescript
-// supabase/functions/_shared/types/automations.ts
-
-export interface ExecutionContext {
-  automationId: string;
-  executionId: string;
-  variables: Map<string, unknown>;
-  conversationId?: string;
-  testMode: boolean;
-  startedAt: number;
-  logger: Logger;
-}
-
-export interface NodeResult<T = unknown> {
-  success: boolean;
-  output?: T;
-  error?: string;
-  durationMs: number;
-}
-```
-
----
-
-## Frontend Implementation
+## 6. Frontend Implementation
 
 ### File Structure
 
 ```
 src/
 ├── pages/
-│   └── Automations.tsx              # Main page component
+│   └── Automations.tsx                    # Main page (~150 lines)
 │
-├── components/
-│   └── automations/
-│       ├── FlowEditor.tsx           # React Flow wrapper
-│       ├── NodeSidebar.tsx          # Draggable node palette
-│       ├── ExecutionPanel.tsx       # Test & execution logs
-│       ├── AutomationHeader.tsx     # Name, status, actions
-│       │
-│       ├── nodes/                   # Custom node components
-│       │   ├── index.ts             # nodeTypes export
-│       │   ├── BaseNode.tsx         # Shared node wrapper
-│       │   ├── TriggerNode.tsx      # Event/schedule/manual triggers
-│       │   ├── ActionNode.tsx       # HTTP, email, database actions
-│       │   ├── ConditionNode.tsx    # If/else branching
-│       │   ├── TransformNode.tsx    # Data transformation
-│       │   ├── AINode.tsx           # AI generation
-│       │   └── DelayNode.tsx        # Wait/delay
-│       │
-│       ├── editors/                 # Node config editors
-│       │   ├── HttpRequestEditor.tsx
-│       │   ├── ConditionEditor.tsx
-│       │   ├── TriggerEditor.tsx
-│       │   └── ...
-│       │
-│       └── dialogs/
-│           ├── CreateAutomationDialog.tsx
-│           ├── TestAutomationDialog.tsx
-│           └── ExecutionDetailDialog.tsx
+├── components/automations/
+│   ├── AutomationsList.tsx                # DataTable list view
+│   ├── AutomationCard.tsx                 # Card for grid view
+│   ├── AutomationStatusBadge.tsx          # Status indicator
+│   │
+│   ├── editor/
+│   │   ├── FlowEditor.tsx                 # React Flow wrapper
+│   │   ├── FlowCanvas.tsx                 # Canvas with controls
+│   │   ├── FlowToolbar.tsx                # Top toolbar
+│   │   ├── FlowMinimap.tsx                # Minimap wrapper
+│   │   └── FlowControls.tsx               # Zoom/fit controls
+│   │
+│   ├── sidebar/
+│   │   ├── NodeSidebar.tsx                # Draggable palette
+│   │   ├── NodeCategory.tsx               # Category group
+│   │   └── DraggableNode.tsx              # Draggable item
+│   │
+│   ├── nodes/
+│   │   ├── BaseNode.tsx                   # Shared node wrapper
+│   │   ├── NodeHandle.tsx                 # Custom handle
+│   │   ├── index.ts                       # nodeTypes export
+│   │   ├── triggers/                      # Trigger node components
+│   │   ├── actions/                       # Action node components
+│   │   ├── logic/                         # Logic node components
+│   │   ├── transform/                     # Transform node components
+│   │   └── ai/                            # AI node components
+│   │
+│   ├── panels/
+│   │   ├── NodeConfigPanel.tsx            # Right panel
+│   │   ├── TriggerConfigForm.tsx          # Trigger config
+│   │   ├── ActionConfigForm.tsx           # Action config
+│   │   ├── LogicConfigForm.tsx            # Logic config
+│   │   └── ConditionBuilder.tsx           # Condition UI
+│   │
+│   ├── variables/
+│   │   ├── VariablePicker.tsx             # Variable selector
+│   │   ├── VariableChip.tsx               # Display chip
+│   │   └── VariableInput.tsx              # Input with picker
+│   │
+│   └── execution/
+│       ├── ExecutionHistory.tsx           # History list
+│       ├── ExecutionTimeline.tsx          # Visual timeline
+│       ├── ExecutionNodeStatus.tsx        # Node status
+│       └── TestRunDialog.tsx              # Test execution
 │
 ├── hooks/
-│   ├── useAutomations.ts            # CRUD + real-time
-│   ├── useAutomationExecution.ts    # Run & monitor
-│   └── useAutomationValidation.ts   # Flow validation
+│   ├── useAutomations.ts                  # CRUD operations
+│   ├── useAutomation.ts                   # Single automation
+│   ├── useAutomationExecutions.ts         # Execution history
+│   └── useFlowState.ts                    # React Flow state
 │
 └── types/
-    └── automations.ts               # Type definitions
+    └── automations.ts                     # All type definitions
 ```
 
-### Hook Pattern
+### Base Node Component
 
-Following `useWebhooks.ts` as template:
+```tsx
+// src/components/automations/nodes/BaseNode.tsx
+
+import { memo } from 'react';
+import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { cn } from '@/lib/utils';
+import type { BaseNodeData } from '@/types/automations';
+
+interface BaseNodeProps extends NodeProps<BaseNodeData> {
+  icon: React.ReactNode;
+  category: 'trigger' | 'action' | 'logic' | 'transform' | 'ai';
+  children?: React.ReactNode;
+  sourceHandles?: number;
+  targetHandles?: number;
+}
+
+const categoryColors = {
+  trigger: 'border-l-status-active',
+  action: 'border-l-primary',
+  logic: 'border-l-status-warning',
+  transform: 'border-l-status-info',
+  ai: 'border-l-gradient-start',
+} as const;
+
+export const BaseNode = memo(function BaseNode({
+  data, selected, icon, category, children,
+  sourceHandles = 1, targetHandles = 1,
+}: BaseNodeProps) {
+  return (
+    <div
+      className={cn(
+        'min-w-[200px] rounded-lg border border-border bg-card shadow-sm border-l-4',
+        categoryColors[category],
+        selected && 'ring-2 ring-ring ring-offset-2 ring-offset-background',
+        data.disabled && 'opacity-50'
+      )}
+      role="button"
+      aria-label={`${data.label} node`}
+      aria-selected={selected}
+      tabIndex={0}
+    >
+      {targetHandles > 0 && (
+        <Handle type="target" position={Position.Top}
+          className="!bg-muted-foreground !border-background !w-3 !h-3" />
+      )}
+
+      <div className="p-3">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">{icon}</span>
+          <span className="text-sm font-medium text-foreground truncate">{data.label}</span>
+        </div>
+        {data.description && (
+          <p className="mt-1 text-xs text-muted-foreground truncate">{data.description}</p>
+        )}
+        {children}
+      </div>
+
+      {sourceHandles > 0 && (
+        <Handle type="source" position={Position.Bottom}
+          className="!bg-muted-foreground !border-background !w-3 !h-3" />
+      )}
+    </div>
+  );
+});
+```
+
+### Condition Node with Multiple Outputs
+
+```tsx
+// src/components/automations/nodes/logic/LogicConditionNode.tsx
+
+import { memo } from 'react';
+import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { GitBranch01 } from '@untitledui/icons';
+import { BaseNode } from '../BaseNode';
+import type { LogicConditionNodeData } from '@/types/automations';
+
+export const LogicConditionNode = memo(function LogicConditionNode(
+  props: NodeProps<LogicConditionNodeData>
+) {
+  const { data } = props;
+  const ruleCount = data.config?.rules?.length ?? 0;
+
+  return (
+    <BaseNode {...props} icon={<GitBranch01 size={16} aria-hidden="true" />}
+      category="logic" targetHandles={1} sourceHandles={0}
+    >
+      <div className="mt-2 text-xs text-muted-foreground">
+        {ruleCount} rule{ruleCount !== 1 ? 's' : ''} ({data.config?.logic ?? 'and'})
+      </div>
+
+      <Handle type="source" position={Position.Bottom} id="true"
+        className="!bg-status-active !border-background !w-3 !h-3" style={{ left: '30%' }} />
+      <span className="absolute bottom-0 left-[30%] -translate-x-1/2 translate-y-full text-2xs text-status-active">
+        Yes
+      </span>
+
+      <Handle type="source" position={Position.Bottom} id="false"
+        className="!bg-destructive !border-background !w-3 !h-3" style={{ left: '70%' }} />
+      <span className="absolute bottom-0 left-[70%] -translate-x-1/2 translate-y-full text-2xs text-destructive">
+        No
+      </span>
+    </BaseNode>
+  );
+});
+```
+
+### Design System Integration
+
+```css
+/* Node category colors - use existing status tokens */
+.border-l-status-active { /* Triggers - green */ }
+.border-l-primary { /* Actions - blue */ }
+.border-l-status-warning { /* Logic - yellow/orange */ }
+.border-l-status-info { /* Transform - purple */ }
+
+/* Node states */
+.bg-card { /* Default background */ }
+.border-border { /* Default border */ }
+.ring-ring { /* Selected ring */ }
+```
+
+### useAutomations Hook
 
 ```typescript
 // src/hooks/useAutomations.ts
 
-import { useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/lib/toast';
-import { getErrorMessage } from '@/types/errors';
-import { useAuth } from '@/hooks/useAuth';
-import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
-import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
-import type { Automation } from '@/types/automations';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
+import { useAgent } from '@/hooks/useAgent';
+import { getErrorMessage } from '@/types/errors';
+import { toast } from 'sonner';
+import { AUTOMATION_LIST_COLUMNS } from '@/lib/db-selects';
+import type { Automation, AutomationInsert, AutomationUpdate } from '@/types/automations';
 
-export function useAutomations(agentId: string) {
-  const { user } = useAuth();
-  const { accountOwnerId } = useAccountOwnerId();
+export function useAutomations() {
   const queryClient = useQueryClient();
+  const { accountOwnerId } = useAccountOwnerId();
+  const { agent } = useAgent();
 
-  const { data: automations = [], isLoading, refetch } = useSupabaseQuery<Automation[]>({
-    queryKey: queryKeys.automations.list(agentId),
+  const { data: automations, isLoading, error } = useQuery({
+    queryKey: queryKeys.automations.list(agent?.id ?? ''),
     queryFn: async () => {
-      if (!user || !agentId) return [];
-      
+      if (!agent?.id) return [];
       const { data, error } = await supabase
         .from('automations')
-        .select('*')
-        .eq('agent_id', agentId)
+        .select(AUTOMATION_LIST_COLUMNS)
+        .eq('agent_id', agent.id)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-      return data || [];
+      return data as Automation[];
     },
-    realtime: {
-      table: 'automations',
-      filter: `agent_id=eq.${agentId}`,
-    },
-    enabled: !!user && !!agentId,
+    enabled: !!agent?.id && !!accountOwnerId,
   });
 
-  // ... CRUD methods following useWebhooks pattern
+  const createMutation = useMutation({
+    mutationFn: async (automation: AutomationInsert) => {
+      if (!agent?.id || !accountOwnerId) throw new Error('Missing agent or account');
+      const { data, error } = await supabase
+        .from('automations')
+        .insert({ ...automation, agent_id: agent.id, user_id: accountOwnerId })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.automations.list(agent?.id ?? '') });
+      toast.success('Automation created');
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to create automation', { description: getErrorMessage(error) });
+    },
+  });
+
+  // ... updateMutation, deleteMutation, toggleMutation
+
+  return {
+    automations: automations ?? [],
+    isLoading,
+    error,
+    createAutomation: createMutation.mutateAsync,
+    // ... other mutations
+  };
 }
 ```
 
-### Route Configuration
+### Accessibility Requirements
 
-Add to `src/config/routes.ts`:
+#### Keyboard Navigation
 
-```typescript
-// In ROUTE_CONFIG array
-{
-  id: 'automations',
-  label: 'Automations',
-  path: '/automations',
-  requiredPermission: 'manage_webhooks',  // Reuse existing permission
-  iconName: 'Dataflow03',
-  shortcut: '⌥U',
-  description: 'Build visual automation workflows',
-  showInNav: true,
-},
+```tsx
+function FlowEditor() {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Delete' || event.key === 'Backspace') deleteSelectedNodes();
+    if (event.metaKey || event.ctrlKey) {
+      if (event.key === 'z') event.shiftKey ? redo() : undo();
+    }
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      moveSelectedNodes(event.key);
+    }
+    if (event.key === 'Escape') clearSelection();
+    if (event.key === 'Enter' && selectedNode) openConfigPanel(selectedNode);
+  }, []);
+
+  return (
+    <div onKeyDown={handleKeyDown} tabIndex={0} role="application"
+      aria-label="Automation flow editor">
+      <ReactFlow ... />
+    </div>
+  );
+}
+```
+
+#### Screen Reader Announcements
+
+```tsx
+function useNodeAnnouncements() {
+  const announce = useCallback((message: string) => {
+    const el = document.getElementById('automation-announcer');
+    if (el) el.textContent = message;
+  }, []);
+
+  return {
+    announceNodeAdded: (label: string) => announce(`${label} node added to flow`),
+    announceNodeDeleted: (label: string) => announce(`${label} node deleted`),
+    announceNodeSelected: (label: string) => announce(`${label} node selected. Press Enter to configure.`),
+  };
+}
+
+// In page layout
+<div id="automation-announcer" role="status" aria-live="polite" className="sr-only" />
+```
+
+### Dark Mode Support
+
+```tsx
+import { ReactFlow } from '@xyflow/react';
+import { useTheme } from 'next-themes';
+
+function FlowCanvas() {
+  const { resolvedTheme } = useTheme();
+  const colorMode = resolvedTheme === 'dark' ? 'dark' : 'light';
+
+  return <ReactFlow colorMode={colorMode} />;
+}
+```
+
+### Permission Guards
+
+```tsx
+import { useCanManage } from '@/hooks/useCanManage';
+import { PermissionGuard } from '@/components/PermissionGuard';
+
+function Automations() {
+  const canManageWebhooks = useCanManage('manage_webhooks');
+
+  return (
+    <PermissionGuard permission="manage_webhooks" redirectTo="/ari">
+      {canManageWebhooks && (
+        <Button onClick={createAutomation}>
+          <Plus size={16} aria-hidden="true" />
+          New Automation
+        </Button>
+      )}
+    </PermissionGuard>
+  );
+}
+```
+
+### Reduced Motion Support
+
+```tsx
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+function FlowEditor() {
+  const prefersReducedMotion = useReducedMotion();
+
+  return (
+    <ReactFlow
+      fitViewOptions={{ duration: prefersReducedMotion ? 0 : 400 }}
+      defaultEdgeOptions={{ animated: !prefersReducedMotion }}
+    />
+  );
+}
 ```
 
 ---
 
-## Migration Strategy
+## 7. Implementation Phases (TEMPORARY)
 
-### Phase 1: Parallel Operation
-
-Both systems run simultaneously:
-- New `automations` system available at `/automations`
-- Existing `webhooks` and `agent_tools` continue working
-- No automatic migration
-
-### Phase 2: Migration Tools
-
-Provide migration utilities:
-
-```typescript
-// src/lib/automation-migration.ts
-
-export async function migrateWebhookToAutomation(
-  webhookId: string
-): Promise<Automation> {
-  // Load webhook
-  // Create automation with equivalent trigger/action
-  // Return new automation (webhook unchanged)
-}
-
-export async function migrateToolToAutomation(
-  toolId: string
-): Promise<Automation> {
-  // Load agent_tool
-  // Create automation with AI tool trigger
-  // Return new automation (tool unchanged)
-}
-```
-
-### Phase 3: Deprecation
-
-After validation period:
-1. Show deprecation warnings in old UIs
-2. Encourage migration via in-app prompts
-3. Stop allowing new webhook/tool creation
-4. Eventually remove old tables (major version)
-
----
-
-## Implementation Phases
+> **Note:** This section will be removed after implementation is complete.
 
 ### Phase 1: Foundation (Week 1)
 
@@ -933,102 +1898,96 @@ After validation period:
 
 ---
 
-## Testing Strategy
+## 8. Migration Strategy
 
-### Unit Tests
+### Phase 1: Parallel Operation
+
+Both systems run simultaneously:
+- New `automations` system available at `/automations`
+- Existing `webhooks` and `agent_tools` continue working
+- No automatic migration
+
+### Phase 2: Migration Tools
 
 ```typescript
-// Node executors
+// src/lib/automation-migration.ts
+
+export async function migrateWebhookToAutomation(webhookId: string): Promise<Automation> {
+  // Load webhook
+  // Create automation with equivalent trigger/action
+  // Return new automation (webhook unchanged)
+}
+
+export async function migrateToolToAutomation(toolId: string): Promise<Automation> {
+  // Load agent_tool
+  // Create automation with AI tool trigger
+  // Return new automation (tool unchanged)
+}
+```
+
+### Phase 3: Deprecation
+
+1. Show deprecation warnings in old UIs
+2. Encourage migration via in-app prompts
+3. Stop allowing new webhook/tool creation
+4. Eventually remove old tables (major version)
+
+---
+
+## Appendix
+
+### Testing Strategy
+
+```typescript
+// Unit Tests
 describe('HttpRequestExecutor', () => {
   it('should make GET request with resolved variables');
   it('should block internal URLs (SSRF protection)');
   it('should timeout after configured duration');
-  it('should handle authentication headers');
 });
 
-// Variable resolution
-describe('resolveTemplate', () => {
-  it('should resolve simple variable paths');
-  it('should handle nested object paths');
-  it('should handle array index access');
-  it('should use fallback for undefined values');
-});
-```
-
-### Integration Tests
-
-```typescript
-// Execution flow
+// Integration Tests
 describe('AutomationExecution', () => {
   it('should execute nodes in correct order');
   it('should follow condition branches correctly');
-  it('should handle execution errors gracefully');
   it('should create complete execution log');
 });
 ```
 
-### E2E Tests
+### Performance Considerations
 
-- Create automation via UI
-- Add and connect nodes
-- Configure HTTP action
-- Test execution
-- Verify logs
-
----
-
-## Performance Considerations
-
-### Database
-
+**Database:**
 - Indexes on `agent_id`, `user_id`, `trigger_type`
 - Partial indexes for active automations
-- JSONB containment queries for trigger matching
 - Execution log retention policy (30 days default)
 
-### Edge Functions
-
+**Edge Functions:**
 - Parallel node execution where possible
-- Connection pooling for database
-- Streaming execution logs via realtime
 - Timeout enforcement per-node and per-automation
 
-### Frontend
-
+**Frontend:**
 - React Flow virtualization (built-in)
 - Lazy-load node editors
 - Debounced auto-save
 - Optimistic UI updates
 
----
-
-## Appendix: React Flow Integration
-
-### Required Dependencies
+### React Flow Integration
 
 ```bash
 bun add @xyflow/react
 ```
 
-### Key Concepts
-
+Key concepts:
 1. **Nodes**: Visual elements with position, type, data
 2. **Edges**: Connections between node handles
 3. **Handles**: Connection points on nodes (source/target)
 4. **Custom Nodes**: React components for specialized behavior
 5. **Node Types**: Registry mapping type strings to components
 
-### Theme Integration
-
 ```typescript
-// Dark mode support
 const colorMode = theme === 'dark' ? 'dark' : 'light';
 
-<ReactFlow
-  colorMode={colorMode}
-  proOptions={{ hideAttribution: true }}
-  fitView
->
+<ReactFlow colorMode={colorMode} proOptions={{ hideAttribution: true }} fitView>
   <Background variant={BackgroundVariant.Dots} />
   <Controls />
   <MiniMap />
@@ -1042,3 +2001,4 @@ const colorMode = theme === 'dark' ? 'dark' : 'light';
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | Jan 2026 | - | Initial planning document |
+| 1.1 | Jan 2026 | - | Consolidated from 5 separate docs |
