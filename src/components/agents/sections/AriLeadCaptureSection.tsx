@@ -5,31 +5,33 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ContactFormSection } from '@/components/agents/embed/sections/ContactFormSection';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonFormSection } from '@/components/ui/skeleton';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 
 interface AriLeadCaptureSectionProps {
   agentId: string;
+  embedConfig: EmbeddedChatConfig;
+  onConfigChange: (updates: Partial<EmbeddedChatConfig>) => Promise<void>;
+  loading?: boolean;
 }
 
-export function AriLeadCaptureSection({ agentId }: AriLeadCaptureSectionProps) {
-  const { config, loading, saveConfig } = useEmbeddedChatConfig(agentId);
-  const [localConfig, setLocalConfig] = useState(config);
+export function AriLeadCaptureSection({ agentId, embedConfig, onConfigChange, loading }: AriLeadCaptureSectionProps) {
+  const [localConfig, setLocalConfig] = useState(embedConfig);
 
   useEffect(() => {
-    setLocalConfig(config);
-  }, [config]);
+    setLocalConfig(embedConfig);
+  }, [embedConfig]);
 
   const { save } = useAutoSave({
-    onSave: async (updates: Partial<typeof config>) => {
-      await saveConfig(updates);
+    onSave: async (updates: Partial<EmbeddedChatConfig>) => {
+      await onConfigChange(updates);
     },
   });
 
-  const handleConfigChange = (updates: Partial<typeof config>) => {
+  const handleConfigChange = (updates: Partial<EmbeddedChatConfig>) => {
     const newConfig = { ...localConfig, ...updates };
     setLocalConfig(newConfig);
     save(updates);

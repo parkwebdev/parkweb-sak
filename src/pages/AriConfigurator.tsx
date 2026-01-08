@@ -85,7 +85,7 @@ const AriConfigurator = () => {
 
   // Widget preview hooks
   logger.debug('AriConfigurator: Initializing widget preview hooks', { agentId });
-  const { config: embedConfig } = useEmbeddedChatConfig(agentId ?? '');
+  const { config: embedConfig, saveConfig: saveEmbedConfig, loading: embedLoading } = useEmbeddedChatConfig(agentId ?? '');
   logger.debug('AriConfigurator: useEmbeddedChatConfig complete');
   
   const { articles: helpArticles, categories: helpCategories } = useHelpArticles(agentId ?? '');
@@ -207,7 +207,7 @@ const AriConfigurator = () => {
         case 'welcome-messages':
           return <AriWelcomeMessagesSection agentId={agent.id} />;
         case 'lead-capture':
-          return <AriLeadCaptureSection agentId={agent.id} />;
+          return <AriLeadCaptureSection agentId={agent.id} embedConfig={embedConfig} onConfigChange={saveEmbedConfig} loading={embedLoading} />;
         case 'knowledge':
           return <AriKnowledgeSection agentId={agent.id} userId={agent.user_id} />;
         case 'locations':
