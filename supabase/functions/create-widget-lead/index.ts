@@ -112,7 +112,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { agentId, customFields, _formLoadTime, referrerJourney, turnstileToken } = await req.json();
+    const { agentId, firstName, lastName, customFields, _formLoadTime, referrerJourney, turnstileToken } = await req.json();
 
     // Bot protection: Verify Turnstile token (runs before other checks for early rejection)
     const turnstileResult = await verifyTurnstile(turnstileToken);
@@ -141,9 +141,9 @@ serve(async (req) => {
       }
     }
 
-    if (!agentId) {
+    if (!agentId || !firstName || !lastName) {
       return new Response(
-        JSON.stringify({ error: 'Missing required field: agentId' }),
+        JSON.stringify({ error: 'Missing required fields: agentId, firstName, lastName' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -265,7 +265,8 @@ serve(async (req) => {
       };
     }
 
-    const leadName = extractedName || 'Anonymous Visitor';
+    // Use firstName/lastName from request, fall back to extracted name from custom fields
+    const leadName = `${firstName} ${lastName}`.trim() || extractedName || 'Anonymous Visitor';
 
     const conversationMetadata: ConversationMetadata = {
       ip_address: ipAddress,

@@ -180,14 +180,26 @@ export function ContactFormPreview({
       )}
 
       <div className="space-y-3">
-        {/* Custom fields for current step */}
-        {currentStepFields.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No fields added yet. Add Name, Email, or other fields in the configuration.
-          </p>
-        ) : (
-          currentStepFields.map(renderFieldPreview)
+        {/* Default fields on step 1: First name and Last name */}
+        {previewStep === 1 && (
+          <>
+            <input
+              type="text"
+              disabled
+              placeholder="First name"
+              className={inputClasses}
+            />
+            <input
+              type="text"
+              disabled
+              placeholder="Last name"
+              className={inputClasses}
+            />
+          </>
         )}
+        
+        {/* Custom fields for current step */}
+        {currentStepFields.map(renderFieldPreview)}
 
         {/* Navigation buttons */}
         {totalSteps > 1 ? (

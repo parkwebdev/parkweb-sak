@@ -117,6 +117,19 @@ export const ContactForm = ({
   const validateCurrentStep = (formData: FormData): Record<string, string> => {
     const errors: Record<string, string> = {};
     
+    // Step 1: Validate required default fields (firstName, lastName)
+    if (currentStep === 1) {
+      const firstName = formData.get('firstName') as string;
+      const lastName = formData.get('lastName') as string;
+      
+      if (!firstName?.trim() || firstName.length > 50) {
+        errors.firstName = 'First name is required';
+      }
+      if (!lastName?.trim() || lastName.length > 50) {
+        errors.lastName = 'Last name is required';
+      }
+    }
+    
     // Validate required custom fields for current step
     currentStepFields.forEach(field => {
       if (field.fieldType === 'checkbox' && field.required) {
@@ -208,36 +221,33 @@ export const ContactForm = ({
       }
     });
 
+    // Get default field values
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
+
     try {
       setFormErrors({});
 
       const { leadId, conversationId } = await createLead(agentId, { 
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         customFields: customFieldData, 
         _formLoadTime: formLoadTime,
         turnstileToken: turnstileToken,
       });
       
-      // Extract name and email from custom fields for ChatUser
-      let extractedFirstName = '';
-      let extractedLastName = '';
+      // Extract email from custom fields for ChatUser (smart detection)
       let extractedEmail = '';
-      
       customFields.forEach(field => {
         const value = formData.get(field.id) as string;
-        if (field.fieldType === 'name' && value) {
-          // Split name into first/last (simple split on first space)
-          const parts = value.trim().split(/\s+/);
-          extractedFirstName = parts[0] || '';
-          extractedLastName = parts.slice(1).join(' ') || '';
-        }
         if (field.fieldType === 'email' && value) {
           extractedEmail = value.trim();
         }
       });
       
       const userData: ChatUser = { 
-        firstName: extractedFirstName, 
-        lastName: extractedLastName, 
+        firstName: firstName.trim(), 
+        lastName: lastName.trim(), 
         email: extractedEmail, 
         leadId, 
         conversationId: conversationId ?? undefined 
@@ -354,6 +364,36 @@ export const ContactForm = ({
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
           />
+          
+          {/* Default fields on step 1: First Name and Last Name */}
+          {currentStep === 1 && (
+            <>
+              <div>
+                <WidgetInput 
+                  name="firstName" 
+                  type="text" 
+                  placeholder="First name" 
+                  required
+                  autoComplete="given-name"
+                />
+                {formErrors.firstName && (
+                  <p className="text-xs text-destructive mt-1" role="alert">{formErrors.firstName}</p>
+                )}
+              </div>
+              <div>
+                <WidgetInput 
+                  name="lastName" 
+                  type="text" 
+                  placeholder="Last name" 
+                  required
+                  autoComplete="family-name"
+                />
+                {formErrors.lastName && (
+                  <p className="text-xs text-destructive mt-1" role="alert">{formErrors.lastName}</p>
+                )}
+              </div>
+            </>
+          )}
           
           {/* Custom fields for current step */}
           {currentStepFields.map(field => (
