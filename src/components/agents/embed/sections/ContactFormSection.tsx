@@ -41,7 +41,7 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
   } = useSortable({ id: field.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
   };
 
