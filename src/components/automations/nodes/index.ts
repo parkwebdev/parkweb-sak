@@ -20,6 +20,9 @@ export { ActionNotifyNode } from './ActionNotifyNode';
 export { LogicConditionNode } from './LogicConditionNode';
 export { LogicDelayNode } from './LogicDelayNode';
 export { LogicStopNode } from './LogicStopNode';
+export { AIGenerateNode } from './AIGenerateNode';
+export { AIClassifyNode } from './AIClassifyNode';
+export { AIExtractNode } from './AIExtractNode';
 
 // Node type registry for React Flow
 import { TriggerEventNode } from './TriggerEventNode';
@@ -35,6 +38,9 @@ import { ActionNotifyNode } from './ActionNotifyNode';
 import { LogicConditionNode } from './LogicConditionNode';
 import { LogicDelayNode } from './LogicDelayNode';
 import { LogicStopNode } from './LogicStopNode';
+import { AIGenerateNode } from './AIGenerateNode';
+import { AIClassifyNode } from './AIClassifyNode';
+import { AIExtractNode } from './AIExtractNode';
 
 export const nodeTypes = {
   'trigger-event': TriggerEventNode,
@@ -50,4 +56,7 @@ export const nodeTypes = {
   'logic-condition': LogicConditionNode,
   'logic-delay': LogicDelayNode,
   'logic-stop': LogicStopNode,
+  'ai-generate': AIGenerateNode,
+  'ai-classify': AIClassifyNode,
+  'ai-extract': AIExtractNode,
 } as const;

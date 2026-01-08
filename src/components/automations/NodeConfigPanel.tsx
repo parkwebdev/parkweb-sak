@@ -26,6 +26,9 @@ import {
   LogicConditionConfigPanel,
   LogicDelayConfigPanel,
   LogicStopConfigPanel,
+  AIGenerateConfigPanel,
+  AIClassifyConfigPanel,
+  AIExtractConfigPanel,
 } from './panels';
 import type {
   AutomationNode,
@@ -42,6 +45,9 @@ import type {
   LogicConditionNodeData,
   LogicDelayNodeData,
   LogicStopNodeData,
+  AIGenerateNodeData,
+  AIClassifyNodeData,
+  AIExtractNodeData,
 } from '@/types/automations';
 
 interface NodeConfigPanelProps {
@@ -151,6 +157,27 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
           <LogicStopConfigPanel
             nodeId={selectedNode.id}
             data={selectedNode.data as LogicStopNodeData}
+          />
+        );
+      case 'ai-generate':
+        return (
+          <AIGenerateConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as AIGenerateNodeData}
+          />
+        );
+      case 'ai-classify':
+        return (
+          <AIClassifyConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as AIClassifyNodeData}
+          />
+        );
+      case 'ai-extract':
+        return (
+          <AIExtractConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as AIExtractNodeData}
           />
         );
       default:
