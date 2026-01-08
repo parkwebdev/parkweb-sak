@@ -8,22 +8,34 @@
  */
 
 import { PreviewChat } from './PreviewChat';
+import type { CustomField } from '@/hooks/useEmbeddedChatConfig';
+
+interface ContactFormConfig {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  customFields: CustomField[];
+  primaryColor: string;
+}
 
 interface AriPreviewColumnProps {
   agentId: string;
   primaryColor?: string;
+  contactFormPreview?: ContactFormConfig | null;
 }
 
 export function AriPreviewColumn({
   agentId,
   primaryColor,
+  contactFormPreview,
 }: AriPreviewColumnProps) {
   return (
     <div className="w-[375px] flex-shrink-0 border-l bg-card hidden xl:flex flex-col">
       <PreviewChat 
         agentId={agentId}
         primaryColor={primaryColor}
+        contactFormPreview={contactFormPreview || undefined}
       />
     </div>
   );
-};
+}
