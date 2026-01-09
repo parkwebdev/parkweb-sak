@@ -34,12 +34,40 @@ export function ExpandableMenuItem({
   className,
 }: ExpandableMenuItemProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = React.useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setIsExpanded(true);
+  }, []);
+
+  const handleMouseLeave = React.useCallback(() => {
+    // Small delay to allow moving to submenu
+    timeoutRef.current = setTimeout(() => {
+      setIsExpanded(false);
+    }, 100);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div
+      ref={containerRef}
       className={cn('relative', className)}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onPointerEnter={handleMouseEnter}
+      onPointerLeave={handleMouseLeave}
     >
       <div
         className={cn(
@@ -55,12 +83,20 @@ export function ExpandableMenuItem({
       {/* Expanded panel - positioned to the right */}
       {isExpanded && items.length > 0 && (
         <div
-          className="absolute left-full top-0 z-50 ml-1 min-w-[120px] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 slide-in-from-left-1"
+          className="absolute left-full top-0 z-[100] ml-1 min-w-[120px] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 slide-in-from-left-1"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onPointerEnter={handleMouseEnter}
+          onPointerLeave={handleMouseLeave}
         >
           {items.map((item) => (
             <button
               key={item.id}
-              onClick={item.onClick}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                item.onClick();
+              }}
               className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
             >
               {item.label}
