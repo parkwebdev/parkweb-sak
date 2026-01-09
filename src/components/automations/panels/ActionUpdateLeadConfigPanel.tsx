@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { VariableReference } from './VariableReference';
 import type { ActionUpdateLeadNodeData, LeadFieldUpdate } from '@/types/automations';
 
 interface ActionUpdateLeadConfigPanelProps {
@@ -74,6 +75,9 @@ export function ActionUpdateLeadConfigPanel({ nodeId, data }: ActionUpdateLeadCo
 
   return (
     <div className="space-y-4">
+      {/* Variable Reference */}
+      <VariableReference showLead showEnvironment />
+
       {/* Lead Source */}
       <div className="space-y-2">
         <Label>Lead Source</Label>

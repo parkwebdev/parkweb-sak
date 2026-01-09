@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { VariableReference } from './VariableReference';
 import type { ActionEmailNodeData } from '@/types/automations';
 
 interface ActionEmailConfigPanelProps {
@@ -30,17 +31,17 @@ export function ActionEmailConfigPanel({ nodeId, data }: ActionEmailConfigPanelP
 
   return (
     <div className="space-y-4">
+      {/* Variable Reference */}
+      <VariableReference showLead showEnvironment />
+
       {/* To */}
       <div className="space-y-2">
         <Label>To</Label>
         <Input
-          placeholder="recipient@example.com"
+          placeholder="{{lead.email}}"
           value={data.to || ''}
           onChange={(e) => handleUpdate({ to: e.target.value })}
         />
-        <p className="text-2xs text-muted-foreground">
-          Use {'{{lead.email}}'} for dynamic recipient
-        </p>
       </div>
 
       {/* From Name */}
@@ -73,9 +74,6 @@ export function ActionEmailConfigPanel({ nodeId, data }: ActionEmailConfigPanelP
           rows={6}
           className="font-mono text-xs"
         />
-        <p className="text-2xs text-muted-foreground">
-          Supports HTML and {'{{variable}}'} interpolation
-        </p>
       </div>
 
       {/* Reply To */}
