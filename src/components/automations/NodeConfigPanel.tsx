@@ -43,6 +43,23 @@ import type {
   AIExtractNodeData,
 } from '@/types/automations';
 
+// Map node types to user-friendly display names
+const NODE_TYPE_LABELS: Record<string, string> = {
+  'trigger-ai-tool': 'Ari Action',
+  'trigger-event': 'Event Trigger',
+  'trigger-schedule': 'Schedule Trigger',
+  'trigger-manual': 'Manual Trigger',
+  'action-http': 'HTTP Request',
+  'action-email': 'Send Email',
+  'action-update-lead': 'Update Lead',
+  'logic-condition': 'Condition',
+  'logic-delay': 'Delay',
+  'logic-stop': 'Stop',
+  'ai-generate': 'AI Generate',
+  'ai-classify': 'AI Classify',
+  'ai-extract': 'AI Extract',
+};
+
 interface NodeConfigPanelProps {
   onClose: () => void;
 }
@@ -182,7 +199,7 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
           {/* Node label (readonly for now) */}
           <div className="mb-4 pb-4 border-b border-border">
             <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-              {selectedNode.type?.replace(/-/g, ' ')}
+              {NODE_TYPE_LABELS[selectedNode.type || ''] || selectedNode.type?.replace(/-/g, ' ')}
             </div>
             <div className="font-medium">
               {(selectedNode.data as { label?: string }).label || 'Untitled'}
