@@ -155,7 +155,7 @@ export function ExecutionHistoryList({
   }
 
   return (
-    <ScrollArea className="h-full">
+    <div className="h-full overflow-auto">
       <div className="divide-y divide-border">
         {executions.map((execution) => (
           <ExecutionRow
@@ -166,6 +166,6 @@ export function ExecutionHistoryList({
           />
         ))}
       </div>
-    </ScrollArea>
+    </div>
   );
 }

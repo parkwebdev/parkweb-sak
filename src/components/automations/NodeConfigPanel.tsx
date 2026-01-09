@@ -9,7 +9,6 @@
 
 import { useMemo } from 'react';
 import { X } from '@untitledui/icons';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { IconButton } from '@/components/ui/icon-button';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import {
@@ -205,7 +204,7 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
       </div>
 
       {/* Content - scrollable */}
-      <ScrollArea className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-4">
           {/* Node label (readonly for now) */}
           <div className="mb-4 pb-4 border-b border-border">
@@ -220,7 +219,7 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
           {/* Type-specific config */}
           {renderConfigPanel()}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
