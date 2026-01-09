@@ -38,7 +38,30 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Check authorization
+    // Try to parse request body - empty body means cron scheduler call
+    let request: TriggerRequest | null = null;
+    let isCronCall = false;
+
+    try {
+      const body = await req.text();
+      if (body && body.trim()) {
+        request = JSON.parse(body);
+      } else {
+        // Empty body = cron scheduler call
+        isCronCall = true;
+      }
+    } catch {
+      // Invalid JSON or empty = treat as cron call
+      isCronCall = true;
+    }
+
+    // Handle cron-triggered schedule check (no auth needed - internal edge function schedule)
+    if (isCronCall) {
+      console.log('[trigger-automation] Cron-triggered schedule check');
+      return await handleScheduleTriggers(supabase, supabaseUrl, serviceRoleKey);
+    }
+
+    // For non-cron calls, require authentication
     const internalSecret = req.headers.get('x-internal-secret');
     const authHeader = req.headers.get('authorization');
     const expectedSecret = Deno.env.get('INTERNAL_WEBHOOK_SECRET');
@@ -67,7 +90,12 @@ serve(async (req) => {
       );
     }
 
-    const request: TriggerRequest = await req.json();
+    if (!request) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const { source, payload, automationId, triggerData, testMode, conversationId, leadId } = request;
 
     let triggered = 0;
@@ -295,6 +323,76 @@ serve(async (req) => {
     );
   }
 });
+
+/**
+ * Handle cron-triggered schedule checks
+ */
+async function handleScheduleTriggers(
+  supabase: ReturnType<typeof createClient>,
+  supabaseUrl: string,
+  serviceRoleKey: string
+): Promise<Response> {
+  const { data: automations, error: fetchError } = await supabase
+    .from('automations')
+    .select('*')
+    .eq('trigger_type', 'schedule')
+    .eq('enabled', true)
+    .eq('status', 'active');
+
+  if (fetchError) {
+    console.error('Error fetching schedule automations:', fetchError);
+    return new Response(
+      JSON.stringify({ error: fetchError.message, triggered: 0 }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  if (!automations || automations.length === 0) {
+    return new Response(
+      JSON.stringify({ triggered: 0, message: 'No schedule automations' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const now = new Date();
+  let triggered = 0;
+  const results: Array<{ automationId: string; executionId?: string; error?: string }> = [];
+
+  for (const automation of automations) {
+    const config = automation.trigger_config as TriggerScheduleConfig;
+    
+    if (shouldRunSchedule(
+      config.cron,
+      config.timezone || 'America/New_York',
+      automation.last_executed_at,
+      now
+    )) {
+      const executionResult = await executeAutomation(
+        supabase,
+        supabaseUrl,
+        serviceRoleKey,
+        automation as Automation,
+        'schedule',
+        { scheduled_at: now.toISOString() },
+        false
+      );
+
+      triggered++;
+      results.push({
+        automationId: automation.id,
+        executionId: executionResult.executionId,
+        error: executionResult.error,
+      });
+    }
+  }
+
+  console.log(`[trigger-automation] Schedule check complete: ${triggered} automations triggered`);
+
+  return new Response(
+    JSON.stringify({ success: true, triggered, results }),
+    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
 
 /**
  * Execute a single automation

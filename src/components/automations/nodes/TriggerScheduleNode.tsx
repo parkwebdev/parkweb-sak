@@ -13,9 +13,20 @@ import { Clock } from '@untitledui/icons';
 import { BaseNode } from './BaseNode';
 import type { TriggerScheduleNodeData } from '@/types/automations';
 
+// Timezone labels for display
+const TIMEZONE_LABELS: Record<string, string> = {
+  'America/New_York': 'Eastern',
+  'America/Chicago': 'Central',
+  'America/Denver': 'Mountain',
+  'America/Los_Angeles': 'Pacific',
+  'America/Phoenix': 'Arizona',
+  'Pacific/Honolulu': 'Hawaii',
+  'America/Anchorage': 'Alaska',
+  'UTC': 'UTC',
+};
+
 /**
- * Convert a simple cron expression to human-readable format.
- * Only handles common patterns; complex cron expressions show as-is.
+ * Convert a cron expression to human-readable format.
  */
 function cronToReadable(cron: string): string {
   if (!cron) return 'Not configured';
@@ -36,33 +47,52 @@ function cronToReadable(cron: string): string {
   
   // Hourly
   if (minute !== '*' && hour === '*' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
-    return `Hourly at :${minute.padStart(2, '0')}`;
+    const m = parseInt(minute, 10);
+    if (m === 0) return 'Hourly at :00';
+    return `Hourly at :${String(m).padStart(2, '0')}`;
   }
+  
+  // Format time for daily/weekly
+  const formatTime = (h: string, m: string) => {
+    const hNum = parseInt(h, 10);
+    const mNum = parseInt(m, 10);
+    const ampm = hNum >= 12 ? 'PM' : 'AM';
+    const h12 = hNum === 0 ? 12 : hNum > 12 ? hNum - 12 : hNum;
+    return `${h12}:${String(mNum).padStart(2, '0')} ${ampm}`;
+  };
   
   // Daily
   if (minute !== '*' && hour !== '*' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
-    const h = parseInt(hour, 10);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `Daily at ${h12}:${minute.padStart(2, '0')} ${ampm}`;
+    return `Daily at ${formatTime(hour, minute)}`;
   }
   
   // Weekly
   if (minute !== '*' && hour !== '*' && dayOfMonth === '*' && month === '*' && dayOfWeek !== '*') {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dayParts = dayOfWeek.split(',').map((d) => days[parseInt(d, 10)] || d);
-    const h = parseInt(hour, 10);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${dayParts.join(', ')} at ${h12}:${minute.padStart(2, '0')} ${ampm}`;
+    
+    // Special cases
+    if (dayOfWeek === '1,2,3,4,5' || dayOfWeek === '1-5') {
+      return `Weekdays at ${formatTime(hour, minute)}`;
+    }
+    if (dayOfWeek === '0,6') {
+      return `Weekends at ${formatTime(hour, minute)}`;
+    }
+    
+    return `${dayParts.join(', ')} at ${formatTime(hour, minute)}`;
   }
   
   return cron;
 }
 
+function getTimezoneLabel(tz: string): string {
+  return TIMEZONE_LABELS[tz] || tz;
+}
+
 export const TriggerScheduleNode = memo(function TriggerScheduleNode(props: NodeProps) {
   const data = props.data as TriggerScheduleNodeData;
   const schedule = cronToReadable(data.cronExpression);
+  const timezone = data.timezone || 'America/New_York';
   
   return (
     <BaseNode
@@ -75,11 +105,9 @@ export const TriggerScheduleNode = memo(function TriggerScheduleNode(props: Node
     >
       <div className="space-y-1">
         <div className="font-medium text-foreground">{schedule}</div>
-        {data.timezone && (
-          <div className="text-2xs text-muted-foreground">
-            Timezone: {data.timezone}
-          </div>
-        )}
+        <div className="text-2xs text-muted-foreground">
+          {getTimezoneLabel(timezone)}
+        </div>
       </div>
     </BaseNode>
   );
