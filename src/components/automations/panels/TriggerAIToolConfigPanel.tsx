@@ -36,6 +36,60 @@ const PARAM_TYPES = [
   { value: 'boolean', label: 'Yes/No' },
 ] as const;
 
+const PRESET_ARI_ACTIONS = [
+  {
+    id: 'schedule_callback',
+    label: 'Schedule Callback',
+    toolName: 'schedule_callback',
+    toolDescription: 'When a customer wants to be called back or schedule a phone consultation',
+    parameters: [
+      { name: 'phone_number', type: 'string' as const, description: "The customer's phone number", required: true },
+      { name: 'preferred_time', type: 'string' as const, description: 'When they prefer to be called', required: false },
+    ],
+  },
+  {
+    id: 'check_availability',
+    label: 'Check Availability',
+    toolName: 'check_availability',
+    toolDescription: 'When a customer asks about available times or dates',
+    parameters: [
+      { name: 'date', type: 'string' as const, description: 'The date they are asking about', required: false },
+      { name: 'service_type', type: 'string' as const, description: 'What service or appointment type', required: false },
+    ],
+  },
+  {
+    id: 'send_info',
+    label: 'Send Information',
+    toolName: 'send_info',
+    toolDescription: 'When a customer wants more details, a brochure, or documentation sent to them',
+    parameters: [
+      { name: 'email', type: 'string' as const, description: "The customer's email address", required: true },
+      { name: 'info_type', type: 'string' as const, description: 'What type of information they want', required: false },
+    ],
+  },
+  {
+    id: 'book_appointment',
+    label: 'Book Appointment',
+    toolName: 'book_appointment',
+    toolDescription: 'When a customer wants to schedule an in-person meeting or appointment',
+    parameters: [
+      { name: 'date', type: 'string' as const, description: 'Preferred date for the appointment', required: true },
+      { name: 'time', type: 'string' as const, description: 'Preferred time', required: true },
+      { name: 'service', type: 'string' as const, description: 'What service or reason for the appointment', required: false },
+    ],
+  },
+  {
+    id: 'request_quote',
+    label: 'Request Quote',
+    toolName: 'request_quote',
+    toolDescription: 'When a customer asks about pricing or wants a quote for services',
+    parameters: [
+      { name: 'service_type', type: 'string' as const, description: 'What service they need a quote for', required: true },
+      { name: 'details', type: 'string' as const, description: 'Any specific requirements or details', required: false },
+    ],
+  },
+] as const;
+
 export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPanelProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
 
@@ -85,6 +139,22 @@ export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPa
     [nodeId, data.parameters, updateNodeData]
   );
 
+  const handlePresetClick = useCallback(
+    (preset: typeof PRESET_ARI_ACTIONS[number]) => {
+      updateNodeData(nodeId, {
+        toolName: preset.toolName,
+        toolDescription: preset.toolDescription,
+        parameters: [...preset.parameters],
+      });
+    },
+    [nodeId, updateNodeData]
+  );
+
+  // Hide presets that match current action name
+  const availablePresets = PRESET_ARI_ACTIONS.filter(
+    (preset) => preset.toolName !== data.toolName
+  );
+
   return (
     <div className="space-y-4">
       {/* Helpful context callout */}
@@ -95,6 +165,25 @@ export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPa
           For example: schedule callbacks, check availability, or send notifications.
         </p>
       </div>
+
+      {/* Preset chips */}
+      {availablePresets.length > 0 && (
+        <div className="space-y-1.5">
+          <span className="text-2xs text-muted-foreground">Quick start with a preset:</span>
+          <div className="flex flex-wrap gap-1.5">
+            {availablePresets.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => handlePresetClick(preset)}
+                className="text-2xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="action-name">Action Name</Label>
