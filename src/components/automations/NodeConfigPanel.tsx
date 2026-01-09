@@ -19,9 +19,6 @@ import {
   ActionHttpConfigPanel,
   ActionEmailConfigPanel,
   ActionUpdateLeadConfigPanel,
-  ActionSupabaseConfigPanel,
-  ActionTaskConfigPanel,
-  ActionNotifyConfigPanel,
   LogicConditionConfigPanel,
   LogicDelayConfigPanel,
   LogicStopConfigPanel,
@@ -38,9 +35,6 @@ import type {
   ActionHttpNodeData,
   ActionEmailNodeData,
   ActionUpdateLeadNodeData,
-  ActionSupabaseNodeData,
-  ActionTaskNodeData,
-  ActionNotifyNodeData,
   LogicConditionNodeData,
   LogicDelayNodeData,
   LogicStopNodeData,
@@ -114,27 +108,6 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
           <ActionUpdateLeadConfigPanel
             nodeId={selectedNode.id}
             data={selectedNode.data as ActionUpdateLeadNodeData}
-          />
-        );
-      case 'action-supabase':
-        return (
-          <ActionSupabaseConfigPanel
-            nodeId={selectedNode.id}
-            data={selectedNode.data as ActionSupabaseNodeData}
-          />
-        );
-      case 'action-task':
-        return (
-          <ActionTaskConfigPanel
-            nodeId={selectedNode.id}
-            data={selectedNode.data as ActionTaskNodeData}
-          />
-        );
-      case 'action-notify':
-        return (
-          <ActionNotifyConfigPanel
-            nodeId={selectedNode.id}
-            data={selectedNode.data as ActionNotifyNodeData}
           />
         );
       case 'logic-condition':
