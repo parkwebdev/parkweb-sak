@@ -323,6 +323,7 @@ export function shouldRunSchedule(
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
     hour: 'numeric',
+    hour12: false,
     minute: 'numeric',
     day: 'numeric',
     month: 'numeric',
