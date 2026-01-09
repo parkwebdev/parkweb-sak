@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { useLeadStages } from '@/hooks/useLeadStages';
 import type { TriggerEventNodeData, AutomationEventType } from '@/types/automations';
 
 interface TriggerEventConfigPanelProps {
@@ -64,12 +65,25 @@ const EVENT_OPTIONS = [
 
 export function TriggerEventConfigPanel({ nodeId, data }: TriggerEventConfigPanelProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
+  const { stages } = useLeadStages();
 
   const handleEventChange = useCallback(
     (value: string) => {
-      updateNodeData(nodeId, { event: value as AutomationEventType });
+      // Clear filters when event type changes
+      updateNodeData(nodeId, { event: value as AutomationEventType, filters: undefined });
     },
     [nodeId, updateNodeData]
+  );
+
+  const handleFilterChange = useCallback(
+    (key: string, value: string | null) => {
+      const currentFilters = (data.filters as Record<string, unknown>) || {};
+      const newFilters = value
+        ? { ...currentFilters, [key]: value }
+        : Object.fromEntries(Object.entries(currentFilters).filter(([k]) => k !== key));
+      updateNodeData(nodeId, { filters: Object.keys(newFilters).length > 0 ? newFilters : undefined });
+    },
+    [nodeId, data.filters, updateNodeData]
   );
 
   return (
@@ -97,6 +111,32 @@ export function TriggerEventConfigPanel({ nodeId, data }: TriggerEventConfigPane
           Choose what triggers this automation
         </p>
       </div>
+
+      {/* Conditions UI for lead.stage_changed */}
+      {data.event === 'lead.stage_changed' && stages && stages.length > 0 && (
+        <div className="space-y-2">
+          <Label htmlFor="stage-filter">Only when stage changes to</Label>
+          <Select
+            value={((data.filters as Record<string, unknown>)?.stage_id as string) || 'any'}
+            onValueChange={(v) => handleFilterChange('stage_id', v === 'any' ? null : v)}
+          >
+            <SelectTrigger id="stage-filter">
+              <SelectValue placeholder="Any stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any stage</SelectItem>
+              {stages.map((stage) => (
+                <SelectItem key={stage.id} value={stage.id}>
+                  {stage.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-2xs text-muted-foreground">
+            Optional: filter to a specific stage
+          </p>
+        </div>
+      )}
     </div>
   );
 }
