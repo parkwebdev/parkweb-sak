@@ -7,11 +7,8 @@
  */
 
 import { useCallback } from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableReference } from './VariableReference';
+import { VariableInput } from './VariableInput';
 import type { ActionEmailNodeData } from '@/types/automations';
 
 interface ActionEmailConfigPanelProps {
@@ -31,60 +28,53 @@ export function ActionEmailConfigPanel({ nodeId, data }: ActionEmailConfigPanelP
 
   return (
     <div className="space-y-4">
-      {/* Variable Reference */}
-      <VariableReference showLead showEnvironment />
-
       {/* To */}
-      <div className="space-y-2">
-        <Label>To</Label>
-        <Input
-          placeholder="{{lead.email}}"
-          value={data.to || ''}
-          onChange={(e) => handleUpdate({ to: e.target.value })}
-        />
-      </div>
+      <VariableInput
+        label="To"
+        placeholder="{{lead.email}}"
+        value={data.to || ''}
+        onChange={(value) => handleUpdate({ to: value })}
+        categories={['lead', 'trigger']}
+      />
 
       {/* From Name */}
-      <div className="space-y-2">
-        <Label>From Name</Label>
-        <Input
-          placeholder="Your Company"
-          value={data.fromName || ''}
-          onChange={(e) => handleUpdate({ fromName: e.target.value })}
-        />
-      </div>
+      <VariableInput
+        label="From Name"
+        placeholder="Your Company"
+        value={data.fromName || ''}
+        onChange={(value) => handleUpdate({ fromName: value })}
+        categories={['environment']}
+      />
 
       {/* Subject */}
-      <div className="space-y-2">
-        <Label>Subject</Label>
-        <Input
-          placeholder="Email subject"
-          value={data.subject || ''}
-          onChange={(e) => handleUpdate({ subject: e.target.value })}
-        />
-      </div>
+      <VariableInput
+        label="Subject"
+        placeholder="Email subject"
+        value={data.subject || ''}
+        onChange={(value) => handleUpdate({ subject: value })}
+        categories={['lead', 'trigger', 'environment']}
+      />
 
       {/* Body */}
-      <div className="space-y-2">
-        <Label>Body (HTML)</Label>
-        <Textarea
-          placeholder="<h1>Hello {{lead.name}}</h1>&#10;<p>Your message here...</p>"
-          value={data.body || ''}
-          onChange={(e) => handleUpdate({ body: e.target.value })}
-          rows={6}
-          className="font-mono text-xs"
-        />
-      </div>
+      <VariableInput
+        label="Body (HTML)"
+        placeholder="<h1>Hello {{lead.name}}</h1>&#10;<p>Your message here...</p>"
+        value={data.body || ''}
+        onChange={(value) => handleUpdate({ body: value })}
+        categories={['lead', 'conversation', 'trigger', 'environment']}
+        multiline
+        rows={6}
+        className="font-mono text-xs"
+      />
 
       {/* Reply To */}
-      <div className="space-y-2">
-        <Label>Reply To (optional)</Label>
-        <Input
-          placeholder="reply@example.com"
-          value={data.replyTo || ''}
-          onChange={(e) => handleUpdate({ replyTo: e.target.value })}
-        />
-      </div>
+      <VariableInput
+        label="Reply To (optional)"
+        placeholder="reply@example.com"
+        value={data.replyTo || ''}
+        onChange={(value) => handleUpdate({ replyTo: value })}
+        categories={['environment']}
+      />
     </div>
   );
 }

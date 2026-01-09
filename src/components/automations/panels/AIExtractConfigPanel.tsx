@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableReference } from './VariableReference';
+import { VariableSelect } from './VariableSelect';
 import type { AIExtractNodeData, AIExtractField } from '@/types/automations';
 
 interface AIExtractConfigPanelProps {
@@ -75,19 +75,14 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
 
   return (
     <div className="space-y-4">
-      {/* Variable Reference */}
-      <VariableReference showLead showConversation showEnvironment />
-
       {/* Input Source */}
-      <div className="space-y-2">
-        <Label htmlFor="input">Input Text</Label>
-        <Input
-          id="input"
-          value={data.input || ''}
-          onChange={(e) => handleChange('input', e.target.value)}
-          placeholder="{{message.content}} or {{lead.data}}"
-        />
-      </div>
+      <VariableSelect
+        label="Input text"
+        value={data.input || ''}
+        onValueChange={(value) => handleChange('input', value)}
+        categories={['lead', 'conversation', 'trigger']}
+        placeholder="Select input source"
+      />
 
       {/* Fields to Extract */}
       <div className="space-y-2">

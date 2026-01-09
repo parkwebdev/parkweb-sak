@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { IconButton } from '@/components/ui/icon-button';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableReference } from './VariableReference';
+import { VariableSelect } from './VariableSelect';
 import type { AIClassifyNodeData, AIClassifyCategory } from '@/types/automations';
 
 interface AIClassifyConfigPanelProps {
@@ -58,19 +58,14 @@ export function AIClassifyConfigPanel({ nodeId, data }: AIClassifyConfigPanelPro
 
   return (
     <div className="space-y-4">
-      {/* Variable Reference */}
-      <VariableReference showLead showConversation showEnvironment />
-
       {/* Input Source */}
-      <div className="space-y-2">
-        <Label htmlFor="input">Input Variable</Label>
-        <Input
-          id="input"
-          value={data.input || ''}
-          onChange={(e) => handleChange('input', e.target.value)}
-          placeholder="{{message.content}} or {{lead.data}}"
-        />
-      </div>
+      <VariableSelect
+        label="Input to classify"
+        value={data.input || ''}
+        onValueChange={(value) => handleChange('input', value)}
+        categories={['lead', 'conversation', 'trigger']}
+        placeholder="Select input source"
+      />
 
       {/* Categories */}
       <div className="space-y-2">

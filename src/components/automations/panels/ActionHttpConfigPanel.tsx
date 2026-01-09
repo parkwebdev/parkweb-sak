@@ -9,7 +9,6 @@
 import { useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -18,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableReference } from './VariableReference';
+import { VariableInput } from './VariableInput';
 import type { ActionHttpNodeData } from '@/types/automations';
 
 interface ActionHttpConfigPanelProps {
@@ -38,13 +37,24 @@ export function ActionHttpConfigPanel({ nodeId, data }: ActionHttpConfigPanelPro
     [nodeId, data, updateNodeData]
   );
 
+  const headersString = data.headers
+    ? JSON.stringify(data.headers, null, 2)
+    : '';
+
+  const handleHeadersChange = (value: string) => {
+    try {
+      const parsed = value ? JSON.parse(value) : undefined;
+      handleUpdate({ headers: parsed });
+    } catch {
+      // Allow invalid JSON while typing
+    }
+  };
+
+  const showBody = data.method && ['POST', 'PUT', 'PATCH'].includes(data.method);
   const responseVar = data.responseVariable || 'response';
 
   return (
     <div className="space-y-4">
-      {/* Variable Reference */}
-      <VariableReference showLead showConversation showEnvironment />
-
       {/* Method */}
       <div className="space-y-2">
         <Label>HTTP Method</Label>
@@ -66,46 +76,38 @@ export function ActionHttpConfigPanel({ nodeId, data }: ActionHttpConfigPanelPro
       </div>
 
       {/* URL */}
-      <div className="space-y-2">
-        <Label>URL</Label>
-        <Input
-          placeholder="https://api.example.com/endpoint"
-          value={data.url || ''}
-          onChange={(e) => handleUpdate({ url: e.target.value })}
-        />
-      </div>
+      <VariableInput
+        label="URL"
+        placeholder="https://api.example.com/endpoint"
+        value={data.url || ''}
+        onChange={(value) => handleUpdate({ url: value })}
+        categories={['lead', 'trigger', 'environment']}
+      />
 
       {/* Headers */}
-      <div className="space-y-2">
-        <Label>Headers (JSON)</Label>
-        <Textarea
-          placeholder='{"Authorization": "Bearer {{token}}"}'
-          value={data.headers ? JSON.stringify(data.headers, null, 2) : ''}
-          onChange={(e) => {
-            try {
-              const headers = e.target.value ? JSON.parse(e.target.value) : undefined;
-              handleUpdate({ headers });
-            } catch {
-              // Invalid JSON, ignore
-            }
-          }}
-          rows={3}
-          className="font-mono text-xs"
-        />
-      </div>
+      <VariableInput
+        label="Headers (JSON)"
+        placeholder={'{"Authorization": "Bearer {{env.api_key}}"}'}
+        value={headersString}
+        onChange={handleHeadersChange}
+        categories={['environment', 'trigger']}
+        multiline
+        rows={3}
+        className="font-mono text-xs"
+      />
 
       {/* Body (for POST/PUT/PATCH) */}
-      {data.method && ['POST', 'PUT', 'PATCH'].includes(data.method) && (
-        <div className="space-y-2">
-          <Label>Request Body</Label>
-          <Textarea
-            placeholder='{"key": "value"}'
-            value={data.body || ''}
-            onChange={(e) => handleUpdate({ body: e.target.value })}
-            rows={4}
-            className="font-mono text-xs"
-          />
-        </div>
+      {showBody && (
+        <VariableInput
+          label="Request Body"
+          placeholder={'{"name": "{{lead.name}}"}'}
+          value={data.body || ''}
+          onChange={(value) => handleUpdate({ body: value })}
+          categories={['lead', 'conversation', 'trigger', 'environment']}
+          multiline
+          rows={4}
+          className="font-mono text-xs"
+        />
       )}
 
       {/* Response Variable */}
@@ -120,9 +122,6 @@ export function ActionHttpConfigPanel({ nodeId, data }: ActionHttpConfigPanelPro
           <p>Access in later nodes:</p>
           <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
             {`{{variables.${responseVar}.body}}`}
-          </code>
-          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
-            {`{{variables.${responseVar}.status}}`}
           </code>
         </div>
       </div>

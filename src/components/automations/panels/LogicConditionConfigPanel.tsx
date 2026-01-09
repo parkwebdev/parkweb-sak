@@ -8,8 +8,6 @@
  */
 
 import { useCallback } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -17,8 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableReference } from './VariableReference';
+import { VariableSelect } from './VariableSelect';
+import { VariableInput } from './VariableInput';
 import type { LogicConditionNodeData } from '@/types/automations';
 
 interface LogicConditionConfigPanelProps {
@@ -72,18 +72,14 @@ export function LogicConditionConfigPanel({ nodeId, data }: LogicConditionConfig
 
   return (
     <div className="space-y-4">
-      {/* Variable Reference */}
-      <VariableReference showLead showConversation showEnvironment />
-
-      <div className="space-y-2">
-        <Label htmlFor="condition-field">Field</Label>
-        <Input
-          id="condition-field"
-          value={condition.field}
-          onChange={(e) => handleFieldChange(e.target.value)}
-          placeholder="e.g., {{lead.status}}"
-        />
-      </div>
+      <VariableSelect
+        label="Field to check"
+        id="condition-field"
+        value={condition.field}
+        onValueChange={handleFieldChange}
+        categories={['lead', 'conversation', 'trigger', 'environment']}
+        placeholder="Select a field"
+      />
 
       <div className="space-y-2">
         <Label htmlFor="condition-operator">Operator</Label>
@@ -102,15 +98,14 @@ export function LogicConditionConfigPanel({ nodeId, data }: LogicConditionConfig
       </div>
 
       {!isValueHidden && (
-        <div className="space-y-2">
-          <Label htmlFor="condition-value">Value</Label>
-          <Input
-            id="condition-value"
-            value={String(condition.value || '')}
-            onChange={(e) => handleValueChange(e.target.value)}
-            placeholder="Value to compare"
-          />
-        </div>
+        <VariableInput
+          label="Value"
+          id="condition-value"
+          value={String(condition.value || '')}
+          onChange={handleValueChange}
+          placeholder="Value to compare"
+          categories={['lead', 'conversation', 'trigger', 'environment']}
+        />
       )}
 
       <div className="pt-4 border-t border-border">
