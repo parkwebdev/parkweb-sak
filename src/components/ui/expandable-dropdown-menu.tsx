@@ -111,7 +111,7 @@ export function ExpandableDropdownMenu({
           className
         )}
       >
-        <div className="flex items-start">
+        <div className="flex">
           {/* Main menu column */}
           <div className="flex-shrink-0 py-1 min-w-[140px]">
             {mainItems.map((item) => (
@@ -143,40 +143,40 @@ export function ExpandableDropdownMenu({
                   {expandableItem.icon && <span className="mr-2 flex-shrink-0">{expandableItem.icon}</span>}
                   <span className="flex-1">{expandableItem.label}</span>
                   <ChevronRight className="ml-2 h-3 w-3 flex-shrink-0" aria-hidden="true" />
+
+                  {/* Expanded column - positioned relative to this row */}
+                  {isExpanded && (
+                    <div
+                      className="absolute left-full top-0 border-l border-border py-1 min-w-[100px] bg-popover rounded-r-md animate-in fade-in-0 slide-in-from-left-1 duration-150"
+                      onMouseEnter={handleExpandEnter}
+                      onMouseMove={handleExpandEnter}
+                      onPointerEnter={handleExpandEnter}
+                      onPointerMove={handleExpandEnter}
+                      onMouseLeave={handleExpandLeave}
+                      onPointerLeave={handleExpandLeave}
+                    >
+                      {expandableItem.items.map((subItem) => (
+                        <button
+                          key={subItem.id}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsOpen(false);
+                            subItem.onClick();
+                          }}
+                          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 mx-1 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground whitespace-nowrap"
+                          style={{ width: 'calc(100% - 8px)' }}
+                        >
+                          {subItem.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             )}
           </div>
-
-          {/* Expanded column - shows on hover */}
-          {isExpanded && hasExpandable && (
-            <div
-              className="border-l border-border py-1 min-w-[100px] animate-in fade-in-0 slide-in-from-left-1 duration-150"
-              onMouseEnter={handleExpandEnter}
-              onMouseMove={handleExpandEnter}
-              onPointerEnter={handleExpandEnter}
-              onPointerMove={handleExpandEnter}
-              onMouseLeave={handleExpandLeave}
-              onPointerLeave={handleExpandLeave}
-            >
-              {expandableItem.items.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsOpen(false);
-                    item.onClick();
-                  }}
-                  className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 mx-1 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground whitespace-nowrap"
-                  style={{ width: 'calc(100% - 8px)' }}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
