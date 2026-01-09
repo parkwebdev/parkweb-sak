@@ -1,8 +1,8 @@
 /**
  * TriggerAIToolNode Component
  * 
- * Trigger node for AI-initiated automation starts.
- * Exposes the automation as a tool the AI agent can call.
+ * Trigger node for Ari-initiated automation.
+ * Ari can use this action during conversations.
  * 
  * @module components/automations/nodes/TriggerAIToolNode
  */
@@ -39,13 +39,13 @@ export const TriggerAIToolNode = memo(function TriggerAIToolNode(props: NodeProp
             )}
             {paramCount > 0 && (
               <div className="text-2xs text-muted-foreground">
-                {paramCount} parameter{paramCount > 1 ? 's' : ''}
+                Collects {paramCount} detail{paramCount > 1 ? 's' : ''}
               </div>
             )}
           </>
         ) : (
           <div className="text-muted-foreground italic">
-            Configure tool name...
+            Configure action...
           </div>
         )}
       </div>

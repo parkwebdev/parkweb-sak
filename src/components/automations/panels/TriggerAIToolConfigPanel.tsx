@@ -1,14 +1,14 @@
 /**
  * TriggerAIToolConfigPanel Component
  * 
- * Configuration panel for AI tool trigger nodes.
- * Allows setting tool name, description, and parameters.
+ * Configuration panel for Ari Action trigger nodes.
+ * Allows setting action name, when to use it, and info to collect.
  * 
  * @module components/automations/panels/TriggerAIToolConfigPanel
  */
 
 import { useCallback } from 'react';
-import { Plus, Trash01 } from '@untitledui/icons';
+import { Plus, Trash01, InfoCircle } from '@untitledui/icons';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,17 +31,17 @@ interface TriggerAIToolConfigPanelProps {
 }
 
 const PARAM_TYPES = [
-  { value: 'string', label: 'String' },
+  { value: 'string', label: 'Text' },
   { value: 'number', label: 'Number' },
-  { value: 'boolean', label: 'Boolean' },
+  { value: 'boolean', label: 'Yes/No' },
 ] as const;
 
 export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPanelProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
 
-  const handleToolNameChange = useCallback(
+  const handleActionNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      // Sanitize tool name: lowercase, underscores only
+      // Sanitize: lowercase, underscores only
       const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_');
       updateNodeData(nodeId, { toolName: value });
     },
@@ -87,37 +87,46 @@ export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPa
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="tool-name">Tool Name</Label>
-        <Input
-          id="tool-name"
-          value={data.toolName || ''}
-          onChange={handleToolNameChange}
-          placeholder="my_custom_tool"
-          className="font-mono text-sm"
-        />
-        <p className="text-2xs text-muted-foreground">
-          Lowercase with underscores. This is how the AI will call this tool.
+      {/* Helpful context callout */}
+      <div className="bg-accent/50 border border-accent rounded-md p-3 flex gap-2">
+        <InfoCircle size={16} className="text-muted-foreground shrink-0 mt-0.5" aria-hidden="true" />
+        <p className="text-xs text-muted-foreground">
+          Ari will use this action during conversations when appropriate. 
+          For example: schedule callbacks, check availability, or send notifications.
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="tool-description">Description</Label>
+        <Label htmlFor="action-name">Action Name</Label>
+        <Input
+          id="action-name"
+          value={data.toolName || ''}
+          onChange={handleActionNameChange}
+          placeholder="schedule_callback"
+          className="font-mono text-sm"
+        />
+        <p className="text-2xs text-muted-foreground">
+          e.g. schedule_callback, check_availability, send_confirmation
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="when-to-use">When should Ari use this?</Label>
         <Textarea
-          id="tool-description"
+          id="when-to-use"
           value={data.toolDescription || ''}
           onChange={handleDescriptionChange}
-          placeholder="Describe what this tool does so the AI knows when to use it..."
+          placeholder="When a customer wants to schedule a callback or phone consultation..."
           rows={3}
         />
         <p className="text-2xs text-muted-foreground">
-          Help the AI understand when to use this tool.
+          Describe the situation when Ari should trigger this action.
         </p>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Parameters</Label>
+          <Label>Information to collect</Label>
           <Button variant="ghost" size="sm" onClick={addParameter}>
             <Plus size={14} className="mr-1" aria-hidden="true" />
             Add
@@ -126,7 +135,7 @@ export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPa
 
         {(!data.parameters || data.parameters.length === 0) && (
           <p className="text-sm text-muted-foreground py-2">
-            No parameters defined. The AI will call this tool without any inputs.
+            No information needed. Ari will run this action without collecting any details.
           </p>
         )}
 
@@ -141,7 +150,7 @@ export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPa
                   <Input
                     value={param.name}
                     onChange={(e) => updateParameter(index, 'name', e.target.value)}
-                    placeholder="Parameter name"
+                    placeholder="e.g. phone_number, preferred_time"
                     className="font-mono text-sm"
                   />
                   <div className="flex gap-2">
@@ -171,11 +180,11 @@ export function TriggerAIToolConfigPanel({ nodeId, data }: TriggerAIToolConfigPa
                   <Input
                     value={param.description}
                     onChange={(e) => updateParameter(index, 'description', e.target.value)}
-                    placeholder="Parameter description"
+                    placeholder="What should Ari ask for? e.g. 'The customer's phone number'"
                   />
                 </div>
                 <IconButton
-                  label="Remove parameter"
+                  label="Remove"
                   variant="ghost"
                   size="sm"
                   onClick={() => removeParameter(index)}
