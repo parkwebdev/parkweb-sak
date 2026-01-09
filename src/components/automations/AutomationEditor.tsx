@@ -24,7 +24,7 @@ import { TestExecutionDialog } from '@/components/automations/TestExecutionDialo
 import { RunAutomationDialog } from '@/components/automations/RunAutomationDialog';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Automation, AutomationStatus, TriggerManualConfig } from '@/types/automations';
+import type { Automation, AutomationStatus, TriggerManualConfig, AutomationTriggerType, AutomationTriggerConfig } from '@/types/automations';
 
 interface AutomationEditorProps {
   automationId: string;
@@ -44,10 +44,23 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
   const [runDialogOpen, setRunDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+  // Handle trigger metadata sync from auto-save
+  const handleTriggerSync = useCallback((
+    triggerType: AutomationTriggerType, 
+    triggerConfig: AutomationTriggerConfig
+  ) => {
+    setAutomation(prev => prev ? { 
+      ...prev, 
+      trigger_type: triggerType, 
+      trigger_config: triggerConfig 
+    } : null);
+  }, []);
+
   // Auto-save hook
   const { saving, lastSavedAt, saveNow, saveError } = useAutomationAutoSave({
     automation,
     enabled: true,
+    onTriggerSync: handleTriggerSync,
   });
 
   // Execution hook for test runs (only initialize when automation is loaded)
