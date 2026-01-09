@@ -28,7 +28,14 @@ import {
   KanbanHeader,
   KanbanCard,
 } from "@/components/ui/kanban";
-import { ExpandableContextMenu } from '@/components/ui/expandable-context-menu';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { ExpandableMenuItem } from '@/components/ui/expandable-menu-item';
 import { VirtualizedKanbanCards } from "@/components/ui/virtualized-kanban-cards";
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { StageProgressIcon } from "./StageProgressIcon";
@@ -612,39 +619,9 @@ export function LeadsKanbanBoard({
                   />
                 </KanbanHeader>
                 <VirtualizedKanbanCards id={column.id} estimatedCardHeight={140}>
-                  {(lead: KanbanLead) => {
-                    const mainItems = [
-                      {
-                        id: 'view',
-                        label: 'View details',
-                        icon: <Eye size={14} aria-hidden="true" />,
-                        onClick: () => {
-                          const originalLead = findOriginalLead(lead.id);
-                          if (originalLead) {
-                            onViewLead(originalLead);
-                          }
-                        },
-                      },
-                    ];
-
-                    const expandableItem = manualAutomations.length > 0 && onRunAutomation
-                      ? {
-                          id: 'run-automation',
-                          label: 'Run automation',
-                          icon: <Zap size={14} aria-hidden="true" />,
-                          items: manualAutomations.map((auto) => ({
-                            id: auto.id,
-                            label: auto.name,
-                            onClick: () => onRunAutomation(auto.id, lead.id, lead.name),
-                          })),
-                        }
-                      : undefined;
-
-                    return (
-                      <ExpandableContextMenu
-                        mainItems={mainItems}
-                        expandableItem={expandableItem}
-                      >
+                  {(lead: KanbanLead) => (
+                    <ContextMenu>
+                      <ContextMenuTrigger asChild>
                         <div>
                           <KanbanCard
                             key={lead.id}
@@ -668,9 +645,34 @@ export function LeadsKanbanBoard({
                             />
                           </KanbanCard>
                         </div>
-                      </ExpandableContextMenu>
-                    );
-                  }}
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem onClick={() => {
+                          const originalLead = findOriginalLead(lead.id);
+                          if (originalLead) {
+                            onViewLead(originalLead);
+                          }
+                        }}>
+                          <Eye size={14} className="mr-2" aria-hidden="true" />
+                          View details
+                        </ContextMenuItem>
+                        {manualAutomations.length > 0 && onRunAutomation && (
+                          <>
+                            <ContextMenuSeparator />
+                            <ExpandableMenuItem
+                              icon={<Zap size={14} aria-hidden="true" />}
+                              label="Run automation"
+                              items={manualAutomations.map((auto) => ({
+                                id: auto.id,
+                                label: auto.name,
+                                onClick: () => onRunAutomation(auto.id, lead.id, lead.name),
+                              }))}
+                            />
+                          </>
+                        )}
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  )}
                 </VirtualizedKanbanCards>
               </KanbanBoard>
             );

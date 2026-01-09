@@ -2,7 +2,14 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { ExpandableDropdownMenu } from '@/components/ui/expandable-dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ExpandableMenuItem } from '@/components/ui/expandable-menu-item';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { LeadAssigneePicker } from '@/components/leads/LeadAssigneePicker';
 import { normalizePriority, PRIORITY_CONFIG } from '@/lib/priority-config';
@@ -340,32 +347,30 @@ export const createLeadsColumns = ({
       
       return (
         <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-          <ExpandableDropdownMenu
-            trigger={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <DotsVertical size={16} aria-hidden="true" />
                 <span className="sr-only">Open menu</span>
               </Button>
-            }
-            mainItems={[
-              {
-                id: 'view',
-                label: 'View details',
-                icon: <Eye size={14} aria-hidden="true" />,
-                onClick: () => onView(lead),
-              },
-            ]}
-            expandableItem={{
-              id: 'run-automation',
-              label: 'Run automation',
-              icon: <Zap size={14} aria-hidden="true" />,
-              items: manualAutomations.map((auto) => ({
-                id: auto.id,
-                label: auto.name,
-                onClick: () => onRunAutomation(auto.id, lead.id, leadName),
-              })),
-            }}
-          />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onView(lead)}>
+                <Eye size={14} className="mr-2" aria-hidden="true" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <ExpandableMenuItem
+                icon={<Zap size={14} aria-hidden="true" />}
+                label="Run automation"
+                items={manualAutomations.map((auto) => ({
+                  id: auto.id,
+                  label: auto.name,
+                  onClick: () => onRunAutomation(auto.id, lead.id, leadName),
+                }))}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       );
     },
