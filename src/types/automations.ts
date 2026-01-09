@@ -81,19 +81,25 @@ export interface BaseNodeData extends Record<string, unknown> {
 }
 
 /**
+ * Supported automation event types matching backend format.
+ */
+export type AutomationEventType =
+  | 'lead.created'
+  | 'lead.updated'
+  | 'lead.stage_changed'
+  | 'conversation.created'
+  | 'conversation.closed'
+  | 'conversation.human_takeover'
+  | 'message.received';
+
+/**
  * Trigger event node configuration.
  */
 export interface TriggerEventNodeData extends BaseNodeData {
-  /** Source of the event (lead, conversation, booking) */
-  eventSource: 'lead' | 'conversation' | 'booking';
-  /** Type of event (INSERT, UPDATE, DELETE, any) */
-  eventType: 'INSERT' | 'UPDATE' | 'DELETE' | 'any';
-  /** Optional field-level conditions */
-  conditions?: Array<{
-    field: string;
-    operator: 'equals' | 'not_equals' | 'contains' | 'changed_to';
-    value: unknown;
-  }>;
+  /** Event type matching backend TriggerEventConfig */
+  event?: AutomationEventType;
+  /** Optional filters for the event */
+  filters?: Record<string, unknown>;
 }
 
 /**
@@ -583,7 +589,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Triggered by lead or conversation events',
         icon: 'Zap',
         color: 'amber',
-        defaultData: { label: 'Event Trigger' },
+        defaultData: { label: 'Event Trigger', event: 'lead.created' },
       },
       {
         type: 'trigger-schedule',
