@@ -21,3 +21,6 @@ export { AIClassifyConfigPanel } from './AIClassifyConfigPanel';
 export { AIExtractConfigPanel } from './AIExtractConfigPanel';
 export { VariableSelect } from './VariableSelect';
 export { VariableInput } from './VariableInput';
+export { AdvancedModeToggle, useAdvancedMode } from './AdvancedModeToggle';
+export { SmartFieldInput } from './SmartFieldInput';
+export * from './panelTypes';

@@ -2,6 +2,7 @@
  * ActionUpdateLeadConfigPanel Component
  * 
  * Configuration panel for lead update action nodes.
+ * Simplified version - automatically uses the triggered lead.
  * 
  * @module components/automations/panels/ActionUpdateLeadConfigPanel
  */
@@ -19,8 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableSelect } from './VariableSelect';
-import { VariableInput } from './VariableInput';
+import { SmartFieldInput } from './SmartFieldInput';
 import type { ActionUpdateLeadNodeData, LeadFieldUpdate } from '@/types/automations';
 
 interface ActionUpdateLeadConfigPanelProps {
@@ -52,13 +52,17 @@ export function ActionUpdateLeadConfigPanel({ nodeId, data }: ActionUpdateLeadCo
   const addField = useCallback(() => {
     const fields = data.fields || [];
     handleUpdate({
-      fields: [...fields, { field: 'name', value: '' }],
+      fields: [...fields, { field: 'status', value: '' }],
     });
   }, [data.fields, handleUpdate]);
 
   const updateField = useCallback(
     (index: number, update: Partial<LeadFieldUpdate>) => {
       const fields = [...(data.fields || [])];
+      // Reset value when field changes to ensure proper type
+      if (update.field && update.field !== fields[index].field) {
+        update.value = '';
+      }
       fields[index] = { ...fields[index], ...update };
       handleUpdate({ fields });
     },
@@ -75,28 +79,26 @@ export function ActionUpdateLeadConfigPanel({ nodeId, data }: ActionUpdateLeadCo
 
   return (
     <div className="space-y-4">
-      {/* Lead Source */}
-      <VariableSelect
-        label="Lead to update"
-        value={data.leadId || '{{lead.id}}'}
-        onValueChange={(value) => handleUpdate({ leadId: value })}
-        categories={['lead', 'trigger']}
-        placeholder="Select lead source"
-      />
+      {/* Implicit lead context message */}
+      <div className="p-3 bg-muted/50 rounded-md">
+        <p className="text-sm text-muted-foreground">
+          This action updates the <strong>lead that triggered</strong> this automation.
+        </p>
+      </div>
 
       {/* Fields to Update */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Fields to Update</Label>
+          <Label>Fields to update</Label>
           <Button variant="ghost" size="sm" onClick={addField}>
             <Plus size={14} aria-hidden="true" className="mr-1" />
-            Add Field
+            Add field
           </Button>
         </div>
 
         {(!data.fields || data.fields.length === 0) && (
           <p className="text-sm text-muted-foreground italic py-2">
-            No fields configured. Click "Add Field" to start.
+            No fields configured. Click "Add field" to start.
           </p>
         )}
 
@@ -129,11 +131,11 @@ export function ActionUpdateLeadConfigPanel({ nodeId, data }: ActionUpdateLeadCo
                 <Trash01 size={16} aria-hidden="true" />
               </IconButton>
             </div>
-            <VariableInput
+            <SmartFieldInput
+              field={field.field}
               value={field.value}
               onChange={(value) => updateField(index, { value })}
               placeholder="New value"
-              categories={['lead', 'trigger', 'conversation', 'environment']}
             />
           </div>
         ))}

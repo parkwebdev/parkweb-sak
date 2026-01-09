@@ -2,7 +2,7 @@
  * AIExtractConfigPanel Component
  * 
  * Configuration panel for AI extraction nodes.
- * Allows defining fields to extract from text.
+ * Simplified with human-readable input options and friendly field type labels.
  * 
  * @module components/automations/panels/AIExtractConfigPanel
  */
@@ -22,7 +22,9 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableSelect } from './VariableSelect';
+import { AdvancedModeToggle } from './AdvancedModeToggle';
+import { VariableInput } from './VariableInput';
+import { INPUT_SOURCES } from './panelTypes';
 import type { AIExtractNodeData, AIExtractField } from '@/types/automations';
 
 interface AIExtractConfigPanelProps {
@@ -30,10 +32,11 @@ interface AIExtractConfigPanelProps {
   data: AIExtractNodeData;
 }
 
+// Friendly labels for field types
 const FIELD_TYPES = [
   { value: 'string', label: 'Text' },
   { value: 'number', label: 'Number' },
-  { value: 'boolean', label: 'Boolean' },
+  { value: 'boolean', label: 'Yes/No' },
   { value: 'date', label: 'Date' },
   { value: 'email', label: 'Email' },
   { value: 'phone', label: 'Phone' },
@@ -71,41 +74,48 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
     handleChange('fields', fields);
   }, [data.fields]);
 
-  const outputVar = data.outputVariable || 'extracted_data';
+  const outputVar = data.outputVariable || 'extracted';
 
   return (
     <div className="space-y-4">
-      {/* Input Source */}
-      <VariableSelect
-        label="Input text"
-        value={data.input || ''}
-        onValueChange={(value) => handleChange('input', value)}
-        categories={['lead', 'conversation', 'trigger']}
-        placeholder="Select input source"
-      />
+      {/* Input Source - Human-readable dropdown */}
+      <div className="space-y-2">
+        <Label>Extract from</Label>
+        <Select
+          value={data.input || ''}
+          onValueChange={(value) => handleChange('input', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select the text to extract from" />
+          </SelectTrigger>
+          <SelectContent>
+            {INPUT_SOURCES.map((source) => (
+              <SelectItem key={source.value} value={source.value}>
+                {source.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Fields to Extract */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Fields to Extract</Label>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addField}
-          >
-            <Plus size={16} aria-hidden="true" />
+          <Label>Fields to extract</Label>
+          <Button variant="ghost" size="sm" className="h-6 px-2" onClick={addField}>
+            <Plus size={14} aria-hidden="true" className="mr-1" />
             Add
           </Button>
         </div>
         
         <div className="space-y-3">
           {(data.fields || []).map((field: AIExtractField, index: number) => (
-            <div key={index} className="p-3 border rounded-md space-y-2 bg-muted/50">
+            <div key={index} className="p-3 border rounded-md space-y-2 bg-muted/30">
               <div className="flex items-center gap-2">
                 <Input
                   value={field.name}
                   onChange={(e) => updateField(index, 'name', e.target.value)}
-                  placeholder="Field name"
+                  placeholder="Field name (e.g., company_name)"
                   size="sm"
                   className="flex-1 font-mono"
                 />
@@ -136,7 +146,7 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
               <Input
                 value={field.description || ''}
                 onChange={(e) => updateField(index, 'description', e.target.value)}
-                placeholder="Description (helps AI find the right data)"
+                placeholder="Describe what to look for (helps AI accuracy)"
                 size="sm"
               />
               <div className="flex items-center gap-2">
@@ -146,36 +156,51 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
                   onCheckedChange={(checked) => updateField(index, 'required', checked)}
                 />
                 <Label htmlFor={`required-${index}`} className="text-xs text-muted-foreground">
-                  Required
+                  Required field
                 </Label>
               </div>
             </div>
           ))}
           
           {(data.fields?.length || 0) === 0 && (
-            <p className="text-2xs text-muted-foreground text-center py-4">
-              Add fields to extract from the input text
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Add fields you want the AI to extract from the text
             </p>
           )}
         </div>
       </div>
 
-      {/* Output Variable */}
-      <div className="space-y-2">
-        <Label htmlFor="outputVariable">Save result as</Label>
-        <Input
-          id="outputVariable"
-          value={data.outputVariable || ''}
-          onChange={(e) => handleChange('outputVariable', e.target.value)}
-          placeholder="extracted_data"
-        />
-        <div className="text-2xs text-muted-foreground space-y-1">
-          <p>Access in later nodes:</p>
-          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
-            {`{{variables.${outputVar}.fieldName}}`}
-          </code>
-        </div>
+      {/* Output Preview */}
+      <div className="p-3 bg-muted/50 rounded-md space-y-1">
+        <p className="text-xs text-muted-foreground">Use extracted data in later nodes:</p>
+        <code className="block bg-background px-2 py-1 rounded text-xs font-mono border border-border">
+          {`{{variables.${outputVar}.field_name}}`}
+        </code>
       </div>
+
+      {/* Advanced Settings */}
+      <AdvancedModeToggle storageKey="ai_extract">
+        {/* Custom Input Source */}
+        <VariableInput
+          label="Custom input (override)"
+          value={data.input || ''}
+          onChange={(value) => handleChange('input', value)}
+          placeholder="{{custom.variable.path}}"
+          categories={['lead', 'conversation', 'trigger']}
+        />
+
+        {/* Output Variable */}
+        <div className="space-y-2">
+          <Label htmlFor="outputVariable">Variable name</Label>
+          <Input
+            id="outputVariable"
+            value={data.outputVariable || ''}
+            onChange={(e) => handleChange('outputVariable', e.target.value)}
+            placeholder="extracted"
+            className="font-mono text-xs"
+          />
+        </div>
+      </AdvancedModeToggle>
     </div>
   );
 }
