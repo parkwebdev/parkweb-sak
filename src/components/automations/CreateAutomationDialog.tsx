@@ -55,8 +55,8 @@ const TRIGGER_OPTIONS: Array<{
   },
   {
     type: 'ai_tool',
-    label: 'AI Tool',
-    description: 'Called by the AI agent',
+    label: 'Ari Action',
+    description: 'Ari uses this during conversations',
     icon: Stars02,
   },
 ];
