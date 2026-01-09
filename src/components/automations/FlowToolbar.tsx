@@ -8,7 +8,7 @@
  */
 
 import { memo } from 'react';
-import { ArrowLeft, ReverseLeft, ReverseRight, Save01, PlayCircle, ClockRewind, DotsVertical, Trash01 } from '@untitledui/icons';
+import { ArrowLeft, ReverseLeft, ReverseRight, Save01, PlayCircle, ClockRewind, DotsVertical, Trash01, ChevronDown, Circle } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LastSavedIndicator } from '@/components/automations/LastSavedIndicator';
 import { useFlowHistory } from '@/stores/automationFlowStore';
-import type { Automation } from '@/types/automations';
+import type { Automation, AutomationStatus } from '@/types/automations';
 
 interface FlowToolbarProps {
   automation: Automation;
@@ -34,6 +34,7 @@ interface FlowToolbarProps {
   onHistoryClick?: () => void;
   onDeleteClick?: () => void;
   canDelete?: boolean;
+  onStatusChange?: (status: AutomationStatus, enabled: boolean) => void;
 }
 
 export const FlowToolbar = memo(function FlowToolbar({
@@ -48,8 +49,24 @@ export const FlowToolbar = memo(function FlowToolbar({
   onHistoryClick,
   onDeleteClick,
   canDelete = true,
+  onStatusChange,
 }: FlowToolbarProps) {
   const { undo, redo, canUndo, canRedo } = useFlowHistory();
+
+  const getStatusColor = (status: AutomationStatus) => {
+    switch (status) {
+      case 'active': return 'fill-status-active text-status-active';
+      case 'paused': return 'fill-status-warning text-status-warning';
+      case 'error': return 'fill-destructive text-destructive';
+      default: return 'fill-muted-foreground text-muted-foreground';
+    }
+  };
+
+  const getStatusBadgeVariant = (status: AutomationStatus, enabled: boolean) => {
+    if (enabled && status === 'active') return 'default';
+    if (status === 'error') return 'destructive';
+    return 'secondary';
+  };
 
   return (
     <div className="h-12 border-b border-border px-4 flex items-center gap-4 bg-card">
@@ -68,9 +85,36 @@ export const FlowToolbar = memo(function FlowToolbar({
         <h1 className="text-sm font-medium text-foreground">
           {automation.name}
         </h1>
-        <Badge variant={automation.enabled ? 'default' : 'secondary'} size="sm">
-          {automation.status}
-        </Badge>
+        
+        {/* Status dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+              <Badge 
+                variant={getStatusBadgeVariant(automation.status, automation.enabled)} 
+                size="sm"
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                {automation.status}
+                <ChevronDown size={12} className="ml-1" aria-hidden="true" />
+              </Badge>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => onStatusChange?.('draft', false)}>
+              <Circle size={8} className="mr-2 fill-muted-foreground text-muted-foreground" aria-hidden="true" />
+              Draft
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusChange?.('active', true)}>
+              <Circle size={8} className="mr-2 fill-status-active text-status-active" aria-hidden="true" />
+              Active
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusChange?.('paused', false)}>
+              <Circle size={8} className="mr-2 fill-status-warning text-status-warning" aria-hidden="true" />
+              Paused
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Last saved indicator */}

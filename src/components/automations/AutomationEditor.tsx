@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
 import { useAutomations } from '@/hooks/useAutomations';
 import { useCanManage } from '@/hooks/useCanManage';
 import { useAutomationAutoSave } from '@/hooks/useAutomationAutoSave';
@@ -22,7 +23,7 @@ import { ExecutionPanel } from '@/components/automations/ExecutionPanel';
 import { TestExecutionDialog } from '@/components/automations/TestExecutionDialog';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Automation } from '@/types/automations';
+import type { Automation, AutomationStatus } from '@/types/automations';
 
 interface AutomationEditorProps {
   automationId: string;
@@ -30,7 +31,7 @@ interface AutomationEditorProps {
 }
 
 export function AutomationEditor({ automationId, onClose }: AutomationEditorProps) {
-  const { getAutomation, deleteAutomation, deleting } = useAutomations();
+  const { getAutomation, updateAutomation, deleteAutomation, deleting } = useAutomations();
   const canManageAutomations = useCanManage('manage_ari');
   const [automation, setAutomation] = useState<Automation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,6 +111,30 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
     setExecutionPanelOpen(true);
   }, []);
 
+  // Status change handler
+  const handleStatusChange = useCallback(async (newStatus: AutomationStatus, enabled: boolean) => {
+    if (!automation) return;
+    
+    // If enabling, require save first (no unsaved changes)
+    if (enabled && isDirty) {
+      toast.error('Save your changes first', { 
+        description: 'You must save before publishing.' 
+      });
+      return;
+    }
+    
+    await updateAutomation({
+      id: automation.id,
+      status: newStatus,
+      enabled,
+    });
+    
+    // Update local state
+    setAutomation(prev => prev ? { ...prev, status: newStatus, enabled } : null);
+    
+    toast.success(enabled ? 'Automation published' : `Automation set to ${newStatus}`);
+  }, [automation, isDirty, updateAutomation]);
+
   // Delete handlers
   const handleDeleteClick = useCallback(() => {
     setDeleteDialogOpen(true);
@@ -166,6 +191,7 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
           onHistoryClick={handleHistoryClick}
           onDeleteClick={handleDeleteClick}
           canDelete={canManageAutomations}
+          onStatusChange={handleStatusChange}
         />
 
         {/* Editor area */}
