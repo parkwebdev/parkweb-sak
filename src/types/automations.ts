@@ -125,7 +125,7 @@ export interface TriggerScheduleNodeData extends BaseNodeData {
  * Trigger manual node configuration.
  */
 export interface TriggerManualNodeData extends BaseNodeData {
-  /** Description of what this manual trigger does */
+  /** Action name shown when triggering this automation */
   buttonLabel?: string;
   /** Whether to require confirmation */
   requireConfirmation?: boolean;
@@ -437,6 +437,7 @@ export interface TriggerScheduleConfig {
  * Manual trigger configuration stored in trigger_config JSONB.
  */
 export interface TriggerManualConfig {
+  /** Action name shown when triggering this automation */
   buttonLabel?: string;
   requireConfirmation?: boolean;
 }

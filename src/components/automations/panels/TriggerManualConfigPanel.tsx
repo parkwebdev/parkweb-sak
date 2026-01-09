@@ -2,7 +2,7 @@
  * TriggerManualConfigPanel Component
  * 
  * Configuration panel for manual trigger nodes.
- * Allows setting button label and confirmation options.
+ * Allows setting action name and confirmation options.
  * 
  * @module components/automations/panels/TriggerManualConfigPanel
  */
@@ -22,7 +22,7 @@ interface TriggerManualConfigPanelProps {
 export function TriggerManualConfigPanel({ nodeId, data }: TriggerManualConfigPanelProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
 
-  const handleButtonLabelChange = useCallback(
+  const handleActionNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       updateNodeData(nodeId, { buttonLabel: e.target.value });
     },
@@ -39,15 +39,15 @@ export function TriggerManualConfigPanel({ nodeId, data }: TriggerManualConfigPa
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="button-label">Button Label</Label>
+        <Label htmlFor="action-name">Action Name</Label>
         <Input
-          id="button-label"
+          id="action-name"
           value={data.buttonLabel || ''}
-          onChange={handleButtonLabelChange}
+          onChange={handleActionNameChange}
           placeholder="Run automation"
         />
         <p className="text-2xs text-muted-foreground">
-          Text shown on the button to trigger this automation.
+          Name shown when triggering this automation.
         </p>
       </div>
 
