@@ -620,7 +620,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       {
         type: 'trigger-ai-tool',
         label: 'Ari Action',
-        description: 'Ari triggers this workflow when customers ask for things like callbacks or quotes',
+        description: 'Ari uses this during conversations',
         icon: 'Sparkles',
         color: 'purple',
         defaultData: { label: 'Ari Action' },
