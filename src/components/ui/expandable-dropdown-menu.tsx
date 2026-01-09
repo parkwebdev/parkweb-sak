@@ -98,8 +98,6 @@ export function ExpandableDropdownMenu({
   }, [cancelClose]);
 
   const hasExpandable = expandableItem && expandableItem.items.length > 0;
-  const baseWidth = 160;
-  const expandedWidth = 300;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
@@ -109,19 +107,18 @@ export function ExpandableDropdownMenu({
       <DropdownMenuContent
         align={align}
         className={cn(
-          'p-0 transition-all duration-200 ease-out overflow-hidden',
+          'p-0 transition-all duration-200 ease-out overflow-visible w-auto',
           className
         )}
-        style={{ width: isExpanded ? `${expandedWidth}px` : `${baseWidth}px` }}
       >
-        <div className="flex">
+        <div className="flex items-start">
           {/* Main menu column */}
-          <div className={cn('flex-shrink-0 py-1', isExpanded ? 'w-[140px]' : 'w-full')}>
+          <div className="flex-shrink-0 py-1 min-w-[140px]">
             {mainItems.map((item) => (
               <DropdownMenuItem
                 key={item.id}
                 onClick={item.onClick}
-                className="mx-1"
+                className="mx-1 whitespace-nowrap"
               >
                 {item.icon && <span className="mr-2 flex-shrink-0">{item.icon}</span>}
                 {item.label}
@@ -133,7 +130,7 @@ export function ExpandableDropdownMenu({
                 <DropdownMenuSeparator className="my-1" />
                 <div
                   className={cn(
-                    'relative flex cursor-default select-none items-center rounded-sm px-2 py-1 mx-1 text-xs outline-none transition-colors',
+                    'relative flex cursor-default select-none items-center rounded-sm px-2 py-1 mx-1 text-xs outline-none transition-colors whitespace-nowrap',
                     isExpanded ? 'bg-accent text-accent-foreground' : 'hover:bg-accent hover:text-accent-foreground'
                   )}
                   onMouseEnter={handleExpandEnter}
@@ -145,7 +142,7 @@ export function ExpandableDropdownMenu({
                 >
                   {expandableItem.icon && <span className="mr-2 flex-shrink-0">{expandableItem.icon}</span>}
                   <span className="flex-1">{expandableItem.label}</span>
-                  <ChevronRight className="ml-auto h-3 w-3" aria-hidden="true" />
+                  <ChevronRight className="ml-2 h-3 w-3 flex-shrink-0" aria-hidden="true" />
                 </div>
               </>
             )}
@@ -154,7 +151,7 @@ export function ExpandableDropdownMenu({
           {/* Expanded column - shows on hover */}
           {isExpanded && hasExpandable && (
             <div
-              className="border-l border-border py-1 flex-1 animate-in fade-in-0 slide-in-from-left-1 duration-150"
+              className="border-l border-border py-1 min-w-[100px] animate-in fade-in-0 slide-in-from-left-1 duration-150"
               onMouseEnter={handleExpandEnter}
               onMouseMove={handleExpandEnter}
               onPointerEnter={handleExpandEnter}
@@ -172,7 +169,7 @@ export function ExpandableDropdownMenu({
                     setIsOpen(false);
                     item.onClick();
                   }}
-                  className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 mx-1 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                  className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 mx-1 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground whitespace-nowrap"
                   style={{ width: 'calc(100% - 8px)' }}
                 >
                   {item.label}
