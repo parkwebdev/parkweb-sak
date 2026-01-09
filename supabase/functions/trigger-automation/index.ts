@@ -34,8 +34,11 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  
+  // Service role client for database operations
+  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
   try {
     // Try to parse request body - empty body means cron scheduler call
@@ -58,7 +61,7 @@ serve(async (req) => {
     // Handle cron-triggered schedule check (no auth needed - internal edge function schedule)
     if (isCronCall) {
       console.log('[trigger-automation] Cron-triggered schedule check');
-      return await handleScheduleTriggers(supabase, supabaseUrl, serviceRoleKey);
+      return await handleScheduleTriggers(supabaseAdmin, supabaseUrl, serviceRoleKey);
     }
 
     // For non-cron calls, require authentication
@@ -71,18 +74,24 @@ serve(async (req) => {
 
     if (internalSecret === expectedSecret) {
       isInternalCall = true;
-    } else if (authHeader) {
-      // Verify JWT for external calls
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    } else if (authHeader?.startsWith('Bearer ')) {
+      // Create a client with user's auth header for JWT validation
+      const supabaseWithAuth = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
       
-      if (authError || !user) {
+      // Verify JWT using getClaims
+      const token = authHeader.replace('Bearer ', '');
+      const { data, error: authError } = await supabaseWithAuth.auth.getClaims(token);
+      
+      if (authError || !data?.claims) {
+        console.error('[trigger-automation] Auth error:', authError);
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      userId = user.id;
+      userId = data.claims.sub as string;
     } else {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -104,7 +113,7 @@ serve(async (req) => {
     // Handle different trigger sources
     if (source === 'manual' && automationId) {
       // Manual trigger - run specific automation
-      const { data: automation, error: fetchError } = await supabase
+      const { data: automation, error: fetchError } = await supabaseAdmin
         .from('automations')
         .select('*')
         .eq('id', automationId)
@@ -119,7 +128,7 @@ serve(async (req) => {
 
       // Verify user has access (if not internal call)
       if (!isInternalCall && userId) {
-        const { data: hasAccess } = await supabase.rpc('has_account_access', {
+        const { data: hasAccess } = await supabaseAdmin.rpc('has_account_access', {
           account_owner_id: automation.user_id
         });
 
@@ -133,7 +142,7 @@ serve(async (req) => {
 
       // Execute the automation
       const executionResult = await executeAutomation(
-        supabase,
+        supabaseAdmin,
         supabaseUrl,
         serviceRoleKey,
         automation,
@@ -163,7 +172,7 @@ serve(async (req) => {
 
       if (!agentId && payload.table === 'messages') {
         // Look up conversation to get agent_id
-        const { data: conversation } = await supabase
+        const { data: conversation } = await supabaseAdmin
           .from('conversations')
           .select('agent_id, user_id')
           .eq('id', payload.record.conversation_id)
@@ -176,7 +185,7 @@ serve(async (req) => {
 
       if (!agentId && payload.table === 'leads') {
         // Get agent via user's agent
-        const { data: agent } = await supabase
+        const { data: agent } = await supabaseAdmin
           .from('agents')
           .select('id')
           .eq('user_id', payload.record.user_id)
@@ -197,7 +206,7 @@ serve(async (req) => {
       }
 
       // Fetch enabled event automations for this agent
-      const { data: automations, error: fetchError } = await supabase
+      const { data: automations, error: fetchError } = await supabaseAdmin
         .from('automations')
         .select('*')
         .eq('agent_id', agentId)
@@ -225,7 +234,7 @@ serve(async (req) => {
       // Execute each matched automation
       for (const match of matched) {
         const executionResult = await executeAutomation(
-          supabase,
+          supabaseAdmin,
           supabaseUrl,
           serviceRoleKey,
           match.automation,
@@ -246,7 +255,7 @@ serve(async (req) => {
 
     } else if (source === 'schedule') {
       // Schedule trigger - check all schedule automations
-      const { data: automations, error: fetchError } = await supabase
+      const { data: automations, error: fetchError } = await supabaseAdmin
         .from('automations')
         .select('*')
         .eq('trigger_type', 'schedule')
@@ -277,7 +286,7 @@ serve(async (req) => {
           now
         )) {
           const executionResult = await executeAutomation(
-            supabase,
+            supabaseAdmin,
             supabaseUrl,
             serviceRoleKey,
             automation as Automation,
