@@ -190,9 +190,9 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
   };
 
   return (
-    <div className="w-80 border-l border-border bg-card flex flex-col">
+    <div className="w-80 h-full border-l border-border bg-card flex flex-col animate-slide-in-from-right">
       {/* Header */}
-      <div className="h-12 px-4 border-b border-border flex items-center justify-between">
+      <div className="h-12 px-4 border-b border-border flex items-center justify-between shrink-0">
         <h3 className="text-sm font-medium">Node Settings</h3>
         <IconButton
           label="Close panel"
@@ -204,8 +204,8 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
         </IconButton>
       </div>
 
-      {/* Content */}
-      <ScrollArea className="flex-1">
+      {/* Content - scrollable */}
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-4">
           {/* Node label (readonly for now) */}
           <div className="mb-4 pb-4 border-b border-border">
