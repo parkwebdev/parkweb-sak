@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
 import { useAutomations } from '@/hooks/useAutomations';
-import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
+import { triggerAutomation } from '@/lib/trigger-automation';
 import { Loading02 } from '@untitledui/icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
@@ -136,11 +136,7 @@ function Leads({ onMenuClick }: LeadsProps) {
   const [automationToRun, setAutomationToRun] = useState<AutomationListItem | null>(null);
   const [leadForAutomation, setLeadForAutomation] = useState<{ id: string; name: string } | null>(null);
   const [runDialogOpen, setRunDialogOpen] = useState(false);
-  
-  // Execution hook for triggering runs
-  const { triggerExecution, triggering } = useAutomationExecutions({ 
-    automationId: automationToRun?.id || '' 
-  });
+  const [triggering, setTriggering] = useState(false);
   
   // Check if user can manage leads (delete, edit stage, etc.)
   const canManageLeads = useCanManage('manage_leads');
@@ -430,28 +426,32 @@ function Leads({ onMenuClick }: LeadsProps) {
     if (!automation) return;
     
     const config = automation.trigger_config as TriggerManualConfig;
-    setAutomationToRun(automation);
-    setLeadForAutomation({ id: leadId, name: leadName });
     
     if (config?.requireConfirmation) {
+      setAutomationToRun(automation);
+      setLeadForAutomation({ id: leadId, name: leadName });
       setRunDialogOpen(true);
     } else {
-      // Run immediately without confirmation
-      setTimeout(() => {
-        triggerExecution({ testMode: false, leadId });
-        setAutomationToRun(null);
-        setLeadForAutomation(null);
-      }, 0);
+      // Run immediately without confirmation - call edge function directly
+      setTriggering(true);
+      triggerAutomation({ automationId, leadId }).finally(() => {
+        setTriggering(false);
+      });
     }
-  }, [manualAutomations, triggerExecution]);
+  }, [manualAutomations]);
 
   const handleConfirmRunOnLead = useCallback(async () => {
     if (!automationToRun || !leadForAutomation) return;
-    await triggerExecution({ testMode: false, leadId: leadForAutomation.id });
+    setTriggering(true);
+    await triggerAutomation({ 
+      automationId: automationToRun.id, 
+      leadId: leadForAutomation.id 
+    });
+    setTriggering(false);
     setRunDialogOpen(false);
     setAutomationToRun(null);
     setLeadForAutomation(null);
-  }, [automationToRun, leadForAutomation, triggerExecution]);
+  }, [automationToRun, leadForAutomation]);
 
   return (
     <div className="flex flex-col h-full w-full min-w-0 bg-muted/30 overflow-y-auto">
