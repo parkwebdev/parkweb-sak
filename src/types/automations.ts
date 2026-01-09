@@ -30,9 +30,6 @@ export type AutomationNodeType =
   | 'action-update-lead'
   | 'action-create-booking'
   | 'action-send-message'
-  | 'action-supabase'
-  | 'action-task'
-  | 'action-notify'
   // Logic
   | 'logic-condition'
   | 'logic-switch'
