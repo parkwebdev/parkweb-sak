@@ -9,7 +9,6 @@
 
 import { useState, useCallback } from 'react';
 import { useAutomations } from '@/hooks/useAutomations';
-import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { AutomationsList } from '@/components/automations/AutomationsList';
 import { AutomationEditor } from '@/components/automations/AutomationEditor';
 import { AutomationsEmptyState } from '@/components/automations/AutomationsEmptyState';
@@ -17,6 +16,7 @@ import { AutomationsListSkeleton } from '@/components/automations/AutomationsLis
 import { CreateAutomationDialog } from '@/components/automations/CreateAutomationDialog';
 import { RunAutomationDialog } from '@/components/automations/RunAutomationDialog';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { triggerAutomation } from '@/lib/trigger-automation';
 import type { AutomationListItem, CreateAutomationData, TriggerManualConfig } from '@/types/automations';
 
 function Automations() {
@@ -27,11 +27,7 @@ function Automations() {
   const [runDialogOpen, setRunDialogOpen] = useState(false);
   const [automationToDelete, setAutomationToDelete] = useState<AutomationListItem | null>(null);
   const [automationToRun, setAutomationToRun] = useState<AutomationListItem | null>(null);
-
-  // Execution hook for triggering runs from the list (use first automation as placeholder)
-  const { triggerExecution, triggering } = useAutomationExecutions({ 
-    automationId: automationToRun?.id || '' 
-  });
+  const [triggering, setTriggering] = useState(false);
 
   const handleCreate = useCallback(async (data: CreateAutomationData) => {
     const automation = await createAutomation(data);
@@ -74,22 +70,23 @@ function Automations() {
         setAutomationToRun(automation);
         setRunDialogOpen(true);
       } else {
-        // Run immediately without confirmation
-        setAutomationToRun(automation);
-        // Need to call trigger after setting automationToRun
-        setTimeout(() => {
-          triggerExecution({ testMode: false });
-        }, 0);
+        // Run immediately without confirmation - call edge function directly
+        setTriggering(true);
+        triggerAutomation({ automationId: id }).finally(() => {
+          setTriggering(false);
+        });
       }
     }
-  }, [automations, triggerExecution]);
+  }, [automations]);
 
   const handleConfirmRun = useCallback(async () => {
     if (!automationToRun) return;
-    await triggerExecution({ testMode: false });
+    setTriggering(true);
+    await triggerAutomation({ automationId: automationToRun.id });
+    setTriggering(false);
     setRunDialogOpen(false);
     setAutomationToRun(null);
-  }, [automationToRun, triggerExecution]);
+  }, [automationToRun]);
 
   // Loading state
   if (loading) {
