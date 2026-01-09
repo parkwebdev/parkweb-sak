@@ -52,7 +52,7 @@ serve(async (req) => {
     }
 
     // Only process relevant tables
-    const relevantTables = ['leads', 'conversations', 'messages'];
+    const relevantTables = ['leads', 'conversations', 'messages', 'calendar_events'];
     if (!relevantTables.includes(payload.table)) {
       return new Response(
         JSON.stringify({ message: 'Table not relevant for automations' }),
@@ -73,6 +73,10 @@ serve(async (req) => {
       agentId = payload.record.agent_id as string;
     } else if (payload.table === 'messages') {
       // Messages don't have agent_id, will be resolved via conversation
+      agentId = null;
+    } else if (payload.table === 'calendar_events') {
+      // Calendar events need to resolve via connected_account -> agent_id
+      // For now, we'll let trigger-automation handle the lookup
       agentId = null;
     }
 

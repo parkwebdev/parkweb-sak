@@ -84,13 +84,25 @@ export interface BaseNodeData extends Record<string, unknown> {
  * Supported automation event types matching backend format.
  */
 export type AutomationEventType =
+  // Lead events
   | 'lead.created'
   | 'lead.updated'
   | 'lead.stage_changed'
+  | 'lead.deleted'
+  // Conversation events
   | 'conversation.created'
   | 'conversation.closed'
   | 'conversation.human_takeover'
-  | 'message.received';
+  // Message events
+  | 'message.received'
+  // Booking events
+  | 'booking.created'
+  | 'booking.updated'
+  | 'booking.cancelled'
+  | 'booking.confirmed'
+  | 'booking.completed'
+  | 'booking.no_show'
+  | 'booking.deleted';
 
 /**
  * Trigger event node configuration.
