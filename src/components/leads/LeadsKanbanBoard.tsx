@@ -33,11 +33,9 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { ExpandableMenuItem } from '@/components/ui/expandable-menu-item';
 import { VirtualizedKanbanCards } from "@/components/ui/virtualized-kanban-cards";
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { StageProgressIcon } from "./StageProgressIcon";
@@ -661,22 +659,15 @@ export function LeadsKanbanBoard({
                         {manualAutomations.length > 0 && onRunAutomation && (
                           <>
                             <ContextMenuSeparator />
-                            <ContextMenuSub>
-                              <ContextMenuSubTrigger>
-                                <Zap size={14} className="mr-2" aria-hidden="true" />
-                                Run automation
-                              </ContextMenuSubTrigger>
-                              <ContextMenuSubContent>
-                                {manualAutomations.map((auto) => (
-                                  <ContextMenuItem 
-                                    key={auto.id}
-                                    onClick={() => onRunAutomation(auto.id, lead.id, lead.name)}
-                                  >
-                                    {auto.name}
-                                  </ContextMenuItem>
-                                ))}
-                              </ContextMenuSubContent>
-                            </ContextMenuSub>
+                            <ExpandableMenuItem
+                              icon={<Zap size={14} aria-hidden="true" />}
+                              label="Run automation"
+                              items={manualAutomations.map((auto) => ({
+                                id: auto.id,
+                                label: auto.name,
+                                onClick: () => onRunAutomation(auto.id, lead.id, lead.name),
+                              }))}
+                            />
                           </>
                         )}
                       </ContextMenuContent>

@@ -7,11 +7,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ExpandableMenuItem } from '@/components/ui/expandable-menu-item';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { LeadAssigneePicker } from '@/components/leads/LeadAssigneePicker';
 import { normalizePriority, PRIORITY_CONFIG } from '@/lib/priority-config';
@@ -362,22 +360,15 @@ export const createLeadsColumns = ({
                 View details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Zap size={14} className="mr-2" aria-hidden="true" />
-                  Run automation
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {manualAutomations.map((auto) => (
-                    <DropdownMenuItem 
-                      key={auto.id}
-                      onClick={() => onRunAutomation(auto.id, lead.id, leadName)}
-                    >
-                      {auto.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
+              <ExpandableMenuItem
+                icon={<Zap size={14} aria-hidden="true" />}
+                label="Run automation"
+                items={manualAutomations.map((auto) => ({
+                  id: auto.id,
+                  label: auto.name,
+                  onClick: () => onRunAutomation(auto.id, lead.id, leadName),
+                }))}
+              />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
