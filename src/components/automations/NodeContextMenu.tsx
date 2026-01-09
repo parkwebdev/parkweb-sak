@@ -88,32 +88,32 @@ export const NodeContextMenu = memo(function NodeContextMenu({
       {/* Menu */}
       <div
         style={menuStyle}
-        className="min-w-[160px] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95"
+        className="min-w-[140px] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95"
       >
         <button
           onClick={handleDuplicate}
-          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
         >
-          <Copy06 className="mr-2 h-4 w-4" aria-hidden="true" />
+          <Copy06 className="mr-2 h-3 w-3" aria-hidden="true" />
           Duplicate
-          <span className="ml-auto text-xs tracking-widest text-muted-foreground">
+          <span className="ml-auto text-2xs tracking-widest text-muted-foreground">
             ⌘D
           </span>
         </button>
 
         <button
           onClick={handleToggleDisabled}
-          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
         >
-          <SlashCircle01 className="mr-2 h-4 w-4" aria-hidden="true" />
+          <SlashCircle01 className="mr-2 h-3 w-3" aria-hidden="true" />
           {isDisabled ? 'Enable' : 'Disable'}
         </button>
 
         <button
           onClick={handleCopyId}
-          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
         >
-          <Copy01 className="mr-2 h-4 w-4" aria-hidden="true" />
+          <Copy01 className="mr-2 h-3 w-3" aria-hidden="true" />
           Copy ID
         </button>
 
@@ -121,11 +121,11 @@ export const NodeContextMenu = memo(function NodeContextMenu({
 
         <button
           onClick={handleDelete}
-          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
+          className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
         >
-          <Trash01 className="mr-2 h-4 w-4" aria-hidden="true" />
+          <Trash01 className="mr-2 h-3 w-3" aria-hidden="true" />
           Delete
-          <span className="ml-auto text-xs tracking-widest text-muted-foreground">
+          <span className="ml-auto text-2xs tracking-widest text-muted-foreground">
             Del
           </span>
         </button>
