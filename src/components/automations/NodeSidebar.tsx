@@ -37,7 +37,7 @@ export const NodeSidebar = memo(function NodeSidebar() {
             return (
               <div key={category.id}>
                 {/* Category header */}
-                <div className="flex items-center gap-2 px-2 py-1 mb-1">
+                <div className="flex items-center gap-2 px-2 py-1.5 mb-1 bg-muted/50 rounded-md">
                   <CategoryIcon size={14} className="text-muted-foreground" />
                   <span className="text-xs font-medium text-foreground">
                     {category.label}
