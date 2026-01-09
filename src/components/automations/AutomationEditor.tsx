@@ -21,9 +21,10 @@ import { AutomationErrorBoundary } from '@/components/automations/AutomationErro
 import { NodeConfigPanel } from '@/components/automations/NodeConfigPanel';
 import { ExecutionPanel } from '@/components/automations/ExecutionPanel';
 import { TestExecutionDialog } from '@/components/automations/TestExecutionDialog';
+import { RunAutomationDialog } from '@/components/automations/RunAutomationDialog';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Automation, AutomationStatus } from '@/types/automations';
+import type { Automation, AutomationStatus, TriggerManualConfig } from '@/types/automations';
 
 interface AutomationEditorProps {
   automationId: string;
@@ -40,6 +41,7 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
   const [configPanelOpen, setConfigPanelOpen] = useState(false);
   const [executionPanelOpen, setExecutionPanelOpen] = useState(false);
   const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [runDialogOpen, setRunDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Auto-save hook
@@ -110,6 +112,22 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
   const handleHistoryClick = useCallback(() => {
     setExecutionPanelOpen(true);
   }, []);
+
+  // Run handlers (for manual trigger automations)
+  const handleRunClick = useCallback(() => {
+    if (!automation) return;
+    const config = automation.trigger_config as TriggerManualConfig;
+    if (config?.requireConfirmation) {
+      setRunDialogOpen(true);
+    } else {
+      triggerExecution({ testMode: false });
+    }
+  }, [automation, triggerExecution]);
+
+  const handleConfirmRun = useCallback(() => {
+    triggerExecution({ testMode: false });
+    setRunDialogOpen(false);
+  }, [triggerExecution]);
 
   // Status change handler
   const handleStatusChange = useCallback(async (newStatus: AutomationStatus, enabled: boolean) => {
@@ -192,6 +210,8 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
           onDeleteClick={handleDeleteClick}
           canDelete={canManageAutomations}
           onStatusChange={handleStatusChange}
+          onRunClick={automation.trigger_type === 'manual' ? handleRunClick : undefined}
+          running={triggering}
         />
 
         {/* Editor area */}
@@ -226,6 +246,15 @@ export function AutomationEditor({ automationId, onClose }: AutomationEditorProp
         automation={automation}
         onSubmit={handleTestSubmit}
         loading={triggering}
+      />
+
+      {/* Run automation dialog (for manual triggers with confirmation) */}
+      <RunAutomationDialog
+        open={runDialogOpen}
+        onOpenChange={setRunDialogOpen}
+        automation={automation}
+        onRun={handleConfirmRun}
+        running={triggering}
       />
 
       {/* Delete confirmation dialog */}

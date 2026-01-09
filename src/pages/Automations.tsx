@@ -9,20 +9,29 @@
 
 import { useState, useCallback } from 'react';
 import { useAutomations } from '@/hooks/useAutomations';
+import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { AutomationsList } from '@/components/automations/AutomationsList';
 import { AutomationEditor } from '@/components/automations/AutomationEditor';
 import { AutomationsEmptyState } from '@/components/automations/AutomationsEmptyState';
 import { AutomationsListSkeleton } from '@/components/automations/AutomationsListSkeleton';
 import { CreateAutomationDialog } from '@/components/automations/CreateAutomationDialog';
+import { RunAutomationDialog } from '@/components/automations/RunAutomationDialog';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import type { Automation, AutomationListItem, CreateAutomationData } from '@/types/automations';
+import type { AutomationListItem, CreateAutomationData, TriggerManualConfig } from '@/types/automations';
 
 function Automations() {
   const { automations, loading, createAutomation, creating, deleteAutomation, deleting } = useAutomations();
   const [selectedAutomationId, setSelectedAutomationId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [runDialogOpen, setRunDialogOpen] = useState(false);
   const [automationToDelete, setAutomationToDelete] = useState<AutomationListItem | null>(null);
+  const [automationToRun, setAutomationToRun] = useState<AutomationListItem | null>(null);
+
+  // Execution hook for triggering runs from the list (use first automation as placeholder)
+  const { triggerExecution, triggering } = useAutomationExecutions({ 
+    automationId: automationToRun?.id || '' 
+  });
 
   const handleCreate = useCallback(async (data: CreateAutomationData) => {
     const automation = await createAutomation(data);
@@ -56,6 +65,31 @@ function Automations() {
       setSelectedAutomationId(null);
     }
   }, [automationToDelete, deleteAutomation, selectedAutomationId]);
+
+  const handleRunFromList = useCallback((id: string) => {
+    const automation = automations.find((a) => a.id === id);
+    if (automation) {
+      const config = automation.trigger_config as TriggerManualConfig;
+      if (config?.requireConfirmation) {
+        setAutomationToRun(automation);
+        setRunDialogOpen(true);
+      } else {
+        // Run immediately without confirmation
+        setAutomationToRun(automation);
+        // Need to call trigger after setting automationToRun
+        setTimeout(() => {
+          triggerExecution({ testMode: false });
+        }, 0);
+      }
+    }
+  }, [automations, triggerExecution]);
+
+  const handleConfirmRun = useCallback(async () => {
+    if (!automationToRun) return;
+    await triggerExecution({ testMode: false });
+    setRunDialogOpen(false);
+    setAutomationToRun(null);
+  }, [automationToRun, triggerExecution]);
 
   // Loading state
   if (loading) {
@@ -96,6 +130,7 @@ function Automations() {
           onSelect={handleSelectAutomation}
           onCreateClick={() => setCreateDialogOpen(true)}
           onDeleteClick={handleDeleteFromList}
+          onRunClick={handleRunFromList}
         />
       </div>
 
@@ -131,6 +166,14 @@ function Automations() {
         description={automationToDelete ? `This will permanently delete "${automationToDelete.name}" and all its execution history. This action cannot be undone.` : ''}
         onConfirm={handleConfirmDelete}
         isDeleting={deleting}
+      />
+
+      <RunAutomationDialog
+        open={runDialogOpen}
+        onOpenChange={setRunDialogOpen}
+        automation={automationToRun}
+        onRun={handleConfirmRun}
+        running={triggering}
       />
     </div>
   );

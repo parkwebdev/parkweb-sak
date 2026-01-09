@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LastSavedIndicator } from '@/components/automations/LastSavedIndicator';
 import { useFlowHistory } from '@/stores/automationFlowStore';
-import type { Automation, AutomationStatus } from '@/types/automations';
+import type { Automation, AutomationStatus, AutomationTriggerType } from '@/types/automations';
 
 interface FlowToolbarProps {
   automation: Automation;
@@ -35,6 +35,10 @@ interface FlowToolbarProps {
   onDeleteClick?: () => void;
   canDelete?: boolean;
   onStatusChange?: (status: AutomationStatus, enabled: boolean) => void;
+  /** Handler for running manual automations */
+  onRunClick?: () => void;
+  /** Whether the automation is currently running */
+  running?: boolean;
 }
 
 export const FlowToolbar = memo(function FlowToolbar({
@@ -50,6 +54,8 @@ export const FlowToolbar = memo(function FlowToolbar({
   onDeleteClick,
   canDelete = true,
   onStatusChange,
+  onRunClick,
+  running = false,
 }: FlowToolbarProps) {
   const { undo, redo, canUndo, canRedo } = useFlowHistory();
 
@@ -162,8 +168,20 @@ export const FlowToolbar = memo(function FlowToolbar({
         </IconButton>
       </div>
 
-      {/* Test & Save buttons */}
+      {/* Run, Test & Save buttons */}
       <div className="flex items-center gap-2">
+        {/* Run Now - only for manual triggers */}
+        {automation.trigger_type === 'manual' && onRunClick && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onRunClick}
+            disabled={isDirty || running}
+          >
+            <Play size={16} className="mr-1.5" aria-hidden="true" />
+            {running ? 'Running...' : 'Run Now'}
+          </Button>
+        )}
         {onTestClick && (
           <Button 
             size="sm" 

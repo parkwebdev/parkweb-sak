@@ -1,11 +1,24 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { LeadAssigneePicker } from '@/components/leads/LeadAssigneePicker';
 import { normalizePriority, PRIORITY_CONFIG } from '@/lib/priority-config';
 import { PHONE_FIELD_KEYS } from '@/lib/field-keys';
+import { DotsVertical, Eye, Zap } from '@untitledui/icons';
 import type { Tables } from '@/integrations/supabase/types';
+import type { AutomationListItem } from '@/types/automations';
 
 export type Lead = Tables<'leads'> & {
   conversations?: {
@@ -24,9 +37,14 @@ interface LeadsColumnsProps {
   getAssignees: (leadId: string) => string[];
   StatusDropdown: React.ComponentType<{ stageId: string | null; onStageChange: (stageId: string) => void }>;
   PriorityDropdown: React.ComponentType<{ priority: string | null | undefined; onPriorityChange: (priority: string) => void }>;
+  /** Manual automations available to run on leads */
+  manualAutomations?: AutomationListItem[];
+  /** Handler for running an automation on a lead */
+  onRunAutomation?: (automationId: string, leadId: string, leadName: string) => void;
 }
 
 export const createLeadsColumns = ({
+  onView,
   onStageChange,
   onPriorityChange,
   onAddAssignee,
@@ -34,6 +52,8 @@ export const createLeadsColumns = ({
   getAssignees,
   StatusDropdown,
   PriorityDropdown,
+  manualAutomations = [],
+  onRunAutomation,
 }: LeadsColumnsProps): ColumnDef<Lead>[] => [
   {
     id: 'select',
@@ -310,5 +330,60 @@ export const createLeadsColumns = ({
     ),
     cell: ({ row }) =>
       formatDistanceToNow(new Date(row.original.updated_at), { addSuffix: true }),
+  },
+  // Actions column
+  {
+    id: 'actions',
+    size: 48,
+    minSize: 48,
+    maxSize: 48,
+    header: () => null,
+    cell: ({ row }) => {
+      const lead = row.original;
+      const leadName = lead.name || 'Unnamed Lead';
+      
+      // Only show if there are automations to run
+      if (manualAutomations.length === 0 || !onRunAutomation) {
+        return null;
+      }
+      
+      return (
+        <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <DotsVertical size={16} aria-hidden="true" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onView(lead)}>
+                <Eye size={16} className="mr-2" aria-hidden="true" />
+                View details
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Zap size={16} className="mr-2" aria-hidden="true" />
+                  Run automation
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {manualAutomations.map((auto) => (
+                    <DropdownMenuItem 
+                      key={auto.id}
+                      onClick={() => onRunAutomation(auto.id, lead.id, leadName)}
+                    >
+                      {auto.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+    },
+    enableSorting: false,
+    enableHiding: false,
   },
 ];
