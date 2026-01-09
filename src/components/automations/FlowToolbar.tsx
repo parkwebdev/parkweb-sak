@@ -8,7 +8,7 @@
  */
 
 import { memo } from 'react';
-import { ArrowLeft, ReverseLeft, ReverseRight, Save01, PlayCircle, ClockRewind, DotsVertical, Trash01, ChevronDown, Circle } from '@untitledui/icons';
+import { ArrowLeft, ReverseLeft, ReverseRight, Save01, Play, ClockRewind, DotsVertical, Trash01, ChevronDown, Circle } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Badge } from '@/components/ui/badge';
@@ -171,7 +171,7 @@ export const FlowToolbar = memo(function FlowToolbar({
             onClick={onTestClick}
             disabled={isDirty}
           >
-            <PlayCircle size={16} className="mr-1.5" aria-hidden="true" />
+            <Play size={16} className="mr-1.5" aria-hidden="true" />
             Test
           </Button>
         )}
