@@ -19,4 +19,5 @@ export { LogicStopConfigPanel } from './LogicStopConfigPanel';
 export { AIGenerateConfigPanel } from './AIGenerateConfigPanel';
 export { AIClassifyConfigPanel } from './AIClassifyConfigPanel';
 export { AIExtractConfigPanel } from './AIExtractConfigPanel';
-export { VariableReference } from './VariableReference';
+export { VariableSelect } from './VariableSelect';
+export { VariableInput } from './VariableInput';

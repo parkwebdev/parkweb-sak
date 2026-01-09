@@ -9,7 +9,6 @@
 
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import {
   Select,
@@ -19,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableReference } from './VariableReference';
+import { VariableInput } from './VariableInput';
 import type { AIGenerateNodeData } from '@/types/automations';
 
 interface AIGenerateConfigPanelProps {
@@ -52,20 +51,16 @@ export function AIGenerateConfigPanel({ nodeId, data }: AIGenerateConfigPanelPro
 
   return (
     <div className="space-y-4">
-      {/* Variable Reference */}
-      <VariableReference showLead showConversation showEnvironment />
-
       {/* Prompt */}
-      <div className="space-y-2">
-        <Label htmlFor="prompt">Prompt</Label>
-        <Textarea
-          id="prompt"
-          value={data.prompt || ''}
-          onChange={(e) => handleChange('prompt', e.target.value)}
-          placeholder="Enter your prompt. Use {{variable}} for dynamic values."
-          rows={5}
-        />
-      </div>
+      <VariableInput
+        label="Prompt"
+        placeholder="Enter your prompt. Use variables for dynamic values."
+        value={data.prompt || ''}
+        onChange={(value) => handleChange('prompt', value)}
+        categories={['lead', 'conversation', 'trigger', 'environment']}
+        multiline
+        rows={5}
+      />
 
       {/* Model Selection */}
       <div className="space-y-2">

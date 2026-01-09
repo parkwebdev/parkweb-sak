@@ -9,7 +9,6 @@
 import { useCallback } from 'react';
 import { Plus, Trash01 } from '@untitledui/icons';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import {
@@ -20,7 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
-import { VariableReference } from './VariableReference';
+import { VariableSelect } from './VariableSelect';
+import { VariableInput } from './VariableInput';
 import type { ActionUpdateLeadNodeData, LeadFieldUpdate } from '@/types/automations';
 
 interface ActionUpdateLeadConfigPanelProps {
@@ -75,21 +75,14 @@ export function ActionUpdateLeadConfigPanel({ nodeId, data }: ActionUpdateLeadCo
 
   return (
     <div className="space-y-4">
-      {/* Variable Reference */}
-      <VariableReference showLead showEnvironment />
-
       {/* Lead Source */}
-      <div className="space-y-2">
-        <Label>Lead Source</Label>
-        <Input
-          placeholder="{{lead.id}}"
-          value={data.leadId || '{{lead.id}}'}
-          onChange={(e) => handleUpdate({ leadId: e.target.value })}
-        />
-        <p className="text-2xs text-muted-foreground">
-          Leave as {'{{lead.id}}'} to use the trigger lead
-        </p>
-      </div>
+      <VariableSelect
+        label="Lead to update"
+        value={data.leadId || '{{lead.id}}'}
+        onValueChange={(value) => handleUpdate({ leadId: value })}
+        categories={['lead', 'trigger']}
+        placeholder="Select lead source"
+      />
 
       {/* Fields to Update */}
       <div className="space-y-2">
@@ -136,11 +129,11 @@ export function ActionUpdateLeadConfigPanel({ nodeId, data }: ActionUpdateLeadCo
                 <Trash01 size={16} aria-hidden="true" />
               </IconButton>
             </div>
-            <Input
-              placeholder="New value or {{variable}}"
+            <VariableInput
               value={field.value}
-              onChange={(e) => updateField(index, { value: e.target.value })}
-              size="sm"
+              onChange={(value) => updateField(index, { value })}
+              placeholder="New value"
+              categories={['lead', 'trigger', 'conversation', 'environment']}
             />
           </div>
         ))}
