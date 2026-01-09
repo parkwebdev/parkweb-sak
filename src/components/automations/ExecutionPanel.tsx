@@ -62,9 +62,9 @@ export const ExecutionPanel = memo(function ExecutionPanel({ automation, onClose
   };
 
   return (
-    <div className="h-full flex flex-col border-l border-border bg-background">
+    <div className="w-96 h-full flex flex-col border-l border-border bg-background animate-slide-in-from-right">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-border">
+      <div className="flex items-center justify-between p-3 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           <ClockRewind size={16} className="text-muted-foreground" aria-hidden="true" />
           <h3 className="text-sm font-medium">Executions</h3>
@@ -97,7 +97,7 @@ export const ExecutionPanel = memo(function ExecutionPanel({ automation, onClose
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2 p-3 border-b border-border">
+      <div className="flex items-center gap-2 p-3 border-b border-border shrink-0">
         <Button
           size="sm"
           onClick={() => setTestDialogOpen(true)}
@@ -116,35 +116,35 @@ export const ExecutionPanel = memo(function ExecutionPanel({ automation, onClose
         </Button>
       </div>
 
-      {/* Content */}
-      {selectedExecutionId && selectedExecution ? (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center gap-2 p-3 border-b border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedExecutionId(null)}
-            >
-              ← Back to list
-            </Button>
-            {loadingDetail && (
-              <span className="text-xs text-muted-foreground animate-pulse">Updating...</span>
-            )}
+      {/* Content - scrollable */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {selectedExecutionId && selectedExecution ? (
+          <div className="h-full flex flex-col">
+            <div className="flex items-center gap-2 p-3 border-b border-border shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedExecutionId(null)}
+              >
+                ← Back to list
+              </Button>
+              {loadingDetail && (
+                <span className="text-xs text-muted-foreground animate-pulse">Updating...</span>
+              )}
+            </div>
+            <div className="flex-1 min-h-0 overflow-auto">
+              <ExecutionDetail execution={selectedExecution} />
+            </div>
           </div>
-          <div className="flex-1 overflow-hidden">
-            <ExecutionDetail execution={selectedExecution} />
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 overflow-hidden">
+        ) : (
           <ExecutionHistoryList
             executions={executions}
             loading={loading}
             selectedId={null}
             onSelect={(execution) => setSelectedExecutionId(execution.id)}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Test Dialog */}
       <TestExecutionDialog

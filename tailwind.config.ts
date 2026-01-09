@@ -207,6 +207,14 @@ const config: Config = {
           "0%": { width: "0%", opacity: "0" },
           "100%": { opacity: "1" },
         },
+        "slide-in-from-right": {
+          "0%": { transform: "translateX(100%)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
+        },
+        "slide-out-to-right": {
+          "0%": { transform: "translateX(0)", opacity: "1" },
+          "100%": { transform: "translateX(100%)", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -220,6 +228,8 @@ const config: Config = {
         "slide-in-right": "slide-in-right 0.2s ease-out",
         "progress-shimmer": "progress-shimmer 2s ease-in-out infinite",
         "grow-width": "growWidth 0.6s ease-out forwards",
+        "slide-in-from-right": "slide-in-from-right 0.25s ease-out",
+        "slide-out-to-right": "slide-out-to-right 0.2s ease-out",
       },
     },
   },
