@@ -56,7 +56,7 @@ const TRIGGER_OPTIONS: Array<{
   {
     type: 'ai_tool',
     label: 'Ari Action',
-    description: 'Ari uses this during conversations',
+    description: 'Ari triggers this workflow when customers ask for things like callbacks or quotes',
     icon: Stars02,
   },
 ];
