@@ -358,13 +358,13 @@ export const createLeadsColumns = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onView(lead)}>
-                <Eye size={16} className="mr-2" aria-hidden="true" />
+                <Eye size={14} className="mr-2" aria-hidden="true" />
                 View details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
-                  <Zap size={16} className="mr-2" aria-hidden="true" />
+                  <Zap size={14} className="mr-2" aria-hidden="true" />
                   Run automation
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>

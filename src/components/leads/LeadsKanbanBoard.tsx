@@ -655,7 +655,7 @@ export function LeadsKanbanBoard({
                             onViewLead(originalLead);
                           }
                         }}>
-                          <Eye size={16} className="mr-2" aria-hidden="true" />
+                          <Eye size={14} className="mr-2" aria-hidden="true" />
                           View details
                         </ContextMenuItem>
                         {manualAutomations.length > 0 && onRunAutomation && (
@@ -663,7 +663,7 @@ export function LeadsKanbanBoard({
                             <ContextMenuSeparator />
                             <ContextMenuSub>
                               <ContextMenuSubTrigger>
-                                <Zap size={16} className="mr-2" aria-hidden="true" />
+                                <Zap size={14} className="mr-2" aria-hidden="true" />
                                 Run automation
                               </ContextMenuSubTrigger>
                               <ContextMenuSubContent>

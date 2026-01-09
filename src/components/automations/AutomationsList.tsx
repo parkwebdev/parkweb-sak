@@ -124,14 +124,14 @@ export const AutomationsList = memo(function AutomationsList({
                   {automation.trigger_type === 'manual' && canManageAutomations && onRunClick && (
                     <>
                       <ContextMenuItem onClick={() => onRunClick(automation.id)}>
-                        <Play size={16} className="mr-2" aria-hidden="true" />
+                        <Play size={14} className="mr-2" aria-hidden="true" />
                         Run
                       </ContextMenuItem>
                       <ContextMenuSeparator />
                     </>
                   )}
                   <ContextMenuItem onClick={() => onSelect(automation.id)}>
-                    <Edit03 size={16} className="mr-2" aria-hidden="true" />
+                    <Edit03 size={14} className="mr-2" aria-hidden="true" />
                     Edit
                   </ContextMenuItem>
                   {canManageAutomations && onDeleteClick && (
@@ -141,7 +141,7 @@ export const AutomationsList = memo(function AutomationsList({
                         onClick={() => onDeleteClick(automation.id)}
                         className="text-destructive focus:text-destructive focus:bg-destructive/10"
                       >
-                        <Trash01 size={16} className="mr-2" aria-hidden="true" />
+                        <Trash01 size={14} className="mr-2" aria-hidden="true" />
                         Delete
                       </ContextMenuItem>
                     </>
