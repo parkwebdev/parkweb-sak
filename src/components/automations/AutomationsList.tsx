@@ -7,8 +7,8 @@
  * @module components/automations/AutomationsList
  */
 
-import { memo, useState, useCallback } from 'react';
-import { Plus, Zap, Clock, Hand, Stars02, Edit03, Trash01 } from '@untitledui/icons';
+import { memo } from 'react';
+import { Plus, Zap, Clock, Hand, Stars02, Edit03, Trash01, Play } from '@untitledui/icons';
 import { IconButton } from '@/components/ui/icon-button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,6 +30,7 @@ interface AutomationsListProps {
   onSelect: (id: string) => void;
   onCreateClick: () => void;
   onDeleteClick?: (id: string) => void;
+  onRunClick?: (id: string) => void;
 }
 
 const TRIGGER_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
@@ -45,6 +46,7 @@ export const AutomationsList = memo(function AutomationsList({
   onSelect, 
   onCreateClick,
   onDeleteClick,
+  onRunClick,
 }: AutomationsListProps) {
   const canManageAutomations = useCanManage('manage_ari');
 
@@ -119,6 +121,15 @@ export const AutomationsList = memo(function AutomationsList({
                   </button>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
+                  {automation.trigger_type === 'manual' && canManageAutomations && onRunClick && (
+                    <>
+                      <ContextMenuItem onClick={() => onRunClick(automation.id)}>
+                        <Play size={16} className="mr-2" aria-hidden="true" />
+                        Run
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                    </>
+                  )}
                   <ContextMenuItem onClick={() => onSelect(automation.id)}>
                     <Edit03 size={16} className="mr-2" aria-hidden="true" />
                     Edit

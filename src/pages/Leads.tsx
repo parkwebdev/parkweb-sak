@@ -15,6 +15,8 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
+import { useAutomations } from '@/hooks/useAutomations';
+import { useAutomationExecutions } from '@/hooks/useAutomationExecutions';
 import { Loading02 } from '@untitledui/icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
@@ -27,6 +29,7 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
+import { RunAutomationDialog } from '@/components/automations/RunAutomationDialog';
 import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
 import { type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
@@ -36,6 +39,7 @@ import { queryKeys } from '@/lib/query-keys';
 import type { Tables, Json } from '@/integrations/supabase/types';
 import type { VisibilityState } from '@tanstack/react-table';
 import type { ConversationMetadata } from '@/types/metadata';
+import type { AutomationListItem, TriggerManualConfig } from '@/types/automations';
 
 // localStorage keys for per-user preferences
 const VIEW_MODE_KEY = 'leads-view-mode';
@@ -120,6 +124,23 @@ function Leads({ onMenuClick }: LeadsProps) {
   const queryClient = useQueryClient();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  
+  // Fetch manual automations for running on leads
+  const { automations: allAutomations } = useAutomations();
+  const manualAutomations = useMemo(() => 
+    allAutomations.filter(a => a.trigger_type === 'manual' && a.enabled),
+    [allAutomations]
+  );
+  
+  // State for running automation on a lead
+  const [automationToRun, setAutomationToRun] = useState<AutomationListItem | null>(null);
+  const [leadForAutomation, setLeadForAutomation] = useState<{ id: string; name: string } | null>(null);
+  const [runDialogOpen, setRunDialogOpen] = useState(false);
+  
+  // Execution hook for triggering runs
+  const { triggerExecution, triggering } = useAutomationExecutions({ 
+    automationId: automationToRun?.id || '' 
+  });
   
   // Check if user can manage leads (delete, edit stage, etc.)
   const canManageLeads = useCanManage('manage_leads');
@@ -399,9 +420,38 @@ function Leads({ onMenuClick }: LeadsProps) {
       setIsSingleDeleteOpen(false);
       setIsDetailsOpen(false);
     } finally {
-      setIsDeleting(false);
+    setIsDeleting(false);
     }
   }, [deleteLead, singleDeleteLeadId]);
+
+  // Handle running automation on a lead
+  const handleRunAutomationOnLead = useCallback((automationId: string, leadId: string, leadName: string) => {
+    const automation = manualAutomations.find(a => a.id === automationId);
+    if (!automation) return;
+    
+    const config = automation.trigger_config as TriggerManualConfig;
+    setAutomationToRun(automation);
+    setLeadForAutomation({ id: leadId, name: leadName });
+    
+    if (config?.requireConfirmation) {
+      setRunDialogOpen(true);
+    } else {
+      // Run immediately without confirmation
+      setTimeout(() => {
+        triggerExecution({ testMode: false, leadId });
+        setAutomationToRun(null);
+        setLeadForAutomation(null);
+      }, 0);
+    }
+  }, [manualAutomations, triggerExecution]);
+
+  const handleConfirmRunOnLead = useCallback(async () => {
+    if (!automationToRun || !leadForAutomation) return;
+    await triggerExecution({ testMode: false, leadId: leadForAutomation.id });
+    setRunDialogOpen(false);
+    setAutomationToRun(null);
+    setLeadForAutomation(null);
+  }, [automationToRun, leadForAutomation, triggerExecution]);
 
   return (
     <div className="flex flex-col h-full w-full min-w-0 bg-muted/30 overflow-y-auto">
@@ -462,6 +512,8 @@ function Leads({ onMenuClick }: LeadsProps) {
                   fieldOrder={kanbanFieldOrder}
                   canManage={canManageLeads}
                   sortOption={defaultSort}
+                  manualAutomations={manualAutomations}
+                  onRunAutomation={handleRunAutomationOnLead}
                 />
               </motion.div>
             ) : (
@@ -490,6 +542,8 @@ function Leads({ onMenuClick }: LeadsProps) {
                   defaultSort={defaultSort}
                   canManage={canManageLeads}
                   isLoading={isFetchingNextPage}
+                  manualAutomations={manualAutomations}
+                  onRunAutomation={handleRunAutomationOnLead}
                 />
               </motion.div>
             )}
@@ -552,6 +606,15 @@ function Leads({ onMenuClick }: LeadsProps) {
         open={isManageStagesOpen}
         onOpenChange={setIsManageStagesOpen}
         canManage={canManageLeads}
+      />
+
+      <RunAutomationDialog
+        open={runDialogOpen}
+        onOpenChange={setRunDialogOpen}
+        automation={automationToRun}
+        onRun={handleConfirmRunOnLead}
+        running={triggering}
+        leadContext={leadForAutomation}
       />
 
     </div>

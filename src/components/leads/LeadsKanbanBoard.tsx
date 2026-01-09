@@ -15,7 +15,9 @@ import {
   MessageChatCircle,
   Edit05,
   Clock,
-  Calendar
+  Calendar,
+  Zap,
+  Eye
 } from "@untitledui/icons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -26,6 +28,16 @@ import {
   KanbanHeader,
   KanbanCard,
 } from "@/components/ui/kanban";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { VirtualizedKanbanCards } from "@/components/ui/virtualized-kanban-cards";
 import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { StageProgressIcon } from "./StageProgressIcon";
@@ -37,6 +49,7 @@ import { SkeletonKanbanColumn } from "@/components/ui/skeleton";
 import type { Tables } from "@/integrations/supabase/types";
 import type { SortOption } from "@/components/leads/LeadsViewSettingsSheet";
 import type { ConversationMetadata } from "@/types/metadata";
+import type { AutomationListItem } from "@/types/automations";
 
 // Kanban-compatible lead type with extended fields
 type KanbanLead = {
@@ -84,6 +97,10 @@ interface LeadsKanbanBoardProps {
   canManage?: boolean;
   /** Sort option for ordering leads within each column */
   sortOption?: SortOption | null;
+  /** Manual automations available to run on leads */
+  manualAutomations?: AutomationListItem[];
+  /** Handler for running an automation on a lead */
+  onRunAutomation?: (automationId: string, leadId: string, leadName: string) => void;
 }
 
 // Inline editable column header
@@ -378,6 +395,8 @@ export function LeadsKanbanBoard({
   fieldOrder,
   canManage = true,
   sortOption,
+  manualAutomations = [],
+  onRunAutomation,
 }: LeadsKanbanBoardProps) {
   const { stages, loading: stagesLoading, updateStage } = useLeadStages();
 
@@ -603,27 +622,65 @@ export function LeadsKanbanBoard({
                 </KanbanHeader>
                 <VirtualizedKanbanCards id={column.id} estimatedCardHeight={140}>
                   {(lead: KanbanLead) => (
-                    <KanbanCard
-                      key={lead.id}
-                      id={lead.id}
-                      name={lead.name}
-                      column={lead.column}
-                      onClick={() => {
-                        const originalLead = findOriginalLead(lead.id);
-                        if (originalLead) {
-                          onViewLead(originalLead);
-                        }
-                      }}
-                    >
-                      <LeadCardContent 
-                        lead={lead} 
-                        visibleFields={visibleFields}
-                        fieldOrder={fieldOrder}
-                        assignees={getAssignees(lead.id)}
-                        onAddAssignee={canManage && onAddAssignee ? (userId) => onAddAssignee(lead.id, userId) : undefined}
-                        onRemoveAssignee={canManage && onRemoveAssignee ? (userId) => onRemoveAssignee(lead.id, userId) : undefined}
-                      />
-                    </KanbanCard>
+                    <ContextMenu>
+                      <ContextMenuTrigger asChild>
+                        <div>
+                          <KanbanCard
+                            key={lead.id}
+                            id={lead.id}
+                            name={lead.name}
+                            column={lead.column}
+                            onClick={() => {
+                              const originalLead = findOriginalLead(lead.id);
+                              if (originalLead) {
+                                onViewLead(originalLead);
+                              }
+                            }}
+                          >
+                            <LeadCardContent 
+                              lead={lead} 
+                              visibleFields={visibleFields}
+                              fieldOrder={fieldOrder}
+                              assignees={getAssignees(lead.id)}
+                              onAddAssignee={canManage && onAddAssignee ? (userId) => onAddAssignee(lead.id, userId) : undefined}
+                              onRemoveAssignee={canManage && onRemoveAssignee ? (userId) => onRemoveAssignee(lead.id, userId) : undefined}
+                            />
+                          </KanbanCard>
+                        </div>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem onClick={() => {
+                          const originalLead = findOriginalLead(lead.id);
+                          if (originalLead) {
+                            onViewLead(originalLead);
+                          }
+                        }}>
+                          <Eye size={16} className="mr-2" aria-hidden="true" />
+                          View details
+                        </ContextMenuItem>
+                        {manualAutomations.length > 0 && onRunAutomation && (
+                          <>
+                            <ContextMenuSeparator />
+                            <ContextMenuSub>
+                              <ContextMenuSubTrigger>
+                                <Zap size={16} className="mr-2" aria-hidden="true" />
+                                Run automation
+                              </ContextMenuSubTrigger>
+                              <ContextMenuSubContent>
+                                {manualAutomations.map((auto) => (
+                                  <ContextMenuItem 
+                                    key={auto.id}
+                                    onClick={() => onRunAutomation(auto.id, lead.id, lead.name)}
+                                  >
+                                    {auto.name}
+                                  </ContextMenuItem>
+                                ))}
+                              </ContextMenuSubContent>
+                            </ContextMenuSub>
+                          </>
+                        )}
+                      </ContextMenuContent>
+                    </ContextMenu>
                   )}
                 </VirtualizedKanbanCards>
               </KanbanBoard>
