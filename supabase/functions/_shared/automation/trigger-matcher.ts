@@ -28,6 +28,7 @@ function getEventType(payload: EventPayload): string | null {
 
   if (table === 'leads') {
     if (type === 'insert') return 'lead.created';
+    if (type === 'delete') return 'lead.deleted';
     if (type === 'update') {
       // Check for stage change
       if (old_record && record.stage_id !== old_record.stage_id) {
@@ -55,6 +56,29 @@ function getEventType(payload: EventPayload): string | null {
   if (table === 'messages') {
     if (type === 'insert' && record.role === 'user') {
       return 'message.received';
+    }
+  }
+
+  if (table === 'calendar_events') {
+    if (type === 'insert') return 'booking.created';
+    if (type === 'delete') return 'booking.deleted';
+    if (type === 'update') {
+      // Check for status changes
+      if (old_record) {
+        if (record.status === 'cancelled' && old_record.status !== 'cancelled') {
+          return 'booking.cancelled';
+        }
+        if (record.status === 'confirmed' && old_record.status !== 'confirmed') {
+          return 'booking.confirmed';
+        }
+        if (record.status === 'completed' && old_record.status !== 'completed') {
+          return 'booking.completed';
+        }
+        if (record.status === 'no_show' && old_record.status !== 'no_show') {
+          return 'booking.no_show';
+        }
+      }
+      return 'booking.updated';
     }
   }
 
@@ -195,6 +219,33 @@ function buildTriggerData(
       created_at: record.created_at,
     };
     triggerData.conversation_id = record.conversation_id;
+  }
+
+  if (table === 'calendar_events') {
+    triggerData.booking = {
+      id: record.id,
+      title: record.title,
+      start_time: record.start_time,
+      end_time: record.end_time,
+      status: record.status,
+      event_type: record.event_type,
+      visitor_name: record.visitor_name,
+      visitor_email: record.visitor_email,
+      visitor_phone: record.visitor_phone,
+      lead_id: record.lead_id,
+      conversation_id: record.conversation_id,
+      location_id: record.location_id,
+      notes: record.notes,
+      created_at: record.created_at,
+    };
+    
+    // Include lead_id and conversation_id at top level for easy access
+    if (record.lead_id) {
+      triggerData.lead_id = record.lead_id;
+    }
+    if (record.conversation_id) {
+      triggerData.conversation_id = record.conversation_id;
+    }
   }
 
   return triggerData;

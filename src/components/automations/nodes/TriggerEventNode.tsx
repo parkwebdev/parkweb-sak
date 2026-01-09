@@ -15,13 +15,25 @@ import type { TriggerEventNodeData } from '@/types/automations';
 
 /** Human-readable labels for each event type */
 const EVENT_LABELS: Record<string, string> = {
+  // Lead events
   'lead.created': 'new lead is created',
   'lead.updated': 'lead is updated',
   'lead.stage_changed': 'lead changes stage',
+  'lead.deleted': 'lead is deleted',
+  // Conversation events
   'conversation.created': 'new conversation starts',
   'conversation.closed': 'conversation is closed',
   'conversation.human_takeover': 'human takeover is requested',
+  // Message events
   'message.received': 'new message is received',
+  // Booking events
+  'booking.created': 'new booking is created',
+  'booking.updated': 'booking is updated',
+  'booking.confirmed': 'booking is confirmed',
+  'booking.cancelled': 'booking is cancelled',
+  'booking.completed': 'booking is completed',
+  'booking.no_show': 'visitor is a no-show',
+  'booking.deleted': 'booking is deleted',
 };
 
 export const TriggerEventNode = memo(function TriggerEventNode(props: NodeProps) {

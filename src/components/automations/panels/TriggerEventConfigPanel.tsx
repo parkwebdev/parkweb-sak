@@ -33,6 +33,7 @@ const EVENT_OPTIONS = [
       { value: 'lead.created', label: 'New lead is created' },
       { value: 'lead.updated', label: 'Lead is updated' },
       { value: 'lead.stage_changed', label: 'Lead moves to a new stage' },
+      { value: 'lead.deleted', label: 'Lead is deleted' },
     ],
   },
   {
@@ -47,6 +48,16 @@ const EVENT_OPTIONS = [
     category: 'Messages',
     events: [
       { value: 'message.received', label: 'New message received' },
+    ],
+  },
+  {
+    category: 'Bookings',
+    events: [
+      { value: 'booking.created', label: 'New booking is created' },
+      { value: 'booking.confirmed', label: 'Booking is confirmed' },
+      { value: 'booking.cancelled', label: 'Booking is cancelled' },
+      { value: 'booking.completed', label: 'Booking is completed' },
+      { value: 'booking.no_show', label: 'Visitor is a no-show' },
     ],
   },
 ] as const;
