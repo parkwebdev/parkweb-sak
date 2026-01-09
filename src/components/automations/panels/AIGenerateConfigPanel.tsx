@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { VariableReference } from './VariableReference';
 import type { AIGenerateNodeData } from '@/types/automations';
 
 interface AIGenerateConfigPanelProps {
@@ -47,8 +48,13 @@ export function AIGenerateConfigPanel({ nodeId, data }: AIGenerateConfigPanelPro
     updateNodeData(nodeId, { [field]: value });
   };
 
+  const outputVar = data.outputVariable || 'ai_response';
+
   return (
     <div className="space-y-4">
+      {/* Variable Reference */}
+      <VariableReference showLead showConversation showEnvironment />
+
       {/* Prompt */}
       <div className="space-y-2">
         <Label htmlFor="prompt">Prompt</Label>
@@ -59,9 +65,6 @@ export function AIGenerateConfigPanel({ nodeId, data }: AIGenerateConfigPanelPro
           placeholder="Enter your prompt. Use {{variable}} for dynamic values."
           rows={5}
         />
-        <p className="text-2xs text-muted-foreground">
-          Supports variable interpolation: {'{{lead.name}}'}, {'{{trigger.data}}'}, etc.
-        </p>
       </div>
 
       {/* Model Selection */}
@@ -140,16 +143,19 @@ export function AIGenerateConfigPanel({ nodeId, data }: AIGenerateConfigPanelPro
 
       {/* Output Variable */}
       <div className="space-y-2">
-        <Label htmlFor="outputVariable">Output Variable</Label>
+        <Label htmlFor="outputVariable">Save response as</Label>
         <Input
           id="outputVariable"
           value={data.outputVariable || ''}
           onChange={(e) => handleChange('outputVariable', e.target.value)}
           placeholder="ai_response"
         />
-        <p className="text-2xs text-muted-foreground">
-          Variable name to store the AI response for use in later nodes
-        </p>
+        <div className="text-2xs text-muted-foreground space-y-1">
+          <p>Access in later nodes:</p>
+          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
+            {`{{variables.${outputVar}}}`}
+          </code>
+        </div>
       </div>
     </div>
   );

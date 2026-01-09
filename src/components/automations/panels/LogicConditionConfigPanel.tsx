@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { VariableReference } from './VariableReference';
 import type { LogicConditionNodeData } from '@/types/automations';
 
 interface LogicConditionConfigPanelProps {
@@ -71,6 +72,9 @@ export function LogicConditionConfigPanel({ nodeId, data }: LogicConditionConfig
 
   return (
     <div className="space-y-4">
+      {/* Variable Reference */}
+      <VariableReference showLead showConversation showEnvironment />
+
       <div className="space-y-2">
         <Label htmlFor="condition-field">Field</Label>
         <Input
@@ -79,9 +83,6 @@ export function LogicConditionConfigPanel({ nodeId, data }: LogicConditionConfig
           onChange={(e) => handleFieldChange(e.target.value)}
           placeholder="e.g., {{lead.status}}"
         />
-        <p className="text-2xs text-muted-foreground">
-          Use variable syntax like {'{{lead.status}}'} or {'{{variables.count}}'}
-        </p>
       </div>
 
       <div className="space-y-2">

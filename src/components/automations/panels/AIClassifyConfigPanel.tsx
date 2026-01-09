@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { IconButton } from '@/components/ui/icon-button';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { VariableReference } from './VariableReference';
 import type { AIClassifyNodeData, AIClassifyCategory } from '@/types/automations';
 
 interface AIClassifyConfigPanelProps {
@@ -53,8 +54,13 @@ export function AIClassifyConfigPanel({ nodeId, data }: AIClassifyConfigPanelPro
     handleChange('categories', categories);
   }, [data.categories]);
 
+  const outputVar = data.outputVariable || 'classification_result';
+
   return (
     <div className="space-y-4">
+      {/* Variable Reference */}
+      <VariableReference showLead showConversation showEnvironment />
+
       {/* Input Source */}
       <div className="space-y-2">
         <Label htmlFor="input">Input Variable</Label>
@@ -64,9 +70,6 @@ export function AIClassifyConfigPanel({ nodeId, data }: AIClassifyConfigPanelPro
           onChange={(e) => handleChange('input', e.target.value)}
           placeholder="{{message.content}} or {{lead.data}}"
         />
-        <p className="text-2xs text-muted-foreground">
-          The text to classify. Use variable references.
-        </p>
       </div>
 
       {/* Categories */}
@@ -121,13 +124,19 @@ export function AIClassifyConfigPanel({ nodeId, data }: AIClassifyConfigPanelPro
 
       {/* Output Variable */}
       <div className="space-y-2">
-        <Label htmlFor="outputVariable">Output Variable</Label>
+        <Label htmlFor="outputVariable">Save result as</Label>
         <Input
           id="outputVariable"
           value={data.outputVariable || ''}
           onChange={(e) => handleChange('outputVariable', e.target.value)}
           placeholder="classification_result"
         />
+        <div className="text-2xs text-muted-foreground space-y-1">
+          <p>Access in later nodes:</p>
+          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
+            {`{{variables.${outputVar}.category}}`}
+          </code>
+        </div>
       </div>
 
       {/* Include Confidence */}

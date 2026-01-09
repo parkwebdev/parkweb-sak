@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { VariableReference } from './VariableReference';
 import type { ActionHttpNodeData } from '@/types/automations';
 
 interface ActionHttpConfigPanelProps {
@@ -37,8 +38,13 @@ export function ActionHttpConfigPanel({ nodeId, data }: ActionHttpConfigPanelPro
     [nodeId, data, updateNodeData]
   );
 
+  const responseVar = data.responseVariable || 'response';
+
   return (
     <div className="space-y-4">
+      {/* Variable Reference */}
+      <VariableReference showLead showConversation showEnvironment />
+
       {/* Method */}
       <div className="space-y-2">
         <Label>HTTP Method</Label>
@@ -67,9 +73,6 @@ export function ActionHttpConfigPanel({ nodeId, data }: ActionHttpConfigPanelPro
           value={data.url || ''}
           onChange={(e) => handleUpdate({ url: e.target.value })}
         />
-        <p className="text-2xs text-muted-foreground">
-          Use {'{{variable}}'} to insert variables
-        </p>
       </div>
 
       {/* Headers */}
@@ -107,15 +110,21 @@ export function ActionHttpConfigPanel({ nodeId, data }: ActionHttpConfigPanelPro
 
       {/* Response Variable */}
       <div className="space-y-2">
-        <Label>Store Response In</Label>
+        <Label>Save response as</Label>
         <Input
           placeholder="response"
           value={data.responseVariable || ''}
           onChange={(e) => handleUpdate({ responseVariable: e.target.value })}
         />
-        <p className="text-2xs text-muted-foreground">
-          Variable name to store the response data
-        </p>
+        <div className="text-2xs text-muted-foreground space-y-1">
+          <p>Access in later nodes:</p>
+          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
+            {`{{variables.${responseVar}.body}}`}
+          </code>
+          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
+            {`{{variables.${responseVar}.status}}`}
+          </code>
+        </div>
       </div>
     </div>
   );

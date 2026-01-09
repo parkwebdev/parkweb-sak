@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { VariableReference } from './VariableReference';
 import type { AIExtractNodeData, AIExtractField } from '@/types/automations';
 
 interface AIExtractConfigPanelProps {
@@ -70,8 +71,13 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
     handleChange('fields', fields);
   }, [data.fields]);
 
+  const outputVar = data.outputVariable || 'extracted_data';
+
   return (
     <div className="space-y-4">
+      {/* Variable Reference */}
+      <VariableReference showLead showConversation showEnvironment />
+
       {/* Input Source */}
       <div className="space-y-2">
         <Label htmlFor="input">Input Text</Label>
@@ -81,9 +87,6 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
           onChange={(e) => handleChange('input', e.target.value)}
           placeholder="{{message.content}} or {{lead.data}}"
         />
-        <p className="text-2xs text-muted-foreground">
-          The text to extract data from. Use variable references.
-        </p>
       </div>
 
       {/* Fields to Extract */}
@@ -164,16 +167,19 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
 
       {/* Output Variable */}
       <div className="space-y-2">
-        <Label htmlFor="outputVariable">Output Variable</Label>
+        <Label htmlFor="outputVariable">Save result as</Label>
         <Input
           id="outputVariable"
           value={data.outputVariable || ''}
           onChange={(e) => handleChange('outputVariable', e.target.value)}
           placeholder="extracted_data"
         />
-        <p className="text-2xs text-muted-foreground">
-          Extracted data will be stored as an object
-        </p>
+        <div className="text-2xs text-muted-foreground space-y-1">
+          <p>Access in later nodes:</p>
+          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
+            {`{{variables.${outputVar}.fieldName}}`}
+          </code>
+        </div>
       </div>
     </div>
   );
