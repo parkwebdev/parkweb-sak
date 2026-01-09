@@ -128,30 +128,17 @@ export const FlowToolbar = memo(function FlowToolbar({
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Test & History buttons */}
-      <div className="flex items-center gap-1">
-        {onTestClick && (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={onTestClick}
-            disabled={isDirty}
-          >
-            <PlayCircle size={16} className="mr-1.5" aria-hidden="true" />
-            Test
-          </Button>
-        )}
-        {onHistoryClick && (
-          <IconButton
-            label="Execution history"
-            variant="ghost"
-            size="sm"
-            onClick={onHistoryClick}
-          >
-            <ClockRewind size={16} />
-          </IconButton>
-        )}
-      </div>
+      {/* History button */}
+      {onHistoryClick && (
+        <IconButton
+          label="Execution history"
+          variant="ghost"
+          size="sm"
+          onClick={onHistoryClick}
+        >
+          <ClockRewind size={16} />
+        </IconButton>
+      )}
 
       {/* Undo/Redo */}
       <div className="flex items-center gap-1">
@@ -175,15 +162,28 @@ export const FlowToolbar = memo(function FlowToolbar({
         </IconButton>
       </div>
 
-      {/* Save button */}
-      <Button 
-        size="sm" 
-        onClick={onSave} 
-        disabled={!isDirty || saving}
-      >
-        <Save01 size={16} className="mr-1.5" aria-hidden="true" />
-        {saving ? 'Saving...' : 'Save'}
-      </Button>
+      {/* Test & Save buttons */}
+      <div className="flex items-center gap-2">
+        {onTestClick && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={onTestClick}
+            disabled={isDirty}
+          >
+            <PlayCircle size={16} className="mr-1.5" aria-hidden="true" />
+            Test
+          </Button>
+        )}
+        <Button 
+          size="sm" 
+          onClick={onSave} 
+          disabled={!isDirty || saving}
+        >
+          <Save01 size={16} className="mr-1.5" aria-hidden="true" />
+          {saving ? 'Saving...' : 'Save'}
+        </Button>
+      </div>
 
       {/* More actions dropdown */}
       {canDelete && onDeleteClick && (
