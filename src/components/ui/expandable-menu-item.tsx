@@ -11,6 +11,7 @@
 import * as React from 'react';
 import { ChevronRight } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface ExpandableMenuItemProps {
   /** Icon to display before the label */
@@ -24,8 +25,8 @@ interface ExpandableMenuItemProps {
 }
 
 /**
- * A menu item that reveals additional options in an inline expanded panel on hover.
- * Provides a seamless, non-popup experience for submenu content.
+ * A menu item that reveals additional options in a seamless inline panel on hover.
+ * Uses a Popover Portal so it won't get clipped by Radix menu content.
  */
 export function ExpandableMenuItem({
   icon,
@@ -33,77 +34,93 @@ export function ExpandableMenuItem({
   items,
   className,
 }: ExpandableMenuItemProps) {
-  const [isExpanded, setIsExpanded] = React.useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [open, setOpen] = React.useState(false);
+  const timeoutRef = React.useRef<number | null>(null);
 
-  const handleMouseEnter = React.useCallback(() => {
+  const cancelClose = React.useCallback(() => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+      window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    setIsExpanded(true);
   }, []);
 
-  const handleMouseLeave = React.useCallback(() => {
-    // Small delay to allow moving to submenu
-    timeoutRef.current = setTimeout(() => {
-      setIsExpanded(false);
-    }, 100);
-  }, []);
+  const scheduleClose = React.useCallback(() => {
+    cancelClose();
+    timeoutRef.current = window.setTimeout(() => setOpen(false), 120);
+  }, [cancelClose]);
+
+  const handleEnter = React.useCallback(() => {
+    cancelClose();
+    setOpen(true);
+  }, [cancelClose]);
+
+  const handleLeave = React.useCallback(() => {
+    scheduleClose();
+  }, [scheduleClose]);
 
   React.useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+    return () => cancelClose();
+  }, [cancelClose]);
+
+  if (items.length === 0) return null;
 
   return (
-    <div
-      ref={containerRef}
-      className={cn('relative', className)}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onPointerEnter={handleMouseEnter}
-      onPointerLeave={handleMouseLeave}
-    >
-      <div
-        className={cn(
-          'relative flex cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none transition-colors',
-          isExpanded ? 'bg-accent text-accent-foreground' : 'hover:bg-accent hover:text-accent-foreground'
-        )}
-      >
-        {icon && <span className="mr-2 flex-shrink-0">{icon}</span>}
-        <span className="flex-1">{label}</span>
-        <ChevronRight className="ml-auto h-3 w-3" aria-hidden="true" />
-      </div>
-
-      {/* Expanded panel - positioned to the right */}
-      {isExpanded && items.length > 0 && (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         <div
-          className="absolute left-full top-0 z-[100] ml-1 min-w-[120px] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 slide-in-from-left-1"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onPointerEnter={handleMouseEnter}
-          onPointerLeave={handleMouseLeave}
+          className={cn('relative', className)}
+          onMouseEnter={handleEnter}
+          onMouseLeave={handleLeave}
+          onMouseMove={handleEnter}
+          onPointerEnter={handleEnter}
+          onPointerLeave={handleLeave}
+          onPointerMove={handleEnter}
         >
-          {items.map((item) => (
-            <button
-              key={item.id}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                item.onClick();
-              }}
-              className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-            >
-              {item.label}
-            </button>
-          ))}
+          <div
+            className={cn(
+              'relative flex cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none transition-colors',
+              open ? 'bg-accent text-accent-foreground' : 'hover:bg-accent hover:text-accent-foreground'
+            )}
+          >
+            {icon && <span className="mr-2 flex-shrink-0">{icon}</span>}
+            <span className="flex-1">{label}</span>
+            <ChevronRight className="ml-auto h-3 w-3" aria-hidden="true" />
+          </div>
         </div>
-      )}
-    </div>
+      </PopoverTrigger>
+
+      <PopoverContent
+        side="right"
+        align="start"
+        sideOffset={6}
+        className={cn(
+          'z-[100] w-auto min-w-[140px] p-1',
+          // override base popover defaults that are too "card-like" for menus
+          'rounded-md border bg-popover text-popover-foreground shadow-md'
+        )}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
+        onMouseMove={handleEnter}
+        onPointerEnter={handleEnter}
+        onPointerLeave={handleLeave}
+        onPointerMove={handleEnter}
+      >
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(false);
+              item.onClick();
+            }}
+            className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1 text-xs outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          >
+            {item.label}
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
   );
 }
