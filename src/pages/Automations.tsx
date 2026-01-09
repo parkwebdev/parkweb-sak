@@ -61,7 +61,7 @@ function Automations() {
   if (loading) {
     return (
       <div className="flex h-full">
-        <div className="w-80 border-r border-border flex-shrink-0">
+        <div className="w-64 border-r border-border flex-shrink-0">
           <AutomationsListSkeleton />
         </div>
         <div className="flex-1 flex items-center justify-center bg-muted/30">
@@ -89,7 +89,7 @@ function Automations() {
   return (
     <div className="flex h-full">
       {/* Automations list sidebar */}
-      <div className="w-80 border-r border-border flex-shrink-0 overflow-hidden flex flex-col">
+      <div className="w-64 border-r border-border flex-shrink-0 overflow-hidden flex flex-col">
         <AutomationsList
           automations={automations}
           selectedId={selectedAutomationId}

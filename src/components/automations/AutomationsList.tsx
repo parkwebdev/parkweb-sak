@@ -9,7 +9,7 @@
 
 import { memo, useState, useCallback } from 'react';
 import { Plus, Zap, Clock, Hand, Stars02, Edit03, Trash01 } from '@untitledui/icons';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -54,10 +54,9 @@ export const AutomationsList = memo(function AutomationsList({
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="text-base font-semibold text-foreground">Automations</h2>
         {canManageAutomations && (
-          <Button size="sm" onClick={onCreateClick}>
-            <Plus size={16} className="mr-1.5" aria-hidden="true" />
-            New
-          </Button>
+          <IconButton label="New automation" size="sm" onClick={onCreateClick}>
+            <Plus size={16} />
+          </IconButton>
         )}
       </div>
 
