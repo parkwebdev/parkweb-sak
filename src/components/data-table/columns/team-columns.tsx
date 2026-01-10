@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DotsHorizontal, Settings01, X } from '@untitledui/icons';
+import { DotsHorizontal, Settings02, Edit05, X } from '@untitledui/icons';
 import { TeamMember } from '@/types/team';
 import { getInitials } from '@/lib/formatting-utils';
 
@@ -115,13 +115,13 @@ export const createTeamColumns = ({
           <DropdownMenuContent align="end">
             {showManageRole && (
               <DropdownMenuItem onClick={() => onEditRole(member)}>
-                <Settings01 className="mr-2 h-4 w-4" />
+                <Settings02 className="mr-2 h-4 w-4" />
                 Manage Role
               </DropdownMenuItem>
             )}
             {onEditProfile && (
               <DropdownMenuItem onClick={() => onEditProfile(member)}>
-                <Settings01 className="mr-2 h-4 w-4" />
+                <Edit05 className="mr-2 h-4 w-4" />
                 Edit Profile
               </DropdownMenuItem>
             )}
