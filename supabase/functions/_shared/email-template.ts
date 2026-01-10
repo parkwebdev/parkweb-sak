@@ -9,9 +9,9 @@
 // DESIGN TOKENS
 // =============================================================================
 
-export const LOGO_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Pilot%20Email%20Logo%20%40%20481px.png';
-export const LINKEDIN_ICON_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png';
-export const FACEBOOK_ICON_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png';
+export const LOGO_URL = 'https://cdn.getpilot.io/v1/object/public/Email/Pilot%20Email%20Logo%20%40%20481px.png';
+export const LINKEDIN_ICON_URL = 'https://cdn.getpilot.io/v1/object/public/Email/LinkedIn%20Icon@4x.png';
+export const FACEBOOK_ICON_URL = 'https://cdn.getpilot.io/v1/object/public/Email/Facebook%20Icon@4x.png';
 
 export const colors = {
   background: '#f5f5f5',

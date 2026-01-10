@@ -358,18 +358,13 @@ async function uploadReportToStorage(
     return null;
   }
   
-  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-    .from('report-exports')
-    .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
-  
-  if (signedUrlError) {
-    console.error('[uploadReportToStorage] Error creating signed URL:', signedUrlError);
-    return null;
-  }
+  // Use public CDN URL instead of signed URL for better email deliverability
+  // Domain matches sending domain (getpilot.io) to avoid Gmail "images hidden" warnings
+  const publicUrl = `https://cdn.getpilot.io/v1/object/public/report-exports/${fileName}`;
   
   return {
     filePath: fileName,
-    signedUrl: signedUrlData.signedUrl,
+    signedUrl: publicUrl,
   };
 }
 
