@@ -19,7 +19,7 @@ export default function QuickStartArticle() {
         steps={[
           {
             title: 'Configure Ari',
-            description: 'Set up your AI agent\'s personality, model, and behavior in the Ari section.',
+            description: 'Set up your AI agent\'s personality and system prompt in the Ari section.',
           },
           {
             title: 'Add Knowledge Sources',
@@ -46,10 +46,10 @@ export default function QuickStartArticle() {
         configuration. Here you can customize:
       </p>
       <ul>
-        <li><strong>Model & Behavior</strong> – Choose the AI model and set response parameters</li>
         <li><strong>System Prompt</strong> – Define Ari's personality and instructions</li>
         <li><strong>Appearance</strong> – Customize colors and branding</li>
         <li><strong>Welcome Messages</strong> – Set up greeting messages and quick actions</li>
+        <li><strong>Lead Capture</strong> – Configure contact forms to collect visitor info</li>
       </ul>
 
       <KBCallout variant="tip">

@@ -1044,144 +1044,87 @@ See [SECURITY_TESTING.md](./SECURITY_TESTING.md) for:
 
 ## Bot Protection
 
-Pilot uses Cloudflare Turnstile to protect widget forms from automated abuse.
+Pilot uses server-side spam detection to protect widget forms from automated abuse.
 
 ### Implementation
 
-- **Mode**: `interaction-only` (invisible unless suspicious)
-- **User Experience**: No checkbox for legitimate users
-- **Challenge**: Automatic challenge only for suspected bots
+Widget lead forms are protected by multiple server-side checks implemented in the `create-widget-lead` edge function:
 
-### Verification Flow
+| Protection | Description |
+|------------|-------------|
+| **IP Rate Limiting** | Maximum 5 submissions per IP address per minute |
+| **Submission Timing** | Minimum 800ms between form load and submit |
+| **Content Validation** | Detects spam patterns (URLs in names, HTML tags, excessive special characters) |
+| **Honeypot Fields** | Hidden form fields that bots fill but humans don't see |
+
+### Server-Side Validation Flow
 
 ```
-1. Turnstile loads invisibly with form
-2. Token generated on form interaction
-3. Token verified server-side before lead creation
-4. Failed verification blocks submission
+1. Request received at create-widget-lead edge function
+2. Check IP rate limit (in-memory Map, max 5/minute)
+3. Validate submission timing (min 800ms from form load)
+4. Check honeypot fields (hidden fields should be empty)
+5. Validate content patterns (no URLs, HTML, spam phrases)
+6. Create lead if all checks pass
+7. Log failed attempts for monitoring
 ```
 
-### TurnstileWidget Component Specification
+### Implementation Details
 
-**File**: `src/widget/components/TurnstileWidget.tsx`
+**File**: `supabase/functions/create-widget-lead/index.ts`
 
 ```typescript
-import { useEffect, useRef, useState } from 'react';
+// IP rate limiting with sliding window
+const ipSubmissions = new Map<string, { count: number; firstSubmission: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const MAX_SUBMISSIONS_PER_WINDOW = 5;
 
-interface TurnstileWidgetProps {
-  siteKey: string;
-  onVerify: (token: string) => void;
-  onError?: () => void;
-}
-
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (container: HTMLElement, options: TurnstileOptions) => string;
-      remove: (widgetId: string) => void;
-    };
-    onTurnstileLoad?: () => void;
+function isIpRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = ipSubmissions.get(ip);
+  
+  if (!record || now - record.firstSubmission > RATE_LIMIT_WINDOW_MS) {
+    ipSubmissions.set(ip, { count: 1, firstSubmission: now });
+    return false;
   }
+  
+  record.count++;
+  return record.count > MAX_SUBMISSIONS_PER_WINDOW;
 }
 
-interface TurnstileOptions {
-  sitekey: string;
-  callback: (token: string) => void;
-  'error-callback'?: () => void;
-  appearance: 'interaction-only' | 'always' | 'execute';
-  theme: 'auto' | 'light' | 'dark';
-}
-
-export const TurnstileWidget = ({ siteKey, onVerify, onError }: TurnstileWidgetProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [widgetId, setWidgetId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Load Turnstile script if not already loaded
-    if (!document.querySelector('script[src*="turnstile"]')) {
-      const script = document.createElement('script');
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad';
-      script.async = true;
-      document.head.appendChild(script);
-    }
-
-    window.onTurnstileLoad = () => {
-      if (containerRef.current && window.turnstile) {
-        const id = window.turnstile.render(containerRef.current, {
-          sitekey: siteKey,
-          callback: onVerify,
-          'error-callback': onError,
-          appearance: 'interaction-only', // Invisible unless suspicious
-          theme: 'auto',
-        });
-        setWidgetId(id);
-      }
-    };
-
-    // If script already loaded
-    if (window.turnstile && containerRef.current) {
-      window.onTurnstileLoad();
-    }
-
-    return () => {
-      if (widgetId && window.turnstile) {
-        window.turnstile.remove(widgetId);
-      }
-    };
-  }, [siteKey, onVerify, onError, widgetId]);
-
-  return <div ref={containerRef} />;
-};
-```
-
-### Client-Side Integration
-
-```typescript
-// In ContactForm.tsx
-import { TurnstileWidget } from './TurnstileWidget';
-
-const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-
-// Add to form (before submit button)
-<TurnstileWidget
-  siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || ''}
-  onVerify={(token) => setTurnstileToken(token)}
-  onError={() => console.error('Turnstile verification failed')}
-/>
-
-// Include token in form submission
-const leadData = {
-  ...existingData,
-  turnstileToken,
-};
-```
-
-### Server-Side Verification
-
-```typescript
-async function verifyTurnstile(token: string): Promise<boolean> {
-  const response = await fetch(
-    'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-    {
-      method: 'POST',
-      body: new URLSearchParams({
-        secret: Deno.env.get('CLOUDFLARE_TURNSTILE_SECRET'),
-        response: token,
-      }),
-    }
-  );
-  const data = await response.json();
-  return data.success === true;
+// Content validation
+function isSpamContent(firstName: string, lastName: string, customFields: Record<string, unknown>): boolean {
+  const allText = [firstName, lastName, ...Object.values(customFields)].join(' ');
+  
+  // Check for URLs
+  if (/https?:\/\/|www\./i.test(allText)) return true;
+  
+  // Check for HTML tags
+  if (/<[^>]+>/i.test(allText)) return true;
+  
+  // Check for excessive special characters
+  if ((allText.match(/[!@#$%^&*()]/g) || []).length > 5) return true;
+  
+  return false;
 }
 ```
 
-### Fail-Open Behavior
+### Why Server-Side Over Client-Side CAPTCHA
 
-If Turnstile is not configured or verification fails due to network issues, forms will still submit (fail-open) to avoid blocking legitimate users. This is logged for monitoring.
+| Benefit | Description |
+|---------|-------------|
+| **No third-party dependencies** | Widget remains lightweight without external scripts |
+| **No user friction** | Legitimate users never see challenges |
+| **Works everywhere** | No CSP complications for widget embedding |
+| **Privacy-friendly** | No tracking pixels or fingerprinting |
+| **Instant feedback** | Failed submissions rejected immediately |
 
-### Implementation Status
+### Monitoring
 
-🟢 **Complete** - TurnstileWidget component created, server-side verification added to create-widget-lead, and ContactForm integrated. Requires `VITE_TURNSTILE_SITE_KEY` env var and `CLOUDFLARE_TURNSTILE_SECRET` Supabase secret.
+Failed bot protection checks are logged in the edge function responses. Monitor these patterns:
+- High rate limit violations from specific IPs
+- Patterns in rejected content
+- Timing violations indicating automated submissions
 
 ---
 
@@ -1558,9 +1501,9 @@ API key manager displays age warnings:
 
 ### Bot Protection
 
-- [x] Turnstile configured for widget forms (TurnstileWidget component)
-- [x] Token verification in edge functions (create-widget-lead)
-- [x] Fail-open behavior documented (verifyTurnstile returns failOpen: true on error)
+- [x] Server-side spam detection for widget forms (rate limiting, timing, content validation)
+- [x] IP rate limiting in edge functions (create-widget-lead)
+- [x] Honeypot fields in contact forms
 
 ### Deployment
 

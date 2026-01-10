@@ -120,12 +120,13 @@ export default function LeadCaptureArticle() {
 
       <h2 id="spam-protection">Spam Protection</h2>
       <p>
-        The contact form includes built-in protections:
+        The contact form includes built-in server-side protections:
       </p>
       <ul>
         <li><strong>Honeypot fields</strong> – Hidden fields to catch automated bots</li>
-        <li><strong>Cloudflare Turnstile</strong> – Invisible CAPTCHA verification</li>
+        <li><strong>IP rate limiting</strong> – Blocks excessive submissions from the same source</li>
         <li><strong>Submission timing</strong> – Detects suspiciously fast submissions</li>
+        <li><strong>Content validation</strong> – Detects spam patterns in form fields</li>
       </ul>
 
       <h2 id="privacy">Privacy Considerations</h2>
