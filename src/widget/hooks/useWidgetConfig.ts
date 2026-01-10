@@ -51,9 +51,13 @@ export function useWidgetConfig(
   isLoadingProp: boolean = false,
   previewMode: boolean = false
 ): UseWidgetConfigResult {
-  // If isLoading prop is provided, parent is handling config fetching (Intercom-style)
-  const parentHandlesConfig = isLoadingProp !== undefined && 'greeting' in configProp;
-  const isSimpleConfig = !parentHandlesConfig && 'agentId' in configProp && !('greeting' in configProp);
+  // Detect if this is a full config (has any of the full-config-only keys)
+  const fullConfigKeys = ['quickActions', 'enableContactForm', 'welcomeTitle', 'helpCategories', 'announcements'];
+  const hasFullConfigKeys = fullConfigKeys.some(key => key in configProp);
+  
+  // If isLoading prop is provided with a full config, parent is handling config fetching (Intercom-style)
+  const parentHandlesConfig = isLoadingProp !== undefined && hasFullConfigKeys;
+  const isSimpleConfig = !parentHandlesConfig && 'agentId' in configProp && !hasFullConfigKeys;
   
   const [config, setConfig] = useState<WidgetConfig | null>(
     isSimpleConfig ? null : (configProp as WidgetConfig)
@@ -90,7 +94,7 @@ export function useWidgetConfig(
           setLoading(false);
         });
     }
-  }, []);
+  }, [isSimpleConfig, agentId]);
 
   // Sync config state when configProp changes (for preview mode OR parent handles config)
   useEffect(() => {

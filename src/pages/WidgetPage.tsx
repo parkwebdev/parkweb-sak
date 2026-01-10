@@ -123,6 +123,8 @@ const WidgetPage = () => {
           enableContactForm: data.enableContactForm ?? true,
           contactFormTitle: data.contactFormTitle || 'Quick intro before we chat 👋',
           contactFormSubtitle: data.contactFormSubtitle,
+          enableMultiStepForm: data.enableMultiStepForm ?? true,
+          formSteps: data.formSteps || [{ id: 'step-1' }],
           announcements: data.announcements || [],
           helpArticles: data.helpArticles || [],
           helpCategories: data.helpCategories || [],
