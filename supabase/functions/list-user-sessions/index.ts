@@ -38,21 +38,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create client to verify user
-    const supabase = createClient(
+    // Use service role to verify user from token
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !userData.user) {
       console.error('[list-user-sessions] User verification failed:', userError?.message);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    const user = userData.user;
 
     console.log('[list-user-sessions] Fetching sessions for user:', user.id);
 
@@ -67,11 +69,7 @@ Deno.serve(async (req) => {
       console.warn('[list-user-sessions] Could not decode session ID from JWT');
     }
 
-    // Create admin client to query auth.sessions
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Query auth.sessions for this user using RPC function (reuse supabaseAdmin from above)
 
     // Query auth.sessions for this user using RPC function
     const { data: sessions, error: sessionsError } = await supabaseAdmin.rpc(
