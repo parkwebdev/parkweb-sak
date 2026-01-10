@@ -39,7 +39,7 @@ import {
 import { cn } from '@/lib/utils';
 
 interface CalendarConnectionsProps {
-  locationId: string;
+  locationId?: string; // Optional - if undefined, connects at agent level
   agentId: string;
 }
 
@@ -173,7 +173,7 @@ export function CalendarConnections({
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
           action: 'initiate',
-          locationId,
+          locationId: locationId || null, // null for agent-level calendars
           agentId,
         },
       });
