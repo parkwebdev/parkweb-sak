@@ -63,3 +63,6 @@ export { WidgetEmojiPicker, WidgetQuickEmojiPicker } from './WidgetEmojiPicker';
 
 /** Phone input with country detection - uses libphonenumber-js/min, no motion/react */
 export { WidgetPhoneInput } from './WidgetPhoneInput';
+
+/** Debug overlay - shows checkpoints when ?debugWidget=1 is in URL */
+export { DebugOverlay } from './DebugOverlay';

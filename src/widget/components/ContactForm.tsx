@@ -17,6 +17,7 @@ import { useSystemTheme } from '../hooks/useSystemTheme';
 import type { ChatUser } from '../types';
 import { logger } from '@/utils/logger';
 import { ChevronLeft, ChevronRight } from '../icons';
+import { addCheckpoint, updateDebugState } from '../utils/widget-debug';
 
 /** Custom field configuration */
 interface CustomField {
@@ -181,11 +182,16 @@ export const ContactForm = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // DEBUG: Checkpoint 1 - Submit started
+    addCheckpoint('CF1_SUBMIT_CLICKED', { step: currentStep, isLastStep });
+    
     const honeypot = formValues.website || '';
     const customFieldData: Record<string, { value: unknown; type: string }> = {};
 
     if (honeypot) {
       logger.debug('Spam detected: honeypot filled');
+      addCheckpoint('CF_HONEYPOT_BLOCKED');
       return;
     }
 
@@ -193,6 +199,7 @@ export const ContactForm = ({
     const stepErrors = validateCurrentStep();
     if (Object.keys(stepErrors).length > 0) {
       setFormErrors(stepErrors);
+      addCheckpoint('CF_VALIDATION_FAILED', { errors: Object.keys(stepErrors) });
       return;
     }
 
@@ -226,6 +233,9 @@ export const ContactForm = ({
 
     setIsSubmitting(true);
     setFormErrors({});
+    
+    // DEBUG: Checkpoint 2 - Lead creation starting
+    addCheckpoint('CF2_CREATE_LEAD_START', { agentId });
 
     try {
       const { leadId, conversationId } = await createLead(agentId, { 
@@ -234,6 +244,9 @@ export const ContactForm = ({
         customFields: customFieldData, 
         _formLoadTime: formLoadTime,
       });
+      
+      // DEBUG: Checkpoint 3 - Lead created
+      addCheckpoint('CF3_CREATE_LEAD_DONE', { leadId: leadId?.slice(0, 8), conversationId: conversationId?.slice(0, 8) });
       
       // Extract email from custom fields for ChatUser (smart detection)
       let extractedEmail = '';
@@ -248,6 +261,7 @@ export const ContactForm = ({
       const isBlocked = FAKE_LEAD_IDS.includes(leadId);
       if (isBlocked) {
         logger.debug('Bot protection triggered, proceeding to chat without lead');
+        addCheckpoint('CF_BOT_BLOCKED');
       }
       
       const userData: ChatUser = { 
@@ -259,10 +273,19 @@ export const ContactForm = ({
         conversationId: isBlocked ? undefined : (conversationId ?? undefined),
       };
       
+      // DEBUG: Checkpoint 4 - Calling onSubmit
+      addCheckpoint('CF4_ONSUBMIT_CALL', { hasUserData: !!userData, hasConvId: !!conversationId });
+      
       // Always proceed to chat - bot protection only blocks lead creation, not chatting
       onSubmit(userData, isBlocked ? undefined : (conversationId ?? undefined));
+      
+      // DEBUG: Checkpoint 5 - onSubmit returned
+      addCheckpoint('CF5_ONSUBMIT_DONE');
     } catch (error: unknown) {
       logger.error('Error creating lead:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      addCheckpoint('CF_ERR', { error: errorMsg.slice(0, 50) });
+      updateDebugState({ lastError: `CF: ${errorMsg.slice(0, 30)}` });
       setFormErrors({ submit: 'Something went wrong. Please try again.' });
     } finally {
       setIsSubmitting(false);

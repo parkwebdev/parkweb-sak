@@ -987,9 +987,17 @@ NEVER mark complete when:
   } catch (error: unknown) {
     const totalDuration = performance.now() - startTime;
     const errorMsg = getErrorMessage(error);
+    
+    // Enhanced error logging for debugging - capture everything available
     log.error('Request failed', { 
       error: errorMsg,
       durationMs: Math.round(totalDuration),
+      errorType: typeof error,
+      errorName: error instanceof Error ? error.name : 'unknown',
+      errorStack: error instanceof Error ? error.stack : undefined,
+      errorJson: (() => {
+        try { return JSON.stringify(error); } catch { return 'non-serializable'; }
+      })(),
     });
     
     // Create agent error notification (fire and forget)
