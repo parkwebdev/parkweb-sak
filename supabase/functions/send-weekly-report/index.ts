@@ -408,11 +408,17 @@ const handler = async (req: Request): Promise<Response> => {
         });
 
         // Send email via Resend
+        const unsubscribeUrl = `${appUrl}/settings?tab=notifications#report-emails`;
+        
         const { error: emailError } = await resend.emails.send({
           from: 'Pilot <reports@getpilot.io>',
           to: [user.email!],
           subject: `Weekly Report: ${displayRange}`,
           html: emailHtml,
+          headers: {
+            'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
         });
 
         if (emailError) {
