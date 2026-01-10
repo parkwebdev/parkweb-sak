@@ -496,11 +496,17 @@ serve(async (req: Request): Promise<Response> => {
         for (const recipient of report.recipients) {
           console.log(`[send-scheduled-report] Sending report to ${recipient}...`);
           
+          const unsubscribeUrl = `${appUrl}/settings?tab=notifications#report-emails`;
+          
           await resend.emails.send({
             from: "Pilot Analytics <reports@getpilot.io>",
             to: [recipient],
             subject: `${report.name} - ${report.frequency.charAt(0).toUpperCase() + report.frequency.slice(1)} Report`,
             html: emailContent,
+            headers: {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
           });
         }
 
