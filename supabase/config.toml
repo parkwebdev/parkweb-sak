@@ -87,7 +87,7 @@ verify_jwt = false
 schedule = "0 * * * *"
 
 [functions.google-calendar-auth]
-verify_jwt = true
+verify_jwt = false
 
 [functions.outlook-calendar-auth]
 verify_jwt = true
