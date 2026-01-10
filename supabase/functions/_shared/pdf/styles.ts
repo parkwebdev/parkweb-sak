@@ -69,7 +69,7 @@ export const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: colors.white,
-    fontFamily: 'Inter',
+    fontFamily: 'Helvetica',
     fontSize: FONT_SIZE.BASE,
     color: colors.primary,
     paddingTop: PAGE.MARGIN,      // Top margin for all pages
