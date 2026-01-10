@@ -70,12 +70,6 @@ const DEFAULT_TABLE_COLUMN_ORDER = ['name', 'email', 'phone', 'stage_id', 'prior
 // Default kanban field order
 const DEFAULT_KANBAN_FIELD_ORDER: CardFieldKey[] = CARD_FIELDS.map(f => f.key);
 
-/** Props for the Leads page */
-interface LeadsProps {
-  /** Handler for mobile menu toggle */
-  onMenuClick?: () => void;
-}
-
 // Date filter day ranges
 const DATE_FILTER_DAYS: Record<Exclude<DateRangeFilter, 'all'>, number> = {
   '7days': 7,
@@ -83,7 +77,7 @@ const DATE_FILTER_DAYS: Record<Exclude<DateRangeFilter, 'all'>, number> = {
   '90days': 90,
 };
 
-function Leads({ onMenuClick }: LeadsProps) {
+function Leads() {
   const { 
     leads, 
     loading, 

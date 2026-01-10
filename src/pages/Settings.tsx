@@ -17,8 +17,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '@/components/ui/button';
-import { Menu01 as Menu, Settings01 } from '@untitledui/icons';
+import { Settings01 } from '@untitledui/icons';
 import { SettingsSectionMenu, type SettingsTab } from '@/components/settings/SettingsSectionMenu';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
@@ -34,13 +33,7 @@ import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
-/** Props for the Settings page */
-interface SettingsProps {
-  /** Handler for mobile menu toggle */
-  onMenuClick?: () => void;
-}
-
-function Settings({ onMenuClick }: SettingsProps) {
+function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [searchParams, setSearchParams] = useSearchParams();
   const { loading } = useRoleAuthorization();
@@ -130,25 +123,8 @@ function Settings({ onMenuClick }: SettingsProps) {
 
       {/* Center: Content Area */}
       <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
-        {/* Mobile header */}
+        {/* Mobile tab navigation */}
         <div className="lg:hidden px-4 pt-4">
-          <div className="flex items-center gap-3 mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onMenuClick}
-            >
-              <Menu size={16} />
-            </Button>
-            <div>
-              <h2 className="text-sm font-semibold text-foreground">Settings</h2>
-              <p className="text-2xs text-muted-foreground">
-                Manage your account and preferences
-              </p>
-            </div>
-          </div>
-          
-          {/* Mobile tab navigation */}
           <div className="flex overflow-x-auto gap-1 mb-4 pb-2">
             {visibleTabs.map((tab) => (
               <button

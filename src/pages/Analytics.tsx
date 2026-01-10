@@ -10,8 +10,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { AnalyticsDatePicker } from '@/components/analytics/AnalyticsDatePicker';
@@ -99,39 +97,10 @@ function Analytics() {
       
       <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
         <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
-          {/* Header with inline controls */}
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold">{SECTION_INFO[activeTab].title}</h1>
-              <p className="text-sm text-muted-foreground mt-1">{SECTION_INFO[activeTab].description}</p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {showToolbar && (
-                <>
-                  <AnalyticsDatePicker
-                    selectedPreset={datePreset}
-                    onPresetChange={setDatePreset}
-                  />
-                  <div className="flex items-center gap-1.5">
-                    <Label htmlFor="mock-toggle" className="text-xs text-muted-foreground cursor-pointer">
-                      {data.mockMode ? 'Mock Data' : 'Live Data'}
-                    </Label>
-                    <div className="scale-[0.65] origin-left -mr-4">
-                      <Switch
-                        id="mock-toggle"
-                        checked={data.mockMode}
-                        onCheckedChange={data.setMockMode}
-                        aria-label="Toggle mock data mode"
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-              {showBuildReport && (
-                <Button size="sm" onClick={() => navigate('/report-builder')}>Build Report</Button>
-              )}
-            </div>
+          {/* Section header */}
+          <div>
+            <h1 className="text-2xl font-bold">{SECTION_INFO[activeTab].title}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{SECTION_INFO[activeTab].description}</p>
           </div>
 
           {/* Sections */}
