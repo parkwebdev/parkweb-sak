@@ -7,7 +7,7 @@
  * @module components/automations/panels/AIExtractConfigPanel
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Plus, Trash01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { AdvancedModeToggle } from './AdvancedModeToggle';
@@ -43,8 +48,30 @@ const FIELD_TYPES = [
   { value: 'url', label: 'URL' },
 ] as const;
 
+// Field presets for common extraction use cases
+const FIELD_PRESETS = {
+  contact: [
+    { name: 'name', type: 'string' as const, description: 'Full name of the person', required: true },
+    { name: 'email', type: 'email' as const, description: 'Email address', required: false },
+    { name: 'phone', type: 'phone' as const, description: 'Phone number', required: false },
+    { name: 'company', type: 'string' as const, description: 'Company or organization name', required: false },
+  ],
+  meeting: [
+    { name: 'date', type: 'date' as const, description: 'Preferred meeting date', required: true },
+    { name: 'time_preference', type: 'string' as const, description: 'Morning, afternoon, or specific time', required: false },
+    { name: 'meeting_type', type: 'string' as const, description: 'Call, video, or in-person', required: false },
+  ],
+  inquiry: [
+    { name: 'topic', type: 'string' as const, description: 'Main topic or product of interest', required: true },
+    { name: 'budget', type: 'string' as const, description: 'Budget range if mentioned', required: false },
+    { name: 'timeline', type: 'string' as const, description: 'When they need a solution', required: false },
+    { name: 'decision_maker', type: 'boolean' as const, description: 'Whether they are the decision maker', required: false },
+  ],
+};
+
 export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps) {
   const updateNodeData = useFlowStore((state) => state.updateNodeData);
+  const [presetOpen, setPresetOpen] = useState(false);
 
   const handleChange = <K extends keyof AIExtractNodeData>(
     field: K,
@@ -74,6 +101,11 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
     handleChange('fields', fields);
   }, [data.fields]);
 
+  const applyPreset = (presetKey: keyof typeof FIELD_PRESETS) => {
+    handleChange('fields', [...FIELD_PRESETS[presetKey]]);
+    setPresetOpen(false);
+  };
+
   const outputVar = data.outputVariable || 'extracted';
 
   return (
@@ -102,10 +134,46 @@ export function AIExtractConfigPanel({ nodeId, data }: AIExtractConfigPanelProps
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label>Fields to extract</Label>
-          <Button variant="ghost" size="sm" className="h-6 px-2" onClick={addField}>
-            <Plus size={14} aria-hidden="true" className="mr-1" />
-            Add
-          </Button>
+          <div className="flex gap-1">
+            <Popover open={presetOpen} onOpenChange={setPresetOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                  Presets
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-48 p-0">
+                <div className="p-2 border-b border-border">
+                  <p className="text-xs font-medium">Quick presets</p>
+                </div>
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('contact')}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
+                  >
+                    Contact info (name, email, phone)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('meeting')}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
+                  >
+                    Meeting details (date, time, type)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset('inquiry')}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
+                  >
+                    Lead qualification (topic, budget)
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <Button variant="ghost" size="sm" className="h-6 px-2" onClick={addField}>
+              <Plus size={14} aria-hidden="true" />
+            </Button>
+          </div>
         </div>
         
         <div className="space-y-3">

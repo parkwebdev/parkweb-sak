@@ -87,10 +87,10 @@ export function LogicConditionConfigPanel({ nodeId, data }: LogicConditionConfig
     <div className="space-y-4">
       {/* Field Selection - Human-readable dropdown */}
       <div className="space-y-2">
-        <Label htmlFor="condition-field">If this field...</Label>
+        <Label htmlFor="condition-field">Check if...</Label>
         <Select value={condition.field} onValueChange={handleFieldChange}>
           <SelectTrigger id="condition-field">
-            <SelectValue placeholder="Select a field to check" />
+            <SelectValue placeholder="Choose what to check" />
           </SelectTrigger>
           <SelectContent>
             {CONDITION_FIELD_OPTIONS.map((option) => (
@@ -104,10 +104,10 @@ export function LogicConditionConfigPanel({ nodeId, data }: LogicConditionConfig
 
       {/* Operator */}
       <div className="space-y-2">
-        <Label htmlFor="condition-operator">...matches this condition</Label>
+        <Label htmlFor="condition-operator">Is...</Label>
         <Select value={condition.operator} onValueChange={handleOperatorChange}>
           <SelectTrigger id="condition-operator">
-            <SelectValue placeholder="Select condition" />
+            <SelectValue placeholder="Choose comparison" />
           </SelectTrigger>
           <SelectContent>
             {OPERATORS.map((op) => (
@@ -125,8 +125,8 @@ export function LogicConditionConfigPanel({ nodeId, data }: LogicConditionConfig
           field={fieldKey}
           value={String(condition.value || '')}
           onChange={handleValueChange}
-          label="Value"
-          placeholder="Value to compare"
+          label="This value"
+          placeholder="Enter value to compare"
         />
       )}
 
