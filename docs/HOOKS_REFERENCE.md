@@ -3185,7 +3185,7 @@ isActive(): boolean
 
 ### useAutomations (`src/hooks/useAutomations.ts`)
 
-Provides CRUD operations for automations with real-time updates. Uses `accountOwnerId` for proper data scoping.
+Provides CRUD operations for automations with real-time updates. Uses `accountOwnerId` for proper data scoping. Supports creating automations from pre-built templates.
 
 ```tsx
 import { useAutomations } from '@/hooks/useAutomations';
@@ -3222,11 +3222,18 @@ function useAutomations(): {
 
 **Usage Example:**
 ```tsx
-// Create new automation
+// Create new automation from scratch
 const newAutomation = await createAutomation({
   name: 'Welcome Message',
-  triggerType: 'event',
-  triggerConfig: { event: 'conversation.started' },
+  trigger_type: 'event',
+  trigger_config: { event: 'conversation.started' },
+});
+
+// Create automation from template
+const templateAutomation = await createAutomation({
+  name: 'My Lead Email',
+  trigger_type: 'event',
+  templateId: 'new-lead-email', // Uses pre-built template
 });
 
 // Update automation
@@ -3246,8 +3253,64 @@ await deleteAutomation(automation.id);
 - Uses `accountOwnerId` for proper data scoping
 - Integrates with `useAgent()` for agent context
 - Toast notifications on errors
+- **Template support**: Create from pre-built templates via `templateId`
 
 **File**: `src/hooks/useAutomations.ts`
+
+---
+
+### useAutomationValidation (`src/hooks/useAutomationValidation.ts`)
+
+Validates automation nodes and flow configuration in real-time. Returns validation status and error details for each node.
+
+```tsx
+import { useAutomationValidation } from '@/hooks/useAutomationValidation';
+
+const { 
+  isValid, 
+  errors, 
+  errorCount, 
+  warningCount, 
+  getNodeErrors 
+} = useAutomationValidation();
+
+// Check if specific node has errors
+const nodeErrors = getNodeErrors('node-abc123');
+```
+
+**Signature:**
+```tsx
+function useAutomationValidation(): {
+  isValid: boolean;
+  errors: ValidationError[];
+  errorCount: number;
+  warningCount: number;
+  getNodeErrors: (nodeId: string) => ValidationError[];
+}
+```
+
+**Features:**
+- Validates required fields per node type
+- Returns specific error messages per field
+- Memoized for performance
+- Integrates with FlowToolbar to block publishing invalid automations
+
+**Validation Rules by Node Type:**
+| Node Type | Required Fields |
+|-----------|-----------------|
+| trigger-event | event |
+| trigger-schedule | cronExpression |
+| trigger-ai-tool | toolName, toolDescription |
+| action-email | to, subject, body |
+| action-http | url |
+| action-update-lead | fields (1+) |
+| logic-condition | condition.field, condition.operator |
+| ai-generate | prompt, outputVariable |
+| ai-classify | input, categories (2+) |
+| ai-extract | input, fields (1+) |
+| transform-set-variable | variableName |
+
+**File**: `src/hooks/useAutomationValidation.ts`
 
 ---
 
@@ -3257,3 +3320,4 @@ await deleteAutomation(automation.id);
 - [Architecture](./ARCHITECTURE.md) - Project structure
 - [Design System](./DESIGN_SYSTEM.md) - UI guidelines
 - [PDF Generator](./PDF_GENERATOR.md) - PDF report generation
+- [Automations Architecture](./AUTOMATIONS_ARCHITECTURE.md) - Full automation system documentation
