@@ -123,6 +123,7 @@ export const WidgetPhoneInput = forwardRef<HTMLInputElement, WidgetPhoneInputPro
         ref={ref}
         name={name}
         type="tel"
+        autoComplete="tel"
         value={inputValue}
         onChange={handleChange}
         placeholder={placeholder}

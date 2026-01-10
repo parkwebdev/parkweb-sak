@@ -19,7 +19,7 @@ const widgetInputVariants = cva(
   {
     variants: {
       size: {
-        default: "h-10 py-2 text-base md:text-sm placeholder:text-sm",
+        default: "h-10 py-2 text-sm placeholder:text-sm",
         sm: "h-8 py-1 text-xs placeholder:text-xs",
       },
     },
