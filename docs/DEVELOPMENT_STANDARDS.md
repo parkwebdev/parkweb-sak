@@ -333,7 +333,6 @@ grep -rn "Record<string, any>" src/ --include="*.ts" --include="*.tsx"
 | `src/pages/Leads.tsx` | 5 catch blocks typed |
 | `src/pages/ReportBuilder.tsx` | 1 catch block typed |
 | `src/widget/utils/migration.ts` | 1 catch block typed |
-| `src/widget/components/TurnstileWidget.tsx` | 2 catch blocks typed |
 | `src/widget/hooks/useWidgetMessaging.ts` | Already typed ✓ |
 | `src/components/pdf/PdfJsViewer.tsx` | 2 catch blocks typed |
 | `src/widget/api.ts` | `Record<string, any>` → `Record<string, unknown>` |
