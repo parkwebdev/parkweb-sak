@@ -3,7 +3,7 @@
  * 
  * React Flow canvas for the automation builder.
  * Uses Zustand store for state management.
- * Includes context menus and keyboard shortcuts.
+ * Includes context menus, keyboard shortcuts, and custom edge types.
  * 
  * @module components/automations/FlowEditor
  */
@@ -19,6 +19,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { nodeTypes } from './nodes';
+import { edgeTypes } from './edges';
 import { NodeContextMenu } from './NodeContextMenu';
 import { PaneContextMenu } from './PaneContextMenu';
 import { NODE_CATEGORIES, type AutomationNodeType, type AutomationNode, type AutomationEdge } from '@/types/automations';
@@ -77,8 +78,9 @@ export function FlowEditor() {
   const [nodeMenu, setNodeMenu] = useState<NodeMenuState | null>(null);
   const [paneMenu, setPaneMenu] = useState<PaneMenuState | null>(null);
 
-  // Memoize nodeTypes to prevent React Flow warnings
+  // Memoize nodeTypes and edgeTypes to prevent React Flow warnings
   const memoizedNodeTypes = useMemo(() => nodeTypes, []);
+  const memoizedEdgeTypes = useMemo(() => edgeTypes, []);
 
   // Close menus
   const closeMenus = useCallback(() => {
@@ -211,6 +213,7 @@ export function FlowEditor() {
         nodes={nodes}
         edges={edges}
         nodeTypes={memoizedNodeTypes}
+        edgeTypes={memoizedEdgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}

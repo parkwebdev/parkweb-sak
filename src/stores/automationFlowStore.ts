@@ -112,9 +112,17 @@ export const useFlowStore = create<FlowStore>()(
       },
 
       onConnect: (connection) => {
+        // Check if connecting from a condition node - use conditional edge type
+        const sourceNode = get().nodes.find(n => n.id === connection.source);
+        const edgeType = sourceNode?.type === 'logic-condition' ? 'conditional' : 'smoothstep';
+        
         set({
           edges: addEdge(
-            { ...connection, id: `edge-${nanoid(8)}` },
+            { 
+              ...connection, 
+              id: `edge-${nanoid(8)}`,
+              type: edgeType,
+            },
             get().edges
           ) as AutomationEdge[],
           isDirty: true,

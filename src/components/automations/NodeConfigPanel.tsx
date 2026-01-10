@@ -3,14 +3,16 @@
  * 
  * Dynamic panel that shows the configuration UI for the selected node.
  * Renders different panels based on node type.
+ * Includes validation error display.
  * 
  * @module components/automations/NodeConfigPanel
  */
 
 import { useMemo } from 'react';
-import { X } from '@untitledui/icons';
+import { X, AlertCircle } from '@untitledui/icons';
 import { IconButton } from '@/components/ui/icon-button';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { useAutomationValidation } from '@/hooks/useAutomationValidation';
 import {
   TriggerEventConfigPanel,
   TriggerScheduleConfigPanel,
@@ -66,6 +68,7 @@ interface NodeConfigPanelProps {
 
 export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
   const nodes = useFlowStore((state) => state.nodes);
+  const { getNodeErrors } = useAutomationValidation();
 
   // Find the selected node
   const selectedNode = useMemo(() => {
@@ -75,6 +78,8 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
   if (!selectedNode) {
     return null;
   }
+
+  const errors = getNodeErrors(selectedNode.id);
 
   const renderConfigPanel = () => {
     switch (selectedNode.type) {
@@ -205,6 +210,23 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
               {(selectedNode.data as { label?: string }).label || 'Untitled'}
             </div>
           </div>
+
+          {/* Validation errors banner */}
+          {errors.length > 0 && (
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+              <div className="flex items-center gap-2 text-sm font-medium text-destructive">
+                <AlertCircle size={16} aria-hidden="true" />
+                Complete required fields
+              </div>
+              <ul className="mt-2 space-y-1">
+                {errors.map((error, index) => (
+                  <li key={index} className="text-xs text-destructive">
+                    • {error.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Type-specific config */}
           {renderConfigPanel()}

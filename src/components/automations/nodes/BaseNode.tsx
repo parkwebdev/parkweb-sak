@@ -2,14 +2,16 @@
  * BaseNode Component
  * 
  * Base wrapper for all automation nodes with consistent styling.
- * Handles selection state, disabled state, and common layout.
+ * Handles selection state, disabled state, validation errors, and common layout.
  * 
  * @module components/automations/nodes/BaseNode
  */
 
 import { memo, type ReactNode } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { AlertCircle } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import { useAutomationValidation } from '@/hooks/useAutomationValidation';
 import type { BaseNodeData } from '@/types/automations';
 
 interface BaseNodeProps {
@@ -40,18 +42,34 @@ export const BaseNode = memo(function BaseNode({
 }: BaseNodeProps) {
   const { selected } = nodeProps;
   const data = nodeProps.data as BaseNodeData;
+  const { hasNodeErrors, getNodeErrors } = useAutomationValidation();
+  
+  const nodeHasErrors = hasNodeErrors(nodeProps.id);
+  const errors = getNodeErrors(nodeProps.id);
   
   return (
     <div
       className={cn(
-        'min-w-[200px] rounded-lg border bg-card shadow-sm',
+        'min-w-[200px] rounded-lg border bg-card shadow-sm relative',
         'transition-all duration-150',
-        selected 
-          ? 'border-primary ring-2 ring-primary/20' 
-          : 'border-border hover:border-border/80',
+        nodeHasErrors
+          ? 'border-destructive ring-1 ring-destructive/20'
+          : selected 
+            ? 'border-primary ring-2 ring-primary/20' 
+            : 'border-border hover:border-border/80',
         data.disabled && 'opacity-50'
       )}
     >
+      {/* Validation error indicator */}
+      {nodeHasErrors && (
+        <div 
+          className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive flex items-center justify-center shadow-sm"
+          title={errors.map(e => e.message).join(', ')}
+        >
+          <AlertCircle size={12} className="text-destructive-foreground" aria-hidden="true" />
+        </div>
+      )}
+      
       {/* Input handle */}
       {hasInput && (
         <Handle
