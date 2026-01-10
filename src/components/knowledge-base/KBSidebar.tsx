@@ -9,8 +9,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { SearchMd, ChevronDown, XClose } from '@untitledui/icons';
-import { Input } from '@/components/ui/input';
+import { ChevronDown } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
@@ -45,6 +44,8 @@ interface KBSidebarProps {
   isCategoryView?: boolean;
   onSelectCategory: (category: KBCategory) => void;
   onSelectArticle: (category: KBCategory, article: KBArticle) => void;
+  /** Search query from TopBar */
+  searchQuery?: string;
 }
 
 export function KBSidebar({
@@ -54,8 +55,8 @@ export function KBSidebar({
   isCategoryView,
   onSelectCategory,
   onSelectArticle,
+  searchQuery = '',
 }: KBSidebarProps) {
-  const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const prefersReducedMotion = useReducedMotion();
   
@@ -110,35 +111,6 @@ export function KBSidebar({
 
   return (
     <aside className="w-[260px] border-r border-border flex flex-col h-full bg-background">
-      {/* Search */}
-      <div className="p-4 border-b border-border">
-        <div className="relative">
-          <SearchMd 
-            size={16} 
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" 
-            aria-hidden="true"
-          />
-          <Input
-            type="text"
-            placeholder="Search articles..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-8"
-            size="sm"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Clear search"
-            >
-              <XClose size={14} aria-hidden="true" />
-            </button>
-          )}
-        </div>
-      </div>
-      
       {/* Categories and Articles */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Knowledge Base navigation">
         {filteredCategories.map((category, categoryIndex) => {
