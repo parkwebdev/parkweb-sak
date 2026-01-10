@@ -28,13 +28,17 @@ const widgetTextareaVariants = cva(
 
 export interface WidgetTextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement>,
-    VariantProps<typeof widgetTextareaVariants> {}
+    VariantProps<typeof widgetTextareaVariants> {
+  /** Autocomplete hint for browser */
+  autoComplete?: string;
+}
 
 const WidgetTextarea = React.forwardRef<HTMLTextAreaElement, WidgetTextareaProps>(
-  ({ className, size, ...props }, ref) => {
+  ({ className, size, autoComplete, ...props }, ref) => {
     return (
       <textarea
         className={cn(widgetTextareaVariants({ size, className }))}
+        autoComplete={autoComplete}
         ref={ref}
         {...props}
       />

@@ -92,7 +92,13 @@ export const ContactForm = ({
   const [checkboxValues, setCheckboxValues] = useState<Record<string, boolean>>({});
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
   const systemTheme = useSystemTheme();
+  
+  /** Update a form field value */
+  const updateFormValue = (name: string, value: string) => {
+    setFormValues(prev => ({ ...prev, [name]: value }));
+  };
 
   // Theme-aware colors (hex intentional for iframe isolation - see component JSDoc)
   const buttonBgColor = systemTheme === 'dark' ? '#FFFFFF' : primaryColor;
@@ -112,20 +118,20 @@ export const ContactForm = ({
   const displaySubtitle = currentStepConfig?.subtitle || (currentStep === 1 ? subtitle : undefined);
 
   /**
-   * Validate fields for the current step only
+   * Validate fields for the current step only using formValues state
    */
-  const validateCurrentStep = (formData: FormData): Record<string, string> => {
+  const validateCurrentStep = (): Record<string, string> => {
     const errors: Record<string, string> = {};
     
     // Step 1: Validate required default fields (firstName, lastName)
     if (currentStep === 1) {
-      const firstName = formData.get('firstName') as string;
-      const lastName = formData.get('lastName') as string;
+      const firstName = formValues.firstName || '';
+      const lastName = formValues.lastName || '';
       
-      if (!firstName?.trim() || firstName.length > 50) {
+      if (!firstName.trim() || firstName.length > 50) {
         errors.firstName = 'First name is required';
       }
-      if (!lastName?.trim() || lastName.length > 50) {
+      if (!lastName.trim() || lastName.length > 50) {
         errors.lastName = 'Last name is required';
       }
     }
@@ -137,13 +143,13 @@ export const ContactForm = ({
           errors[field.id] = `${field.label} is required`;
         }
       } else if (field.required && field.fieldType !== 'checkbox') {
-        const value = formData.get(field.id) as string;
-        if (!value || !value.trim()) {
+        const value = formValues[field.id] || '';
+        if (!value.trim()) {
           errors[field.id] = `${field.label} is required`;
         }
         
         // Additional validation for email type
-        if (field.fieldType === 'email' && value && value.trim()) {
+        if (field.fieldType === 'email' && value.trim()) {
           if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || value.length > 255) {
             errors[field.id] = 'Please enter a valid email address';
           }
@@ -157,12 +163,7 @@ export const ContactForm = ({
   const handleNext = (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // Get form data from the form element
-    const form = (e.target as HTMLElement).closest('form');
-    if (!form) return;
-    
-    const formData = new FormData(form);
-    const errors = validateCurrentStep(formData);
+    const errors = validateCurrentStep();
     
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -181,8 +182,7 @@ export const ContactForm = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const honeypot = formData.get('website') as string;
+    const honeypot = formValues.website || '';
     const customFieldData: Record<string, { value: unknown; type: string }> = {};
 
     if (honeypot) {
@@ -191,7 +191,7 @@ export const ContactForm = ({
     }
 
     // Validate current step before final submission
-    const stepErrors = validateCurrentStep(formData);
+    const stepErrors = validateCurrentStep();
     if (Object.keys(stepErrors).length > 0) {
       setFormErrors(stepErrors);
       return;
@@ -211,7 +211,7 @@ export const ContactForm = ({
           };
         }
       } else {
-        const value = formData.get(field.id);
+        const value = formValues[field.id];
         if (value) {
           customFieldData[field.label] = {
             value: value,
@@ -222,8 +222,8 @@ export const ContactForm = ({
     });
 
     // Get default field values
-    const firstName = formData.get('firstName') as string;
-    const lastName = formData.get('lastName') as string;
+    const firstName = formValues.firstName || '';
+    const lastName = formValues.lastName || '';
 
     try {
       setFormErrors({});
@@ -239,7 +239,7 @@ export const ContactForm = ({
       // Extract email from custom fields for ChatUser (smart detection)
       let extractedEmail = '';
       customFields.forEach(field => {
-        const value = formData.get(field.id) as string;
+        const value = formValues[field.id];
         if (field.fieldType === 'email' && value) {
           extractedEmail = value.trim();
         }
@@ -281,7 +281,12 @@ export const ContactForm = ({
         );
       case 'select':
         return (
-          <WidgetSelect name={field.id} required={field.required}>
+          <WidgetSelect 
+            name={field.id} 
+            required={field.required}
+            value={formValues[field.id] || ''}
+            onValueChange={(value) => updateFormValue(field.id, value)}
+          >
             <WidgetSelectTrigger>
               <WidgetSelectValue placeholder={field.label} />
             </WidgetSelectTrigger>
@@ -293,7 +298,16 @@ export const ContactForm = ({
           </WidgetSelect>
         );
       case 'textarea':
-        return <WidgetTextarea id={field.id} name={field.id} placeholder={field.label} required={field.required} />;
+        return (
+          <WidgetTextarea 
+            id={field.id} 
+            name={field.id} 
+            placeholder={field.label} 
+            required={field.required}
+            value={formValues[field.id] || ''}
+            onChange={(e) => updateFormValue(field.id, e.target.value)}
+          />
+        );
       case 'phone':
         return (
           <Suspense fallback={<WidgetInput placeholder={field.label} disabled />}>
@@ -301,6 +315,8 @@ export const ContactForm = ({
               name={field.id}
               placeholder={field.label}
               required={field.required}
+              value={formValues[field.id] || ''}
+              onChange={(phone) => updateFormValue(field.id, phone)}
             />
           </Suspense>
         );
@@ -313,6 +329,8 @@ export const ContactForm = ({
             placeholder={field.label} 
             required={field.required}
             autoComplete="name"
+            value={formValues[field.id] || ''}
+            onChange={(e) => updateFormValue(field.id, e.target.value)}
           />
         );
       default: // text, email
@@ -324,6 +342,8 @@ export const ContactForm = ({
             placeholder={field.label} 
             required={field.required}
             autoComplete={field.fieldType === 'email' ? 'email' : undefined}
+            value={formValues[field.id] || ''}
+            onChange={(e) => updateFormValue(field.id, e.target.value)}
           />
         );
     }
@@ -367,6 +387,8 @@ export const ContactForm = ({
             autoComplete="off"
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
+            value={formValues.website || ''}
+            onChange={(e) => updateFormValue('website', e.target.value)}
           />
           
           {/* Default fields on step 1: First Name and Last Name */}
@@ -380,6 +402,8 @@ export const ContactForm = ({
                   placeholder="First name" 
                   required
                   autoComplete="given-name"
+                  value={formValues.firstName || ''}
+                  onChange={(e) => updateFormValue('firstName', e.target.value)}
                 />
                 {formErrors.firstName && (
                   <p className="text-xs text-destructive mt-1" role="alert">{formErrors.firstName}</p>
@@ -393,6 +417,8 @@ export const ContactForm = ({
                   placeholder="Last name" 
                   required
                   autoComplete="family-name"
+                  value={formValues.lastName || ''}
+                  onChange={(e) => updateFormValue('lastName', e.target.value)}
                 />
                 {formErrors.lastName && (
                   <p className="text-xs text-destructive mt-1" role="alert">{formErrors.lastName}</p>
