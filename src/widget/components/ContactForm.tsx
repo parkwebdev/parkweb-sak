@@ -55,8 +55,6 @@ interface ContactFormProps {
   subtitle?: string;
   /** Array of custom field configurations */
   customFields: CustomField[];
-  /** Timestamp when form was loaded (for spam protection) */
-  formLoadTime: number;
   /** Form submission handler */
   onSubmit: (userData: ChatUser, conversationId?: string) => void;
   /** Enable multi-step form mode */
@@ -79,7 +77,6 @@ export const ContactForm = ({
   title,
   subtitle,
   customFields,
-  formLoadTime,
   onSubmit,
   enableMultiStepForm = false,
   formSteps = [{ id: 'step-1' }],
@@ -91,7 +88,10 @@ export const ContactForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const systemTheme = useSystemTheme();
   
-  // Fake leadIds returned by bot protection - treat as errors
+  // Track when THIS form view loaded (not widget mount) for timing-based bot protection
+  const [formLoadTime] = useState(() => Date.now());
+  
+  // Fake leadIds returned by bot protection - proceed to chat anyway (fail-open)
   const FAKE_LEAD_IDS = ['rate-limited', 'spam-blocked', 'timing-blocked'];
   
   /** Update a form field value */
@@ -235,11 +235,6 @@ export const ContactForm = ({
         _formLoadTime: formLoadTime,
       });
       
-      // Detect bot protection fake responses
-      if (FAKE_LEAD_IDS.includes(leadId)) {
-        throw new Error('Something went wrong. Please try again.');
-      }
-      
       // Extract email from custom fields for ChatUser (smart detection)
       let extractedEmail = '';
       customFields.forEach(field => {
@@ -249,15 +244,23 @@ export const ContactForm = ({
         }
       });
       
+      // Check if bot protection returned a fake leadId - still start chat (fail-open)
+      const isBlocked = FAKE_LEAD_IDS.includes(leadId);
+      if (isBlocked) {
+        logger.debug('Bot protection triggered, proceeding to chat without lead');
+      }
+      
       const userData: ChatUser = { 
         firstName: firstName.trim(), 
         lastName: lastName.trim(), 
         email: extractedEmail, 
-        leadId, 
-        conversationId: conversationId ?? undefined 
+        // Use undefined for blocked cases so widget-chat can create conversation
+        leadId: isBlocked ? undefined : leadId, 
+        conversationId: isBlocked ? undefined : (conversationId ?? undefined),
       };
       
-      onSubmit(userData, conversationId ?? undefined);
+      // Always proceed to chat - bot protection only blocks lead creation, not chatting
+      onSubmit(userData, isBlocked ? undefined : (conversationId ?? undefined));
     } catch (error: unknown) {
       logger.error('Error creating lead:', error);
       setFormErrors({ submit: 'Something went wrong. Please try again.' });

@@ -115,7 +115,6 @@ const ChatWidgetInner = ({
   });
   // File attachment state (kept local - simple UI toggle)
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
-  const [formLoadTime] = useState(() => Date.now());
   
   const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
@@ -464,7 +463,6 @@ const ChatWidgetInner = ({
                     recordingTime={recordingTime}
                     isAttachingFiles={isAttachingFiles}
                     setIsAttachingFiles={setIsAttachingFiles}
-                    formLoadTime={formLoadTime}
                     isLoadingMessages={isLoadingMessages}
                     messagesContainerRef={messagesContainerRef}
                     messagesEndRef={messagesEndRef}
