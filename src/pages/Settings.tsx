@@ -40,9 +40,10 @@ function Settings() {
   const canManage = useCanManageChecker();
   
   // Configure top bar for this page
-  useTopBar({
+  const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={Settings01} title="Settings" />,
-  });
+  }), []);
+  useTopBar(topBarConfig);
 
   // Filter tabs for mobile view
   const visibleTabs = useMemo(() => {

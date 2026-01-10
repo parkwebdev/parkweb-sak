@@ -92,9 +92,10 @@ function Leads() {
   } = useInfiniteLeads();
   
   // Configure top bar for this page
-  useTopBar({
+  const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={Users01} title="Leads" />,
-  });
+  }), []);
+  useTopBar(topBarConfig);
   
   // Infinite scroll intersection observer
   const loadMoreRef = useRef<HTMLDivElement>(null);
