@@ -1,8 +1,8 @@
 /**
- * PDF Font Registration
+ * PDF Font Configuration
  * 
- * Registers Helvetica font family for @react-pdf/renderer.
- * Uses built-in PDF fonts for maximum compatibility.
+ * Uses Helvetica font family (built-in) for @react-pdf/renderer.
+ * Built-in fonts ensure maximum compatibility without external dependencies.
  */
 
 import { Font } from '@react-pdf/renderer';
