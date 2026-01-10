@@ -946,7 +946,6 @@ const validIds = getValidAriSectionIds(); // ['model-behavior', 'system-prompt',
 | `AriSectionMenu` | Left sidebar section navigation |
 | `AriPreviewColumn` | Right widget preview column |
 | `AriSystemPromptSection` | System prompt configuration |
-| `AriModelBehaviorSection` | Model and behavior settings |
 | `AriKnowledgeSection` | Knowledge source management |
 | `AriCustomToolsSection` | Custom tool configuration |
 | `AriAppearanceSection` | Widget appearance settings |
