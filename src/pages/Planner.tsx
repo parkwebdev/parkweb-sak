@@ -19,7 +19,7 @@ import { GoogleCalendarLogo, MicrosoftOutlookLogo } from '@/components/icons/Cal
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
-import { DeleteEventDialog } from '@/components/calendar/DeleteEventDialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDialog';
 import { SkeletonCalendarPage } from '@/components/ui/page-skeleton';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
@@ -308,11 +308,12 @@ function Planner() {
         canManage={canManageBookings}
       />
 
-      <DeleteEventDialog
+      <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        event={selectedEvent}
-        onConfirmDelete={handleDeleteEvent}
+        title="Delete Booking"
+        description={`Are you sure you want to delete "${selectedEvent?.title}"? This action cannot be undone.`}
+        onConfirm={handleDeleteEvent}
       />
 
       <TimeChangeReasonDialog
