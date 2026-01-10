@@ -301,12 +301,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailContent = generateEmailContent(type, sanitizedTitle, sanitizedMessage, sanitizedData);
 
+    const baseUrl = Deno.env.get('APP_URL') || 'https://getpilot.io';
+    const unsubscribeUrl = `${baseUrl}/settings?tab=notifications`;
+
     const emailResponse = await resend.emails.send({
       from: "Pilot <team@getpilot.io>",
       to: [sanitizedTo],
       reply_to: "team@getpilot.io",
       subject: emailContent.subject,
       html: emailContent.html,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'Precedence': 'bulk',
+        'X-Auto-Response-Suppress': 'All',
+      },
     });
 
     if (emailResponse.error) {
