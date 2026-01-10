@@ -11,12 +11,10 @@ import {
   Phone, 
   MarkerPin01, 
   Globe01, 
-  Flag01, 
   MessageChatCircle,
   Edit05,
   Clock,
   Calendar,
-  Zap,
   Eye
 } from "@untitledui/icons";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +47,6 @@ import { SkeletonKanbanColumn } from "@/components/ui/skeleton";
 import type { Tables } from "@/integrations/supabase/types";
 import type { SortOption } from "@/components/leads/LeadsViewSettingsSheet";
 import type { ConversationMetadata } from "@/types/metadata";
-import type { AutomationListItem } from "@/types/automations";
 
 // Kanban-compatible lead type with extended fields
 type KanbanLead = {
@@ -97,10 +94,6 @@ interface LeadsKanbanBoardProps {
   canManage?: boolean;
   /** Sort option for ordering leads within each column */
   sortOption?: SortOption | null;
-  /** Manual automations available to run on leads */
-  manualAutomations?: AutomationListItem[];
-  /** Handler for running an automation on a lead */
-  onRunAutomation?: (automationId: string, leadId: string, leadName: string) => void;
 }
 
 // Inline editable column header
@@ -395,8 +388,6 @@ export function LeadsKanbanBoard({
   fieldOrder,
   canManage = true,
   sortOption,
-  manualAutomations = [],
-  onRunAutomation,
 }: LeadsKanbanBoardProps) {
   const { stages, loading: stagesLoading, updateStage } = useLeadStages();
 

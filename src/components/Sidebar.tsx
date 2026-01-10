@@ -9,10 +9,10 @@
  */
 
 import React, { useMemo } from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd, BookOpen01, GitBranch01 } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd, BookOpen01 } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from './icons/DashboardIcon';
-import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled, KnowledgeBaseFilled, AutomationsFilled } from './icons/SidebarIcons';
+import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled, KnowledgeBaseFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -62,7 +62,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   Circle: Circle,
   Settings01: Settings,
   BookOpen01: BookOpen01,
-  GitBranch01: GitBranch01,
 };
 
 /** Active icon mapping from route config iconName to filled component */
@@ -74,7 +73,6 @@ const ACTIVE_ICON_MAP: Record<string, React.ComponentType<{ size?: number; class
   TrendUp01: AnalyticsFilled,
   Settings01: SettingsFilled,
   BookOpen01: KnowledgeBaseFilled,
-  GitBranch01: AutomationsFilled,
 };
 
 /** Convert RouteConfig to NavigationItem */
