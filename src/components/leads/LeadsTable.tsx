@@ -31,8 +31,6 @@ import { LeadPriorityDropdown } from './LeadPriorityDropdown';
 import { Button } from '@/components/ui/button';
 import type { SortOption } from './LeadsViewSettingsSheet';
 
-import type { AutomationListItem } from '@/types/automations';
-
 interface LeadsTableProps {
   leads: Lead[];
   selectedIds: Set<string>;
@@ -51,10 +49,6 @@ interface LeadsTableProps {
   defaultSort: SortOption | null;
   canManage?: boolean;
   isLoading?: boolean;
-  /** Manual automations available to run on leads */
-  manualAutomations?: AutomationListItem[];
-  /** Handler for running an automation on a lead */
-  onRunAutomation?: (automationId: string, leadId: string, leadName: string) => void;
 }
 
 export const LeadsTable = React.memo(function LeadsTable({
@@ -75,8 +69,6 @@ export const LeadsTable = React.memo(function LeadsTable({
   defaultSort,
   canManage = true,
   isLoading = false,
-  manualAutomations = [],
-  onRunAutomation,
 }: LeadsTableProps) {
   // Initialize sorting from defaultSort
   const [sorting, setSorting] = useState<SortingState>(() => {
@@ -115,10 +107,8 @@ export const LeadsTable = React.memo(function LeadsTable({
         getAssignees,
         StatusDropdown: LeadStatusDropdown,
         PriorityDropdown: LeadPriorityDropdown,
-        manualAutomations,
-        onRunAutomation,
       }),
-    [onView, onStageChange, onPriorityChange, onAddAssignee, onRemoveAssignee, getAssignees, manualAutomations, onRunAutomation]
+    [onView, onStageChange, onPriorityChange, onAddAssignee, onRemoveAssignee, getAssignees]
   );
 
   // Reorder columns based on columnOrder prop

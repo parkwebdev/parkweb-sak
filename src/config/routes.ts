@@ -59,16 +59,6 @@ export const ROUTE_CONFIG: readonly RouteConfig[] = [
     showInNav: true,
   },
   {
-    id: 'automations',
-    label: 'Automations',
-    path: '/automations',
-    requiredPermission: 'manage_automations',
-    iconName: 'GitBranch01',
-    shortcut: '⌥U',
-    description: 'Create visual workflows and automations',
-    showInNav: true,
-  },
-  {
     id: 'conversations',
     label: 'Inbox',
     path: '/conversations',

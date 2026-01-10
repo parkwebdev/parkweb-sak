@@ -15,7 +15,6 @@ import { persistToolCall, persistToolResult } from "../memory/conversation-histo
 import { searchProperties, lookupProperty, getLocations } from "../tools/property-tools.ts";
 import { checkCalendarAvailability, bookAppointment } from "../tools/calendar-tools.ts";
 import { callToolEndpoint } from "../tools/custom-tools.ts";
-import { executeAutomationTool } from "../tools/automation-tools.ts";
 
 /** Result of tool execution loop */
 export interface ToolExecutionResult {
@@ -65,7 +64,6 @@ export async function executeToolCalls(
     previewMode: boolean;
     conversationMetadata: ConversationMetadata;
     openRouterApiKey: string;
-    automationToolMap?: Map<string, string>; // toolName -> automationId
     leadId?: string;
   }
 ): Promise<ToolExecutionResult> {
@@ -80,7 +78,6 @@ export async function executeToolCalls(
     previewMode,
     conversationMetadata,
     openRouterApiKey,
-    automationToolMap,
     leadId,
   } = options;
 
@@ -240,42 +237,6 @@ export async function executeToolCalls(
       }
       toolResults.push(result.toolResult);
       continue;
-    }
-
-    // Handle automation tools (prefixed with automation_)
-    if (toolName.startsWith('automation_') && automationToolMap) {
-      const automationId = automationToolMap.get(toolName);
-      if (automationId) {
-        console.log(`Executing automation tool: ${toolName} -> ${automationId}`);
-        
-        if (!previewMode) {
-          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
-        }
-
-        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-        const result = await executeAutomationTool(
-          supabaseUrl,
-          serviceRoleKey,
-          automationId,
-          toolArgs,
-          activeConversationId,
-          leadId
-        );
-
-        const resultData = result.success ? result.result : { error: result.error };
-        
-        if (!previewMode) {
-          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
-        }
-
-        toolsUsed.push({ name: toolName, success: result.success });
-        toolResults.push({
-          role: 'tool',
-          tool_call_id: toolCall.id,
-          content: JSON.stringify(resultData),
-        });
-        continue;
-      }
     }
 
     // Handle custom user-defined tools

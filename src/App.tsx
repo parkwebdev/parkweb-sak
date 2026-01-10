@@ -43,7 +43,7 @@ import BookingComponentsTest from "./pages/BookingComponentsTest";
 import EmailTemplatesTest from "./pages/EmailTemplatesTest";
 import ReportBuilder from "./pages/ReportBuilder";
 import KnowledgeBaseWrapper from "./pages/KnowledgeBaseWrapper";
-import AutomationsWrapper from "./pages/AutomationsWrapper";
+
 /**
  * Gets PermissionGuard props from centralized route configuration.
  * Ensures consistency between routing, sidebar, and search.
@@ -204,15 +204,6 @@ const App = () => (
                       element={<KnowledgeBaseWrapper />} 
                     />
                     
-                    {/* Automations - requires manage_automations permission */}
-                    <Route 
-                      path="/automations" 
-                      element={
-                        <PermissionGuard {...getGuardProps('automations')}>
-                          <AutomationsWrapper />
-                        </PermissionGuard>
-                      } 
-                    />
                     
                     {/* Report Builder - requires view_dashboard permission */}
                     <Route 
