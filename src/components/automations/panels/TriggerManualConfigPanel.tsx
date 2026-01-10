@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { AdvancedModeToggle } from './AdvancedModeToggle';
 import type { TriggerManualNodeData } from '@/types/automations';
 
 interface TriggerManualConfigPanelProps {
@@ -39,7 +40,7 @@ export function TriggerManualConfigPanel({ nodeId, data }: TriggerManualConfigPa
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="action-name">Action Name</Label>
+        <Label htmlFor="action-name">Button Label</Label>
         <Input
           id="action-name"
           value={data.buttonLabel || ''}
@@ -47,23 +48,25 @@ export function TriggerManualConfigPanel({ nodeId, data }: TriggerManualConfigPa
           placeholder="Run automation"
         />
         <p className="text-2xs text-muted-foreground">
-          Name shown when triggering this automation.
+          Text shown on the button when triggering this automation.
         </p>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="space-y-0.5">
-          <Label htmlFor="require-confirmation">Require Confirmation</Label>
-          <p className="text-2xs text-muted-foreground">
-            Ask for confirmation before running.
-          </p>
+      <AdvancedModeToggle storageKey="manual-trigger-panel">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="require-confirmation">Require Confirmation</Label>
+            <p className="text-2xs text-muted-foreground">
+              Ask for confirmation before running.
+            </p>
+          </div>
+          <Switch
+            id="require-confirmation"
+            checked={data.requireConfirmation || false}
+            onCheckedChange={handleConfirmationChange}
+          />
         </div>
-        <Switch
-          id="require-confirmation"
-          checked={data.requireConfirmation || false}
-          onCheckedChange={handleConfirmationChange}
-        />
-      </div>
+      </AdvancedModeToggle>
     </div>
   );
 }

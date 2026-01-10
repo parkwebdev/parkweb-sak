@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { VariableInput } from './VariableInput';
+import { AdvancedModeToggle } from './AdvancedModeToggle';
 import type { ActionHttpNodeData } from '@/types/automations';
 
 interface ActionHttpConfigPanelProps {
@@ -84,18 +85,6 @@ export function ActionHttpConfigPanel({ nodeId, data }: ActionHttpConfigPanelPro
         categories={['lead', 'trigger', 'environment']}
       />
 
-      {/* Headers */}
-      <VariableInput
-        label="Headers (JSON)"
-        placeholder={'{"Authorization": "Bearer {{env.api_key}}"}'}
-        value={headersString}
-        onChange={handleHeadersChange}
-        categories={['environment', 'trigger']}
-        multiline
-        rows={3}
-        className="font-mono text-xs"
-      />
-
       {/* Body (for POST/PUT/PATCH) */}
       {showBody && (
         <VariableInput
@@ -110,21 +99,35 @@ export function ActionHttpConfigPanel({ nodeId, data }: ActionHttpConfigPanelPro
         />
       )}
 
-      {/* Response Variable */}
-      <div className="space-y-2">
-        <Label>Save response as</Label>
-        <Input
-          placeholder="response"
-          value={data.responseVariable || ''}
-          onChange={(e) => handleUpdate({ responseVariable: e.target.value })}
+      <AdvancedModeToggle storageKey="http-panel">
+        {/* Headers */}
+        <VariableInput
+          label="Headers (JSON)"
+          placeholder={'{"Authorization": "Bearer {{env.api_key}}"}'}
+          value={headersString}
+          onChange={handleHeadersChange}
+          categories={['environment', 'trigger']}
+          multiline
+          rows={3}
+          className="font-mono text-xs"
         />
-        <div className="text-2xs text-muted-foreground space-y-1">
-          <p>Access in later nodes:</p>
-          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
-            {`{{variables.${responseVar}.body}}`}
-          </code>
+
+        {/* Response Variable */}
+        <div className="space-y-2">
+          <Label>Save response as</Label>
+          <Input
+            placeholder="response"
+            value={data.responseVariable || ''}
+            onChange={(e) => handleUpdate({ responseVariable: e.target.value })}
+          />
+          <div className="text-2xs text-muted-foreground space-y-1">
+            <p>Access in later nodes:</p>
+            <code className="block bg-muted px-2 py-1 rounded text-xs font-mono">
+              {`{{variables.${responseVar}.body}}`}
+            </code>
+          </div>
         </div>
-      </div>
+      </AdvancedModeToggle>
     </div>
   );
 }

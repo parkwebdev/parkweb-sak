@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { AdvancedModeToggle } from './AdvancedModeToggle';
 import { cn } from '@/lib/utils';
 import type { TriggerScheduleNodeData } from '@/types/automations';
 
@@ -340,25 +341,30 @@ export function TriggerScheduleConfigPanel({ nodeId, data }: TriggerScheduleConf
         </div>
       )}
 
-      {/* Timezone */}
-      <div className="space-y-2">
-        <Label htmlFor="timezone">Timezone</Label>
-        <Select 
-          value={data.timezone || 'America/New_York'} 
-          onValueChange={handleTimezoneChange}
-        >
-          <SelectTrigger id="timezone">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {US_TIMEZONES.map((tz) => (
-              <SelectItem key={tz.value} value={tz.value}>
-                {tz.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <AdvancedModeToggle storageKey="schedule-trigger-panel">
+        {/* Timezone */}
+        <div className="space-y-2">
+          <Label htmlFor="timezone">Timezone</Label>
+          <Select 
+            value={data.timezone || 'America/New_York'} 
+            onValueChange={handleTimezoneChange}
+          >
+            <SelectTrigger id="timezone">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {US_TIMEZONES.map((tz) => (
+                <SelectItem key={tz.value} value={tz.value}>
+                  {tz.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-2xs text-muted-foreground">
+            Default: Eastern Time (ET)
+          </p>
+        </div>
+      </AdvancedModeToggle>
     </div>
   );
 }

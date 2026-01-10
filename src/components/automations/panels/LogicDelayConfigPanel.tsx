@@ -10,6 +10,7 @@
 import { useCallback, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -18,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { AdvancedModeToggle } from './AdvancedModeToggle';
 import type { LogicDelayNodeData } from '@/types/automations';
 
 interface LogicDelayConfigPanelProps {
@@ -81,17 +83,17 @@ export function LogicDelayConfigPanel({ nodeId, data }: LogicDelayConfigPanelPro
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Delay Duration</Label>
+        <Label>Wait for</Label>
         <div className="flex gap-2">
           <Input
             type="number"
-            min={0}
+            min={1}
             value={value}
             onChange={(e) => handleValueChange(e.target.value)}
-            className="flex-1"
+            className="w-24"
           />
           <Select value={unit} onValueChange={handleUnitChange}>
-            <SelectTrigger className="w-28">
+            <SelectTrigger className="flex-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -102,23 +104,26 @@ export function LogicDelayConfigPanel({ nodeId, data }: LogicDelayConfigPanelPro
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="delay-description">Description (optional)</Label>
-        <Input
-          id="delay-description"
-          value={data.delayDescription || ''}
-          onChange={(e) => handleDescriptionChange(e.target.value)}
-          placeholder="e.g., Wait for payment processing"
-        />
-      </div>
-
-      <div className="pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">
-          The automation will pause for this duration before continuing to the next step.
+        <p className="text-2xs text-muted-foreground">
+          The automation will pause before continuing.
         </p>
       </div>
+
+      <AdvancedModeToggle storageKey="delay-panel">
+        <div className="space-y-2">
+          <Label htmlFor="delay-description">Description (optional)</Label>
+          <Textarea
+            id="delay-description"
+            value={data.delayDescription || ''}
+            onChange={(e) => handleDescriptionChange(e.target.value)}
+            placeholder="e.g., Wait for user to respond"
+            rows={2}
+          />
+          <p className="text-2xs text-muted-foreground">
+            Add context for why this delay exists
+          </p>
+        </div>
+      </AdvancedModeToggle>
     </div>
   );
 }
