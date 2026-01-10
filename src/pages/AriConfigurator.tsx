@@ -19,10 +19,12 @@ import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { logger } from '@/utils/logger';
 import { AriSectionMenu, type AriSection } from '@/components/agents/AriSectionMenu';
-import { getValidAriSectionIds } from '@/config/routes';
+import { getValidAriSectionIds, ARI_SECTIONS } from '@/config/routes';
 import { AriPreviewColumn } from '@/components/agents/AriPreviewColumn';
 import { SkeletonAriConfiguratorPage } from '@/components/ui/page-skeleton';
 import { ChatWidget } from '@/widget/ChatWidget';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import type { Tables } from '@/integrations/supabase/types';
 import type { WidgetConfig } from '@/widget/api';
 
@@ -72,6 +74,22 @@ const AriConfigurator = () => {
   }, []); // Only compute once on mount
   
   const [activeSection, setActiveSection] = useState<AriSection>(initialSection);
+  
+  // Get current section label for subtitle
+  const currentSectionLabel = useMemo(() => {
+    const section = ARI_SECTIONS.find(s => s.id === activeSection);
+    return section?.label;
+  }, [activeSection]);
+  
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext 
+      icon={() => <AriAgentsIcon className="h-3.5 w-3.5" />} 
+      title="Ari" 
+      subtitle={currentSectionLabel}
+    />,
+  }), [currentSectionLabel]);
+  useTopBar(topBarConfig);
   
   // Sync section from URL when it changes (for deep linking)
   useEffect(() => {

@@ -15,7 +15,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
-import { Loading02 } from '@untitledui/icons';
+import { Loading02, Users01 } from '@untitledui/icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
 import { useTeam } from '@/hooks/useTeam';
@@ -33,6 +33,7 @@ import { type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { Tables, Json } from '@/integrations/supabase/types';
 import type { VisibilityState } from '@tanstack/react-table';
 import type { ConversationMetadata } from '@/types/metadata';
@@ -95,6 +96,11 @@ function Leads({ onMenuClick }: LeadsProps) {
     deleteLeads, 
     getLeadsWithConversations 
   } = useInfiniteLeads();
+  
+  // Configure top bar for this page
+  useTopBar({
+    left: <TopBarPageContext icon={Users01} title="Leads" />,
+  });
   
   // Infinite scroll intersection observer
   const loadMoreRef = useRef<HTMLDivElement>(null);

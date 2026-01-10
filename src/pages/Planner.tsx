@@ -8,13 +8,13 @@
  * @page
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
 import { AnimatedTabsList } from '@/components/ui/animated-tabs-list';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown } from '@untitledui/icons';
+import { ChevronDown, Calendar as CalendarIcon } from '@untitledui/icons';
 import { GoogleCalendarLogo, MicrosoftOutlookLogo } from '@/components/icons/CalendarLogos';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
@@ -24,6 +24,7 @@ import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDi
 import { SkeletonCalendarPage } from '@/components/ui/page-skeleton';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useCanManageMultiple } from '@/hooks/useCanManage';
+import { useTopBar, TopBarPageContext, TopBarTabs, type TopBarTab } from '@/components/layout/TopBar';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
 import { logger } from '@/utils/logger';
@@ -52,6 +53,30 @@ function Planner() {
     rescheduleEvent,
     refetch 
   } = useCalendarEvents();
+  
+  // Configure top bar tabs for event types
+  const plannerTabs: TopBarTab[] = useMemo(() => [
+    { id: 'all', label: 'All' },
+    { id: 'showing', label: 'Showings' },
+    { id: 'move_in', label: 'Move-ins' },
+    { id: 'inspection', label: 'Inspections' },
+    { id: 'maintenance', label: 'Maintenance' },
+  ], []);
+  
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={CalendarIcon} title="Planner" />,
+    center: <TopBarTabs tabs={plannerTabs} activeTab={activeTab} onTabChange={setActiveTab} />,
+    right: canManageBookings ? (
+      <Button size="sm" onClick={() => {
+        setSelectedDate(new Date());
+        setCreateDialogOpen(true);
+      }}>
+        Add event
+      </Button>
+    ) : undefined,
+  }), [plannerTabs, activeTab, canManageBookings]);
+  useTopBar(topBarConfig);
   
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

@@ -18,7 +18,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { Menu01 as Menu } from '@untitledui/icons';
+import { Menu01 as Menu, Settings01 } from '@untitledui/icons';
 import { SettingsSectionMenu, type SettingsTab } from '@/components/settings/SettingsSectionMenu';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { useCanManageChecker } from '@/hooks/useCanManage';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
 /** Props for the Settings page */
 interface SettingsProps {
@@ -44,6 +45,11 @@ function Settings({ onMenuClick }: SettingsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { loading } = useRoleAuthorization();
   const canManage = useCanManageChecker();
+  
+  // Configure top bar for this page
+  useTopBar({
+    left: <TopBarPageContext icon={Settings01} title="Settings" />,
+  });
 
   // Filter tabs for mobile view
   const visibleTabs = useMemo(() => {

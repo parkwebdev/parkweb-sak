@@ -17,6 +17,8 @@ import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { AnalyticsDatePicker } from '@/components/analytics/AnalyticsDatePicker';
 import { SECTION_INFO, TOOLBAR_SECTIONS } from '@/lib/analytics-constants';
 import { AnalyticsDatePreset, getDateRangeFromPreset } from '@/components/analytics/constants';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { TrendUp01 } from '@untitledui/icons';
 
 import {
   ConversationsSection,
@@ -42,6 +44,11 @@ function Analytics() {
       return tabParam as AnalyticsSection;
     }
     return 'conversations';
+  });
+  
+  // Configure top bar for this page
+  useTopBar({
+    left: <TopBarPageContext icon={TrendUp01} title="Analytics" />,
   });
 
   // Clear tab param from URL after reading (clean URL)

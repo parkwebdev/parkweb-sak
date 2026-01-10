@@ -7,9 +7,10 @@
  * @module pages/KnowledgeBase
  */
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { BookOpen01 } from '@untitledui/icons';
 import { KBSidebar } from '@/components/knowledge-base/KBSidebar';
 import { KBArticleView } from '@/components/knowledge-base/KBArticleView';
 import { KBCategoryView } from '@/components/knowledge-base/KBCategoryView';
@@ -18,6 +19,7 @@ import { KBPopularArticles } from '@/components/knowledge-base/KBPopularArticles
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { 
   KB_CATEGORIES, 
   getKBCategoryById, 
@@ -58,6 +60,15 @@ export default function KnowledgeBase() {
   
   // Determine if we're in category view (no article param)
   const isCategoryView = categoryId && !articleSlug;
+  
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext 
+      icon={BookOpen01} 
+      title="Knowledge Base" 
+    />,
+  }), []);
+  useTopBar(topBarConfig);
   
   useEffect(() => {
     if (categoryId && articleSlug) {

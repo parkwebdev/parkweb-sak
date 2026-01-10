@@ -17,6 +17,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { validateFiles } from '@/lib/file-validation';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { MessageChatSquare } from '@untitledui/icons';
 
 import { useInfiniteConversations } from '@/hooks/useInfiniteConversations';
 import { useAgent } from '@/hooks/useAgent';
@@ -57,6 +59,11 @@ function Conversations() {
   
   // Check if user can manage conversations (takeover, send messages, close/reopen)
   const canManageConversations = useCanManage('manage_conversations');
+  
+  // Configure top bar for this page
+  useTopBar({
+    left: <TopBarPageContext icon={MessageChatSquare} title="Inbox" />,
+  });
   
   // === DATA HOOKS ===
   const {
