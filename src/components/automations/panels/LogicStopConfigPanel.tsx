@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useFlowStore } from '@/stores/automationFlowStore';
+import { AdvancedModeToggle } from './AdvancedModeToggle';
 import type { LogicStopNodeData } from '@/types/automations';
 
 interface LogicStopConfigPanelProps {
@@ -48,25 +49,27 @@ export function LogicStopConfigPanel({ nodeId, data }: LogicStopConfigPanelProps
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="stop-reason">Reason (optional)</Label>
-        <Textarea
-          id="stop-reason"
-          value={data.reason || ''}
-          onChange={(e) => handleReasonChange(e.target.value)}
-          placeholder="e.g., Lead already processed"
-          rows={3}
-        />
-        <p className="text-2xs text-muted-foreground">
-          Add context for why the automation ends here. Helpful for debugging.
-        </p>
-      </div>
-
-      <div className="pt-4 border-t border-border">
+      <div className="pt-2">
         <p className="text-xs text-muted-foreground">
           This node ends the automation. No further steps will be executed.
         </p>
       </div>
+
+      <AdvancedModeToggle storageKey="stop-panel">
+        <div className="space-y-2">
+          <Label htmlFor="stop-reason">Reason (optional)</Label>
+          <Textarea
+            id="stop-reason"
+            value={data.reason || ''}
+            onChange={(e) => handleReasonChange(e.target.value)}
+            placeholder="e.g., Lead already processed"
+            rows={3}
+          />
+          <p className="text-2xs text-muted-foreground">
+            Add context for why the automation ends here. Helpful for debugging.
+          </p>
+        </div>
+      </AdvancedModeToggle>
     </div>
   );
 }

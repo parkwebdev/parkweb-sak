@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { VariableInput } from './VariableInput';
+import { AdvancedModeToggle } from './AdvancedModeToggle';
 import type { TransformSetVariableNodeData } from '@/types/automations';
 
 interface TransformSetVariableConfigPanelProps {
@@ -61,26 +62,6 @@ export function TransformSetVariableConfigPanel({ nodeId, data }: TransformSetVa
         </p>
       </div>
 
-      {/* Value Type */}
-      <div className="space-y-2">
-        <Label htmlFor="valueType">Value type</Label>
-        <Select
-          value={data.valueType || 'string'}
-          onValueChange={(value) => handleChange('valueType', value as 'string' | 'number' | 'boolean' | 'json')}
-        >
-          <SelectTrigger id="valueType">
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            {VALUE_TYPES.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
-                {type.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Value Expression */}
       <div className="space-y-2">
         <Label htmlFor="valueExpression">Value</Label>
@@ -106,6 +87,31 @@ export function TransformSetVariableConfigPanel({ nodeId, data }: TransformSetVa
           </code>
         </div>
       )}
+
+      <AdvancedModeToggle storageKey="set-variable-panel">
+        {/* Value Type */}
+        <div className="space-y-2">
+          <Label htmlFor="valueType">Value type</Label>
+          <Select
+            value={data.valueType || 'string'}
+            onValueChange={(value) => handleChange('valueType', value as 'string' | 'number' | 'boolean' | 'json')}
+          >
+            <SelectTrigger id="valueType">
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              {VALUE_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-2xs text-muted-foreground">
+            Automatically cast the value to this type
+          </p>
+        </div>
+      </AdvancedModeToggle>
     </div>
   );
 }

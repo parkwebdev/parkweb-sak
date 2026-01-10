@@ -20,7 +20,7 @@ export const TransformSetVariableNode = memo(function TransformSetVariableNode(p
     <BaseNode
       nodeProps={props}
       icon={<Variable size={16} className="text-white" aria-hidden="true" />}
-      colorClass="bg-amber-500"
+      colorClass="bg-cyan-500"
       hasInput={true}
       hasOutput={true}
       category="Transform"

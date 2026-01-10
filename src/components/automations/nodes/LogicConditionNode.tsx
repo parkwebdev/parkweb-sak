@@ -5,44 +5,60 @@
  * Displays the condition configuration for visual reference.
  * Has TWO output handles: "true" (Yes) and "false" (No) for branching.
  * 
+ * Uses BaseNode for consistent styling but overrides output handles.
+ * 
  * @module components/automations/nodes/LogicConditionNode
  */
 
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { GitBranch01 } from '@untitledui/icons';
+import { GitBranch01, AlertCircle } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import { useAutomationValidation } from '@/hooks/useAutomationValidation';
 import type { LogicConditionNodeData, BaseNodeData } from '@/types/automations';
 
+const OPERATOR_LABELS: Record<string, string> = {
+  equals: '=',
+  not_equals: '≠',
+  greater_than: '>',
+  less_than: '<',
+  contains: 'contains',
+  is_empty: 'is empty',
+  is_not_empty: 'is not empty',
+};
+
 export const LogicConditionNode = memo(function LogicConditionNode(props: NodeProps) {
-  const { selected } = props;
+  const { selected, id } = props;
   const data = props.data as LogicConditionNodeData;
   const baseData = props.data as BaseNodeData;
-
-  const getOperatorLabel = (op: string) => {
-    const labels: Record<string, string> = {
-      equals: '=',
-      not_equals: '≠',
-      greater_than: '>',
-      less_than: '<',
-      contains: 'contains',
-      is_empty: 'is empty',
-      is_not_empty: 'is not empty',
-    };
-    return labels[op] || op;
-  };
+  const { hasNodeErrors, getNodeErrors } = useAutomationValidation();
+  
+  const nodeHasErrors = hasNodeErrors(id);
+  const errors = getNodeErrors(id);
 
   return (
     <div
       className={cn(
-        'min-w-[200px] rounded-lg border bg-card shadow-sm',
+        'min-w-[200px] rounded-lg border bg-card shadow-sm relative',
         'transition-all duration-150',
-        selected 
-          ? 'border-primary ring-2 ring-primary/20' 
-          : 'border-border hover:border-border/80',
+        nodeHasErrors
+          ? 'border-destructive ring-1 ring-destructive/20'
+          : selected 
+            ? 'border-primary ring-2 ring-primary/20' 
+            : 'border-border hover:border-border/80',
         baseData.disabled && 'opacity-50'
       )}
     >
+      {/* Validation error indicator */}
+      {nodeHasErrors && (
+        <div 
+          className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive flex items-center justify-center shadow-sm"
+          title={errors.map(e => e.message).join(', ')}
+        >
+          <AlertCircle size={12} className="text-destructive-foreground" aria-hidden="true" />
+        </div>
+      )}
+      
       {/* Input handle */}
       <Handle
         type="target"
@@ -69,11 +85,11 @@ export const LogicConditionNode = memo(function LogicConditionNode(props: NodePr
       <div className="p-3 text-xs text-muted-foreground">
         {data.condition ? (
           <div className="font-mono text-xs">
-            {data.condition.field} {getOperatorLabel(data.condition.operator)}{' '}
+            {data.condition.field} {OPERATOR_LABELS[data.condition.operator] || data.condition.operator}{' '}
             {data.condition.value !== undefined && String(data.condition.value)}
           </div>
         ) : (
-          <div className="text-muted-foreground italic">No condition set</div>
+          <div className="text-muted-foreground italic">Configure condition...</div>
         )}
       </div>
       
