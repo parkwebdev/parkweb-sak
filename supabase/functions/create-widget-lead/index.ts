@@ -55,7 +55,10 @@ function isSpamContent(firstName: string, lastName: string, customFields: Record
   const allText = [firstName, lastName];
   
   // Collect all string values from custom fields
-  for (const value of Object.values(customFields || {})) {
+  for (const [key, value] of Object.entries(customFields || {})) {
+    // Skip checkbox richTextContent fields - they contain configuration HTML with links, not user input
+    if (key.endsWith('_content')) continue;
+    
     if (typeof value === 'string') {
       allText.push(value);
     } else if (typeof value === 'object' && value !== null && 'value' in value) {
