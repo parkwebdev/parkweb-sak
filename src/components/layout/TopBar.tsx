@@ -3,7 +3,7 @@
  * A thin, static header bar with three sections: left (page context), 
  * center (navigation tabs), and right (action buttons).
  * 
- * Height: 44px (h-11)
+ * Height: 48px (h-12)
  * Styling: bg-background border-b border-border
  */
 
@@ -39,7 +39,7 @@ export function TopBar({
   return (
     <header 
       className={cn(
-        "h-11 border-b border-border bg-background flex items-center px-4 gap-4 shrink-0",
+        "h-12 border-b border-border bg-background flex items-center px-4 gap-4 shrink-0",
         className
       )}
     >
