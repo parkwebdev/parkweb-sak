@@ -649,27 +649,6 @@ export function LeadsKanbanBoard({
                           <Eye size={14} className="mr-2" aria-hidden="true" />
                           View details
                         </ContextMenuItem>
-                        {manualAutomations.length > 0 && onRunAutomation && (
-                          <>
-                            <ContextMenuSeparator />
-                            <ContextMenuSub>
-                              <ContextMenuSubTrigger>
-                                <Zap size={14} className="mr-2" aria-hidden="true" />
-                                Run automation
-                              </ContextMenuSubTrigger>
-                              <ContextMenuSubContent>
-                                {manualAutomations.map((auto) => (
-                                  <ContextMenuItem 
-                                    key={auto.id}
-                                    onClick={() => onRunAutomation(auto.id, lead.id, lead.name)}
-                                  >
-                                    {auto.name}
-                                  </ContextMenuItem>
-                                ))}
-                              </ContextMenuSubContent>
-                            </ContextMenuSub>
-                          </>
-                        )}
                       </ContextMenuContent>
                     </ContextMenu>
                   )}
