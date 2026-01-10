@@ -27,6 +27,7 @@ import {
   AIGenerateConfigPanel,
   AIClassifyConfigPanel,
   AIExtractConfigPanel,
+  TransformSetVariableConfigPanel,
 } from './panels';
 import type {
   AutomationNode,
@@ -43,6 +44,7 @@ import type {
   AIGenerateNodeData,
   AIClassifyNodeData,
   AIExtractNodeData,
+  TransformSetVariableNodeData,
 } from '@/types/automations';
 
 // Map node types to user-friendly display names
@@ -60,6 +62,7 @@ const NODE_TYPE_LABELS: Record<string, string> = {
   'ai-generate': 'AI Generate',
   'ai-classify': 'AI Classify',
   'ai-extract': 'AI Extract',
+  'transform-set-variable': 'Set Variable',
 };
 
 interface NodeConfigPanelProps {
@@ -172,6 +175,13 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
           <AIExtractConfigPanel
             nodeId={selectedNode.id}
             data={selectedNode.data as AIExtractNodeData}
+          />
+        );
+      case 'transform-set-variable':
+        return (
+          <TransformSetVariableConfigPanel
+            nodeId={selectedNode.id}
+            data={selectedNode.data as TransformSetVariableNodeData}
           />
         );
       default:

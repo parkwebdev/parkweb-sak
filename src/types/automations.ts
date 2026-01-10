@@ -292,6 +292,8 @@ export interface TransformSetVariableNodeData extends BaseNodeData {
   variableName: string;
   /** Value expression (can reference other variables) */
   valueExpression: string;
+  /** Value type for casting */
+  valueType?: 'string' | 'number' | 'boolean' | 'json';
 }
 
 // ============================================================================

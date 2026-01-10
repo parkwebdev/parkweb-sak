@@ -20,6 +20,7 @@ export { LogicStopNode } from './LogicStopNode';
 export { AIGenerateNode } from './AIGenerateNode';
 export { AIClassifyNode } from './AIClassifyNode';
 export { AIExtractNode } from './AIExtractNode';
+export { TransformSetVariableNode } from './TransformSetVariableNode';
 
 // Node type registry for React Flow
 import { TriggerEventNode } from './TriggerEventNode';
@@ -35,6 +36,7 @@ import { LogicStopNode } from './LogicStopNode';
 import { AIGenerateNode } from './AIGenerateNode';
 import { AIClassifyNode } from './AIClassifyNode';
 import { AIExtractNode } from './AIExtractNode';
+import { TransformSetVariableNode } from './TransformSetVariableNode';
 
 export const nodeTypes = {
   'trigger-event': TriggerEventNode,
@@ -50,4 +52,5 @@ export const nodeTypes = {
   'ai-generate': AIGenerateNode,
   'ai-classify': AIClassifyNode,
   'ai-extract': AIExtractNode,
+  'transform-set-variable': TransformSetVariableNode,
 } as const;
