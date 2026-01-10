@@ -688,17 +688,9 @@ function SkeletonMessageThread({ messages = 4, className }: { messages?: number;
 }
 
 /**
- * User account card skeleton for sidebar
+ * User account card skeleton for sidebar (always expanded)
  */
-function SkeletonUserCard({ isCollapsed = false, className }: { isCollapsed?: boolean; className?: string }) {
-  if (isCollapsed) {
-    return (
-      <div className={cn("flex justify-center p-[6px]", className)}>
-        <SkeletonAvatar size="sm" />
-      </div>
-    );
-  }
-  
+function SkeletonUserCard({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-3 p-[11px]", className)}>
       <SkeletonAvatar size="sm" />

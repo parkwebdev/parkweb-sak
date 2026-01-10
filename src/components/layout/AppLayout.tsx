@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { useSidebar } from '@/hooks/use-sidebar';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { Button } from '@/components/ui/button';
 import { Menu01 as Menu } from '@untitledui/icons';
@@ -16,7 +15,6 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { isCollapsed } = useSidebar();
   
   // Initialize keyboard shortcuts at app level
   useKeyboardShortcuts();
@@ -46,9 +44,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
       
       {/* Main Content Container - Full height, edge-to-edge */}
-      <div className={`flex-1 flex flex-col min-h-0 min-w-0 w-full transition-all duration-300 ${
-        isCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]'
-      }`}>
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full lg:ml-[240px]">
           {/* Mobile menu button */}
           <div className="lg:hidden flex items-center px-4 py-3 border-b border-border">
             <Button

@@ -27,7 +27,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { SkeletonUserCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { Badge } from '@/components/ui/badge';
-import { useSidebar } from '@/hooks/use-sidebar';
 import { ThemeSwitcher } from '@/components/ui/theme-switcher';
 import type { AppPermission } from '@/types/team';
 
@@ -43,8 +42,7 @@ interface UserProfile {
 
 /** Props for the UserAccountCard component */
 interface UserAccountCardProps {
-  /** Whether the sidebar is collapsed (shows avatar only) */
-  isCollapsed?: boolean;
+  // No props needed - sidebar is always expanded
 }
 
 /** Keyboard shortcut definition */
@@ -77,7 +75,7 @@ const formatShortcut = (shortcut: KeyboardShortcut): string[] => {
   return keys;
 };
 
-export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
+export function UserAccountCard() {
   const { user, signOut } = useAuth();
   const canView = useCanManageChecker();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -85,12 +83,10 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
-  const { setLocked } = useSidebar();
 
-  // Lock sidebar when dropdown opens, unlock when it closes
+  // Handle dropdown open/close
   const handleDropdownOpenChange = (open: boolean) => {
     setIsDropdownOpen(open);
-    setLocked(open);
     if (!open) {
       setShowShortcuts(false);
     }
@@ -139,7 +135,7 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
   };
 
   if (!user || loading) {
-    return <SkeletonUserCard isCollapsed={isCollapsed} />;
+    return <SkeletonUserCard />;
   }
 
   const displayName = profile?.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
@@ -150,7 +146,7 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
   return (
     <DropdownMenu onOpenChange={handleDropdownOpenChange}>
       <DropdownMenuTrigger asChild>
-        <button className={`relative flex items-center w-full ${isCollapsed ? 'justify-center p-[6px]' : 'gap-3 p-[11px]'} hover:bg-accent/50 rounded-md transition-all duration-150`}>
+        <button className="relative flex items-center w-full gap-3 p-[11px] hover:bg-accent/50 rounded-md transition-all duration-150">
           <div className="relative flex-shrink-0">
             <Avatar className="h-7 w-7">
               <AvatarImage src={avatarUrl} alt={displayName} />
@@ -160,16 +156,14 @@ export function UserAccountCard({ isCollapsed = false }: UserAccountCardProps) {
             </Avatar>
             <div className="bg-status-active absolute rounded-full border-[1.5px] border-sidebar w-2.5 h-2.5 bottom-0 right-0" />
           </div>
-          {!isCollapsed && (
-            <div className="text-left min-w-0 flex-1 overflow-hidden">
-              <div className="text-foreground text-xs font-semibold leading-tight truncate">
-                {displayName}
-              </div>
-              <div className="text-muted-foreground text-2xs font-normal leading-tight truncate">
-                {email}
-              </div>
+          <div className="text-left min-w-0 flex-1 overflow-hidden">
+            <div className="text-foreground text-xs font-semibold leading-tight truncate">
+              {displayName}
             </div>
-          )}
+            <div className="text-muted-foreground text-2xs font-normal leading-tight truncate">
+              {email}
+            </div>
+          </div>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 

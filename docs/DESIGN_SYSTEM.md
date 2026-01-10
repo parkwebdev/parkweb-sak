@@ -310,20 +310,20 @@ import { PRIORITY_OPTIONS } from '@/lib/priority-config';
 The app uses an edge-to-edge layout with a fixed sidebar:
 
 ```tsx
-// Sidebar: White background with right border separator
-<motion.aside className="flex h-screen bg-background border-r border-border">
+// Sidebar: Always expanded at 240px, white background with right border
+<aside className="flex h-screen w-[240px] bg-background border-r border-border">
 
-// Main content: Full height, no card wrapper
-<div className="flex-1 flex flex-col min-h-0 min-w-0 w-full">
+// Main content: Full height, no card wrapper, fixed left margin
+<div className="flex-1 flex flex-col min-h-0 min-w-0 w-full lg:ml-[240px]">
 ```
 
 **Key layout patterns:**
 - Sidebar uses `bg-background` (white in light mode) with `border-r border-border`
+- Sidebar is always fully expanded at 240px width (no collapse functionality)
 - Main content extends full height without rounded card wrapper
-- No margins between sidebar and content
+- No margins between sidebar and content (content starts at 240px on desktop)
 - Content scrolls within the main area, not the entire viewport
-- Sidebar toggle button (`LayoutAlt04` icon) in header for manual collapse/expand
-- No auto-collapse on hover - sidebar state persists until user toggles
+- **Verified: 2026-01-10**
 
 ### Usage Examples
 

@@ -1,22 +1,20 @@
 /**
  * Sidebar Navigation Component
  * 
- * Main navigation sidebar with manual toggle behavior.
- * Uses LayoutAlt04 icon button to collapse/expand.
+ * Main navigation sidebar - always expanded at 240px width.
  * Shows unread conversation badges and filters items based on user permissions.
  * 
  * @module components/Sidebar
  */
 
 import React, { useMemo } from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd, BookOpen01, LayoutAlt04 } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd, BookOpen01 } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from './icons/DashboardIcon';
 import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled, KnowledgeBaseFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
-import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
@@ -24,7 +22,6 @@ import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
-import { cn } from '@/lib/utils';
 import { getMainNavRoutes, getBottomNavRoutes, getRouteById, type RouteConfig } from '@/config/routes';
 import type { ConversationMetadata } from '@/types/metadata';
 import type { AppPermission } from '@/types/team';
@@ -117,7 +114,6 @@ interface SidebarProps {
  */
 function SidebarComponent({ onClose }: SidebarProps) {
   const location = useLocation();
-  const { isCollapsed, toggle } = useSidebar();
   const { conversations } = useConversations();
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
@@ -180,41 +176,21 @@ function SidebarComponent({ onClose }: SidebarProps) {
   }).length;
 
   return (
-    <motion.aside 
-      className="flex h-screen bg-background border-r border-border"
-      animate={{ width: isCollapsed ? 64 : 240 }}
-      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-    >
+    <aside className="flex h-screen w-[240px] bg-background border-r border-border">
       <nav className="w-full flex flex-col pt-6 px-3 pb-4" aria-label="Main navigation">
-        {/* Header with logo and toggle */}
+        {/* Header with logo */}
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
-            </div>
-            {/* Toggle button - always visible, centered when collapsed */}
-            <div className={cn(
-              "flex items-center gap-1",
-              isCollapsed && "absolute left-1/2 -translate-x-1/2 top-6"
-            )}>
+            <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
+            {onClose && (
               <button
-                onClick={toggle}
-                className="p-1.5 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                onClick={onClose}
+                className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                aria-label="Close menu"
               >
-                <LayoutAlt04 size={16} />
+                <X size={16} />
               </button>
-              {!isCollapsed && onClose && (
-                <button
-                  onClick={onClose}
-                  className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                  aria-label="Close menu"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </header>
 
@@ -241,7 +217,6 @@ function SidebarComponent({ onClose }: SidebarProps) {
                         ? 'bg-accent text-accent-foreground' 
                         : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                     }`}
-                    title={isCollapsed ? item.label : ''}
                   >
                     <div className="items-center flex gap-2 my-auto w-full">
                       <div className="items-center flex my-auto w-[18px] flex-shrink-0 relative">
@@ -250,22 +225,8 @@ function SidebarComponent({ onClose }: SidebarProps) {
                         ) : (
                           <item.icon size={14} className="self-stretch my-auto" />
                         )}
-                        {/* Collapsed state unread indicator */}
-                        {isCollapsed && item.id === 'conversations' && unreadConversationsCount > 0 && (
-                          <motion.span 
-                            className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"
-                            initial={prefersReducedMotion ? false : { scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={springs.bouncy}
-                          />
-                        )}
                       </div>
-                      <motion.div 
-                        className="flex items-center justify-between flex-1 overflow-hidden"
-                        initial={false}
-                        animate={{ opacity: isCollapsed ? 0 : 1 }}
-                        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
-                      >
+                      <div className="flex items-center justify-between flex-1 overflow-hidden">
                         <div className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
                           isActive ? 'font-medium' : ''
                         }`}>
@@ -283,7 +244,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
                             {unreadConversationsCount}
                           </motion.div>
                         )}
-                      </motion.div>
+                      </div>
                     </div>
                   </Link>
                 </motion.div>
@@ -305,18 +266,12 @@ function SidebarComponent({ onClose }: SidebarProps) {
             <button
               onClick={() => setSearchOpen(true)}
               className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-              title={isCollapsed ? 'Search' : ''}
             >
               <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
                 <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
                   <SearchMd size={14} className="self-stretch my-auto" />
                 </div>
-                <motion.div
-                  className="flex items-center justify-between flex-1 text-sm font-normal leading-4 my-auto whitespace-nowrap"
-                  initial={false}
-                  animate={{ opacity: isCollapsed ? 0 : 1 }}
-                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
-                >
+                <div className="flex items-center justify-between flex-1 text-sm font-normal leading-4 my-auto whitespace-nowrap">
                   <span>Search</span>
                   <div className="flex items-center gap-0.5">
                     <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
@@ -326,7 +281,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
                       K
                     </kbd>
                   </div>
-                </motion.div>
+                </div>
               </div>
             </button>
           </motion.div>
@@ -408,24 +363,18 @@ function SidebarComponent({ onClose }: SidebarProps) {
                       ? 'bg-accent text-accent-foreground' 
                       : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                   }`}
-                  title={isCollapsed ? item.label : ''}
                 >
                   <div className="items-center flex gap-2 my-auto w-full">
                     <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
                       {renderIcon()}
                     </div>
-                    <motion.div 
-                      className="flex items-center justify-between flex-1 overflow-hidden"
-                      initial={false}
-                      animate={{ opacity: isCollapsed ? 0 : 1 }}
-                      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
-                    >
+                    <div className="flex items-center justify-between flex-1 overflow-hidden">
                       <div className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
                         isActive ? 'font-medium' : ''
                       }`}>
                         {item.label}
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </Link>
               </motion.div>
@@ -434,11 +383,11 @@ function SidebarComponent({ onClose }: SidebarProps) {
 
           {/* User account card */}
           <div className="mt-4">
-            <UserAccountCard isCollapsed={isCollapsed} />
+            <UserAccountCard />
           </div>
         </div>
       </nav>
-    </motion.aside>
+    </aside>
   );
 }
 
