@@ -417,6 +417,12 @@
         params.set('location', this.config.locationSlug);
       }
       
+      // Pass debug flag from parent page to iframe
+      const parentParams = new URLSearchParams(window.location.search);
+      if (parentParams.get('debugWidget') === '1') {
+        params.set('debugWidget', '1');
+      }
+      
       this.iframe = document.createElement('iframe');
       this.iframe.className = 'pilot-widget-iframe';
       // Use widget.html for optimized widget bundle
