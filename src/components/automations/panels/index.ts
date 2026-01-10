@@ -19,6 +19,7 @@ export { LogicStopConfigPanel } from './LogicStopConfigPanel';
 export { AIGenerateConfigPanel } from './AIGenerateConfigPanel';
 export { AIClassifyConfigPanel } from './AIClassifyConfigPanel';
 export { AIExtractConfigPanel } from './AIExtractConfigPanel';
+export { TransformSetVariableConfigPanel } from './TransformSetVariableConfigPanel';
 export { VariableSelect } from './VariableSelect';
 export { VariableInput } from './VariableInput';
 export { AdvancedModeToggle, useAdvancedMode } from './AdvancedModeToggle';
