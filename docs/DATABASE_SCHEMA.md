@@ -65,8 +65,15 @@ Application-level user roles.
 ### `app_permission`
 Granular permissions for role-based access control.
 ```sql
-'manage_ari' | 'manage_conversations' | 'manage_leads' | 
-'manage_bookings' | 'manage_team' | 'manage_billing'
+-- View permissions
+'view_dashboard' | 'view_conversations' | 'view_leads' | 'view_bookings' |
+'view_knowledge' | 'view_help_articles' | 'view_team' | 'view_settings' |
+'view_billing' | 'view_integrations' | 'view_webhooks' | 'view_api_keys'
+
+-- Manage permissions  
+'manage_ari' | 'manage_conversations' | 'manage_leads' | 'manage_bookings' |
+'manage_knowledge' | 'manage_help_articles' | 'manage_team' | 'manage_settings' |
+'manage_billing' | 'manage_integrations' | 'manage_webhooks' | 'manage_api_keys'
 ```
 
 ### `calendar_provider`

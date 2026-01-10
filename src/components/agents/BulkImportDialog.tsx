@@ -418,7 +418,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
                 </div>
                 {invalidCount > 0 && (
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-amber-500" />
+                    <AlertCircle className="w-4 h-4 text-warning" />
                     <span className="text-sm text-muted-foreground">{invalidCount} will be skipped</span>
                   </div>
                 )}
