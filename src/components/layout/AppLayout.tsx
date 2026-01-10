@@ -22,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   useKeyboardShortcuts();
 
   return (
-    <div className="flex h-screen bg-app-background">
+    <div className="flex h-screen bg-background">
       {/* Skip Navigation Link - WCAG AAA */}
       <a
         href="#main-content"
@@ -45,11 +45,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
       
-      {/* Wrapped Content Container */}
+      {/* Main Content Container - Full height, edge-to-edge */}
       <div className={`flex-1 flex flex-col min-h-0 min-w-0 w-full transition-all duration-300 ${
         isCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]'
       }`}>
-        <div className="flex-1 min-h-0 min-w-0 m-2 ml-0 lg:m-4 lg:ml-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden flex flex-col">
           {/* Mobile menu button */}
           <div className="lg:hidden flex items-center px-4 py-3 border-b border-border">
             <Button
@@ -68,7 +67,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               {children}
             </div>
           </main>
-        </div>
       </div>
     </div>
   );

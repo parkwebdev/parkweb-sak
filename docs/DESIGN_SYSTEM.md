@@ -294,13 +294,34 @@ import { PRIORITY_OPTIONS } from '@/lib/priority-config';
 | `--chart-4` | `43 74% 66%` | `280 65% 60%` |
 | `--chart-5` | `27 87% 67%` | `340 75% 55%` |
 
-### Sidebar Colors
+### Sidebar & Layout Colors
 
-| Token | Light Mode | Dark Mode |
-|-------|------------|-----------|
-| `--sidebar` | `0 0% 97%` | `0 0% 3.9%` |
-| `--sidebar-foreground` | `0 0% 3.9%` | `0 0% 98%` |
-| `--app-background` | `0 0% 96%` | `0 0% 3.9%` |
+> **Verified**: 2026-01-10
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--background` | `0 0% 100%` | `0 0% 3.9%` | Sidebar background, main content |
+| `--sidebar` | `0 0% 97%` | `0 0% 3.9%` | (Legacy - prefer `--background`) |
+| `--sidebar-foreground` | `0 0% 3.9%` | `0 0% 98%` | Sidebar text |
+| `--app-background` | `0 0% 96%` | `0 0% 3.9%` | (Legacy - no longer used) |
+
+#### Layout Structure
+
+The app uses an edge-to-edge layout with a fixed sidebar:
+
+```tsx
+// Sidebar: White background with right border separator
+<motion.aside className="flex h-screen bg-background border-r border-border">
+
+// Main content: Full height, no card wrapper
+<div className="flex-1 flex flex-col min-h-0 min-w-0 w-full">
+```
+
+**Key layout patterns:**
+- Sidebar uses `bg-background` (white in light mode) with `border-r border-border`
+- Main content extends full height without rounded card wrapper
+- No margins between sidebar and content
+- Content scrolls within the main area, not the entire viewport
 
 ### Usage Examples
 

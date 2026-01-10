@@ -180,7 +180,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
 
   return (
     <motion.aside 
-      className="flex h-screen bg-app-background"
+      className="flex h-screen bg-background border-r border-border"
       animate={{ width: isCollapsed ? 64 : 240 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
       onMouseEnter={() => setCollapsed(false)}
