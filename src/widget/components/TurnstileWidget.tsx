@@ -129,10 +129,12 @@ export const TurnstileWidget = ({
   }
 
   return (
-    <div 
-      ref={containerRef} 
-      className="turnstile-container"
-      data-turnstile-loaded={isLoaded}
-    />
+    <div className="min-h-[65px]">
+      <div 
+        ref={containerRef} 
+        className="turnstile-container"
+        data-turnstile-loaded={isLoaded}
+      />
+    </div>
   );
 };

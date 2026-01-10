@@ -48,6 +48,8 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
     contactFormTitle: config.contactFormTitle,
     contactFormSubtitle: config.contactFormSubtitle,
     customFields: config.customFields,
+    enableMultiStepForm: config.enableMultiStepForm,
+    formSteps: config.formSteps,
     quickActions: config.quickActions.map(qa => ({
       id: qa.id,
       label: qa.title,
