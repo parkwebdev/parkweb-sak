@@ -14,6 +14,12 @@ import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import type { SessionData } from '@/components/data-table/columns/sessions-columns';
 
+/** Error returned when edge function fails */
+export interface SessionsError {
+  status?: number;
+  message: string;
+}
+
 interface RawSessionData {
   id: string;
   created_at: string;
@@ -80,15 +86,27 @@ function parseUserAgent(ua: string | null): { device: string; browser: string; o
 }
 
 export function useSessions() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: sessions = [], isLoading, error, refetch } = useQuery({
+  const { data: sessions = [], isLoading, error, refetch } = useQuery<SessionData[], SessionsError>({
     queryKey: ['user-sessions', user?.id],
     queryFn: async (): Promise<SessionData[]> => {
-      const { data, error } = await supabase.functions.invoke<SessionsResponse>('list-user-sessions');
+      // Explicitly pass the JWT token to handle iframe/preview environments
+      const accessToken = session?.access_token;
+      if (!accessToken) {
+        throw { status: 401, message: 'No access token available' } as SessionsError;
+      }
 
-      if (error) throw error;
+      const { data, error } = await supabase.functions.invoke<SessionsResponse>('list-user-sessions', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (error) {
+        throw { status: (error as { status?: number }).status || 500, message: getErrorMessage(error) } as SessionsError;
+      }
       if (!data?.sessions) return [];
       
       // Enrich sessions with parsed user agent data
@@ -97,7 +115,7 @@ export function useSessions() {
         ...parseUserAgent(session.user_agent),
       }));
     },
-    enabled: !!user,
+    enabled: !!session?.access_token,
     staleTime: 30_000, // 30 seconds
   });
 

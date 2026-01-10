@@ -49,6 +49,8 @@ export function SessionsSection() {
   const { 
     sessions, 
     isLoading, 
+    error,
+    refetch,
     revokeOthers, 
     isRevokingOthers 
   } = useSessions();
@@ -102,6 +104,35 @@ export function SessionsSection() {
                   <Skeleton className="h-4 w-20" />
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state - prevents blank screen
+  if (error) {
+    const isAuthError = error.status === 401;
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Active Sessions</CardTitle>
+            <CardDescription className="text-sm">
+              Manage your active login sessions across devices
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-muted-foreground mb-4">
+                {isAuthError 
+                  ? 'Unable to verify your session. Please sign out and sign back in.'
+                  : 'Unable to load sessions. Please try again.'}
+              </p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                Retry
+              </Button>
             </div>
           </CardContent>
         </Card>
