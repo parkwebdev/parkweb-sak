@@ -7,19 +7,26 @@
  * @module pages/Dashboard
  */
 
-import React from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight } from '@untitledui/icons';
+import { ArrowUpRight, Home01 } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { Separator } from '@/components/ui/separator';
 import { InviteTeamInline } from '@/components/onboarding/InviteTeamInline';
 import { GoFurtherSection } from '@/components/onboarding';
 import { PlayIcon } from '@/components/icons/PlayIcon';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { logger } from '@/utils/logger';
 
 export function Dashboard() {
   const prefersReducedMotion = useReducedMotion();
+
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Home01} title="Dashboard" />,
+  }), []);
+  useTopBar(topBarConfig);
 
   // Animation variants
   const containerVariants = {
