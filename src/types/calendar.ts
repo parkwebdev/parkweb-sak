@@ -10,7 +10,7 @@
 /** Calendar provider types for OAuth connections */
 export type CalendarProvider = 'google_calendar' | 'outlook_calendar';
 
-/** Calendar event status options */
+/** Calendar event status options (matches calendar_event_status enum in database) */
 export type CalendarEventStatus = 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
 /** Recurrence frequency options for repeating events */
@@ -76,7 +76,7 @@ export interface CalendarEvent {
   property?: string;
   community?: string;
   notes?: string;
-  status?: 'confirmed' | 'pending' | 'cancelled' | 'completed';
+  status?: CalendarEventStatus;
   
   // Time change tracking
   time_change_history?: TimeChangeRecord[];
@@ -95,9 +95,9 @@ export const EVENT_TYPE_CONFIG: Record<NonNullable<EventType>, { label: string; 
   meeting: { label: 'Meeting', color: '#6366F1' },
 };
 
-export const EVENT_STATUS_CONFIG: Record<NonNullable<EventStatus>, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+export const EVENT_STATUS_CONFIG: Record<CalendarEventStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   confirmed: { label: 'Confirmed', variant: 'default' },
-  pending: { label: 'Pending', variant: 'secondary' },
   cancelled: { label: 'Cancelled', variant: 'destructive' },
   completed: { label: 'Completed', variant: 'outline' },
+  no_show: { label: 'No Show', variant: 'secondary' },
 };

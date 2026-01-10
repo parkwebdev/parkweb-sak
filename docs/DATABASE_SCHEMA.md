@@ -65,15 +65,8 @@ Application-level user roles.
 ### `app_permission`
 Granular permissions for role-based access control.
 ```sql
-'manage_team' | 'view_team' | 'manage_projects' | 'view_projects' |
-'manage_onboarding' | 'view_onboarding' | 'manage_scope_works' |
-'view_scope_works' | 'manage_settings' | 'view_settings'
-```
-
-### `org_role`
-Legacy organization role (deprecated - use `app_role`).
-```sql
-'owner' | 'admin' | 'member'
+'manage_ari' | 'manage_conversations' | 'manage_leads' | 
+'manage_bookings' | 'manage_team' | 'manage_billing'
 ```
 
 ### `calendar_provider`
