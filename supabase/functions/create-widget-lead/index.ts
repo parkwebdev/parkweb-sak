@@ -10,50 +10,104 @@ const corsHeaders = {
 // Minimum time (ms) between form load and submission to consider legitimate
 const MIN_FORM_TIME_MS = 2000; // 2 seconds
 
+// In-memory IP rate limiting (resets on function cold start, which is fine for burst protection)
+const ipSubmissions = new Map<string, { count: number; firstSubmission: number }>();
+const IP_RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const IP_RATE_LIMIT_MAX = 5; // Max 5 submissions per IP per minute
+
 /**
- * Verify Cloudflare Turnstile token server-side.
- * Returns true if verification passes, false otherwise.
- * Fails open if Turnstile is not configured (allows submission but logs warning).
+ * Check if IP is rate limited
  */
-async function verifyTurnstile(token: string | null): Promise<{ success: boolean; failOpen: boolean }> {
-  const turnstileSecret = Deno.env.get('CLOUDFLARE_TURNSTILE_SECRET');
+function isIpRateLimited(ip: string): boolean {
+  if (!ip || ip === 'unknown') return false;
   
-  // Fail open if not configured
-  if (!turnstileSecret) {
-    console.warn('Turnstile: CLOUDFLARE_TURNSTILE_SECRET not configured, skipping verification');
-    return { success: true, failOpen: true };
+  const now = Date.now();
+  const record = ipSubmissions.get(ip);
+  
+  if (!record) {
+    ipSubmissions.set(ip, { count: 1, firstSubmission: now });
+    return false;
   }
   
-  // Fail open if no token provided
-  if (!token) {
-    console.warn('Turnstile: No token provided, allowing submission (fail-open)');
-    return { success: true, failOpen: true };
+  // Reset window if expired
+  if (now - record.firstSubmission > IP_RATE_LIMIT_WINDOW_MS) {
+    ipSubmissions.set(ip, { count: 1, firstSubmission: now });
+    return false;
   }
   
-  try {
-    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        secret: turnstileSecret,
-        response: token,
-      }),
-    });
+  // Check if over limit
+  if (record.count >= IP_RATE_LIMIT_MAX) {
+    console.log(`IP rate limited: ${ip} (${record.count} submissions in window)`);
+    return true;
+  }
+  
+  // Increment count
+  record.count++;
+  return false;
+}
+
+/**
+ * Content validation - detect spam patterns in form fields
+ * Returns true if content looks spammy
+ */
+function isSpamContent(firstName: string, lastName: string, customFields: Record<string, unknown>): boolean {
+  const allText = [firstName, lastName];
+  
+  // Collect all string values from custom fields
+  for (const value of Object.values(customFields || {})) {
+    if (typeof value === 'string') {
+      allText.push(value);
+    } else if (typeof value === 'object' && value !== null && 'value' in value) {
+      const typedValue = (value as { value: unknown }).value;
+      if (typeof typedValue === 'string') {
+        allText.push(typedValue);
+      }
+    }
+  }
+  
+  for (const text of allText) {
+    if (!text) continue;
     
-    if (!response.ok) {
-      console.error('Turnstile: Verification request failed', response.status);
-      return { success: true, failOpen: true }; // Fail open on network errors
+    // Check for URLs in name fields (spam signature)
+    if (/https?:\/\/|www\./i.test(text)) {
+      console.log('Spam detected: URL in form field');
+      return true;
     }
     
-    const data = await response.json();
-    console.log('Turnstile verification result:', data.success ? 'passed' : 'failed');
-    return { success: data.success === true, failOpen: false };
-  } catch (error: unknown) {
-    console.error('Turnstile: Verification error', error);
-    return { success: true, failOpen: true }; // Fail open on exceptions
+    // Check for HTML tags
+    if (/<[^>]+>/i.test(text)) {
+      console.log('Spam detected: HTML in form field');
+      return true;
+    }
+    
+    // Check for excessive special characters (gibberish)
+    const specialCharRatio = (text.match(/[^a-zA-Z0-9\s\-'.,@]/g) || []).length / text.length;
+    if (text.length > 10 && specialCharRatio > 0.3) {
+      console.log('Spam detected: Excessive special characters');
+      return true;
+    }
+    
+    // Check for repeated characters (e.g., "aaaaaa")
+    if (/(.)\1{5,}/i.test(text)) {
+      console.log('Spam detected: Repeated characters');
+      return true;
+    }
+    
+    // Common spam phrases
+    const spamPhrases = [
+      /\b(viagra|cialis|casino|lottery|winner|prize|free money)\b/i,
+      /\b(click here|buy now|act now|limited time)\b/i,
+      /\b(make money fast|work from home|earn \$\d+)\b/i,
+    ];
+    for (const pattern of spamPhrases) {
+      if (pattern.test(text)) {
+        console.log('Spam detected: Known spam phrase');
+        return true;
+      }
+    }
   }
+  
+  return false;
 }
 
 // Geo-IP lookup using ip-api.com (free, no API key needed)
@@ -112,30 +166,39 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { agentId, firstName, lastName, customFields, _formLoadTime, referrerJourney, turnstileToken } = await req.json();
+    const { agentId, firstName, lastName, customFields, _formLoadTime, referrerJourney } = await req.json();
 
-    // Bot protection: Verify Turnstile token (runs before other checks for early rejection)
-    const turnstileResult = await verifyTurnstile(turnstileToken);
-    if (!turnstileResult.success) {
-      console.log('Bot detected: Turnstile verification failed');
-      // Return success to not tip off bots, but don't create lead
+    // Capture IP address early for rate limiting
+    const ipAddress = req.headers.get('cf-connecting-ip') || 
+                      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                      req.headers.get('x-real-ip') || 
+                      'unknown';
+
+    // Bot protection #1: IP-based rate limiting
+    if (isIpRateLimited(ipAddress)) {
+      console.log(`Bot blocked: IP rate limit exceeded for ${ipAddress}`);
       return new Response(
-        JSON.stringify({ leadId: 'bot-blocked', conversationId: null }),
+        JSON.stringify({ leadId: 'rate-limited', conversationId: null }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    if (turnstileResult.failOpen) {
-      console.log('Turnstile: Verification skipped (fail-open mode)');
+
+    // Bot protection #2: Content validation (detect spam patterns)
+    if (isSpamContent(firstName || '', lastName || '', customFields || {})) {
+      console.log('Bot blocked: Spam content detected');
+      return new Response(
+        JSON.stringify({ leadId: 'spam-blocked', conversationId: null }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // Spam protection: Check timing (reject if submitted too fast)
+    // Bot protection #3: Timing check (reject if submitted too fast)
     if (_formLoadTime) {
       const timeTaken = Date.now() - _formLoadTime;
       if (timeTaken < MIN_FORM_TIME_MS) {
-        console.log(`Spam detected: Form submitted too fast (${timeTaken}ms)`);
-        // Return success to not tip off bots, but don't create lead
+        console.log(`Bot blocked: Form submitted too fast (${timeTaken}ms)`);
         return new Response(
-          JSON.stringify({ leadId: 'spam-blocked', conversationId: null }),
+          JSON.stringify({ leadId: 'timing-blocked', conversationId: null }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -225,11 +288,7 @@ serve(async (req) => {
       }
     }
 
-    // Capture request metadata
-    const ipAddress = req.headers.get('cf-connecting-ip') || 
-                      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                      req.headers.get('x-real-ip') || 
-                      'unknown';
+    // Capture request metadata (IP already captured above for rate limiting)
     const userAgent = req.headers.get('user-agent');
     const referer = req.headers.get('referer') || null;
     const { device, browser, os } = parseUserAgent(userAgent);

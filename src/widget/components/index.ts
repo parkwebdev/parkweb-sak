@@ -63,6 +63,3 @@ export { WidgetEmojiPicker, WidgetQuickEmojiPicker } from './WidgetEmojiPicker';
 
 /** Phone input with country detection - uses libphonenumber-js/min, no motion/react */
 export { WidgetPhoneInput } from './WidgetPhoneInput';
-
-/** Cloudflare Turnstile bot protection widget */
-export { TurnstileWidget } from './TurnstileWidget';
