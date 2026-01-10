@@ -1,20 +1,23 @@
 /**
  * @fileoverview Main application layout wrapper.
- * Provides sidebar navigation and responsive content area.
+ * Provides sidebar navigation, global top bar, and responsive content area.
+ * 
+ * The TopBar is a thin (h-11) static header that displays dynamic content
+ * based on the current page using the TopBarContext.
  */
 
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { Button } from '@/components/ui/button';
-import { Menu01 as Menu } from '@untitledui/icons';
+import { TopBar, TopBarProvider, useTopBarContext } from '@/components/layout/TopBar';
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+function AppLayoutInner({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { config } = useTopBarContext();
   
   // Initialize keyboard shortcuts at app level
   useKeyboardShortcuts();
@@ -45,25 +48,29 @@ export function AppLayout({ children }: AppLayoutProps) {
       
       {/* Main Content Container - Full height, edge-to-edge */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full lg:ml-[240px]">
-          {/* Mobile menu button */}
-          <div className="lg:hidden flex items-center px-4 py-3 border-b border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label="Open navigation menu"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu size={18} aria-hidden="true" />
-            </Button>
-          </div>
+        {/* Global Top Bar - always visible */}
+        <TopBar 
+          left={config.left}
+          center={config.center}
+          right={config.right}
+          onMobileMenuClick={() => setSidebarOpen(true)}
+        />
           
-          {/* Page Content - flex column container so children can use flex-1 properly */}
-          <main id="main-content" className="flex-1 min-h-0 overflow-hidden flex flex-col" tabIndex={-1}>
-            <div className="flex-1 min-h-0 flex flex-col">
-              {children}
-            </div>
-          </main>
+        {/* Page Content - flex column container so children can use flex-1 properly */}
+        <main id="main-content" className="flex-1 min-h-0 overflow-hidden flex flex-col" tabIndex={-1}>
+          <div className="flex-1 min-h-0 flex flex-col">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );
-};
+}
+
+export function AppLayout({ children }: AppLayoutProps) {
+  return (
+    <TopBarProvider>
+      <AppLayoutInner>{children}</AppLayoutInner>
+    </TopBarProvider>
+  );
+}
