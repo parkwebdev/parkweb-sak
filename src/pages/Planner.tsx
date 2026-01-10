@@ -10,8 +10,6 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs } from '@/components/ui/tabs';
-import { AnimatedTabsList } from '@/components/ui/animated-tabs-list';
 import { Calendar as CalendarIcon } from '@untitledui/icons';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
@@ -236,34 +234,17 @@ function Planner() {
   return (
     <main className="flex-1 bg-muted/30 h-full overflow-auto">
       <div className="px-4 lg:px-8 py-6 space-y-6">
-        {/* Tabs & Color Legend */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <AnimatedTabsList
-              tabs={[
-                { value: 'all', label: 'All Bookings' },
-                { value: 'showing', label: 'Showings' },
-                { value: 'move_in', label: 'Move-ins' },
-                { value: 'inspection', label: 'Inspections' },
-                { value: 'maintenance', label: 'Maintenance' },
-              ]}
-              activeValue={activeTab}
-              onValueChange={setActiveTab}
-            />
-          </Tabs>
-
-          {/* Color Legend */}
-          <div className="flex flex-wrap items-center gap-3">
-            {Object.entries(EVENT_TYPE_CONFIG).map(([key, config]) => (
-              <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span 
-                  className="w-2.5 h-2.5 rounded-full" 
-                  style={{ backgroundColor: config.color }}
-                />
-                <span>{config.label}</span>
-              </div>
-            ))}
-          </div>
+        {/* Color Legend */}
+        <div className="flex flex-wrap items-center gap-3">
+          {Object.entries(EVENT_TYPE_CONFIG).map(([key, config]) => (
+            <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span 
+                className="w-2.5 h-2.5 rounded-full" 
+                style={{ backgroundColor: config.color }}
+              />
+              <span>{config.label}</span>
+            </div>
+          ))}
         </div>
 
         {/* Calendar */}
