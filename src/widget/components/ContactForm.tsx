@@ -88,7 +88,11 @@ export const ContactForm = ({
   const [checkboxValues, setCheckboxValues] = useState<Record<string, boolean>>({});
   const [currentStep, setCurrentStep] = useState(1);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const systemTheme = useSystemTheme();
+  
+  // Fake leadIds returned by bot protection - treat as errors
+  const FAKE_LEAD_IDS = ['rate-limited', 'spam-blocked', 'timing-blocked'];
   
   /** Update a form field value */
   const updateFormValue = (name: string, value: string) => {
@@ -220,15 +224,21 @@ export const ContactForm = ({
     const firstName = formValues.firstName || '';
     const lastName = formValues.lastName || '';
 
-    try {
-      setFormErrors({});
+    setIsSubmitting(true);
+    setFormErrors({});
 
+    try {
       const { leadId, conversationId } = await createLead(agentId, { 
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         customFields: customFieldData, 
         _formLoadTime: formLoadTime,
       });
+      
+      // Detect bot protection fake responses
+      if (FAKE_LEAD_IDS.includes(leadId)) {
+        throw new Error('Something went wrong. Please try again.');
+      }
       
       // Extract email from custom fields for ChatUser (smart detection)
       let extractedEmail = '';
@@ -250,6 +260,9 @@ export const ContactForm = ({
       onSubmit(userData, conversationId ?? undefined);
     } catch (error: unknown) {
       logger.error('Error creating lead:', error);
+      setFormErrors({ submit: 'Something went wrong. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -432,6 +445,13 @@ export const ContactForm = ({
             </div>
           ))}
           
+          {/* Submission error message */}
+          {formErrors.submit && (
+            <p className="text-xs text-destructive text-center" role="alert">
+              {formErrors.submit}
+            </p>
+          )}
+          
           {/* Navigation buttons */}
           {totalSteps > 1 ? (
             <div className="flex items-center gap-2 pt-1">
@@ -441,6 +461,7 @@ export const ContactForm = ({
                   variant="outline" 
                   size="default"
                   onClick={handleBack}
+                  disabled={isSubmitting}
                   className="flex-shrink-0"
                 >
                   <ChevronLeft size={16} aria-hidden="true" />
@@ -453,9 +474,10 @@ export const ContactForm = ({
                   type="submit" 
                   size="default" 
                   className="flex-1" 
+                  disabled={isSubmitting}
                   style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
                 >
-                  Start Chat
+                  {isSubmitting ? 'Starting...' : 'Start Chat'}
                 </WidgetButton>
               ) : (
                 <WidgetButton 
@@ -475,9 +497,10 @@ export const ContactForm = ({
               type="submit" 
               size="default" 
               className="w-full" 
+              disabled={isSubmitting}
               style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
             >
-              Start Chat
+              {isSubmitting ? 'Starting...' : 'Start Chat'}
             </WidgetButton>
           )}
         </form>
