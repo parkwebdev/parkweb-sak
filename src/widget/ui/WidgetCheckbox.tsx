@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import DOMPurify from 'isomorphic-dompurify';
 
 interface WidgetCheckboxProps {
+  /** Unique id for the checkbox input */
+  id?: string;
   /** Field name for form submission */
   name: string;
   /** Inline label displayed next to checkbox */
@@ -36,6 +38,7 @@ interface WidgetCheckboxProps {
  * Links in rich text open in new tabs for security.
  */
 export const WidgetCheckbox = ({
+  id,
   name,
   label,
   richTextContent,
@@ -71,6 +74,7 @@ export const WidgetCheckbox = ({
       <label className="flex items-start gap-3 cursor-pointer min-h-[44px] py-1 -mb-3">
         <input
           type="checkbox"
+          id={id}
           name={name}
           checked={checked}
           onChange={(e) => onChange?.(e.target.checked)}

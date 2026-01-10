@@ -265,6 +265,7 @@ export const ContactForm = ({
         return (
           <>
             <WidgetCheckbox
+              id={field.id}
               name={field.id}
               label={field.label}
               richTextContent={field.richTextContent}
@@ -292,7 +293,7 @@ export const ContactForm = ({
           </WidgetSelect>
         );
       case 'textarea':
-        return <WidgetTextarea name={field.id} placeholder={field.label} required={field.required} />;
+        return <WidgetTextarea id={field.id} name={field.id} placeholder={field.label} required={field.required} />;
       case 'phone':
         return (
           <Suspense fallback={<WidgetInput placeholder={field.label} disabled />}>
@@ -306,6 +307,7 @@ export const ContactForm = ({
       case 'name':
         return (
           <WidgetInput 
+            id={field.id}
             name={field.id} 
             type="text" 
             placeholder={field.label} 
@@ -316,6 +318,7 @@ export const ContactForm = ({
       default: // text, email
         return (
           <WidgetInput 
+            id={field.id}
             name={field.id} 
             type={field.fieldType === 'email' ? 'email' : 'text'} 
             placeholder={field.label} 
@@ -357,6 +360,7 @@ export const ContactForm = ({
         <form className="space-y-2" onSubmit={handleSubmit}>
           {/* Honeypot field - hidden from users, bots fill it */}
           <input 
+            id="website"
             name="website" 
             type="text" 
             tabIndex={-1} 
@@ -370,6 +374,7 @@ export const ContactForm = ({
             <>
               <div>
                 <WidgetInput 
+                  id="firstName"
                   name="firstName" 
                   type="text" 
                   placeholder="First name" 
@@ -382,6 +387,7 @@ export const ContactForm = ({
               </div>
               <div>
                 <WidgetInput 
+                  id="lastName"
                   name="lastName" 
                   type="text" 
                   placeholder="Last name" 
