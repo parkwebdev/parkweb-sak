@@ -36,6 +36,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { sendChatMessage, getWidgetSupabase, type WidgetConfig, type ReferrerJourney } from '../api';
 import { widgetLogger } from '../utils/widget-logger';
 import type { Message, ChatUser, PendingFile, PageVisit, ViewType } from '../types';
+import { addCheckpoint, updateDebugState } from '../utils/widget-debug';
 
 // ============================================================================
 // Types
@@ -467,8 +468,15 @@ export function useWidgetMessaging({
 
   // === Form Submit Handler ===
   const handleFormSubmit = useCallback(async (userData: ChatUser, conversationId?: string) => {
+    // DEBUG: Checkpoint 1 - handleFormSubmit entered
+    addCheckpoint('WM1_FORM_SUBMIT_ENTER', { hasUser: !!userData, hasConvId: !!conversationId });
+    
     localStorage.setItem(`pilot_user_${config.agentId}`, JSON.stringify(userData));
     setChatUser(userData);
+    
+    // DEBUG: Checkpoint 2 - setChatUser called
+    addCheckpoint('WM2_SET_CHAT_USER', { firstName: userData.firstName });
+    updateDebugState({ chatUser: true });
     
     // Clear messages and set up for AI greeting
     setMessages([]);
@@ -481,8 +489,16 @@ export function useWidgetMessaging({
     
     setActiveConversationId(conversationId || 'new');
     
+    // DEBUG: Checkpoint 3 - setActiveConversationId called
+    addCheckpoint('WM3_SET_CONV_ID', { convId: (conversationId || 'new').slice(0, 8) });
+    updateDebugState({ activeConversationId: conversationId || 'new' });
+    
     // Trigger AI to generate personalized greeting using lead data
     setIsTyping(true);
+    
+    // DEBUG: Checkpoint 4 - About to call sendChatMessage for greeting
+    addCheckpoint('WM4_GREETING_START', { agentId: config.agentId.slice(0, 8), leadId: userData.leadId?.slice(0, 8) });
+    
     try {
       const response = await sendChatMessage(
         config.agentId,
@@ -494,9 +510,13 @@ export function useWidgetMessaging({
         visitorId
       );
       
+      // DEBUG: Checkpoint 5 - sendChatMessage returned successfully
+      addCheckpoint('WM5_GREETING_OK', { hasResponse: !!response.response, convId: response.conversationId?.slice(0, 8) });
+      
       if (response.conversationId && response.conversationId !== conversationId) {
         markConversationFetched(response.conversationId);
         setActiveConversationId(response.conversationId);
+        updateDebugState({ activeConversationId: response.conversationId });
         
         const updatedUser = { ...userData, conversationId: response.conversationId };
         setChatUser(updatedUser);
@@ -514,9 +534,18 @@ export function useWidgetMessaging({
           reactions: [],
           linkPreviews: response.linkPreviews,
         }]);
+        addCheckpoint('WM6_MSG_SET', { msgLen: response.response.length });
       }
     } catch (error: unknown) {
       widgetLogger.error('Error getting AI greeting:', error);
+      
+      // DEBUG: Checkpoint - Error getting greeting
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      // Try to extract requestId if it's a WidgetApiError
+      const requestId = (error as { requestId?: string })?.requestId;
+      addCheckpoint('WM_ERR', { error: errorMsg.slice(0, 40), requestId: requestId?.slice(0, 12) });
+      updateDebugState({ lastError: `WM: ${errorMsg.slice(0, 30)}` });
+      
       // Fallback to a simple greeting if AI fails
       setMessages([{ 
         role: 'assistant', 
@@ -526,6 +555,7 @@ export function useWidgetMessaging({
         type: 'text', 
         reactions: [] 
       }]);
+      addCheckpoint('WM_FALLBACK_MSG');
     } finally {
       setIsTyping(false);
     }

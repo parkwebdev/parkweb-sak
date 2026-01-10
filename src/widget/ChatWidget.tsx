@@ -61,7 +61,7 @@ const HelpView = lazy(() => import('./views/HelpView').then(m => ({ default: m.H
 const NewsView = lazy(() => import('./views/NewsView').then(m => ({ default: m.NewsView })));
 
 // UI Components
-import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating } from './components';
+import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating, DebugOverlay } from './components';
 import { WidgetCard, WidgetSkeletonView, WidgetSkeletonLoader } from './ui';
 
 /**
@@ -397,6 +397,8 @@ const ChatWidgetInner = ({
   // Widget content
   const widgetContent = (
     <div id="pilot-widget-root" className="h-full bg-transparent flex flex-col items-end gap-4 justify-end">
+      {/* Debug Overlay - only visible when ?debugWidget=1 */}
+      <DebugOverlay />
       {(isOpen || isIframeMode) && (
         <WidgetCard
           className={isIframeMode 
