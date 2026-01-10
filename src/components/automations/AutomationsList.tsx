@@ -56,8 +56,8 @@ export const AutomationsList = memo(function AutomationsList({
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="text-base font-semibold text-foreground">Automations</h2>
         {canManageAutomations && (
-          <IconButton label="New automation" size="sm" onClick={onCreateClick}>
-            <Plus size={16} />
+          <IconButton label="New automation" size="xs" onClick={onCreateClick}>
+            <Plus size={14} />
           </IconButton>
         )}
       </div>
