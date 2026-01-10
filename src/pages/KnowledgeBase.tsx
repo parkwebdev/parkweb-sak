@@ -10,13 +10,14 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen01 } from '@untitledui/icons';
+import { BookOpen01, SearchMd, XClose } from '@untitledui/icons';
 import { KBSidebar } from '@/components/knowledge-base/KBSidebar';
 import { KBArticleView } from '@/components/knowledge-base/KBArticleView';
 import { KBCategoryView } from '@/components/knowledge-base/KBCategoryView';
 import { KBTableOfContents } from '@/components/knowledge-base/KBTableOfContents';
 import { KBPopularArticles } from '@/components/knowledge-base/KBPopularArticles';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
@@ -49,6 +50,7 @@ export default function KnowledgeBase() {
   const [searchParams, setSearchParams] = useSearchParams();
   const prefersReducedMotion = useReducedMotion();
   const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Get current selection from URL params
   const categoryId = searchParams.get('category');
@@ -63,11 +65,37 @@ export default function KnowledgeBase() {
   
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext 
-      icon={BookOpen01} 
-      title="Knowledge Base" 
-    />,
-  }), []);
+    left: (
+      <div className="flex items-center gap-3">
+        <TopBarPageContext icon={BookOpen01} title="Knowledge Base" />
+        <div className="relative w-48 lg:w-64">
+          <SearchMd
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            type="text"
+            placeholder="Search articles..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-8"
+            size="sm"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Clear search"
+            >
+              <XClose size={14} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      </div>
+    ),
+  }), [searchQuery]);
   useTopBar(topBarConfig);
   
   useEffect(() => {
@@ -138,6 +166,7 @@ export default function KnowledgeBase() {
         isCategoryView={!!isCategoryView}
         onSelectCategory={handleSelectCategory}
         onSelectArticle={handleSelectArticle}
+        searchQuery={searchQuery}
       />
       
       {/* Main Content Area */}
