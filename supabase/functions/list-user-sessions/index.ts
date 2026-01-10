@@ -45,7 +45,15 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const token = authHeader.replace('Bearer ', '');
+    // Handle varying casing/spacing in Bearer token
+    const token = authHeader.replace(/^bearer\s+/i, '').trim();
+    if (!token) {
+      console.error('[list-user-sessions] Empty token after parsing');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', details: 'Empty token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !userData.user) {
       console.error('[list-user-sessions] User verification failed:', userError?.message);
