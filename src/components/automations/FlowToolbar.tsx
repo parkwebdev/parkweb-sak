@@ -2,13 +2,14 @@
  * FlowToolbar Component
  * 
  * Toolbar for the automation editor with save, undo/redo, and close actions.
+ * Includes validation-aware publish/activate controls.
  * Memoized for performance.
  * 
  * @module components/automations/FlowToolbar
  */
 
 import { memo } from 'react';
-import { ArrowLeft, ReverseLeft, ReverseRight, Save01, Play, ClockRewind, DotsVertical, Trash01, ChevronDown, Circle } from '@untitledui/icons';
+import { ArrowLeft, ReverseLeft, ReverseRight, Save01, Play, ClockRewind, DotsVertical, Trash01, ChevronDown, Circle, AlertCircle } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Badge } from '@/components/ui/badge';
@@ -18,8 +19,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { LastSavedIndicator } from '@/components/automations/LastSavedIndicator';
 import { useFlowHistory } from '@/stores/automationFlowStore';
+import { useAutomationValidation } from '@/hooks/useAutomationValidation';
 import type { Automation, AutomationStatus, AutomationTriggerType } from '@/types/automations';
 
 interface FlowToolbarProps {
@@ -58,6 +65,7 @@ export const FlowToolbar = memo(function FlowToolbar({
   running = false,
 }: FlowToolbarProps) {
   const { undo, redo, canUndo, canRedo } = useFlowHistory();
+  const { isValid, errorCount } = useAutomationValidation();
 
   const getStatusColor = (status: AutomationStatus) => {
     switch (status) {
@@ -72,6 +80,15 @@ export const FlowToolbar = memo(function FlowToolbar({
     if (enabled && status === 'active') return 'default';
     if (status === 'error') return 'destructive';
     return 'secondary';
+  };
+
+  // Block activation if invalid
+  const handleStatusChange = (status: AutomationStatus, enabled: boolean) => {
+    if (status === 'active' && !isValid) {
+      // Don't allow activation if invalid
+      return;
+    }
+    onStatusChange?.(status, enabled);
   };
 
   return (
@@ -107,20 +124,51 @@ export const FlowToolbar = memo(function FlowToolbar({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => onStatusChange?.('draft', false)}>
+            <DropdownMenuItem onClick={() => handleStatusChange('draft', false)}>
               <Circle size={8} className="mr-2 fill-muted-foreground text-muted-foreground" aria-hidden="true" />
               Draft
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onStatusChange?.('active', true)}>
-              <Circle size={8} className="mr-2 fill-status-active text-status-active" aria-hidden="true" />
-              Active
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onStatusChange?.('paused', false)}>
+            {/* Active option - disabled if invalid */}
+            {isValid ? (
+              <DropdownMenuItem onClick={() => handleStatusChange('active', true)}>
+                <Circle size={8} className="mr-2 fill-status-active text-status-active" aria-hidden="true" />
+                Active
+              </DropdownMenuItem>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center px-2 py-1.5 text-sm text-muted-foreground cursor-not-allowed opacity-50">
+                    <Circle size={8} className="mr-2 fill-status-active text-status-active" aria-hidden="true" />
+                    Active
+                    <AlertCircle size={12} className="ml-auto text-destructive" aria-hidden="true" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Fix {errorCount} validation error{errorCount !== 1 ? 's' : ''} before activating
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <DropdownMenuItem onClick={() => handleStatusChange('paused', false)}>
               <Circle size={8} className="mr-2 fill-status-warning text-status-warning" aria-hidden="true" />
               Paused
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        
+        {/* Validation indicator */}
+        {!isValid && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1 px-2 py-1 bg-destructive/10 text-destructive rounded text-xs font-medium">
+                <AlertCircle size={12} aria-hidden="true" />
+                {errorCount} issue{errorCount !== 1 ? 's' : ''}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              Complete required fields to activate this automation
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       {/* Last saved indicator */}
@@ -172,26 +220,48 @@ export const FlowToolbar = memo(function FlowToolbar({
       <div className="flex items-center gap-2">
         {/* Run Now - only for manual triggers */}
         {automation.trigger_type === 'manual' && onRunClick && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onRunClick}
-            disabled={isDirty || running}
-          >
-            <Play size={16} className="mr-1.5" aria-hidden="true" />
-            {running ? 'Running...' : 'Run Now'}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onRunClick}
+                  disabled={isDirty || running || !isValid}
+                >
+                  <Play size={16} className="mr-1.5" aria-hidden="true" />
+                  {running ? 'Running...' : 'Run Now'}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {!isValid && (
+              <TooltipContent>
+                Fix validation errors before running
+              </TooltipContent>
+            )}
+          </Tooltip>
         )}
         {onTestClick && (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={onTestClick}
-            disabled={isDirty}
-          >
-            <Play size={16} className="mr-1.5" aria-hidden="true" />
-            Test
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={onTestClick}
+                  disabled={isDirty || !isValid}
+                >
+                  <Play size={16} className="mr-1.5" aria-hidden="true" />
+                  Test
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {!isValid && (
+              <TooltipContent>
+                Fix validation errors before testing
+              </TooltipContent>
+            )}
+          </Tooltip>
         )}
         <Button 
           size="sm" 
