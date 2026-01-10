@@ -667,46 +667,6 @@ export function SkeletonHelpArticlesSection({ className }: { className?: string 
   );
 }
 
-/**
- * Model behavior section skeleton
- */
-export function SkeletonModelBehaviorSection({ className }: { className?: string }) {
-  return (
-    <div className={cn("space-y-6", className)}>
-      {/* Header */}
-      <div className="space-y-1.5">
-        <Skeleton className="h-6 w-36" />
-        <Skeleton className="h-4 w-80" />
-      </div>
-      {/* Model selector */}
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-10 w-full rounded-md" />
-      </div>
-      {/* Temperature slider */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-8" />
-        </div>
-        <Skeleton className="h-2 w-full rounded-full" />
-      </div>
-      {/* Max tokens */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-4 w-12" />
-        </div>
-        <Skeleton className="h-2 w-full rounded-full" />
-      </div>
-      {/* System prompt */}
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-40 w-full rounded-md" />
-      </div>
-    </div>
-  );
-}
 
 // =============================================================================
 // CHART SKELETONS

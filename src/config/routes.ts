@@ -259,7 +259,6 @@ export interface AriSectionConfig {
  */
 export const ARI_SECTIONS: readonly AriSectionConfig[] = [
   // AI Configuration
-  { id: 'model-behavior', label: 'Model & Behavior', group: 'AI', requiredPermission: 'manage_ari', iconName: 'Atom01' },
   { id: 'system-prompt', label: 'System Prompt', group: 'AI', requiredPermission: 'manage_ari', iconName: 'File02', activeIconName: 'FileFilled' },
   
   // Widget Appearance

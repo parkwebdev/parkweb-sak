@@ -95,13 +95,6 @@ export const KB_CATEGORIES: readonly KBCategory[] = [
         component: lazy(() => import('@/data/knowledge-base/ari/AriOverviewArticle')),
       },
       {
-        id: 'model-behavior',
-        slug: 'model-behavior',
-        title: 'Model & Behavior Settings',
-        description: 'Configure how Ari responds and behaves.',
-        component: lazy(() => import('@/data/knowledge-base/ari/ModelBehaviorArticle')),
-      },
-      {
         id: 'system-prompt',
         slug: 'system-prompt',
         title: 'Writing a System Prompt',

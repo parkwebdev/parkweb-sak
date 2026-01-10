@@ -89,7 +89,7 @@ export default function KnowledgeSourcesArticle() {
       <KBRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'overview', title: 'Understanding Ari' },
-          { categoryId: 'ari', articleSlug: 'model-behavior', title: 'Model & Behavior Settings' },
+          { categoryId: 'ari', articleSlug: 'system-prompt', title: 'Writing a System Prompt' },
           { categoryId: 'getting-started', articleSlug: 'quick-start', title: 'Quick Start Guide' },
         ]}
       />
