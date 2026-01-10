@@ -168,6 +168,12 @@ const handler = async (req: Request): Promise<Response> => {
       subject: `New lead: ${leadName} via Ari Agent`,
       html,
       text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'Precedence': 'bulk',
+        'X-Auto-Response-Suppress': 'All',
+      },
     });
 
     console.log("New lead email sent successfully:", emailResponse);

@@ -98,11 +98,19 @@ const handler = async (req: Request): Promise<Response> => {
       unsubscribeUrl: `${APP_URL}/settings/notifications`,
     });
 
+    const unsubscribeUrl = `${APP_URL}/settings?tab=notifications`;
+
     const emailResponse = await resend.emails.send({
       from: "Pilot <notifications@mail.getpilot.co>",
       to: [recipientEmail],
       subject: `Webhook failed: ${webhookName}`,
       html,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'Precedence': 'bulk',
+        'X-Auto-Response-Suppress': 'All',
+      },
     });
 
     console.log(`[send-webhook-failure-email] Email sent successfully:`, emailResponse);

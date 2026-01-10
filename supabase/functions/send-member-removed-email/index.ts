@@ -104,6 +104,12 @@ const handler = async (req: Request): Promise<Response> => {
       subject: `${memberFullName} has been removed from ${companyName}`,
       html,
       text,
+      headers: {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'Precedence': 'bulk',
+        'X-Auto-Response-Suppress': 'All',
+      },
     });
 
     console.log("Member removed email sent successfully:", emailResponse);
