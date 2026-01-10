@@ -245,8 +245,7 @@ Overview of key metrics: conversations, agents, leads, usage with sparkline tren
 **Location:** `src/pages/AriConfigurator.tsx`
 
 Single-agent architecture with comprehensive configuration:
-- System prompts and model selection
-- Behavior parameters (temperature, top P, etc.)
+- System prompts and personality settings
 - Knowledge sources (PDFs, URLs, sitemaps)
 - Help center content and news
 - Custom tools and webhooks
@@ -872,7 +871,6 @@ All Ari configurator sections are centralized in `src/config/routes.ts` via `ARI
 
 | Section ID | Label | Group | Permission |
 |------------|-------|-------|------------|
-| `model-behavior` | Model & Behavior | AI | `manage_ari` |
 | `system-prompt` | System Prompt | AI | `manage_ari` |
 | `appearance` | Appearance | Widget | `manage_ari` |
 | `welcome-messages` | Welcome & Messages | Widget | `manage_ari` |
@@ -899,7 +897,7 @@ const visibleSections = ARI_SECTIONS.filter(section => {
 });
 
 // Validate section ID
-const validIds = getValidAriSectionIds(); // ['model-behavior', 'system-prompt', ...]
+const validIds = getValidAriSectionIds(); // ['system-prompt', 'appearance', ...]
 ```
 
 ---

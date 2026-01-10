@@ -151,7 +151,6 @@ src/widget/
 │   ├── WidgetMessageReactions.tsx # Emoji reaction picker
 │   ├── WidgetEmojiPicker.tsx   # Full emoji picker
 │   ├── WidgetPhoneInput.tsx    # Phone input with US/CA formatting
-│   ├── TurnstileWidget.tsx     # Cloudflare Turnstile bot protection
 │   └── booking/
 │       ├── index.ts            # Barrel exports
 │       ├── DayPicker.tsx       # Date selection grid
