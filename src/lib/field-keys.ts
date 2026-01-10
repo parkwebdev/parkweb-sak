@@ -78,6 +78,14 @@ export const isPhoneFieldKey = (key: string): boolean => {
 };
 
 /**
+ * Check if a field key represents an email field.
+ */
+export const isEmailFieldKey = (key: string): boolean => {
+  const lowerKey = key.toLowerCase();
+  return lowerKey.includes('email') || lowerKey.includes('e-mail');
+};
+
+/**
  * Check if a field key represents a consent field.
  */
 export const isConsentFieldKey = (key: string): boolean => {

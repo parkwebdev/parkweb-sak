@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import DOMPurify from 'isomorphic-dompurify';
 import { getLanguageFlag } from '@/lib/language-utils';
-import { isPhoneFieldKey, isConsentFieldKey } from '@/lib/field-keys';
+import { isPhoneFieldKey, isConsentFieldKey, isEmailFieldKey } from '@/lib/field-keys';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -387,6 +387,9 @@ export function ConversationMetadataPanel({
                   
                   if (isPhoneFieldKey(key)) {
                     phoneFieldEntries.push([key, value]);
+                  } else if (isEmailFieldKey(key)) {
+                    // Skip email fields - already displayed in header via metadata.lead_email
+                    return;
                   } else {
                     otherFieldEntries.push([key, value]);
                   }
