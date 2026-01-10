@@ -377,40 +377,172 @@ function SkeletonNotificationList({ items = 5, className }: { items?: number; cl
 }
 
 /**
- * Skeleton for leads page with stats and content
+ * Skeleton for leads page table view
  */
-function SkeletonLeadsPage({ className }: { className?: string }) {
+function SkeletonLeadsTableView({ className }: { className?: string }) {
   return (
-    <div className={cn("space-y-6 px-4 lg:px-8 mt-6", className)}>
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="p-4 border rounded-lg space-y-2">
-            <Skeleton className="h-6 w-12" />
-            <Skeleton className="h-3 w-16" />
+    <div className={cn("space-y-6", className)}>
+      {/* Table */}
+      <div className="rounded-lg border">
+        {/* Table header */}
+        <div className="border-b px-4 py-3 bg-muted/30 flex items-center gap-4">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-28 ml-auto" />
+        </div>
+        {/* Table rows */}
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className="border-b last:border-0 px-4">
+            <SkeletonTableRow columns={6} />
           </div>
         ))}
       </div>
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <Skeleton className="h-10 w-full max-w-sm" />
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-32" />
-          <Skeleton className="h-9 w-20" />
+      
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-4 w-32" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-8" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-8 w-8" />
         </div>
       </div>
-      {/* Content - Kanban columns */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    </div>
+  );
+}
+
+/**
+ * Skeleton for leads page kanban view
+ */
+function SkeletonLeadsKanbanView({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-6", className)}>
+      {/* Kanban columns */}
+      <div className="flex gap-4 overflow-x-auto pb-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="space-y-3">
-            <Skeleton className="h-6 w-24" />
+          <div key={i} className="flex-shrink-0 w-72 space-y-3">
+            {/* Column header */}
+            <div className="flex items-center gap-2 px-2">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-5 w-6 rounded-full" />
+            </div>
+            {/* Column cards */}
             {Array.from({ length: 3 }).map((_, j) => (
-              <div key={j} className="rounded-lg border bg-card p-4 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
+              <div key={j} className="rounded-lg border bg-card p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-5 w-5 rounded" />
+                </div>
                 <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-2/3" />
+                <div className="flex items-center gap-2 pt-1">
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-md" />
+                </div>
               </div>
             ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton for leads page with stats and content.
+ * Automatically detects view mode from localStorage to show matching skeleton.
+ */
+interface SkeletonLeadsPageProps {
+  className?: string;
+  /** Override the view mode (otherwise reads from localStorage) */
+  viewMode?: 'kanban' | 'table';
+}
+
+function SkeletonLeadsPage({ className, viewMode }: SkeletonLeadsPageProps) {
+  // Determine view mode: prop > localStorage > default to kanban
+  const effectiveViewMode = viewMode ?? (() => {
+    try {
+      const stored = localStorage.getItem('leads-view-mode');
+      if (stored === 'table' || stored === 'kanban') return stored;
+    } catch {
+      // localStorage not available
+    }
+    return 'kanban';
+  })();
+
+  return (
+    <div className={cn("space-y-6", className)}>
+      {effectiveViewMode === 'table' ? (
+        <SkeletonLeadsTableView />
+      ) : (
+        <SkeletonLeadsKanbanView />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Skeleton for news section with cards
+ */
+function SkeletonNewsSection({ items = 3, className }: { items?: number; className?: string }) {
+  return (
+    <div className={cn("space-y-4", className)}>
+      {/* News cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: items }).map((_, i) => (
+          <div key={i} className="rounded-lg border bg-card overflow-hidden">
+            {/* Featured image placeholder */}
+            <Skeleton className="h-32 w-full" />
+            <div className="p-4 space-y-3">
+              {/* Title */}
+              <Skeleton className="h-5 w-3/4" />
+              {/* Excerpt */}
+              <div className="space-y-1.5">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-5/6" />
+              </div>
+              {/* Author and date */}
+              <div className="flex items-center gap-2 pt-1">
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-16 ml-auto" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton for integrations section with tabs and cards
+ */
+function SkeletonIntegrationsSection({ className }: { className?: string }) {
+  return (
+    <div className={cn("space-y-4", className)}>
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-lg bg-muted w-fit">
+        <Skeleton className="h-8 w-16 rounded-md" />
+        <Skeleton className="h-8 w-16 rounded-md" />
+        <Skeleton className="h-8 w-20 rounded-md" />
+      </div>
+      
+      {/* Integration cards */}
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="px-4 py-3 rounded-lg border bg-card">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-md" />
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-8 w-24 rounded-md" />
+            </div>
           </div>
         ))}
       </div>
@@ -629,6 +761,10 @@ export {
   SkeletonProfileCard,
   SkeletonNotificationList,
   SkeletonLeadsPage,
+  SkeletonLeadsTableView,
+  SkeletonLeadsKanbanView,
+  SkeletonNewsSection,
+  SkeletonIntegrationsSection,
   SkeletonBadge,
   SkeletonChart,
   SkeletonForm,

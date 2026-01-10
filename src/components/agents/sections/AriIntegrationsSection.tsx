@@ -14,13 +14,14 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Link03, CheckCircle, Mail01, LinkBroken01 } from '@untitledui/icons';
+import { Link03, CheckCircle, Mail01, LinkBroken01, Loading02 } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { EmptyState } from '@/components/ui/empty-state';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Facebook, Instagram, Google } from '@ridemountainpig/svgl-react';
 import { GoogleCalendarLogo, MicrosoftOutlookLogo, MicrosoftLogo } from '@/components/icons/CalendarLogos';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { SkeletonIntegrationsSection } from '@/components/ui/skeleton';
 import { useConnectedAccounts, ConnectedAccount } from '@/hooks/useConnectedAccounts';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
@@ -350,6 +351,19 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
       </div>
     );
   };
+
+  // Show loading skeleton while initial data is loading
+  if (calendarsLoading && activeTab === 'calendars') {
+    return (
+      <div>
+        <AriSectionHeader
+          title="Integrations"
+          description="Connect social media, email, and calendar services"
+        />
+        <SkeletonIntegrationsSection />
+      </div>
+    );
+  }
 
   return (
     <div>
