@@ -554,6 +554,55 @@ try {
 
 ---
 
+## UI & State Hooks
+
+### useTopBar (`src/components/layout/TopBarContext.tsx`)
+
+Sets the global top bar content for the current page. Automatically clears config when the component unmounts.
+
+```tsx
+import { useTopBar, TopBarPageContext, TopBarTabs, type TopBarTab } from '@/components/layout/TopBar';
+import { Users01 } from '@untitledui/icons';
+
+function MyPage() {
+  const [activeTab, setActiveTab] = useState('all');
+  
+  const tabs: TopBarTab[] = useMemo(() => [
+    { id: 'all', label: 'All' },
+    { id: 'active', label: 'Active', count: 5 },
+  ], []);
+  
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Users01} title="My Page" />,
+    center: <TopBarTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />,
+    right: <Button size="sm">+ Add Item</Button>,
+  }), [tabs, activeTab]);
+  useTopBar(topBarConfig);
+  
+  return <div>...</div>;
+}
+```
+
+**Signature:**
+```tsx
+function useTopBar(config: TopBarConfig): void;
+
+interface TopBarConfig {
+  left?: ReactNode;   // Page context (icon + title)
+  center?: ReactNode; // Tabs/navigation
+  right?: ReactNode;  // Action buttons
+}
+```
+
+**Best Practices:**
+- Always memoize the config object with `useMemo` to prevent infinite loops
+- Include dependencies that affect the config (tabs, activeTab, etc.)
+- Config automatically clears on component unmount
+
+**File:** `src/components/layout/TopBarContext.tsx`
+
+---
+
 ## Data Hooks
 
 Hooks for fetching and mutating data with React Query and Supabase.

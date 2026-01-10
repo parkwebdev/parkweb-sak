@@ -9,13 +9,10 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
 import { AnimatedTabsList } from '@/components/ui/animated-tabs-list';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Calendar as CalendarIcon } from '@untitledui/icons';
-import { GoogleCalendarLogo, MicrosoftOutlookLogo } from '@/components/icons/CalendarLogos';
+import { Calendar as CalendarIcon } from '@untitledui/icons';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
@@ -238,38 +235,7 @@ function Planner() {
 
   return (
     <main className="flex-1 bg-muted/30 h-full overflow-auto">
-      <PageHeader
-        title="Planner"
-        description="Manage your property showings and bookings"
-      >
-      {canManageIntegrations && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              Connect Calendar
-              <ChevronDown size={16} className="ml-2" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-50">
-            <DropdownMenuItem className="gap-2">
-              <GoogleCalendarLogo className="w-4 h-4" />
-              Google Calendar
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2">
-              <MicrosoftOutlookLogo className="w-4 h-4" />
-              Outlook Calendar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-      {canManageBookings && (
-        <Button onClick={handleAddEvent}>
-          Add event
-        </Button>
-      )}
-      </PageHeader>
-
-      <div className="px-4 lg:px-8 mt-6 pb-8 space-y-6">
+      <div className="px-4 lg:px-8 py-6 space-y-6">
         {/* Tabs & Color Legend */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <Tabs value={activeTab} onValueChange={setActiveTab}>

@@ -46,11 +46,6 @@ function Analytics() {
     return 'conversations';
   });
   
-  // Configure top bar for this page
-  useTopBar({
-    left: <TopBarPageContext icon={TrendUp01} title="Analytics" />,
-  });
-
   // Clear tab param from URL after reading (clean URL)
   useEffect(() => {
     if (searchParams.has('tab')) {
@@ -83,6 +78,20 @@ function Analytics() {
   // === Derived State ===
   const showToolbar = TOOLBAR_SECTIONS.includes(activeTab);
   const showBuildReport = activeTab === 'reports';
+  
+  // Configure top bar for this page (after derived state)
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={TrendUp01} title="Analytics" subtitle={SECTION_INFO[activeTab].title} />,
+    right: showToolbar ? (
+      <AnalyticsDatePicker
+        selectedPreset={datePreset}
+        onPresetChange={setDatePreset}
+      />
+    ) : showBuildReport ? (
+      <Button size="sm" onClick={() => navigate('/report-builder')}>Build Report</Button>
+    ) : undefined,
+  }), [activeTab, showToolbar, showBuildReport, datePreset, navigate]);
+  useTopBar(topBarConfig);
 
   return (
     <div className="flex-1 h-full bg-muted/30 flex min-h-0">
