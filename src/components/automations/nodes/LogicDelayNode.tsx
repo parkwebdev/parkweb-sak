@@ -28,8 +28,8 @@ export const LogicDelayNode = memo(function LogicDelayNode(props: NodeProps) {
     <BaseNode
       nodeProps={props}
       icon={<Clock size={16} className="text-white" aria-hidden="true" />}
-      colorClass="bg-gray-500"
-      category="Logic"
+      colorClass="bg-slate-500"
+      category="Decide"
     >
       <div className="flex items-center gap-2">
         <span className="text-foreground font-medium">

@@ -8,7 +8,7 @@
  */
 
 import { memo } from 'react';
-import { Zap, Play, GitBranch01, Stars02 } from '@untitledui/icons';
+import { Zap, Play, GitBranch01 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NODE_CATEGORIES } from '@/types/automations';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,12 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ size?: number; classN
   triggers: Zap,
   actions: Play,
   logic: GitBranch01,
-  ai: Stars02,
+};
+
+const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  triggers: 'When',
+  actions: 'Do',
+  logic: 'Decide',
 };
 
 export const NodeSidebar = memo(function NodeSidebar() {
@@ -40,7 +45,7 @@ export const NodeSidebar = memo(function NodeSidebar() {
                 <div className="flex items-center gap-2 px-2 py-1.5 mb-1 bg-muted/50 rounded-md">
                   <CategoryIcon size={14} className="text-muted-foreground" />
                   <span className="text-xs font-medium text-foreground">
-                    {category.label}
+                    {CATEGORY_DISPLAY_NAMES[category.id] || category.label}
                   </span>
                 </div>
                 

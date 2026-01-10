@@ -20,10 +20,10 @@ export const TransformSetVariableNode = memo(function TransformSetVariableNode(p
     <BaseNode
       nodeProps={props}
       icon={<Variable size={16} className="text-white" aria-hidden="true" />}
-      colorClass="bg-cyan-500"
+      colorClass="bg-slate-500"
       hasInput={true}
       hasOutput={true}
-      category="Transform"
+      category="Decide"
     >
       <div className="space-y-1">
         {data.variableName ? (

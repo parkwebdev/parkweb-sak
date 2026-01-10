@@ -46,7 +46,7 @@ const TRIGGER_OPTIONS: TriggerOption[] = [
     icon: Stars02,
     label: 'When Ari Decides',
     description: 'Let AI trigger this action',
-    color: 'bg-violet-500',
+    color: 'bg-purple-500',
   },
 ];
 

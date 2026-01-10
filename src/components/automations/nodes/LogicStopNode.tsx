@@ -21,7 +21,7 @@ export const LogicStopNode = memo(function LogicStopNode(props: NodeProps) {
       nodeProps={props}
       icon={<StopCircle size={16} className="text-white" aria-hidden="true" />}
       colorClass="bg-red-500"
-      category="Logic"
+      category="Decide"
       hasOutput={false}
     >
       {data.reason ? (

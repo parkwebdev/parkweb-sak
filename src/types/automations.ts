@@ -680,7 +680,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         label: 'Wait',
         description: 'Pause before continuing',
         icon: 'Timer',
-        color: 'gray',
+        color: 'slate',
         defaultData: { label: 'Wait', delayMs: 60000 },
       },
       {
@@ -696,16 +696,9 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         label: 'Save a Value',
         description: 'Store data for later steps',
         icon: 'Variable',
-        color: 'cyan',
+        color: 'slate',
         defaultData: { label: 'Save Value' },
       },
-    ],
-  },
-  {
-    id: 'ai',
-    label: 'AI',
-    description: 'AI-powered actions',
-    nodes: [
       {
         type: 'ai-generate',
         label: 'Write with AI',

@@ -8,8 +8,10 @@
  * @module components/automations/NodeConfigPanel
  */
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { X, AlertCircle } from '@untitledui/icons';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { IconButton } from '@/components/ui/icon-button';
 import { useFlowStore } from '@/stores/automationFlowStore';
 import { useAutomationValidation } from '@/hooks/useAutomationValidation';
@@ -49,20 +51,20 @@ import type {
 
 // Map node types to user-friendly display names
 const NODE_TYPE_LABELS: Record<string, string> = {
-  'trigger-ai-tool': 'Ari Action',
-  'trigger-event': 'Event Trigger',
-  'trigger-schedule': 'Schedule Trigger',
-  'trigger-manual': 'Manual Trigger',
-  'action-http': 'HTTP Request',
+  'trigger-ai-tool': 'When Ari Decides',
+  'trigger-event': 'Something Happens',
+  'trigger-schedule': 'On a Schedule',
+  'trigger-manual': 'You Click Run',
+  'action-http': 'Call Webhook',
   'action-email': 'Send Email',
   'action-update-lead': 'Update Lead',
-  'logic-condition': 'Condition',
-  'logic-delay': 'Delay',
+  'logic-condition': 'If/Then Branch',
+  'logic-delay': 'Wait',
   'logic-stop': 'Stop',
-  'ai-generate': 'AI Generate',
-  'ai-classify': 'AI Classify',
-  'ai-extract': 'AI Extract',
-  'transform-set-variable': 'Set Variable',
+  'ai-generate': 'Write with AI',
+  'ai-classify': 'Categorize',
+  'ai-extract': 'Extract Info',
+  'transform-set-variable': 'Save a Value',
 };
 
 interface NodeConfigPanelProps {
@@ -71,6 +73,7 @@ interface NodeConfigPanelProps {
 
 export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
   const nodes = useFlowStore((state) => state.nodes);
+  const updateNodeData = useFlowStore((state) => state.updateNodeData);
   const { getNodeErrors } = useAutomationValidation();
 
   // Find the selected node
@@ -78,11 +81,18 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
     return nodes.find((n) => n.selected);
   }, [nodes]) as AutomationNode | undefined;
 
+  const handleLabelChange = useCallback((newLabel: string) => {
+    if (selectedNode) {
+      updateNodeData(selectedNode.id, { label: newLabel });
+    }
+  }, [selectedNode, updateNodeData]);
+
   if (!selectedNode) {
     return null;
   }
 
   const errors = getNodeErrors(selectedNode.id);
+  const nodeLabel = (selectedNode.data as { label?: string }).label || 'Untitled';
 
   const renderConfigPanel = () => {
     switch (selectedNode.type) {
@@ -197,7 +207,9 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
     <div className="w-80 h-full border-l border-border bg-card flex flex-col animate-slide-in-from-right">
       {/* Header */}
       <div className="h-12 px-4 border-b border-border flex items-center justify-between shrink-0">
-        <h3 className="text-sm font-medium">Node Settings</h3>
+        <h3 className="text-sm font-medium truncate">
+          {nodeLabel}
+        </h3>
         <IconButton
           label="Close panel"
           variant="ghost"
@@ -211,13 +223,20 @@ export function NodeConfigPanel({ onClose }: NodeConfigPanelProps) {
       {/* Content - scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="p-4">
-          {/* Node label (readonly for now) */}
-          <div className="mb-4 pb-4 border-b border-border">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+          {/* Node type & editable label */}
+          <div className="mb-4 pb-4 border-b border-border space-y-3">
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">
               {NODE_TYPE_LABELS[selectedNode.type || ''] || selectedNode.type?.replace(/-/g, ' ')}
             </div>
-            <div className="font-medium">
-              {(selectedNode.data as { label?: string }).label || 'Untitled'}
+            <div className="space-y-1.5">
+              <Label htmlFor="node-label" className="text-xs">Name</Label>
+              <Input
+                id="node-label"
+                value={nodeLabel}
+                onChange={(e) => handleLabelChange(e.target.value)}
+                placeholder="Node name"
+                size="sm"
+              />
             </div>
           </div>
 
