@@ -8,9 +8,10 @@
  * @module pages/GetStarted
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { Rocket01 } from '@untitledui/icons';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboardingProgress, OnboardingStep } from '@/hooks/useOnboardingProgress';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
@@ -23,6 +24,7 @@ import {
 } from '@/components/onboarding';
 import { springs } from '@/lib/motion-variants';
 import { supabase } from '@/integrations/supabase/client';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
 /**
  * Completed badge icon (seal with checkmark)
@@ -92,6 +94,12 @@ export function GetStarted() {
     allComplete,
     isLoading,
   } = useOnboardingProgress();
+
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Rocket01} title="Get Set Up" />,
+  }), []);
+  useTopBar(topBarConfig);
 
   /**
    * Redirect to dashboard when all steps are complete (admin only)
