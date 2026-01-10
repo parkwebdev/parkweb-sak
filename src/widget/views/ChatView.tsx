@@ -40,7 +40,6 @@ interface ChatViewProps {
   recordingTime: number;
   isAttachingFiles: boolean;
   setIsAttachingFiles: (value: boolean) => void;
-  formLoadTime: number;
   isLoadingMessages: boolean;
   messagesContainerRef: RefObject<HTMLDivElement>;
   messagesEndRef: RefObject<HTMLDivElement>;
@@ -74,7 +73,6 @@ export const ChatView = ({
   recordingTime,
   isAttachingFiles,
   setIsAttachingFiles,
-  formLoadTime,
   isLoadingMessages,
   messagesContainerRef,
   messagesEndRef,
@@ -173,7 +171,6 @@ export const ChatView = ({
             title={config.contactFormTitle || 'Quick intro before we chat 👋'}
             subtitle={config.contactFormSubtitle}
             customFields={config.customFields}
-            formLoadTime={formLoadTime}
             onSubmit={onFormSubmit}
             enableMultiStepForm={config.enableMultiStepForm}
             formSteps={config.formSteps}

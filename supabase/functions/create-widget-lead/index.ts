@@ -8,7 +8,8 @@ const corsHeaders = {
 };
 
 // Minimum time (ms) between form load and submission to consider legitimate
-const MIN_FORM_TIME_MS = 2000; // 2 seconds
+// Lowered from 2000ms - timing is measured from ContactForm mount, not widget mount
+const MIN_FORM_TIME_MS = 800; // 800ms - reasonable for fast typists without blocking real users
 
 // In-memory IP rate limiting (resets on function cold start, which is fine for burst protection)
 const ipSubmissions = new Map<string, { count: number; firstSubmission: number }>();

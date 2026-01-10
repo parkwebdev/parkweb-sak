@@ -27,7 +27,7 @@ export interface ChatUser {
   firstName: string;
   lastName: string;
   email: string;
-  leadId: string;
+  leadId?: string; // Optional - undefined when bot protection blocked lead creation
   conversationId?: string; // Database conversation ID
 }
 
