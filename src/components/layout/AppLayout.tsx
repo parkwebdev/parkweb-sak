@@ -2,7 +2,7 @@
  * @fileoverview Main application layout wrapper.
  * Provides sidebar navigation, global top bar, and responsive content area.
  * 
- * The TopBar is a thin (h-11) static header that displays dynamic content
+ * The TopBar is a thin (h-12) static header that displays dynamic content
  * based on the current page using the TopBarContext.
  */
 
