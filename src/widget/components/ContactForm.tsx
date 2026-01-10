@@ -186,7 +186,7 @@ export const ContactForm = ({
     // DEBUG: Checkpoint 1 - Submit started
     addCheckpoint('CF1_SUBMIT_CLICKED', { step: currentStep, isLastStep });
     
-    const honeypot = formValues.website || '';
+    const honeypot = formValues.ohnohoney || '';
     const customFieldData: Record<string, { value: unknown; type: string }> = {};
 
     if (honeypot) {
@@ -414,15 +414,16 @@ export const ContactForm = ({
         <form className="space-y-2" onSubmit={handleSubmit}>
           {/* Honeypot field - hidden from users, bots fill it */}
           <input 
-            id="website"
-            name="website" 
+            id="ohnohoney"
+            name="ohnohoney" 
             type="text" 
             tabIndex={-1} 
-            autoComplete="off"
+            autoComplete="new-password"
+            data-form-type="other"
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
-            value={formValues.website || ''}
-            onChange={(e) => updateFormValue('website', e.target.value)}
+            value={formValues.ohnohoney || ''}
+            onChange={(e) => updateFormValue('ohnohoney', e.target.value)}
           />
           
           {/* Default fields on step 1: First Name and Last Name */}
