@@ -32,7 +32,7 @@ import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog'
 import { uploadFeaturedImage, deleteArticleImage } from '@/lib/article-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
-import { SkeletonCard, Skeleton } from '@/components/ui/skeleton';
+import { SkeletonNewsSection, Skeleton } from '@/components/ui/skeleton';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { logger } from '@/utils/logger';
 import { format } from 'date-fns';
@@ -602,11 +602,7 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
       <div className="mt-6 space-y-4">
 
         {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <SkeletonCard key={i} withHeader withFooter />
-            ))}
-          </div>
+          <SkeletonNewsSection items={3} />
         ) : newsItems.length === 0 ? (
           <EmptyState
             icon={<Image03 className="h-5 w-5 text-muted-foreground/50" />}

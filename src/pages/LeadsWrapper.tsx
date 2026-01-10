@@ -9,14 +9,14 @@
 
 import { lazy, Suspense } from 'react';
 import { PageTransition } from '@/components/ui/page-transition';
-import { SkeletonTablePage } from '@/components/ui/page-skeleton';
+import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 
 const Leads = lazy(() => import('./Leads'));
 
 const LeadsWrapper = () => {
   return (
     <PageTransition>
-      <Suspense fallback={<SkeletonTablePage className="min-h-[400px]" />}>
+      <Suspense fallback={<SkeletonLeadsPage className="px-4 lg:px-8 pt-4" />}>
         <Leads />
       </Suspense>
     </PageTransition>
