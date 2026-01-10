@@ -8,7 +8,7 @@
  */
 
 import { memo } from 'react';
-import { Zap, Play, GitBranch01, Variable, Stars02 } from '@untitledui/icons';
+import { Zap, Play, GitBranch01, Stars02 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NODE_CATEGORIES } from '@/types/automations';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,6 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ size?: number; classN
   triggers: Zap,
   actions: Play,
   logic: GitBranch01,
-  transform: Variable,
   ai: Stars02,
 };
 

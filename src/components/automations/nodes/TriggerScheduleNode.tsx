@@ -103,12 +103,16 @@ export const TriggerScheduleNode = memo(function TriggerScheduleNode(props: Node
       hasOutput={true}
       category="Trigger"
     >
-      <div className="space-y-1">
-        <div className="font-medium text-foreground">{schedule}</div>
-        <div className="text-2xs text-muted-foreground">
-          {getTimezoneLabel(timezone)}
+      {data.cronExpression ? (
+        <div className="space-y-1">
+          <div className="font-medium text-foreground">{schedule}</div>
+          <div className="text-2xs text-muted-foreground">
+            {getTimezoneLabel(timezone)}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="text-muted-foreground italic">Configure schedule...</div>
+      )}
     </BaseNode>
   );
 });

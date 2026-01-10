@@ -25,17 +25,19 @@ export const ActionUpdateLeadNode = memo(function ActionUpdateLeadNode(props: No
       hasInput={true}
       hasOutput={true}
     >
-      <div className="space-y-1">
-        <div className="text-foreground">
-          Update {fieldCount} field{fieldCount !== 1 ? 's' : ''}
-        </div>
-        {data.fields && data.fields.length > 0 && (
-          <div className="text-2xs text-muted-foreground">
-            {data.fields.slice(0, 2).map(f => f.field).join(', ')}
-            {data.fields.length > 2 && ` +${data.fields.length - 2} more`}
+      {fieldCount > 0 ? (
+        <div className="space-y-1">
+          <div className="text-foreground">
+            Update {fieldCount} field{fieldCount !== 1 ? 's' : ''}
           </div>
-        )}
-      </div>
+          <div className="text-2xs text-muted-foreground">
+            {data.fields!.slice(0, 2).map(f => f.field).join(', ')}
+            {data.fields!.length > 2 && ` +${data.fields!.length - 2} more`}
+          </div>
+        </div>
+      ) : (
+        <div className="text-muted-foreground italic">Configure fields...</div>
+      )}
     </BaseNode>
   );
 });
