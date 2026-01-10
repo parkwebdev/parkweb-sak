@@ -322,6 +322,8 @@ The app uses an edge-to-edge layout with a fixed sidebar:
 - Main content extends full height without rounded card wrapper
 - No margins between sidebar and content
 - Content scrolls within the main area, not the entire viewport
+- Sidebar toggle button (`LayoutAlt04` icon) in header for manual collapse/expand
+- No auto-collapse on hover - sidebar state persists until user toggles
 
 ### Usage Examples
 
