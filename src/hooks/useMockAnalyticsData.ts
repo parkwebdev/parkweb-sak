@@ -7,7 +7,7 @@
  * @hook
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   generateConversationTrend,
   generateLeadTrend,
@@ -132,11 +132,11 @@ export const useMockAnalyticsData = (): UseMockAnalyticsDataReturn => {
 
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Persist to localStorage
-  const setEnabled = (value: boolean) => {
+  // Persist to localStorage - memoized to prevent infinite re-render loops
+  const setEnabled = useCallback((value: boolean) => {
     setEnabledState(value);
     localStorage.setItem(MOCK_MODE_KEY, value.toString());
-  };
+  }, []);
 
   // Generate all mock data when enabled
   const mockData = useMemo<MockAnalyticsData | null>(() => {
@@ -187,9 +187,9 @@ export const useMockAnalyticsData = (): UseMockAnalyticsDataReturn => {
     };
   }, [enabled, refreshKey]);
 
-  const regenerate = () => {
+  const regenerate = useCallback(() => {
     setRefreshKey(k => k + 1);
-  };
+  }, []);
 
   return {
     enabled,
