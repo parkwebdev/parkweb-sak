@@ -11,7 +11,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowUpRight } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { SetupProgress } from './SetupProgress';
+
 import { VideoPlaceholder } from './VideoPlaceholder';
 import { InviteTeamInline } from './InviteTeamInline';
 import { SetupFeedbackToast } from './SetupFeedbackToast';
@@ -201,19 +201,7 @@ export function SetupChecklist({
     <motion.div 
       initial={prefersReducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-4"
     >
-      <motion.div
-        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-      >
-        <SetupProgress
-          completedCount={visibleCompletedCount}
-          totalCount={visibleTotalCount}
-        />
-      </motion.div>
-
       {/* Bordered wrapper around checklist + video */}
       <motion.div 
         initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}

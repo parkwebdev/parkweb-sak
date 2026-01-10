@@ -11,7 +11,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Rocket01 } from '@untitledui/icons';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboardingProgress, OnboardingStep } from '@/hooks/useOnboardingProgress';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
@@ -24,7 +24,7 @@ import {
 } from '@/components/onboarding';
 import { springs } from '@/lib/motion-variants';
 import { supabase } from '@/integrations/supabase/client';
-import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { useTopBar } from '@/components/layout/TopBar';
 
 /**
  * Completed badge icon (seal with checkmark)
@@ -98,19 +98,16 @@ export function GetStarted() {
   // Configure top bar for this page with progress indicator
   const topBarConfig = useMemo(() => ({
     left: (
-      <div className="flex items-center gap-3">
-        <TopBarPageContext icon={Rocket01} title="Get Set Up" />
-        {!allComplete && (
-          <div className="flex items-center gap-2 text-sm">
-            <ProgressCircle completedCount={completedCount} totalCount={totalCount} />
-            <span className="text-muted-foreground">
-              {completedCount}/{totalCount} steps
-            </span>
-          </div>
-        )}
+      <div className="flex items-center gap-2">
+        <ProgressCircle completedCount={completedCount} totalCount={totalCount} />
+        <span className="text-sm font-medium text-foreground">Get Set Up</span>
+        <span className="text-muted-foreground">•</span>
+        <span className="text-sm text-muted-foreground">
+          {completedCount} / {totalCount} steps
+        </span>
       </div>
     ),
-  }), [allComplete, completedCount, totalCount]);
+  }), [completedCount, totalCount]);
   useTopBar(topBarConfig);
 
   /**
