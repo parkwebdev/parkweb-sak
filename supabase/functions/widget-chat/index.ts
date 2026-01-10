@@ -788,15 +788,15 @@ NEVER mark complete when:
     };
 
     // Combine built-in tools with user-defined tools (only include quick replies if enabled)
-    const allTools = [
+    const finalTools = [
       ...(quickRepliesTool ? [quickRepliesTool] : []),
       markCompleteTool, // Always include mark_conversation_complete
       ...(formattedTools || [])
     ];
     
     // PHASE 7: Only add tools if there are any (skip entirely for lite model with no user tools)
-    if (allTools.length > 0) {
-      aiRequestBody.tools = allTools;
+    if (finalTools.length > 0) {
+      aiRequestBody.tools = finalTools;
       aiRequestBody.tool_choice = 'auto';
     }
     
