@@ -249,7 +249,9 @@ export function useInfiniteLeads(options: UseInfiniteLeadsOptions = {}) {
         .eq('id', id)
         .single();
 
-      // Delete related data
+      // Delete related data (order matters: assignees/activities first to avoid trigger FK issues)
+      await supabase.from('lead_assignees').delete().eq('lead_id', id);
+      await supabase.from('lead_activities').delete().eq('lead_id', id);
       await supabase.from('conversation_memories').delete().eq('lead_id', id);
       await supabase.from('calendar_events').update({ lead_id: null }).eq('lead_id', id);
 
@@ -296,6 +298,9 @@ export function useInfiniteLeads(options: UseInfiniteLeadsOptions = {}) {
         ?.filter(l => l.conversation_id)
         .map(l => l.conversation_id) || []) as string[];
 
+      // Delete related data (order matters: assignees/activities first to avoid trigger FK issues)
+      await supabase.from('lead_assignees').delete().in('lead_id', ids);
+      await supabase.from('lead_activities').delete().in('lead_id', ids);
       await supabase.from('conversation_memories').delete().in('lead_id', ids);
       await supabase.from('calendar_events').update({ lead_id: null }).in('lead_id', ids);
 
