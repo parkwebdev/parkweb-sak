@@ -6,7 +6,7 @@
  * - Search and status filtering
  * - Bulk selection and deletion
  * - Lead details sheet with conversation linkage
- * - Inline display settings via header bar dropdowns
+ * - All controls integrated in TopBar
  * 
  * @page
  */
@@ -15,22 +15,27 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
-import { Loading02, Users01 } from '@untitledui/icons';
+import { Loading02, Users01, SearchMd, X, Download01, LayersThree01 } from '@untitledui/icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
 import { useTeam } from '@/hooks/useTeam';
 import { useCanManage } from '@/hooks/useCanManage';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
-import { LeadsHeaderBar } from '@/components/leads/LeadsHeaderBar';
+import { LeadsActiveFilters, type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
+import { LeadsSortDropdown } from '@/components/leads/LeadsSortDropdown';
+import { LeadsPropertiesDropdown } from '@/components/leads/LeadsPropertiesDropdown';
+import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
 import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
-import { type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
@@ -91,12 +96,6 @@ function Leads() {
     getLeadsWithConversations 
   } = useInfiniteLeads();
   
-  // Configure top bar for this page
-  const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Users01} title="Leads" />,
-  }), []);
-  useTopBar(topBarConfig);
-  
   // Infinite scroll intersection observer
   const loadMoreRef = useRef<HTMLDivElement>(null);
   
@@ -115,6 +114,7 @@ function Leads() {
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const { stages } = useLeadStages();
   const { getAssignees, addAssignee, removeAssignee, assigneesByLead } = useLeadAssignees();
   const { teamMembers } = useTeam();
@@ -246,6 +246,18 @@ function Leads() {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isManageStagesOpen, setIsManageStagesOpen] = useState(false);
 
+  // Shared search state for filtering across both views
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Stage filter state
+  const [selectedStageIds, setSelectedStageIds] = useState<string[]>([]);
+  
+  // Assignee filter state
+  const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
+  
+  // Date range filter state
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
+
   // Settings update handlers (per-user localStorage)
   const handleViewModeChange = useCallback((mode: 'kanban' | 'table') => {
     setViewMode(mode);
@@ -284,18 +296,117 @@ function Leads() {
       return updated;
     });
   }, []);
-  
-  // Shared search state for filtering across both views
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  // Stage filter state
-  const [selectedStageIds, setSelectedStageIds] = useState<string[]>([]);
-  
-  // Assignee filter state
-  const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
-  
-  // Date range filter state
-  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
+
+  // Configure top bar for this page with all controls
+  const topBarConfig = useMemo(() => ({
+    left: (
+      <div className="flex items-center gap-3">
+        <TopBarPageContext icon={Users01} title="Leads" />
+        {/* Search Input */}
+        <div className="w-48 lg:w-64 relative flex-shrink-0">
+          <Input
+            type="text"
+            placeholder="Search leads..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-8 pl-9 pr-8"
+          />
+          <SearchMd className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" aria-hidden="true" />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setSearchQuery('')}
+            >
+              <X size={14} aria-hidden="true" />
+              <span className="sr-only">Clear search</span>
+            </Button>
+          )}
+        </div>
+      </div>
+    ),
+    right: (
+      <div className="flex items-center gap-1">
+        {/* Action buttons */}
+        <IconButton
+          label="Export leads"
+          variant="outline"
+          size="sm"
+          onClick={() => setIsExportDialogOpen(true)}
+        >
+          <Download01 size={16} />
+        </IconButton>
+        {canManageLeads && (
+          <IconButton
+            label="Manage stages"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsManageStagesOpen(true)}
+          >
+            <LayersThree01 size={16} />
+          </IconButton>
+        )}
+
+        {/* Divider */}
+        <div className="w-px h-5 bg-border mx-1" />
+
+        {/* Filter controls */}
+        <LeadsActiveFilters
+          stages={stages}
+          selectedStageIds={selectedStageIds}
+          onStageFilterChange={setSelectedStageIds}
+          dateRange={dateRangeFilter}
+          onDateRangeChange={setDateRangeFilter}
+          teamMembers={teamMembers}
+          selectedAssigneeIds={selectedAssigneeIds}
+          onAssigneeFilterChange={setSelectedAssigneeIds}
+        />
+        {viewMode === 'kanban' && (
+          <LeadsSortDropdown
+            sortOption={defaultSort}
+            onSortChange={handleDefaultSortChange}
+          />
+        )}
+        <LeadsPropertiesDropdown
+          viewMode={viewMode}
+          visibleCardFields={visibleCardFields}
+          onToggleCardField={handleToggleField}
+          kanbanFieldOrder={kanbanFieldOrder}
+          onKanbanFieldOrderChange={handleKanbanFieldOrderChange}
+          columnVisibility={tableColumnVisibility}
+          onColumnVisibilityChange={handleColumnVisibilityChange}
+          tableColumnOrder={tableColumnOrder}
+          onColumnOrderChange={handleColumnOrderChange}
+        />
+        <ViewModeToggle
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+        />
+      </div>
+    ),
+  }), [
+    searchQuery,
+    canManageLeads,
+    viewMode,
+    stages,
+    selectedStageIds,
+    dateRangeFilter,
+    teamMembers,
+    selectedAssigneeIds,
+    defaultSort,
+    handleDefaultSortChange,
+    visibleCardFields,
+    handleToggleField,
+    kanbanFieldOrder,
+    handleKanbanFieldOrderChange,
+    tableColumnVisibility,
+    handleColumnVisibilityChange,
+    tableColumnOrder,
+    handleColumnOrderChange,
+    handleViewModeChange,
+  ]);
+  useTopBar(topBarConfig);
   
   // Find the default stage for leads without a stage_id
   const defaultStage = stages.find(s => s.is_default);
@@ -406,36 +517,6 @@ function Leads() {
 
   return (
     <div className="flex flex-col h-full w-full min-w-0 bg-muted/30 overflow-y-auto">
-
-      {/* Header bar - outside content padding for full-width effect */}
-      <LeadsHeaderBar
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        stages={stages}
-        selectedStageIds={selectedStageIds}
-        onStageFilterChange={setSelectedStageIds}
-        dateRange={dateRangeFilter}
-        onDateRangeChange={setDateRangeFilter}
-        teamMembers={teamMembers}
-        selectedAssigneeIds={selectedAssigneeIds}
-        onAssigneeFilterChange={setSelectedAssigneeIds}
-        sortOption={defaultSort}
-        onSortChange={handleDefaultSortChange}
-        visibleCardFields={visibleCardFields}
-        onToggleCardField={handleToggleField}
-        kanbanFieldOrder={kanbanFieldOrder}
-        onKanbanFieldOrderChange={handleKanbanFieldOrderChange}
-        columnVisibility={tableColumnVisibility}
-        onColumnVisibilityChange={handleColumnVisibilityChange}
-        tableColumnOrder={tableColumnOrder}
-        onColumnOrderChange={handleColumnOrderChange}
-        onExport={() => setIsExportDialogOpen(true)}
-        onManageStages={() => setIsManageStagesOpen(true)}
-        canManage={canManageLeads}
-      />
-
       <div className="px-4 lg:px-8 pt-4 space-y-6 min-w-0">
 
         {/* Content */}
