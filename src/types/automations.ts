@@ -691,13 +691,6 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         color: 'red',
         defaultData: { label: 'Stop' },
       },
-    ],
-  },
-  {
-    id: 'transform',
-    label: 'Transform',
-    description: 'Manipulate data',
-    nodes: [
       {
         type: 'transform-set-variable',
         label: 'Save a Value',
