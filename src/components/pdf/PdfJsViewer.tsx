@@ -431,7 +431,7 @@ export function PdfJsViewer({
           <span><span className="text-muted-foreground">v:</span> {diagnostics.version}</span>
           <span><span className="text-muted-foreground">worker:</span> {diagnostics.disableWorker ? 'disabled (main thread)' : 'enabled'}</span>
           {diagnostics.lastError && (
-            <span className="text-amber-600"><span className="text-muted-foreground">warn:</span> recovered from worker error</span>
+            <span className="text-warning"><span className="text-muted-foreground">warn:</span> recovered from worker error</span>
           )}
         </div>
       )}

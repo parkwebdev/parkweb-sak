@@ -87,7 +87,7 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-500">
+              <div className="flex items-center gap-1.5 text-warning">
                 <AlertTriangle size={14} />
                 <span className="text-xs">Missing</span>
               </div>
@@ -115,7 +115,7 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-500">
+              <div className="flex items-center gap-1.5 text-warning">
                 <AlertTriangle size={14} />
                 <span className="text-xs">Unmatched</span>
               </div>
