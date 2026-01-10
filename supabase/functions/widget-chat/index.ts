@@ -125,28 +125,23 @@ import {
 import { executeToolCalls, type EnabledTool } from "../_shared/handlers/tool-executor.ts";
 
 // ============================================
-// Local function selectModelTier kept for backward compatibility
+// 2-Tier Model Selection (Lite + Standard)
 // ============================================
 function selectModelTier(
   query: string,
   ragSimilarity: number,
   conversationLength: number,
   requiresTools: boolean,
-  agentModel: string
-): { model: string; tier: 'lite' | 'standard' | 'premium' } {
+  _agentModel: string // Unused - kept for signature compatibility
+): { model: string; tier: 'lite' | 'standard' } {
   const wordCount = query.split(/\s+/).length;
   
-  // Tier 1: Cheapest - simple lookups with high RAG match, no tools
+  // Lite tier: Simple lookups with high RAG match, no tools, short conversations
   if (ragSimilarity > 0.60 && wordCount < 15 && !requiresTools && conversationLength < 5) {
     return { model: MODEL_TIERS.lite, tier: 'lite' };
   }
   
-  // Tier 3: Premium - complex reasoning needed
-  if (ragSimilarity < 0.35 || conversationLength > 10 || requiresTools) {
-    return { model: agentModel || MODEL_TIERS.standard, tier: 'premium' };
-  }
-  
-  // Tier 2: Default balanced
+  // Standard tier: Everything else (tools, complex queries, longer conversations)
   return { model: MODEL_TIERS.standard, tier: 'standard' };
 }
 

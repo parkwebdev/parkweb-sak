@@ -1,16 +1,20 @@
 /**
  * Model Routing
- * Smart model tier selection for cost optimization.
+ * 2-tier model selection for cost optimization.
  * 
  * @module _shared/ai/model-routing
- * @description Provides model tier definitions for routing queries to appropriate models.
+ * @description Routes queries to Lite or Standard models based on complexity.
+ * 
+ * ## How It Works
+ * - **Lite**: Gemini 2.5 Flash Lite - for simple greetings and short follow-ups
+ * - **Standard**: Gemini 2.5 Flash - for everything else (tools, RAG, complex queries)
  * 
  * @example
  * ```typescript
  * import { MODEL_TIERS, selectModelTier } from "../_shared/ai/model-routing.ts";
  * 
- * const model = MODEL_TIERS.lite; // For simple lookups
- * const tier = selectModelTier(messageCount, toolCount);
+ * const model = MODEL_TIERS.lite; // Simple lookups
+ * const tier = selectModelTier(messageCount, hasTools, hasRag);
  * ```
  */
 
@@ -19,21 +23,19 @@
 // ============================================
 
 /**
- * Model tiers for smart routing (cost optimization).
+ * 2-tier model routing for cost optimization.
  * 
- * - lite: Cheapest, for simple lookups and greetings
- * - standard: Balanced cost/quality for general queries
- * - premium: Uses agent's configured model for complex tasks
+ * - lite: Cheapest, for simple greetings and short follow-ups
+ * - standard: Full capability for tools, RAG, and complex queries
  */
 export const MODEL_TIERS = {
   /** $0.015/M input, $0.06/M output - simple lookups */
   lite: 'google/gemini-2.5-flash-lite',
-  /** $0.15/M input, $0.60/M output - balanced */
+  /** $0.15/M input, $0.60/M output - full capability */
   standard: 'google/gemini-2.5-flash',
-  // premium uses agent's configured model
 } as const;
 
-export type ModelTier = keyof typeof MODEL_TIERS | 'premium';
+export type ModelTier = keyof typeof MODEL_TIERS;
 
 /**
  * Select appropriate model tier based on conversation complexity.
@@ -41,23 +43,23 @@ export type ModelTier = keyof typeof MODEL_TIERS | 'premium';
  * @param messageCount - Number of messages in conversation
  * @param toolsRequired - Whether tools/function calling is needed
  * @param hasRagContext - Whether RAG context was retrieved
- * @returns Model tier to use
+ * @returns 'lite' for simple queries, 'standard' for everything else
  */
 export function selectModelTier(
   messageCount: number,
   toolsRequired: boolean,
   hasRagContext: boolean
 ): ModelTier {
-  // Complex queries with tools or RAG need standard/premium
-  if (toolsRequired) {
+  // Tools or RAG require standard tier
+  if (toolsRequired || hasRagContext) {
     return 'standard';
   }
   
-  // Initial greeting or simple follow-up
-  if (messageCount <= 2 && !hasRagContext) {
+  // Simple greeting or short follow-up can use lite
+  if (messageCount <= 2) {
     return 'lite';
   }
   
-  // Default to standard for balanced performance
+  // Default to standard for longer conversations
   return 'standard';
 }
