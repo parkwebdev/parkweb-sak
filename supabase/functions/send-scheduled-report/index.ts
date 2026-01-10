@@ -506,6 +506,8 @@ serve(async (req: Request): Promise<Response> => {
             headers: {
               'List-Unsubscribe': `<${unsubscribeUrl}>`,
               'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+              'Precedence': 'bulk',
+              'X-Auto-Response-Suppress': 'All',
             },
           });
         }
