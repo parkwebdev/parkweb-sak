@@ -383,10 +383,10 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get location details
+    // Get location details (including agent_id for fallback lookup)
     const { data: location, error: locationError } = await supabase
       .from('locations')
-      .select('id, name, timezone, business_hours, phone')
+      .select('id, name, timezone, business_hours, phone, agent_id')
       .eq('id', location_id)
       .single();
 
@@ -398,16 +398,40 @@ serve(async (req) => {
       );
     }
 
-    // Get connected calendar for this location
-    const { data: account, error: accountError } = await supabase
+    // Get connected calendar - try location-specific first, then fall back to agent-level default
+    let account = null;
+    let isUsingFallback = false;
+    
+    // First try location-specific calendar
+    const { data: locationAccount, error: locationAccountError } = await supabase
       .from('connected_accounts')
       .select('*')
       .eq('location_id', location_id)
       .eq('is_active', true)
       .single();
+    
+    if (locationAccount && !locationAccountError) {
+      account = locationAccount;
+      console.log('Using location-specific calendar for:', location_id);
+    } else {
+      // Fall back to agent-level default calendar (location_id is null)
+      const { data: agentAccount, error: agentAccountError } = await supabase
+        .from('connected_accounts')
+        .select('*')
+        .eq('agent_id', location.agent_id)
+        .is('location_id', null)
+        .eq('is_active', true)
+        .single();
+      
+      if (agentAccount && !agentAccountError) {
+        account = agentAccount;
+        isUsingFallback = true;
+        console.log('Using agent-level default calendar for location:', location_id);
+      }
+    }
 
-    if (accountError || !account) {
-      console.log('No connected calendar for location:', location_id);
+    if (!account) {
+      console.log('No connected calendar for location (checked location + agent fallback):', location_id);
       return new Response(
         JSON.stringify({
           location: {

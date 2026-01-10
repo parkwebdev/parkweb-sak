@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight } from '@untitledui/icons';
+import { ChevronDown, ChevronRight, InfoCircle } from '@untitledui/icons';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { BusinessHoursEditor } from './BusinessHoursEditor';
 import { CalendarConnections } from './CalendarConnections';
@@ -18,6 +18,7 @@ import { SocialConnections } from './SocialConnections';
 import { US_TIMEZONES, type BusinessHours, type LocationFormData } from '@/types/locations';
 import type { Tables } from '@/integrations/supabase/types';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 
 type Location = Tables<'locations'>;
 
@@ -46,6 +47,14 @@ export function LocationDetails({
     wordpress_slug: location.wordpress_slug || '',
   });
   const [hoursOpen, setHoursOpen] = useState(false);
+
+  // Check for agent-level default calendar (for fallback indicator)
+  const { accounts: locationCalendars } = useConnectedAccounts(location.id, agentId);
+  const { accounts: agentCalendars } = useConnectedAccounts(undefined, agentId);
+  
+  const hasLocationCalendar = locationCalendars.length > 0;
+  const hasAgentDefaultCalendar = agentCalendars.length > 0;
+  const isUsingFallback = !hasLocationCalendar && hasAgentDefaultCalendar;
 
   // Use ref to avoid recreating save when onUpdate changes
   const onUpdateRef = useRef(onUpdate);
@@ -100,6 +109,17 @@ export function LocationDetails({
       <AnimatedItem>
         <div className="space-y-2 p-3 rounded-lg bg-muted/30">
           <span className="text-xs text-muted-foreground uppercase tracking-wide">Connected Calendars</span>
+          
+          {/* Fallback indicator */}
+          {isUsingFallback && (
+            <div className="flex items-center gap-2 p-2 rounded-md bg-primary/5 border border-primary/10">
+              <InfoCircle size={14} className="text-primary flex-shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                Using default calendar from Ari Integrations. Connect a calendar here for location-specific scheduling.
+              </p>
+            </div>
+          )}
+          
           <CalendarConnections
             locationId={location.id}
             agentId={agentId}
