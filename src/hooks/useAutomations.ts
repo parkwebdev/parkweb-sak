@@ -3,6 +3,7 @@
  * 
  * Provides CRUD operations for automations with real-time updates.
  * Uses accountOwnerId for proper team data scoping.
+ * Supports creating automations from templates.
  * 
  * @module hooks/useAutomations
  */
@@ -17,6 +18,7 @@ import { queryKeys } from '@/lib/query-keys';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { AUTOMATION_LIST_COLUMNS } from '@/lib/db-selects';
+import { getTemplateById, instantiateTemplate } from '@/lib/automation-templates';
 import type { 
   Automation, 
   AutomationListItem, 
@@ -131,30 +133,50 @@ export function useAutomations() {
         throw new Error('Missing account owner or agent');
       }
 
-      // Create default trigger node with type-specific data
-      const baseLabel = `${data.trigger_type.charAt(0).toUpperCase() + data.trigger_type.slice(1)} Trigger`;
-      
-      const getTriggerNodeData = () => {
-        switch (data.trigger_type) {
-          case 'event':
-            return { label: baseLabel, eventSource: 'lead' as const, eventType: 'INSERT' as const };
-          case 'schedule':
-            return { label: baseLabel, cronExpression: '0 9 * * 1', timezone: 'UTC' };
-          case 'manual':
-            return { label: baseLabel, inputs: [] };
-          case 'ai_tool':
-            return { label: baseLabel, toolName: '', toolDescription: '', parameters: [] };
-          default:
-            return { label: baseLabel };
-        }
-      };
+      let nodes: AutomationNode[];
+      let edges: AutomationEdge[];
+      let triggerConfig = data.trigger_config ?? {};
 
-      const triggerNode: AutomationNode = {
-        id: 'trigger-1',
-        type: `trigger-${data.trigger_type === 'ai_tool' ? 'ai-tool' : data.trigger_type}` as AutomationNode['type'],
-        position: { x: 250, y: 50 },
-        data: getTriggerNodeData(),
-      };
+      // Check if creating from template
+      if (data.templateId) {
+        const template = getTemplateById(data.templateId);
+        if (template) {
+          const instantiated = instantiateTemplate(template);
+          nodes = instantiated.nodes;
+          edges = instantiated.edges;
+          triggerConfig = instantiated.triggerConfig;
+        } else {
+          throw new Error(`Template not found: ${data.templateId}`);
+        }
+      } else {
+        // Create default trigger node with type-specific data
+        const baseLabel = `${data.trigger_type.charAt(0).toUpperCase() + data.trigger_type.slice(1)} Trigger`;
+        
+        const getTriggerNodeData = () => {
+          switch (data.trigger_type) {
+            case 'event':
+              return { label: baseLabel, eventSource: 'lead' as const, eventType: 'INSERT' as const };
+            case 'schedule':
+              return { label: baseLabel, cronExpression: '0 9 * * 1', timezone: 'UTC' };
+            case 'manual':
+              return { label: baseLabel, inputs: [] };
+            case 'ai_tool':
+              return { label: baseLabel, toolName: '', toolDescription: '', parameters: [] };
+            default:
+              return { label: baseLabel };
+          }
+        };
+
+        const triggerNode: AutomationNode = {
+          id: 'trigger-1',
+          type: `trigger-${data.trigger_type === 'ai_tool' ? 'ai-tool' : data.trigger_type}` as AutomationNode['type'],
+          position: { x: 250, y: 50 },
+          data: getTriggerNodeData(),
+        };
+
+        nodes = [triggerNode];
+        edges = [];
+      }
 
       const { data: created, error } = await supabase
         .from('automations')
@@ -166,9 +188,9 @@ export function useAutomations() {
           icon: data.icon ?? 'Zap',
           color: data.color ?? 'blue',
           trigger_type: data.trigger_type,
-          trigger_config: (data.trigger_config ?? {}) as Json,
-          nodes: [triggerNode] as unknown as Json,
-          edges: [] as unknown as Json,
+          trigger_config: triggerConfig as Json,
+          nodes: nodes as unknown as Json,
+          edges: edges as unknown as Json,
           viewport: { x: 0, y: 0, zoom: 1 } as unknown as Json,
           status: 'draft',
           enabled: false,

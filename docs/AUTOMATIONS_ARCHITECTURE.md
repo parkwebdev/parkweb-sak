@@ -1,12 +1,18 @@
 # Automations Architecture
 
-> **Version**: 1.7  
+> **Version**: 1.8  
 > **Status**: Implementation Complete (100%)  
 > **Created**: January 2026  
-> **Last Updated**: January 8, 2026  
+> **Last Updated**: January 10, 2026  
 > **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Security](./SECURITY.md)
 
 A visual automation/flow builder that replaces Custom Tools and Webhooks with a unified, node-based workflow system. **Implementation is 100% complete.**
+
+## Recent Updates (v1.8)
+
+- **Visual Branching**: Condition nodes now display Yes/No edge labels with color-coded handles (green/red)
+- **Node Validation**: Real-time validation prevents publishing incomplete automations
+- **Template Library**: Create automations from pre-built templates for faster onboarding
 
 ---
 

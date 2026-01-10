@@ -526,6 +526,8 @@ export interface CreateAutomationData {
   color?: string;
   trigger_type: AutomationTriggerType;
   trigger_config?: AutomationTriggerConfig;
+  /** Optional template ID to create from */
+  templateId?: string;
 }
 
 /**
