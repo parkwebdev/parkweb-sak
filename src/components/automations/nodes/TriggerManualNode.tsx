@@ -26,7 +26,7 @@ export const TriggerManualNode = memo(function TriggerManualNode(props: NodeProp
       category="Trigger"
     >
       <div className="space-y-1">
-        <div className="font-medium text-foreground">
+        <div className="text-xs font-medium text-foreground">
           {data.buttonLabel || 'Run manually'}
         </div>
         {data.requireConfirmation && (

@@ -23,7 +23,7 @@ export const AIGenerateNode = memo(function AIGenerateNode(props: NodeProps) {
       colorClass="bg-violet-500"
       hasInput={true}
       hasOutput={true}
-      category="Do"
+      category="Decide"
     >
       <div className="space-y-1">
         {data.prompt ? (

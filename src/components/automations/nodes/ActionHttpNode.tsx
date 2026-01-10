@@ -30,7 +30,7 @@ export const ActionHttpNode = memo(function ActionHttpNode(props: NodeProps) {
             <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 font-mono text-2xs">
               {data.method || 'GET'}
             </span>
-            <span className="truncate text-foreground">
+            <span className="truncate text-foreground text-xs">
               {data.url}
             </span>
           </div>
