@@ -95,10 +95,22 @@ export function GetStarted() {
     isLoading,
   } = useOnboardingProgress();
 
-  // Configure top bar for this page
+  // Configure top bar for this page with progress indicator
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Rocket01} title="Get Set Up" />,
-  }), []);
+    left: (
+      <div className="flex items-center gap-3">
+        <TopBarPageContext icon={Rocket01} title="Get Set Up" />
+        {!allComplete && (
+          <div className="flex items-center gap-2 text-sm">
+            <ProgressCircle completedCount={completedCount} totalCount={totalCount} />
+            <span className="text-muted-foreground">
+              {completedCount}/{totalCount} steps
+            </span>
+          </div>
+        )}
+      </div>
+    ),
+  }), [allComplete, completedCount, totalCount]);
   useTopBar(topBarConfig);
 
   /**
@@ -176,17 +188,6 @@ export function GetStarted() {
               <h1 className="text-3xl font-bold text-foreground">
                 Get started with Ari, your AI sales agent
               </h1>
-              {/* Progress subheader - only show when not complete */}
-              {!allComplete && (
-                <div className="flex items-center gap-2 text-sm">
-                  <ProgressCircle completedCount={completedCount} totalCount={totalCount} />
-                  <span className="text-muted-foreground">Progress</span>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-muted-foreground">
-                    {completedCount}/{totalCount} steps
-                  </span>
-                </div>
-              )}
             </div>
           </header>
 
