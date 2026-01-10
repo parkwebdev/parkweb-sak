@@ -105,13 +105,13 @@ export const TriggerScheduleNode = memo(function TriggerScheduleNode(props: Node
     >
       {data.cronExpression ? (
         <div className="space-y-1">
-          <div className="font-medium text-foreground">{schedule}</div>
+          <div className="text-xs font-medium text-foreground">{schedule}</div>
           <div className="text-2xs text-muted-foreground">
             {getTimezoneLabel(timezone)}
           </div>
         </div>
       ) : (
-        <div className="text-muted-foreground italic">Configure schedule...</div>
+        <div className="text-xs text-muted-foreground italic">Configure schedule...</div>
       )}
     </BaseNode>
   );

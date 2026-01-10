@@ -25,9 +25,9 @@ export const LogicStopNode = memo(function LogicStopNode(props: NodeProps) {
       hasOutput={false}
     >
       {data.reason ? (
-        <div className="text-muted-foreground">{data.reason}</div>
+        <div className="text-xs text-muted-foreground">{data.reason}</div>
       ) : (
-        <div className="text-muted-foreground italic">End automation</div>
+        <div className="text-xs text-muted-foreground italic">End automation</div>
       )}
     </BaseNode>
   );

@@ -27,7 +27,7 @@ export const ActionUpdateLeadNode = memo(function ActionUpdateLeadNode(props: No
     >
       {fieldCount > 0 ? (
         <div className="space-y-1">
-          <div className="text-foreground">
+          <div className="text-xs text-foreground">
             Update {fieldCount} field{fieldCount !== 1 ? 's' : ''}
           </div>
           <div className="text-2xs text-muted-foreground">

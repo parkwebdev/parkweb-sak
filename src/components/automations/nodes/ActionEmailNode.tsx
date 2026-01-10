@@ -28,11 +28,11 @@ export const ActionEmailNode = memo(function ActionEmailNode(props: NodeProps) {
         <div className="space-y-1">
           <div className="truncate">
             <span className="text-muted-foreground">To: </span>
-            <span className="text-foreground">{data.to || 'Not set'}</span>
+            <span className="text-xs text-foreground">{data.to || 'Not set'}</span>
           </div>
           <div className="truncate">
             <span className="text-muted-foreground">Subject: </span>
-            <span className="text-foreground">{data.subject || 'No subject'}</span>
+            <span className="text-xs text-foreground">{data.subject || 'No subject'}</span>
           </div>
         </div>
       ) : (

@@ -55,7 +55,7 @@ export const TriggerEventNode = memo(function TriggerEventNode(props: NodeProps)
       <div className="space-y-1">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-muted-foreground">When</span>
-          <span className="font-medium text-foreground">{eventLabel}</span>
+          <span className="text-xs font-medium text-foreground">{eventLabel}</span>
         </div>
         {data.filters && Object.keys(data.filters).length > 0 && (
           <div className="text-2xs text-muted-foreground">
