@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowUpRight } from '@untitledui/icons';
+import { ArrowUpRight, CheckVerified02 } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
@@ -242,14 +242,8 @@ export function SetupChecklist({
                               initial={prefersReducedMotion ? false : { scale: 0 }}
                               animate={{ scale: 1 }}
                               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                              className="w-4 h-4 rounded-full border-2 border-status-active/40 flex items-center justify-center"
                             >
-                              <motion.div 
-                                initial={prefersReducedMotion ? false : { scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: 'spring', stiffness: 500, damping: 25, delay: 0.1 }}
-                                className="w-1.5 h-1.5 rounded-full bg-status-active" 
-                              />
+                              <CheckVerified02 size={16} className="text-status-active" aria-hidden="true" />
                             </motion.div>
                           ) : (
                             <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/40" />
