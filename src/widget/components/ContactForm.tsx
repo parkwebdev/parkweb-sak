@@ -312,6 +312,7 @@ export const ContactForm = ({
         return (
           <Suspense fallback={<WidgetInput placeholder={field.label} disabled />}>
             <PhoneInputField 
+              id={field.id}
               name={field.id}
               placeholder={field.label}
               required={field.required}
@@ -437,16 +438,6 @@ export const ContactForm = ({
             </div>
           ))}
           
-          {/* Cloudflare Turnstile bot protection (invisible unless suspicious) - only on last step */}
-          {TURNSTILE_SITE_KEY && isLastStep && (
-            <TurnstileWidget
-              siteKey={TURNSTILE_SITE_KEY}
-              onVerify={(token) => setTurnstileToken(token)}
-              onError={() => logger.warn('Turnstile verification failed')}
-              onExpire={() => setTurnstileToken(null)}
-            />
-          )}
-          
           {/* Navigation buttons */}
           {totalSteps > 1 ? (
             <div className="flex items-center gap-2 pt-1">
@@ -494,6 +485,18 @@ export const ContactForm = ({
             >
               Start Chat
             </WidgetButton>
+          )}
+          
+          {/* Cloudflare Turnstile bot protection (after button to prevent layout shift) */}
+          {TURNSTILE_SITE_KEY && isLastStep && (
+            <div className="overflow-hidden">
+              <TurnstileWidget
+                siteKey={TURNSTILE_SITE_KEY}
+                onVerify={(token) => setTurnstileToken(token)}
+                onError={() => logger.warn('Turnstile verification failed')}
+                onExpire={() => setTurnstileToken(null)}
+              />
+            </div>
           )}
         </form>
       </div>

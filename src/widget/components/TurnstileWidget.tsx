@@ -58,7 +58,9 @@ export const TurnstileWidget = ({
 }: TurnstileWidgetProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const hasVerifiedRef = useRef(false);
 
   useEffect(() => {
     // Skip if no site key provided
@@ -67,13 +69,39 @@ export const TurnstileWidget = ({
       return;
     }
 
+    // Fail-open timeout: if Turnstile doesn't load within 5s, proceed without it
+    timeoutIdRef.current = setTimeout(() => {
+      if (!hasVerifiedRef.current) {
+        console.debug('Turnstile: Load timeout, proceeding without verification (fail-open)');
+        hasVerifiedRef.current = true;
+        onVerify(''); // Empty token triggers fail-open on backend
+      }
+    }, 5000);
+
     const initTurnstile = () => {
       if (containerRef.current && window.turnstile && !widgetIdRef.current) {
         try {
           const id = window.turnstile.render(containerRef.current, {
             sitekey: siteKey,
-            callback: onVerify,
-            'error-callback': onError,
+            callback: (token: string) => {
+              hasVerifiedRef.current = true;
+              if (timeoutIdRef.current) {
+                clearTimeout(timeoutIdRef.current);
+              }
+              onVerify(token);
+            },
+            'error-callback': () => {
+              // On error, proceed with fail-open
+              if (!hasVerifiedRef.current) {
+                hasVerifiedRef.current = true;
+                if (timeoutIdRef.current) {
+                  clearTimeout(timeoutIdRef.current);
+                }
+                console.debug('Turnstile: Error occurred, proceeding with fail-open');
+                onVerify('');
+              }
+              onError?.();
+            },
             'expired-callback': onExpire,
             appearance: 'interaction-only', // Invisible unless suspicious
             theme: 'auto',
@@ -84,6 +112,11 @@ export const TurnstileWidget = ({
           console.debug('Turnstile: Widget rendered successfully');
         } catch (err: unknown) {
           console.error('Turnstile: Failed to render widget', err);
+          // Fail-open on render error
+          if (!hasVerifiedRef.current) {
+            hasVerifiedRef.current = true;
+            onVerify('');
+          }
           onError?.();
         }
       }
@@ -111,6 +144,10 @@ export const TurnstileWidget = ({
     }
 
     return () => {
+      // Cleanup timeout
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+      }
       // Cleanup widget on unmount
       if (widgetIdRef.current && window.turnstile) {
         try {
