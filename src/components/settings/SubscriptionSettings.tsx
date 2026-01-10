@@ -41,7 +41,7 @@ type Invoice = {
 };
 
 export const SubscriptionSettings = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -75,11 +75,15 @@ export const SubscriptionSettings = () => {
   }, [user]);
 
   const fetchInvoices = async () => {
-    if (!user) return;
+    if (!user || !session?.access_token) return;
 
     setInvoicesLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('get-invoices');
+      const { data, error } = await supabase.functions.invoke('get-invoices', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (error) throw error;
       if (data?.invoices) {
