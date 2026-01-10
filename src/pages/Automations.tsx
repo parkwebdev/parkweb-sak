@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAutomations } from '@/hooks/useAutomations';
 import { AutomationsList } from '@/components/automations/AutomationsList';
 import { AutomationEditor } from '@/components/automations/AutomationEditor';
@@ -17,9 +18,11 @@ import { CreateAutomationDialog } from '@/components/automations/CreateAutomatio
 import { RunAutomationDialog } from '@/components/automations/RunAutomationDialog';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { triggerAutomation } from '@/lib/trigger-automation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { AutomationListItem, CreateAutomationData, TriggerManualConfig } from '@/types/automations';
 
 function Automations() {
+  const prefersReducedMotion = useReducedMotion();
   const { automations, loading, createAutomation, creating, deleteAutomation, deleting } = useAutomations();
   const [selectedAutomationId, setSelectedAutomationId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -126,38 +129,69 @@ function Automations() {
   }
 
   return (
-    <div className="flex h-full">
-      {/* Automations list sidebar - hidden when automation is selected */}
-      {!selectedAutomationId && (
-        <div className="w-64 border-r border-border flex-shrink-0 overflow-hidden flex flex-col">
-          <AutomationsList
-            automations={automations}
-            selectedId={selectedAutomationId}
-            onSelect={handleSelectAutomation}
-            onCreateClick={() => setCreateDialogOpen(true)}
-            onDeleteClick={handleDeleteFromList}
-            onRunClick={handleRunFromList}
-          />
-        </div>
-      )}
+    <div className="flex h-full overflow-hidden">
+      <AnimatePresence mode="wait">
+        {/* Automations list sidebar - hidden when automation is selected */}
+        {!selectedAutomationId && (
+          <motion.div
+            key="list"
+            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, x: -64 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -64 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="w-64 border-r border-border flex-shrink-0 overflow-hidden flex flex-col"
+          >
+            <AutomationsList
+              automations={automations}
+              selectedId={selectedAutomationId}
+              onSelect={handleSelectAutomation}
+              onCreateClick={() => setCreateDialogOpen(true)}
+              onDeleteClick={handleDeleteFromList}
+              onRunClick={handleRunFromList}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Editor or placeholder */}
-      <div className="flex-1 overflow-hidden">
-        {selectedAutomationId ? (
-          <AutomationEditor
-            automationId={selectedAutomationId}
-            onClose={handleCloseEditor}
-          />
-        ) : (
-          <div className="h-full flex items-center justify-center bg-muted/30">
-            <div className="text-center">
-              <p className="text-muted-foreground text-sm">
-                Select an automation to edit or create a new one
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+      <motion.div 
+        className="flex-1 overflow-hidden"
+        layout={!prefersReducedMotion}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      >
+        <AnimatePresence mode="wait">
+          {selectedAutomationId ? (
+            <motion.div
+              key="editor"
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="h-full"
+            >
+              <AutomationEditor
+                automationId={selectedAutomationId}
+                onClose={handleCloseEditor}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="placeholder"
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="h-full flex items-center justify-center bg-muted/30"
+            >
+              <div className="text-center">
+                <p className="text-muted-foreground text-sm">
+                  Select an automation to edit or create a new one
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       <CreateAutomationDialog
         open={createDialogOpen}
