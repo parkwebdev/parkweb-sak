@@ -22,6 +22,7 @@ import { nodeTypes } from './nodes';
 import { edgeTypes } from './edges';
 import { NodeContextMenu } from './NodeContextMenu';
 import { PaneContextMenu } from './PaneContextMenu';
+import { FlowEmptyState } from './FlowEmptyState';
 import { NODE_CATEGORIES, type AutomationNodeType, type AutomationNode, type AutomationEdge } from '@/types/automations';
 
 /** Context menu state for nodes */
@@ -207,8 +208,19 @@ export function FlowEditor() {
     reactFlowInstance.current = instance;
   }, []);
 
+  // Handler for empty state trigger selection
+  const handleAddTrigger = useCallback((type: string) => {
+    const defaultData = getDefaultNodeData(type as AutomationNodeType);
+    // Add trigger node at center of viewport
+    const position = { x: 250, y: 100 };
+    addNode(type as AutomationNodeType, position, defaultData);
+  }, [addNode]);
+
+  const isEmpty = nodes.length === 0;
+
   return (
-    <div className="h-full w-full" ref={reactFlowWrapper}>
+    <div className="h-full w-full relative" ref={reactFlowWrapper}>
+      {isEmpty && <FlowEmptyState onAddTrigger={handleAddTrigger} />}
       <ReactFlow
         nodes={nodes}
         edges={edges}

@@ -117,20 +117,28 @@ export const CATEGORY_PRESETS = {
  */
 export const PROMPT_TEMPLATES = [
   {
+    label: 'Follow-up email',
+    prompt: 'Write a friendly follow-up email to {{lead.name}} based on our conversation. Be professional but warm, and include a clear next step:\n\n{{conversation.messages}}',
+  },
+  {
     label: 'Summarize conversation',
     prompt: 'Summarize the following conversation between the lead and our agent. Focus on the key points, questions asked, and any action items:\n\n{{conversation.messages}}',
   },
   {
-    label: 'Draft follow-up email',
-    prompt: 'Based on this conversation, draft a professional follow-up email to {{lead.name}}:\n\n{{conversation.messages}}\n\nThe email should be friendly, address their questions, and include a clear call-to-action.',
+    label: 'Personalized greeting',
+    prompt: 'Write a personalized greeting for {{lead.name}} from {{lead.company}}. Make it warm and reference something relevant to their industry or needs.',
   },
   {
-    label: 'Extract key information',
-    prompt: 'Extract and summarize the key information from this conversation. Include: main topic, questions asked, concerns raised, and next steps:\n\n{{conversation.messages}}',
+    label: 'Lead qualification notes',
+    prompt: 'Based on this conversation, write brief qualification notes about this lead. Include: their needs, budget indicators, timeline, and decision-making authority:\n\n{{conversation.messages}}',
   },
   {
-    label: 'Classify lead intent',
-    prompt: 'Analyze the following conversation and classify the lead\'s primary intent. What are they looking for? What problem are they trying to solve?\n\n{{conversation.messages}}',
+    label: 'Meeting agenda',
+    prompt: 'Create a meeting agenda for a call with {{lead.name}}. Based on our conversation, include topics to discuss and questions to ask:\n\n{{conversation.messages}}',
+  },
+  {
+    label: 'Thank you message',
+    prompt: 'Write a brief thank you message for {{lead.name}} for booking a meeting. Be warm and professional, and confirm any details mentioned.',
   },
 ] as const;
 
