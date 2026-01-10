@@ -38,7 +38,7 @@ Pilot implements defense-in-depth security with multiple layers:
 6. **Spam Protection**: Honeypot, timing, and rate limiting
 7. **Audit Logging**: Security event tracking
 8. **AI Safety**: Prompt injection protection and content moderation
-9. **Bot Protection**: Cloudflare Turnstile CAPTCHA
+9. **Bot Protection**: Cloudflare Turnstile (auth pages) + server-side spam detection (widget)
 
 ---
 
@@ -208,8 +208,7 @@ The following security measures are fully implemented:
 |--------|------|---------|--------|
 | `OPENAI_API_KEY` | Supabase | Content moderation API | ✅ Configured |
 | `INTERNAL_WEBHOOK_SECRET` | Supabase | Secure trigger-to-function calls | ✅ Configured |
-| `VITE_TURNSTILE_SITE_KEY` | Public (.env) | Widget CAPTCHA | ✅ Configured |
-| `CLOUDFLARE_TURNSTILE_SECRET` | Supabase | Token verification | ✅ Configured |
+| `VITE_TURNSTILE_SITE_KEY` | Public (.env) | Auth page CAPTCHA | ✅ Configured |
 | `SECURITY_ALERT_EMAIL` | Supabase | Alert delivery | ⏳ Pending |
 
 ### Deferred to Super Admin Build
@@ -286,13 +285,13 @@ Permissive policy for embedding on customer sites.
 
 ```
 default-src 'self';
-script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com;
+script-src 'self' 'unsafe-inline' 'unsafe-eval';
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 font-src 'self' https://fonts.gstatic.com;
 img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://*;
-connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co https://challenges.cloudflare.com;
+connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co;
 media-src 'self' blob:;
-frame-src 'self' https://challenges.cloudflare.com;
+frame-src 'self';
 object-src 'none';
 base-uri 'self';
 upgrade-insecure-requests;
@@ -304,7 +303,6 @@ upgrade-insecure-requests;
 |--------|-----------|---------|
 | `https://mvaimvwdukpgvkifkfpa.supabase.co` | img-src, connect-src | Supabase Storage and API |
 | `wss://mvaimvwdukpgvkifkfpa.supabase.co` | connect-src | Realtime subscriptions |
-| `https://challenges.cloudflare.com` | script-src, connect-src, frame-src | Cloudflare Turnstile bot protection |
 | `https://fonts.googleapis.com` | style-src | Google Fonts CSS |
 | `https://fonts.gstatic.com` | font-src | Google Fonts files |
 | `https://*` | img-src | Link preview images from any external site |
@@ -316,7 +314,7 @@ upgrade-insecure-requests;
 | No `frame-ancestors` | Widget must be embeddable on any customer website |
 | `img-src https://*` | Display Open Graph images from link previews |
 | `media-src blob:` | Support voice recording playback |
-| Includes Cloudflare Turnstile | Bot protection on public forms |
+| Server-side bot protection | Honeypot, timing checks, rate limiting (no client-side CAPTCHA) |
 
 ---
 
