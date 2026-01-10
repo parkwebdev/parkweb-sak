@@ -119,6 +119,7 @@ const WidgetSelect = React.forwardRef<HTMLDivElement, WidgetSelectProps>(
           {name && (
             <input
               type="hidden"
+              id={name}
               name={name}
               value={value}
               required={required}

@@ -16,6 +16,8 @@ import { WidgetInput } from '../ui/WidgetInput';
 import { cn } from '@/lib/utils';
 
 interface WidgetPhoneInputProps {
+  /** Unique field identifier for accessibility */
+  id?: string;
   /** Current phone value (E.164 format preferred) */
   value?: string;
   /** Callback when phone changes - passes E.164 format when valid */
@@ -51,6 +53,7 @@ interface WidgetPhoneInputProps {
  * ```
  */
 export const WidgetPhoneInput = forwardRef<HTMLInputElement, WidgetPhoneInputProps>(({ 
+  id,
   value = '', 
   onChange, 
   placeholder = "Phone number",
@@ -121,6 +124,7 @@ export const WidgetPhoneInput = forwardRef<HTMLInputElement, WidgetPhoneInputPro
       )}
       <WidgetInput
         ref={ref}
+        id={id}
         name={name}
         type="tel"
         autoComplete="tel"
