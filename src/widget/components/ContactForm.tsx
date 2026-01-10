@@ -14,13 +14,9 @@ import { WidgetSelect, WidgetSelectTrigger, WidgetSelectValue, WidgetSelectConte
 import { PhoneInputField } from '../constants';
 import { createLead } from '../api';
 import { useSystemTheme } from '../hooks/useSystemTheme';
-import { TurnstileWidget } from './TurnstileWidget';
 import type { ChatUser } from '../types';
 import { logger } from '@/utils/logger';
 import { ChevronLeft, ChevronRight } from '../icons';
-
-// Turnstile site key from environment (public key, safe to expose)
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
 
 /** Custom field configuration */
 interface CustomField {
@@ -90,7 +86,6 @@ export const ContactForm = ({
 }: ContactFormProps) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [checkboxValues, setCheckboxValues] = useState<Record<string, boolean>>({});
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const systemTheme = useSystemTheme();
@@ -233,7 +228,6 @@ export const ContactForm = ({
         lastName: lastName.trim(),
         customFields: customFieldData, 
         _formLoadTime: formLoadTime,
-        turnstileToken: turnstileToken,
       });
       
       // Extract email from custom fields for ChatUser (smart detection)
@@ -485,18 +479,6 @@ export const ContactForm = ({
             >
               Start Chat
             </WidgetButton>
-          )}
-          
-          {/* Cloudflare Turnstile bot protection (after button to prevent layout shift) */}
-          {TURNSTILE_SITE_KEY && isLastStep && (
-            <div className="overflow-hidden">
-              <TurnstileWidget
-                siteKey={TURNSTILE_SITE_KEY}
-                onVerify={(token) => setTurnstileToken(token)}
-                onError={() => logger.warn('Turnstile verification failed')}
-                onExpire={() => setTurnstileToken(null)}
-              />
-            </div>
           )}
         </form>
       </div>
