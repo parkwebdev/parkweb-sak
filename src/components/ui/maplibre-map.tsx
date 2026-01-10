@@ -875,7 +875,7 @@ export function MapLibreMap({
 
       {showControls && (
         <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-background/90 backdrop-blur-sm border border-border rounded-md px-2.5 py-1.5 shadow-md">
-          <LayersThree01 size={14} className={cn(showHeatmap && "text-orange-500")} />
+          <LayersThree01 size={14} className={cn(showHeatmap && "text-warning")} />
           <Label htmlFor="heatmap-toggle" className="text-xs font-medium cursor-pointer">
             Heatmap
           </Label>

@@ -86,13 +86,12 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
           meeting: 'meeting',
         };
 
-        // Map database status to CalendarEvent status (exclude no_show)
+        // Map database status to CalendarEvent status
         const statusMap: Record<string, NonNullable<EventStatus>> = {
           confirmed: 'confirmed',
-          pending: 'pending',
           cancelled: 'cancelled',
           completed: 'completed',
-          no_show: 'completed', // Map no_show to completed for UI
+          no_show: 'no_show',
         };
 
         return {

@@ -80,14 +80,22 @@ export interface PDFData {
     sessions: number; 
     cvr: number;
   }>;
-  /** Lead conversion trend with stage breakdown */
+  /** 
+   * Lead conversion trend with stage breakdown.
+   * 
+   * Note: `won` and `lost` are computed analytics fields derived from custom
+   * lead_stages, NOT from the `lead_status` database enum. They represent
+   * leads that have reached terminal positive/negative stages.
+   */
   leadConversionTrend?: Array<{
     date: string;
     total: number;
     new?: number;
     contacted?: number;
     qualified?: number;
+    /** Computed: leads in terminal positive stages */
     won?: number;
+    /** Computed: leads in terminal negative stages */
     lost?: number;
   }>;
 

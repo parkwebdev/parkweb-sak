@@ -41,7 +41,7 @@ type TreemapCellProps = {
 };
 
 // Custom content renderer for Treemap cells
-const TreemapCell: React.FC<TreemapCellProps> = (props) => {
+function TreemapCell(props: TreemapCellProps) {
   const { x = 0, y = 0, width = 0, height = 0, name, bookings, index, colors } = props;
   
   // Skip rendering if missing required props or tiny cells
