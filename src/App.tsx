@@ -23,6 +23,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PointerEventsGuard } from "@/components/PointerEventsGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import RouteErrorFallback from "@/components/RouteErrorFallback";
 import { getRouteById } from "@/config/routes";
@@ -105,10 +106,11 @@ const App = () => (
       <ThemeProvider defaultTheme="dark" storageKey="app-ui-theme">
         <TooltipProvider>
           <GlobalSearchProvider>
-            <Toaster />
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <AuthProvider>
-                <GlobalSearch />
+                <Toaster />
+                <PointerEventsGuard />
+                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                  <AuthProvider>
+                    <GlobalSearch />
                 <Routes>
                   {/* Public routes */}
                   <Route path="/login" element={<Auth />} />

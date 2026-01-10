@@ -123,14 +123,19 @@ export const AutomationsList = memo(function AutomationsList({
                 <ContextMenuContent>
                   {automation.trigger_type === 'manual' && canManageAutomations && onRunClick && (
                     <>
-                      <ContextMenuItem onSelect={() => onRunClick(automation.id)}>
+                      <ContextMenuItem onSelect={() => {
+                        // Delay to let ContextMenu close and restore pointer-events
+                        requestAnimationFrame(() => onRunClick(automation.id));
+                      }}>
                         <Play size={14} className="mr-2" aria-hidden="true" />
                         Run
                       </ContextMenuItem>
                       <ContextMenuSeparator />
                     </>
                   )}
-                  <ContextMenuItem onSelect={() => onSelect(automation.id)}>
+                  <ContextMenuItem onSelect={() => {
+                    requestAnimationFrame(() => onSelect(automation.id));
+                  }}>
                     <Edit03 size={14} className="mr-2" aria-hidden="true" />
                     Edit
                   </ContextMenuItem>
@@ -138,7 +143,10 @@ export const AutomationsList = memo(function AutomationsList({
                     <>
                       <ContextMenuSeparator />
                       <ContextMenuItem 
-                        onSelect={() => onDeleteClick(automation.id)}
+                        onSelect={() => {
+                          // Critical: let ContextMenu fully close before opening delete dialog
+                          requestAnimationFrame(() => onDeleteClick(automation.id));
+                        }}
                         className="text-destructive focus:text-destructive focus:bg-destructive/10"
                       >
                         <Trash01 size={14} className="mr-2" aria-hidden="true" />
