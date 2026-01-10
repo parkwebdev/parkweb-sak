@@ -53,12 +53,20 @@ function Automations() {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!automationToDelete) return;
-    await deleteAutomation(automationToDelete.id);
-    setDeleteDialogOpen(false);
-    setAutomationToDelete(null);
-    // If deleted automation was selected, deselect it
-    if (selectedAutomationId === automationToDelete.id) {
-      setSelectedAutomationId(null);
+
+    const deletingId = automationToDelete.id;
+
+    try {
+      await deleteAutomation(deletingId);
+
+      // If deleted automation was selected, deselect it
+      if (selectedAutomationId === deletingId) {
+        setSelectedAutomationId(null);
+      }
+    } finally {
+      // Always close/cleanup so we never strand an overlay in a locked state
+      setDeleteDialogOpen(false);
+      setAutomationToDelete(null);
     }
   }, [automationToDelete, deleteAutomation, selectedAutomationId]);
 

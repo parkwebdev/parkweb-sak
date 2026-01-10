@@ -124,13 +124,13 @@ export const FlowToolbar = memo(function FlowToolbar({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => handleStatusChange('draft', false)}>
+            <DropdownMenuItem onSelect={() => handleStatusChange('draft', false)}>
               <Circle size={8} className="mr-2 fill-muted-foreground text-muted-foreground" aria-hidden="true" />
               Draft
             </DropdownMenuItem>
             {/* Active option - disabled if invalid */}
             {isValid ? (
-              <DropdownMenuItem onClick={() => handleStatusChange('active', true)}>
+              <DropdownMenuItem onSelect={() => handleStatusChange('active', true)}>
                 <Circle size={8} className="mr-2 fill-status-active text-status-active" aria-hidden="true" />
                 Active
               </DropdownMenuItem>
@@ -148,7 +148,7 @@ export const FlowToolbar = memo(function FlowToolbar({
                 </TooltipContent>
               </Tooltip>
             )}
-            <DropdownMenuItem onClick={() => handleStatusChange('paused', false)}>
+            <DropdownMenuItem onSelect={() => handleStatusChange('paused', false)}>
               <Circle size={8} className="mr-2 fill-status-warning text-status-warning" aria-hidden="true" />
               Paused
             </DropdownMenuItem>
@@ -283,7 +283,7 @@ export const FlowToolbar = memo(function FlowToolbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              onClick={onDeleteClick}
+              onSelect={onDeleteClick}
               className="text-destructive focus:text-destructive focus:bg-destructive/10"
             >
               <Trash01 size={16} className="mr-2" aria-hidden="true" />

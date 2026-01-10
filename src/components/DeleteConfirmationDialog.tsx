@@ -72,10 +72,15 @@ export function DeleteConfirmationDialog({
 }: DeleteConfirmationDialogProps) {
   const [confirmValue, setConfirmValue] = useState('');
   
-  // Clear confirmation value when dialog closes
+  // Clear confirmation value and any lingering body locks when dialog closes
   useEffect(() => {
     if (!open) {
       setConfirmValue('');
+
+      // Defensive cleanup: if a portal/dismissable layer failed to release,
+      // ensure the app doesn't remain unclickable.
+      document.body.style.pointerEvents = '';
+      document.body.style.overflow = '';
     }
   }, [open]);
 
@@ -86,21 +91,20 @@ export function DeleteConfirmationDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-4">
-            <p>{description}</p>
-            <div className="space-y-2">
-              <Label>
-                Type <span className="font-mono font-semibold text-foreground">{confirmationText}</span> to confirm:
-              </Label>
-              <Input
-                value={confirmValue}
-                onChange={(e) => setConfirmValue(e.target.value)}
-                placeholder={confirmationText}
-                className="font-mono"
-                aria-label="Confirmation text"
-              />
-            </div>
-          </AlertDialogDescription>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+
+          <div className="mt-4 space-y-2">
+            <Label>
+              Type <span className="font-mono font-semibold text-foreground">{confirmationText}</span> to confirm:
+            </Label>
+            <Input
+              value={confirmValue}
+              onChange={(e) => setConfirmValue(e.target.value)}
+              placeholder={confirmationText}
+              className="font-mono"
+              aria-label="Confirmation text"
+            />
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
