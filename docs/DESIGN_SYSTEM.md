@@ -307,17 +307,42 @@ import { PRIORITY_OPTIONS } from '@/lib/priority-config';
 
 #### Layout Structure
 
-The app uses an edge-to-edge layout with a fixed sidebar:
+The app uses an edge-to-edge layout with a fixed sidebar and global top bar:
 
 ```tsx
 // Sidebar: Always expanded at 240px, white background with right border
 <aside className="flex h-screen w-[240px] bg-background border-r border-border">
 
-// Main content: Full height, no card wrapper, fixed left margin
+// Main content container: Fixed left margin, stacks TopBar + content
 <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full lg:ml-[240px]">
+  // TopBar: 44px thin header with three-section layout
+  <TopBar ... />
+  
+  // Content: Full height, scrollable
+  <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
+    {children}
+  </main>
+</div>
 ```
 
+#### TopBar Layout
+
+| Property | Value |
+|----------|-------|
+| Height | 44px (`h-11`) |
+| Background | `bg-background` |
+| Border | `border-b border-border` |
+| Padding | `px-4` |
+| Gap | `gap-4` |
+
+**Three-Section Layout:**
+- **Left**: Page context (icon + title), `shrink-0`
+- **Center**: Flex-1, centered, for tabs/navigation (`min-w-0 overflow-hidden`)
+- **Right**: Action buttons, `shrink-0`, `gap-2`
+
 **Key layout patterns:**
+- TopBar is rendered by `AppLayout.tsx` at the top of content area
+- Mobile menu button is integrated into TopBar (shows on `lg:hidden`)
 - Sidebar uses `bg-background` (white in light mode) with `border-r border-border`
 - Sidebar is always fully expanded at 240px width (no collapse functionality)
 - Main content extends full height without rounded card wrapper

@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { validateFiles } from '@/lib/file-validation';
 import { useCanManage } from '@/hooks/useCanManage';
-import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { useTopBar, TopBarPageContext, TopBarTabs, type TopBarTab } from '@/components/layout/TopBar';
 import { MessageChatSquare } from '@untitledui/icons';
 
 import { useInfiniteConversations } from '@/hooks/useInfiniteConversations';
@@ -59,11 +59,6 @@ function Conversations() {
   
   // Check if user can manage conversations (takeover, send messages, close/reopen)
   const canManageConversations = useCanManage('manage_conversations');
-  
-  // Configure top bar for this page
-  useTopBar({
-    left: <TopBarPageContext icon={MessageChatSquare} title="Inbox" />,
-  });
   
   // === DATA HOOKS ===
   const {
@@ -323,6 +318,37 @@ function Conversations() {
     instagram: conversations.filter(c => c.channel === 'instagram').length,
     x: conversations.filter(c => c.channel === 'x').length,
   }), [conversations, userTakeovers]);
+  
+  // Define inbox tabs for TopBar (after filterCounts is defined)
+  const inboxTabs: TopBarTab[] = useMemo(() => [
+    { id: 'all', label: 'All', count: filterCounts.all },
+    { id: 'yours', label: 'Yours', count: filterCounts.yours },
+    { id: 'resolved', label: 'Resolved', count: filterCounts.resolved },
+  ], [filterCounts.all, filterCounts.yours, filterCounts.resolved]);
+  
+  // Compute active tab ID from current filter
+  const activeTabId = useMemo(() => {
+    if (activeFilter.type === 'status' && activeFilter.value === 'closed') return 'resolved';
+    if (activeFilter.type === 'yours') return 'yours';
+    return 'all';
+  }, [activeFilter.type, activeFilter.value]);
+  
+  const handleTopBarTabChange = useCallback((tabId: string) => {
+    if (tabId === 'resolved') {
+      setActiveFilter({ type: 'status', value: 'closed', label: 'Resolved' });
+    } else if (tabId === 'yours') {
+      setActiveFilter({ type: 'yours', label: 'Your Inbox' });
+    } else {
+      setActiveFilter({ type: 'all', label: 'All Conversations' });
+    }
+  }, []);
+  
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={MessageChatSquare} title="Inbox" />,
+    center: <TopBarTabs tabs={inboxTabs} activeTab={activeTabId} onTabChange={handleTopBarTabChange} />,
+  }), [inboxTabs, activeTabId, handleTopBarTabChange]);
+  useTopBar(topBarConfig);
 
   // === HANDLERS (useCallback for Phase 4 optimization) ===
   

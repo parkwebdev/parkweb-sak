@@ -23,6 +23,8 @@ Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design syste
 10. [Icon System](#icon-system)
 11. [Spacing & Layout System](#spacing--layout-system)
 
+12. [TopBar System](#topbar-system)
+
 ---
 
 ## Core Responsibilities
@@ -1042,6 +1044,114 @@ const Component = React.forwardRef<HTMLDivElement, ComponentProps>(
 Component.displayName = "Component";
 
 export { Component, componentVariants };
+```
+
+---
+
+## TopBar System
+
+Global top bar component that provides a consistent header across all pages with dynamic content configuration.
+
+### Overview
+
+The TopBar uses a three-section layout:
+- **Left**: Page context (icon + title)
+- **Center**: Tab navigation (optional)
+- **Right**: Action buttons (optional)
+
+Height: 44px (`h-11`), fixed at top of content area.
+
+### Components
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| `TopBar` | `src/components/layout/TopBar.tsx` | Main container component |
+| `TopBarContext` | `src/components/layout/TopBarContext.tsx` | Context provider and `useTopBar` hook |
+| `TopBarTabs` | `src/components/layout/TopBarTabs.tsx` | Horizontal tab navigation |
+| `TopBarPageContext` | `src/components/layout/TopBarPageContext.tsx` | Left section with icon/title |
+
+### Usage Pattern
+
+Pages configure their top bar content using the `useTopBar` hook:
+
+```tsx
+import { useTopBar, TopBarPageContext, TopBarTabs, type TopBarTab } from '@/components/layout/TopBar';
+import { Users01 } from '@untitledui/icons';
+
+function LeadsPage() {
+  const [activeTab, setActiveTab] = useState('all');
+  
+  const tabs: TopBarTab[] = useMemo(() => [
+    { id: 'all', label: 'All' },
+    { id: 'new', label: 'New', count: 5 },
+    { id: 'qualified', label: 'Qualified' },
+  ], []);
+  
+  // Configure top bar - memoize to prevent infinite loops
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Users01} title="Leads" />,
+    center: <TopBarTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />,
+    right: <Button size="sm">+ Add Lead</Button>,
+  }), [tabs, activeTab]);
+  useTopBar(topBarConfig);
+  
+  return <div>Page content...</div>;
+}
+```
+
+### TopBarTabs Props
+
+```tsx
+interface TopBarTab {
+  id: string;          // Unique identifier
+  label: string;       // Display text
+  icon?: ComponentType<{ size: number }>;  // Optional icon
+  count?: number;      // Optional badge count
+}
+
+interface TopBarTabsProps {
+  tabs: TopBarTab[];
+  activeTab: string;
+  onTabChange: (tabId: string) => void;
+}
+```
+
+### TopBarPageContext Props
+
+```tsx
+interface TopBarPageContextProps {
+  icon?: ComponentType<{ size: number }>;  // Page icon
+  title: string;                           // Page title
+  subtitle?: string;                       // Optional subtitle
+  menuItems?: Array<{                      // Optional dropdown menu
+    label: string;
+    onClick: () => void;
+  }>;
+}
+```
+
+### Best Practices
+
+1. **Memoize config**: Always wrap `useTopBar` config in `useMemo` to prevent infinite re-renders
+2. **Keep right section compact**: Use `size="sm"` buttons and avoid too many actions
+3. **Tab labels**: Keep short on mobile - icons show, labels hide on small screens
+4. **Accessibility**: TopBarTabs uses proper `role="tablist"` and `aria-selected`
+
+### Integration with AppLayout
+
+The `TopBar` is rendered in `AppLayout.tsx` and reads its content from `TopBarContext`. The mobile menu button is integrated into the left section of the TopBar.
+
+```tsx
+// In AppLayout.tsx
+<TopBarProvider>
+  <TopBar 
+    left={config.left}
+    center={config.center}
+    right={config.right}
+    onMobileMenuClick={() => setSidebarOpen(true)}
+  />
+  <main>{children}</main>
+</TopBarProvider>
 ```
 
 ---
