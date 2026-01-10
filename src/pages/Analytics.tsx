@@ -10,6 +10,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { AnalyticsSectionMenu, AnalyticsSection } from '@/components/analytics/AnalyticsSectionMenu';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { AnalyticsDatePicker } from '@/components/analytics/AnalyticsDatePicker';
@@ -81,14 +83,27 @@ function Analytics() {
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={TrendUp01} title="Analytics" subtitle={SECTION_INFO[activeTab].title} />,
     right: showToolbar ? (
-      <AnalyticsDatePicker
-        selectedPreset={datePreset}
-        onPresetChange={setDatePreset}
-      />
+      <div className="flex items-center gap-3">
+        <AnalyticsDatePicker
+          selectedPreset={datePreset}
+          onPresetChange={setDatePreset}
+        />
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor="mock-toggle" className="text-xs text-muted-foreground cursor-pointer">
+            {data.mockMode ? 'Mock' : 'Live'}
+          </Label>
+          <Switch
+            id="mock-toggle"
+            checked={data.mockMode}
+            onCheckedChange={data.setMockMode}
+            aria-label="Toggle mock data mode"
+          />
+        </div>
+      </div>
     ) : showBuildReport ? (
       <Button size="sm" onClick={() => navigate('/report-builder')}>Build Report</Button>
     ) : undefined,
-  }), [activeTab, showToolbar, showBuildReport, datePreset, navigate]);
+  }), [activeTab, showToolbar, showBuildReport, datePreset, navigate, data.mockMode, data.setMockMode]);
   useTopBar(topBarConfig);
 
   return (
