@@ -7,12 +7,13 @@
 
 import { Font } from '@react-pdf/renderer';
 
-// Google Fonts CDN URLs for Inter (v18)
+// Fontsource CDN URLs for Inter (static, non-variable fonts)
+// Using jsdelivr CDN which is already in CSP connect-src
 const INTER_FONTS = {
-  regular: 'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2',
-  medium: 'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI2fAZ9hiJ-Ek-_EeA.woff2',
-  semibold: 'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2',
-  bold: 'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2',
+  regular: 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff2',
+  medium: 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-500-normal.woff2',
+  semibold: 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-600-normal.woff2',
+  bold: 'https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.woff2',
 };
 
 let fontsRegistered = false;
