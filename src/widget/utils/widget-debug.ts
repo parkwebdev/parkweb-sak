@@ -16,8 +16,17 @@ const MAX_CHECKPOINTS = 20;
 // Check if debug mode is enabled
 export function isWidgetDebugEnabled(): boolean {
   try {
+    // Check URL parameter first
     const params = new URLSearchParams(window.location.search);
-    return params.get('debugWidget') === '1';
+    if (params.get('debugWidget') === '1') return true;
+    
+    // Check localStorage as fallback (for embedded iframe scenarios)
+    if (localStorage.getItem('widgetDebug') === '1') return true;
+    
+    // Check parent URL via referrer (partial match)
+    if (document.referrer?.includes('debugWidget=1')) return true;
+    
+    return false;
   } catch {
     return false;
   }
