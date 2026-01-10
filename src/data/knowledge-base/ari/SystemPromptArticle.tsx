@@ -112,8 +112,8 @@ export default function SystemPromptArticle() {
 
       <KBRelatedArticles
         articles={[
-          { categoryId: 'ari', articleSlug: 'model-behavior', title: 'Model & Behavior Settings' },
           { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Knowledge Sources' },
+          { categoryId: 'ari', articleSlug: 'appearance', title: 'Customizing Appearance' },
         ]}
       />
     </>

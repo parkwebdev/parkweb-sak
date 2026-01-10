@@ -79,12 +79,6 @@ export default function AriOverviewArticle() {
       </p>
       <ul>
         <li>
-          <KBArticleLink categoryId="ari" articleSlug="model-behavior">
-            Model & Behavior
-          </KBArticleLink>{' '}
-          – Choose the AI model and set response parameters
-        </li>
-        <li>
           <KBArticleLink categoryId="ari" articleSlug="system-prompt">
             System Prompt
           </KBArticleLink>{' '}
@@ -106,7 +100,6 @@ export default function AriOverviewArticle() {
 
       <KBRelatedArticles
         articles={[
-          { categoryId: 'ari', articleSlug: 'model-behavior', title: 'Model & Behavior Settings' },
           { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Adding Knowledge Sources' },
           { categoryId: 'ari', articleSlug: 'installation', title: 'Installing the Widget' },
         ]}

@@ -8,7 +8,6 @@
  */
 
 // Re-export all section components
-export { AriModelBehaviorSection } from './AriModelBehaviorSection';
 export { AriSystemPromptSection } from './AriSystemPromptSection';
 export { AriAppearanceSection } from './AriAppearanceSection';
 export { AriWelcomeMessagesSection } from './AriWelcomeMessagesSection';

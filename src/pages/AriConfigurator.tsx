@@ -27,7 +27,6 @@ import type { Tables } from '@/integrations/supabase/types';
 import type { WidgetConfig } from '@/widget/api';
 
 // Section content components - imported from existing tabs
-import { AriModelBehaviorSection } from '@/components/agents/sections/AriModelBehaviorSection';
 import { AriSystemPromptSection } from '@/components/agents/sections/AriSystemPromptSection';
 import { AriAppearanceSection } from '@/components/agents/sections/AriAppearanceSection';
 import { AriWelcomeMessagesSection } from '@/components/agents/sections/AriWelcomeMessagesSection';
@@ -64,12 +63,12 @@ const AriConfigurator = () => {
   const [searchParams] = useSearchParams();
   logger.debug('AriConfigurator: useSearchParams complete');
   
-  // Get initial section from URL or default to model-behavior
+  // Get initial section from URL or default to system-prompt
   const initialSection = useMemo(() => {
     const sectionFromUrl = searchParams.get('section') as AriSection;
     return sectionFromUrl && VALID_SECTIONS.includes(sectionFromUrl) 
       ? sectionFromUrl 
-      : 'model-behavior';
+      : 'system-prompt';
   }, []); // Only compute once on mount
   
   const [activeSection, setActiveSection] = useState<AriSection>(initialSection);
@@ -198,8 +197,6 @@ const AriConfigurator = () => {
     
     const getSectionContent = () => {
       switch (activeSection) {
-        case 'model-behavior':
-          return <AriModelBehaviorSection {...commonProps} />;
         case 'system-prompt':
           return <AriSystemPromptSection {...commonProps} />;
         case 'appearance':
