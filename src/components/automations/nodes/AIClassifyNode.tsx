@@ -23,7 +23,7 @@ export const AIClassifyNode = memo(function AIClassifyNode(props: NodeProps) {
       colorClass="bg-violet-500"
       hasInput={true}
       hasOutput={true}
-      category="AI"
+      category="Do"
     >
       <div className="space-y-1">
         {categoryCount > 0 ? (

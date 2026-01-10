@@ -73,7 +73,7 @@ export const LogicConditionNode = memo(function LogicConditionNode(props: NodePr
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-xs text-muted-foreground uppercase tracking-wide">
-            Logic
+            Decide
           </div>
           <div className="text-sm font-medium text-foreground truncate">
             {baseData.label}
