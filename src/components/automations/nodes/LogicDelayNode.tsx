@@ -32,7 +32,7 @@ export const LogicDelayNode = memo(function LogicDelayNode(props: NodeProps) {
       category="Decide"
     >
       <div className="flex items-center gap-2">
-        <span className="text-foreground font-medium">
+        <span className="text-xs text-foreground font-medium">
           Wait {formatDuration(data.delayMs || 0)}
         </span>
         {data.delayDescription && (
