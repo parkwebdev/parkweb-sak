@@ -127,17 +127,19 @@ function Automations() {
 
   return (
     <div className="flex h-full">
-      {/* Automations list sidebar */}
-      <div className="w-64 border-r border-border flex-shrink-0 overflow-hidden flex flex-col">
-        <AutomationsList
-          automations={automations}
-          selectedId={selectedAutomationId}
-          onSelect={handleSelectAutomation}
-          onCreateClick={() => setCreateDialogOpen(true)}
-          onDeleteClick={handleDeleteFromList}
-          onRunClick={handleRunFromList}
-        />
-      </div>
+      {/* Automations list sidebar - hidden when automation is selected */}
+      {!selectedAutomationId && (
+        <div className="w-64 border-r border-border flex-shrink-0 overflow-hidden flex flex-col">
+          <AutomationsList
+            automations={automations}
+            selectedId={selectedAutomationId}
+            onSelect={handleSelectAutomation}
+            onCreateClick={() => setCreateDialogOpen(true)}
+            onDeleteClick={handleDeleteFromList}
+            onRunClick={handleRunFromList}
+          />
+        </div>
+      )}
 
       {/* Editor or placeholder */}
       <div className="flex-1 overflow-hidden">
