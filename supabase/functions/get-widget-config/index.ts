@@ -225,6 +225,8 @@ Deno.serve(async (req) => {
       contactFormTitle: embeddedChatConfig.contactFormTitle || 'Get in touch',
       contactFormSubtitle: embeddedChatConfig.contactFormSubtitle || 'Fill out the form below to start chatting',
       customFields: embeddedChatConfig.customFields || [],
+      enableMultiStepForm: embeddedChatConfig.enableMultiStepForm ?? true,
+      formSteps: embeddedChatConfig.formSteps || [{ id: 'step-1' }],
       
       enableFileAttachments: true, // Always enabled for widget
       allowedFileTypes: embeddedChatConfig.allowedFileTypes || ['image/*', 'application/pdf'],
