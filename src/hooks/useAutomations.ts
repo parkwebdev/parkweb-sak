@@ -288,22 +288,48 @@ export function useAutomations() {
     },
   });
 
-  // Delete automation mutation
+  // Delete automation mutation with optimistic update
   const deleteMutation = useSupabaseMutation({
-    mutationFn: async (id: string): Promise<void> => {
+    mutationFn: async (id: string): Promise<string> => {
       const { error } = await supabase
         .from('automations')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+      return id;
     },
-    invalidateKeys: [queryKeys.automations.all],
+    onMutate: async (deletedId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.automations.all });
+
+      // Snapshot the previous value
+      const listKey = queryKeys.automations.list(accountOwnerId ?? '');
+      const previousAutomations = queryClient.getQueryData<AutomationListItem[]>(listKey);
+
+      // Optimistically remove from the list
+      if (previousAutomations) {
+        queryClient.setQueryData<AutomationListItem[]>(
+          listKey,
+          previousAutomations.filter((a) => a.id !== deletedId)
+        );
+      }
+
+      return { previousAutomations, listKey };
+    },
+    onError: (_error: unknown, _deletedId: string, context) => {
+      // Rollback on error
+      if (context?.previousAutomations) {
+        queryClient.setQueryData(context.listKey, context.previousAutomations);
+      }
+      toast.error('Failed to delete automation', { description: getErrorMessage(_error) });
+    },
     onSuccess: () => {
       toast.success('Automation deleted');
     },
-    onError: (error: unknown) => {
-      toast.error('Failed to delete automation', { description: getErrorMessage(error) });
+    onSettled: () => {
+      // Always refetch after error or success to ensure consistency
+      queryClient.invalidateQueries({ queryKey: queryKeys.automations.all });
     },
   });
 
