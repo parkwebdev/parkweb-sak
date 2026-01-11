@@ -106,7 +106,7 @@ QueryClientProvider
 
 | Element | Choice |
 |---------|--------|
-| **Font** | Geist (primary), Geist Mono (code) |
+| **Font** | Inter (primary), system monospace |
 | **Icons** | UntitledUI Icons |
 | **Colors** | HSL-based semantic tokens |
 

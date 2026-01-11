@@ -94,7 +94,7 @@ body {
 
 | Element | Tailwind Class | Size | Line Height | Letter Spacing |
 |---------|---------------|------|-------------|----------------|
-| Body | `text-sm` | 14px | 1.25rem | -0.01em |
+| Body | `text-sm` | 13px | 1.25rem | -0.01em |
 | H1 | `text-base font-bold` | 16px | 1.5rem | -0.02em |
 | H2 | `text-sm font-bold` | 14px | 1.25rem | -0.02em |
 | H3 | `text-sm font-semibold` | 14px | 1.25rem | -0.02em |

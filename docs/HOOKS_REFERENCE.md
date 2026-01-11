@@ -202,26 +202,6 @@ function useAutoSave<T>(options: UseAutoSaveOptions<T>): {
 
 ---
 
-Centralized query key factory for type-safe cache management. All query keys are defined here.
-
-```tsx
-import { queryKeys } from '@/lib/query-keys';
-
-// Examples
-queryKeys.agent.all           // ['agent'] - Invalidate all agent data
-queryKeys.agent.detail(userId) // ['agent', userId] - Specific user's agent
-
-queryKeys.locations.all       // Invalidate all locations
-queryKeys.locations.list(agentId) // Locations for specific agent
-
-// Use with React Query
-queryClient.invalidateQueries({ queryKey: queryKeys.agent.all });
-```
-
-**Available Keys**: `agent`, `profile`, `knowledgeSources`, `locations`, `helpArticles`, `helpCategories`, `announcements`, `newsItems`, `conversations`, `leads`, `team`, `properties`, `webhooks`, `agentTools`, `connectedAccounts`, `calendarEvents`, `analytics`, `notifications`
-
----
-
 ### useSupabaseQuery (`src/hooks/useSupabaseQuery.ts`)
 
 Combines React Query with Supabase real-time subscriptions for automatic cache invalidation.
