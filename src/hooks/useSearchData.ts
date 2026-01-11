@@ -23,6 +23,7 @@ import {
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { ROUTE_CONFIG, SETTINGS_TABS, ARI_SECTIONS } from '@/config/routes';
 import { KB_CATEGORIES } from '@/config/knowledge-base-config';
+import { ANALYTICS_SECTION_CONFIG } from '@/lib/analytics-constants';
 import type { 
   SearchDataMap, 
   ConversationWithAgent, 
@@ -263,6 +264,20 @@ export const useSearchData = () => {
           category: 'Ari Configuration',
           iconName: section.iconName,
           action: () => navigate(`/ari?section=${section.id}`),
+        });
+      });
+
+      // ============ 2b. ANALYTICS SECTIONS ============
+      ANALYTICS_SECTION_CONFIG.forEach(section => {
+        if (section.requiredPermission && !isAdmin && !hasPermission(section.requiredPermission)) return;
+        
+        results.push({
+          id: `analytics-section-${section.id}`,
+          title: section.label,
+          description: `${section.group} • Analytics`,
+          category: 'Analytics',
+          iconName: section.iconName,
+          action: () => navigate(`/analytics?section=${section.id}`),
         });
       });
 
