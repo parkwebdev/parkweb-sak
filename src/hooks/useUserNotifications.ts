@@ -3,11 +3,12 @@
  * 
  * Fetches, manages, and subscribes to real-time notifications for the current user.
  * Provides unread count, mark as read, and navigation helpers.
+ * Includes sound and browser push notification support.
  * 
  * @module hooks/useUserNotifications
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +17,9 @@ import { queryKeys } from '@/lib/query-keys';
 import { RealtimeManager } from '@/lib/realtime-manager';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
+import { playNotificationSound } from '@/lib/notification-sound';
+import { showBrowserNotification } from '@/lib/browser-notifications';
+import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import type { Json } from '@/integrations/supabase/types';
 import type { NotificationData } from '@/hooks/useNotifications';
 
@@ -51,6 +55,10 @@ export function useUserNotifications() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { preferences } = useNotificationPreferences();
+  
+  // Track previous notification IDs to detect new ones
+  const previousNotificationIdsRef = useRef<Set<string>>(new Set());
 
   // Fetch all notifications for user
   const {
@@ -204,9 +212,27 @@ export function useUserNotifications() {
       {
         table: 'notifications',
         filter: `user_id=eq.${user.id}`,
-        event: '*',
+        event: 'INSERT',
       },
-      () => {
+      (payload) => {
+        // Handle new notification
+        const newNotification = payload.new as Notification | undefined;
+        
+        if (newNotification && !previousNotificationIdsRef.current.has(newNotification.id)) {
+          // Play sound if enabled
+          if (preferences.sound_notifications) {
+            playNotificationSound();
+          }
+          
+          // Show browser notification if enabled
+          if (preferences.browser_notifications) {
+            showBrowserNotification(newNotification);
+          }
+          
+          // Track this notification ID
+          previousNotificationIdsRef.current.add(newNotification.id);
+        }
+        
         // Invalidate queries to refetch
         queryClient.invalidateQueries({
           queryKey: queryKeys.notifications.list(user.id),
@@ -216,7 +242,14 @@ export function useUserNotifications() {
     );
 
     return unsubscribe;
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient, preferences.sound_notifications, preferences.browser_notifications]);
+
+  // Initialize previous notification IDs from fetched data
+  useEffect(() => {
+    if (notifications.length > 0) {
+      previousNotificationIdsRef.current = new Set(notifications.map(n => n.id));
+    }
+  }, [notifications]);
 
   return {
     notifications,
