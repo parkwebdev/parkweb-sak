@@ -93,14 +93,14 @@ export function InboxFilterDropdown({ activeFilter, onFilterChange, counts }: In
           <ChevronDown size={16} className="text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56 space-y-0.5">
         {/* Ari Section */}
         <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Ari
         </DropdownMenuLabel>
         <DropdownMenuItem
           onClick={() => onFilterChange({ type: 'all', label: 'All Conversations' })}
-          className={cn(isActive('all') && 'bg-accent')}
+          className={cn("py-2.5", isActive('all') && 'bg-accent')}
         >
           <AriAgentsIcon className="h-4 w-4 mr-2 text-muted-foreground" />
           <span className="flex-1">All Conversations</span>
@@ -108,7 +108,7 @@ export function InboxFilterDropdown({ activeFilter, onFilterChange, counts }: In
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onFilterChange({ type: 'yours', label: 'Your Inbox' })}
-          className={cn(isActive('yours') && 'bg-accent')}
+          className={cn("py-2.5", isActive('yours') && 'bg-accent')}
         >
           <Inbox01 size={16} className="mr-2 text-muted-foreground" aria-hidden="true" />
           <span className="flex-1">Your Inbox</span>
@@ -121,14 +121,14 @@ export function InboxFilterDropdown({ activeFilter, onFilterChange, counts }: In
         <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Tickets
         </DropdownMenuLabel>
-        <DropdownMenuItem disabled className="opacity-50">
+        <DropdownMenuItem disabled className="py-2.5 opacity-50">
           <Ticket01 size={16} className="mr-2 text-muted-foreground" aria-hidden="true" />
           <span className="flex-1">All Tickets</span>
           <span className="text-2xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Soon</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => onFilterChange({ type: 'status', value: 'closed', label: 'Resolved' })}
-          className={cn(isActive('status', 'closed') && 'bg-accent')}
+          className={cn("py-2.5", isActive('status', 'closed') && 'bg-accent')}
         >
           <CheckCircle size={16} className="mr-2 text-muted-foreground" aria-hidden="true" />
           <span className="flex-1">Resolved</span>
@@ -143,23 +143,23 @@ export function InboxFilterDropdown({ activeFilter, onFilterChange, counts }: In
         </DropdownMenuLabel>
         <DropdownMenuItem
           onClick={() => onFilterChange({ type: 'channel', value: 'widget', label: 'Widget' })}
-          className={cn(isActive('channel', 'widget') && 'bg-accent')}
+          className={cn("py-2.5", isActive('channel', 'widget') && 'bg-accent')}
         >
           <Globe01 size={16} className="mr-2 text-muted-foreground" aria-hidden="true" />
           <span className="flex-1">Widget</span>
           {counts.widget > 0 && <span className="text-xs text-muted-foreground tabular-nums">{counts.widget}</span>}
         </DropdownMenuItem>
-        <DropdownMenuItem disabled className="opacity-50">
+        <DropdownMenuItem disabled className="py-2.5 opacity-50">
           <span className="mr-2 text-muted-foreground"><FacebookLogo /></span>
           <span className="flex-1">Facebook</span>
           <span className="text-2xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Soon</span>
         </DropdownMenuItem>
-        <DropdownMenuItem disabled className="opacity-50">
+        <DropdownMenuItem disabled className="py-2.5 opacity-50">
           <span className="mr-2 text-muted-foreground"><InstagramLogo /></span>
           <span className="flex-1">Instagram</span>
           <span className="text-2xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Soon</span>
         </DropdownMenuItem>
-        <DropdownMenuItem disabled className="opacity-50">
+        <DropdownMenuItem disabled className="py-2.5 opacity-50">
           <span className="mr-2 text-muted-foreground"><XLogo /></span>
           <span className="flex-1">X (Twitter)</span>
           <span className="text-2xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Soon</span>
