@@ -13,6 +13,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { extractCommunityData, type ExtractedCommunityData } from '../_shared/ai/wordpress-extraction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -531,7 +532,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter } = await req.json();
+    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter, useAiExtraction } = await req.json();
 
     // Verify user has access to this agent
     const { data: agent, error: agentError } = await supabase
@@ -645,7 +646,8 @@ Deno.serve(async (req: Request) => {
         agent.user_id,
         communities,
         taxonomyTerms,
-        isIncremental
+        isIncremental,
+        useAiExtraction ?? false
       );
 
       // Update agent's deployment_config with sync info
@@ -990,7 +992,8 @@ async function syncCommunitiesToLocations(
   userId: string,
   communities: WordPressCommunity[],
   taxonomyTerms: Map<string, number>,
-  isIncremental: boolean
+  isIncremental: boolean,
+  useAiExtraction: boolean = false
 ): Promise<SyncResult> {
   const result: SyncResult = { 
     created: 0, 
@@ -1039,21 +1042,52 @@ async function syncCommunitiesToLocations(
   // Create/update locations from WordPress
   for (const community of communities) {
     try {
+      let address: string | null = null;
+      let city: string | null = null;
+      let state: string | null = null;
+      let zip: string | null = null;
+      let phone: string | null = null;
+      let email: string | null = null;
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      let description: string | null = null;
+      
       const acf = community.acf;
-      const address = extractAcfField(acf, 'full_address', 'address', 'street');
-      const city = extractAcfField(acf, 'city');
-      const state = extractAcfField(acf, 'state');
-      const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
-      const phone = extractAcfField(acf, 'phone', 'telephone', 'tel', 'phone_number');
-      const email = extractAcfField(acf, 'email', 'mail', 'email_address', 'contact_email', 'e_mail');
-      const latitude = extractAcfNumber(acf, 'latitude', 'lat');
-      const longitude = extractAcfNumber(acf, 'longitude', 'lng', 'long');
+      
+      // Use AI extraction if enabled
+      if (useAiExtraction) {
+        console.log(`🤖 Using AI extraction for community: ${community.slug}`);
+        const aiData = await extractCommunityData(community);
+        
+        if (aiData) {
+          address = aiData.address || null;
+          city = aiData.city || null;
+          state = aiData.state || null;
+          zip = aiData.zip || null;
+          phone = aiData.phone || null;
+          email = aiData.email || null;
+          latitude = aiData.latitude || null;
+          longitude = aiData.longitude || null;
+          description = aiData.description || null;
+        }
+      }
+      
+      // Fall back to / supplement with ACF extraction
+      if (!address) address = extractAcfField(acf, 'full_address', 'address', 'street');
+      if (!city) city = extractAcfField(acf, 'city');
+      if (!state) state = extractAcfField(acf, 'state');
+      if (!zip) zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
+      if (!phone) phone = extractAcfField(acf, 'phone', 'telephone', 'tel', 'phone_number');
+      if (!email) email = extractAcfField(acf, 'email', 'mail', 'email_address', 'contact_email', 'e_mail');
+      if (latitude == null) latitude = extractAcfNumber(acf, 'latitude', 'lat');
+      if (longitude == null) longitude = extractAcfNumber(acf, 'longitude', 'lng', 'long');
       
       const timezone = inferTimezone(state, latitude, longitude);
       
       const metadata: Record<string, unknown> = {};
       if (latitude != null) metadata.latitude = latitude;
       if (longitude != null) metadata.longitude = longitude;
+      if (description) metadata.description = description;
       const ageCategory = extractAcfField(acf, 'age', 'age_category', 'age_restriction');
       if (ageCategory) metadata.age_category = ageCategory;
       const communityType = extractAcfField(acf, 'type', 'community_type');
