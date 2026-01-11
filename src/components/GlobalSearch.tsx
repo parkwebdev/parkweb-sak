@@ -108,12 +108,14 @@ export const GlobalSearch = () => {
                       onSelect={() => handleSelect(result)}
                       className="flex items-center justify-between"
                     >
-                      <div className="flex items-center gap-2">
-                        {isAriLogo ? (
-                          <AriAgentsIcon className="h-4 w-4 shrink-0 text-muted-foreground" size={16} />
-                        ) : IconComponent ? (
-                          <IconComponent className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        ) : null}
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted">
+                          {isAriLogo ? (
+                            <AriAgentsIcon className="h-4 w-4 text-muted-foreground" size={16} />
+                          ) : IconComponent ? (
+                            <IconComponent className="h-4 w-4 text-muted-foreground" />
+                          ) : null}
+                        </div>
                         <div className="flex flex-col">
                           <span className="font-medium">{result.title}</span>
                           {result.description && (
