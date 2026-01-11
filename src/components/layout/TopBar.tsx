@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { TopBarUserMenu } from './TopBarUserMenu';
+import { NotificationBell } from './NotificationBell';
 
 interface TopBarProps {
   /** Left section - page context/entity indicator */
@@ -65,9 +66,10 @@ export function TopBar({
         {center}
       </div>
       
-      {/* Right section - action buttons + user menu */}
+      {/* Right section - action buttons + notifications + user menu */}
       <div className="flex items-center gap-3 shrink-0">
         {right}
+        <NotificationBell />
         <TopBarUserMenu />
       </div>
     </header>
