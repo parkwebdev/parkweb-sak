@@ -169,6 +169,34 @@ function SidebarComponent({ onClose }: SidebarProps) {
         </header>
 
         <div className="flex-1 overflow-auto">
+          {/* Search bar - above main navigation */}
+          <motion.div 
+            className="items-center flex w-full py-0.5 mb-2"
+            initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={springs.smooth}
+          >
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50"
+            >
+              <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                <SearchMd size={14} className="flex-shrink-0" />
+                <span className="text-sm font-normal leading-4 my-auto whitespace-nowrap flex-1 text-left">
+                  Search...
+                </span>
+                <div className="flex items-center gap-0.5 ml-auto">
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
+                    <span className="text-xs">⌘</span>
+                  </kbd>
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
+                    K
+                  </kbd>
+                </div>
+              </div>
+            </button>
+          </motion.div>
+
           {/* Main navigation */}
           <section className="w-full">
             {filteredNavigationItems.map((item, index) => {
@@ -228,38 +256,8 @@ function SidebarComponent({ onClose }: SidebarProps) {
 
         </div>
 
-        {/* Footer with search, theme, nav items and user account */}
+        {/* Footer with bottom nav items */}
         <div className="pt-4">
-          {/* Search button - always visible */}
-          <motion.div 
-            className="items-center flex w-full py-0.5"
-            initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: filteredNavigationItems.length * 0.03, ...springs.smooth }}
-          >
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-            >
-              <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
-                <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
-                  <SearchMd size={14} className="self-stretch my-auto" />
-                </div>
-                <div className="flex items-center justify-between flex-1 text-sm font-normal leading-4 my-auto whitespace-nowrap">
-                  <span>Search</span>
-                  <div className="flex items-center gap-0.5">
-                    <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
-                      <span className="text-xs">⌘</span>
-                    </kbd>
-                    <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
-                      K
-                    </kbd>
-                  </div>
-                </div>
-              </div>
-            </button>
-          </motion.div>
-
           {/* Bottom navigation (get set up, settings) - permission filtered */}
           {filteredBottomItems.map((item, index) => {
             const isActive = location.pathname === item.path;
@@ -354,7 +352,6 @@ function SidebarComponent({ onClose }: SidebarProps) {
               </motion.div>
             );
           })}
-
         </div>
       </nav>
     </aside>
