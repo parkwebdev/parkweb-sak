@@ -72,7 +72,7 @@ export function TopBarPageContext({
               <DotsHorizontal size={16} aria-hidden="true" />
             </IconButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent align="start" className="space-y-0.5">
             {menuItems.map((item, i) => {
               const ItemIcon = item.icon;
               return (
@@ -80,6 +80,7 @@ export function TopBarPageContext({
                   key={i} 
                   onClick={item.onClick}
                   className={cn(
+                    "gap-2",
                     item.variant === 'destructive' && "text-destructive focus:text-destructive"
                   )}
                 >
