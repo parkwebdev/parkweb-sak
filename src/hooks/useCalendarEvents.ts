@@ -83,7 +83,6 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
           move_in: 'move_in',
           inspection: 'inspection',
           maintenance: 'maintenance',
-          meeting: 'meeting',
         };
 
         // Map database status to CalendarEvent status
