@@ -414,7 +414,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
     }
     
     return actions;
-  }, [canManageKnowledge, sources.length, isRetraining, retrainProgress, outdatedCount, handleRetrainAll, sources]);
+  }, [canManageKnowledge, sources.length, isRetraining, retrainProgress, outdatedCount, handleRetrainAll]);
   
   useRegisterSectionActions('knowledge', sectionActions);
 
