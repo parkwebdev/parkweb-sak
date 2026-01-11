@@ -356,7 +356,7 @@ function Conversations() {
       </div>
     ),
     center: <TopBarTabs tabs={inboxTabs} activeTab={activeTabId} onTabChange={handleTopBarTabChange} />,
-  }), [inboxTabs, activeTabId, handleTopBarTabChange, conversations]);
+  }), [inboxTabs, activeTabId, handleTopBarTabChange]);
   useTopBar(topBarConfig);
 
   // === HANDLERS (useCallback for Phase 4 optimization) ===
