@@ -9,7 +9,8 @@
 
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Home01 } from '@untitledui/icons';
+import { ArrowUpRight } from '@untitledui/icons';
+import { getNavigationIcon } from '@/lib/navigation-icons';
 import { motion } from 'motion/react';
 import { Separator } from '@/components/ui/separator';
 import { InviteTeamInline } from '@/components/onboarding/InviteTeamInline';
@@ -24,7 +25,7 @@ export function Dashboard() {
 
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Home01} title="Dashboard" />,
+    left: <TopBarPageContext icon={getNavigationIcon('Dashboard')} title="Dashboard" />,
   }), []);
   useTopBar(topBarConfig);
 

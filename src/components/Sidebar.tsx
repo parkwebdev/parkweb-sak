@@ -8,10 +8,8 @@
  */
 
 import React, { useMemo } from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, Circle, SearchMd, BookOpen01 } from '@untitledui/icons';
+import { X, Grid01 as Grid, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
-import { DashboardIcon, DashboardIconFilled } from './icons/DashboardIcon';
-import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled, KnowledgeBaseFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -23,6 +21,7 @@ import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
 import { getMainNavRoutes, getBottomNavRoutes, getRouteById, type RouteConfig } from '@/config/routes';
+import { NAVIGATION_ICON_MAP, ACTIVE_ICON_MAP } from '@/lib/navigation-icons';
 import type { ConversationMetadata } from '@/types/metadata';
 import type { AppPermission } from '@/types/team';
 
@@ -49,36 +48,12 @@ interface NavigationItem {
   adminOnly?: boolean;
 }
 
-/** Icon mapping from route config iconName to component */
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  Dashboard: DashboardIcon,
-  AriLogo: AriAgentsIcon,
-  MessageChatSquare: InboxOutline,
-  Calendar: Calendar,
-  Users01: User03,
-  TrendUp01: PieChart01,
-  Circle: Circle,
-  Settings01: Settings,
-  BookOpen01: BookOpen01,
-};
-
-/** Active icon mapping from route config iconName to filled component */
-const ACTIVE_ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }> | undefined> = {
-  Dashboard: DashboardIconFilled,
-  MessageChatSquare: InboxFilled,
-  Calendar: PlannerFilled,
-  Users01: LeadsFilled,
-  TrendUp01: AnalyticsFilled,
-  Settings01: SettingsFilled,
-  BookOpen01: KnowledgeBaseFilled,
-};
-
 /** Convert RouteConfig to NavigationItem */
 function routeToNavItem(route: RouteConfig): NavigationItem {
   return {
     id: route.id,
     label: route.label,
-    icon: ICON_MAP[route.iconName ?? ''] ?? Grid,
+    icon: NAVIGATION_ICON_MAP[route.iconName ?? ''] ?? Grid,
     activeIcon: ACTIVE_ICON_MAP[route.iconName ?? ''],
     path: route.path,
     requiredPermission: route.requiredPermission,
