@@ -13,6 +13,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { extractPropertyData, type ExtractedPropertyData } from '../_shared/ai/wordpress-extraction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -350,7 +351,8 @@ Deno.serve(async (req: Request) => {
         knowledgeSourceId,
         locationMaps,
         homes,
-        isIncremental
+        isIncremental,
+        useAiExtraction ?? false
       );
 
       // Update agent's deployment_config with sync info
@@ -611,7 +613,8 @@ async function syncHomesToProperties(
   knowledgeSourceId: string,
   locationMaps: LocationMaps,
   homes: WordPressHome[],
-  isIncremental: boolean
+  isIncremental: boolean,
+  useAiExtraction: boolean = false
 ): Promise<SyncResult> {
   const result: SyncResult = { 
     created: 0, 
@@ -660,33 +663,71 @@ async function syncHomesToProperties(
   // Create/update properties from WordPress
   for (const home of homes) {
     try {
+      let address: string | null = null;
+      let lotNumber: string | null = null;
+      let city: string | null = null;
+      let state: string | null = null;
+      let zip: string | null = null;
+      let price: number | null = null;
+      let priceType: string | null = 'sale';
+      let beds: number | null = null;
+      let baths: number | null = null;
+      let sqft: number | null = null;
+      let yearBuilt: number | null = null;
+      let status: string | null = 'available';
+      let description: string | null = null;
+      let features: string[] = [];
+      
       const acf = home.acf;
       
-      // Extract property data from ACF
-      const address = extractAcfField(acf, 'address', 'full_address', 'street_address');
-      const lotNumber = extractAcfField(acf, 'lot', 'lot_number', 'lot_num', 'site_number', 'unit_number', 'home_unit_number');
-      const city = extractAcfField(acf, 'city');
-      const state = extractAcfField(acf, 'state');
-      const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal_code') || extractZipFromAddress(address);
-      
-      // Price handling - convert to cents
-      let price: number | null = null;
-      const priceValue = extractAcfNumber(acf, 'price', 'asking_price', 'list_price', 'sale_price');
-      if (priceValue != null) {
-        price = Math.round(priceValue * 100);
+      // Use AI extraction if enabled
+      if (useAiExtraction) {
+        console.log(`🤖 Using AI extraction for property: ${home.slug}`);
+        const aiData = await extractPropertyData(home);
+        
+        if (aiData) {
+          address = aiData.address || null;
+          lotNumber = aiData.lot_number || null;
+          city = aiData.city || null;
+          state = aiData.state || null;
+          zip = aiData.zip || null;
+          if (aiData.price != null) price = Math.round(aiData.price * 100);
+          priceType = aiData.price_type || 'sale';
+          beds = aiData.beds || null;
+          baths = aiData.baths || null;
+          sqft = aiData.sqft || null;
+          yearBuilt = aiData.year_built || null;
+          status = aiData.status || 'available';
+          description = aiData.description || null;
+          features = aiData.features || [];
+        }
       }
       
-      const priceType = extractAcfField(acf, 'price_type', 'listing_type') || 'sale';
-      const beds = extractAcfNumber(acf, 'beds', 'bedrooms', 'bed', 'bedroom');
-      const baths = extractAcfNumber(acf, 'baths', 'bathrooms', 'bath', 'bathroom');
-      const sqft = extractAcfNumber(acf, 'sqft', 'square_feet', 'sq_ft', 'square_footage', 'size');
-      const yearBuilt = extractAcfNumber(acf, 'year_built', 'year', 'built');
-      const status = extractAcfField(acf, 'status', 'listing_status', 'availability') || 'available';
-      const description = extractAcfField(acf, 'description', 'details', 'summary') || 
-                          home.excerpt?.rendered?.replace(/<[^>]*>/g, '').trim() ||
-                          home.content?.rendered?.replace(/<[^>]*>/g, '').substring(0, 500).trim();
+      // Fall back to / supplement with ACF extraction
+      if (!address) address = extractAcfField(acf, 'address', 'full_address', 'street_address');
+      if (!lotNumber) lotNumber = extractAcfField(acf, 'lot', 'lot_number', 'lot_num', 'site_number', 'unit_number', 'home_unit_number');
+      if (!city) city = extractAcfField(acf, 'city');
+      if (!state) state = extractAcfField(acf, 'state');
+      if (!zip) zip = extractAcfField(acf, 'zip', 'zipcode', 'postal_code') || extractZipFromAddress(address);
       
-      const features = extractAcfArray(acf, 'features', 'amenities', 'highlights');
+      if (price == null) {
+        const priceValue = extractAcfNumber(acf, 'price', 'asking_price', 'list_price', 'sale_price');
+        if (priceValue != null) price = Math.round(priceValue * 100);
+      }
+      
+      if (!priceType || priceType === 'sale') priceType = extractAcfField(acf, 'price_type', 'listing_type') || 'sale';
+      if (beds == null) beds = extractAcfNumber(acf, 'beds', 'bedrooms', 'bed', 'bedroom');
+      if (baths == null) baths = extractAcfNumber(acf, 'baths', 'bathrooms', 'bath', 'bathroom');
+      if (sqft == null) sqft = extractAcfNumber(acf, 'sqft', 'square_feet', 'sq_ft', 'square_footage', 'size');
+      if (yearBuilt == null) yearBuilt = extractAcfNumber(acf, 'year_built', 'year', 'built');
+      if (!status || status === 'available') status = extractAcfField(acf, 'status', 'listing_status', 'availability') || 'available';
+      if (!description) {
+        description = extractAcfField(acf, 'description', 'details', 'summary') || 
+                      home.excerpt?.rendered?.replace(/<[^>]*>/g, '').trim() ||
+                      home.content?.rendered?.replace(/<[^>]*>/g, '').substring(0, 500).trim();
+      }
+      
+      if (features.length === 0) features = extractAcfArray(acf, 'features', 'amenities', 'highlights');
       
       // Get images
       const images: Array<{ url: string; alt?: string }> = [];

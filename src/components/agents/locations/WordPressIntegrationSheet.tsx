@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -52,9 +53,10 @@ import {
   ChevronDown,
   Edit02,
   XClose,
-  Link01
+  Link01,
+  Database01,
+  Stars01
 } from '@untitledui/icons';
-import { InfoCircleIcon } from '@/components/ui/info-circle-icon';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
 import type { Tables } from '@/integrations/supabase/types';
@@ -203,7 +205,7 @@ export function WordPressIntegrationSheet({
 }: WordPressIntegrationSheetProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [urlInput, setUrlInput] = useState('');
-  const [useAiExtraction, setUseAiExtraction] = useState(true);
+  const [extractionMode, setExtractionMode] = useState<'standard' | 'ai'>('standard');
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
   const [deleteLocationsOnDisconnect, setDeleteLocationsOnDisconnect] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
@@ -296,8 +298,8 @@ export function WordPressIntegrationSheet({
     setUrlInput('');
   };
 
-  const handleSyncCommunities = () => importCommunities();
-  const handleSyncHomes = () => syncHomes(undefined, useAiExtraction);
+  const handleSyncCommunities = () => importCommunities(undefined, undefined, extractionMode === 'ai');
+  const handleSyncHomes = () => syncHomes(undefined, extractionMode === 'ai');
 
   const isLoading = connectionTesting || connectionSyncing || homesSyncing;
 
@@ -425,6 +427,67 @@ export function WordPressIntegrationSheet({
             {/* Sync sections - only when connected */}
             {isConnected && !isEditing && (
               <>
+                {/* Data Extraction Mode Card */}
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Zap size={16} className="text-warning" aria-hidden="true" />
+                      <span className="text-sm font-medium">Data Extraction</span>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      Choose how to extract data from your WordPress posts. This applies to both communities and properties.
+                    </p>
+                    
+                    <RadioGroup 
+                      value={extractionMode} 
+                      onValueChange={(value) => setExtractionMode(value as 'standard' | 'ai')}
+                      className="space-y-2"
+                    >
+                      <div 
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          extractionMode === 'standard' 
+                            ? 'border-primary bg-primary/5' 
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => setExtractionMode('standard')}
+                      >
+                        <RadioGroupItem value="standard" id="mode-standard" className="mt-0.5" />
+                        <Label htmlFor="mode-standard" className="cursor-pointer flex-1">
+                          <span className="font-medium text-sm flex items-center gap-2">
+                            <Database01 size={14} className="text-muted-foreground" aria-hidden="true" />
+                            Standard
+                          </span>
+                          <span className="text-xs text-muted-foreground block mt-1">
+                            Reads ACF (Advanced Custom Fields) directly. Fast and reliable for most WordPress sites with standard field naming.
+                          </span>
+                        </Label>
+                      </div>
+                      
+                      <div 
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          extractionMode === 'ai' 
+                            ? 'border-primary bg-primary/5' 
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => setExtractionMode('ai')}
+                      >
+                        <RadioGroupItem value="ai" id="mode-ai" className="mt-0.5" />
+                        <Label htmlFor="mode-ai" className="cursor-pointer flex-1">
+                          <span className="font-medium text-sm flex items-center gap-2">
+                            <Stars01 size={14} className="text-warning" aria-hidden="true" />
+                            AI-Powered
+                            <Badge variant="outline" size="sm">Uses credits</Badge>
+                          </span>
+                          <span className="text-xs text-muted-foreground block mt-1">
+                            Analyzes page content with AI. Use if your site has non-standard field names, data in HTML content, or custom themes.
+                          </span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </CardContent>
+                </Card>
+
                 {/* Communities Sync Card */}
                 <Card>
                   <CardContent className="p-4 space-y-3">
@@ -524,32 +587,6 @@ export function WordPressIntegrationSheet({
                         ))}
                       </SelectContent>
                     </Select>
-
-                    {/* AI Extraction Toggle */}
-                    <div className="flex items-center justify-between pt-2 border-t">
-                      <div className="flex items-center gap-2">
-                        <Zap size={14} className="text-warning" aria-hidden="true" />
-                        <span className="text-xs font-medium">AI Extraction</span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <InfoCircleIcon className="text-muted-foreground cursor-help w-3 h-3" />
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-xs">
-                              <p className="text-xs">
-                                Uses AI to extract structured property data from page content. 
-                                Improves accuracy but uses additional credits.
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      <Switch
-                        checked={useAiExtraction}
-                        onCheckedChange={setUseAiExtraction}
-                        aria-label="Enable AI extraction"
-                      />
-                    </div>
                   </CardContent>
                 </Card>
 

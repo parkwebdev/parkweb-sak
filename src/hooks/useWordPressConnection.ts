@@ -266,7 +266,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   }, [agent?.id]);
 
   // Import communities from WordPress
-  const importCommunities = useCallback(async (url?: string, endpoint?: string): Promise<SyncResult | null> => {
+  const importCommunities = useCallback(async (url?: string, endpoint?: string, useAiExtraction?: boolean): Promise<SyncResult | null> => {
     if (!agent?.id) return null;
 
     setIsSyncing(true);
@@ -284,6 +284,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
           agentId: agent.id,
           siteUrl: url,
           communityEndpoint: endpoint || communityEndpoint || undefined,
+          useAiExtraction: useAiExtraction ?? false,
         },
       });
 
