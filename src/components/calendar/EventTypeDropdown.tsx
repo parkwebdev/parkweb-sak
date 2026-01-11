@@ -53,7 +53,7 @@ export function EventTypeDropdown({ activeType, onTypeChange }: EventTypeDropdow
           <ChevronDown size={14} aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center">
+      <DropdownMenuContent align="end" className="space-y-0.5">
         {options.map(option => (
           <DropdownMenuItem
             key={option.id}
