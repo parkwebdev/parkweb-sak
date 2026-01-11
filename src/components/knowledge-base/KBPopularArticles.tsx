@@ -7,7 +7,7 @@
  * @module components/knowledge-base/KBPopularArticles
  */
 
-import { Eye } from '@untitledui/icons';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { usePopularArticles } from '@/hooks/useKBArticleViews';
@@ -19,7 +19,7 @@ interface KBPopularArticlesProps {
 }
 
 export function KBPopularArticles({ categoryId, onSelectArticle }: KBPopularArticlesProps) {
-  const { data: popularArticles, isLoading } = usePopularArticles(categoryId);
+  const { data: popularArticles, isLoading } = usePopularArticles(categoryId, 10);
   
   if (isLoading) {
     return (
@@ -55,7 +55,7 @@ export function KBPopularArticles({ categoryId, onSelectArticle }: KBPopularArti
       </h3>
       
       <nav className="space-y-1" aria-label="Popular articles">
-        {popularArticles.map(({ article, viewCount }, index) => (
+        {popularArticles.map(({ article }, index) => (
           <button
             key={article.id}
             onClick={() => onSelectArticle(article)}
@@ -71,10 +71,6 @@ export function KBPopularArticles({ categoryId, onSelectArticle }: KBPopularArti
               {index + 1}.
             </span>
             <span className="flex-1 line-clamp-2">{article.title}</span>
-            <span className="flex items-center gap-1 text-2xs text-muted-foreground/50 shrink-0">
-              <Eye size={10} aria-hidden="true" />
-              {viewCount}
-            </span>
           </button>
         ))}
       </nav>
