@@ -625,11 +625,11 @@ export function FullCalendar({
         {/* Left: Mini date + Title info */}
         <div className="flex items-center gap-4">
           {/* Mini date indicator */}
-          <div className="flex flex-col items-center justify-center bg-primary/10 rounded-lg px-3 py-1.5 min-w-[52px]">
-            <span className="text-2xs font-medium text-primary uppercase tracking-wide">
+          <div className="flex flex-col items-center justify-center bg-info/10 rounded-lg px-3 py-1.5 min-w-[52px]">
+            <span className="text-2xs font-medium text-info uppercase tracking-wide">
               {format(today, 'MMM')}
             </span>
-            <span className="text-xl font-semibold text-primary leading-tight">
+            <span className="text-xl font-semibold text-info leading-tight">
               {format(today, 'd')}
             </span>
           </div>
