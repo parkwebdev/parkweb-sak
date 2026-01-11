@@ -1,6 +1,7 @@
 // Conversations components barrel export
 export { ConversationMetadataPanel } from './ConversationMetadataPanel';
 export { InboxNavSidebar, type InboxFilter } from './InboxNavSidebar';
+export { InboxFilterDropdown } from './InboxFilterDropdown';
 export { TakeoverDialog } from './TakeoverDialog';
 export { ConversationItem, type ConversationItemProps } from './ConversationItem';
 export { ConversationsList, type ConversationsListProps } from './ConversationsList';

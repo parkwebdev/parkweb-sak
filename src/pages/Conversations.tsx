@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { validateFiles } from '@/lib/file-validation';
 import { useCanManage } from '@/hooks/useCanManage';
-import { useTopBar, TopBarPageContext, TopBarTabs, type TopBarTab } from '@/components/layout/TopBar';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { getNavigationIcon } from '@/lib/navigation-icons';
 
 import { useInfiniteConversations } from '@/hooks/useInfiniteConversations';
@@ -27,7 +27,6 @@ import { useTypingPresence } from '@/hooks/useTypingPresence';
 import { useConversationMessages } from '@/hooks/useConversationMessages';
 import { 
   ConversationMetadataPanel,
-  InboxNavSidebar, 
   type InboxFilter,
   VirtualizedConversationsList,
   ChatHeader,
@@ -37,6 +36,7 @@ import {
   type VirtualizedMessageThreadRef,
   ConversationsTopBarSearch,
 } from '@/components/conversations';
+import { InboxFilterDropdown } from '@/components/conversations/InboxFilterDropdown';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
@@ -320,43 +320,23 @@ function Conversations() {
     x: conversations.filter(c => c.channel === 'x').length,
   }), [conversations, userTakeovers]);
   
-  // Define inbox tabs for TopBar (after filterCounts is defined)
-  const inboxTabs: TopBarTab[] = useMemo(() => [
-    { id: 'all', label: 'All', count: filterCounts.all },
-    { id: 'yours', label: 'Yours', count: filterCounts.yours },
-    { id: 'resolved', label: 'Resolved', count: filterCounts.resolved },
-  ], [filterCounts.all, filterCounts.yours, filterCounts.resolved]);
-  
-  // Compute active tab ID from current filter
-  const activeTabId = useMemo(() => {
-    if (activeFilter.type === 'status' && activeFilter.value === 'closed') return 'resolved';
-    if (activeFilter.type === 'yours') return 'yours';
-    return 'all';
-  }, [activeFilter.type, activeFilter.value]);
-  
-  const handleTopBarTabChange = useCallback((tabId: string) => {
-    if (tabId === 'resolved') {
-      setActiveFilter({ type: 'status', value: 'closed', label: 'Resolved' });
-    } else if (tabId === 'yours') {
-      setActiveFilter({ type: 'yours', label: 'Your Inbox' });
-    } else {
-      setActiveFilter({ type: 'all', label: 'All Conversations' });
-    }
-  }, []);
-  
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('MessageChatSquare')} title="Inbox" />
+        <InboxFilterDropdown
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          counts={filterCounts}
+        />
         <ConversationsTopBarSearch
           conversations={conversations}
           onSelect={setSelectedConversation}
         />
       </div>
     ),
-    center: <TopBarTabs tabs={inboxTabs} activeTab={activeTabId} onTabChange={handleTopBarTabChange} />,
-  }), [inboxTabs, activeTabId, handleTopBarTabChange]);
+  }), [activeFilter, filterCounts, conversations]);
   useTopBar(topBarConfig);
 
   // === HANDLERS (useCallback for Phase 4 optimization) ===
@@ -531,12 +511,7 @@ function Conversations() {
   // === RENDER ===
   return (
     <div className="h-full flex min-h-0 overflow-x-hidden">
-      {/* Inbox Navigation Sidebar */}
-      <InboxNavSidebar
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-        counts={filterCounts}
-      />
+      {/* Conversations List Sidebar - Virtualized for performance */}
       
       {/* Conversations List Sidebar - Virtualized for performance */}
       <VirtualizedConversationsList
