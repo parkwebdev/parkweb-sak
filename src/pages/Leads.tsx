@@ -15,7 +15,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
-import { Loading02, SearchMd, X, Download01, LayersThree01 } from '@untitledui/icons';
+import { Loading02, Download01, LayersThree01 } from '@untitledui/icons';
 import { getNavigationIcon } from '@/lib/navigation-icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
@@ -31,15 +31,15 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
+import { LeadsSearchResults } from '@/components/leads/LeadsSearchResults';
 import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
-import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { useTopBar, TopBarPageContext, TopBarSearch } from '@/components/layout/TopBar';
 import type { Tables, Json } from '@/integrations/supabase/types';
 import type { VisibilityState } from '@tanstack/react-table';
 import type { ConversationMetadata } from '@/types/metadata';
@@ -298,33 +298,75 @@ function Leads() {
     });
   }, []);
 
+  // Find the default stage for leads without a stage_id
+  const defaultStage = stages.find(s => s.is_default);
+  
+  // Filter leads based on search query, stage filter, and date range
+  const filteredLeads = useMemo(() => {
+    let result = leads;
+    
+    // Stage filter - treat null stage_id as the default stage
+    if (selectedStageIds.length > 0) {
+      result = result.filter(lead => {
+        const effectiveStageId = lead.stage_id ?? defaultStage?.id;
+        return effectiveStageId && selectedStageIds.includes(effectiveStageId);
+      });
+    }
+    
+    // Assignee filter
+    if (selectedAssigneeIds.length > 0) {
+      result = result.filter(lead => {
+        const leadAssignees = assigneesByLead[lead.id] || [];
+        return selectedAssigneeIds.some(id => leadAssignees.includes(id));
+      });
+    }
+    
+    // Date range filter
+    if (dateRangeFilter !== 'all') {
+      const daysAgo = DATE_FILTER_DAYS[dateRangeFilter];
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - daysAgo);
+      result = result.filter(lead => new Date(lead.created_at) >= cutoff);
+    }
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((lead) => {
+        return (
+          lead.name?.toLowerCase().includes(query) ||
+          lead.email?.toLowerCase().includes(query) ||
+          lead.phone?.toLowerCase().includes(query) ||
+          lead.company?.toLowerCase().includes(query)
+        );
+      });
+    }
+    
+    return result;
+  }, [leads, selectedStageIds, selectedAssigneeIds, assigneesByLead, dateRangeFilter, searchQuery, defaultStage?.id]);
+
+  const handleViewLead = useCallback((lead: Tables<'leads'>) => {
+    setSelectedLead(lead);
+    setIsDetailsOpen(true);
+  }, []);
+
   // Configure top bar for this page with all controls
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('Users01')} title="Leads" />
-        {/* Search Input */}
-        <div className="w-48 lg:w-64 relative flex-shrink-0">
-          <Input
-            type="text"
-            placeholder="Search leads..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 pl-9 pr-8"
-          />
-          <SearchMd className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" aria-hidden="true" />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-              onClick={() => setSearchQuery('')}
-            >
-              <X size={14} aria-hidden="true" />
-              <span className="sr-only">Clear search</span>
-            </Button>
+        <TopBarSearch
+          placeholder="Search leads..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          renderResults={() => (
+            <LeadsSearchResults
+              leads={filteredLeads}
+              stages={stages}
+              onSelect={handleViewLead}
+            />
           )}
-        </div>
+        />
       </div>
     ),
     right: (
@@ -388,9 +430,11 @@ function Leads() {
     ),
   }), [
     searchQuery,
+    filteredLeads,
+    stages,
+    handleViewLead,
     canManageLeads,
     viewMode,
-    stages,
     selectedStageIds,
     dateRangeFilter,
     teamMembers,
@@ -408,58 +452,6 @@ function Leads() {
     handleViewModeChange,
   ]);
   useTopBar(topBarConfig);
-  
-  // Find the default stage for leads without a stage_id
-  const defaultStage = stages.find(s => s.is_default);
-  
-  // Filter leads based on search query, stage filter, and date range
-  const filteredLeads = useMemo(() => {
-    let result = leads;
-    
-    // Stage filter - treat null stage_id as the default stage
-    if (selectedStageIds.length > 0) {
-      result = result.filter(lead => {
-        const effectiveStageId = lead.stage_id ?? defaultStage?.id;
-        return effectiveStageId && selectedStageIds.includes(effectiveStageId);
-      });
-    }
-    
-    // Assignee filter
-    if (selectedAssigneeIds.length > 0) {
-      result = result.filter(lead => {
-        const leadAssignees = assigneesByLead[lead.id] || [];
-        return selectedAssigneeIds.some(id => leadAssignees.includes(id));
-      });
-    }
-    
-    // Date range filter
-    if (dateRangeFilter !== 'all') {
-      const daysAgo = DATE_FILTER_DAYS[dateRangeFilter];
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - daysAgo);
-      result = result.filter(lead => new Date(lead.created_at) >= cutoff);
-    }
-    
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter((lead) => {
-        return (
-          lead.name?.toLowerCase().includes(query) ||
-          lead.email?.toLowerCase().includes(query) ||
-          lead.phone?.toLowerCase().includes(query) ||
-          lead.company?.toLowerCase().includes(query)
-        );
-      });
-    }
-    
-    return result;
-  }, [leads, selectedStageIds, selectedAssigneeIds, assigneesByLead, dateRangeFilter, searchQuery, defaultStage?.id]);
-
-  const handleViewLead = useCallback((lead: Tables<'leads'>) => {
-    setSelectedLead(lead);
-    setIsDetailsOpen(true);
-  }, []);
 
   // Selection handlers
   const handleSelectAll = useCallback((checked: boolean) => {
