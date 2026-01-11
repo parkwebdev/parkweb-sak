@@ -79,8 +79,8 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   // Check WordPress connection status from agent config
   const isWordPressConnected = useMemo(() => {
     if (!agent?.deployment_config) return false;
-    const config = agent.deployment_config as { wordpress?: { siteUrl?: string } };
-    return !!config.wordpress?.siteUrl;
+    const config = agent.deployment_config as { wordpress?: { site_url?: string } };
+    return !!config.wordpress?.site_url;
   }, [agent?.deployment_config]);
   
   // Table states
