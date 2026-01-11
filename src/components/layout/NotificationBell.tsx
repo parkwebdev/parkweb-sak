@@ -50,14 +50,14 @@ export function NotificationBell() {
               variant="destructive"
               className={cn(
                 "absolute -top-0.5 -right-0.5",
-                "border-2 border-background",
-                "h-[16px] min-w-[16px] p-0 flex items-center justify-center",
-                "text-[9px] font-semibold leading-none"
+                "border-2 border-background rounded-full",
+                "h-4 w-4 p-0 flex items-center justify-center",
+                "text-[8px] font-bold leading-none"
               )}
               role="status"
               aria-live="polite"
             >
-              {displayCount}
+              {unreadCount > 9 ? '9+' : unreadCount}
             </Badge>
           )}
         </button>
