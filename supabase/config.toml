@@ -93,10 +93,10 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.sync-wordpress-communities]
-verify_jwt = false
+verify_jwt = true
 
 [functions.sync-wordpress-homes]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-calendar-availability]
 verify_jwt = false

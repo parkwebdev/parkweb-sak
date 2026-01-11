@@ -167,6 +167,25 @@ function normalizeSiteUrl(url: string): string {
   return normalized;
 }
 
+/**
+ * Decode JWT payload (base64url) - safe after gateway verification
+ */
+function decodeJwtPayload(token: string): { sub?: string; role?: string } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    
+    // Base64url decode the payload
+    const payload = parts[1]
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    const decoded = atob(payload);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -176,6 +195,7 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get('Authorization');
     const isScheduledSync = req.headers.get('x-scheduled-sync') === 'true';
     let userId: string | null = null;
+    let isServiceRole = false;
 
     // Create service role client for database operations
     const supabase = createClient(
@@ -183,56 +203,33 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    if (!isScheduledSync) {
-      // Diagnostic logging (safe - no secrets)
-      const hasAuthHeader = !!authHeader;
-      const authHeaderStartsWithBearer = authHeader?.startsWith('Bearer ') ?? false;
-      console.log('Auth check:', { isScheduledSync, hasAuthHeader, authHeaderStartsWithBearer });
-
-      if (!authHeaderStartsWithBearer) {
-        console.log('Auth failed: Missing or invalid Authorization header');
-        return new Response(
-          JSON.stringify({ error: 'Missing authorization header' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Direct GoTrue API call - most reliable method for edge runtime
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    // Gateway has already verified the JWT (verify_jwt = true in config)
+    // We just need to extract the user ID from the payload
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
+      const payload = decodeJwtPayload(token);
       
-      const gotrueResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
-        headers: {
-          'Authorization': authHeader,
-          'apikey': supabaseAnonKey,
-        },
-      });
-
-      console.log('GoTrue response status:', gotrueResponse.status);
-
-      if (!gotrueResponse.ok) {
-        const errorBody = await gotrueResponse.text();
-        console.log('Auth failed: GoTrue rejected token:', errorBody);
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      if (payload) {
+        userId = payload.sub || null;
+        isServiceRole = payload.role === 'service_role';
+        console.log('JWT verified by gateway, extracted:', { 
+          userId: userId ? `${userId.slice(0, 8)}...` : null, 
+          role: payload.role,
+          isScheduledSync 
+        });
       }
+    }
 
-      const userData = await gotrueResponse.json();
-      userId = userData.id;
-      
-      if (!userId) {
-        console.log('Auth failed: No user ID in GoTrue response');
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      console.log('Auth succeeded for user:', userId);
-    } else {
-      console.log('Scheduled sync: bypassing user auth');
+    // For scheduled syncs with service_role, skip user-level checks
+    if (isScheduledSync && isServiceRole) {
+      console.log('Scheduled sync with service_role: bypassing user auth');
+    } else if (!userId) {
+      // This shouldn't happen if gateway is properly configured
+      console.log('Auth failed: No user ID extracted from JWT');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const { action, agentId, siteUrl, homeEndpoint, useAiExtraction, modifiedAfter } = await req.json();
@@ -250,7 +247,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (!isScheduledSync && userId) {
+    // Skip access check for scheduled syncs with service_role
+    if (!(isScheduledSync && isServiceRole) && userId) {
       let hasAccess = userId === agent.user_id;
       
       if (!hasAccess) {

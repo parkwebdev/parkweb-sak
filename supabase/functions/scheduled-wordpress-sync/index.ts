@@ -9,7 +9,7 @@
  * @module functions/scheduled-wordpress-sync
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -109,6 +109,9 @@ Deno.serve(async (req: Request) => {
         console.log(`🏘️ Agent ${agent.id}: Community sync is due (interval: ${communityInterval}, last: ${wpConfig.last_community_sync || 'never'})`);
         
         try {
+          // Use service role key as Authorization header so verify_jwt passes
+          const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+          
           const { data, error } = await supabase.functions.invoke('sync-wordpress-communities', {
             body: {
               action: 'sync',
@@ -120,6 +123,7 @@ Deno.serve(async (req: Request) => {
             },
             headers: {
               'x-scheduled-sync': 'true',
+              'Authorization': `Bearer ${serviceRoleKey}`,
             },
           });
 
@@ -144,6 +148,9 @@ Deno.serve(async (req: Request) => {
         console.log(`🏠 Agent ${agent.id}: Home sync is due (interval: ${homeInterval}, last: ${wpConfig.last_home_sync || 'never'})`);
         
         try {
+          // Use service role key as Authorization header so verify_jwt passes
+          const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+          
           const { data, error } = await supabase.functions.invoke('sync-wordpress-homes', {
             body: {
               action: 'sync',
@@ -155,6 +162,7 @@ Deno.serve(async (req: Request) => {
             },
             headers: {
               'x-scheduled-sync': 'true',
+              'Authorization': `Bearer ${serviceRoleKey}`,
             },
           });
 
