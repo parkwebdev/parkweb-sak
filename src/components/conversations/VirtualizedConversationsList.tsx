@@ -153,12 +153,12 @@ export const VirtualizedConversationsList = memo(function VirtualizedConversatio
             <div className="flex items-center gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-accent">
+                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-input hover:bg-accent">
                     <span>{getSortLabel(sortBy)}</span>
                     <ChevronDown size={12} />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onSortChange('last_activity')}>
                     Last activity
                   </DropdownMenuItem>
