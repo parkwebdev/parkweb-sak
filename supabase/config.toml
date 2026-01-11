@@ -96,7 +96,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.sync-wordpress-homes]
-verify_jwt = true
+verify_jwt = false
 
 [functions.check-calendar-availability]
 verify_jwt = false
