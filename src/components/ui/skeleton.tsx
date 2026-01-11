@@ -770,4 +770,138 @@ export {
   SkeletonUserCard,
   SkeletonSearchResults,
   SkeletonKanbanColumn,
+  // TopBar skeletons
+  SkeletonTopBar,
+  SkeletonTopBarPageContext,
+  SkeletonTopBarTabs,
+  SkeletonTopBarSearch,
+  SkeletonTopBarActions,
 };
+
+// =============================================================================
+// TOPBAR SKELETON COMPONENTS
+// =============================================================================
+
+interface SkeletonTopBarPageContextProps {
+  showSubtitle?: boolean;
+  className?: string;
+}
+
+/**
+ * Skeleton for the left section of TopBar (icon + title + optional subtitle)
+ */
+function SkeletonTopBarPageContext({ 
+  showSubtitle = false,
+  className 
+}: SkeletonTopBarPageContextProps) {
+  return (
+    <div className={cn("flex items-center gap-2 min-w-0 shrink-0", className)}>
+      {/* Icon placeholder - 24x24 rounded square */}
+      <Skeleton className="w-6 h-6 rounded" />
+      {/* Title + optional subtitle */}
+      <div className="flex items-center gap-1.5">
+        <Skeleton className="h-4 w-20" />
+        {showSubtitle && <Skeleton className="h-3 w-24 hidden sm:block" />}
+      </div>
+    </div>
+  );
+}
+
+interface SkeletonTopBarTabsProps {
+  tabCount?: number;
+  className?: string;
+}
+
+/**
+ * Skeleton for center section tabs in TopBar
+ */
+function SkeletonTopBarTabs({ 
+  tabCount = 3,
+  className 
+}: SkeletonTopBarTabsProps) {
+  return (
+    <div className={cn("flex items-center gap-1", className)}>
+      {Array.from({ length: tabCount }).map((_, i) => (
+        <Skeleton 
+          key={i} 
+          className={cn(
+            "h-8 rounded-md",
+            i === 0 ? "w-20 bg-accent" : "w-16"
+          )} 
+        />
+      ))}
+    </div>
+  );
+}
+
+interface SkeletonTopBarSearchProps {
+  className?: string;
+}
+
+/**
+ * Skeleton for the search input in TopBar
+ */
+function SkeletonTopBarSearch({ className }: SkeletonTopBarSearchProps) {
+  return (
+    <Skeleton className={cn("h-8 w-48 lg:w-64 rounded-md", className)} />
+  );
+}
+
+interface SkeletonTopBarActionsProps {
+  buttonCount?: number;
+  className?: string;
+}
+
+/**
+ * Skeleton for right section action buttons in TopBar
+ */
+function SkeletonTopBarActions({ 
+  buttonCount = 2,
+  className 
+}: SkeletonTopBarActionsProps) {
+  return (
+    <div className={cn("flex items-center gap-2 shrink-0", className)}>
+      {Array.from({ length: buttonCount }).map((_, i) => (
+        <Skeleton key={i} className="h-8 w-8 rounded-md" />
+      ))}
+    </div>
+  );
+}
+
+interface SkeletonTopBarProps {
+  className?: string;
+  showTabs?: boolean;
+  tabCount?: number;
+  showSearch?: boolean;
+  buttonCount?: number;
+}
+
+/**
+ * Complete TopBar skeleton matching the 48px height and three-section layout
+ */
+function SkeletonTopBar({ 
+  className,
+  showTabs = false,
+  tabCount = 3,
+  showSearch = false,
+  buttonCount = 2,
+}: SkeletonTopBarProps) {
+  return (
+    <div className={cn(
+      "h-12 border-b border-border bg-background flex items-center px-4 gap-4 shrink-0",
+      className
+    )}>
+      {/* Left section */}
+      <SkeletonTopBarPageContext />
+      
+      {/* Center section */}
+      <div className="flex-1 flex items-center justify-center min-w-0 overflow-hidden">
+        {showTabs && <SkeletonTopBarTabs tabCount={tabCount} />}
+        {showSearch && <SkeletonTopBarSearch />}
+      </div>
+      
+      {/* Right section */}
+      <SkeletonTopBarActions buttonCount={buttonCount} />
+    </div>
+  );
+}
