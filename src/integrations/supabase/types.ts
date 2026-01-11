@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: string | null
+          target_email: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_email?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_email?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       agent_api_keys: {
         Row: {
           agent_id: string
@@ -682,6 +721,54 @@ export type Database = {
           },
         ]
       }
+      email_delivery_logs: {
+        Row: {
+          bounce_reason: string | null
+          clicked_at: string | null
+          created_at: string | null
+          from_email: string
+          id: string
+          metadata: Json | null
+          opened_at: string | null
+          resend_email_id: string
+          status: string
+          subject: string | null
+          template_type: string | null
+          to_email: string
+          updated_at: string | null
+        }
+        Insert: {
+          bounce_reason?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          from_email: string
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          resend_email_id: string
+          status?: string
+          subject?: string | null
+          template_type?: string | null
+          to_email: string
+          updated_at?: string | null
+        }
+        Update: {
+          bounce_reason?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          from_email?: string
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          resend_email_id?: string
+          status?: string
+          subject?: string | null
+          template_type?: string | null
+          to_email?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           active: boolean | null
@@ -818,6 +905,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      impersonation_sessions: {
+        Row: {
+          admin_user_id: string
+          ended_at: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          reason: string
+          started_at: string | null
+          target_user_id: string
+        }
+        Insert: {
+          admin_user_id: string
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          reason: string
+          started_at?: string | null
+          target_user_id: string
+        }
+        Update: {
+          admin_user_id?: string
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          reason?: string
+          started_at?: string | null
+          target_user_id?: string
+        }
+        Relationships: []
       }
       kb_article_feedback: {
         Row: {
@@ -1607,6 +1727,36 @@ export type Database = {
           price_monthly?: number
           price_yearly?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_config: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+          version: number | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: Json
+          version?: number | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+          version?: number | null
         }
         Relationships: []
       }

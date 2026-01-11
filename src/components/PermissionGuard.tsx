@@ -14,7 +14,7 @@ import type { AppPermission } from '@/types/team';
 import { Lock01 } from '@untitledui/icons';
 
 interface PermissionGuardProps {
-  /** Required permission(s) to access this route (ignored if adminOnly is true) */
+  /** Required permission(s) to access this route (ignored if adminOnly or superAdminOnly is true) */
   permission?: AppPermission | AppPermission[];
   /** Child components to render when authorized */
   children: React.ReactNode;
@@ -24,6 +24,8 @@ interface PermissionGuardProps {
   showAccessDenied?: boolean;
   /** If true, only admins can access this route */
   adminOnly?: boolean;
+  /** If true, only super_admins can access this route */
+  superAdminOnly?: boolean;
 }
 
 /**
@@ -39,6 +41,12 @@ interface PermissionGuardProps {
  * <PermissionGuard permission={['view_leads', 'manage_leads']}>
  *   <LeadsPage />
  * </PermissionGuard>
+ * 
+ * @example
+ * // Super admin only route
+ * <PermissionGuard superAdminOnly redirectTo="/dashboard">
+ *   <AdminDashboard />
+ * </PermissionGuard>
  */
 export function PermissionGuard({
   permission,
@@ -46,11 +54,39 @@ export function PermissionGuard({
   redirectTo,
   showAccessDenied = true,
   adminOnly = false,
+  superAdminOnly = false,
 }: PermissionGuardProps) {
-  const { hasPermission, loading, isAdmin } = useRoleAuthorization();
+  const { hasPermission, loading, isAdmin, isSuperAdmin } = useRoleAuthorization();
 
   // Still loading permissions
   if (loading) {
+    return null;
+  }
+
+  // Super admin-only routes require super_admin role
+  if (superAdminOnly) {
+    if (isSuperAdmin) {
+      return <>{children}</>;
+    }
+    // Non-super-admins are denied access
+    if (redirectTo) {
+      return <Navigate to={redirectTo} replace />;
+    }
+    if (showAccessDenied) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+            <Lock01 size={24} className="text-destructive" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Super Admin Access Required
+          </h2>
+          <p className="text-muted-foreground max-w-md">
+            This area is restricted to platform administrators only.
+          </p>
+        </div>
+      );
+    }
     return null;
   }
 
