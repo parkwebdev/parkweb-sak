@@ -7,7 +7,7 @@
  * @module contexts/GlobalSearchContext
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 interface GlobalSearchContextType {
   open: boolean;
@@ -35,12 +35,15 @@ export function GlobalSearchProvider({ children }: { children: React.ReactNode }
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({ open, setOpen }), [open]);
+
   return (
-    <GlobalSearchContext.Provider value={{ open, setOpen }}>
+    <GlobalSearchContext.Provider value={value}>
       {children}
     </GlobalSearchContext.Provider>
   );
-};
+}
 
 export const useGlobalSearch = () => {
   const context = useContext(GlobalSearchContext);

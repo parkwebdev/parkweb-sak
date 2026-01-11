@@ -68,7 +68,7 @@ export function showBrowserNotification(notification: AppNotification): boolean 
     };
 
     return true;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Failed to show browser notification:', error);
     return false;
   }

@@ -7,7 +7,7 @@
  * @module contexts/AuthContext
  */
 
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
@@ -251,7 +251,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * Clears session persistence flags.
    * @throws Error if sign out fails
    */
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     // Clear session persistence flags
     sessionStorage.removeItem('pilot_session_temporary');
     localStorage.removeItem('pilot_session_temporary_flag');
@@ -261,21 +261,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       logger.error('Error signing out:', error);
       throw error;
     }
-  };
+  }, []);
 
   /** Clear the justSignedIn flag after loading animation completes */
-  const clearJustSignedIn = () => setJustSignedIn(false);
+  const clearJustSignedIn = useCallback(() => setJustSignedIn(false), []);
+  
+  /** Memoized setter for hasSeenAriLoader */
+  const setHasSeenAriLoaderMemo = useCallback((value: boolean) => setHasSeenAriLoader(value), []);
 
-  const value = {
+  // Memoize context value to prevent cascading re-renders
+  const value = useMemo(() => ({
     user,
     session,
     loading,
     justSignedIn,
     clearJustSignedIn,
     hasSeenAriLoader,
-    setHasSeenAriLoader,
+    setHasSeenAriLoader: setHasSeenAriLoaderMemo,
     signOut,
-  };
+  }), [user, session, loading, justSignedIn, clearJustSignedIn, hasSeenAriLoader, setHasSeenAriLoaderMemo, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
