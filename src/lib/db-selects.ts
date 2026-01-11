@@ -459,3 +459,45 @@ export const LEAD_SEARCH_COLUMNS = `
   created_at
 `;
 
+/**
+ * Columns for calendar event search views.
+ */
+export const CALENDAR_EVENT_SEARCH_COLUMNS = `
+  id,
+  title,
+  start_time,
+  status,
+  event_type,
+  visitor_name,
+  locations!fk_events_location(name)
+`;
+
+/**
+ * Columns for location search views.
+ */
+export const LOCATION_SEARCH_COLUMNS = `
+  id,
+  name,
+  city,
+  state,
+  is_active
+`;
+
+/**
+ * Columns for announcement search views.
+ */
+export const ANNOUNCEMENT_SEARCH_COLUMNS = `
+  id,
+  title,
+  is_active
+`;
+
+/**
+ * Columns for help category search views.
+ */
+export const HELP_CATEGORY_SEARCH_COLUMNS = `
+  id,
+  name,
+  description
+`;
+
