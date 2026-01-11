@@ -78,18 +78,18 @@ export function useAriSectionActions() {
 /**
  * Hook for sections to register their actions.
  * Actions are automatically unregistered when the component unmounts.
+ * Uses stable function references to avoid re-render loops.
  */
 export function useRegisterSectionActions(sectionId: string, actions: SectionAction[]) {
-  const context = useContext(AriSectionActionsContext);
+  const { registerActions, unregisterActions } = useAriSectionActions();
+  
+  // Serialize actions to detect meaningful changes
+  const actionsKey = JSON.stringify(
+    actions.map(a => ({ id: a.id, label: a.label, disabled: a.disabled, isActive: a.isActive }))
+  );
   
   useEffect(() => {
-    if (context) {
-      context.registerActions(sectionId, actions);
-    }
-    return () => {
-      if (context) {
-        context.unregisterActions(sectionId);
-      }
-    };
-  }, [context, sectionId, JSON.stringify(actions.map(a => ({ id: a.id, label: a.label, disabled: a.disabled, isActive: a.isActive })))]);
+    registerActions(sectionId, actions);
+    return () => unregisterActions(sectionId);
+  }, [sectionId, actionsKey, registerActions, unregisterActions]);
 }

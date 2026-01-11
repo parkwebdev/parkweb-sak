@@ -155,19 +155,22 @@ function AriConfiguratorContent() {
   };
 
   // Build widget config for preview
-  const activeAnnouncements = allAnnouncements.filter(a => a.is_active).map(a => ({
-    id: a.id,
-    title: a.title,
-    subtitle: a.subtitle || '',
-    image_url: a.image_url || null,
-    background_color: a.background_color || '#ffffff',
-    title_color: a.title_color || '#000000',
-    action_type: a.action_type || '',
-    action_url: a.action_url || null,
-  }));
-
+  // NOTE: All derived data must be computed INSIDE useMemo to avoid infinite loops
   const widgetConfig = useMemo<WidgetConfig | null>(() => {
     if (!agent) return null;
+    
+    // Compute active announcements inside useMemo
+    const activeAnnouncements = allAnnouncements.filter(a => a.is_active).map(a => ({
+      id: a.id,
+      title: a.title,
+      subtitle: a.subtitle || '',
+      image_url: a.image_url || null,
+      background_color: a.background_color || '#ffffff',
+      title_color: a.title_color || '#000000',
+      action_type: a.action_type || '',
+      action_url: a.action_url || null,
+    }));
+    
     return {
       agentId: embedConfig.agentId || agent.id,
       userId: embedConfig.userId || agent.user_id,
@@ -239,7 +242,7 @@ function AriConfiguratorContent() {
       defaultLocationSlug: embedConfig.defaultLocationSlug,
       enableAutoLocationDetection: embedConfig.enableAutoLocationDetection ?? true,
     };
-  }, [agent, embedConfig, activeAnnouncements, helpCategories, helpArticles]);
+  }, [agent, embedConfig, allAnnouncements, helpCategories, helpArticles]);
 
   // Show skeleton while agent data loads (after MultiStepLoader completes)
   if (!agent || agentLoading) {
