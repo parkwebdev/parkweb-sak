@@ -15,3 +15,4 @@ export { KBArticleCard } from './KBArticleCard';
 export { KBTableOfContents } from './KBTableOfContents';
 export { KBPopularArticles } from './KBPopularArticles';
 export { KBArticleFeedback } from './KBArticleFeedback';
+export { KBTopBarSearch } from './KBTopBarSearch';
