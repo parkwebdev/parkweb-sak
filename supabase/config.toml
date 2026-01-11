@@ -93,7 +93,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.sync-wordpress-communities]
-verify_jwt = true
+verify_jwt = false
 
 [functions.sync-wordpress-homes]
 verify_jwt = true

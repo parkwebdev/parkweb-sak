@@ -323,35 +323,42 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    const isScheduledSync = req.headers.get('x-scheduled-sync') === 'true';
+    let userId: string | null = null;
+    
+    // Create service role client for database operations
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const isScheduledSync = req.headers.get('x-scheduled-sync') === 'true';
-    let userId: string | null = null;
-    
     if (!isScheduledSync) {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
+      if (!authHeader?.startsWith('Bearer ')) {
         return new Response(
           JSON.stringify({ error: 'Missing authorization header' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const { data: { user }, error: authError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
+      // Create anon client for JWT verification
+      const anonClient = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: authHeader } } }
       );
 
-      if (authError || !user) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data, error: authError } = await anonClient.auth.getClaims(token);
+
+      if (authError || !data?.claims?.sub) {
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      userId = user.id;
+      userId = data.claims.sub as string;
     }
 
     const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter } = await req.json();
