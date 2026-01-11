@@ -28,6 +28,12 @@ import {
   MessageTextSquare01,
   MarkerPin01,
   Terminal as TerminalIcon,
+  // Analytics section icons
+  MessageChatCircle,
+  Zap,
+  Share07,
+  Globe01,
+  BarChart01,
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from '@/components/icons/DashboardIcon';
@@ -71,6 +77,13 @@ export const NAVIGATION_ICON_MAP: Record<string, IconComponent> = {
   DataFlow: AriMenuIcons.DataFlow,
   Key01: Key01,
   Terminal: TerminalIcon,
+  
+  // Analytics section icons
+  MessageChatCircle: MessageChatCircle,
+  Zap: Zap,
+  Share07: Share07,
+  Globe01: Globe01,
+  BarChart01: BarChart01,
   
   // Utility icons
   FolderClosed: FolderClosed,

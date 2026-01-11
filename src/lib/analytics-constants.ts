@@ -8,6 +8,7 @@
  */
 
 import type { ReportConfig } from '@/types/report-config';
+import type { AppPermission } from '@/types/team';
 
 // =============================================================================
 // ANALYTICS SECTION TYPE
@@ -29,6 +30,34 @@ export const ANALYTICS_SECTIONS = [
 ] as const;
 
 export type AnalyticsSection = (typeof ANALYTICS_SECTIONS)[number];
+
+// =============================================================================
+// ANALYTICS SECTION CONFIG (for Global Search)
+// =============================================================================
+
+export interface AnalyticsSectionConfig {
+  id: AnalyticsSection;
+  label: string;
+  group: string;
+  description: string;
+  iconName: string;
+  requiredPermission?: AppPermission;
+}
+
+/**
+ * Configuration for each Analytics section.
+ * Used by Global Search to navigate to specific sections.
+ */
+export const ANALYTICS_SECTION_CONFIG: readonly AnalyticsSectionConfig[] = [
+  { id: 'conversations', label: 'Conversations', group: 'Engagement', description: 'Analyze chat sessions and engagement patterns', iconName: 'MessageChatCircle', requiredPermission: 'view_dashboard' },
+  { id: 'leads', label: 'Leads', group: 'Engagement', description: 'Track lead generation and conversion metrics', iconName: 'Users01', requiredPermission: 'view_dashboard' },
+  { id: 'bookings', label: 'Bookings', group: 'Performance', description: 'Monitor appointment scheduling performance', iconName: 'Calendar', requiredPermission: 'view_dashboard' },
+  { id: 'ai-performance', label: 'Ari Performance', group: 'Performance', description: 'Measure containment, resolution, and satisfaction', iconName: 'Zap', requiredPermission: 'view_dashboard' },
+  { id: 'sources', label: 'Traffic Sources', group: 'Traffic', description: 'Understand where your visitors come from', iconName: 'Share07', requiredPermission: 'view_dashboard' },
+  { id: 'pages', label: 'Top Pages', group: 'Traffic', description: 'See which pages drive the most engagement', iconName: 'File02', requiredPermission: 'view_dashboard' },
+  { id: 'geography', label: 'Geography', group: 'Traffic', description: 'View visitor locations around the world', iconName: 'Globe01', requiredPermission: 'view_dashboard' },
+  { id: 'reports', label: 'Reports', group: 'Reporting', description: 'View export history and manage scheduled reports', iconName: 'BarChart01', requiredPermission: 'view_dashboard' },
+];
 /**
  * Section title and description mapping
  */
