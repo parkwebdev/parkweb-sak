@@ -23,7 +23,8 @@ import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
 import { SkeletonSearchResults } from '@/components/ui/skeleton';
 import * as Icons from '@untitledui/icons';
-import { SearchSm, File06 } from '@untitledui/icons';
+import { File06 } from '@untitledui/icons';
+import * as AriMenuIcons from '@/components/icons/AriMenuIcons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
 /**
@@ -100,7 +101,11 @@ export const GlobalSearch = () => {
               {results.map((result) => {
                   const isAriLogo = result.iconName === 'AriLogo';
                   const IconsRecord = Icons as Record<string, React.ComponentType<{ className?: string }>>;
-                  const IconComponent = isAriLogo ? null : (result.iconName ? IconsRecord[result.iconName] : null);
+                  const AriIconsRecord = AriMenuIcons as Record<string, React.ComponentType<{ className?: string; size?: number }>>;
+                  // Check UntitledUI icons first, then custom AriMenuIcons
+                  const IconComponent = isAriLogo 
+                    ? null 
+                    : (result.iconName ? (IconsRecord[result.iconName] || AriIconsRecord[result.iconName]) : null);
                   
                     return (
                     <CommandItem
