@@ -359,9 +359,10 @@ function Leads() {
           placeholder="Search leads..."
           value={searchQuery}
           onChange={setSearchQuery}
-          renderResults={() => (
+          renderResults={(query) => (
             <LeadsSearchResults
-              leads={filteredLeads}
+              query={query}
+              leads={leads}
               stages={stages}
               onSelect={handleViewLead}
             />
@@ -430,7 +431,7 @@ function Leads() {
     ),
   }), [
     searchQuery,
-    filteredLeads,
+    leads,
     stages,
     handleViewLead,
     canManageLeads,

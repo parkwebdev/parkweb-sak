@@ -355,7 +355,8 @@ function Conversations() {
           onChange={setSearchQuery}
           renderResults={(query) => (
             <ConversationSearchResults
-              conversations={filteredConversations}
+              query={query}
+              conversations={conversations}
               onSelect={setSelectedConversation}
             />
           )}
@@ -363,7 +364,7 @@ function Conversations() {
       </div>
     ),
     center: <TopBarTabs tabs={inboxTabs} activeTab={activeTabId} onTabChange={handleTopBarTabChange} />,
-  }), [inboxTabs, activeTabId, handleTopBarTabChange, searchQuery, filteredConversations]);
+  }), [inboxTabs, activeTabId, handleTopBarTabChange, searchQuery, conversations]);
   useTopBar(topBarConfig);
 
   // === HANDLERS (useCallback for Phase 4 optimization) ===

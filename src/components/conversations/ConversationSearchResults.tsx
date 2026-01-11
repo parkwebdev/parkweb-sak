@@ -2,11 +2,12 @@
  * @fileoverview Conversation Search Results Component
  * 
  * Renders conversation search results for the TopBarSearch dropdown.
+ * Filters conversations internally based on query to avoid parent re-renders.
  * 
  * @module components/conversations/ConversationSearchResults
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { TopBarSearchResultItem, TopBarSearchEmptyState } from '@/components/layout/TopBarSearchResultItem';
 import type { Tables } from '@/integrations/supabase/types';
@@ -17,7 +18,9 @@ type Conversation = Tables<'conversations'> & {
 };
 
 interface ConversationSearchResultsProps {
-  /** Filtered conversations to display */
+  /** Search query to filter conversations */
+  query: string;
+  /** All conversations to search through */
   conversations: Conversation[];
   /** Callback when a conversation is selected */
   onSelect: (conversation: Conversation) => void;
@@ -27,19 +30,37 @@ interface ConversationSearchResultsProps {
 
 /**
  * Renders conversation search results in the TopBarSearch dropdown.
+ * Filters conversations internally to avoid memoization issues in parent.
  */
 export function ConversationSearchResults({
+  query,
   conversations,
   onSelect,
   maxResults = 10,
 }: ConversationSearchResultsProps) {
-  if (conversations.length === 0) {
+  // Filter conversations based on query - done here to avoid parent re-renders
+  const filteredConversations = useMemo(() => {
+    if (!query.trim()) return [];
+    
+    const q = query.toLowerCase();
+    return conversations.filter((conv) => {
+      const metadata = (conv.metadata || {}) as ConversationMetadata;
+      return (
+        metadata.lead_name?.toLowerCase().includes(q) ||
+        metadata.lead_email?.toLowerCase().includes(q) ||
+        metadata.lead_phone?.toLowerCase().includes(q) ||
+        metadata.last_message_preview?.toLowerCase().includes(q)
+      );
+    }).slice(0, maxResults);
+  }, [query, conversations, maxResults]);
+
+  if (filteredConversations.length === 0) {
     return <TopBarSearchEmptyState message="No conversations found" />;
   }
 
   return (
     <>
-      {conversations.slice(0, maxResults).map((conv) => {
+      {filteredConversations.map((conv) => {
         const metadata = (conv.metadata || {}) as ConversationMetadata;
         
         return (
