@@ -1059,7 +1059,37 @@ The TopBar uses a three-section layout:
 - **Center**: Tab navigation (optional)
 - **Right**: Action buttons (optional)
 
-Height: 44px (`h-11`), fixed at top of content area.
+Height: 48px (`h-12`), fixed at top of content area.
+
+### Provider Hierarchy
+
+The TopBar system requires two context providers in the correct order:
+
+```tsx
+// In App.tsx (root level) - MUST be app-wide
+<AriSectionActionsProvider>   {/* App-wide for Ari action buttons */}
+  <BrowserRouter>
+    <AuthProvider>
+      {/* Routes render here */}
+    </AuthProvider>
+  </BrowserRouter>
+</AriSectionActionsProvider>
+
+// In AppLayout.tsx (wraps protected routes) - layout-scoped
+<TopBarProvider>              {/* Per-layout for TopBar content */}
+  <TopBar 
+    left={config.left}
+    center={config.center}
+    right={config.right}
+  />
+  <main>{children}</main>
+</TopBarProvider>
+```
+
+**Why this order matters:**
+- `AriSectionActionsProvider` at root ensures TopBar can render `<AriTopBarActions />` even before the Ari page mounts
+- `TopBarProvider` at layout level allows different layouts to have different TopBar behavior
+- The `useAriSectionActions` hook returns safe defaults when outside its provider (won't crash)
 
 ### Components
 
@@ -1069,6 +1099,8 @@ Height: 44px (`h-11`), fixed at top of content area.
 | `TopBarContext` | `src/components/layout/TopBarContext.tsx` | Context provider and `useTopBar` hook |
 | `TopBarTabs` | `src/components/layout/TopBarTabs.tsx` | Horizontal tab navigation |
 | `TopBarPageContext` | `src/components/layout/TopBarPageContext.tsx` | Left section with icon/title |
+| `AriTopBarActions` | `src/pages/AriConfigurator.tsx` | Renders Ari section actions in TopBar |
+| `SkeletonTopBar` | `src/components/layout/TopBar.tsx` | Loading skeleton for full TopBar |
 
 ### Usage Pattern
 
@@ -1088,15 +1120,101 @@ function LeadsPage() {
   ], []);
   
   // Configure top bar - memoize to prevent infinite loops
+  // ALWAYS pass pageId as second arg to prevent re-render loops
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={Users01} title="Leads" />,
     center: <TopBarTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />,
     right: <Button size="sm">+ Add Lead</Button>,
   }), [tabs, activeTab]);
-  useTopBar(topBarConfig);
+  
+  useTopBar(topBarConfig, 'leads');  // pageId prevents unnecessary updates
   
   return <div>Page content...</div>;
 }
+```
+
+### Ari Section Actions Pattern
+
+For Ari configurator tabs that need action buttons in the TopBar:
+
+```tsx
+// 1. In AriConfigurator.tsx - render the actions component in right slot
+const topBarConfig = useMemo(() => ({
+  left: <TopBarPageContext icon={AriAgentsIcon} title="Ari" subtitle={currentSection} />,
+  right: <AriTopBarActions />,  // Reads actions from context
+}), [currentSection]);
+useTopBar(topBarConfig, 'ari');
+
+// 2. In each section component - register section-specific actions
+function AriLocationsSection() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // MUST memoize actions array to prevent re-registration loops
+  const sectionActions: SectionAction[] = useMemo(() => [
+    { 
+      id: 'add-location', 
+      label: 'Add Location', 
+      onClick: () => setDialogOpen(true),
+      icon: <Plus size={16} aria-hidden="true" />,
+    },
+    { 
+      id: 'wordpress', 
+      label: 'WordPress', 
+      onClick: handleConnect, 
+      variant: 'outline',
+    },
+  ], []);
+  
+  useRegisterSectionActions('locations', sectionActions);
+  
+  return (
+    <>
+      <AddLocationDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      {/* Section content */}
+    </>
+  );
+}
+
+// 3. Sync active section (in parent or via URL param)
+const { setCurrentSection } = useAriSectionActions();
+useEffect(() => {
+  setCurrentSection(activeSection);
+}, [activeSection, setCurrentSection]);
+```
+
+**Key Points:**
+- Dialog/modal state stays in the section component
+- Only the trigger action moves to TopBar
+- Memoize actions array with `useMemo` to prevent infinite loops
+- Include relevant state in dependencies (disabled, isActive)
+
+### Skeleton Components
+
+Pre-built loading states for TopBar sections:
+
+| Component | Purpose | Props |
+|-----------|---------|-------|
+| `SkeletonTopBar` | Full TopBar skeleton (48px height) | `showTabs?`, `tabCount?`, `showSearch?`, `buttonCount?` |
+| `SkeletonTopBarPageContext` | Left section placeholder | `showSubtitle?` |
+| `SkeletonTopBarTabs` | Tab navigation placeholder | `tabCount?` (default: 3) |
+| `SkeletonTopBarSearch` | Search input placeholder | - |
+| `SkeletonTopBarActions` | Right section buttons | `buttonCount?` (default: 2) |
+
+```tsx
+import { 
+  SkeletonTopBar,
+  SkeletonTopBarPageContext,
+  SkeletonTopBarTabs,
+  SkeletonTopBarActions,
+} from '@/components/layout/TopBar';
+
+// Full TopBar skeleton during page transitions
+<SkeletonTopBar showTabs tabCount={4} buttonCount={2} />
+
+// Individual skeletons for partial loading states
+<SkeletonTopBarPageContext showSubtitle />
+<SkeletonTopBarTabs tabCount={3} />
+<SkeletonTopBarActions buttonCount={1} />
 ```
 
 ### TopBarTabs Props
@@ -1126,16 +1244,22 @@ interface TopBarPageContextProps {
   menuItems?: Array<{                      // Optional dropdown menu
     label: string;
     onClick: () => void;
+    icon?: ReactNode;
+    variant?: 'default' | 'destructive';
   }>;
 }
 ```
 
 ### Best Practices
 
-1. **Memoize config**: Always wrap `useTopBar` config in `useMemo` to prevent infinite re-renders
-2. **Keep right section compact**: Use `size="sm"` buttons and avoid too many actions
-3. **Tab labels**: Keep short on mobile - icons show, labels hide on small screens
-4. **Accessibility**: TopBarTabs uses proper `role="tablist"` and `aria-selected`
+1. **Always memoize config**: Wrap `useTopBar` config in `useMemo` to prevent infinite re-renders
+2. **Always pass pageId**: Include a unique page identifier as second arg to `useTopBar('config', 'page-id')`
+3. **Keep right section compact**: Use `size="sm"` buttons and limit to 2-3 actions
+4. **Tab labels**: Keep short on mobile - icons show, labels may hide on small screens
+5. **Accessibility**: TopBarTabs uses proper `role="tablist"` and `aria-selected`
+6. **Dialog state stays local**: Keep modal/dialog state in section components, only trigger moves to TopBar
+7. **Memoize section actions**: Always wrap `sectionActions` array in `useMemo`
+8. **Use skeletons**: Show `SkeletonTopBar` during page transitions for smooth loading UX
 
 ### Integration with AppLayout
 

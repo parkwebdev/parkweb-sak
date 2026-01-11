@@ -3230,9 +3230,120 @@ isActive(): boolean
 
 ---
 
+## TopBar Hooks
+
+### useTopBar (`src/components/layout/TopBarContext.tsx`)
+
+Sets the global top bar content for the current page.
+
+```tsx
+import { useTopBar, TopBarPageContext, TopBarTabs } from '@/components/layout/TopBar';
+
+const topBarConfig = useMemo(() => ({
+  left: <TopBarPageContext icon={Users01} title="Leads" />,
+  center: <TopBarTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />,
+  right: <Button size="sm">+ Add Lead</Button>,
+}), [tabs, activeTab]);
+
+useTopBar(topBarConfig, 'leads'); // pageId prevents unnecessary re-renders
+```
+
+**Signature:**
+```tsx
+function useTopBar(config: TopBarConfig, pageId?: string): void;
+
+interface TopBarConfig {
+  left?: ReactNode;   // Page context (icon + title)
+  center?: ReactNode; // Tabs/navigation
+  right?: ReactNode;  // Action buttons
+}
+```
+
+**Best Practices:**
+- **Always memoize** the config object with `useMemo`
+- **Always pass pageId** - unique string per page (e.g., 'leads', 'conversations', 'ari')
+- PageId ensures config only updates on mount or page navigation, not on every child re-render
+
+**File:** `src/components/layout/TopBarContext.tsx`
+
+---
+
+### useAriSectionActions (`src/contexts/AriSectionActionsContext.tsx`)
+
+Access the current section's registered actions. Returns a default empty state if used outside provider (safe for TopBar rendering).
+
+```tsx
+import { useAriSectionActions } from '@/contexts/AriSectionActionsContext';
+
+const { 
+  actions,           // SectionAction[] - Current section's actions
+  currentSection,    // string | null - Active section ID
+  setCurrentSection, // (id: string | null) => void
+  registerActions,   // (sectionId: string, actions: SectionAction[]) => void
+  unregisterActions, // (sectionId: string) => void
+} = useAriSectionActions();
+```
+
+**SectionAction Interface:**
+```tsx
+interface SectionAction {
+  id: string;
+  label: string;
+  onClick: () => void;
+  variant?: 'default' | 'outline' | 'ghost' | 'secondary' | 'destructive';
+  icon?: ReactNode;
+  disabled?: boolean;
+  isActive?: boolean;    // For toggle buttons (e.g., Debug Mode)
+  requiresPermission?: boolean;
+}
+```
+
+**File:** `src/contexts/AriSectionActionsContext.tsx`
+
+---
+
+### useRegisterSectionActions (`src/contexts/AriSectionActionsContext.tsx`)
+
+Register action buttons for an Ari section. Actions appear in the TopBar's right section when that section is active.
+
+```tsx
+import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
+
+// MUST memoize actions array to prevent infinite registration loops
+const sectionActions: SectionAction[] = useMemo(() => [
+  {
+    id: 'add-location',
+    label: 'Add Location',
+    onClick: () => setDialogOpen(true),
+    icon: <Plus size={16} aria-hidden="true" />,
+  },
+  {
+    id: 'connect-wordpress',
+    label: 'WordPress',
+    onClick: handleWordPressConnect,
+    variant: 'outline',
+    disabled: isConnecting,
+  },
+], [isConnecting]); // Include state that affects button rendering
+
+useRegisterSectionActions('locations', sectionActions);
+```
+
+**Best Practices:**
+- Memoize the actions array with `useMemo` to prevent re-registration loops
+- Include relevant state in dependencies (disabled, isActive, etc.)
+- Use `size="sm"` for button sizing in TopBar (handled by AriTopBarActions)
+- Keep dialog/modal state in the section component, only the trigger moves to TopBar
+- Actions are automatically unregistered when the component unmounts
+
+**File:** `src/contexts/AriSectionActionsContext.tsx`
+
+---
+
 ## Related Documentation
 
 - [Database Schema](./DATABASE_SCHEMA.md) - Data fetching patterns
-- [Architecture](./ARCHITECTURE.md) - Project structure
+- [Architecture](./ARCHITECTURE.md) - Project structure and provider hierarchy
 - [Design System](./DESIGN_SYSTEM.md) - UI guidelines
+- [Component Patterns](./COMPONENT_PATTERNS.md) - TopBar System patterns
 - [PDF Generator](./PDF_GENERATOR.md) - PDF report generation

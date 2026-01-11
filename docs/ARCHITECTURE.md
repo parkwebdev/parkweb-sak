@@ -40,6 +40,31 @@ Pilot is a multi-tenant AI agent platform for building, deploying, and managing 
 
 ---
 
+## Provider Hierarchy
+
+The application uses a layered provider architecture. Understanding this hierarchy is critical for context access:
+
+```
+QueryClientProvider
+└── ThemeProvider
+    └── TooltipProvider
+        └── GlobalSearchProvider
+            └── BrowserRouter
+                └── AuthProvider
+                    └── AriSectionActionsProvider  ← App-wide (for TopBar actions)
+                        └── Routes
+                            └── AppLayout
+                                └── TopBarProvider  ← Layout-scoped (for TopBar content)
+                                    └── Page Content
+```
+
+**Key Points:**
+- `AriSectionActionsProvider` is app-wide so TopBar can render action components before Ari page mounts
+- `TopBarProvider` is layout-scoped so different layouts can have independent TopBar behavior
+- Both contexts return safe defaults when accessed outside their provider (won't crash)
+
+---
+
 ## Technology Stack
 
 ### Frontend

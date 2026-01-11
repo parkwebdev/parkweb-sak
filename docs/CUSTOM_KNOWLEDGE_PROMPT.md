@@ -275,7 +275,8 @@ Always handle 429 (rate limit) and 402 (payment required) errors:
 | New UI component | SHADCN_COMPONENT_GUIDE.md |
 | New design token | DESIGN_SYSTEM.md |
 | New route | ROUTE_CONFIG in routes.ts |
-| New Ari section | ARI_SECTIONS in routes.ts |
+| New Ari section | ARI_SECTIONS in routes.ts, use `useRegisterSectionActions` for TopBar actions |
+| New Ari section with TopBar actions | COMPONENT_PATTERNS.md (TopBar System section) |
 
 ---
 
@@ -291,3 +292,6 @@ Always handle 429 (rate limit) and 402 (payment required) errors:
 8. Missing `enabled: !!user` on queries with realtime subscriptions
 9. Missing permission checks on mutation functions
 10. Using raw Tailwind colors (text-green-600) instead of tokens (text-status-active)
+11. Putting `AriSectionActionsProvider` inside page component instead of App.tsx root
+12. Forgetting `pageId` parameter in `useTopBar(config, pageId)` causing re-render loops
+13. Not memoizing `sectionActions` array in `useRegisterSectionActions`
