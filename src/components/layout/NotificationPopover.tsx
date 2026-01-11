@@ -15,7 +15,6 @@ import {
 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUserNotifications, type Notification, type NotificationType } from '@/hooks/useUserNotifications';
 
@@ -47,6 +46,18 @@ const notificationTypeConfig: Record<NotificationType, { icon: typeof MessageCha
     bgColor: 'bg-muted'
   },
 };
+
+/** Get unread dot color based on notification type */
+function getUnreadDotColor(type: NotificationType): string {
+  const colors: Record<NotificationType, string> = {
+    conversation: '#2563eb', // blue-600
+    lead: '#16a34a', // green-600
+    team: '#9333ea', // purple-600
+    report: '#d97706', // amber-600
+    system: '#6b7280', // gray-500
+  };
+  return colors[type] || colors.system;
+}
 
 /** Single notification item */
 function NotificationItem({ 
@@ -93,10 +104,11 @@ function NotificationItem({
           )}>
             {notification.title}
           </p>
-          {/* Unread indicator */}
+          {/* Unread indicator - colored by type */}
           {!notification.read && (
             <div 
-              className="h-2 w-2 rounded-full bg-primary shrink-0 mt-1.5" 
+              className={cn("h-2 w-2 rounded-full shrink-0 mt-1.5", config.bgColor.replace('bg-', 'bg-').replace('/30', ''))}
+              style={{ backgroundColor: getUnreadDotColor(notification.type) }}
               aria-label="Unread"
             />
           )}
@@ -211,8 +223,8 @@ export function NotificationPopover() {
         )}
       </div>
 
-      {/* Notification list */}
-      <ScrollArea className="max-h-[400px]">
+      {/* Notification list - scrollable container */}
+      <div className="overflow-y-auto max-h-[360px]">
         {isLoading ? (
           <div>
             <NotificationSkeleton />
@@ -233,7 +245,7 @@ export function NotificationPopover() {
             ))}
           </div>
         )}
-      </ScrollArea>
+      </div>
 
       {/* Footer - view all link (optional) */}
       {notifications.length > 0 && (

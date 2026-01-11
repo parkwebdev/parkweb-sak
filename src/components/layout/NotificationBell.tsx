@@ -48,11 +48,11 @@ export function NotificationBell() {
           {hasUnread && !isLoading && (
             <Badge
               variant="destructive"
-              size={unreadCount > 9 ? 'micro' : 'dot'}
               className={cn(
-                "absolute -top-0.5 -right-0.5 min-w-[18px]",
+                "absolute -top-0.5 -right-0.5",
                 "border-2 border-background",
-                unreadCount <= 9 && "h-[18px] w-[18px]"
+                "h-[16px] min-w-[16px] p-0 flex items-center justify-center",
+                "text-[9px] font-semibold leading-none"
               )}
               role="status"
               aria-live="polite"
