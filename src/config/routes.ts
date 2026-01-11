@@ -101,7 +101,7 @@ export const ROUTE_CONFIG: readonly RouteConfig[] = [
   // Bottom navigation routes
   {
     id: 'knowledge-base',
-    label: 'Knowledge Base',
+    label: 'Help Center',
     path: '/knowledge-base',
     iconName: 'BookOpen01',
     shortcut: '⌥H',

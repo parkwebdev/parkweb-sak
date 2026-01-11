@@ -72,7 +72,7 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
     {
       key: 'h',
       altKey: true,
-      description: 'Go to Knowledge Base',
+      description: 'Go to Help Center',
       action: () => navigate('/knowledge-base')
     }
   ];
