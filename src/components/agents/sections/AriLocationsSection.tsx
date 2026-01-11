@@ -24,7 +24,8 @@ import { useAgent } from '@/hooks/useAgent';
 import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 import { CreateLocationDialog } from '@/components/agents/locations/CreateLocationDialog';
 import { LocationDetailsSheet } from '@/components/agents/locations/LocationDetailsSheet';
-import { WordPressIntegrationSection } from '@/components/agents/locations/WordPressIntegrationSection';
+import { WordPressIntegrationSheet } from '@/components/agents/locations/WordPressIntegrationSheet';
+import { WordPressIcon } from '@/components/icons/WordPressIcon';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonTableSection } from '@/components/ui/skeleton';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
@@ -73,6 +74,14 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteLocation_, setDeleteLocation] = useState<LocationWithCounts | null>(null);
   const [deleteProperty_, setDeleteProperty] = useState<PropertyWithLocation | null>(null);
+  const [wordPressSheetOpen, setWordPressSheetOpen] = useState(false);
+
+  // Check WordPress connection status from agent config
+  const isWordPressConnected = useMemo(() => {
+    if (!agent?.deployment_config) return false;
+    const config = agent.deployment_config as { wordpress?: { siteUrl?: string } };
+    return !!config.wordpress?.siteUrl;
+  }, [agent?.deployment_config]);
   
   // Table states
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -403,6 +412,15 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const sectionActions: SectionAction[] = useMemo(() => {
     const actions: SectionAction[] = [];
     
+    // WordPress integration button
+    actions.push({
+      id: 'wordpress-integration',
+      label: isWordPressConnected ? 'WordPress' : 'Connect WordPress',
+      onClick: () => setWordPressSheetOpen(true),
+      variant: 'outline',
+      icon: <WordPressIcon className="h-4 w-4 text-[#21759b]" />,
+    });
+    
     if (viewMode === 'communities' && canManageLocations) {
       actions.push({
         id: 'add-location',
@@ -413,7 +431,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
     }
     
     return actions;
-  }, [viewMode, canManageLocations]);
+  }, [viewMode, canManageLocations, isWordPressConnected]);
   
   useRegisterSectionActions('locations', sectionActions);
 
@@ -627,9 +645,6 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
       />
 
       <div className="space-y-4">
-        {/* WordPress Integration - Collapsible */}
-        <WordPressIntegrationSection agent={agent} onSyncComplete={handleWordPressSyncComplete} />
-
         {/* Validation Warning Banner - Properties View */}
         {viewMode === 'properties' && validationStats.missingLotNumber > 0 && (
           <div className="flex items-center gap-3 p-3 bg-warning/10 border border-warning/30 rounded-lg">
@@ -835,6 +850,13 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
           onConfirm={handleDeleteProperty}
           title="Delete Property"
           description="This will permanently delete this property. This action cannot be undone."
+        />
+
+        <WordPressIntegrationSheet
+          agent={agent}
+          onSyncComplete={handleWordPressSyncComplete}
+          open={wordPressSheetOpen}
+          onOpenChange={setWordPressSheetOpen}
         />
       </div>
     </div>
