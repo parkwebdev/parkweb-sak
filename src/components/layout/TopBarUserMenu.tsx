@@ -241,7 +241,7 @@ export function TopBarUserMenu() {
               className="border-l border-border animate-fade-in flex-1"
               onMouseLeave={() => setShowShortcuts(false)}
             >
-              <div className="space-y-0.5 px-2 py-1">
+              <div className="space-y-1.5 px-2 py-1">
                 {shortcuts.map((shortcut, index) => (
                   <div key={index} className="flex items-center justify-between w-full py-0.5">
                     <span className="text-xs text-foreground">{shortcut.description}</span>
