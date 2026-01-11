@@ -5,10 +5,9 @@
  */
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { SearchLg, ChevronDown } from '@untitledui/icons';
+import { ChevronDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,8 +47,6 @@ interface FullCalendarProps {
   onAddEvent?: () => void;
   onEventMove?: (eventId: string, newStart: Date, newEnd: Date) => void;
   onEventResize?: (eventId: string, newStart: Date, newEnd: Date) => void;
-  searchQuery?: string;
-  onSearchChange?: (value: string) => void;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -62,8 +59,6 @@ export function FullCalendar({
   onAddEvent,
   onEventMove,
   onEventResize,
-  searchQuery = '',
-  onSearchChange,
 }: FullCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>('month');
@@ -657,19 +652,6 @@ export function FullCalendar({
                 : format(currentDate, 'MMMM yyyy')
               }
             </span>
-          </div>
-        </div>
-        
-        {/* Center: Search input */}
-        <div className="hidden lg:flex flex-1 max-w-sm mx-6">
-          <div className="relative w-full">
-            <SearchLg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search bookings..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="pl-9"
-            />
           </div>
         </div>
         

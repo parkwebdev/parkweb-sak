@@ -19,9 +19,10 @@ import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDi
 import { SkeletonCalendarPage } from '@/components/ui/page-skeleton';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useCanManageMultiple } from '@/hooks/useCanManage';
-import { useTopBar, TopBarPageContext, TopBarTabs, type TopBarTab } from '@/components/layout/TopBar';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { PlannerTopBarSearch } from '@/components/calendar/PlannerTopBarSearch';
+import { EventTypeDropdown } from '@/components/calendar/EventTypeDropdown';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
-import { EVENT_TYPE_CONFIG } from '@/types/calendar';
 import { logger } from '@/utils/logger';
 
 interface PendingTimeChange {
@@ -33,7 +34,6 @@ interface PendingTimeChange {
 }
 
 function Planner() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   
   // Permission checks
@@ -49,30 +49,6 @@ function Planner() {
     refetch 
   } = useCalendarEvents();
   
-  // Configure top bar tabs for event types
-  const plannerTabs: TopBarTab[] = useMemo(() => [
-    { id: 'all', label: 'All' },
-    { id: 'showing', label: 'Showings' },
-    { id: 'move_in', label: 'Move-ins' },
-    { id: 'inspection', label: 'Inspections' },
-    { id: 'maintenance', label: 'Maintenance' },
-  ], []);
-  
-  // Configure top bar for this page
-  const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={getNavigationIcon('Calendar')} title="Planner" />,
-    center: <TopBarTabs tabs={plannerTabs} activeTab={activeTab} onTabChange={setActiveTab} />,
-    right: canManageBookings ? (
-      <Button size="sm" onClick={() => {
-        setSelectedDate(new Date());
-        setCreateDialogOpen(true);
-      }}>
-        Add event
-      </Button>
-    ) : undefined,
-  }), [plannerTabs, activeTab, canManageBookings]);
-  useTopBar(topBarConfig);
-  
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [eventDetailOpen, setEventDetailOpen] = useState(false);
@@ -84,26 +60,43 @@ function Planner() {
   const [timeChangeDialogOpen, setTimeChangeDialogOpen] = useState(false);
   const [pendingTimeChange, setPendingTimeChange] = useState<PendingTimeChange | null>(null);
 
-  // Filter events based on active tab and search
+  // Filter events based on active tab
   const filteredEvents = dbEvents.filter(event => {
-    const matchesTab = activeTab === 'all' || event.type === activeTab;
-    const matchesSearch = !searchQuery || 
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.lead_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.property?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.community?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesTab && matchesSearch;
+    return activeTab === 'all' || event.type === activeTab;
   });
 
-  const handleDateClick = (date: Date) => {
+  const handleDateClick = useCallback((date: Date) => {
     setSelectedDate(date);
     setCreateDialogOpen(true);
-  };
+  }, []);
 
-  const handleEventClick = (event: CalendarEvent) => {
+  const handleEventClick = useCallback((event: CalendarEvent) => {
     setSelectedEvent(event);
     setEventDetailOpen(true);
-  };
+  }, []);
+  
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: (
+      <div className="flex items-center gap-3">
+        <TopBarPageContext icon={getNavigationIcon('Calendar')} title="Planner" />
+        <PlannerTopBarSearch 
+          events={dbEvents} 
+          onSelect={handleEventClick}
+        />
+      </div>
+    ),
+    center: <EventTypeDropdown activeType={activeTab} onTypeChange={setActiveTab} />,
+    right: canManageBookings ? (
+      <Button size="sm" onClick={() => {
+        setSelectedDate(new Date());
+        setCreateDialogOpen(true);
+      }}>
+        Add event
+      </Button>
+    ) : undefined,
+  }), [activeTab, canManageBookings, dbEvents, handleEventClick]);
+  useTopBar(topBarConfig);
 
   const handleAddEvent = () => {
     setSelectedDate(new Date());
@@ -233,20 +226,7 @@ function Planner() {
 
   return (
     <main className="flex-1 bg-muted/30 h-full overflow-auto">
-      <div className="px-4 lg:px-8 py-6 space-y-6">
-        {/* Color Legend */}
-        <div className="flex flex-wrap items-center gap-3">
-          {Object.entries(EVENT_TYPE_CONFIG).map(([key, config]) => (
-            <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span 
-                className="w-2.5 h-2.5 rounded-full" 
-                style={{ backgroundColor: config.color }}
-              />
-              <span>{config.label}</span>
-            </div>
-          ))}
-        </div>
-
+      <div className="px-4 lg:px-8 py-6">
         {/* Calendar */}
         <FullCalendar
           events={filteredEvents}
@@ -255,8 +235,6 @@ function Planner() {
           onAddEvent={canManageBookings ? handleAddEvent : undefined}
           onEventMove={canManageBookings ? handleEventMove : undefined}
           onEventResize={canManageBookings ? handleEventResize : undefined}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
         />
       </div>
 
