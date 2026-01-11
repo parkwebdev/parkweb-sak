@@ -78,3 +78,12 @@ export { TopBarPageContext, type PageContextMenuItem } from './TopBarPageContext
 export { TopBarProvider, useTopBar, useTopBarContext, type TopBarConfig } from './TopBarContext';
 export { TopBarSearch } from './TopBarSearch';
 export { TopBarSearchResultItem, TopBarSearchEmptyState } from './TopBarSearchResultItem';
+
+// Re-export skeleton components for convenience
+export { 
+  SkeletonTopBar,
+  SkeletonTopBarPageContext,
+  SkeletonTopBarTabs,
+  SkeletonTopBarSearch,
+  SkeletonTopBarActions,
+} from '@/components/ui/skeleton';
