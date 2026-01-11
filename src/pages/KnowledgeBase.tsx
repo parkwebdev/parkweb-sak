@@ -7,21 +7,20 @@
  * @module pages/KnowledgeBase
  */
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { SearchMd, XClose } from '@untitledui/icons';
 import { getNavigationIcon } from '@/lib/navigation-icons';
 import { KBSidebar } from '@/components/knowledge-base/KBSidebar';
 import { KBArticleView } from '@/components/knowledge-base/KBArticleView';
 import { KBCategoryView } from '@/components/knowledge-base/KBCategoryView';
 import { KBTableOfContents } from '@/components/knowledge-base/KBTableOfContents';
 import { KBPopularArticles } from '@/components/knowledge-base/KBPopularArticles';
+import { KBSearchResults } from '@/components/knowledge-base/KBSearchResults';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
-import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { useTopBar, TopBarPageContext, TopBarSearch } from '@/components/layout/TopBar';
 import { 
   KB_CATEGORIES, 
   getKBCategoryById, 
@@ -64,39 +63,31 @@ export default function KnowledgeBase() {
   // Determine if we're in category view (no article param)
   const isCategoryView = categoryId && !articleSlug;
   
+  // Handle article selection from search results
+  const handleSearchSelect = useCallback((category: KBCategory, article: KBArticle) => {
+    setSearchParams({ category: category.id, article: article.slug });
+    setSearchQuery('');
+  }, [setSearchParams]);
+  
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('BookOpen01')} title="Knowledge Base" />
-        <div className="relative w-48 lg:w-64">
-          <SearchMd
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            type="text"
-            placeholder="Search articles..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-8"
-            size="sm"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Clear search"
-            >
-              <XClose size={14} aria-hidden="true" />
-            </button>
+        <TopBarSearch
+          placeholder="Search articles..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          renderResults={() => (
+            <KBSearchResults
+              query={searchQuery}
+              onSelect={handleSearchSelect}
+            />
           )}
-        </div>
+        />
       </div>
     ),
-  }), [searchQuery]);
+  }), [searchQuery, handleSearchSelect]);
   useTopBar(topBarConfig);
   
   useEffect(() => {
