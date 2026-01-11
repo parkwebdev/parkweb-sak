@@ -128,11 +128,12 @@ export function useTopBar(config: TopBarConfig, pageId?: string) {
   }, [config, pageId]);
   
   // Separate cleanup effect that only runs on unmount
+  // NOTE: We intentionally do NOT call setConfig({}) here.
+  // The next page will set its own config on mount, and calling setConfig({})
+  // during unmount causes infinite re-render loops when components remount quickly.
   useLayoutEffect(() => {
     return () => {
       hasMountedRef.current = false;
-      setConfig({});
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

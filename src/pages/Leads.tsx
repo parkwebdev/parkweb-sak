@@ -15,66 +15,30 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
-import { Loading02, Download01, LayersThree01 } from '@untitledui/icons';
+import { Loading02 } from '@untitledui/icons';
 import { getNavigationIcon } from '@/lib/navigation-icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
-import { useTeam } from '@/hooks/useTeam';
 import { useCanManage } from '@/hooks/useCanManage';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
-import { LeadsActiveFilters, type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
-import { LeadsSortDropdown } from '@/components/leads/LeadsSortDropdown';
-import { LeadsPropertiesDropdown } from '@/components/leads/LeadsPropertiesDropdown';
-import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
+import { type DateRangeFilter } from '@/components/leads/LeadsActiveFilters';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
 import { LeadsSearchWrapper } from '@/components/leads/LeadsSearchWrapper';
-import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
-import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
+import { LeadsTopBarRight } from '@/components/leads/LeadsTopBarRight';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { Tables, Json } from '@/integrations/supabase/types';
-import type { VisibilityState } from '@tanstack/react-table';
 import type { ConversationMetadata } from '@/types/metadata';
 
 // localStorage keys for per-user preferences
 const VIEW_MODE_KEY = 'leads-view-mode';
-const KANBAN_FIELDS_KEY = 'leads-kanban-fields';
-const KANBAN_FIELDS_VERSION_KEY = 'leads-kanban-fields-version';
-const KANBAN_FIELD_ORDER_KEY = 'leads-kanban-field-order';
-const TABLE_COLUMNS_KEY = 'leads-table-columns';
-const TABLE_COLUMN_ORDER_KEY = 'leads-table-column-order';
-const DEFAULT_SORT_KEY = 'leads-default-sort';
-
-// Increment this when adding new default fields to trigger migration
-const KANBAN_FIELDS_VERSION = 1;
-
-// Default table column visibility
-const DEFAULT_TABLE_COLUMNS: VisibilityState = {
-  name: true,
-  email: true,
-  phone: true,
-  stage_id: true,
-  priority: true,
-  assignees: true,
-  location: false,
-  source: false,
-  created_at: true,
-  updated_at: false,
-};
-
-// Default table column order
-const DEFAULT_TABLE_COLUMN_ORDER = ['name', 'email', 'phone', 'stage_id', 'priority', 'assignees', 'location', 'source', 'created_at', 'updated_at'];
-
-// Default kanban field order
-const DEFAULT_KANBAN_FIELD_ORDER: CardFieldKey[] = CARD_FIELDS.map(f => f.key);
 
 // Date filter day ranges
 const DATE_FILTER_DAYS: Record<Exclude<DateRangeFilter, 'all'>, number> = {
@@ -118,7 +82,6 @@ function Leads() {
 
   const { stages } = useLeadStages();
   const { getAssignees, addAssignee, removeAssignee, assigneesByLead } = useLeadAssignees();
-  const { teamMembers } = useTeam();
   const queryClient = useQueryClient();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -128,7 +91,6 @@ function Leads() {
 
   // Handle priority change from table dropdown
   const handlePriorityChange = useCallback(async (leadId: string, conversationId: string, priority: string) => {
-    // Fetch current conversation metadata
     const { data: conversation } = await supabase
       .from('conversations')
       .select('metadata')
@@ -144,7 +106,6 @@ function Leads() {
       .update({ metadata: newMetadata as unknown as Json })
       .eq('id', conversationId);
 
-    // Invalidate queries to refresh data
     queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
   }, [queryClient]);
@@ -158,80 +119,6 @@ function Leads() {
       console.warn('Failed to read view mode from localStorage:', e);
     }
     return 'kanban';
-  });
-
-  // Per-user kanban visible fields with version-based migration
-  const [visibleCardFields, setVisibleCardFields] = useState<Set<CardFieldKey>>(() => {
-    const defaults = getDefaultVisibleFields();
-    
-    try {
-      const storedVersion = localStorage.getItem(KANBAN_FIELDS_VERSION_KEY);
-      const stored = localStorage.getItem(KANBAN_FIELDS_KEY);
-      
-      if (stored) {
-        const savedFields = new Set(JSON.parse(stored) as CardFieldKey[]);
-        
-        // If version mismatch, merge in new default fields
-        if (storedVersion !== String(KANBAN_FIELDS_VERSION)) {
-          for (const field of defaults) {
-            savedFields.add(field);
-          }
-          localStorage.setItem(KANBAN_FIELDS_KEY, JSON.stringify([...savedFields]));
-          localStorage.setItem(KANBAN_FIELDS_VERSION_KEY, String(KANBAN_FIELDS_VERSION));
-        }
-        
-        return savedFields;
-      }
-    } catch (e: unknown) {
-      console.warn('Failed to read kanban fields from localStorage:', e);
-    }
-    
-    localStorage.setItem(KANBAN_FIELDS_VERSION_KEY, String(KANBAN_FIELDS_VERSION));
-    return defaults;
-  });
-
-  // Per-user table column visibility
-  const [tableColumnVisibility, setTableColumnVisibility] = useState<VisibilityState>(() => {
-    try {
-      const stored = localStorage.getItem(TABLE_COLUMNS_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e: unknown) {
-      console.warn('Failed to read table columns from localStorage:', e);
-    }
-    return DEFAULT_TABLE_COLUMNS;
-  });
-
-  // Per-user table column order
-  const [tableColumnOrder, setTableColumnOrder] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem(TABLE_COLUMN_ORDER_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e: unknown) {
-      console.warn('Failed to read table column order from localStorage:', e);
-    }
-    return DEFAULT_TABLE_COLUMN_ORDER;
-  });
-
-  // Per-user kanban field order
-  const [kanbanFieldOrder, setKanbanFieldOrder] = useState<CardFieldKey[]>(() => {
-    try {
-      const stored = localStorage.getItem(KANBAN_FIELD_ORDER_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e: unknown) {
-      console.warn('Failed to read kanban field order from localStorage:', e);
-    }
-    return DEFAULT_KANBAN_FIELD_ORDER;
-  });
-
-  // Per-user default sort preference
-  const [defaultSort, setDefaultSort] = useState<SortOption | null>(() => {
-    try {
-      const stored = localStorage.getItem(DEFAULT_SORT_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e: unknown) {
-      console.warn('Failed to read default sort from localStorage:', e);
-    }
-    return null;
   });
   
   // Bulk selection state
@@ -263,39 +150,6 @@ function Leads() {
   const handleViewModeChange = useCallback((mode: 'kanban' | 'table') => {
     setViewMode(mode);
     localStorage.setItem(VIEW_MODE_KEY, mode);
-  }, []);
-
-  const handleColumnVisibilityChange = useCallback((visibility: VisibilityState) => {
-    setTableColumnVisibility(visibility);
-    localStorage.setItem(TABLE_COLUMNS_KEY, JSON.stringify(visibility));
-  }, []);
-
-  const handleColumnOrderChange = useCallback((order: string[]) => {
-    setTableColumnOrder(order);
-    localStorage.setItem(TABLE_COLUMN_ORDER_KEY, JSON.stringify(order));
-  }, []);
-
-  const handleKanbanFieldOrderChange = useCallback((order: CardFieldKey[]) => {
-    setKanbanFieldOrder(order);
-    localStorage.setItem(KANBAN_FIELD_ORDER_KEY, JSON.stringify(order));
-  }, []);
-
-  const handleDefaultSortChange = useCallback((sort: SortOption | null) => {
-    setDefaultSort(sort);
-    localStorage.setItem(DEFAULT_SORT_KEY, JSON.stringify(sort));
-  }, []);
-
-  const handleToggleField = useCallback((field: CardFieldKey) => {
-    setVisibleCardFields(prev => {
-      const updated = new Set(prev);
-      if (updated.has(field)) {
-        updated.delete(field);
-      } else {
-        updated.add(field);
-      }
-      localStorage.setItem(KANBAN_FIELDS_KEY, JSON.stringify([...updated]));
-      return updated;
-    });
   }, []);
 
   // Find the default stage for leads without a stage_id
@@ -350,8 +204,11 @@ function Leads() {
     setIsDetailsOpen(true);
   }, []);
 
-  // Configure top bar for this page with all controls
-  // Note: LeadsSearchWrapper fetches its own data, keeping topBarConfig stable
+  // Stable callbacks for TopBar actions
+  const handleOpenExport = useCallback(() => setIsExportDialogOpen(true), []);
+  const handleOpenManageStages = useCallback(() => setIsManageStagesOpen(true), []);
+
+  // Configure top bar for this page - simplified with LeadsTopBarRight component
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
@@ -360,84 +217,28 @@ function Leads() {
       </div>
     ),
     right: (
-      <div className="flex items-center gap-1">
-        {/* Action buttons */}
-        <IconButton
-          label="Export leads"
-          variant="outline"
-          size="sm"
-          onClick={() => setIsExportDialogOpen(true)}
-        >
-          <Download01 size={16} />
-        </IconButton>
-        {canManageLeads && (
-          <IconButton
-            label="Manage stages"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsManageStagesOpen(true)}
-          >
-            <LayersThree01 size={16} />
-          </IconButton>
-        )}
-
-        {/* Divider */}
-        <div className="w-px h-5 bg-border mx-1" />
-
-        {/* Filter controls */}
-        <LeadsActiveFilters
-          stages={stages}
-          selectedStageIds={selectedStageIds}
-          onStageFilterChange={setSelectedStageIds}
-          dateRange={dateRangeFilter}
-          onDateRangeChange={setDateRangeFilter}
-          teamMembers={teamMembers}
-          selectedAssigneeIds={selectedAssigneeIds}
-          onAssigneeFilterChange={setSelectedAssigneeIds}
-        />
-        {viewMode === 'kanban' && (
-          <LeadsSortDropdown
-            sortOption={defaultSort}
-            onSortChange={handleDefaultSortChange}
-          />
-        )}
-        <LeadsPropertiesDropdown
-          viewMode={viewMode}
-          visibleCardFields={visibleCardFields}
-          onToggleCardField={handleToggleField}
-          kanbanFieldOrder={kanbanFieldOrder}
-          onKanbanFieldOrderChange={handleKanbanFieldOrderChange}
-          columnVisibility={tableColumnVisibility}
-          onColumnVisibilityChange={handleColumnVisibilityChange}
-          tableColumnOrder={tableColumnOrder}
-          onColumnOrderChange={handleColumnOrderChange}
-        />
-        <ViewModeToggle
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-        />
-      </div>
+      <LeadsTopBarRight
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
+        selectedStageIds={selectedStageIds}
+        onStageFilterChange={setSelectedStageIds}
+        selectedAssigneeIds={selectedAssigneeIds}
+        onAssigneeFilterChange={setSelectedAssigneeIds}
+        dateRangeFilter={dateRangeFilter}
+        onDateRangeFilterChange={setDateRangeFilter}
+        onOpenExport={handleOpenExport}
+        onOpenManageStages={handleOpenManageStages}
+      />
     ),
   }), [
     handleViewLead,
-    canManageLeads,
-    stages,
     viewMode,
-    selectedStageIds,
-    dateRangeFilter,
-    teamMembers,
-    selectedAssigneeIds,
-    defaultSort,
-    handleDefaultSortChange,
-    visibleCardFields,
-    handleToggleField,
-    kanbanFieldOrder,
-    handleKanbanFieldOrderChange,
-    tableColumnVisibility,
-    handleColumnVisibilityChange,
-    tableColumnOrder,
-    handleColumnOrderChange,
     handleViewModeChange,
+    selectedStageIds,
+    selectedAssigneeIds,
+    dateRangeFilter,
+    handleOpenExport,
+    handleOpenManageStages,
   ]);
   useTopBar(topBarConfig, 'leads');
 
@@ -492,7 +293,7 @@ function Leads() {
       setIsSingleDeleteOpen(false);
       setIsDetailsOpen(false);
     } finally {
-    setIsDeleting(false);
+      setIsDeleting(false);
     }
   }, [deleteLead, singleDeleteLeadId]);
 
@@ -521,10 +322,7 @@ function Leads() {
                   onAddAssignee={canManageLeads ? addAssignee : undefined}
                   onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
                   getAssignees={getAssignees}
-                  visibleFields={visibleCardFields}
-                  fieldOrder={kanbanFieldOrder}
-                  canManage={canManageLeads}
-                  sortOption={defaultSort}
+                  onBulkDelete={canManageLeads ? handleOpenBulkDelete : undefined}
                 />
               </motion.div>
             ) : (
@@ -537,53 +335,63 @@ function Leads() {
               >
                 <LeadsTable
                   leads={filteredLeads}
-                  selectedIds={selectedLeadIds}
-                  onView={handleViewLead}
-                  onStageChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : undefined}
-                  onPriorityChange={canManageLeads ? handlePriorityChange : undefined}
+                  stages={stages}
+                  selectedLeadIds={selectedLeadIds}
+                  onSelectAll={handleSelectAll}
+                  onSelectLead={handleSelectLead}
+                  onViewLead={handleViewLead}
+                  onStageChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : () => {}}
+                  onPriorityChange={handlePriorityChange}
+                  onBulkDelete={canManageLeads ? () => setIsDeleteDialogOpen(true) : undefined}
+                  getAssignees={getAssignees}
                   onAddAssignee={canManageLeads ? addAssignee : undefined}
                   onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
-                  getAssignees={getAssignees}
-                  onSelectionChange={canManageLeads ? handleSelectLead : undefined}
-                  onSelectAll={canManageLeads ? handleSelectAll : undefined}
-                  onBulkDelete={canManageLeads ? handleOpenBulkDelete : undefined}
-                  columnVisibility={tableColumnVisibility}
-                  onColumnVisibilityChange={handleColumnVisibilityChange}
-                  columnOrder={tableColumnOrder}
-                  defaultSort={defaultSort}
-                  canManage={canManageLeads}
-                  isLoading={isFetchingNextPage}
                 />
               </motion.div>
             )}
           </AnimatePresence>
         )}
-
-        {!loading && leads.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            No leads captured yet. Leads are automatically added when visitors submit the contact form in your widget.
+        
+        {/* Empty state */}
+        {!loading && filteredLeads.length === 0 && leads.length > 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-muted-foreground text-sm">No leads match your current filters.</p>
+            <Button 
+              variant="link" 
+              className="mt-2"
+              onClick={() => {
+                setSelectedStageIds([]);
+                setSelectedAssigneeIds([]);
+                setDateRangeFilter('all');
+                setSearchQuery('');
+              }}
+            >
+              Clear all filters
+            </Button>
           </div>
         )}
-        
+
         {/* Infinite scroll trigger */}
-        <div ref={loadMoreRef} className="h-4" aria-hidden="true" />
+        <div ref={loadMoreRef} className="h-1" />
         
-        {/* Loading indicator for infinite scroll */}
+        {/* Loading more indicator */}
         {isFetchingNextPage && (
-          <div className="flex justify-center py-4">
-            <Loading02 size={20} className="animate-spin text-muted-foreground" aria-hidden="true" />
-            <span className="sr-only">Loading more leads</span>
+          <div className="flex items-center justify-center py-4">
+            <Loading02 className="animate-spin text-muted-foreground" size={20} />
+            <span className="ml-2 text-sm text-muted-foreground">Loading more...</span>
           </div>
         )}
       </div>
 
-      {/* Dialogs */}
+      {/* Lead Details Sheet */}
       <LeadDetailsSheet
         lead={selectedLead}
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
-        onUpdate={updateLead}
         onDelete={canManageLeads ? handleSingleDelete : undefined}
+        onLeadUpdate={() => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+        }}
       />
 
       <DeleteLeadDialog
