@@ -231,7 +231,7 @@ function Planner() {
 
   return (
     <main className="flex-1 bg-muted/30 h-full overflow-auto">
-      <div className="px-4 lg:px-8 py-6">
+      <div className="px-4 py-6">
         {/* Calendar */}
         <FullCalendar
           events={filteredEvents}
