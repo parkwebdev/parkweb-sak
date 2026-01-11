@@ -86,15 +86,20 @@ function Planner() {
         />
       </div>
     ),
-    center: <EventTypeDropdown activeType={activeTab} onTypeChange={setActiveTab} />,
-    right: canManageBookings ? (
-      <Button size="sm" onClick={() => {
-        setSelectedDate(new Date());
-        setCreateDialogOpen(true);
-      }}>
-        Add event
-      </Button>
-    ) : undefined,
+    center: undefined,
+    right: (
+      <div className="flex items-center gap-2">
+        <EventTypeDropdown activeType={activeTab} onTypeChange={setActiveTab} />
+        {canManageBookings && (
+          <Button size="sm" onClick={() => {
+            setSelectedDate(new Date());
+            setCreateDialogOpen(true);
+          }}>
+            Add event
+          </Button>
+        )}
+      </div>
+    ),
   }), [activeTab, canManageBookings, dbEvents, handleEventClick]);
   useTopBar(topBarConfig);
 
