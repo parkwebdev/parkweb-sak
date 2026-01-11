@@ -7,7 +7,7 @@
  * @module components/leads/LeadsTopBarSearch
  */
 
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, memo, useRef, useEffect } from 'react';
 import { TopBarSearch } from '@/components/layout/TopBar';
 import { LeadsSearchResults } from './LeadsSearchResults';
 import type { Tables } from '@/integrations/supabase/types';
@@ -26,6 +26,7 @@ interface LeadsTopBarSearchProps {
 /**
  * Self-contained search component for the Leads page.
  * Manages search state internally to avoid triggering parent re-renders.
+ * Uses refs for data props to ensure stable renderResults callback.
  */
 export const LeadsTopBarSearch = memo(function LeadsTopBarSearch({
   leads,
@@ -34,14 +35,27 @@ export const LeadsTopBarSearch = memo(function LeadsTopBarSearch({
 }: LeadsTopBarSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Use refs to avoid closure issues and keep renderResults stable
+  const leadsRef = useRef(leads);
+  const stagesRef = useRef(stages);
+  const onSelectRef = useRef(onSelect);
+  
+  // Keep refs updated with latest values
+  useEffect(() => {
+    leadsRef.current = leads;
+    stagesRef.current = stages;
+    onSelectRef.current = onSelect;
+  });
+  
+  // Stable renderResults with empty deps - reads from refs
   const renderResults = useCallback((query: string) => (
     <LeadsSearchResults
       query={query}
-      leads={leads}
-      stages={stages}
-      onSelect={onSelect}
+      leads={leadsRef.current}
+      stages={stagesRef.current}
+      onSelect={onSelectRef.current}
     />
-  ), [leads, stages, onSelect]);
+  ), []);
 
   return (
     <TopBarSearch

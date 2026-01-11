@@ -422,7 +422,6 @@ function Leads() {
       </div>
     ),
   }), [
-    leads,
     stages,
     handleViewLead,
     canManageLeads,
