@@ -157,7 +157,7 @@ export function TopBarUserMenu() {
       <DropdownMenuContent 
         side="bottom"
         align="end"
-        sideOffset={8}
+        sideOffset={4}
         className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl p-0 overflow-hidden"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >

@@ -72,7 +72,7 @@ export function TopBarPageContext({
               <DotsHorizontal size={16} aria-hidden="true" />
             </IconButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent side="bottom" align="start" sideOffset={8} className="space-y-0.5">
+          <DropdownMenuContent side="bottom" align="start" sideOffset={4} className="space-y-0.5">
             {menuItems.map((item, i) => {
               const ItemIcon = item.icon;
               return (
