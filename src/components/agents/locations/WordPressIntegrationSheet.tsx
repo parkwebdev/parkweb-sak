@@ -44,18 +44,15 @@ import {
   RefreshCw01, 
   Check, 
   AlertCircle, 
-  Home01, 
   Trash01, 
   LinkExternal01, 
-  Building01, 
-  Settings01,
+  Settings02,
   ChevronDown,
   Edit02,
   XClose,
   Database01,
-  Dataflow01,
-  ZapFast
 } from '@untitledui/icons';
+import { DataExtractionIcon, LightningBoltFilled } from '@/components/icons/WordPressIcons';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
 import type { Tables } from '@/integrations/supabase/types';
@@ -179,7 +176,6 @@ function UnclassifiedEndpointItem({ endpoint, onApplyAsCommunity, onApplyAsHome 
           onClick={onApplyAsCommunity}
           className="h-6 text-2xs px-1.5"
         >
-          <Building01 size={10} aria-hidden="true" className="mr-0.5" />
           Community
         </Button>
         <Button
@@ -188,7 +184,6 @@ function UnclassifiedEndpointItem({ endpoint, onApplyAsCommunity, onApplyAsHome 
           onClick={onApplyAsHome}
           className="h-6 text-2xs px-1.5"
         >
-          <Home01 size={10} aria-hidden="true" className="mr-0.5" />
           Property
         </Button>
       </div>
@@ -429,7 +424,7 @@ export function WordPressIntegrationSheet({
                 <Card>
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Dataflow01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                      <DataExtractionIcon size={16} className="text-muted-foreground" aria-hidden="true" />
                       <span className="text-sm font-medium">Data Extraction</span>
                     </div>
                     
@@ -473,7 +468,7 @@ export function WordPressIntegrationSheet({
                         <RadioGroupItem value="ai" id="mode-ai" className="mt-0.5" />
                         <Label htmlFor="mode-ai" className="cursor-pointer flex-1">
                           <span className="font-medium text-sm flex items-center gap-2">
-                            <ZapFast size={14} className="text-warning" aria-hidden="true" />
+                            <LightningBoltFilled size={14} className="text-warning" aria-hidden="true" />
                             AI-Powered
                             <Badge variant="outline" size="sm">Uses credits</Badge>
                           </span>
@@ -491,7 +486,6 @@ export function WordPressIntegrationSheet({
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Building01 size={16} className="text-muted-foreground" aria-hidden="true" />
                         <span className="text-sm font-medium">Communities</span>
                         {(communityCount ?? 0) > 0 && (
                           <Badge variant="secondary" size="sm">
@@ -542,7 +536,6 @@ export function WordPressIntegrationSheet({
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Home01 size={16} className="text-muted-foreground" aria-hidden="true" />
                         <span className="text-sm font-medium">Property Listings</span>
                         {(homeCount ?? 0) > 0 && (
                           <Badge variant="secondary" size="sm">
@@ -597,7 +590,7 @@ export function WordPressIntegrationSheet({
                       className="w-full justify-between h-9 text-xs text-muted-foreground hover:text-foreground"
                     >
                       <div className="flex items-center gap-2">
-                        <Settings01 size={14} aria-hidden="true" />
+                        <Settings02 size={14} aria-hidden="true" />
                         <span>Advanced Settings</span>
                       </div>
                       <ChevronDown 
@@ -653,8 +646,7 @@ export function WordPressIntegrationSheet({
                             {/* Community Endpoints */}
                             {discoveredEndpoints.communityEndpoints?.length > 0 && (
                               <div className="bg-muted/50 rounded p-3 space-y-2">
-                                <p className="font-medium text-muted-foreground flex items-center gap-2">
-                                  <Building01 size={12} aria-hidden="true" />
+                                <p className="font-medium text-muted-foreground">
                                   Communities
                                 </p>
                                 {discoveredEndpoints.communityEndpoints.map((ep) => (
@@ -673,8 +665,7 @@ export function WordPressIntegrationSheet({
                             {/* Home/Property Endpoints */}
                             {discoveredEndpoints.homeEndpoints?.length > 0 && (
                               <div className="bg-muted/50 rounded p-3 space-y-2">
-                                <p className="font-medium text-muted-foreground flex items-center gap-2">
-                                  <Home01 size={12} aria-hidden="true" />
+                                <p className="font-medium text-muted-foreground">
                                   Properties
                                 </p>
                                 {discoveredEndpoints.homeEndpoints.map((ep) => (
