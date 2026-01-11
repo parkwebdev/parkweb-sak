@@ -67,12 +67,19 @@ export function AriSectionActionsProvider({ children }: AriSectionActionsProvide
   );
 }
 
+// Default context value for when hook is used outside provider (e.g., TopBar rendering before page mounts)
+const defaultContextValue: AriSectionActionsContextValue = {
+  actions: [],
+  registerActions: () => {},
+  unregisterActions: () => {},
+  currentSection: null,
+  setCurrentSection: () => {},
+};
+
 export function useAriSectionActions() {
   const context = useContext(AriSectionActionsContext);
-  if (!context) {
-    throw new Error('useAriSectionActions must be used within AriSectionActionsProvider');
-  }
-  return context;
+  // Return default value if outside provider - allows TopBar to render safely
+  return context ?? defaultContextValue;
 }
 
 /**
