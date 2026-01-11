@@ -10,7 +10,8 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen01, SearchMd, XClose } from '@untitledui/icons';
+import { SearchMd, XClose } from '@untitledui/icons';
+import { getNavigationIcon } from '@/lib/navigation-icons';
 import { KBSidebar } from '@/components/knowledge-base/KBSidebar';
 import { KBArticleView } from '@/components/knowledge-base/KBArticleView';
 import { KBCategoryView } from '@/components/knowledge-base/KBCategoryView';
@@ -67,7 +68,7 @@ export default function KnowledgeBase() {
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
-        <TopBarPageContext icon={BookOpen01} title="Knowledge Base" />
+        <TopBarPageContext icon={getNavigationIcon('BookOpen01')} title="Knowledge Base" />
         <div className="relative w-48 lg:w-64">
           <SearchMd
             size={16}

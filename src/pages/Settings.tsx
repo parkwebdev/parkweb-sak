@@ -17,7 +17,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings01 } from '@untitledui/icons';
+import { getNavigationIcon } from '@/lib/navigation-icons';
 import { SettingsSectionMenu, type SettingsTab } from '@/components/settings/SettingsSectionMenu';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
@@ -41,7 +41,7 @@ function Settings() {
   
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Settings01} title="Settings" />,
+    left: <TopBarPageContext icon={getNavigationIcon('Settings01')} title="Settings" />,
   }), []);
   useTopBar(topBarConfig);
 

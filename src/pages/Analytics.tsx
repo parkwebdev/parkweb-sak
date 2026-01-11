@@ -18,7 +18,7 @@ import { AnalyticsDatePicker } from '@/components/analytics/AnalyticsDatePicker'
 import { SECTION_INFO, TOOLBAR_SECTIONS } from '@/lib/analytics-constants';
 import { AnalyticsDatePreset, getDateRangeFromPreset } from '@/components/analytics/constants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
-import { TrendUp01 } from '@untitledui/icons';
+import { getNavigationIcon } from '@/lib/navigation-icons';
 
 import {
   ConversationsSection,
@@ -81,7 +81,7 @@ function Analytics() {
   
   // Configure top bar for this page (after derived state)
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={TrendUp01} title="Analytics" subtitle={SECTION_INFO[activeTab].title} />,
+    left: <TopBarPageContext icon={getNavigationIcon('TrendUp01')} title="Analytics" subtitle={SECTION_INFO[activeTab].title} />,
     right: showToolbar ? (
       <div className="flex items-center gap-3">
         <AnalyticsDatePicker

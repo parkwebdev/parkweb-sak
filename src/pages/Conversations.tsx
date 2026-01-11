@@ -18,7 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import { validateFiles } from '@/lib/file-validation';
 import { useCanManage } from '@/hooks/useCanManage';
 import { useTopBar, TopBarPageContext, TopBarTabs, type TopBarTab } from '@/components/layout/TopBar';
-import { MessageChatSquare } from '@untitledui/icons';
+import { getNavigationIcon } from '@/lib/navigation-icons';
 
 import { useInfiniteConversations } from '@/hooks/useInfiniteConversations';
 import { useAgent } from '@/hooks/useAgent';
@@ -345,7 +345,7 @@ function Conversations() {
   
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={MessageChatSquare} title="Inbox" />,
+    left: <TopBarPageContext icon={getNavigationIcon('MessageChatSquare')} title="Inbox" />,
     center: <TopBarTabs tabs={inboxTabs} activeTab={activeTabId} onTabChange={handleTopBarTabChange} />,
   }), [inboxTabs, activeTabId, handleTopBarTabChange]);
   useTopBar(topBarConfig);

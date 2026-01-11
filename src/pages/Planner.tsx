@@ -10,7 +10,7 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon } from '@untitledui/icons';
+import { getNavigationIcon } from '@/lib/navigation-icons';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
@@ -60,7 +60,7 @@ function Planner() {
   
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={CalendarIcon} title="Planner" />,
+    left: <TopBarPageContext icon={getNavigationIcon('Calendar')} title="Planner" />,
     center: <TopBarTabs tabs={plannerTabs} activeTab={activeTab} onTabChange={setActiveTab} />,
     right: canManageBookings ? (
       <Button size="sm" onClick={() => {

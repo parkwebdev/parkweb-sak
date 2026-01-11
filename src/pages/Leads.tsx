@@ -15,7 +15,8 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
-import { Loading02, Users01, SearchMd, X, Download01, LayersThree01 } from '@untitledui/icons';
+import { Loading02, SearchMd, X, Download01, LayersThree01 } from '@untitledui/icons';
+import { getNavigationIcon } from '@/lib/navigation-icons';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useLeadAssignees } from '@/hooks/useLeadAssignees';
 import { useTeam } from '@/hooks/useTeam';
@@ -301,7 +302,7 @@ function Leads() {
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
-        <TopBarPageContext icon={Users01} title="Leads" />
+        <TopBarPageContext icon={getNavigationIcon('Users01')} title="Leads" />
         {/* Search Input */}
         <div className="w-48 lg:w-64 relative flex-shrink-0">
           <Input
