@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/settings-icon';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCanManageChecker } from '@/hooks/useCanManage';
 import { toast } from '@/lib/toast';
@@ -71,6 +72,19 @@ export function TopBarUserMenu() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActiveRoute = (path: string) => {
+    if (path.includes('?tab=')) {
+      const [basePath, query] = path.split('?');
+      const tabValue = query.split('=')[1];
+      return location.pathname === basePath && location.search.includes(tabValue);
+    }
+    if (path === '/settings') {
+      return location.pathname === '/settings' && !location.search;
+    }
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   const handleDropdownOpenChange = (open: boolean) => {
     setIsDropdownOpen(open);
@@ -149,59 +163,59 @@ export function TopBarUserMenu() {
         side="bottom"
         align="end"
         sideOffset={8}
-        className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl"
+        className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl space-y-0.5"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
         <div className="flex">
           {/* Main menu column */}
-          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0`}>
+          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 space-y-0.5`}>
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/settings?tab=profile" className="w-full flex items-center gap-2 cursor-pointer">
+            <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
+              <Link to="/settings?tab=profile" className="w-full flex items-center cursor-pointer">
                 <UserCircleIcon size={15} />
                 Profile
               </Link>
             </DropdownMenuItem>
             {canView('view_team') && (
-              <DropdownMenuItem asChild>
-                <Link to="/settings?tab=team" className="w-full flex items-center gap-2 cursor-pointer">
+              <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings?tab=team') && 'bg-accent')}>
+                <Link to="/settings?tab=team" className="w-full flex items-center cursor-pointer">
                   <Users01 size={15} />
                   Team
                 </Link>
               </DropdownMenuItem>
             )}
             {canView('view_billing') && (
-              <DropdownMenuItem asChild>
-                <Link to="/settings?tab=usage" className="w-full flex items-center gap-2 cursor-pointer">
+              <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings?tab=usage') && 'bg-accent')}>
+                <Link to="/settings?tab=usage" className="w-full flex items-center cursor-pointer">
                   <PieChart03Icon size={15} />
                   Usage
                 </Link>
               </DropdownMenuItem>
             )}
             {canView('view_billing') && (
-              <DropdownMenuItem asChild>
-                <Link to="/settings?tab=billing" className="w-full flex items-center gap-2 cursor-pointer">
+              <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings?tab=billing') && 'bg-accent')}>
+                <Link to="/settings?tab=billing" className="w-full flex items-center cursor-pointer">
                   <CreditCard01 size={15} />
                   Billing
                 </Link>
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem asChild>
-              <Link to="/settings" className="w-full flex items-center gap-2 cursor-pointer">
+            <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings') && 'bg-accent')}>
+              <Link to="/settings" className="w-full flex items-center cursor-pointer">
                 <Settings02Icon size={15} />
                 Settings
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/knowledge-base" className="w-full flex items-center gap-2 cursor-pointer">
+            <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/knowledge-base') && 'bg-accent')}>
+              <Link to="/knowledge-base" className="w-full flex items-center cursor-pointer">
                 <BookOpen01 size={15} />
                 Help Center
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem 
               onMouseEnter={() => setShowShortcuts(true)}
-              className="flex items-center gap-2 cursor-default"
+              className="gap-2 cursor-default"
               onSelect={(e) => e.preventDefault()}
             >
               <Keyboard01 size={15} />
@@ -213,7 +227,7 @@ export function TopBarUserMenu() {
               <ThemeSwitcher />
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+            <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive cursor-pointer">
               <LogOut size={15} className="mr-2" />
               Sign Out
             </DropdownMenuItem>
