@@ -2,8 +2,7 @@
  * @fileoverview Leads TopBar Right Section
  * 
  * Self-contained component for the right side of the Leads page TopBar.
- * Manages its own state and data fetching to prevent re-render cascades
- * from propagating to the parent's TopBar config.
+ * Manages kanban-specific state internally while receiving table state from parent.
  * 
  * @module components/leads/LeadsTopBarRight
  */
@@ -23,33 +22,12 @@ import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from './Kanba
 import type { VisibilityState } from '@tanstack/react-table';
 
 // localStorage keys for per-user preferences
-const VIEW_MODE_KEY = 'leads-view-mode';
 const KANBAN_FIELDS_KEY = 'leads-kanban-fields';
 const KANBAN_FIELDS_VERSION_KEY = 'leads-kanban-fields-version';
 const KANBAN_FIELD_ORDER_KEY = 'leads-kanban-field-order';
-const TABLE_COLUMNS_KEY = 'leads-table-columns';
-const TABLE_COLUMN_ORDER_KEY = 'leads-table-column-order';
-const DEFAULT_SORT_KEY = 'leads-default-sort';
 
 // Increment this when adding new default fields to trigger migration
 const KANBAN_FIELDS_VERSION = 1;
-
-// Default table column visibility
-const DEFAULT_TABLE_COLUMNS: VisibilityState = {
-  name: true,
-  email: true,
-  phone: true,
-  stage_id: true,
-  priority: true,
-  assignees: true,
-  location: false,
-  source: false,
-  created_at: true,
-  updated_at: false,
-};
-
-// Default table column order
-const DEFAULT_TABLE_COLUMN_ORDER = ['name', 'email', 'phone', 'stage_id', 'priority', 'assignees', 'location', 'source', 'created_at', 'updated_at'];
 
 // Default kanban field order
 const DEFAULT_KANBAN_FIELD_ORDER: CardFieldKey[] = CARD_FIELDS.map(f => f.key);
@@ -75,6 +53,18 @@ export interface LeadsTopBarRightProps {
   onOpenExport: () => void;
   /** Callback to open manage stages dialog */
   onOpenManageStages: () => void;
+  /** Table column visibility state (from parent) */
+  columnVisibility: VisibilityState;
+  /** Callback when column visibility changes */
+  onColumnVisibilityChange: (visibility: VisibilityState) => void;
+  /** Table column order (from parent) */
+  columnOrder: string[];
+  /** Callback when column order changes */
+  onColumnOrderChange: (order: string[]) => void;
+  /** Default sort option (from parent) */
+  defaultSort: SortOption | null;
+  /** Callback when default sort changes */
+  onDefaultSortChange: (sort: SortOption | null) => void;
 }
 
 /**
@@ -92,6 +82,12 @@ export const LeadsTopBarRight = memo(function LeadsTopBarRight({
   onDateRangeFilterChange,
   onOpenExport,
   onOpenManageStages,
+  columnVisibility,
+  onColumnVisibilityChange,
+  columnOrder,
+  onColumnOrderChange,
+  defaultSort,
+  onDefaultSortChange,
 }: LeadsTopBarRightProps) {
   // Fetch data internally - these won't cause parent re-renders
   const { stages } = useLeadStages();
@@ -144,28 +140,6 @@ export const LeadsTopBarRight = memo(function LeadsTopBarRight({
     return defaults;
   });
 
-  // Per-user table column visibility
-  const [tableColumnVisibility, setTableColumnVisibility] = useState<VisibilityState>(() => {
-    try {
-      const stored = localStorage.getItem(TABLE_COLUMNS_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e: unknown) {
-      console.warn('Failed to read table columns from localStorage:', e);
-    }
-    return DEFAULT_TABLE_COLUMNS;
-  });
-
-  // Per-user table column order
-  const [tableColumnOrder, setTableColumnOrder] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem(TABLE_COLUMN_ORDER_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e: unknown) {
-      console.warn('Failed to read table column order from localStorage:', e);
-    }
-    return DEFAULT_TABLE_COLUMN_ORDER;
-  });
-
   // Per-user kanban field order
   const [kanbanFieldOrder, setKanbanFieldOrder] = useState<CardFieldKey[]>(() => {
     try {
@@ -177,36 +151,9 @@ export const LeadsTopBarRight = memo(function LeadsTopBarRight({
     return DEFAULT_KANBAN_FIELD_ORDER;
   });
 
-  // Per-user default sort preference
-  const [defaultSort, setDefaultSort] = useState<SortOption | null>(() => {
-    try {
-      const stored = localStorage.getItem(DEFAULT_SORT_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (e: unknown) {
-      console.warn('Failed to read default sort from localStorage:', e);
-    }
-    return null;
-  });
-
-  // Settings update handlers
-  const handleColumnVisibilityChange = useCallback((visibility: VisibilityState) => {
-    setTableColumnVisibility(visibility);
-    localStorage.setItem(TABLE_COLUMNS_KEY, JSON.stringify(visibility));
-  }, []);
-
-  const handleColumnOrderChange = useCallback((order: string[]) => {
-    setTableColumnOrder(order);
-    localStorage.setItem(TABLE_COLUMN_ORDER_KEY, JSON.stringify(order));
-  }, []);
-
   const handleKanbanFieldOrderChange = useCallback((order: CardFieldKey[]) => {
     setKanbanFieldOrder(order);
     localStorage.setItem(KANBAN_FIELD_ORDER_KEY, JSON.stringify(order));
-  }, []);
-
-  const handleDefaultSortChange = useCallback((sort: SortOption | null) => {
-    setDefaultSort(sort);
-    localStorage.setItem(DEFAULT_SORT_KEY, JSON.stringify(sort));
   }, []);
 
   const handleToggleField = useCallback((field: CardFieldKey) => {
@@ -264,7 +211,7 @@ export const LeadsTopBarRight = memo(function LeadsTopBarRight({
       {viewMode === 'kanban' && (
         <LeadsSortDropdown
           sortOption={defaultSort}
-          onSortChange={handleDefaultSortChange}
+          onSortChange={onDefaultSortChange}
         />
       )}
       <LeadsPropertiesDropdown
@@ -273,10 +220,10 @@ export const LeadsTopBarRight = memo(function LeadsTopBarRight({
         onToggleCardField={handleToggleField}
         kanbanFieldOrder={kanbanFieldOrder}
         onKanbanFieldOrderChange={handleKanbanFieldOrderChange}
-        columnVisibility={tableColumnVisibility}
-        onColumnVisibilityChange={handleColumnVisibilityChange}
-        tableColumnOrder={tableColumnOrder}
-        onColumnOrderChange={handleColumnOrderChange}
+        columnVisibility={columnVisibility}
+        onColumnVisibilityChange={onColumnVisibilityChange}
+        tableColumnOrder={columnOrder}
+        onColumnOrderChange={onColumnOrderChange}
       />
       <ViewModeToggle
         viewMode={viewMode}

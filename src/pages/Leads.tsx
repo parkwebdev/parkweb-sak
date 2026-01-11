@@ -36,9 +36,31 @@ import { queryKeys } from '@/lib/query-keys';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { Tables, Json } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
+import type { VisibilityState } from '@tanstack/react-table';
+import type { SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 
 // localStorage keys for per-user preferences
 const VIEW_MODE_KEY = 'leads-view-mode';
+const TABLE_COLUMNS_KEY = 'leads-table-columns';
+const TABLE_COLUMN_ORDER_KEY = 'leads-table-column-order';
+const DEFAULT_SORT_KEY = 'leads-default-sort';
+
+// Default table column visibility
+const DEFAULT_TABLE_COLUMNS: VisibilityState = {
+  name: true,
+  email: true,
+  phone: true,
+  stage_id: true,
+  priority: true,
+  assignees: true,
+  location: false,
+  source: false,
+  created_at: true,
+  updated_at: false,
+};
+
+// Default table column order
+const DEFAULT_TABLE_COLUMN_ORDER = ['name', 'email', 'phone', 'stage_id', 'priority', 'assignees', 'location', 'source', 'created_at', 'updated_at'];
 
 // Date filter day ranges
 const DATE_FILTER_DAYS: Record<Exclude<DateRangeFilter, 'all'>, number> = {
@@ -146,10 +168,58 @@ function Leads() {
   // Date range filter state
   const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
 
+  // Per-user table column visibility
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
+    try {
+      const stored = localStorage.getItem(TABLE_COLUMNS_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e: unknown) {
+      console.warn('Failed to read table columns from localStorage:', e);
+    }
+    return DEFAULT_TABLE_COLUMNS;
+  });
+
+  // Per-user table column order
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(TABLE_COLUMN_ORDER_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e: unknown) {
+      console.warn('Failed to read table column order from localStorage:', e);
+    }
+    return DEFAULT_TABLE_COLUMN_ORDER;
+  });
+
+  // Per-user default sort preference
+  const [defaultSort, setDefaultSort] = useState<SortOption | null>(() => {
+    try {
+      const stored = localStorage.getItem(DEFAULT_SORT_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (e: unknown) {
+      console.warn('Failed to read default sort from localStorage:', e);
+    }
+    return null;
+  });
+
   // Settings update handlers (per-user localStorage)
   const handleViewModeChange = useCallback((mode: 'kanban' | 'table') => {
     setViewMode(mode);
     localStorage.setItem(VIEW_MODE_KEY, mode);
+  }, []);
+
+  const handleColumnVisibilityChange = useCallback((visibility: VisibilityState) => {
+    setColumnVisibility(visibility);
+    localStorage.setItem(TABLE_COLUMNS_KEY, JSON.stringify(visibility));
+  }, []);
+
+  const handleColumnOrderChange = useCallback((order: string[]) => {
+    setColumnOrder(order);
+    localStorage.setItem(TABLE_COLUMN_ORDER_KEY, JSON.stringify(order));
+  }, []);
+
+  const handleDefaultSortChange = useCallback((sort: SortOption | null) => {
+    setDefaultSort(sort);
+    localStorage.setItem(DEFAULT_SORT_KEY, JSON.stringify(sort));
   }, []);
 
   // Find the default stage for leads without a stage_id
@@ -228,6 +298,12 @@ function Leads() {
         onDateRangeFilterChange={setDateRangeFilter}
         onOpenExport={handleOpenExport}
         onOpenManageStages={handleOpenManageStages}
+        columnVisibility={columnVisibility}
+        onColumnVisibilityChange={handleColumnVisibilityChange}
+        columnOrder={columnOrder}
+        onColumnOrderChange={handleColumnOrderChange}
+        defaultSort={defaultSort}
+        onDefaultSortChange={handleDefaultSortChange}
       />
     ),
   }), [
@@ -239,6 +315,12 @@ function Leads() {
     dateRangeFilter,
     handleOpenExport,
     handleOpenManageStages,
+    columnVisibility,
+    handleColumnVisibilityChange,
+    columnOrder,
+    handleColumnOrderChange,
+    defaultSort,
+    handleDefaultSortChange,
   ]);
   useTopBar(topBarConfig, 'leads');
 
@@ -322,7 +404,7 @@ function Leads() {
                   onAddAssignee={canManageLeads ? addAssignee : undefined}
                   onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
                   getAssignees={getAssignees}
-                  onBulkDelete={canManageLeads ? handleOpenBulkDelete : undefined}
+                  
                 />
               </motion.div>
             ) : (
@@ -335,17 +417,21 @@ function Leads() {
               >
                 <LeadsTable
                   leads={filteredLeads}
-                  stages={stages}
-                  selectedLeadIds={selectedLeadIds}
+                  selectedIds={selectedLeadIds}
                   onSelectAll={handleSelectAll}
-                  onSelectLead={handleSelectLead}
-                  onViewLead={handleViewLead}
+                  onSelectionChange={handleSelectLead}
+                  onView={handleViewLead}
                   onStageChange={canManageLeads ? (leadId, stageId) => updateLead(leadId, { stage_id: stageId }) : () => {}}
                   onPriorityChange={handlePriorityChange}
                   onBulkDelete={canManageLeads ? () => setIsDeleteDialogOpen(true) : undefined}
                   getAssignees={getAssignees}
                   onAddAssignee={canManageLeads ? addAssignee : undefined}
                   onRemoveAssignee={canManageLeads ? removeAssignee : undefined}
+                  columnVisibility={columnVisibility}
+                  onColumnVisibilityChange={handleColumnVisibilityChange}
+                  columnOrder={columnOrder}
+                  defaultSort={defaultSort}
+                  canManage={canManageLeads}
                 />
               </motion.div>
             )}
@@ -389,7 +475,7 @@ function Leads() {
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
         onDelete={canManageLeads ? handleSingleDelete : undefined}
-        onLeadUpdate={() => {
+        onUpdate={() => {
           queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
         }}
       />
