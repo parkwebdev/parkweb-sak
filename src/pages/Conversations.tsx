@@ -25,6 +25,7 @@ import { useAgent } from '@/hooks/useAgent';
 import { useVisitorPresence } from '@/hooks/useVisitorPresence';
 import { useTypingPresence } from '@/hooks/useTypingPresence';
 import { useConversationMessages } from '@/hooks/useConversationMessages';
+import { useTabNotifications } from '@/hooks/useTabNotifications';
 import { 
   ConversationMetadataPanel,
   type InboxFilter,
@@ -146,6 +147,12 @@ function Conversations() {
     userEmail: user?.email,
   });
   
+  // Tab notifications (title flashing, favicon badge)
+  const { flashTitle, setBadgeCount, clearNotifications, isTabFocused } = useTabNotifications();
+  
+  // Track unread messages for tab notifications
+  const unreadCountRef = useRef(0);
+  
   // Message state and real-time
   const { 
     messages, 
@@ -156,6 +163,20 @@ function Conversations() {
   } = useConversationMessages({
     conversationId: selectedConversation?.id,
     fetchMessages,
+    onNewUserMessage: useCallback((message) => {
+      // Only notify if this is during human takeover and tab is not focused
+      if (selectedConversation?.status === 'human_takeover' && !isTabFocused()) {
+        const metadata = (selectedConversation?.metadata || {}) as ConversationMetadata;
+        const visitorName = metadata.lead_name || 'Visitor';
+        
+        // Flash title with visitor name
+        flashTitle(`💬 ${visitorName}: New message`);
+        
+        // Increment unread count and update badge
+        unreadCountRef.current += 1;
+        setBadgeCount(unreadCountRef.current);
+      }
+    }, [selectedConversation?.status, selectedConversation?.metadata, isTabFocused, flashTitle, setBadgeCount]),
   });
 
   // === EFFECTS ===
@@ -169,11 +190,15 @@ function Conversations() {
     localStorage.setItem('inbox_conversations_collapsed', String(conversationsCollapsed));
   }, [conversationsCollapsed]);
 
-  // Reset translation when conversation changes
+  // Reset translation and tab notifications when conversation changes
   useEffect(() => {
     setShowTranslation(false);
     setTranslatedMessages({});
-  }, [selectedConversation?.id]);
+    
+    // Clear unread count when viewing a conversation
+    unreadCountRef.current = 0;
+    clearNotifications();
+  }, [selectedConversation?.id, clearNotifications]);
 
   // Handle conversation ID from URL query param
   useEffect(() => {
