@@ -357,10 +357,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
 
   // View handler
   const handleView = useCallback((article: HelpArticleWithMeta) => {
-    logger.debug('[HelpArticles] handleView called', { articleId: article.id, title: article.title });
     setSelectedArticle(article);
     setSheetOpen(true);
-    logger.debug('[HelpArticles] sheetOpen set to true');
   }, []);
 
   // Column definitions
