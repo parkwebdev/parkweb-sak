@@ -76,7 +76,7 @@ export function InboxFilterDropdown({ activeFilter, onFilterChange, counts }: In
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 font-medium">
+        <Button variant="outline" size="sm" className="gap-2 font-medium">
           <span className="text-muted-foreground">{getFilterIcon(activeFilter)}</span>
           <span>{activeFilter.label}</span>
           {counts[activeFilter.type === 'all' ? 'all' : 
