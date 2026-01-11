@@ -58,7 +58,7 @@ export function EventTypeDropdown({ activeType, onTypeChange }: EventTypeDropdow
           <DropdownMenuItem
             key={option.id}
             onClick={() => onTypeChange(option.id)}
-            className="gap-2"
+            className={`gap-2 ${option.id === activeType ? 'bg-accent' : ''}`}
           >
             {option.color ? (
               <span 
