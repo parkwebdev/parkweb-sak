@@ -22,9 +22,8 @@ import {
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
 import { SkeletonSearchResults } from '@/components/ui/skeleton';
-import * as Icons from '@untitledui/icons';
 import { File06 } from '@untitledui/icons';
-import * as AriMenuIcons from '@/components/icons/AriMenuIcons';
+import { NAVIGATION_ICON_MAP } from '@/lib/navigation-icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
 /**
@@ -97,17 +96,15 @@ export const GlobalSearch = () => {
           <>
             <CommandEmpty>No results found.</CommandEmpty>
             {Object.entries(groupedResults).map(([category, results]) => (
-              <CommandGroup key={category} heading={category}>
+            <CommandGroup key={category} heading={category}>
               {results.map((result) => {
                   const isAriLogo = result.iconName === 'AriLogo';
-                  const IconsRecord = Icons as Record<string, React.ComponentType<{ className?: string }>>;
-                  const AriIconsRecord = AriMenuIcons as Record<string, React.ComponentType<{ className?: string; size?: number }>>;
-                  // Check UntitledUI icons first, then custom AriMenuIcons
+                  // Use centralized NAVIGATION_ICON_MAP for consistent icons across app
                   const IconComponent = isAriLogo 
-                    ? null 
-                    : (result.iconName ? (IconsRecord[result.iconName] || AriIconsRecord[result.iconName]) : null);
+                    ? AriAgentsIcon 
+                    : (result.iconName ? NAVIGATION_ICON_MAP[result.iconName] : null);
                   
-                    return (
+                  return (
                     <CommandItem
                       key={result.id}
                       value={`${result.title} ${result.description || ''}`}
@@ -116,10 +113,8 @@ export const GlobalSearch = () => {
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted">
-                          {isAriLogo ? (
-                            <AriAgentsIcon className="h-4 w-4 text-muted-foreground" size={16} />
-                          ) : IconComponent ? (
-                            <IconComponent className="h-4 w-4 text-muted-foreground" />
+                          {IconComponent ? (
+                            <IconComponent className="h-4 w-4 text-muted-foreground" size={16} />
                           ) : (
                             <File06 className="h-4 w-4 text-muted-foreground" />
                           )}
