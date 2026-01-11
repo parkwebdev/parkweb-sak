@@ -165,12 +165,12 @@ export function TopBarUserMenu() {
         <div className="flex">
           <div className={showShortcuts ? 'w-[160px] flex-shrink-0' : 'w-full'}>
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="mx-0" />
           </div>
           {showShortcuts && (
             <div className="border-l border-border flex-1">
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="mx-0" />
             </div>
           )}
         </div>
