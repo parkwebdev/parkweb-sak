@@ -7,10 +7,11 @@
  * Styling: bg-background border-b border-border
  */
 
-import React, { type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Menu01 as Menu } from '@untitledui/icons';
+import { TopBarUserMenu } from './TopBarUserMenu';
 
 interface TopBarProps {
   /** Left section - page context/entity indicator */
@@ -64,9 +65,10 @@ export function TopBar({
         {center}
       </div>
       
-      {/* Right section - action buttons */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Right section - action buttons + user menu */}
+      <div className="flex items-center gap-3 shrink-0">
         {right}
+        <TopBarUserMenu />
       </div>
     </header>
   );
