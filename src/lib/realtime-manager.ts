@@ -202,7 +202,7 @@ class RealtimeManagerClass {
       subs.forEach((sub) => {
         try {
           sub.callback(payload);
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('[RealtimeManager] Callback error:', error);
         }
       });

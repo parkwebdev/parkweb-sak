@@ -162,7 +162,7 @@ async function callGemini<T>(
     }
 
     return JSON.parse(text) as T;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error calling Gemini for extraction:', error);
     return null;
   }
