@@ -40,6 +40,10 @@ interface DiscoveredEndpoint {
   slug: string;
   name: string;
   rest_base: string;
+  classification?: 'community' | 'home' | 'unknown';
+  confidence?: number;
+  signals?: string[];
+  postCount?: number;
 }
 
 interface SyncResult {
@@ -234,34 +238,159 @@ function normalizeSiteUrl(url: string): string {
 }
 
 /**
- * Auto-detect available custom post types from WordPress REST API root
+ * Classify an endpoint by analyzing sample post ACF fields
+ * Returns classification type, confidence score, and signals used for classification
  */
-async function discoverEndpoints(siteUrl: string): Promise<{
-  communityEndpoints: DiscoveredEndpoint[];
-  homeEndpoints: DiscoveredEndpoint[];
+async function classifyEndpoint(
+  siteUrl: string, 
+  slug: string
+): Promise<{
+  type: 'community' | 'home' | 'unknown';
+  confidence: number;
+  signals: string[];
+  postCount: number;
 }> {
-  const normalizedUrl = normalizeSiteUrl(siteUrl);
-  const communityEndpoints: DiscoveredEndpoint[] = [];
-  const homeEndpoints: DiscoveredEndpoint[] = [];
-  
+  const signals: string[] = [];
+  let communityScore = 0;
+  let homeScore = 0;
+  let postCount = 0;
+
   try {
-    // Fetch WordPress REST API root to discover available endpoints
-    const response = await fetch(`${normalizedUrl}/wp-json/wp/v2`, {
+    // Fetch 1 sample post with ACF data
+    const response = await fetch(`${siteUrl}/wp-json/wp/v2/${slug}?per_page=1`, {
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Pilot/1.0',
       },
     });
-    
+
     if (!response.ok) {
-      console.log(`Could not fetch /wp-json/wp/v2: ${response.status}`);
-      return { communityEndpoints, homeEndpoints };
+      return { type: 'unknown', confidence: 0, signals: ['Endpoint not accessible'], postCount: 0 };
+    }
+
+    // Get total post count from headers
+    postCount = parseInt(response.headers.get('X-WP-Total') || '0', 10);
+
+    const posts = await response.json();
+    if (!Array.isArray(posts) || posts.length === 0) {
+      return { type: 'unknown', confidence: 0, signals: ['No posts found'], postCount };
+    }
+
+    const sample = posts[0];
+    const acfKeys = Object.keys(sample.acf || {}).map(k => k.toLowerCase());
+    const allKeys = [...acfKeys, ...Object.keys(sample).map(k => k.toLowerCase())];
+
+    // Community signals - things communities typically have
+    const communityFields = [
+      'amenities', 'amenity', 'pet_policy', 'pets', 'office_hours', 'office', 
+      'manager', 'staff', 'entrance', 'gate', 'clubhouse', 'pool', 'gym',
+      'lot_count', 'lots', 'spaces', 'sites', 'neighborhood', 'community_info'
+    ];
+    const communityMatches = communityFields.filter(f => 
+      acfKeys.some(k => k.includes(f))
+    );
+    if (communityMatches.length > 0) {
+      communityScore += Math.min(communityMatches.length * 1.5, 5);
+      signals.push(`Has community fields: ${communityMatches.slice(0, 3).join(', ')}`);
+    }
+
+    // Home/Property signals - things homes typically have
+    const homeFields = [
+      'price', 'bedrooms', 'beds', 'bed', 'bathrooms', 'baths', 'bath',
+      'sqft', 'square_feet', 'sq_ft', 'lot_rent', 'rent', 'status',
+      'year_built', 'year', 'model', 'manufacturer', 'serial', 'vin',
+      'lot_number', 'lot', 'home_type', 'property_type', 'mls', 'listing'
+    ];
+    const homeMatches = homeFields.filter(f => 
+      acfKeys.some(k => k.includes(f))
+    );
+    if (homeMatches.length > 0) {
+      homeScore += Math.min(homeMatches.length * 1.5, 5);
+      signals.push(`Has property fields: ${homeMatches.slice(0, 3).join(', ')}`);
+    }
+
+    // Relationship signals - homes often reference communities
+    if (sample.home_community || sample.community || acfKeys.some(k => k.includes('home_community'))) {
+      homeScore += 2;
+      signals.push('Has community relationship field');
+    }
+
+    // Taxonomy signals - check for taxonomy terms that indicate type
+    if (sample.community || sample.communities) {
+      homeScore += 1;
+      signals.push('Has community taxonomy');
+    }
+
+    // Featured image presence (both can have, but communities more likely to have galleries)
+    if (sample.featured_media || sample._embedded?.['wp:featuredmedia']) {
+      // Neutral signal
+    }
+
+    // Slug keyword bonus (existing logic, lower weight)
+    const communityKeywords = ['community', 'communities', 'location', 'site', 'park', 'neighborhood', 'village', 'estate'];
+    const homeKeywords = ['home', 'homes', 'property', 'properties', 'listing', 'house', 'unit', 'apartment', 'mhc', 'mh'];
+
+    if (communityKeywords.some(k => slug.toLowerCase().includes(k))) {
+      communityScore += 1;
+      if (!signals.some(s => s.includes('slug'))) {
+        signals.push(`Slug contains community keyword`);
+      }
+    }
+    if (homeKeywords.some(k => slug.toLowerCase().includes(k))) {
+      homeScore += 1;
+      if (!signals.some(s => s.includes('slug'))) {
+        signals.push(`Slug contains property keyword`);
+      }
+    }
+
+    // Determine classification
+    const totalScore = communityScore + homeScore;
+    
+    if (totalScore === 0) {
+      return { type: 'unknown', confidence: 0, signals: ['No classifiable fields found'], postCount };
+    }
+
+    if (communityScore > homeScore && communityScore >= 2) {
+      const confidence = Math.min(communityScore / (totalScore + 2), 0.95);
+      return { type: 'community', confidence, signals, postCount };
     }
     
-    const data = await response.json();
-    
-    // WordPress REST API v2 returns available routes
-    // We need to check /wp-json to get post types
+    if (homeScore > communityScore && homeScore >= 2) {
+      const confidence = Math.min(homeScore / (totalScore + 2), 0.95);
+      return { type: 'home', confidence, signals, postCount };
+    }
+
+    // Tie or low scores
+    if (communityScore > homeScore) {
+      return { type: 'community', confidence: 0.3, signals: [...signals, 'Low confidence - similar to both types'], postCount };
+    }
+    if (homeScore > communityScore) {
+      return { type: 'home', confidence: 0.3, signals: [...signals, 'Low confidence - similar to both types'], postCount };
+    }
+
+    return { type: 'unknown', confidence: 0, signals: ['Could not determine type'], postCount };
+  } catch (error: unknown) {
+    console.error(`Error classifying endpoint ${slug}:`, error);
+    return { type: 'unknown', confidence: 0, signals: ['Classification failed'], postCount };
+  }
+}
+
+/**
+ * Auto-detect available custom post types from WordPress REST API root
+ * Uses schema analysis to classify endpoints by their content
+ */
+async function discoverEndpoints(siteUrl: string): Promise<{
+  communityEndpoints: DiscoveredEndpoint[];
+  homeEndpoints: DiscoveredEndpoint[];
+  unclassifiedEndpoints: DiscoveredEndpoint[];
+}> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl);
+  const communityEndpoints: DiscoveredEndpoint[] = [];
+  const homeEndpoints: DiscoveredEndpoint[] = [];
+  const unclassifiedEndpoints: DiscoveredEndpoint[] = [];
+  
+  try {
+    // Fetch WordPress REST API root to discover available endpoints
     const rootResponse = await fetch(`${normalizedUrl}/wp-json`, {
       headers: {
         'Accept': 'application/json',
@@ -270,51 +399,71 @@ async function discoverEndpoints(siteUrl: string): Promise<{
     });
     
     if (!rootResponse.ok) {
-      return { communityEndpoints, homeEndpoints };
+      console.log(`Could not fetch /wp-json: ${rootResponse.status}`);
+      return { communityEndpoints, homeEndpoints, unclassifiedEndpoints };
     }
     
     const rootData = await rootResponse.json();
     const routes = rootData.routes || {};
     
-    // Community-related keywords
-    const communityKeywords = ['community', 'communities', 'location', 'locations', 'site', 'sites', 'park', 'parks'];
-    // Home/property-related keywords
-    const homeKeywords = ['home', 'homes', 'property', 'properties', 'listing', 'listings', 'house', 'houses', 'unit', 'units'];
+    // Skip WordPress core types
+    const coreTypes = ['posts', 'pages', 'media', 'blocks', 'templates', 'template-parts', 'navigation', 'comments', 'search', 'categories', 'tags', 'users', 'settings', 'themes', 'plugins', 'block-types', 'block-patterns', 'block-directory', 'menu-items', 'menus', 'sidebars', 'widget-types', 'widgets', 'types', 'statuses', 'taxonomies', 'global-styles'];
     
-    // Check each route for custom post types
-    for (const [route, info] of Object.entries(routes)) {
-      // Routes look like /wp/v2/community
+    // Collect all custom post type slugs
+    const customPostTypes: string[] = [];
+    
+    for (const [route] of Object.entries(routes)) {
       const match = route.match(/^\/wp\/v2\/([a-z0-9_-]+)$/i);
       if (!match) continue;
       
       const slug = match[1];
-      const routeInfo = info as { namespace?: string; methods?: string[] };
-      
-      // Skip WordPress core types
-      const coreTypes = ['posts', 'pages', 'media', 'blocks', 'templates', 'template-parts', 'navigation', 'comments', 'search', 'categories', 'tags', 'users', 'settings', 'themes', 'plugins', 'block-types', 'block-patterns', 'block-directory'];
       if (coreTypes.includes(slug)) continue;
+      
+      customPostTypes.push(slug);
+    }
+    
+    console.log(`Found ${customPostTypes.length} custom post types to classify`);
+    
+    // Classify each endpoint in parallel
+    const classificationPromises = customPostTypes.map(async (slug) => {
+      const classification = await classifyEndpoint(normalizedUrl, slug);
       
       const endpoint: DiscoveredEndpoint = {
         slug,
         name: slug.replace(/-/g, ' ').replace(/_/g, ' '),
         rest_base: slug,
+        classification: classification.type,
+        confidence: classification.confidence,
+        signals: classification.signals,
+        postCount: classification.postCount,
       };
       
-      // Categorize the endpoint
-      const lowerSlug = slug.toLowerCase();
-      if (communityKeywords.some(k => lowerSlug.includes(k))) {
+      return endpoint;
+    });
+    
+    const classifiedEndpoints = await Promise.all(classificationPromises);
+    
+    // Sort into buckets based on classification
+    for (const endpoint of classifiedEndpoints) {
+      if (endpoint.classification === 'community') {
         communityEndpoints.push(endpoint);
-      } else if (homeKeywords.some(k => lowerSlug.includes(k))) {
+      } else if (endpoint.classification === 'home') {
         homeEndpoints.push(endpoint);
+      } else {
+        unclassifiedEndpoints.push(endpoint);
       }
     }
     
-    console.log(`Discovered ${communityEndpoints.length} community endpoints, ${homeEndpoints.length} home endpoints`);
+    // Sort by confidence (highest first)
+    communityEndpoints.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+    homeEndpoints.sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+    
+    console.log(`Classified: ${communityEndpoints.length} community, ${homeEndpoints.length} home, ${unclassifiedEndpoints.length} unknown`);
   } catch (error: unknown) {
     console.error('Error discovering endpoints:', error);
   }
   
-  return { communityEndpoints, homeEndpoints };
+  return { communityEndpoints, homeEndpoints, unclassifiedEndpoints };
 }
 
 /**

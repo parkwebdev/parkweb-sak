@@ -59,6 +59,16 @@ import { useWordPressConnection } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
 import type { Tables } from '@/integrations/supabase/types';
 
+interface DiscoveredEndpoint {
+  slug: string;
+  name: string;
+  rest_base: string;
+  classification?: 'community' | 'home' | 'unknown';
+  confidence?: number;
+  signals?: string[];
+  postCount?: number;
+}
+
 interface WordPressIntegrationSheetProps {
   agent: Tables<'agents'> | null;
   onSyncComplete?: () => void;
@@ -93,6 +103,96 @@ function formatLastSync(dateString: string | null): string {
   
   const diffDays = Math.floor(diffHours / 24);
   return `${diffDays}d ago`;
+}
+
+function getConfidenceLabel(confidence: number): { label: string; variant: 'default' | 'secondary' | 'outline' } {
+  if (confidence >= 0.7) return { label: 'High', variant: 'default' };
+  if (confidence >= 0.4) return { label: 'Medium', variant: 'secondary' };
+  return { label: 'Low', variant: 'outline' };
+}
+
+interface DiscoveredEndpointItemProps {
+  endpoint: DiscoveredEndpoint;
+  onApply: () => void;
+}
+
+function DiscoveredEndpointItem({ endpoint, onApply }: DiscoveredEndpointItemProps) {
+  const confidence = getConfidenceLabel(endpoint.confidence || 0);
+  
+  return (
+    <div className="flex items-center justify-between gap-2 py-1">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <code className="font-mono text-foreground truncate">{endpoint.rest_base}</code>
+        {endpoint.postCount != null && endpoint.postCount > 0 && (
+          <span className="text-muted-foreground shrink-0">({endpoint.postCount})</span>
+        )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant={confidence.variant} size="sm" className="shrink-0 cursor-help">
+                {confidence.label}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <p className="text-xs font-medium mb-1">Classification signals:</p>
+              <ul className="text-2xs text-muted-foreground space-y-0.5">
+                {endpoint.signals?.map((signal, i) => (
+                  <li key={i}>• {signal}</li>
+                ))}
+              </ul>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onApply}
+        className="h-6 text-xs px-2 shrink-0"
+      >
+        Apply
+      </Button>
+    </div>
+  );
+}
+
+interface UnclassifiedEndpointItemProps {
+  endpoint: DiscoveredEndpoint;
+  onApplyAsCommunity: () => void;
+  onApplyAsHome: () => void;
+}
+
+function UnclassifiedEndpointItem({ endpoint, onApplyAsCommunity, onApplyAsHome }: UnclassifiedEndpointItemProps) {
+  return (
+    <div className="flex items-center justify-between gap-2 py-1">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <code className="font-mono text-foreground truncate">{endpoint.rest_base}</code>
+        {endpoint.postCount != null && endpoint.postCount > 0 && (
+          <span className="text-muted-foreground shrink-0">({endpoint.postCount})</span>
+        )}
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onApplyAsCommunity}
+          className="h-6 text-2xs px-1.5"
+        >
+          <Building01 size={10} aria-hidden="true" className="mr-0.5" />
+          Community
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onApplyAsHome}
+          className="h-6 text-2xs px-1.5"
+        >
+          <Home01 size={10} aria-hidden="true" className="mr-0.5" />
+          Property
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export function WordPressIntegrationSheet({ 
@@ -514,44 +614,80 @@ export function WordPressIntegrationSheet({
                         </div>
 
                         {discoveredEndpoints && (
-                          <div className="text-xs bg-muted/50 rounded p-3 space-y-2">
-                            <p className="font-medium text-muted-foreground">Discovered endpoints:</p>
-                            {discoveredEndpoints.communityEndpoints?.[0] && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">
-                                  Communities: <code className="font-mono">{discoveredEndpoints.communityEndpoints[0].rest_base}</code>
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    const endpoint = discoveredEndpoints.communityEndpoints![0].rest_base;
-                                    setLocalCommunityEndpoint(endpoint);
-                                    updateEndpoint('community', endpoint);
-                                  }}
-                                  className="h-6 text-xs px-2"
-                                >
-                                  Apply
-                                </Button>
+                          <div className="text-xs space-y-3">
+                            {/* Community Endpoints */}
+                            {discoveredEndpoints.communityEndpoints?.length > 0 && (
+                              <div className="bg-muted/50 rounded p-3 space-y-2">
+                                <p className="font-medium text-muted-foreground flex items-center gap-2">
+                                  <Building01 size={12} aria-hidden="true" />
+                                  Communities
+                                </p>
+                                {discoveredEndpoints.communityEndpoints.map((ep) => (
+                                  <DiscoveredEndpointItem
+                                    key={ep.slug}
+                                    endpoint={ep}
+                                    onApply={() => {
+                                      setLocalCommunityEndpoint(ep.rest_base);
+                                      updateEndpoint('community', ep.rest_base);
+                                    }}
+                                  />
+                                ))}
                               </div>
                             )}
-                            {discoveredEndpoints.homeEndpoints?.[0] && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">
-                                  Properties: <code className="font-mono">{discoveredEndpoints.homeEndpoints[0].rest_base}</code>
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    const endpoint = discoveredEndpoints.homeEndpoints![0].rest_base;
-                                    setLocalHomeEndpoint(endpoint);
-                                    updateEndpoint('home', endpoint);
-                                  }}
-                                  className="h-6 text-xs px-2"
-                                >
-                                  Apply
-                                </Button>
+
+                            {/* Home/Property Endpoints */}
+                            {discoveredEndpoints.homeEndpoints?.length > 0 && (
+                              <div className="bg-muted/50 rounded p-3 space-y-2">
+                                <p className="font-medium text-muted-foreground flex items-center gap-2">
+                                  <Home01 size={12} aria-hidden="true" />
+                                  Properties
+                                </p>
+                                {discoveredEndpoints.homeEndpoints.map((ep) => (
+                                  <DiscoveredEndpointItem
+                                    key={ep.slug}
+                                    endpoint={ep}
+                                    onApply={() => {
+                                      setLocalHomeEndpoint(ep.rest_base);
+                                      updateEndpoint('home', ep.rest_base);
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Unclassified Endpoints */}
+                            {(discoveredEndpoints.unclassifiedEndpoints?.length ?? 0) > 0 && (
+                              <div className="bg-muted/30 rounded p-3 space-y-2">
+                                <p className="font-medium text-muted-foreground flex items-center gap-2">
+                                  <AlertCircle size={12} aria-hidden="true" />
+                                  Other Post Types
+                                </p>
+                                <p className="text-muted-foreground text-2xs mb-2">
+                                  Couldn't auto-classify these. Use as community or property if applicable.
+                                </p>
+                                {(discoveredEndpoints.unclassifiedEndpoints ?? []).map((ep) => (
+                                  <UnclassifiedEndpointItem
+                                    key={ep.slug}
+                                    endpoint={ep}
+                                    onApplyAsCommunity={() => {
+                                      setLocalCommunityEndpoint(ep.rest_base);
+                                      updateEndpoint('community', ep.rest_base);
+                                    }}
+                                    onApplyAsHome={() => {
+                                      setLocalHomeEndpoint(ep.rest_base);
+                                      updateEndpoint('home', ep.rest_base);
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            )}
+
+                            {/* No endpoints found */}
+                            {!discoveredEndpoints.communityEndpoints?.length && 
+                             !discoveredEndpoints.homeEndpoints?.length && 
+                             !discoveredEndpoints.unclassifiedEndpoints?.length && (
+                              <div className="bg-muted/30 rounded p-3 text-center text-muted-foreground">
+                                No custom post types found
                               </div>
                             )}
                           </div>
