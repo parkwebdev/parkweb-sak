@@ -78,9 +78,9 @@ export default function KnowledgeBase() {
           placeholder="Search articles..."
           value={searchQuery}
           onChange={setSearchQuery}
-          renderResults={() => (
+          renderResults={(query) => (
             <KBSearchResults
-              query={searchQuery}
+              query={query}
               onSelect={handleSearchSelect}
             />
           )}
