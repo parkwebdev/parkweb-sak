@@ -43,14 +43,11 @@ export default function InboxOverviewArticle() {
       <ul>
         <li><strong>All</strong> – Show conversations from all channels</li>
         <li><strong>Widget</strong> – Website chat widget conversations</li>
-        <li><strong>Facebook</strong> – Facebook Messenger conversations</li>
-        <li><strong>Instagram</strong> – Instagram DM conversations</li>
-        <li><strong>X (Twitter)</strong> – X/Twitter DM conversations</li>
       </ul>
 
       <KBCallout variant="info">
-        Channel availability depends on which integrations you've connected 
-        in your agent settings.
+        Additional channels can be added via custom integrations using webhooks 
+        and the API. Contact support to learn more about multi-channel setups.
       </KBCallout>
 
       <h2 id="sorting">Sorting Options</h2>

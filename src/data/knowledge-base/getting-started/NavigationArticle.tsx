@@ -21,13 +21,14 @@ export default function NavigationArticle() {
         all major sections of Pilot:
       </p>
       <ul>
-        <li><strong>Dashboard</strong> – Your command center with key metrics at a glance</li>
         <li><strong>Ari</strong> – Configure and manage your AI agent</li>
         <li><strong>Inbox</strong> – View and manage all conversations</li>
         <li><strong>Planner</strong> – Calendar and booking management</li>
         <li><strong>Leads</strong> – Track and organize captured leads</li>
         <li><strong>Analytics</strong> – Insights and performance metrics</li>
-        <li><strong>Knowledge Base</strong> – Documentation and help articles (you're here!)</li>
+        <li><strong>Help Center</strong> – Documentation and help articles (you're here!)</li>
+        <li><strong>Settings</strong> – Organization and account settings</li>
+        <li><strong>Dashboard</strong> – Your command center (visible after completing setup)</li>
       </ul>
 
       <KBCallout variant="tip" title="Collapse the Sidebar">
@@ -44,7 +45,9 @@ export default function NavigationArticle() {
         <li>Search for conversations by visitor name or content</li>
         <li>Find leads quickly</li>
         <li>Navigate to any section of the app</li>
+        <li>Jump to Ari configuration sections</li>
         <li>Access settings and preferences</li>
+        <li>Search documentation articles</li>
       </ul>
 
       <h2 id="keyboard-shortcuts">Keyboard Shortcuts</h2>
@@ -64,10 +67,6 @@ export default function NavigationArticle() {
             <td>Open global search</td>
           </tr>
           <tr>
-            <td><kbd>⌥D</kbd> / <kbd>Alt+D</kbd></td>
-            <td>Go to Dashboard</td>
-          </tr>
-          <tr>
             <td><kbd>⌥A</kbd> / <kbd>Alt+A</kbd></td>
             <td>Go to Ari configuration</td>
           </tr>
@@ -76,16 +75,20 @@ export default function NavigationArticle() {
             <td>Go to Inbox (Conversations)</td>
           </tr>
           <tr>
-            <td><kbd>⌥L</kbd> / <kbd>Alt+L</kbd></td>
-            <td>Go to Leads</td>
-          </tr>
-          <tr>
             <td><kbd>⌥P</kbd> / <kbd>Alt+P</kbd></td>
             <td>Go to Planner</td>
           </tr>
           <tr>
+            <td><kbd>⌥L</kbd> / <kbd>Alt+L</kbd></td>
+            <td>Go to Leads</td>
+          </tr>
+          <tr>
             <td><kbd>⌥Y</kbd> / <kbd>Alt+Y</kbd></td>
             <td>Go to Analytics</td>
+          </tr>
+          <tr>
+            <td><kbd>⌥H</kbd> / <kbd>Alt+H</kbd></td>
+            <td>Go to Help Center</td>
           </tr>
           <tr>
             <td><kbd>⌥S</kbd> / <kbd>Alt+S</kbd></td>
@@ -96,19 +99,21 @@ export default function NavigationArticle() {
 
       <h2 id="settings-menu">Settings & Account</h2>
       <p>
-        Click on your profile avatar in the bottom of the sidebar to access:
+        Click the Settings icon in the bottom of the sidebar (or press <kbd>⌥S</kbd>) to access:
       </p>
       <ul>
-        <li><strong>Profile settings</strong> – Update your personal information</li>
-        <li><strong>Team management</strong> – Invite and manage team members</li>
+        <li><strong>General</strong> – Organization name and branding</li>
+        <li><strong>Profile</strong> – Update your personal information</li>
+        <li><strong>Team</strong> – Invite and manage team members</li>
         <li><strong>Billing</strong> – Manage your subscription and payments</li>
+        <li><strong>Usage</strong> – View usage metrics and limits</li>
         <li><strong>Notifications</strong> – Configure alert preferences</li>
-        <li><strong>Theme</strong> – Switch between light and dark mode</li>
+        <li><strong>Sessions</strong> – Manage active login sessions</li>
       </ul>
 
       <p>
-        You can also access Settings by clicking the gear icon in the sidebar or 
-        using the keyboard shortcut.
+        Click your profile avatar in the sidebar to access your profile menu, 
+        switch themes, or sign out.
       </p>
 
       <h2 id="mobile-access">Mobile Access</h2>

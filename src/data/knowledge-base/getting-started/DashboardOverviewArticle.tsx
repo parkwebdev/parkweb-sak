@@ -12,13 +12,18 @@ export default function DashboardOverviewArticle() {
         It provides a quick overview of your Ari deployment status and key actions.
       </p>
 
+      <KBCallout variant="info">
+        The Dashboard is only visible to account administrators after completing 
+        the initial setup checklist. Team members will see the Inbox as their default view.
+      </KBCallout>
+
       <h2 id="accessing-dashboard">Accessing the Dashboard</h2>
       <p>
         The Dashboard appears after you've completed the initial setup checklist. 
         Before that, you'll see the "Get Set Up" page with your setup progress.
       </p>
 
-      <KBCallout variant="info">
+      <KBCallout variant="tip">
         Complete all setup steps to unlock the Dashboard. This includes 
         configuring Ari, adding knowledge, and installing the widget.
       </KBCallout>

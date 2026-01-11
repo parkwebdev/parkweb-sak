@@ -21,8 +21,7 @@ export default function IntegrationsArticle() {
         Sync appointments with your calendar:
       </p>
       <ul>
-        <li><strong>Google Calendar:</strong> Two-way sync for bookings</li>
-        <li><strong>Microsoft Outlook:</strong> Connect your Outlook calendar</li>
+        <li><strong>Google Calendar:</strong> Two-way sync for bookings with real-time availability</li>
       </ul>
 
       <KBCallout variant="info">
@@ -30,21 +29,23 @@ export default function IntegrationsArticle() {
         When a visitor tries to book, Ari sees your actual schedule.
       </KBCallout>
 
-      <h3 id="crm-integrations">CRM Integrations</h3>
+      <h3 id="automation">Automation & Workflows</h3>
       <p>
-        Sync leads with your customer relationship management system:
+        Connect to external systems using automation tools:
       </p>
       <ul>
-        <li>Automatic lead creation in your CRM</li>
-        <li>Bidirectional sync for updates</li>
-        <li>Custom field mapping</li>
+        <li><strong>Webhooks:</strong> Push data to any system when events occur (leads, bookings, conversations)</li>
+        <li><strong>Custom Tools:</strong> Build custom API integrations for Ari to use</li>
+        <li><strong>Zapier/n8n:</strong> Use third-party automation platforms for complex workflows</li>
       </ul>
 
-      <h3 id="communication">Communication Tools</h3>
+      <h3 id="notifications">Notification Channels</h3>
+      <p>
+        Stay informed about activity:
+      </p>
       <ul>
-        <li><strong>Email:</strong> Send follow-up emails from conversations</li>
-        <li><strong>SMS:</strong> Text message notifications and reminders</li>
-        <li><strong>Slack:</strong> Team notifications for new leads and bookings</li>
+        <li><strong>Email:</strong> Receive email notifications for important events</li>
+        <li><strong>Browser:</strong> Desktop push notifications for real-time alerts</li>
       </ul>
 
       <h2 id="connecting-integration">Connecting an Integration</h2>
