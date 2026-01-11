@@ -12,6 +12,7 @@
  */
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
@@ -70,6 +71,8 @@ const DATE_FILTER_DAYS: Record<Exclude<DateRangeFilter, 'all'>, number> = {
 };
 
 function Leads() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const { 
     leads, 
     loading, 
@@ -101,6 +104,19 @@ function Leads() {
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Handle lead ID from URL query param (from Global Search)
+  useEffect(() => {
+    const leadIdFromUrl = searchParams.get('id');
+    if (leadIdFromUrl && leads.length > 0 && !loading) {
+      const lead = leads.find(l => l.id === leadIdFromUrl);
+      if (lead) {
+        setSelectedLead(lead);
+        setIsDetailsOpen(true);
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, leads, loading, setSearchParams]);
 
   const { stages } = useLeadStages();
   const { getAssignees, addAssignee, removeAssignee, assigneesByLead } = useLeadAssignees();
