@@ -51,6 +51,7 @@ import {
   type HelpArticleWithMeta 
 } from '@/components/data-table/columns/help-articles-columns';
 import { supabase } from '@/integrations/supabase/client';
+import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 
 interface HelpArticlesManagerProps {
   agentId: string;
@@ -107,6 +108,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
   const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [categoriesPopoverOpen, setCategoriesPopoverOpen] = useState(false);
   
   // Delete confirmation state
   const [deleteArticle_, setDeleteArticle] = useState<HelpArticleWithMeta | null>(null);
@@ -549,6 +551,59 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     }
   };
 
+  // Section actions for TopBar
+  const unembeddedCount = articles.filter(a => !a.has_embedding).length;
+  const sectionActions: SectionAction[] = useMemo(() => {
+    if (!canManageHelpArticles) return [];
+    
+    const actions: SectionAction[] = [];
+    
+    // Embed All (only show if there are unembedded articles)
+    if (unembeddedCount > 0) {
+      actions.push({
+        id: 'embed-all',
+        label: isEmbedding 
+          ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
+          : `Embed All (${unembeddedCount})`,
+        onClick: handleEmbedAll,
+        variant: 'outline',
+        disabled: isEmbedding,
+        icon: <RefreshCcw01 size={16} className={isEmbedding ? 'animate-spin' : ''} aria-hidden="true" />,
+      });
+    }
+    
+    // Import CSV
+    actions.push({
+      id: 'import-csv',
+      label: 'Import CSV',
+      onClick: () => setBulkImportOpen(true),
+      variant: 'outline',
+      icon: <Upload01 size={16} aria-hidden="true" />,
+    });
+    
+    // Categories
+    actions.push({
+      id: 'categories',
+      label: 'Categories',
+      onClick: () => setCategoriesPopoverOpen(true),
+      variant: 'outline',
+      icon: <ChevronDown size={16} aria-hidden="true" />,
+    });
+    
+    // Add Article
+    actions.push({
+      id: 'add-article',
+      label: 'Add Article',
+      onClick: () => setDialogOpen(true),
+      variant: 'default',
+      icon: <Plus size={16} aria-hidden="true" />,
+    });
+    
+    return actions;
+  }, [canManageHelpArticles, unembeddedCount, isEmbedding, embeddingProgress, handleEmbedAll]);
+
+  useRegisterSectionActions('help-articles', sectionActions);
+
   // Save from sheet
   const handleSaveArticle = async (id: string, data: { title: string; content: string; category_id: string; featured_image: string | null }) => {
     const category = categories.find(c => c.id === data.category_id);
@@ -738,99 +793,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
               {FilterPopover}
             </div>
 
-            {/* Actions - only show management actions if user can manage */}
-            {canManageHelpArticles && (
-              <div className="flex items-center gap-2 flex-wrap justify-start lg:justify-end">
-                {/* Embed All */}
-                {articles.some(a => !a.has_embedding) && (
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={handleEmbedAll}
-                    disabled={isEmbedding}
-                    className="max-w-xs"
-                  >
-                    <RefreshCcw01 className={`h-4 w-4 mr-1 ${isEmbedding ? 'animate-spin' : ''}`} />
-                    <span className="truncate">
-                      {isEmbedding 
-                        ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
-                        : `Embed All (${articles.filter(a => !a.has_embedding).length})`
-                      }
-                    </span>
-                  </Button>
-                )}
-                
-                <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
-                  Import CSV
-                </Button>
-
-                {/* Category Management */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button size="sm" variant="outline" className="gap-1">
-                      Categories
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs text-muted-foreground">Manage Categories</Label>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-6 px-2"
-                          onClick={() => setNewCategoryDialogOpen(true)}
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add
-                        </Button>
-                      </div>
-                      {categories.length === 0 ? (
-                        <p className="text-sm text-muted-foreground py-2">No categories yet</p>
-                      ) : (
-                        <div className="space-y-1 max-h-48 overflow-y-auto">
-                          {categories.map(cat => (
-                            <div key={cat.id} className="flex items-center justify-between p-2 rounded hover:bg-accent group">
-                              <div className="flex items-center gap-2">
-                                <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
-                                <span className="text-sm">{cat.name}</span>
-                                <Badge variant="secondary" size="counter">
-                                  {articles.filter(a => a.category === cat.name).length}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  className="h-6 w-6 p-0"
-                                  onClick={() => handleEditCategory(cat.name)}
-                                >
-                                  <span className="text-xs">Edit</span>
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                                  onClick={() => handleDeleteCategoryClick(cat.name)}
-                                >
-                                  <Trash01 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-                {/* Add Article */}
-                <Button size="sm" onClick={() => setDialogOpen(true)}>
-                  Add Article
-                </Button>
-              </div>
-            )}
           </div>
 
           {/* Active Filter Chips */}
@@ -1126,6 +1088,72 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
             </Button>
             <Button onClick={handleUpdateCategory}>Update Category</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Categories Management Dialog (for TopBar action) */}
+      <Dialog open={categoriesPopoverOpen} onOpenChange={setCategoriesPopoverOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Categories</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={() => {
+                setCategoriesPopoverOpen(false);
+                setNewCategoryDialogOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Category
+            </Button>
+            {categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-2 text-center">No categories yet</p>
+            ) : (
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {categories.map(cat => (
+                  <div key={cat.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-accent group border">
+                    <div className="flex items-center gap-3">
+                      <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-5 w-5" />
+                      <div>
+                        <span className="text-sm font-medium">{cat.name}</span>
+                        <Badge variant="secondary" size="counter" className="ml-2">
+                          {articles.filter(a => a.category === cat.name).length}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-8 px-2"
+                        onClick={() => {
+                          setCategoriesPopoverOpen(false);
+                          handleEditCategory(cat.name);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-8 px-2 text-destructive hover:text-destructive"
+                        onClick={() => {
+                          setCategoriesPopoverOpen(false);
+                          handleDeleteCategoryClick(cat.name);
+                        }}
+                      >
+                        <Trash01 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
