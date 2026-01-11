@@ -1,8 +1,7 @@
 /**
- * WordPressIntegrationSheet Component
+ * WordPress Integration Sheet
  * 
- * Sheet-based WordPress integration UI combining site connection,
- * community sync, and property/homes sync functionality.
+ * Clean, card-based layout for managing WordPress connection and sync settings.
  */
 
 import { useState, useEffect } from 'react';
@@ -12,8 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Select,
   SelectContent,
@@ -38,14 +38,24 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { RefreshCw01, Check, AlertCircle, ArrowRight, ChevronRight, Zap, Home01, Trash01, LinkExternal01, Building01, Settings01, SearchRefraction } from '@untitledui/icons';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
+import { 
+  RefreshCw01, 
+  Check, 
+  AlertCircle, 
+  Zap, 
+  Home01, 
+  Trash01, 
+  LinkExternal01, 
+  Building01, 
+  Settings01,
+  ChevronDown,
+  Edit02,
+  XClose,
+  Link01
+} from '@untitledui/icons';
+import { InfoCircleIcon } from '@/components/ui/info-circle-icon';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
-import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { WordPressIcon } from '@/components/icons/WordPressIcon';
 import type { Tables } from '@/integrations/supabase/types';
 
 interface WordPressIntegrationSheetProps {
@@ -67,19 +77,36 @@ const SYNC_INTERVAL_OPTIONS = [
   { value: 'daily', label: 'Daily' },
 ];
 
+function formatLastSync(dateString: string | null): string {
+  if (!dateString) return 'Never';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
 export function WordPressIntegrationSheet({ 
   agent, 
   onSyncComplete, 
   open, 
   onOpenChange 
 }: WordPressIntegrationSheetProps) {
-  const prefersReducedMotion = useReducedMotion();
   const [isEditing, setIsEditing] = useState(false);
-  const [inputUrl, setInputUrl] = useState('');
-  const [useAiExtraction, setUseAiExtraction] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [useAiExtraction, setUseAiExtraction] = useState(true);
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
-  const [deleteOnDisconnect, setDeleteOnDisconnect] = useState(false);
-  const [disconnectConfirmValue, setDisconnectConfirmValue] = useState('');
+  const [deleteLocationsOnDisconnect, setDeleteLocationsOnDisconnect] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     siteUrl,
@@ -91,578 +118,378 @@ export function WordPressIntegrationSheet({
     homeEndpoint,
     isTesting: connectionTesting,
     isSyncing: connectionSyncing,
-    isSaving,
     isDiscovering,
     testResult: connectionTestResult,
     discoveredEndpoints,
     isConnected,
     testConnection,
-    saveUrl,
     importCommunities,
     updateSyncInterval,
     updateEndpoint,
-    discoverEndpoints,
     disconnect,
-    clearTestResult: clearConnectionTestResult,
+    discoverEndpoints,
   } = useWordPressConnection({ agent, onSyncComplete });
 
   const {
     lastSync: homesLastSync,
     homeCount,
-    isTesting: homesTesting,
     isSyncing: homesSyncing,
-    testResult: homesTestResult,
-    testHomesEndpoint,
     syncHomes,
-    clearTestResult: clearHomesTestResult,
   } = useWordPressHomes({ agent, onSyncComplete });
 
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [communityEndpointInput, setCommunityEndpointInput] = useState(communityEndpoint || 'community');
-  const [homeEndpointInput, setHomeEndpointInput] = useState(homeEndpoint || 'home');
-
-  // Sync endpoint inputs when stored values change
+  // Sync local state with hook values
   useEffect(() => {
-    setCommunityEndpointInput(communityEndpoint || 'community');
-  }, [communityEndpoint]);
-
-  useEffect(() => {
-    setHomeEndpointInput(homeEndpoint || 'home');
-  }, [homeEndpoint]);
-
-  // Update input when siteUrl changes
-  useEffect(() => {
-    setInputUrl(siteUrl);
-    if (siteUrl && !isEditing) {
-      setIsEditing(false);
-    }
+    if (siteUrl) setUrlInput(siteUrl);
   }, [siteUrl]);
 
-  const formatLastSync = (lastSync: string | null) => {
-    if (!lastSync) return null;
-    try {
-      return formatDistanceToNow(new Date(lastSync), { addSuffix: true });
-    } catch {
-      return null;
+  const handleConnect = async () => {
+    if (!urlInput.trim()) return;
+    const result = await testConnection(urlInput.trim());
+    if (result.success) {
+      setIsEditing(false);
     }
-  };
-
-  const handleTestConnection = async () => {
-    if (!inputUrl.trim()) return;
-    await testConnection(inputUrl.trim());
-  };
-
-  const handleImportCommunities = async () => {
-    const url = inputUrl.trim() || undefined;
-    await importCommunities(url);
-    setIsEditing(false);
-  };
-
-  const handleTestHomes = async () => {
-    if (!siteUrl) return;
-    await testHomesEndpoint(siteUrl);
-  };
-
-  const handleSyncHomes = async () => {
-    await syncHomes(undefined, useAiExtraction);
   };
 
   const handleDisconnect = async () => {
-    await disconnect(deleteOnDisconnect);
+    await disconnect(deleteLocationsOnDisconnect);
     setShowDisconnectDialog(false);
-    setDeleteOnDisconnect(false);
+    setDeleteLocationsOnDisconnect(false);
+    setDeleteConfirmation('');
+    setUrlInput('');
   };
 
-  const handleCommunitySyncIntervalChange = async (value: string) => {
-    await updateSyncInterval('community', value);
-  };
+  const handleSyncCommunities = () => importCommunities();
+  const handleSyncHomes = () => syncHomes(undefined, useAiExtraction);
 
-  const handleHomeSyncIntervalChange = async (value: string) => {
-    await updateSyncInterval('home', value);
-  };
+  const isLoading = connectionTesting || connectionSyncing || homesSyncing;
 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetContent className="sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#21759b]/10">
-                <WordPressIcon className="h-4 w-4 text-[#21759b]" />
-              </div>
+              <Link01 size={20} aria-hidden="true" />
               WordPress Integration
             </SheetTitle>
             <SheetDescription>
-              Connect and sync communities and properties from your WordPress site
+              Sync communities and property listings from your WordPress site.
             </SheetDescription>
           </SheetHeader>
 
-          <div className="mt-6 space-y-6">
-            {/* Connection Status Card - shown when connected */}
+          <div className="mt-6 space-y-4">
+            {/* Connection Card */}
+            <Card>
+              <CardContent className="p-4">
+                <AnimatePresence mode="wait">
+                  {isConnected && !isEditing ? (
+                    <motion.div
+                      key="connected"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-2 w-2 rounded-full bg-status-active shrink-0" />
+                        <a 
+                          href={siteUrl?.startsWith('http') ? siteUrl : `https://${siteUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-foreground hover:text-primary truncate flex items-center gap-1"
+                        >
+                          {siteUrl?.replace(/^https?:\/\//, '')}
+                          <LinkExternal01 size={12} aria-hidden="true" />
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsEditing(true)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit02 size={16} aria-hidden="true" />
+                          <span className="sr-only">Edit URL</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowDisconnectDialog(true)}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        >
+                          <XClose size={16} aria-hidden="true" />
+                          <span className="sr-only">Disconnect</span>
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="editing"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-3"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="wp-url" className="text-sm font-medium">
+                          WordPress Site URL
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="wp-url"
+                            placeholder="https://yoursite.com"
+                            value={urlInput}
+                            onChange={(e) => setUrlInput(e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button
+                            onClick={handleConnect}
+                            disabled={!urlInput.trim() || connectionTesting}
+                            loading={connectionTesting}
+                            size="sm"
+                          >
+                            {isEditing ? 'Update' : 'Connect'}
+                          </Button>
+                          {isEditing && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setIsEditing(false);
+                                setUrlInput(siteUrl || '');
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {connectionTestResult && (
+                        <div className={`flex items-start gap-2 text-sm ${
+                          connectionTestResult.success ? 'text-status-active' : 'text-destructive'
+                        }`}>
+                          {connectionTestResult.success ? (
+                            <Check size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+                          ) : (
+                            <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+                          )}
+                          <span>{connectionTestResult.message}</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </CardContent>
+            </Card>
+
+            {/* Sync sections - only when connected */}
             {isConnected && !isEditing && (
-              <div className="p-3 rounded-lg bg-muted/50 border space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Connected Site</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <a 
-                        href={siteUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline flex items-center gap-1 truncate"
+              <>
+                {/* Communities Sync Card */}
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                        <span className="text-sm font-medium">Communities</span>
+                        {(communityCount ?? 0) > 0 && (
+                          <Badge variant="secondary" size="sm">
+                            {communityCount}
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleSyncCommunities}
+                        disabled={isLoading}
+                        className="h-8 w-8 p-0"
                       >
-                        {siteUrl.replace(/^https?:\/\//, '')}
-                        <LinkExternal01 className="h-3 w-3 shrink-0" />
-                      </a>
+                        <RefreshCw01 
+                          size={16} 
+                          className={connectionSyncing ? 'animate-spin' : ''} 
+                          aria-hidden="true" 
+                        />
+                        <span className="sr-only">Sync communities</span>
+                      </Button>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2"
-                      onClick={() => setIsEditing(true)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setShowDisconnectDialog(true)}
-                    >
-                      <Trash01 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Site URL Input - shown when not connected or editing */}
-            {(!isConnected || isEditing) && (
-              <div className="space-y-3">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Site URL</Label>
-                <Input
-                  value={inputUrl}
-                  onChange={(e) => {
-                    setInputUrl(e.target.value);
-                    clearConnectionTestResult();
-                  }}
-                  onBlur={() => {
-                    // Save URL immediately when user clicks away
-                    if (inputUrl.trim()) {
-                      saveUrl(inputUrl.trim());
-                    }
-                  }}
-                  placeholder="https://yoursite.com"
-                  className="h-8"
-                />
-                
-                {connectionTestResult && (
-                  <div
-                    className={cn(
-                      'flex items-start gap-2 text-xs p-2 rounded',
-                      connectionTestResult.success
-                        ? 'bg-success/10 text-success'
-                        : 'bg-destructive/10 text-destructive'
-                    )}
-                  >
-                    {connectionTestResult.success ? (
-                      <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                    ) : (
-                      <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                    )}
-                    <span>{connectionTestResult.message}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleTestConnection}
-                    disabled={!inputUrl.trim() || connectionTesting}
-                    className="h-7"
-                  >
-                    {connectionTesting ? 'Testing...' : 'Test'}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleImportCommunities}
-                    disabled={!inputUrl.trim() || connectionSyncing || (connectionTestResult !== null && !connectionTestResult.success)}
-                    className="h-7"
-                  >
-                    {connectionSyncing ? (
-                      <>
-                        <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                        Importing...
-                      </>
-                    ) : (
-                      <>
-                        Import
-                        <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                      </>
-                    )}
-                  </Button>
-                  {isConnected && isEditing && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7"
-                      onClick={() => {
-                        setInputUrl(siteUrl);
-                        setIsEditing(false);
-                        clearConnectionTestResult();
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Communities Section - shown when connected */}
-            {isConnected && !isEditing && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Building01 className="h-4 w-4 text-muted-foreground" />
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Communities</Label>
-                  {communityCount !== undefined && communityCount > 0 && (
-                    <Badge variant="secondary">{communityCount} synced</Badge>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs text-muted-foreground">Auto-sync:</Label>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      Last synced {formatLastSync(connectionLastSync ?? null)}
+                    </div>
+                    
                     <Select
                       value={communitySyncInterval}
-                      onValueChange={handleCommunitySyncIntervalChange}
+                      onValueChange={(value) => updateSyncInterval('community', value)}
                     >
-                      <SelectTrigger size="sm" className="w-[140px] text-xs">
+                      <SelectTrigger className="h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {SYNC_INTERVAL_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value} className="text-xs">
+                          <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleImportCommunities}
-                    disabled={connectionSyncing}
-                    className="h-7"
-                  >
-                    {connectionSyncing ? (
-                      <RefreshCw01 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <>
-                        <RefreshCw01 className="h-3.5 w-3.5 mr-1.5" />
-                        Sync Now
-                      </>
-                    )}
-                  </Button>
-                </div>
+                  </CardContent>
+                </Card>
 
-                {formatLastSync(connectionLastSync ?? null) && (
-                  <p className="text-xs text-muted-foreground">
-                    Last synced {formatLastSync(connectionLastSync ?? null)}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Property Listings Section - shown when connected */}
-            {isConnected && !isEditing && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Home01 className="h-4 w-4 text-muted-foreground" />
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Property Listings</Label>
-                    {homeCount !== undefined && homeCount > 0 && (
-                      <Badge variant="secondary">{homeCount} homes</Badge>
-                    )}
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground">
-                    Sync home/property listings to enable AI-powered property search.
-                  </p>
-
-                  {/* AI Extraction toggle */}
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="ai-extraction"
-                      checked={useAiExtraction}
-                      onCheckedChange={setUseAiExtraction}
-                      disabled={homesSyncing}
-                    />
-                    <Label htmlFor="ai-extraction" className="text-xs text-muted-foreground cursor-pointer">
-                      <span className="flex items-center gap-1">
-                        <Zap className="h-3 w-3 text-warning" />
-                        Use AI extraction
-                      </span>
-                    </Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button type="button" className="group inline-flex text-muted-foreground hover:text-foreground transition-colors">
-                            <InfoCircleIcon className="h-4 w-4 group-hover:hidden" />
-                            <InfoCircleIconFilled className="h-4 w-4 hidden group-hover:block" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p>Enable if your WordPress site doesn't use ACF. AI will parse property details from page HTML.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground">Auto-sync:</Label>
-                      <Select
-                        value={homeSyncInterval}
-                        onValueChange={handleHomeSyncIntervalChange}
-                      >
-                        <SelectTrigger size="sm" className="w-[140px] text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SYNC_INTERVAL_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value} className="text-xs">
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center gap-2">
+                {/* Property Listings Sync Card */}
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Home01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                        <span className="text-sm font-medium">Property Listings</span>
+                        {(homeCount ?? 0) > 0 && (
+                          <Badge variant="secondary" size="sm">
+                            {homeCount}
+                          </Badge>
+                        )}
+                      </div>
                       <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleTestHomes}
-                        disabled={homesTesting || homesSyncing}
-                        className="h-7"
-                      >
-                        {homesTesting ? 'Testing...' : 'Test'}
-                      </Button>
-                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={handleSyncHomes}
-                        disabled={homesSyncing}
-                        className="h-7"
+                        disabled={isLoading}
+                        className="h-8 w-8 p-0"
                       >
-                        {homesSyncing ? (
-                          <>
-                            <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                            Syncing...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw01 className="h-3.5 w-3.5 mr-1.5" />
-                            Sync Homes
-                          </>
-                        )}
+                        <RefreshCw01 
+                          size={16} 
+                          className={homesSyncing ? 'animate-spin' : ''} 
+                          aria-hidden="true" 
+                        />
+                        <span className="sr-only">Sync properties</span>
                       </Button>
                     </div>
-                  </div>
-
-                  {homesTestResult && (
-                    <div
-                      className={cn(
-                        'flex items-start gap-2 text-xs p-2 rounded',
-                        homesTestResult.success
-                          ? 'bg-success/10 text-success'
-                          : 'bg-destructive/10 text-destructive'
-                      )}
-                    >
-                      {homesTestResult.success ? (
-                        <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                      ) : (
-                        <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                      )}
-                      <span>
-                        {homesTestResult.message}
-                        {homesTestResult.homeCount !== undefined && homesTestResult.homeCount > 0 && (
-                          <span className="font-medium"> ({homesTestResult.homeCount} homes found)</span>
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {formatLastSync(homesLastSync) && (
-                    <p className="text-xs text-muted-foreground">
+                    
+                    <div className="text-xs text-muted-foreground">
                       Last synced {formatLastSync(homesLastSync)}
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* Advanced Settings - shown when connected */}
-            {isConnected && !isEditing && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Settings01 className="h-3.5 w-3.5" />
-                    <span>Advanced Settings</span>
-                    <motion.div
-                      animate={{ rotate: showAdvanced ? 90 : 0 }}
-                      transition={{ duration: 0.15 }}
+                    </div>
+                    
+                    <Select
+                      value={homeSyncInterval}
+                      onValueChange={(value) => updateSyncInterval('home', value)}
                     >
-                      <ChevronRight className="h-3 w-3" />
-                    </motion.div>
-                  </button>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SYNC_INTERVAL_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                  <AnimatePresence initial={false}>
-                    {showAdvanced && (
-                      <motion.div
-                        initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                        className="overflow-hidden"
-                      >
-                        <div className="space-y-4 pt-2">
-                          <p className="text-xs text-muted-foreground">
-                            Custom post type endpoints for non-standard WordPress configurations.
-                          </p>
+                    {/* AI Extraction Toggle */}
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <div className="flex items-center gap-2">
+                        <Zap size={14} className="text-warning" aria-hidden="true" />
+                        <span className="text-xs font-medium">AI Extraction</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <InfoCircleIcon className="text-muted-foreground cursor-help w-3 h-3" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <p className="text-xs">
+                                Uses AI to extract structured property data from page content. 
+                                Improves accuracy but uses additional credits.
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <Switch
+                        checked={useAiExtraction}
+                        onCheckedChange={setUseAiExtraction}
+                        aria-label="Enable AI extraction"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
 
-                          {/* Auto-detect button */}
+                {/* Advanced Settings */}
+                <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+                  <CollapsibleTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-between h-9 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Settings01 size={14} aria-hidden="true" />
+                        <span>Advanced Settings</span>
+                      </div>
+                      <ChevronDown 
+                        size={14} 
+                        className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+                        aria-hidden="true" 
+                      />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <Card className="mt-2">
+                      <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground">API Endpoints</span>
                           <Button
-                            size="sm"
                             variant="outline"
-                            onClick={() => discoverEndpoints(siteUrl)}
+                            size="sm"
+                            onClick={() => siteUrl && discoverEndpoints(siteUrl)}
                             disabled={isDiscovering || !siteUrl}
-                            className="h-7"
+                            className="h-7 text-xs"
                           >
                             {isDiscovering ? (
-                              <>
-                                <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                                Detecting...
-                              </>
-                            ) : (
-                              <>
-                                <SearchRefraction className="h-3.5 w-3.5 mr-1.5" />
-                                Auto-detect Endpoints
-                              </>
-                            )}
+                              <RefreshCw01 size={12} className="animate-spin mr-1" aria-hidden="true" />
+                            ) : null}
+                            Auto-detect
                           </Button>
+                        </div>
 
-                          {/* Discovered endpoints */}
-                          {discoveredEndpoints && (
-                            <div className="p-2 rounded bg-muted/50 border space-y-2">
-                              <p className="text-xs font-medium">Discovered post types:</p>
-                              {discoveredEndpoints.communityEndpoints.length > 0 && (
-                                <div className="space-y-1">
-                                  <p className="text-xs text-muted-foreground">Communities:</p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {discoveredEndpoints.communityEndpoints.map((ep: { slug: string; name: string; rest_base: string }) => (
-                                      <button
-                                        key={ep.rest_base}
-                                        type="button"
-                                        onClick={() => {
-                                          setCommunityEndpointInput(ep.rest_base);
-                                          updateEndpoint('community', ep.rest_base);
-                                        }}
-                                        className={cn(
-                                          "text-xs px-2 py-0.5 rounded border transition-colors",
-                                          communityEndpointInput === ep.rest_base
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "bg-background hover:bg-accent border-border"
-                                        )}
-                                      >
-                                        {ep.name || ep.slug}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              {discoveredEndpoints.homeEndpoints.length > 0 && (
-                                <div className="space-y-1">
-                                  <p className="text-xs text-muted-foreground">Homes/Properties:</p>
-                                  <div className="flex flex-wrap gap-1">
-                                    {discoveredEndpoints.homeEndpoints.map((ep: { slug: string; name: string; rest_base: string }) => (
-                                      <button
-                                        key={ep.rest_base}
-                                        type="button"
-                                        onClick={() => {
-                                          setHomeEndpointInput(ep.rest_base);
-                                          updateEndpoint('home', ep.rest_base);
-                                        }}
-                                        className={cn(
-                                          "text-xs px-2 py-0.5 rounded border transition-colors",
-                                          homeEndpointInput === ep.rest_base
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "bg-background hover:bg-accent border-border"
-                                        )}
-                                      >
-                                        {ep.name || ep.slug}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              {discoveredEndpoints.communityEndpoints.length === 0 && discoveredEndpoints.homeEndpoints.length === 0 && (
-                                <p className="text-xs text-muted-foreground italic">No custom post types detected. Using defaults.</p>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Manual endpoint inputs */}
-                          <div className="grid gap-3">
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Community endpoint</Label>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">/wp-json/wp/v2/</span>
-                                <Input
-                                  value={communityEndpointInput}
-                                  onChange={(e) => setCommunityEndpointInput(e.target.value)}
-                                  onBlur={() => {
-                                    if (communityEndpointInput.trim() && communityEndpointInput !== communityEndpoint) {
-                                      updateEndpoint('community', communityEndpointInput.trim());
-                                    }
-                                  }}
-                                  placeholder="community"
-                                  className="h-7 text-xs flex-1"
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Home/Property endpoint</Label>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">/wp-json/wp/v2/</span>
-                                <Input
-                                  value={homeEndpointInput}
-                                  onChange={(e) => setHomeEndpointInput(e.target.value)}
-                                  onBlur={() => {
-                                    if (homeEndpointInput.trim() && homeEndpointInput !== homeEndpoint) {
-                                      updateEndpoint('home', homeEndpointInput.trim());
-                                    }
-                                  }}
-                                  placeholder="home"
-                                  className="h-7 text-xs flex-1"
-                                />
-                              </div>
-                            </div>
+                        <div className="space-y-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-muted-foreground">Communities</Label>
+                            <Input
+                              value={communityEndpoint || ''}
+                              onChange={(e) => updateEndpoint('community', e.target.value)}
+                              placeholder="/wp-json/wp/v2/community"
+                              className="h-8 text-xs font-mono"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1.5">
+                            <Label className="text-xs text-muted-foreground">Properties</Label>
+                            <Input
+                              value={homeEndpoint || ''}
+                              onChange={(e) => updateEndpoint('home', e.target.value)}
+                              placeholder="/wp-json/wp/v2/home"
+                              className="h-8 text-xs font-mono"
+                            />
                           </div>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+
+                        {discoveredEndpoints && (
+                          <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2">
+                            <p className="font-medium mb-1">Discovered endpoints:</p>
+                            {discoveredEndpoints.communityEndpoints?.[0] && (
+                              <p>• Communities: {discoveredEndpoints.communityEndpoints[0].rest_base}</p>
+                            )}
+                            {discoveredEndpoints.homeEndpoints?.[0] && (
+                              <p>• Properties: {discoveredEndpoints.homeEndpoints[0].rest_base}</p>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
               </>
             )}
           </div>
@@ -670,57 +497,64 @@ export function WordPressIntegrationSheet({
       </Sheet>
 
       {/* Disconnect Confirmation Dialog */}
-      <AlertDialog open={showDisconnectDialog} onOpenChange={(open) => {
-        setShowDisconnectDialog(open);
-        if (!open) {
-          setDeleteOnDisconnect(false);
-          setDisconnectConfirmValue('');
-        }
-      }}>
+      <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disconnect WordPress?</AlertDialogTitle>
+            <AlertDialogTitle>Disconnect WordPress</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the WordPress connection from this agent.
+              This will remove the WordPress connection. Your synced data will remain unless you choose to delete it.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="delete-locations"
-                checked={deleteOnDisconnect}
-                onCheckedChange={(checked) => {
-                  setDeleteOnDisconnect(checked);
-                  if (!checked) setDisconnectConfirmValue('');
-                }}
-              />
-              <Label htmlFor="delete-locations" className="text-sm cursor-pointer">
-                Also delete all synced locations ({communityCount || 0} communities)
-              </Label>
+          
+          <div className="space-y-4 py-2">
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-destructive/20 bg-destructive/5">
+              <Trash01 size={16} className="text-destructive mt-0.5 shrink-0" aria-hidden="true" />
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="delete-locations" className="text-sm font-medium">
+                    Delete synced locations
+                  </Label>
+                  <Switch
+                    id="delete-locations"
+                    checked={deleteLocationsOnDisconnect}
+                    onCheckedChange={setDeleteLocationsOnDisconnect}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This will permanently delete all communities and properties synced from WordPress.
+                </p>
+              </div>
             </div>
-            {deleteOnDisconnect && (
-              <div className="space-y-2 pt-2 border-t">
-                <Label>
-                  Type <span className="font-mono font-semibold text-foreground">DELETE</span> to confirm deletion:
+
+            {deleteLocationsOnDisconnect && (
+              <div className="space-y-2">
+                <Label htmlFor="confirm-delete" className="text-sm">
+                  Type <span className="font-mono font-medium">DELETE</span> to confirm
                 </Label>
                 <Input
-                  value={disconnectConfirmValue}
-                  onChange={(e) => setDisconnectConfirmValue(e.target.value)}
+                  id="confirm-delete"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
                   placeholder="DELETE"
                   className="font-mono"
-                  aria-label="Confirmation text"
                 />
               </div>
             )}
           </div>
+
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => {
+              setDeleteLocationsOnDisconnect(false);
+              setDeleteConfirmation('');
+            }}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDisconnect}
-              disabled={isSaving || (deleteOnDisconnect && disconnectConfirmValue !== 'DELETE')}
+              disabled={deleteLocationsOnDisconnect && deleteConfirmation !== 'DELETE'}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isSaving ? 'Disconnecting...' : 'Disconnect'}
+              Disconnect
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
