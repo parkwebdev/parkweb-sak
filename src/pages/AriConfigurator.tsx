@@ -26,7 +26,7 @@ import { ChatWidget } from '@/widget/ChatWidget';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
-import { AriSectionActionsProvider, useAriSectionActions } from '@/contexts/AriSectionActionsContext';
+import { useAriSectionActions } from '@/contexts/AriSectionActionsContext';
 import type { Tables } from '@/integrations/supabase/types';
 import type { WidgetConfig } from '@/widget/api';
 
@@ -347,11 +347,7 @@ function AriConfiguratorContent() {
 }
 
 const AriConfigurator = () => {
-  return (
-    <AriSectionActionsProvider>
-      <AriConfiguratorContent />
-    </AriSectionActionsProvider>
-  );
+  return <AriConfiguratorContent />;
 };
 
 export default AriConfigurator;
