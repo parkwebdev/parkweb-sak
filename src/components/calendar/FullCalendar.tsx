@@ -693,7 +693,7 @@ export function FullCalendar({
           {/* View Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-[130px] justify-between">
+              <Button variant="outline" size="sm" className="w-[130px] justify-between">
                 {view === 'month' ? 'Month view' : view === 'week' ? 'Week view' : 'Day view'}
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
