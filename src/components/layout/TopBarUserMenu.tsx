@@ -158,14 +158,28 @@ export function TopBarUserMenu() {
         side="bottom"
         align="end"
         sideOffset={8}
-        className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl space-y-0.5"
+        className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
+        {/* Headers row */}
+        <div className="flex">
+          <div className={showShortcuts ? 'w-[160px] flex-shrink-0' : 'w-full'}>
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
+          </div>
+          {showShortcuts && (
+            <div className="border-l border-border flex-1">
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
+            </div>
+          )}
+        </div>
+        
+        {/* Shared separator */}
+        <DropdownMenuSeparator />
+        
+        {/* Content row */}
         <div className="flex">
           {/* Main menu column */}
-          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 space-y-0.5`}>
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
-            <DropdownMenuSeparator />
+          <div className={showShortcuts ? 'w-[160px] flex-shrink-0' : 'w-full'}>
             <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
               <Link to="/settings?tab=profile" className="w-full cursor-pointer">
                 Profile
@@ -227,8 +241,6 @@ export function TopBarUserMenu() {
               className="border-l border-border animate-fade-in flex-1"
               onMouseLeave={() => setShowShortcuts(false)}
             >
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
-              <DropdownMenuSeparator />
               <div className="space-y-1 px-2 py-1">
                 {shortcuts.map((shortcut, index) => (
                   <div key={index} className="flex items-center justify-between w-full py-0.5">
