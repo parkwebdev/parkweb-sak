@@ -760,13 +760,13 @@ export function LeadsTable({ leads, onView, onStatusChange }) {
 
 ## Typography System
 
-Pilot uses a refined typography system built on Geist fonts.
+Pilot uses a refined typography system built on Inter font.
 
 ### Font Families
 
 ```tsx
-<p className="font-sans">Body text (Geist)</p>
-<code className="font-mono">Code text (Geist Mono)</code>
+<p className="font-sans">Body text (Inter)</p>
+<code className="font-mono">Code text (system monospace)</code>
 ```
 
 ### Type Scale

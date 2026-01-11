@@ -69,7 +69,7 @@ Welcome to the Pilot documentation. This index provides quick access to all tech
 | **State** | TanStack Query (React Query) |
 | **Backend** | Supabase (PostgreSQL, Edge Functions, Auth, Realtime) |
 | **AI** | OpenRouter (Google Gemini default) |
-| **Fonts** | Geist, Geist Mono |
+| **Fonts** | Inter (primary), system monospace |
 | **Error Handling** | Type-safe with `getErrorMessage()` utility |
 
 ### Key File Locations
