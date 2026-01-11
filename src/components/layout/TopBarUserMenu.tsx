@@ -163,14 +163,14 @@ export function TopBarUserMenu() {
       >
         {/* Headers row with separators */}
         <div className="flex">
-          <div className={showShortcuts ? 'w-[160px] flex-shrink-0' : 'w-full'}>
+          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 overflow-hidden`}>
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
-            <DropdownMenuSeparator className="mx-0" />
+            <DropdownMenuSeparator />
           </div>
           {showShortcuts && (
-            <div className="border-l border-border flex-1">
+            <div className="border-l border-border flex-1 overflow-hidden">
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
-              <DropdownMenuSeparator className="mx-0" />
+              <DropdownMenuSeparator />
             </div>
           )}
         </div>
