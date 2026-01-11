@@ -181,6 +181,8 @@ export const queryKeys = {
     list: (userId: string) => [...queryKeys.notifications.lists(), userId] as const,
     unreadCount: (userId: string) =>
       [...queryKeys.notifications.all, 'unread-count', userId] as const,
+    preferences: (userId: string) =>
+      [...queryKeys.notifications.all, 'preferences', userId] as const,
   },
 
   // Properties

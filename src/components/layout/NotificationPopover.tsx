@@ -1,8 +1,9 @@
 /**
  * @fileoverview Notification Popover Content
- * Displays list of notifications with categorization, actions, and empty state.
+ * Displays list of notifications with categorization, actions, swipe-to-delete, and empty state.
  */
 
+import { useState, useRef, useCallback } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { 
   MessageChatSquare, 
@@ -59,7 +60,11 @@ function getUnreadDotColor(type: NotificationType): string {
   return colors[type] || colors.system;
 }
 
-/** Single notification item */
+/** Swipe threshold in pixels */
+const SWIPE_THRESHOLD = 80;
+const DELETE_THRESHOLD = 120;
+
+/** Single notification item with swipe-to-delete */
 function NotificationItem({ 
   notification, 
   onNavigate,
@@ -73,70 +78,155 @@ function NotificationItem({
   const Icon = config.icon;
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true });
 
+  // Swipe state
+  const [swipeX, setSwipeX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    setIsSwiping(false);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touchStartRef.current.x - touch.clientX;
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+
+    // Only allow horizontal swipe if horizontal movement is greater than vertical
+    if (deltaY > 10 && !isSwiping) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    // Only swipe left (positive deltaX means swipe left)
+    if (deltaX > 10) {
+      setIsSwiping(true);
+      setSwipeX(Math.min(Math.max(deltaX, 0), DELETE_THRESHOLD));
+    }
+  }, [isSwiping]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (swipeX > DELETE_THRESHOLD - 10) {
+      // Animate out and delete
+      setSwipeX(300);
+      setTimeout(() => {
+        onDelete(notification.id);
+      }, 200);
+    } else {
+      // Snap back
+      setSwipeX(0);
+    }
+    touchStartRef.current = null;
+    setIsSwiping(false);
+  }, [swipeX, notification.id, onDelete]);
+
+  const handleClick = useCallback(() => {
+    if (!isSwiping && swipeX === 0) {
+      onNavigate(notification);
+    }
+  }, [isSwiping, swipeX, notification, onNavigate]);
+
+  const showDeleteHint = swipeX > SWIPE_THRESHOLD;
+
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => onNavigate(notification)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onNavigate(notification);
-        }
-      }}
-      className={cn(
-        "flex items-start gap-3 p-3 cursor-pointer transition-colors",
-        "hover:bg-accent focus:bg-accent focus:outline-none",
-        !notification.read && "bg-muted/50"
-      )}
-    >
-      {/* Icon */}
-      <div className={cn("p-2 rounded-lg shrink-0", config.bgColor)}>
-        <Icon size={16} className={config.color} aria-hidden="true" />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className={cn(
-            "text-sm leading-tight line-clamp-1",
-            !notification.read && "font-medium"
-          )}>
-            {notification.title}
-          </p>
-          {/* Unread indicator - colored by type */}
-          {!notification.read && (
-            <div 
-              className={cn("h-2 w-2 rounded-full shrink-0 mt-1.5", config.bgColor.replace('bg-', 'bg-').replace('/30', ''))}
-              style={{ backgroundColor: getUnreadDotColor(notification.type) }}
-              aria-label="Unread"
-            />
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground line-clamp-2">
-          {notification.message}
-        </p>
-        <p className="text-2xs text-muted-foreground">
-          {timeAgo}
-        </p>
-      </div>
-
-      {/* Delete button (on hover) */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(notification.id);
-        }}
+    <div className="relative overflow-hidden">
+      {/* Delete background */}
+      <div 
         className={cn(
-          "p-1 rounded opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity",
-          "hover:bg-destructive/10 text-muted-foreground hover:text-destructive",
-          "focus:outline-none focus-visible:ring-1 focus-visible:ring-destructive",
-          "group-hover:opacity-100"
+          "absolute inset-y-0 right-0 flex items-center justify-end pr-4 transition-colors",
+          showDeleteHint ? "bg-destructive" : "bg-destructive/50"
         )}
-        aria-label="Delete notification"
+        style={{ width: Math.max(swipeX, 0) }}
       >
-        <Trash01 size={14} aria-hidden="true" />
-      </button>
+        <Trash01 
+          size={20} 
+          className={cn(
+            "text-destructive-foreground transition-opacity",
+            showDeleteHint ? "opacity-100" : "opacity-50"
+          )} 
+          aria-hidden="true" 
+        />
+      </div>
+
+      {/* Main content */}
+      <div
+        ref={itemRef}
+        role="button"
+        tabIndex={0}
+        onClick={handleClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onNavigate(notification);
+          }
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className={cn(
+          "flex items-start gap-3 p-3 cursor-pointer transition-all bg-background",
+          "hover:bg-accent focus:bg-accent focus:outline-none",
+          !notification.read && "bg-muted/50",
+          isSwiping && "transition-none"
+        )}
+        style={{
+          transform: `translateX(-${swipeX}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.2s ease-out',
+        }}
+      >
+        {/* Icon */}
+        <div className={cn("p-2 rounded-lg shrink-0", config.bgColor)}>
+          <Icon size={16} className={config.color} aria-hidden="true" />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className={cn(
+              "text-sm leading-tight line-clamp-1",
+              !notification.read && "font-medium"
+            )}>
+              {notification.title}
+            </p>
+            {/* Unread indicator - colored by type */}
+            {!notification.read && (
+              <div 
+                className={cn("h-2 w-2 rounded-full shrink-0 mt-1.5", config.bgColor.replace('bg-', 'bg-').replace('/30', ''))}
+                style={{ backgroundColor: getUnreadDotColor(notification.type) }}
+                aria-label="Unread"
+              />
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground line-clamp-2">
+            {notification.message}
+          </p>
+          <p className="text-2xs text-muted-foreground">
+            {timeAgo}
+          </p>
+        </div>
+
+        {/* Delete button (desktop hover) */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(notification.id);
+          }}
+          className={cn(
+            "p-1 rounded opacity-0 hover:opacity-100 focus:opacity-100 transition-opacity",
+            "hover:bg-destructive/10 text-muted-foreground hover:text-destructive",
+            "focus:outline-none focus-visible:ring-1 focus-visible:ring-destructive",
+            "hidden sm:block group-hover:opacity-100"
+          )}
+          aria-label="Delete notification"
+        >
+          <Trash01 size={14} aria-hidden="true" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -191,7 +281,7 @@ function Bell01Icon({ size, className }: { size: number; className?: string }) {
 }
 
 /**
- * Notification popover content with header, list, and actions.
+ * Notification popover content with header, list, swipe-to-delete, and actions.
  */
 export function NotificationPopover() {
   const {
@@ -221,6 +311,11 @@ export function NotificationPopover() {
             Mark all read
           </Button>
         )}
+      </div>
+
+      {/* Mobile swipe hint */}
+      <div className="sm:hidden px-4 py-1.5 text-2xs text-muted-foreground bg-muted/30 border-b border-border">
+        Swipe left to delete
       </div>
 
       {/* Notification list - scrollable container */}
