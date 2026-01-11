@@ -33,9 +33,20 @@ interface TestResult {
   communityCount?: number;
 }
 
+interface DiscoveredEndpoint {
+  slug: string;
+  name: string;
+  rest_base: string;
+  classification?: 'community' | 'home' | 'unknown';
+  confidence?: number;
+  signals?: string[];
+  postCount?: number;
+}
+
 interface DiscoveredEndpoints {
-  communityEndpoints: Array<{ slug: string; name: string; rest_base: string }>;
-  homeEndpoints: Array<{ slug: string; name: string; rest_base: string }>;
+  communityEndpoints: DiscoveredEndpoint[];
+  homeEndpoints: DiscoveredEndpoint[];
+  unclassifiedEndpoints?: DiscoveredEndpoint[];
 }
 
 type SyncInterval = 'manual' | 'hourly_1' | 'hourly_2' | 'hourly_3' | 'hourly_4' | 'hourly_6' | 'hourly_8' | 'hourly_12' | 'daily';
