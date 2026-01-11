@@ -44,6 +44,19 @@ import BookingComponentsTest from "./pages/BookingComponentsTest";
 import EmailTemplatesTest from "./pages/EmailTemplatesTest";
 import ReportBuilder from "./pages/ReportBuilder";
 import KnowledgeBaseWrapper from "./pages/KnowledgeBaseWrapper";
+import {
+  AdminLayout,
+  AdminDashboard,
+  AdminAccounts,
+  AdminAccountDetail,
+  AdminPrompts,
+  AdminPlans,
+  AdminTeam,
+  AdminKnowledge,
+  AdminEmails,
+  AdminRevenue,
+  AdminAuditLog,
+} from "./pages/admin";
 
 /**
  * Gets PermissionGuard props from centralized route configuration.
@@ -224,6 +237,29 @@ const App = () => (
                         <Route path="/booking-test" element={<BookingComponentsTest />} />
                       </>
                     )}
+                  </Route>
+                  
+                  {/* Admin Routes - Super Admin Only */}
+                  <Route element={<ProtectedLayout />}>
+                    <Route 
+                      path="/admin/*" 
+                      element={
+                        <PermissionGuard superAdminOnly redirectTo="/dashboard">
+                          <AdminLayout />
+                        </PermissionGuard>
+                      }
+                    >
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="accounts" element={<AdminAccounts />} />
+                      <Route path="accounts/:userId" element={<AdminAccountDetail />} />
+                      <Route path="prompts" element={<AdminPrompts />} />
+                      <Route path="plans" element={<AdminPlans />} />
+                      <Route path="team" element={<AdminTeam />} />
+                      <Route path="knowledge" element={<AdminKnowledge />} />
+                      <Route path="emails" element={<AdminEmails />} />
+                      <Route path="analytics" element={<AdminRevenue />} />
+                      <Route path="audit" element={<AdminAuditLog />} />
+                    </Route>
                   </Route>
                   
                   <Route path="*" element={<NotFound />} />

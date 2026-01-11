@@ -23,6 +23,8 @@ export interface RouteConfig {
   requiredPermission?: AppPermission;
   /** If true, only admins can access */
   adminOnly?: boolean;
+  /** If true, only super_admins can access */
+  superAdminOnly?: boolean;
   /** Icon name for UntitledUI icons */
   iconName?: string;
   /** Keyboard shortcut (e.g., '⌥A') */
@@ -296,4 +298,56 @@ export function getValidAriSectionIds(): readonly string[] {
 /** Get Ari section by ID */
 export function getAriSectionById(id: string): AriSectionConfig | undefined {
   return ARI_SECTIONS.find(s => s.id === id);
+}
+
+// ============================================================
+// ADMIN ROUTES & SECTIONS (Super Admin Only)
+// ============================================================
+
+/** Admin route configuration */
+export const ADMIN_ROUTES: readonly RouteConfig[] = [
+  {
+    id: 'admin',
+    label: 'Admin',
+    path: '/admin',
+    superAdminOnly: true,
+    iconName: 'Shield01',
+    description: 'Platform administration',
+    showInNav: false,
+  },
+] as const;
+
+/** Admin section configuration for sidebar navigation */
+export interface AdminSectionConfig {
+  id: string;
+  label: string;
+  iconName: string;
+  path: string;
+  description: string;
+}
+
+/** All admin sections for the Super Admin Dashboard */
+export const ADMIN_SECTIONS: readonly AdminSectionConfig[] = [
+  { id: 'overview', label: 'Overview', iconName: 'LayoutAlt01', path: '/admin', description: 'Dashboard overview' },
+  { id: 'accounts', label: 'Accounts', iconName: 'Users01', path: '/admin/accounts', description: 'Manage user accounts' },
+  { id: 'prompts', label: 'Baseline Prompt', iconName: 'FileCode01', path: '/admin/prompts', description: 'Configure AI baseline' },
+  { id: 'plans', label: 'Plans & Billing', iconName: 'CreditCard01', path: '/admin/plans', description: 'Manage subscription plans' },
+  { id: 'team', label: 'Pilot Team', iconName: 'UserGroup', path: '/admin/team', description: 'Manage internal team' },
+  { id: 'knowledge', label: 'Help Articles', iconName: 'BookOpen01', path: '/admin/knowledge', description: 'Edit user documentation' },
+  { id: 'emails', label: 'Emails', iconName: 'Mail01', path: '/admin/emails', description: 'Templates & announcements' },
+  { id: 'analytics', label: 'Revenue', iconName: 'TrendUp01', path: '/admin/analytics', description: 'Revenue & metrics' },
+  { id: 'audit', label: 'Audit Log', iconName: 'ClipboardCheck', path: '/admin/audit', description: 'View admin actions' },
+] as const;
+
+/** Type for valid Admin section IDs */
+export type AdminSectionId = typeof ADMIN_SECTIONS[number]['id'];
+
+/** Get Admin section by ID */
+export function getAdminSectionById(id: string): AdminSectionConfig | undefined {
+  return ADMIN_SECTIONS.find(s => s.id === id);
+}
+
+/** Get all admin routes */
+export function getAdminRoutes(): readonly RouteConfig[] {
+  return ADMIN_ROUTES;
 }
