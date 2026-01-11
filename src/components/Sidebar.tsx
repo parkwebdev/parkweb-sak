@@ -12,7 +12,6 @@ import { X, Grid01 as Grid, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { UserAccountCard } from './UserAccountCard';
 import { useConversations } from '@/hooks/useConversations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
@@ -356,10 +355,6 @@ function SidebarComponent({ onClose }: SidebarProps) {
             );
           })}
 
-          {/* User account card */}
-          <div className="mt-4">
-            <UserAccountCard />
-          </div>
         </div>
       </nav>
     </aside>
