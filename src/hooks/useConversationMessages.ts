@@ -37,6 +37,8 @@ export interface UseConversationMessagesOptions {
   fetchMessages: (conversationId: string) => Promise<Message[]>;
   /** Optional callback when messages are loaded */
   onMessagesLoaded?: (messages: Message[]) => void;
+  /** Optional callback when a new user message arrives (for notifications) */
+  onNewUserMessage?: (message: Message) => void;
 }
 
 /** Return type for the useConversationMessages hook */
@@ -62,7 +64,7 @@ export interface UseConversationMessagesReturn {
  * @returns Message state and control functions
  */
 export function useConversationMessages(options: UseConversationMessagesOptions): UseConversationMessagesReturn {
-  const { conversationId, fetchMessages, onMessagesLoaded } = options;
+  const { conversationId, fetchMessages, onMessagesLoaded, onNewUserMessage } = options;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -106,6 +108,11 @@ export function useConversationMessages(options: UseConversationMessagesOptions)
             if (!isInitialLoadRef.current && !isReplacingOptimistic) {
               newMessageIdsRef.current.add(newMessage.id);
               setTimeout(() => newMessageIdsRef.current.delete(newMessage.id), 300);
+              
+              // Notify about new user messages (for tab notifications)
+              if (newMessage.role === 'user' && onNewUserMessage) {
+                onNewUserMessage(newMessage);
+              }
             }
             
             // Remove any pending optimistic message with matching content
