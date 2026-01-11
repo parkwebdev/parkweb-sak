@@ -15,8 +15,8 @@ interface TopBarSearchResultItemProps {
   icon?: ReactNode;
   /** Main title text */
   title: string;
-  /** Optional subtitle/secondary text */
-  subtitle?: string;
+  /** Optional subtitle/secondary text or element */
+  subtitle?: ReactNode;
   /** Optional status indicator (e.g., colored dot) */
   statusIndicator?: ReactNode;
   /** Click handler - will also close the popover */

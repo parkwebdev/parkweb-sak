@@ -6,9 +6,10 @@
  * @module components/knowledge-base/KBSearchResults
  */
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { BookOpen01 } from '@untitledui/icons';
 import { TopBarSearchResultItem, TopBarSearchEmptyState } from '@/components/layout/TopBarSearchResultItem';
+import { Badge } from '@/components/ui/badge';
 import { KB_CATEGORIES, type KBCategory, type KBArticle } from '@/config/knowledge-base-config';
 
 interface SearchResult {
@@ -65,7 +66,7 @@ export function KBSearchResults({
           key={`${category.id}-${article.id}`}
           icon={<BookOpen01 size={16} />}
           title={article.title}
-          subtitle={category.label}
+          subtitle={<Badge variant="secondary" size="sm">{category.label}</Badge>}
           onClick={() => onSelect(category, article)}
         />
       ))}
