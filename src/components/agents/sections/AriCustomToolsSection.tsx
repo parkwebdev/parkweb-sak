@@ -291,14 +291,13 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
     actions.push({
       id: 'debug-mode',
       label: 'Debug',
-      onClick: () => setDebugMode(!debugMode),
-      variant: debugMode ? 'secondary' : 'ghost',
+      onClick: () => setDebugMode(prev => !prev),
+      variant: 'ghost',
       icon: <Code01 size={14} />,
-      isActive: debugMode,
     });
     
     return actions;
-  }, [canManageTools, debugMode]);
+  }, [canManageTools]);
   
   useRegisterSectionActions('custom-tools', sectionActions);
 
