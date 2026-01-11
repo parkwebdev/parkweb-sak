@@ -12,7 +12,7 @@
  * @module functions/sync-wordpress-communities
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -334,7 +334,12 @@ Deno.serve(async (req: Request) => {
     );
 
     if (!isScheduledSync) {
-      if (!authHeader?.startsWith('Bearer ')) {
+      // Diagnostic logging (safe - no secrets)
+      const hasAuthHeader = !!authHeader;
+      const authHeaderStartsWithBearer = authHeader?.startsWith('Bearer ') ?? false;
+      console.log('Auth check:', { isScheduledSync, hasAuthHeader, authHeaderStartsWithBearer });
+
+      if (!authHeaderStartsWithBearer) {
         console.log('Auth failed: Missing or invalid Authorization header');
         return new Response(
           JSON.stringify({ error: 'Missing authorization header' }),
@@ -342,25 +347,39 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Extract token and verify explicitly (stateless edge runtime pattern)
-      const token = authHeader.replace('Bearer ', '');
+      // Direct GoTrue API call - most reliable method for edge runtime
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
       
-      const anonClient = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_ANON_KEY')!
-      );
+      const gotrueResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: {
+          'Authorization': authHeader,
+          'apikey': supabaseAnonKey,
+        },
+      });
 
-      const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
+      console.log('GoTrue response status:', gotrueResponse.status);
 
-      if (authError || !user) {
-        console.log('Auth failed:', authError?.message || 'No user returned');
+      if (!gotrueResponse.ok) {
+        const errorBody = await gotrueResponse.text();
+        console.log('Auth failed: GoTrue rejected token:', errorBody);
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const userData = await gotrueResponse.json();
+      userId = userData.id;
+      
+      if (!userId) {
+        console.log('Auth failed: No user ID in GoTrue response');
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      userId = user.id;
       console.log('Auth succeeded for user:', userId);
     } else {
       console.log('Scheduled sync: bypassing user auth');
