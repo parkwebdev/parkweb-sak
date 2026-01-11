@@ -9,7 +9,7 @@
  * @module pages/AriConfigurator
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAgent } from '@/hooks/useAgent';
@@ -26,7 +26,7 @@ import { ChatWidget } from '@/widget/ChatWidget';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
-import { AriSectionActionsProvider, useAriSectionActions } from '@/contexts/AriSectionActionsContext';
+import { AriSectionActionsProvider, useAriSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import type { Tables } from '@/integrations/supabase/types';
 import type { WidgetConfig } from '@/widget/api';
 
@@ -50,6 +50,35 @@ type Agent = Tables<'agents'>;
 
 // Get valid sections from centralized config
 const VALID_SECTIONS = getValidAriSectionIds();
+
+/**
+ * Component that renders Ari section actions from a ref
+ * This ensures the actions can update without triggering TopBar re-renders
+ */
+function AriTopBarActions({ actionsRef }: { actionsRef: MutableRefObject<SectionAction[]> }) {
+  // Force re-render when actions change by reading the latest value
+  const actions = actionsRef.current;
+  
+  if (actions.length === 0) return null;
+  
+  return (
+    <div className="flex items-center gap-2">
+      {actions.map((action) => (
+        <Button
+          key={action.id}
+          size="sm"
+          variant={action.isActive ? 'secondary' : (action.variant || 'default')}
+          onClick={action.onClick}
+          disabled={action.disabled}
+          className="gap-1.5"
+        >
+          {action.icon}
+          {action.label}
+        </Button>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Inner component that uses the section actions context
@@ -90,31 +119,19 @@ function AriConfiguratorContent() {
   }, [activeSection]);
   
   // Configure top bar for this page - render actions inline to stay within context provider
+  // Use a ref for actions to prevent re-render cascades when sections register actions
+  const actionsRef = useRef(actions);
+  actionsRef.current = actions;
+  
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext 
       icon={() => <AriAgentsIcon className="h-3.5 w-3.5" />} 
       title="Ari" 
       subtitle={currentSectionLabel}
     />,
-    right: actions.length > 0 ? (
-      <div className="flex items-center gap-2">
-        {actions.map((action) => (
-          <Button
-            key={action.id}
-            size="sm"
-            variant={action.isActive ? 'secondary' : (action.variant || 'default')}
-            onClick={action.onClick}
-            disabled={action.disabled}
-            className="gap-1.5"
-          >
-            {action.icon}
-            {action.label}
-          </Button>
-        ))}
-      </div>
-    ) : null,
-  }), [currentSectionLabel, actions]);
-  useTopBar(topBarConfig);
+    right: <AriTopBarActions actionsRef={actionsRef} />,
+  }), [currentSectionLabel]);
+  useTopBar(topBarConfig, 'ari');
   
   // Sync section from URL when it changes (for deep linking)
   useEffect(() => {

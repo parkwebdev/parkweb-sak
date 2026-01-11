@@ -11,7 +11,7 @@
  * @page
  */
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -321,6 +321,7 @@ function Conversations() {
   }), [conversations, userTakeovers]);
   
   // Configure top bar for this page
+  // Note: ConversationsTopBarSearch uses refs internally, so passing data props is safe
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
@@ -339,7 +340,7 @@ function Conversations() {
       />
     ),
   }), [activeFilter, filterCounts, conversations]);
-  useTopBar(topBarConfig);
+  useTopBar(topBarConfig, 'conversations');
 
   // === HANDLERS (useCallback for Phase 4 optimization) ===
   

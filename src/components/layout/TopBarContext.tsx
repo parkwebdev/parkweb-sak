@@ -2,18 +2,23 @@
  * @fileoverview TopBar Context Provider
  * Provides a context for pages to set their top bar content dynamically.
  * 
+ * Uses a stable identity system to prevent re-render cascades:
+ * - Each page provides a unique pageId
+ * - Config updates use a ref-based approach to prevent unnecessary re-renders
+ * 
  * @example
  * ```tsx
- * // In a page component
- * useTopBar({
+ * // In a page component - memoize the config and pass a pageId
+ * const topBarConfig = useMemo(() => ({
  *   left: <TopBarPageContext title="Leads" icon={Users01} />,
- *   center: <TopBarTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />,
  *   right: <Button size="sm">+ Add Lead</Button>,
- * });
+ * }), []);
+ * 
+ * useTopBar(topBarConfig, 'leads');
  * ```
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useLayoutEffect, useCallback, useRef, type ReactNode } from 'react';
 
 export interface TopBarConfig {
   /** Left section - page context/entity indicator */
@@ -66,36 +71,59 @@ export function useTopBarContext() {
 
 /**
  * Hook for pages to set their top bar content.
- * Uses shallow equality check to prevent unnecessary context updates.
- * Automatically clears the config when the component unmounts.
  * 
- * @param config - The top bar configuration for this page
+ * IMPORTANT: The pageId parameter is crucial for stable identity.
+ * When a pageId is provided, the config only updates if:
+ * 1. The component is mounting
+ * 2. The pageId changes (navigation to a new page)
+ * 3. The config reference changes (controlled updates via useMemo)
+ * 
+ * @param config - The top bar configuration for this page (should be memoized)
+ * @param pageId - Unique identifier for this page (e.g., 'leads', 'conversations')
  * 
  * @example
  * ```tsx
- * useTopBar({
+ * const topBarConfig = useMemo(() => ({
  *   left: <TopBarPageContext title="Analytics" icon={TrendUp01} />,
- *   center: <TopBarTabs tabs={analyticsTabsConfig} activeTab={activeTab} onTabChange={setActiveTab} />,
  *   right: <AnalyticsDatePicker />,
- * });
+ * }), []);
+ * 
+ * useTopBar(topBarConfig, 'analytics');
  * ```
  */
-export function useTopBar(config: TopBarConfig) {
+export function useTopBar(config: TopBarConfig, pageId?: string) {
   const { setConfig } = useContext(TopBarContext);
-  const prevConfigRef = useRef<TopBarConfig>({});
+  const pageIdRef = useRef(pageId);
+  const hasMountedRef = useRef(false);
   
-  useEffect(() => {
-    // Shallow equality check to prevent unnecessary updates
-    const hasChanged = 
-      prevConfigRef.current.left !== config.left ||
-      prevConfigRef.current.center !== config.center ||
-      prevConfigRef.current.right !== config.right;
-    
-    if (hasChanged) {
-      prevConfigRef.current = config;
+  // Use layout effect to set config synchronously before paint
+  // This prevents flashing of stale content
+  useLayoutEffect(() => {
+    // Set config on mount
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      pageIdRef.current = pageId;
       setConfig(config);
+      return;
     }
     
-    return () => setConfig({});
-  }, [config, setConfig]);
+    // Update if pageId changed (navigation)
+    if (pageIdRef.current !== pageId) {
+      pageIdRef.current = pageId;
+      setConfig(config);
+      return;
+    }
+    
+    // Update if config object changed (parent useMemo recomputed)
+    // This handles cases where filters, tabs, or other UI state changes
+    setConfig(config);
+    
+    // Cleanup: clear config when unmounting
+    return () => {
+      hasMountedRef.current = false;
+      setConfig({});
+    };
+    // Only depend on config and pageId - setConfig is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, pageId]);
 }
