@@ -7,7 +7,7 @@
  * @module components/leads/LeadsSearchWrapper
  */
 
-import { memo, useRef, useEffect, useCallback } from 'react';
+import { memo, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useInfiniteLeads } from '@/hooks/useInfiniteLeads';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { LeadsTopBarSearch } from './LeadsTopBarSearch';
@@ -40,8 +40,11 @@ export const LeadsSearchWrapper = memo(function LeadsSearchWrapper({
     onSelectRef.current(lead);
   }, []);
   
-  // Transform stages for the search component
-  const stagesForSearch = stages.map(s => ({ id: s.id, name: s.name, color: s.color }));
+  // Memoize the stages transformation to prevent new array on each render
+  const stagesForSearch = useMemo(() => 
+    stages.map(s => ({ id: s.id, name: s.name, color: s.color })),
+    [stages]
+  );
   
   return (
     <LeadsTopBarSearch
