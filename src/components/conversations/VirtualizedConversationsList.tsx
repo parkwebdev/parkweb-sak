@@ -12,7 +12,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MessageChatSquare, SwitchVertical01, ChevronDown } from '@untitledui/icons';
+import { MessageChatSquare, ChevronDown } from '@untitledui/icons';
 import { ConversationItem } from './ConversationItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -84,11 +84,6 @@ export const VirtualizedConversationsList = memo(function VirtualizedConversatio
 }: VirtualizedConversationsListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const handleCycleSortOrder = useCallback(() => {
-    if (sortBy === 'last_activity') onSortChange('newest');
-    else if (sortBy === 'newest') onSortChange('oldest');
-    else onSortChange('last_activity');
-  }, [sortBy, onSortChange]);
 
   const getSortLabel = useCallback((sort: SortBy) => {
     switch (sort) {
@@ -175,14 +170,6 @@ export const VirtualizedConversationsList = memo(function VirtualizedConversatio
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              
-              <button 
-                onClick={handleCycleSortOrder}
-                className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
-                aria-label="Toggle sort order"
-              >
-                <SwitchVertical01 size={14} />
-              </button>
             </div>
           </div>
         )}
