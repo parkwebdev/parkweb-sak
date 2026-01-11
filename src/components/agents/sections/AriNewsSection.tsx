@@ -5,11 +5,12 @@
  * rich text editor, featured images, author selection, and CTAs.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNewsItems, type NewsItem, type NewsItemInsert } from '@/hooks/useNewsItems';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeam } from '@/hooks/useTeam';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trash01, Image03, Upload01, XClose, Plus } from '@untitledui/icons';
+import { Trash01, Image03, Upload01, XClose } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -585,18 +586,29 @@ export function AriNewsSection({ agentId, userId }: AriNewsSectionProps) {
     setDeleteId(null);
   };
 
+  // Register actions for TopBar
+  const sectionActions: SectionAction[] = useMemo(() => {
+    const actions: SectionAction[] = [];
+    
+    if (canManageNews) {
+      actions.push({
+        id: 'add-news',
+        label: 'Add News Item',
+        onClick: () => setIsCreateOpen(true),
+        variant: 'default',
+      });
+    }
+    
+    return actions;
+  }, [canManageNews]);
+  
+  useRegisterSectionActions('news', sectionActions);
+
   return (
     <div>
       <AriSectionHeader
         title="News"
         description="Blog-style updates and articles for your users"
-        extra={
-          canManageNews && (
-            <Button onClick={() => setIsCreateOpen(true)} size="sm">
-              Add News Item
-            </Button>
-          )
-        }
       />
 
       <div className="mt-6 space-y-4">

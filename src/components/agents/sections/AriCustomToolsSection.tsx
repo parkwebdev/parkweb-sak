@@ -4,13 +4,14 @@
  * Custom tools management with full CRUD, test, and debug capabilities.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Trash01, Link03, Edit03, PlayCircle, ChevronDown, Plus, Lightbulb02, Code01 } from '@untitledui/icons';
+import { Trash01, Link03, Edit03, PlayCircle, ChevronDown, Lightbulb02, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonListSection } from '@/components/ui/skeleton';
 import { AriSectionHeader } from './AriSectionHeader';
@@ -266,6 +267,41 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
     });
   };
 
+  // Register actions for TopBar
+  const sectionActions: SectionAction[] = useMemo(() => {
+    const actions: SectionAction[] = [];
+    
+    if (canManageTools) {
+      actions.push({
+        id: 'add-tool',
+        label: 'Add Tool',
+        onClick: () => setShowCreateDialog(true),
+        variant: 'default',
+      });
+    }
+    
+    actions.push({
+      id: 'use-cases',
+      label: 'Use Cases',
+      onClick: () => setShowUseCasesModal(true),
+      variant: 'outline',
+      icon: <Lightbulb02 size={14} />,
+    });
+    
+    actions.push({
+      id: 'debug-mode',
+      label: 'Debug',
+      onClick: () => setDebugMode(!debugMode),
+      variant: debugMode ? 'secondary' : 'ghost',
+      icon: <Code01 size={14} />,
+      isActive: debugMode,
+    });
+    
+    return actions;
+  }, [canManageTools, debugMode]);
+  
+  useRegisterSectionActions('custom-tools', sectionActions);
+
   if (loading) {
     return <SkeletonListSection items={3} />;
   }
@@ -278,28 +314,6 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
       />
 
       <div className="space-y-4">
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          {canManageTools && (
-            <Button onClick={() => setShowCreateDialog(true)} size="sm">
-              Add Tool
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => setShowUseCasesModal(true)}>
-            <Lightbulb02 size={14} className="mr-1.5" />
-            View Use Cases
-          </Button>
-          <div className="flex-1" />
-          <Button
-            variant={debugMode ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setDebugMode(!debugMode)}
-          >
-            <Code01 size={14} className="mr-1.5" />
-            Debug Mode
-          </Button>
-        </div>
-
         {/* Tools List */}
         {tools.length === 0 ? (
           <EmptyState
