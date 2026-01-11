@@ -342,14 +342,15 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Create anon client for JWT verification using getUser()
+      // Extract token and verify explicitly (stateless edge runtime pattern)
+      const token = authHeader.replace('Bearer ', '');
+      
       const anonClient = createClient(
         Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_ANON_KEY')!,
-        { global: { headers: { Authorization: authHeader } } }
+        Deno.env.get('SUPABASE_ANON_KEY')!
       );
 
-      const { data: { user }, error: authError } = await anonClient.auth.getUser();
+      const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
 
       if (authError || !user) {
         console.log('Auth failed:', authError?.message || 'No user returned');
