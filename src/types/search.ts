@@ -47,6 +47,20 @@ export type KnowledgeSourceWithAgent = Tables<'knowledge_sources'> & {
 /** Profile record for team members */
 export type ProfileRecord = Tables<'profiles'>;
 
+/** Calendar event with location relation */
+export type CalendarEventRecord = Tables<'calendar_events'> & {
+  locations?: { name: string } | null;
+};
+
+/** Location record */
+export type LocationRecord = Tables<'locations'>;
+
+/** Announcement record */
+export type AnnouncementRecord = Tables<'announcements'>;
+
+/** Help category record */
+export type HelpCategoryRecord = Tables<'help_categories'>;
+
 /**
  * Type-safe data map for search results.
  * All properties are optional as they're conditionally fetched based on permissions.
@@ -60,6 +74,10 @@ export interface SearchDataMap {
   tools?: AgentToolWithAgent[];
   knowledgeSources?: KnowledgeSourceWithAgent[];
   teamMembers?: ProfileRecord[];
+  calendarEvents?: CalendarEventRecord[];
+  locations?: LocationRecord[];
+  announcements?: AnnouncementRecord[];
+  helpCategories?: HelpCategoryRecord[];
 }
 
 /** Maps data types to their required permissions */
@@ -72,4 +90,8 @@ export const DATA_PERMISSION_MAP: Record<keyof SearchDataMap, AppPermission> = {
   tools: 'manage_ari',
   knowledgeSources: 'view_knowledge',
   teamMembers: 'view_team',
+  calendarEvents: 'view_bookings',
+  locations: 'manage_ari',
+  announcements: 'manage_ari',
+  helpCategories: 'view_help_articles',
 } as const;

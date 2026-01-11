@@ -12,9 +12,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { LEAD_SEARCH_COLUMNS, PROFILE_LIST_COLUMNS } from '@/lib/db-selects';
+import { 
+  LEAD_SEARCH_COLUMNS, 
+  PROFILE_LIST_COLUMNS,
+  CALENDAR_EVENT_SEARCH_COLUMNS,
+  LOCATION_SEARCH_COLUMNS,
+  ANNOUNCEMENT_SEARCH_COLUMNS,
+  HELP_CATEGORY_SEARCH_COLUMNS,
+} from '@/lib/db-selects';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
-import { ROUTE_CONFIG, SETTINGS_TABS } from '@/config/routes';
+import { ROUTE_CONFIG, SETTINGS_TABS, ARI_SECTIONS } from '@/config/routes';
 import { KB_CATEGORIES } from '@/config/knowledge-base-config';
 import type { 
   SearchDataMap, 
@@ -26,10 +33,13 @@ import type {
   AgentToolWithAgent,
   KnowledgeSourceWithAgent,
   ProfileRecord,
+  CalendarEventRecord,
+  LocationRecord,
+  AnnouncementRecord,
+  HelpCategoryRecord,
 } from '@/types/search';
 import { DATA_PERMISSION_MAP } from '@/types/search';
 import type { ConversationMetadata } from '@/types/metadata';
-import type { AppPermission } from '@/types/team';
 import { logger } from '@/utils/logger';
 
 export interface SearchResult {
@@ -172,6 +182,54 @@ export const useSearchData = () => {
         })());
       }
 
+      // Calendar Events - using DATA_PERMISSION_MAP
+      if (hasDataPermission('calendarEvents')) {
+        fetchPromises.push((async () => {
+          const res = await supabase
+            .from('calendar_events')
+            .select(CALENDAR_EVENT_SEARCH_COLUMNS)
+            .order('start_time', { ascending: false })
+            .limit(50);
+          dataMap.calendarEvents = (res.data ?? []) as CalendarEventRecord[];
+        })());
+      }
+
+      // Locations - using DATA_PERMISSION_MAP
+      if (hasDataPermission('locations')) {
+        fetchPromises.push((async () => {
+          const res = await supabase
+            .from('locations')
+            .select(LOCATION_SEARCH_COLUMNS)
+            .order('name')
+            .limit(50);
+          dataMap.locations = (res.data ?? []) as LocationRecord[];
+        })());
+      }
+
+      // Announcements - using DATA_PERMISSION_MAP
+      if (hasDataPermission('announcements')) {
+        fetchPromises.push((async () => {
+          const res = await supabase
+            .from('announcements')
+            .select(ANNOUNCEMENT_SEARCH_COLUMNS)
+            .order('order_index')
+            .limit(50);
+          dataMap.announcements = (res.data ?? []) as AnnouncementRecord[];
+        })());
+      }
+
+      // Help Categories - using DATA_PERMISSION_MAP
+      if (hasDataPermission('helpCategories')) {
+        fetchPromises.push((async () => {
+          const res = await supabase
+            .from('help_categories')
+            .select(HELP_CATEGORY_SEARCH_COLUMNS)
+            .order('order_index')
+            .limit(50);
+          dataMap.helpCategories = (res.data ?? []) as HelpCategoryRecord[];
+        })());
+      }
+
       // Execute all permitted queries
       await Promise.all(fetchPromises);
 
@@ -193,6 +251,20 @@ export const useSearchData = () => {
           iconName: route.iconName,
           shortcut: route.shortcut,
           action: () => navigate(route.path),
+        });
+      });
+
+      // Ari Sections from centralized config
+      ARI_SECTIONS.forEach(section => {
+        if (section.requiredPermission && !isAdmin && !hasPermission(section.requiredPermission)) return;
+        
+        results.push({
+          id: `ari-section-${section.id}`,
+          title: section.label,
+          description: `${section.group} • Ari Configuration`,
+          category: 'Ari Sections',
+          iconName: section.iconName,
+          action: () => navigate(`/ari?section=${section.id}`),
         });
       });
 
@@ -225,6 +297,64 @@ export const useSearchData = () => {
         });
       }
 
+      // Calendar Events
+      if (dataMap.calendarEvents) {
+        dataMap.calendarEvents.forEach((event) => {
+          const eventDate = new Date(event.start_time).toLocaleDateString();
+          results.push({
+            id: `event-${event.id}`,
+            title: event.title || event.visitor_name || 'Untitled Event',
+            description: `${event.event_type || 'Event'} • ${eventDate} • ${event.status}`,
+            category: 'Calendar Events',
+            iconName: 'Calendar',
+            action: () => navigate('/planner'),
+          });
+        });
+      }
+
+      // Locations
+      if (dataMap.locations) {
+        dataMap.locations.forEach((location) => {
+          const locationParts = [location.city, location.state].filter(Boolean).join(', ');
+          results.push({
+            id: `location-${location.id}`,
+            title: location.name,
+            description: `${locationParts} • ${location.is_active ? 'Active' : 'Inactive'}`,
+            category: 'Locations',
+            iconName: 'MarkerPin01',
+            action: () => navigate('/ari?section=locations'),
+          });
+        });
+      }
+
+      // Announcements
+      if (dataMap.announcements) {
+        dataMap.announcements.forEach((announcement) => {
+          results.push({
+            id: `announcement-${announcement.id}`,
+            title: announcement.title,
+            description: announcement.is_active ? 'Active' : 'Inactive',
+            category: 'Announcements',
+            iconName: 'Announcement01',
+            action: () => navigate('/ari?section=announcements'),
+          });
+        });
+      }
+
+      // Help Categories
+      if (dataMap.helpCategories) {
+        dataMap.helpCategories.forEach((category) => {
+          results.push({
+            id: `help-category-${category.id}`,
+            title: category.name,
+            description: category.description || 'Help category',
+            category: 'Help Categories',
+            iconName: 'Folder',
+            action: () => navigate('/ari?section=help-articles'),
+          });
+        });
+      }
+
       // Help Articles
       if (dataMap.helpArticles) {
         dataMap.helpArticles.forEach((article) => {
@@ -234,7 +364,7 @@ export const useSearchData = () => {
             description: `${article.help_categories?.name || 'Uncategorized'}`,
             category: 'Help Articles',
             iconName: 'BookOpen01',
-            action: () => navigate('/ari/help-articles'),
+            action: () => navigate('/ari?section=help-articles'),
           });
         });
       }
@@ -248,7 +378,7 @@ export const useSearchData = () => {
             description: news.is_published ? 'Published' : 'Draft',
             category: 'News',
             iconName: 'Announcement01',
-            action: () => navigate('/ari/news'),
+            action: () => navigate('/ari?section=news'),
           });
         });
       }
@@ -262,7 +392,7 @@ export const useSearchData = () => {
             description: webhook.active ? 'Active' : 'Inactive',
             category: 'Webhooks',
             iconName: 'Link01',
-            action: () => navigate('/ari/webhooks'),
+            action: () => navigate('/ari?section=webhooks'),
           });
         });
       }
@@ -276,7 +406,7 @@ export const useSearchData = () => {
             description: tool.enabled ? 'Enabled' : 'Disabled',
             category: 'Tools',
             iconName: 'Tool02',
-            action: () => navigate('/ari/custom-tools'),
+            action: () => navigate('/ari?section=custom-tools'),
           });
         });
       }
@@ -290,7 +420,7 @@ export const useSearchData = () => {
             description: `${source.type.toUpperCase()} • ${source.status}`,
             category: 'Knowledge',
             iconName: 'Database01',
-            action: () => navigate('/ari/knowledge'),
+            action: () => navigate('/ari?section=knowledge'),
           });
         });
       }
