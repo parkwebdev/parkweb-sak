@@ -63,7 +63,7 @@ const shortcuts: KeyboardShortcut[] = [
   { key: 'y', altKey: true, description: 'Analytics' },
   { key: 'p', altKey: true, description: 'Planner' },
   { key: 's', altKey: true, description: 'Settings' },
-  { key: 'h', altKey: true, description: 'Knowledge Base' },
+  { key: 'h', altKey: true, description: 'Help Center' },
 ];
 
 const formatShortcut = (shortcut: KeyboardShortcut): string[] => {
@@ -218,7 +218,7 @@ export function UserAccountCard() {
             <DropdownMenuItem asChild>
               <Link to="/knowledge-base" className="w-full flex items-center gap-2">
                 <BookOpen01 size={15} />
-                Knowledge Base
+                Help Center
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem 
