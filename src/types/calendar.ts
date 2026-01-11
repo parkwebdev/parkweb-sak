@@ -68,7 +68,7 @@ export interface CalendarEvent {
   is_recurring_instance?: boolean;
   
   // Booking-specific fields
-  type?: 'showing' | 'move_in' | 'inspection' | 'maintenance' | 'meeting';
+  type?: 'showing' | 'move_in' | 'inspection' | 'maintenance';
   lead_id?: string;
   lead_name?: string;
   lead_email?: string;
@@ -92,7 +92,6 @@ export const EVENT_TYPE_CONFIG: Record<NonNullable<EventType>, { label: string; 
   move_in: { label: 'Move-in', color: '#10B981' },
   inspection: { label: 'Inspection', color: '#F59E0B' },
   maintenance: { label: 'Maintenance', color: '#8B5CF6' },
-  meeting: { label: 'Meeting', color: '#6366F1' },
 };
 
 export const EVENT_STATUS_CONFIG: Record<CalendarEventStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
