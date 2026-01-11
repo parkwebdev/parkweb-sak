@@ -52,33 +52,6 @@ type Agent = Tables<'agents'>;
 const VALID_SECTIONS = getValidAriSectionIds();
 
 /**
- * Component that renders the section actions in the TopBar
- */
-function SectionActionsRenderer() {
-  const { actions } = useAriSectionActions();
-  
-  if (actions.length === 0) return null;
-  
-  return (
-    <div className="flex items-center gap-2">
-      {actions.map((action) => (
-        <Button
-          key={action.id}
-          size="sm"
-          variant={action.isActive ? 'secondary' : (action.variant || 'default')}
-          onClick={action.onClick}
-          disabled={action.disabled}
-          className="gap-1.5"
-        >
-          {action.icon}
-          {action.label}
-        </Button>
-      ))}
-    </div>
-  );
-}
-
-/**
  * Inner component that uses the section actions context
  */
 function AriConfiguratorContent() {
@@ -93,7 +66,7 @@ function AriConfiguratorContent() {
   const [searchParams] = useSearchParams();
   logger.debug('AriConfigurator: useSearchParams complete');
   
-  const { setCurrentSection } = useAriSectionActions();
+  const { setCurrentSection, actions } = useAriSectionActions();
   
   // Get initial section from URL or default to system-prompt
   const initialSection = useMemo(() => {
@@ -116,15 +89,31 @@ function AriConfiguratorContent() {
     return section?.label;
   }, [activeSection]);
   
-  // Configure top bar for this page
+  // Configure top bar for this page - render actions inline to stay within context provider
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext 
       icon={() => <AriAgentsIcon className="h-3.5 w-3.5" />} 
       title="Ari" 
       subtitle={currentSectionLabel}
     />,
-    right: <SectionActionsRenderer />,
-  }), [currentSectionLabel]);
+    right: actions.length > 0 ? (
+      <div className="flex items-center gap-2">
+        {actions.map((action) => (
+          <Button
+            key={action.id}
+            size="sm"
+            variant={action.isActive ? 'secondary' : (action.variant || 'default')}
+            onClick={action.onClick}
+            disabled={action.disabled}
+            className="gap-1.5"
+          >
+            {action.icon}
+            {action.label}
+          </Button>
+        ))}
+      </div>
+    ) : null,
+  }), [currentSectionLabel, actions]);
   useTopBar(topBarConfig);
   
   // Sync section from URL when it changes (for deep linking)
