@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
@@ -47,6 +47,7 @@ import {
   Trash01, 
   LinkExternal01, 
   Settings02,
+  ChevronDown,
   Edit02,
   XClose,
   Database01,
@@ -202,6 +203,7 @@ export function WordPressIntegrationSheet({
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
   const [deleteLocationsOnDisconnect, setDeleteLocationsOnDisconnect] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   
   // Local state for endpoint inputs (for auto-save debouncing)
   const [localCommunityEndpoint, setLocalCommunityEndpoint] = useState('');
@@ -580,22 +582,29 @@ export function WordPressIntegrationSheet({
                 </Card>
 
                 {/* Advanced Settings */}
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="advanced" className="border-0">
-                    <AccordionTrigger 
-                      className="py-2 px-0 text-xs text-muted-foreground hover:text-foreground hover:no-underline"
-                      showIcon={true}
+                <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+                  <CollapsibleTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-between h-9 text-xs text-muted-foreground hover:text-foreground"
                     >
                       <div className="flex items-center gap-2">
                         <Settings02 size={14} aria-hidden="true" />
                         <span>Advanced Settings</span>
                       </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <Card className="mt-2">
-                        <CardContent className="p-4 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">API Endpoints</span>
+                      <ChevronDown 
+                        size={14} 
+                        className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+                        aria-hidden="true" 
+                      />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <Card className="mt-2">
+                      <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground">API Endpoints</span>
                           <Button
                             variant="outline"
                             size="sm"
@@ -711,9 +720,8 @@ export function WordPressIntegrationSheet({
                         )}
                       </CardContent>
                     </Card>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                  </CollapsibleContent>
+                </Collapsible>
               </>
             )}
           </div>
