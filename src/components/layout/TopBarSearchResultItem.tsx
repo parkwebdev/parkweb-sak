@@ -48,7 +48,8 @@ export function TopBarSearchResultItem({
     <button
       onClick={handleClick}
       className={cn(
-        "w-full p-3 text-left hover:bg-accent flex items-start gap-3 border-b last:border-b-0 transition-colors",
+        "w-full px-3 py-2.5 text-left hover:bg-accent flex items-start gap-3 transition-colors",
+        "border-t border-border first:border-t-0",
         className
       )}
       type="button"

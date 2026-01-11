@@ -87,7 +87,7 @@ export function TopBarSearch({
         <div className={cn("relative w-48 lg:w-64", className)}>
           <SearchMd 
             size={16} 
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" 
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" 
             aria-hidden="true"
           />
           <Input
@@ -97,13 +97,16 @@ export function TopBarSearch({
             onChange={handleInputChange}
             onFocus={handleFocus}
             onKeyDown={handleKeyDown}
-            className="pl-9 pr-8"
+            className={cn(
+              "pl-9 pr-8 transition-[border-radius]",
+              shouldShowPopover && "rounded-b-none border-b-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            )}
             size="sm"
           />
           {value && (
             <button
               onClick={handleClear}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors z-10"
               aria-label="Clear search"
               type="button"
             >
@@ -116,8 +119,8 @@ export function TopBarSearch({
       {renderResults && (
         <PopoverContent 
           align="start" 
-          sideOffset={8}
-          className="w-[320px] p-0 max-h-80 overflow-y-auto"
+          sideOffset={0}
+          className="w-[var(--radix-popover-trigger-width)] p-0 max-h-72 overflow-y-auto rounded-t-none rounded-b-md border-t-0 shadow-lg"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <TopBarSearchResultsContext.Provider value={{ onResultClick: handleResultClick }}>
