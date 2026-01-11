@@ -68,7 +68,7 @@ export function NotificationBell() {
       <PopoverContent
         side="bottom"
         align="end"
-        sideOffset={8}
+        sideOffset={4}
         className="w-80 p-0 rounded-xl shadow-lg"
       >
         <NotificationPopover onClose={() => setOpen(false)} />
