@@ -318,7 +318,7 @@ export const useSearchData = () => {
             title: lead.name || lead.email || 'Unnamed Lead',
             description: `${lead.company || ''} • ${lead.status}`,
             category: 'Leads',
-            iconName: 'User01',
+            iconName: 'Users01',
             action: () => navigate('/leads'),
           });
         });
@@ -347,7 +347,7 @@ export const useSearchData = () => {
             title: profile.display_name || profile.email || 'Team Member',
             description: profile.email || '',
             category: 'Team',
-            iconName: 'User01',
+            iconName: 'Users01',
             action: () => navigate('/settings?tab=team'),
           });
         });
@@ -391,7 +391,7 @@ export const useSearchData = () => {
             title: category.name,
             description: category.description || 'Help category',
             category: 'Ari Content',
-            iconName: 'Folder',
+            iconName: 'FolderClosed',
             action: () => navigate('/ari?section=help-articles'),
           });
         });
@@ -434,7 +434,7 @@ export const useSearchData = () => {
             title: webhook.name,
             description: webhook.active ? 'Active' : 'Inactive',
             category: 'Ari Tools',
-            iconName: 'Link01',
+            iconName: 'Webhook',
             action: () => navigate('/ari?section=webhooks'),
           });
         });
@@ -448,7 +448,7 @@ export const useSearchData = () => {
             title: tool.name,
             description: tool.enabled ? 'Enabled' : 'Disabled',
             category: 'Ari Tools',
-            iconName: 'Tool02',
+            iconName: 'CodeBrowser',
             action: () => navigate('/ari?section=custom-tools'),
           });
         });
