@@ -93,7 +93,7 @@ export function InboxFilterDropdown({ activeFilter, onFilterChange, counts }: In
           <ChevronDown size={16} className="text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 space-y-0.5">
+      <DropdownMenuContent side="bottom" align="start" sideOffset={8} className="w-56 space-y-0.5">
         {/* Ari Section */}
         <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Ari
