@@ -18,6 +18,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AriSectionActionsProvider } from "@/contexts/AriSectionActionsContext";
 import { GlobalSearchProvider } from "@/contexts/GlobalSearchContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PermissionGuard } from "@/components/PermissionGuard";
@@ -110,6 +111,7 @@ const App = () => (
                 <PointerEventsGuard />
                 <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                   <AuthProvider>
+                    <AriSectionActionsProvider>
                     <GlobalSearch />
                 <Routes>
                   {/* Public routes */}
@@ -226,8 +228,9 @@ const App = () => (
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </AuthProvider>
-            </BrowserRouter>
+                    </AriSectionActionsProvider>
+                  </AuthProvider>
+                </BrowserRouter>
           </GlobalSearchProvider>
         </TooltipProvider>
       </ThemeProvider>
