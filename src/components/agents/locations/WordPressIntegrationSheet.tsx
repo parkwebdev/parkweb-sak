@@ -44,7 +44,6 @@ import {
   RefreshCw01, 
   Check, 
   AlertCircle, 
-  Zap, 
   Home01, 
   Trash01, 
   LinkExternal01, 
@@ -53,9 +52,9 @@ import {
   ChevronDown,
   Edit02,
   XClose,
-  Link01,
   Database01,
-  Stars01
+  Dataflow01,
+  ZapFast
 } from '@untitledui/icons';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
@@ -308,8 +307,7 @@ export function WordPressIntegrationSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="sm:max-w-md overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <Link01 size={20} aria-hidden="true" />
+            <SheetTitle>
               WordPress Integration
             </SheetTitle>
             <SheetDescription>
@@ -431,7 +429,7 @@ export function WordPressIntegrationSheet({
                 <Card>
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Zap size={16} className="text-warning" aria-hidden="true" />
+                      <Dataflow01 size={16} className="text-muted-foreground" aria-hidden="true" />
                       <span className="text-sm font-medium">Data Extraction</span>
                     </div>
                     
@@ -475,7 +473,7 @@ export function WordPressIntegrationSheet({
                         <RadioGroupItem value="ai" id="mode-ai" className="mt-0.5" />
                         <Label htmlFor="mode-ai" className="cursor-pointer flex-1">
                           <span className="font-medium text-sm flex items-center gap-2">
-                            <Stars01 size={14} className="text-warning" aria-hidden="true" />
+                            <ZapFast size={14} className="text-warning" aria-hidden="true" />
                             AI-Powered
                             <Badge variant="outline" size="sm">Uses credits</Badge>
                           </span>
