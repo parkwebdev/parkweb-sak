@@ -8,7 +8,7 @@
  * @page
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { getNavigationIcon } from '@/lib/navigation-icons';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
@@ -76,6 +76,7 @@ function Planner() {
   }, []);
   
   // Configure top bar for this page
+  // Note: PlannerTopBarSearch uses refs internally, so passing data props is safe
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
@@ -101,7 +102,7 @@ function Planner() {
       </div>
     ),
   }), [activeTab, canManageBookings, dbEvents, handleEventClick]);
-  useTopBar(topBarConfig);
+  useTopBar(topBarConfig, 'planner');
 
   const handleAddEvent = () => {
     setSelectedDate(new Date());

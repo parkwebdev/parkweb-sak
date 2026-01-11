@@ -104,7 +104,7 @@ function Analytics() {
       <Button size="sm" onClick={() => navigate('/report-builder')}>Build Report</Button>
     ) : undefined,
   }), [activeTab, showToolbar, showBuildReport, datePreset, navigate, data.mockMode, data.setMockMode]);
-  useTopBar(topBarConfig);
+  useTopBar(topBarConfig, 'analytics');
 
   return (
     <div className="flex-1 h-full bg-muted/30 flex min-h-0">

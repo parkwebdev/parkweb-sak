@@ -351,6 +351,7 @@ function Leads() {
   }, []);
 
   // Configure top bar for this page with all controls
+  // Note: LeadsTopBarSearch uses refs internally, so passing data props is safe
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
@@ -422,6 +423,7 @@ function Leads() {
       </div>
     ),
   }), [
+    leads,
     stages,
     handleViewLead,
     canManageLeads,
@@ -442,7 +444,7 @@ function Leads() {
     handleColumnOrderChange,
     handleViewModeChange,
   ]);
-  useTopBar(topBarConfig);
+  useTopBar(topBarConfig, 'leads');
 
   // Selection handlers
   const handleSelectAll = useCallback((checked: boolean) => {
