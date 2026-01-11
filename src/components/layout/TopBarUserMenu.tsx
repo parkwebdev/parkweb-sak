@@ -149,23 +149,23 @@ export function TopBarUserMenu() {
         side="bottom"
         align="end"
         sideOffset={8}
-        className="bg-background border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl"
+        className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
         <div className="flex">
           {/* Main menu column */}
-          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 py-2`}>
-            <div className="px-2 pb-1.5 text-sm font-semibold text-muted-foreground">Account</div>
-            <DropdownMenuSeparator className="mb-1" />
+          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0`}>
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
+              <Link to="/settings?tab=profile" className="w-full flex items-center gap-2 cursor-pointer">
                 <UserCircleIcon size={15} />
                 Profile
               </Link>
             </DropdownMenuItem>
             {canView('view_team') && (
               <DropdownMenuItem asChild>
-                <Link to="/settings?tab=team" className="w-full flex items-center gap-2">
+                <Link to="/settings?tab=team" className="w-full flex items-center gap-2 cursor-pointer">
                   <Users01 size={15} />
                   Team
                 </Link>
@@ -173,7 +173,7 @@ export function TopBarUserMenu() {
             )}
             {canView('view_billing') && (
               <DropdownMenuItem asChild>
-                <Link to="/settings?tab=usage" className="w-full flex items-center gap-2">
+                <Link to="/settings?tab=usage" className="w-full flex items-center gap-2 cursor-pointer">
                   <PieChart03Icon size={15} />
                   Usage
                 </Link>
@@ -181,20 +181,20 @@ export function TopBarUserMenu() {
             )}
             {canView('view_billing') && (
               <DropdownMenuItem asChild>
-                <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
+                <Link to="/settings?tab=billing" className="w-full flex items-center gap-2 cursor-pointer">
                   <CreditCard01 size={15} />
                   Billing
                 </Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
-              <Link to="/settings" className="w-full flex items-center gap-2">
+              <Link to="/settings" className="w-full flex items-center gap-2 cursor-pointer">
                 <Settings02Icon size={15} />
                 Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/knowledge-base" className="w-full flex items-center gap-2">
+              <Link to="/knowledge-base" className="w-full flex items-center gap-2 cursor-pointer">
                 <BookOpen01 size={15} />
                 Help Center
               </Link>
@@ -204,17 +204,17 @@ export function TopBarUserMenu() {
               className="flex items-center gap-2 cursor-default"
               onSelect={(e) => e.preventDefault()}
             >
-              <Keyboard01 size={16} />
+              <Keyboard01 size={15} />
               Shortcuts
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <div className="px-2 py-2">
-              <div className="text-xs text-muted-foreground mb-2">Theme</div>
+            <div className="px-2 py-1.5">
+              <div className="text-xs text-muted-foreground mb-1.5">Theme</div>
               <ThemeSwitcher />
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-              <LogOut size={16} className="mr-2" />
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+              <LogOut size={15} className="mr-2" />
               Sign Out
             </DropdownMenuItem>
           </div>
@@ -222,14 +222,14 @@ export function TopBarUserMenu() {
           {/* Shortcuts column - shows on hover */}
           {showShortcuts && (
             <div 
-              className="border-l border-border py-2 animate-fade-in flex-1"
+              className="border-l border-border animate-fade-in flex-1"
               onMouseLeave={() => setShowShortcuts(false)}
             >
-              <div className="px-2 pb-1.5 text-sm font-semibold text-muted-foreground">Shortcuts</div>
-              <DropdownMenuSeparator className="mb-1" />
-              <div className="space-y-2 px-2 pt-1">
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
+              <DropdownMenuSeparator />
+              <div className="space-y-1 px-2 py-1">
                 {shortcuts.map((shortcut, index) => (
-                  <div key={index} className="flex items-center justify-between w-full">
+                  <div key={index} className="flex items-center justify-between w-full py-0.5">
                     <span className="text-xs text-foreground">{shortcut.description}</span>
                     <div className="flex items-center gap-0.5 ml-auto">
                       {formatShortcut(shortcut).map((key, keyIndex) => (
@@ -237,7 +237,7 @@ export function TopBarUserMenu() {
                           key={keyIndex}
                           variant="secondary" 
                           size="sm"
-                          className="px-1.5 py-0.5 font-mono text-xs h-auto rounded-sm"
+                          className="px-1.5 py-0 font-mono text-2xs h-auto rounded-sm"
                         >
                           {key}
                         </Badge>
