@@ -161,20 +161,19 @@ export function TopBarUserMenu() {
         className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
-        {/* Headers row */}
+        {/* Headers row with separators */}
         <div className="flex">
           <div className={showShortcuts ? 'w-[160px] flex-shrink-0' : 'w-full'}>
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
+            <DropdownMenuSeparator />
           </div>
           {showShortcuts && (
             <div className="border-l border-border flex-1">
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
+              <DropdownMenuSeparator />
             </div>
           )}
         </div>
-        
-        {/* Shared separator */}
-        <DropdownMenuSeparator />
         
         {/* Content row */}
         <div className="flex">
