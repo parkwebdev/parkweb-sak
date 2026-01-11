@@ -4,7 +4,8 @@
  * Clean, card-based layout for managing WordPress connection and sync settings.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { AnimatePresence, motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,6 +108,10 @@ export function WordPressIntegrationSheet({
   const [deleteLocationsOnDisconnect, setDeleteLocationsOnDisconnect] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Local state for endpoint inputs (for auto-save debouncing)
+  const [localCommunityEndpoint, setLocalCommunityEndpoint] = useState('');
+  const [localHomeEndpoint, setLocalHomeEndpoint] = useState('');
 
   const {
     siteUrl,
@@ -141,6 +146,39 @@ export function WordPressIntegrationSheet({
   useEffect(() => {
     if (siteUrl) setUrlInput(siteUrl);
   }, [siteUrl]);
+
+  useEffect(() => {
+    setLocalCommunityEndpoint(communityEndpoint || '');
+  }, [communityEndpoint]);
+
+  useEffect(() => {
+    setLocalHomeEndpoint(homeEndpoint || '');
+  }, [homeEndpoint]);
+
+  // Auto-save handlers for endpoint inputs
+  const { save: saveCommunityEndpoint } = useAutoSave({
+    onSave: useCallback(async (value: string) => {
+      await updateEndpoint('community', value);
+    }, [updateEndpoint]),
+    savingMessage: 'Saving endpoint...',
+  });
+
+  const { save: saveHomeEndpoint } = useAutoSave({
+    onSave: useCallback(async (value: string) => {
+      await updateEndpoint('home', value);
+    }, [updateEndpoint]),
+    savingMessage: 'Saving endpoint...',
+  });
+
+  const handleCommunityEndpointChange = (value: string) => {
+    setLocalCommunityEndpoint(value);
+    saveCommunityEndpoint(value);
+  };
+
+  const handleHomeEndpointChange = (value: string) => {
+    setLocalHomeEndpoint(value);
+    saveHomeEndpoint(value);
+  };
 
   const handleConnect = async () => {
     if (!urlInput.trim()) return;
@@ -457,8 +495,8 @@ export function WordPressIntegrationSheet({
                           <div className="space-y-1.5">
                             <Label className="text-xs text-muted-foreground">Communities</Label>
                             <Input
-                              value={communityEndpoint || ''}
-                              onChange={(e) => updateEndpoint('community', e.target.value)}
+                              value={localCommunityEndpoint}
+                              onChange={(e) => handleCommunityEndpointChange(e.target.value)}
                               placeholder="/wp-json/wp/v2/community"
                               className="h-8 text-xs font-mono"
                             />
@@ -467,8 +505,8 @@ export function WordPressIntegrationSheet({
                           <div className="space-y-1.5">
                             <Label className="text-xs text-muted-foreground">Properties</Label>
                             <Input
-                              value={homeEndpoint || ''}
-                              onChange={(e) => updateEndpoint('home', e.target.value)}
+                              value={localHomeEndpoint}
+                              onChange={(e) => handleHomeEndpointChange(e.target.value)}
                               placeholder="/wp-json/wp/v2/home"
                               className="h-8 text-xs font-mono"
                             />
@@ -486,7 +524,11 @@ export function WordPressIntegrationSheet({
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => updateEndpoint('community', discoveredEndpoints.communityEndpoints![0].rest_base)}
+                                  onClick={() => {
+                                    const endpoint = discoveredEndpoints.communityEndpoints![0].rest_base;
+                                    setLocalCommunityEndpoint(endpoint);
+                                    updateEndpoint('community', endpoint);
+                                  }}
                                   className="h-6 text-xs px-2"
                                 >
                                   Apply
@@ -501,7 +543,11 @@ export function WordPressIntegrationSheet({
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => updateEndpoint('home', discoveredEndpoints.homeEndpoints![0].rest_base)}
+                                  onClick={() => {
+                                    const endpoint = discoveredEndpoints.homeEndpoints![0].rest_base;
+                                    setLocalHomeEndpoint(endpoint);
+                                    updateEndpoint('home', endpoint);
+                                  }}
                                   className="h-6 text-xs px-2"
                                 >
                                   Apply
