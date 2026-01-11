@@ -5,12 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { LogOut01 as LogOut, Users01, Keyboard01, CreditCard01, BookOpen01 } from '@untitledui/icons';
-import { 
-  Settings02Icon, 
-  UserCircleIcon,
-  PieChart03Icon,
-} from '@/components/ui/settings-icon';
+import { Keyboard01 } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -171,45 +166,39 @@ export function TopBarUserMenu() {
           <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 space-y-0.5`}>
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
-              <Link to="/settings?tab=profile" className="w-full flex items-center cursor-pointer">
-                <UserCircleIcon size={15} />
+            <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
+              <Link to="/settings?tab=profile" className="w-full cursor-pointer">
                 Profile
               </Link>
             </DropdownMenuItem>
             {canView('view_team') && (
-              <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings?tab=team') && 'bg-accent')}>
-                <Link to="/settings?tab=team" className="w-full flex items-center cursor-pointer">
-                  <Users01 size={15} />
+              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=team') && 'bg-accent')}>
+                <Link to="/settings?tab=team" className="w-full cursor-pointer">
                   Team
                 </Link>
               </DropdownMenuItem>
             )}
             {canView('view_billing') && (
-              <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings?tab=usage') && 'bg-accent')}>
-                <Link to="/settings?tab=usage" className="w-full flex items-center cursor-pointer">
-                  <PieChart03Icon size={15} />
+              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=usage') && 'bg-accent')}>
+                <Link to="/settings?tab=usage" className="w-full cursor-pointer">
                   Usage
                 </Link>
               </DropdownMenuItem>
             )}
             {canView('view_billing') && (
-              <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings?tab=billing') && 'bg-accent')}>
-                <Link to="/settings?tab=billing" className="w-full flex items-center cursor-pointer">
-                  <CreditCard01 size={15} />
+              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=billing') && 'bg-accent')}>
+                <Link to="/settings?tab=billing" className="w-full cursor-pointer">
                   Billing
                 </Link>
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/settings') && 'bg-accent')}>
-              <Link to="/settings" className="w-full flex items-center cursor-pointer">
-                <Settings02Icon size={15} />
+            <DropdownMenuItem asChild className={cn(isActiveRoute('/settings') && 'bg-accent')}>
+              <Link to="/settings" className="w-full cursor-pointer">
                 Settings
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className={cn("gap-2", isActiveRoute('/knowledge-base') && 'bg-accent')}>
-              <Link to="/knowledge-base" className="w-full flex items-center cursor-pointer">
-                <BookOpen01 size={15} />
+            <DropdownMenuItem asChild className={cn(isActiveRoute('/knowledge-base') && 'bg-accent')}>
+              <Link to="/knowledge-base" className="w-full cursor-pointer">
                 Help Center
               </Link>
             </DropdownMenuItem>
@@ -227,8 +216,7 @@ export function TopBarUserMenu() {
               <ThemeSwitcher />
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="gap-2 text-destructive cursor-pointer">
-              <LogOut size={15} className="mr-2" />
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
               Sign Out
             </DropdownMenuItem>
           </div>
