@@ -106,6 +106,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
 
       const { data, error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: {
           action: 'discover',
           agentId: agent.id,
@@ -142,6 +143,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       if (!session) return false;
 
       const { error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: {
           action: 'save',
           agentId: agent.id,
@@ -179,6 +181,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
 
       const { data, error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: {
           action: 'test',
           agentId: agent.id,
@@ -229,6 +232,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
 
       const { error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: {
           action: 'save',
           agentId: agent.id,
@@ -263,6 +267,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
 
       const { data, error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: {
           action: 'sync',
           agentId: agent.id,
@@ -344,6 +349,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
 
       const { error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body,
       });
 
@@ -397,6 +403,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
 
       const { error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body,
       });
 
@@ -431,6 +438,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       }
 
       const { error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: {
           action: 'disconnect',
           agentId: agent.id,

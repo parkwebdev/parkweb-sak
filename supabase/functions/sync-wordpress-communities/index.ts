@@ -342,25 +342,24 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Create anon client for JWT verification per Lovable Cloud pattern
+      // Create anon client for JWT verification using getUser()
       const anonClient = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_ANON_KEY')!,
         { global: { headers: { Authorization: authHeader } } }
       );
 
-      const token = authHeader.replace('Bearer ', '');
-      const { data, error: authError } = await anonClient.auth.getClaims(token);
+      const { data: { user }, error: authError } = await anonClient.auth.getUser();
 
-      if (authError || !data?.claims) {
-        console.log('Auth failed:', authError?.message || 'No claims in token');
+      if (authError || !user) {
+        console.log('Auth failed:', authError?.message || 'No user returned');
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      userId = data.claims.sub as string;
+      userId = user.id;
       console.log('Auth succeeded for user:', userId);
     } else {
       console.log('Scheduled sync: bypassing user auth');
