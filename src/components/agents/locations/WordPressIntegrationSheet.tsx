@@ -476,13 +476,37 @@ export function WordPressIntegrationSheet({
                         </div>
 
                         {discoveredEndpoints && (
-                          <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2">
-                            <p className="font-medium mb-1">Discovered endpoints:</p>
+                          <div className="text-xs bg-muted/50 rounded p-3 space-y-2">
+                            <p className="font-medium text-muted-foreground">Discovered endpoints:</p>
                             {discoveredEndpoints.communityEndpoints?.[0] && (
-                              <p>• Communities: {discoveredEndpoints.communityEndpoints[0].rest_base}</p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
+                                  Communities: <code className="font-mono">{discoveredEndpoints.communityEndpoints[0].rest_base}</code>
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateEndpoint('community', discoveredEndpoints.communityEndpoints![0].rest_base)}
+                                  className="h-6 text-xs px-2"
+                                >
+                                  Apply
+                                </Button>
+                              </div>
                             )}
                             {discoveredEndpoints.homeEndpoints?.[0] && (
-                              <p>• Properties: {discoveredEndpoints.homeEndpoints[0].rest_base}</p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">
+                                  Properties: <code className="font-mono">{discoveredEndpoints.homeEndpoints[0].rest_base}</code>
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateEndpoint('home', discoveredEndpoints.homeEndpoints![0].rest_base)}
+                                  className="h-6 text-xs px-2"
+                                >
+                                  Apply
+                                </Button>
+                              </div>
                             )}
                           </div>
                         )}
