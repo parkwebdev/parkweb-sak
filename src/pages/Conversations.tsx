@@ -34,8 +34,8 @@ import {
   VirtualizedMessageThread,
   MessageInputArea,
   type VirtualizedMessageThreadRef,
-  ConversationsTopBarSearch,
 } from '@/components/conversations';
+import { ConversationsSearchWrapper } from '@/components/conversations/ConversationsSearchWrapper';
 import { InboxFilterDropdown } from '@/components/conversations/InboxFilterDropdown';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
@@ -321,15 +321,12 @@ function Conversations() {
   }), [conversations, userTakeovers]);
   
   // Configure top bar for this page
-  // Note: ConversationsTopBarSearch uses refs internally, so passing data props is safe
+  // Note: ConversationsSearchWrapper fetches its own data, keeping topBarConfig stable
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('MessageChatSquare')} title="Inbox" />
-        <ConversationsTopBarSearch
-          conversations={conversations}
-          onSelect={setSelectedConversation}
-        />
+        <ConversationsSearchWrapper onSelect={setSelectedConversation} />
       </div>
     ),
     right: (
@@ -339,7 +336,7 @@ function Conversations() {
         counts={filterCounts}
       />
     ),
-  }), [activeFilter, filterCounts, conversations]);
+  }), [activeFilter, filterCounts]);
   useTopBar(topBarConfig, 'conversations');
 
   // === HANDLERS (useCallback for Phase 4 optimization) ===

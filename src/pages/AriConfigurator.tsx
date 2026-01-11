@@ -9,7 +9,7 @@
  * @module pages/AriConfigurator
  */
 
-import { useState, useEffect, useMemo, useRef, type MutableRefObject } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAgent } from '@/hooks/useAgent';
@@ -26,7 +26,7 @@ import { ChatWidget } from '@/widget/ChatWidget';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
-import { AriSectionActionsProvider, useAriSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
+import { AriSectionActionsProvider, useAriSectionActions } from '@/contexts/AriSectionActionsContext';
 import type { Tables } from '@/integrations/supabase/types';
 import type { WidgetConfig } from '@/widget/api';
 
@@ -52,12 +52,11 @@ type Agent = Tables<'agents'>;
 const VALID_SECTIONS = getValidAriSectionIds();
 
 /**
- * Component that renders Ari section actions from a ref
- * This ensures the actions can update without triggering TopBar re-renders
+ * Component that renders Ari section actions from context
+ * Renders dynamically when actions change without affecting TopBar config
  */
-function AriTopBarActions({ actionsRef }: { actionsRef: MutableRefObject<SectionAction[]> }) {
-  // Force re-render when actions change by reading the latest value
-  const actions = actionsRef.current;
+function AriTopBarActions() {
+  const { actions } = useAriSectionActions();
   
   if (actions.length === 0) return null;
   
@@ -95,7 +94,7 @@ function AriConfiguratorContent() {
   const [searchParams] = useSearchParams();
   logger.debug('AriConfigurator: useSearchParams complete');
   
-  const { setCurrentSection, actions } = useAriSectionActions();
+  const { setCurrentSection } = useAriSectionActions();
   
   // Get initial section from URL or default to system-prompt
   const initialSection = useMemo(() => {
@@ -118,18 +117,15 @@ function AriConfiguratorContent() {
     return section?.label;
   }, [activeSection]);
   
-  // Configure top bar for this page - render actions inline to stay within context provider
-  // Use a ref for actions to prevent re-render cascades when sections register actions
-  const actionsRef = useRef(actions);
-  actionsRef.current = actions;
-  
+  // Configure top bar for this page
+  // AriTopBarActions reads from context directly and re-renders independently
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext 
       icon={() => <AriAgentsIcon className="h-3.5 w-3.5" />} 
       title="Ari" 
       subtitle={currentSectionLabel}
     />,
-    right: <AriTopBarActions actionsRef={actionsRef} />,
+    right: <AriTopBarActions />,
   }), [currentSectionLabel]);
   useTopBar(topBarConfig, 'ari');
   

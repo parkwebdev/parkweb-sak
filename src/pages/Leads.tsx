@@ -31,7 +31,7 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
-import { LeadsTopBarSearch } from '@/components/leads/LeadsTopBarSearch';
+import { LeadsSearchWrapper } from '@/components/leads/LeadsSearchWrapper';
 import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
@@ -351,16 +351,12 @@ function Leads() {
   }, []);
 
   // Configure top bar for this page with all controls
-  // Note: LeadsTopBarSearch uses refs internally, so passing data props is safe
+  // Note: LeadsSearchWrapper fetches its own data, keeping topBarConfig stable
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('Users01')} title="Leads" />
-        <LeadsTopBarSearch
-          leads={leads}
-          stages={stages}
-          onSelect={handleViewLead}
-        />
+        <LeadsSearchWrapper onSelect={handleViewLead} />
       </div>
     ),
     right: (
@@ -423,10 +419,9 @@ function Leads() {
       </div>
     ),
   }), [
-    leads,
-    stages,
     handleViewLead,
     canManageLeads,
+    stages,
     viewMode,
     selectedStageIds,
     dateRangeFilter,
