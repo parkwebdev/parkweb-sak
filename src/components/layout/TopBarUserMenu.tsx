@@ -161,16 +161,16 @@ export function TopBarUserMenu() {
         className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
-        {/* Headers row with separators */}
+        {/* Headers row with non-intersecting separators */}
         <div className="flex">
-          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 overflow-hidden`}>
+          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0`}>
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
-            <DropdownMenuSeparator />
+            <div className="my-1 h-px bg-muted ml-1 mr-1" />
           </div>
           {showShortcuts && (
-            <div className="border-l border-border flex-1 overflow-hidden">
+            <div className="border-l border-border flex-1">
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
-              <DropdownMenuSeparator />
+              <div className="my-1 h-px bg-muted ml-1 mr-1" />
             </div>
           )}
         </div>
