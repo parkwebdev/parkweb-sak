@@ -501,7 +501,7 @@ function Leads() {
 
   return (
     <div className="flex flex-col h-full w-full min-w-0 bg-muted/30 overflow-y-auto">
-      <div className="px-4 lg:px-8 pt-4 space-y-6 min-w-0">
+      <div className="px-4 pt-4 space-y-6 min-w-0">
 
         {/* Content */}
         {loading ? (
