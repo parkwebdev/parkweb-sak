@@ -235,26 +235,24 @@ export const useSearchData = () => {
 
       const results: SearchResult[] = [];
 
-      // Navigation items from centralized route config
+      // ============ 1. QUICK ACTIONS (Navigation) ============
       ROUTE_CONFIG.forEach(route => {
-        // Filter by permissions
         if (route.adminOnly && !isAdmin) return;
         if (route.requiredPermission && !isAdmin && !hasPermission(route.requiredPermission)) return;
-        // Skip routes not intended for search (no nav or bottom nav)
         if (!route.showInNav && !route.showInBottomNav && route.id !== 'report-builder') return;
 
         results.push({
           id: `nav-${route.id}`,
           title: route.label,
           description: route.description,
-          category: 'Navigation',
+          category: 'Quick Actions',
           iconName: route.iconName,
           shortcut: route.shortcut,
           action: () => navigate(route.path),
         });
       });
 
-      // Ari Sections from centralized config
+      // ============ 2. ARI CONFIGURATION ============
       ARI_SECTIONS.forEach(section => {
         if (section.requiredPermission && !isAdmin && !hasPermission(section.requiredPermission)) return;
         
@@ -262,12 +260,41 @@ export const useSearchData = () => {
           id: `ari-section-${section.id}`,
           title: section.label,
           description: `${section.group} • Ari Configuration`,
-          category: 'Ari Sections',
+          category: 'Ari Configuration',
           iconName: section.iconName,
           action: () => navigate(`/ari?section=${section.id}`),
         });
       });
 
+      // ============ 3. SETTINGS ============
+      SETTINGS_TABS.forEach(tab => {
+        if (tab.requiredPermission && !isAdmin && !hasPermission(tab.requiredPermission)) return;
+        
+        results.push({
+          id: tab.id,
+          title: tab.label,
+          description: tab.description,
+          category: 'Settings',
+          iconName: tab.iconName,
+          action: () => navigate(`/settings?tab=${tab.tabParam}`),
+        });
+      });
+
+      // ============ 4. DOCS (Knowledge Base) ============
+      KB_CATEGORIES.forEach(category => {
+        category.articles.forEach(article => {
+          results.push({
+            id: `kb-${category.id}-${article.id}`,
+            title: article.title,
+            description: `${category.label} • Documentation`,
+            category: 'Docs',
+            iconName: 'BookOpen01',
+            action: () => navigate(`/knowledge-base?category=${category.id}&article=${article.slug}`),
+          });
+        });
+      });
+
+      // ============ 5. CRM DATA ============
       // Conversations
       if (dataMap.conversations) {
         dataMap.conversations.forEach((conv) => {
@@ -305,122 +332,9 @@ export const useSearchData = () => {
             id: `event-${event.id}`,
             title: event.title || event.visitor_name || 'Untitled Event',
             description: `${event.event_type || 'Event'} • ${eventDate} • ${event.status}`,
-            category: 'Calendar Events',
+            category: 'Calendar',
             iconName: 'Calendar',
             action: () => navigate('/planner'),
-          });
-        });
-      }
-
-      // Locations
-      if (dataMap.locations) {
-        dataMap.locations.forEach((location) => {
-          const locationParts = [location.city, location.state].filter(Boolean).join(', ');
-          results.push({
-            id: `location-${location.id}`,
-            title: location.name,
-            description: `${locationParts} • ${location.is_active ? 'Active' : 'Inactive'}`,
-            category: 'Locations',
-            iconName: 'MarkerPin01',
-            action: () => navigate('/ari?section=locations'),
-          });
-        });
-      }
-
-      // Announcements
-      if (dataMap.announcements) {
-        dataMap.announcements.forEach((announcement) => {
-          results.push({
-            id: `announcement-${announcement.id}`,
-            title: announcement.title,
-            description: announcement.is_active ? 'Active' : 'Inactive',
-            category: 'Announcements',
-            iconName: 'Announcement01',
-            action: () => navigate('/ari?section=announcements'),
-          });
-        });
-      }
-
-      // Help Categories
-      if (dataMap.helpCategories) {
-        dataMap.helpCategories.forEach((category) => {
-          results.push({
-            id: `help-category-${category.id}`,
-            title: category.name,
-            description: category.description || 'Help category',
-            category: 'Help Categories',
-            iconName: 'Folder',
-            action: () => navigate('/ari?section=help-articles'),
-          });
-        });
-      }
-
-      // Help Articles
-      if (dataMap.helpArticles) {
-        dataMap.helpArticles.forEach((article) => {
-          results.push({
-            id: `article-${article.id}`,
-            title: article.title,
-            description: `${article.help_categories?.name || 'Uncategorized'}`,
-            category: 'Help Articles',
-            iconName: 'BookOpen01',
-            action: () => navigate('/ari?section=help-articles'),
-          });
-        });
-      }
-
-      // News Items
-      if (dataMap.newsItems) {
-        dataMap.newsItems.forEach((news) => {
-          results.push({
-            id: `news-${news.id}`,
-            title: news.title,
-            description: news.is_published ? 'Published' : 'Draft',
-            category: 'News',
-            iconName: 'Announcement01',
-            action: () => navigate('/ari?section=news'),
-          });
-        });
-      }
-
-      // Webhooks
-      if (dataMap.webhooks) {
-        dataMap.webhooks.forEach((webhook) => {
-          results.push({
-            id: `webhook-${webhook.id}`,
-            title: webhook.name,
-            description: webhook.active ? 'Active' : 'Inactive',
-            category: 'Webhooks',
-            iconName: 'Link01',
-            action: () => navigate('/ari?section=webhooks'),
-          });
-        });
-      }
-
-      // Custom Tools
-      if (dataMap.tools) {
-        dataMap.tools.forEach((tool) => {
-          results.push({
-            id: `tool-${tool.id}`,
-            title: tool.name,
-            description: tool.enabled ? 'Enabled' : 'Disabled',
-            category: 'Tools',
-            iconName: 'Tool02',
-            action: () => navigate('/ari?section=custom-tools'),
-          });
-        });
-      }
-
-      // Knowledge Sources
-      if (dataMap.knowledgeSources) {
-        dataMap.knowledgeSources.forEach((source) => {
-          results.push({
-            id: `knowledge-${source.id}`,
-            title: source.source,
-            description: `${source.type.toUpperCase()} • ${source.status}`,
-            category: 'Knowledge',
-            iconName: 'Database01',
-            action: () => navigate('/ari?section=knowledge'),
           });
         });
       }
@@ -439,33 +353,120 @@ export const useSearchData = () => {
         });
       }
 
-      // Settings sections from centralized config
-      SETTINGS_TABS.forEach(tab => {
-        if (tab.requiredPermission && !isAdmin && !hasPermission(tab.requiredPermission)) return;
-        
-        results.push({
-          id: tab.id,
-          title: tab.label,
-          description: tab.description,
-          category: 'Settings',
-          iconName: tab.iconName,
-          action: () => navigate(`/settings?tab=${tab.tabParam}`),
-        });
-      });
-
-      // Knowledge Base Articles (no permission required - public docs)
-      KB_CATEGORIES.forEach(category => {
-        category.articles.forEach(article => {
+      // ============ 6. ARI CONTENT ============
+      // Locations
+      if (dataMap.locations) {
+        dataMap.locations.forEach((location) => {
+          const locationParts = [location.city, location.state].filter(Boolean).join(', ');
           results.push({
-            id: `kb-${category.id}-${article.id}`,
-            title: article.title,
-            description: `${category.label} • Knowledge Base`,
-            category: 'Knowledge Base',
-            iconName: 'BookOpen01',
-            action: () => navigate(`/knowledge-base?category=${category.id}&article=${article.slug}`),
+            id: `location-${location.id}`,
+            title: location.name,
+            description: `${locationParts} • ${location.is_active ? 'Active' : 'Inactive'}`,
+            category: 'Ari Content',
+            iconName: 'MarkerPin01',
+            action: () => navigate('/ari?section=locations'),
           });
         });
-      });
+      }
+
+      // Announcements
+      if (dataMap.announcements) {
+        dataMap.announcements.forEach((announcement) => {
+          results.push({
+            id: `announcement-${announcement.id}`,
+            title: announcement.title,
+            description: announcement.is_active ? 'Active' : 'Inactive',
+            category: 'Ari Content',
+            iconName: 'Announcement01',
+            action: () => navigate('/ari?section=announcements'),
+          });
+        });
+      }
+
+      // Help Categories
+      if (dataMap.helpCategories) {
+        dataMap.helpCategories.forEach((category) => {
+          results.push({
+            id: `help-category-${category.id}`,
+            title: category.name,
+            description: category.description || 'Help category',
+            category: 'Ari Content',
+            iconName: 'Folder',
+            action: () => navigate('/ari?section=help-articles'),
+          });
+        });
+      }
+
+      // Help Articles
+      if (dataMap.helpArticles) {
+        dataMap.helpArticles.forEach((article) => {
+          results.push({
+            id: `article-${article.id}`,
+            title: article.title,
+            description: `${article.help_categories?.name || 'Uncategorized'}`,
+            category: 'Ari Content',
+            iconName: 'BookOpen01',
+            action: () => navigate('/ari?section=help-articles'),
+          });
+        });
+      }
+
+      // News Items
+      if (dataMap.newsItems) {
+        dataMap.newsItems.forEach((news) => {
+          results.push({
+            id: `news-${news.id}`,
+            title: news.title,
+            description: news.is_published ? 'Published' : 'Draft',
+            category: 'Ari Content',
+            iconName: 'Announcement01',
+            action: () => navigate('/ari?section=news'),
+          });
+        });
+      }
+
+      // ============ 7. ARI TOOLS ============
+      // Webhooks
+      if (dataMap.webhooks) {
+        dataMap.webhooks.forEach((webhook) => {
+          results.push({
+            id: `webhook-${webhook.id}`,
+            title: webhook.name,
+            description: webhook.active ? 'Active' : 'Inactive',
+            category: 'Ari Tools',
+            iconName: 'Link01',
+            action: () => navigate('/ari?section=webhooks'),
+          });
+        });
+      }
+
+      // Custom Tools
+      if (dataMap.tools) {
+        dataMap.tools.forEach((tool) => {
+          results.push({
+            id: `tool-${tool.id}`,
+            title: tool.name,
+            description: tool.enabled ? 'Enabled' : 'Disabled',
+            category: 'Ari Tools',
+            iconName: 'Tool02',
+            action: () => navigate('/ari?section=custom-tools'),
+          });
+        });
+      }
+
+      // Knowledge Sources
+      if (dataMap.knowledgeSources) {
+        dataMap.knowledgeSources.forEach((source) => {
+          results.push({
+            id: `knowledge-${source.id}`,
+            title: source.source,
+            description: `${source.type.toUpperCase()} • ${source.status}`,
+            category: 'Ari Tools',
+            iconName: 'Database01',
+            action: () => navigate('/ari?section=knowledge'),
+          });
+        });
+      }
 
       setSearchResults(results);
     } catch (error: unknown) {
