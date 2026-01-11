@@ -415,7 +415,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
     // WordPress integration button
     actions.push({
       id: 'wordpress-integration',
-      label: isWordPressConnected ? 'WordPress' : 'Connect WordPress',
+      label: isWordPressConnected ? 'WordPress Connected' : 'Connect WordPress',
       onClick: () => setWordPressSheetOpen(true),
       variant: 'outline',
       icon: <WordPressIcon className="h-4 w-4 text-[#21759b]" />,
