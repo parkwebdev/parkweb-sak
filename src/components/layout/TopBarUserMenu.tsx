@@ -158,88 +158,79 @@ export function TopBarUserMenu() {
         side="bottom"
         align="end"
         sideOffset={8}
-        className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl"
+        className="bg-popover border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl p-0 overflow-hidden"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
-        {/* Headers row with non-intersecting separators */}
         <div className="flex">
-          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0`}>
+          {/* Left column - Account */}
+          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 p-1`}>
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
-            <div className="my-1 h-px bg-muted ml-1 mr-1" />
-          </div>
-          {showShortcuts && (
-            <div className="border-l border-border flex-1">
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
-              <div className="my-1 h-px bg-muted ml-1 mr-1" />
+            <DropdownMenuSeparator className="mx-0" />
+            <div className="space-y-0.5">
+              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
+                <Link to="/settings?tab=profile" className="w-full cursor-pointer">
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+              {canView('view_team') && (
+                <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=team') && 'bg-accent')}>
+                  <Link to="/settings?tab=team" className="w-full cursor-pointer">
+                    Team
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {canView('view_billing') && (
+                <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=usage') && 'bg-accent')}>
+                  <Link to="/settings?tab=usage" className="w-full cursor-pointer">
+                    Usage
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {canView('view_billing') && (
+                <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=billing') && 'bg-accent')}>
+                  <Link to="/settings?tab=billing" className="w-full cursor-pointer">
+                    Billing
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings') && 'bg-accent')}>
+                <Link to="/settings" className="w-full cursor-pointer">
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className={cn(isActiveRoute('/knowledge-base') && 'bg-accent')}>
+                <Link to="/knowledge-base" className="w-full cursor-pointer">
+                  Help Center
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onMouseEnter={() => setShowShortcuts(true)}
+                className="gap-2 cursor-default"
+                onSelect={(e) => e.preventDefault()}
+              >
+                <Keyboard01 size={15} />
+                Shortcuts
+              </DropdownMenuItem>
             </div>
-          )}
-        </div>
-        
-        {/* Content row */}
-        <div className="flex">
-          {/* Main menu column */}
-          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 space-y-0.5`}>
-            <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
-              <Link to="/settings?tab=profile" className="w-full cursor-pointer">
-                Profile
-              </Link>
-            </DropdownMenuItem>
-            {canView('view_team') && (
-              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=team') && 'bg-accent')}>
-                <Link to="/settings?tab=team" className="w-full cursor-pointer">
-                  Team
-                </Link>
-              </DropdownMenuItem>
-            )}
-            {canView('view_billing') && (
-              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=usage') && 'bg-accent')}>
-                <Link to="/settings?tab=usage" className="w-full cursor-pointer">
-                  Usage
-                </Link>
-              </DropdownMenuItem>
-            )}
-            {canView('view_billing') && (
-              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=billing') && 'bg-accent')}>
-                <Link to="/settings?tab=billing" className="w-full cursor-pointer">
-                  Billing
-                </Link>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem asChild className={cn(isActiveRoute('/settings') && 'bg-accent')}>
-              <Link to="/settings" className="w-full cursor-pointer">
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild className={cn(isActiveRoute('/knowledge-base') && 'bg-accent')}>
-              <Link to="/knowledge-base" className="w-full cursor-pointer">
-                Help Center
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onMouseEnter={() => setShowShortcuts(true)}
-              className="gap-2 cursor-default"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Keyboard01 size={15} />
-              Shortcuts
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="mx-0" />
             <div className="px-2 py-1.5">
               <div className="text-xs text-muted-foreground mb-1.5">Theme</div>
               <ThemeSwitcher />
             </div>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="mx-0" />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
               Sign Out
             </DropdownMenuItem>
           </div>
 
-          {/* Shortcuts column - shows on hover */}
+          {/* Right column - Shortcuts (shows on hover) */}
           {showShortcuts && (
             <div 
-              className="border-l border-border animate-fade-in flex-1"
+              className="border-l border-border animate-fade-in flex-1 p-1"
               onMouseLeave={() => setShowShortcuts(false)}
             >
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
+              <DropdownMenuSeparator className="mx-0" />
               <div className="space-y-1.5 px-2 py-1">
                 {shortcuts.map((shortcut, index) => (
                   <div key={index} className="flex items-center justify-between w-full py-0.5">
