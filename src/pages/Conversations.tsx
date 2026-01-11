@@ -325,16 +325,18 @@ function Conversations() {
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('MessageChatSquare')} title="Inbox" />
-        <InboxFilterDropdown
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-          counts={filterCounts}
-        />
         <ConversationsTopBarSearch
           conversations={conversations}
           onSelect={setSelectedConversation}
         />
       </div>
+    ),
+    right: (
+      <InboxFilterDropdown
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        counts={filterCounts}
+      />
     ),
   }), [activeFilter, filterCounts, conversations]);
   useTopBar(topBarConfig);
