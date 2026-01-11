@@ -25,6 +25,7 @@ import { Separator } from '@/components/ui/separator';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { useLocations } from '@/hooks/useLocations';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { KnowledgeDetailsSheet } from '@/components/agents/knowledge';
 import { AriSectionHeader } from './AriSectionHeader';
@@ -384,6 +385,39 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
     setRowSelection({});
   };
 
+  // Register actions for TopBar
+  const sectionActions: SectionAction[] = useMemo(() => {
+    const actions: SectionAction[] = [];
+    
+    if (canManageKnowledge && sources.length > 0) {
+      actions.push({
+        id: 'retrain',
+        label: isRetraining 
+          ? `${retrainProgress.completed}/${retrainProgress.total}`
+          : outdatedCount > 0 
+            ? `Retrain (${outdatedCount})`
+            : 'Retrain',
+        onClick: handleRetrainAll,
+        variant: 'outline',
+        disabled: isRetraining || sources.every(s => s.status === 'processing'),
+        icon: <ZapSolidIcon size={16} className={`text-warning ${isRetraining ? 'animate-pulse' : ''}`} />,
+      });
+    }
+    
+    if (canManageKnowledge) {
+      actions.push({
+        id: 'add-source',
+        label: 'Add Source',
+        onClick: () => setAddDialogOpen(true),
+        variant: 'default',
+      });
+    }
+    
+    return actions;
+  }, [canManageKnowledge, sources.length, isRetraining, retrainProgress, outdatedCount, handleRetrainAll, sources]);
+  
+  useRegisterSectionActions('knowledge', sectionActions);
+
   if (loading) {
     return <SkeletonTableSection rows={5} />;
   }
@@ -512,31 +546,6 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
       <AriSectionHeader
         title="Knowledge"
         description="Add URLs, sitemaps, or documents to train Ari"
-        extra={
-          <div className="flex items-center gap-2">
-            {canManageKnowledge && sources.length > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleRetrainAll}
-                disabled={isRetraining || sources.every(s => s.status === 'processing')}
-              >
-                <ZapSolidIcon size={16} className={`mr-1.5 text-warning ${isRetraining ? 'animate-pulse' : ''}`} />
-                {isRetraining 
-                  ? `${retrainProgress.completed}/${retrainProgress.total}`
-                  : outdatedCount > 0 
-                    ? `Retrain (${outdatedCount})`
-                    : 'Retrain'
-                }
-              </Button>
-            )}
-            {canManageKnowledge && (
-              <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-                Add Source
-              </Button>
-            )}
-          </div>
-        }
       />
 
       <div className="space-y-4">

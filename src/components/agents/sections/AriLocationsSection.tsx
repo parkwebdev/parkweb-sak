@@ -11,6 +11,7 @@ import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel,
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { Trash01, XClose, X, FilterLines, AlertTriangle, Home01 } from '@untitledui/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -398,6 +399,24 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const table = viewMode === 'communities' ? locationsTable : propertiesTable;
   const selectedCount = Object.keys(rowSelection).length;
 
+  // Register actions for TopBar
+  const sectionActions: SectionAction[] = useMemo(() => {
+    const actions: SectionAction[] = [];
+    
+    if (viewMode === 'communities' && canManageLocations) {
+      actions.push({
+        id: 'add-location',
+        label: 'Add Location',
+        onClick: () => setCreateDialogOpen(true),
+        variant: 'default',
+      });
+    }
+    
+    return actions;
+  }, [viewMode, canManageLocations]);
+  
+  useRegisterSectionActions('locations', sectionActions);
+
   if (loading) {
     return <SkeletonTableSection rows={5} />;
   }
@@ -605,13 +624,6 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
       <AriSectionHeader
         title="Locations"
         description="Manage communities, properties, and business configuration"
-        extra={
-          viewMode === 'communities' && canManageLocations && (
-            <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-              Add Location
-            </Button>
-          )
-        }
       />
 
       <div className="space-y-4">

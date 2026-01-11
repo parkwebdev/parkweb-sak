@@ -4,12 +4,13 @@
  * Webhooks management with full CRUD, test, and debug capabilities.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
-import { Link03, Trash01, Eye, Edit03, PlayCircle, Plus, Code01 } from '@untitledui/icons';
+import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
+import { Link03, Trash01, Eye, Edit03, PlayCircle, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useWebhooks } from '@/hooks/useWebhooks';
 import { WebhookLogsDialog } from '@/components/agents/webhooks/WebhookLogsDialog';
@@ -128,6 +129,33 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
     setShowLogsDialog(true);
   };
 
+  // Register actions for TopBar
+  const sectionActions: SectionAction[] = useMemo(() => {
+    const actions: SectionAction[] = [];
+    
+    if (canManageWebhooks) {
+      actions.push({
+        id: 'add-webhook',
+        label: 'Add Webhook',
+        onClick: () => setShowCreateDialog(true),
+        variant: 'default',
+      });
+    }
+    
+    actions.push({
+      id: 'debug-mode',
+      label: 'Debug',
+      onClick: () => setDebugMode(!debugMode),
+      variant: debugMode ? 'secondary' : 'ghost',
+      icon: <Code01 size={14} />,
+      isActive: debugMode,
+    });
+    
+    return actions;
+  }, [canManageWebhooks, debugMode]);
+  
+  useRegisterSectionActions('webhooks', sectionActions);
+
   if (loading) {
     return <SkeletonListSection items={2} />;
   }
@@ -140,23 +168,6 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
       />
 
       <div className="space-y-4">
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          {canManageWebhooks && (
-            <Button onClick={() => setShowCreateDialog(true)} size="sm">
-              Add Webhook
-            </Button>
-          )}
-          <div className="flex-1" />
-          <Button
-            variant={debugMode ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => setDebugMode(!debugMode)}
-          >
-            <Code01 size={14} className="mr-1.5" />
-            Debug Mode
-          </Button>
-        </div>
 
         {/* Webhooks List */}
         {webhooks.length === 0 ? (

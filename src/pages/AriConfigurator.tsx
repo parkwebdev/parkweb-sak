@@ -24,7 +24,9 @@ import { AriPreviewColumn } from '@/components/agents/AriPreviewColumn';
 import { SkeletonAriConfiguratorPage } from '@/components/ui/page-skeleton';
 import { ChatWidget } from '@/widget/ChatWidget';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { Button } from '@/components/ui/button';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+import { AriSectionActionsProvider, useAriSectionActions } from '@/contexts/AriSectionActionsContext';
 import type { Tables } from '@/integrations/supabase/types';
 import type { WidgetConfig } from '@/widget/api';
 
@@ -47,23 +49,51 @@ import { SectionErrorBoundary } from '@/components/agents/sections/SectionErrorB
 type Agent = Tables<'agents'>;
 
 // Get valid sections from centralized config
-
-// Get valid sections from centralized config
 const VALID_SECTIONS = getValidAriSectionIds();
 
-const AriConfigurator = () => {
+/**
+ * Component that renders the section actions in the TopBar
+ */
+function SectionActionsRenderer() {
+  const { actions } = useAriSectionActions();
+  
+  if (actions.length === 0) return null;
+  
+  return (
+    <div className="flex items-center gap-2">
+      {actions.map((action) => (
+        <Button
+          key={action.id}
+          size="sm"
+          variant={action.isActive ? 'secondary' : (action.variant || 'default')}
+          onClick={action.onClick}
+          disabled={action.disabled}
+          className="gap-1.5"
+        >
+          {action.icon}
+          {action.label}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Inner component that uses the section actions context
+ */
+function AriConfiguratorContent() {
   logger.debug('AriConfigurator: Component mounting');
   
   const prefersReducedMotion = useReducedMotion();
   logger.debug('AriConfigurator: useReducedMotion complete', { prefersReducedMotion });
-  
-  
   
   const { agent, agentId, updateAgent, loading: agentLoading } = useAgent();
   logger.debug('AriConfigurator: useAgent complete', { agentId, agentLoading, hasAgent: !!agent });
   
   const [searchParams] = useSearchParams();
   logger.debug('AriConfigurator: useSearchParams complete');
+  
+  const { setCurrentSection } = useAriSectionActions();
   
   // Get initial section from URL or default to system-prompt
   const initialSection = useMemo(() => {
@@ -74,6 +104,11 @@ const AriConfigurator = () => {
   }, []); // Only compute once on mount
   
   const [activeSection, setActiveSection] = useState<AriSection>(initialSection);
+  
+  // Update current section in context when it changes
+  useEffect(() => {
+    setCurrentSection(activeSection);
+  }, [activeSection, setCurrentSection]);
   
   // Get current section label for subtitle
   const currentSectionLabel = useMemo(() => {
@@ -88,6 +123,7 @@ const AriConfigurator = () => {
       title="Ari" 
       subtitle={currentSectionLabel}
     />,
+    right: <SectionActionsRenderer />,
   }), [currentSectionLabel]);
   useTopBar(topBarConfig);
   
@@ -203,8 +239,6 @@ const AriConfigurator = () => {
     };
   }, [agent, embedConfig, activeAnnouncements, helpCategories, helpArticles]);
 
-  // Show skeleton while agent data loads
-
   // Show skeleton while agent data loads (after MultiStepLoader completes)
   if (!agent || agentLoading) {
     return <SkeletonAriConfiguratorPage />;
@@ -304,6 +338,14 @@ const AriConfigurator = () => {
         </div>
       )}
     </div>
+  );
+}
+
+const AriConfigurator = () => {
+  return (
+    <AriSectionActionsProvider>
+      <AriConfiguratorContent />
+    </AriSectionActionsProvider>
   );
 };
 
