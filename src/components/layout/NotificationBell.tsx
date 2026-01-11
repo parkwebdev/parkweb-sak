@@ -37,7 +37,7 @@ export function NotificationBell() {
           aria-label={`Notifications${hasUnread ? `, ${unreadCount} unread` : ''}`}
         >
           <Bell01 
-            size={20} 
+            size={18} 
             aria-hidden="true"
             className={cn(
               hasUnread && !prefersReducedMotion && "animate-bell-ring"
