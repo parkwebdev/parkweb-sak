@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { validateFiles } from '@/lib/file-validation';
 import { useCanManage } from '@/hooks/useCanManage';
-import { useTopBar, TopBarPageContext, TopBarTabs, type TopBarTab } from '@/components/layout/TopBar';
+import { useTopBar, TopBarPageContext, TopBarTabs, TopBarSearch, type TopBarTab } from '@/components/layout/TopBar';
 import { getNavigationIcon } from '@/lib/navigation-icons';
 
 import { useInfiniteConversations } from '@/hooks/useInfiniteConversations';
@@ -35,6 +35,7 @@ import {
   VirtualizedMessageThread,
   MessageInputArea,
   type VirtualizedMessageThreadRef,
+  ConversationSearchResults,
 } from '@/components/conversations';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
@@ -345,9 +346,24 @@ function Conversations() {
   
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={getNavigationIcon('MessageChatSquare')} title="Inbox" />,
+    left: (
+      <div className="flex items-center gap-3">
+        <TopBarPageContext icon={getNavigationIcon('MessageChatSquare')} title="Inbox" />
+        <TopBarSearch
+          placeholder="Search conversations..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          renderResults={(query) => (
+            <ConversationSearchResults
+              conversations={filteredConversations}
+              onSelect={setSelectedConversation}
+            />
+          )}
+        />
+      </div>
+    ),
     center: <TopBarTabs tabs={inboxTabs} activeTab={activeTabId} onTabChange={handleTopBarTabChange} />,
-  }), [inboxTabs, activeTabId, handleTopBarTabChange]);
+  }), [inboxTabs, activeTabId, handleTopBarTabChange, searchQuery, filteredConversations]);
   useTopBar(topBarConfig);
 
   // === HANDLERS (useCallback for Phase 4 optimization) ===
@@ -527,10 +543,6 @@ function Conversations() {
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
         counts={filterCounts}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filteredConversations={filteredConversations}
-        onSelectConversation={setSelectedConversation}
       />
       
       {/* Conversations List Sidebar - Virtualized for performance */}

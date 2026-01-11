@@ -11,3 +11,4 @@ export { MessageThread, type MessageThreadProps } from './MessageThread';
 export { VirtualizedMessageThread, type VirtualizedMessageThreadProps, type VirtualizedMessageThreadRef } from './VirtualizedMessageThread';
 export { AdminMessageBubble, type AdminMessageBubbleProps } from './AdminMessageBubble';
 export { MessageInputArea, type MessageInputAreaProps } from './MessageInputArea';
+export { ConversationSearchResults } from './ConversationSearchResults';

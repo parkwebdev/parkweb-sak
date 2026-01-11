@@ -5,13 +5,11 @@
  * Fixed width, not collapsible.
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { motion } from 'motion/react';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
-import { CheckCircle, Globe01, Inbox01, SearchMd, XClose, Ticket01 } from '@untitledui/icons';
+import { CheckCircle, Globe01, Inbox01, Ticket01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 
@@ -34,20 +32,6 @@ const XLogo = () => (
   </svg>
 );
 
-import type { Tables } from '@/integrations/supabase/types';
-import type { ConversationMetadata } from '@/types/metadata';
-
-type Conversation = Tables<'conversations'> & {
-  agents?: { name: string };
-  active_takeover?: {
-    taken_over_by: string;
-    profiles: {
-      display_name: string | null;
-      avatar_url: string | null;
-    } | null;
-  } | null;
-};
-
 export type InboxFilter = {
   type: 'all' | 'status' | 'channel' | 'yours';
   value?: string;
@@ -66,10 +50,6 @@ interface InboxNavSidebarProps {
     instagram: number;
     x: number;
   };
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  filteredConversations: Conversation[];
-  onSelectConversation: (conversation: Conversation) => void;
 }
 
 interface NavItemProps {
@@ -110,121 +90,21 @@ const NavItem = React.memo(function NavItem({ icon, label, count, isActive, onCl
   );
 });
 
-export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQuery, onSearchChange, filteredConversations, onSelectConversation }: InboxNavSidebarProps) {
-  const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilter, onFilterChange, counts }: InboxNavSidebarProps) {
   const prefersReducedMotion = useReducedMotion();
   
   const isActive = useCallback((type: string, value?: string) => 
     activeFilter.type === type && activeFilter.value === value, [activeFilter]);
-
-  // Focus input when modal opens
-  useEffect(() => {
-    if (searchModalOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [searchModalOpen]);
-
-  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onSearchChange('');
-      setSearchModalOpen(false);
-    }
-    if (e.key === 'Enter') {
-      setSearchModalOpen(false);
-    }
-  }, [onSearchChange]);
-
-  const handleClearSearch = useCallback(() => {
-    onSearchChange('');
-    searchInputRef.current?.focus();
-  }, [onSearchChange]);
 
   // Track animation index across all sections
   let animationIndex = 0;
 
   return (
     <div className="w-48 border-r bg-background flex flex-col">
-      {/* Header with Inbox title and search */}
-      <div className="h-14 border-b flex items-center justify-between px-3">
+      {/* Header with Inbox title */}
+      <div className="h-14 border-b flex items-center px-3">
         <h2 className="text-sm font-semibold text-foreground">Inbox</h2>
-        <button
-          onClick={() => setSearchModalOpen(true)}
-          className="p-1.5 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Search conversations"
-        >
-          <SearchMd size={16} />
-        </button>
       </div>
-
-      {/* Search Modal */}
-      <Dialog open={searchModalOpen} onOpenChange={setSearchModalOpen}>
-        <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
-          <DialogHeader className="p-4 pb-0">
-            <DialogTitle>Search Conversations</DialogTitle>
-          </DialogHeader>
-          <div className="flex items-center gap-2 p-4 border-b">
-            <Input
-              ref={searchInputRef}
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              className="flex-1"
-              autoFocus
-            />
-            {searchQuery && (
-              <button
-                onClick={handleClearSearch}
-                className="p-2 hover:bg-accent rounded"
-              >
-                <XClose size={16} className="text-muted-foreground" />
-              </button>
-            )}
-          </div>
-          
-          {/* Live Search Results */}
-          {searchQuery && (
-            <div className="max-h-80 overflow-y-auto">
-              {filteredConversations.length > 0 ? (
-                filteredConversations.slice(0, 10).map((conv) => {
-                  const metadata = (conv.metadata || {}) as ConversationMetadata;
-                  return (
-                    <button
-                      key={conv.id}
-                      onClick={() => {
-                        onSelectConversation(conv);
-                        setSearchModalOpen(false);
-                        onSearchChange('');
-                      }}
-                      className="w-full p-3 text-left hover:bg-accent flex items-start gap-3 border-b last:border-b-0 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate text-foreground">
-                          {metadata.lead_name || metadata.lead_email || 'Anonymous Visitor'}
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate mt-0.5">
-                          {metadata.last_message_preview || 'No messages yet'}
-                        </div>
-                      </div>
-                      <div className={cn(
-                        "flex-shrink-0 w-2 h-2 rounded-full mt-1.5",
-                        conv.status === 'active' && "bg-status-active",
-                        conv.status === 'human_takeover' && "bg-status-warning",
-                        conv.status === 'closed' && "bg-muted-foreground"
-                      )} />
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="p-4 text-center text-muted-foreground text-sm">
-                  No conversations found
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Ari Section */}
       <div className="p-3">

@@ -76,3 +76,5 @@ export function TopBar({
 export { TopBarTabs, type TopBarTab } from './TopBarTabs';
 export { TopBarPageContext, type PageContextMenuItem } from './TopBarPageContext';
 export { TopBarProvider, useTopBar, useTopBarContext, type TopBarConfig } from './TopBarContext';
+export { TopBarSearch } from './TopBarSearch';
+export { TopBarSearchResultItem, TopBarSearchEmptyState } from './TopBarSearchResultItem';
