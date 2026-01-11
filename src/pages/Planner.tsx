@@ -8,7 +8,8 @@
  * @page
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { getNavigationIcon } from '@/lib/navigation-icons';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
@@ -34,6 +35,7 @@ interface PendingTimeChange {
 }
 
 function Planner() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('all');
   
   // Permission checks
@@ -59,6 +61,19 @@ function Planner() {
   // Time change reason dialog state
   const [timeChangeDialogOpen, setTimeChangeDialogOpen] = useState(false);
   const [pendingTimeChange, setPendingTimeChange] = useState<PendingTimeChange | null>(null);
+
+  // Handle event ID from URL query param (from Global Search)
+  useEffect(() => {
+    const eventIdFromUrl = searchParams.get('id');
+    if (eventIdFromUrl && dbEvents.length > 0 && !isLoading) {
+      const event = dbEvents.find(e => e.id === eventIdFromUrl);
+      if (event) {
+        setSelectedEvent(event);
+        setEventDetailOpen(true);
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, dbEvents, isLoading, setSearchParams]);
 
   // Filter events based on active tab
   const filteredEvents = dbEvents.filter(event => {

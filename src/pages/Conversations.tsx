@@ -212,6 +212,29 @@ function Conversations() {
     }
   }, [searchParams, conversations, loading, setSearchParams]);
 
+  // Handle inbox filter from URL query param (from Global Search)
+  useEffect(() => {
+    const filterType = searchParams.get('filter');
+    const filterValue = searchParams.get('value');
+    
+    if (filterType) {
+      const filterLabels: Record<string, string> = {
+        all: 'All Conversations',
+        yours: 'Your Inbox',
+        status: filterValue === 'closed' ? 'Resolved' : 'Status',
+        channel: filterValue === 'widget' ? 'Widget' : 'Channel',
+      };
+      
+      setActiveFilter({
+        type: filterType as InboxFilter['type'],
+        value: filterValue || undefined,
+        label: filterLabels[filterType] || filterType,
+      });
+      
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   // Update selected conversation when conversations list updates
   // Guard against setting state when reference hasn't changed to prevent loops
   useEffect(() => {

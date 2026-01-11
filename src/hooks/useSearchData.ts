@@ -309,7 +309,58 @@ export const useSearchData = () => {
         });
       });
 
-      // ============ 5. CRM DATA ============
+      // ============ 5. INBOX FILTERS ============
+      const INBOX_FILTERS = [
+        { 
+          id: 'inbox-all', 
+          filterType: 'all', 
+          label: 'All Conversations', 
+          iconName: 'AriLogo',
+          description: 'View all conversations'
+        },
+        { 
+          id: 'inbox-yours', 
+          filterType: 'yours', 
+          label: 'Your Inbox', 
+          iconName: 'MessageChatSquare',
+          description: 'Conversations you\'ve taken over'
+        },
+        { 
+          id: 'inbox-resolved', 
+          filterType: 'status', 
+          filterValue: 'closed', 
+          label: 'Resolved', 
+          iconName: 'Circle',
+          description: 'Closed conversations'
+        },
+        { 
+          id: 'inbox-widget', 
+          filterType: 'channel', 
+          filterValue: 'widget', 
+          label: 'Widget Channel', 
+          iconName: 'Globe01',
+          description: 'Conversations from website widget'
+        },
+      ];
+
+      if (hasDataPermission('conversations')) {
+        INBOX_FILTERS.forEach(filter => {
+          const params = new URLSearchParams();
+          params.set('filter', filter.filterType);
+          if (filter.filterValue) params.set('value', filter.filterValue);
+          
+          results.push({
+            id: filter.id,
+            title: filter.label,
+            description: filter.description,
+            category: 'Inbox Filters',
+            iconName: filter.iconName,
+            action: () => navigate(`/conversations?${params.toString()}`),
+          });
+        });
+      }
+
+      // ============ 6. CRM DATA ============
       // Conversations
       if (dataMap.conversations) {
         dataMap.conversations.forEach((conv) => {
@@ -320,7 +371,7 @@ export const useSearchData = () => {
             description: `via ${conv.agents?.name || 'Unknown Agent'} • ${conv.status}`,
             category: 'Conversations',
             iconName: 'MessageChatSquare',
-            action: () => navigate('/conversations'),
+            action: () => navigate(`/conversations?id=${conv.id}`),
           });
         });
       }
@@ -334,7 +385,7 @@ export const useSearchData = () => {
             description: `${lead.company || ''} • ${lead.status}`,
             category: 'Leads',
             iconName: 'Users01',
-            action: () => navigate('/leads'),
+            action: () => navigate(`/leads?id=${lead.id}`),
           });
         });
       }
@@ -349,7 +400,7 @@ export const useSearchData = () => {
             description: `${event.event_type || 'Event'} • ${eventDate} • ${event.status}`,
             category: 'Calendar',
             iconName: 'Calendar',
-            action: () => navigate('/planner'),
+            action: () => navigate(`/planner?id=${event.id}`),
           });
         });
       }
@@ -368,7 +419,7 @@ export const useSearchData = () => {
         });
       }
 
-      // ============ 6. ARI CONTENT ============
+      // ============ 7. ARI CONTENT ============
       // Locations
       if (dataMap.locations) {
         dataMap.locations.forEach((location) => {
@@ -440,7 +491,7 @@ export const useSearchData = () => {
         });
       }
 
-      // ============ 7. ARI TOOLS ============
+      // ============ 8. ARI TOOLS ============
       // Webhooks
       if (dataMap.webhooks) {
         dataMap.webhooks.forEach((webhook) => {
