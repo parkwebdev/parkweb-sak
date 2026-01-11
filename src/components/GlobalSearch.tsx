@@ -23,6 +23,7 @@ import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
 import { SkeletonSearchResults } from '@/components/ui/skeleton';
 import * as Icons from '@untitledui/icons';
+import { SearchSm, File06 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
 /**
@@ -114,7 +115,9 @@ export const GlobalSearch = () => {
                             <AriAgentsIcon className="h-4 w-4 text-muted-foreground" size={16} />
                           ) : IconComponent ? (
                             <IconComponent className="h-4 w-4 text-muted-foreground" />
-                          ) : null}
+                          ) : (
+                            <File06 className="h-4 w-4 text-muted-foreground" />
+                          )}
                         </div>
                         <div className="flex flex-col">
                           <span className="font-medium">{result.title}</span>
