@@ -4,6 +4,7 @@
  * Opens NotificationPopover on click.
  */
 
+import { useState } from 'react';
 import { Bell01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
  * Positioned in TopBar next to user avatar.
  */
 export function NotificationBell() {
+  const [open, setOpen] = useState(false);
   const { unreadCount, isLoading } = useUserNotifications();
   const prefersReducedMotion = useReducedMotion();
 
@@ -25,7 +27,7 @@ export function NotificationBell() {
   const hasUnread = unreadCount > 0;
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           className={cn(
@@ -69,7 +71,7 @@ export function NotificationBell() {
         sideOffset={8}
         className="w-80 p-0 rounded-xl shadow-lg"
       >
-        <NotificationPopover />
+        <NotificationPopover onClose={() => setOpen(false)} />
       </PopoverContent>
     </Popover>
   );

@@ -280,10 +280,15 @@ function Bell01Icon({ size, className }: { size: number; className?: string }) {
   );
 }
 
+interface NotificationPopoverProps {
+  /** Callback to close the popover */
+  onClose?: () => void;
+}
+
 /**
  * Notification popover content with header, list, swipe-to-delete, and actions.
  */
-export function NotificationPopover() {
+export function NotificationPopover({ onClose }: NotificationPopoverProps) {
   const {
     notifications,
     unreadCount,
@@ -293,6 +298,12 @@ export function NotificationPopover() {
     navigateToNotification,
     isMarkingAllAsRead,
   } = useUserNotifications();
+
+  /** Navigate to notification and close popover */
+  const handleNavigate = (notification: Notification) => {
+    onClose?.();
+    navigateToNotification(notification);
+  };
 
   return (
     <div className="flex flex-col">
@@ -334,7 +345,7 @@ export function NotificationPopover() {
               <NotificationItem
                 key={notification.id}
                 notification={notification}
-                onNavigate={navigateToNotification}
+                onNavigate={handleNavigate}
                 onDelete={deleteNotification}
               />
             ))}
@@ -349,7 +360,7 @@ export function NotificationPopover() {
             variant="ghost"
             size="sm"
             className="w-full text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => navigateToNotification({ 
+            onClick={() => handleNavigate({ 
               id: '', 
               user_id: '', 
               type: 'system', 
