@@ -31,7 +31,7 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
-import { LeadsSearchResults } from '@/components/leads/LeadsSearchResults';
+import { LeadsTopBarSearch } from '@/components/leads/LeadsTopBarSearch';
 import { type SortOption } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
@@ -39,7 +39,7 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
-import { useTopBar, TopBarPageContext, TopBarSearch } from '@/components/layout/TopBar';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { Tables, Json } from '@/integrations/supabase/types';
 import type { VisibilityState } from '@tanstack/react-table';
 import type { ConversationMetadata } from '@/types/metadata';
@@ -355,18 +355,10 @@ function Leads() {
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('Users01')} title="Leads" />
-        <TopBarSearch
-          placeholder="Search leads..."
-          value={searchQuery}
-          onChange={setSearchQuery}
-          renderResults={(query) => (
-            <LeadsSearchResults
-              query={query}
-              leads={leads}
-              stages={stages}
-              onSelect={handleViewLead}
-            />
-          )}
+        <LeadsTopBarSearch
+          leads={leads}
+          stages={stages}
+          onSelect={handleViewLead}
         />
       </div>
     ),
@@ -430,7 +422,6 @@ function Leads() {
       </div>
     ),
   }), [
-    searchQuery,
     leads,
     stages,
     handleViewLead,

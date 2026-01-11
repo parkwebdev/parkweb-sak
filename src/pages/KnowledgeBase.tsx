@@ -16,11 +16,11 @@ import { KBArticleView } from '@/components/knowledge-base/KBArticleView';
 import { KBCategoryView } from '@/components/knowledge-base/KBCategoryView';
 import { KBTableOfContents } from '@/components/knowledge-base/KBTableOfContents';
 import { KBPopularArticles } from '@/components/knowledge-base/KBPopularArticles';
-import { KBSearchResults } from '@/components/knowledge-base/KBSearchResults';
+import { KBTopBarSearch } from '@/components/knowledge-base/KBTopBarSearch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
-import { useTopBar, TopBarPageContext, TopBarSearch } from '@/components/layout/TopBar';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { 
   KB_CATEGORIES, 
   getKBCategoryById, 
@@ -74,20 +74,10 @@ export default function KnowledgeBase() {
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('BookOpen01')} title="Knowledge Base" />
-        <TopBarSearch
-          placeholder="Search articles..."
-          value={searchQuery}
-          onChange={setSearchQuery}
-          renderResults={(query) => (
-            <KBSearchResults
-              query={query}
-              onSelect={handleSearchSelect}
-            />
-          )}
-        />
+        <KBTopBarSearch onSelect={handleSearchSelect} />
       </div>
     ),
-  }), [searchQuery, handleSearchSelect]);
+  }), [handleSearchSelect]);
   useTopBar(topBarConfig);
   
   useEffect(() => {

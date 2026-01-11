@@ -13,7 +13,7 @@
  * ```
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 
 export interface TopBarConfig {
   /** Left section - page context/entity indicator */
@@ -66,6 +66,7 @@ export function useTopBarContext() {
 
 /**
  * Hook for pages to set their top bar content.
+ * Uses shallow equality check to prevent unnecessary context updates.
  * Automatically clears the config when the component unmounts.
  * 
  * @param config - The top bar configuration for this page
@@ -81,9 +82,20 @@ export function useTopBarContext() {
  */
 export function useTopBar(config: TopBarConfig) {
   const { setConfig } = useContext(TopBarContext);
+  const prevConfigRef = useRef<TopBarConfig>({});
   
   useEffect(() => {
-    setConfig(config);
+    // Shallow equality check to prevent unnecessary updates
+    const hasChanged = 
+      prevConfigRef.current.left !== config.left ||
+      prevConfigRef.current.center !== config.center ||
+      prevConfigRef.current.right !== config.right;
+    
+    if (hasChanged) {
+      prevConfigRef.current = config;
+      setConfig(config);
+    }
+    
     return () => setConfig({});
   }, [config, setConfig]);
 }
