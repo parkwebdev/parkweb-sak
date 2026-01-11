@@ -263,12 +263,12 @@ export const ARI_SECTIONS: readonly AriSectionConfig[] = [
   
   // Widget Appearance
   { id: 'appearance', label: 'Appearance', group: 'Widget', requiredPermission: 'manage_ari', iconName: 'Palette', activeIconName: 'PaletteFilled' },
-  { id: 'welcome-messages', label: 'Welcome & Messages', group: 'Widget', requiredPermission: 'manage_ari', iconName: 'MessageSquare', activeIconName: 'MessageSquareFilled' },
+  { id: 'welcome-messages', label: 'Welcome & Messages', group: 'Widget', requiredPermission: 'manage_ari', iconName: 'MessageTextSquare01', activeIconName: 'MessageSquareFilled' },
   { id: 'lead-capture', label: 'Lead Capture', group: 'Widget', requiredPermission: 'manage_ari', iconName: 'User01', activeIconName: 'UserFilled' },
   
   // Knowledge
   { id: 'knowledge', label: 'Knowledge', group: 'Knowledge', requiredPermission: 'manage_knowledge', iconName: 'Database01', activeIconName: 'DatabaseFilled' },
-  { id: 'locations', label: 'Locations', group: 'Knowledge', requiredPermission: 'manage_ari', iconName: 'MarkerPin', activeIconName: 'MarkerPinFilled' },
+  { id: 'locations', label: 'Locations', group: 'Knowledge', requiredPermission: 'manage_ari', iconName: 'MarkerPin01', activeIconName: 'MarkerPinFilled' },
   { id: 'help-articles', label: 'Help Articles', group: 'Knowledge', requiredPermission: 'manage_help_articles', iconName: 'BookOpen01', activeIconName: 'BookOpenFilled' },
   
   // Content
