@@ -179,7 +179,7 @@ export function TopBarUserMenu() {
         {/* Content row */}
         <div className="flex">
           {/* Main menu column */}
-          <div className={showShortcuts ? 'w-[160px] flex-shrink-0' : 'w-full'}>
+          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 space-y-0.5`}>
             <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
               <Link to="/settings?tab=profile" className="w-full cursor-pointer">
                 Profile
@@ -241,7 +241,7 @@ export function TopBarUserMenu() {
               className="border-l border-border animate-fade-in flex-1"
               onMouseLeave={() => setShowShortcuts(false)}
             >
-              <div className="space-y-1 px-2 py-1">
+              <div className="space-y-0.5 px-2 py-1">
                 {shortcuts.map((shortcut, index) => (
                   <div key={index} className="flex items-center justify-between w-full py-0.5">
                     <span className="text-xs text-foreground">{shortcut.description}</span>
