@@ -94,6 +94,7 @@ export function useTopBarContext() {
 export function useTopBar(config: TopBarConfig, pageId?: string) {
   const { setConfig } = useContext(TopBarContext);
   const pageIdRef = useRef(pageId);
+  const configRef = useRef(config);
   const hasMountedRef = useRef(false);
   
   // Use layout effect to set config synchronously before paint
@@ -103,6 +104,7 @@ export function useTopBar(config: TopBarConfig, pageId?: string) {
     if (!hasMountedRef.current) {
       hasMountedRef.current = true;
       pageIdRef.current = pageId;
+      configRef.current = config;
       setConfig(config);
       return;
     }
@@ -110,20 +112,27 @@ export function useTopBar(config: TopBarConfig, pageId?: string) {
     // Update if pageId changed (navigation)
     if (pageIdRef.current !== pageId) {
       pageIdRef.current = pageId;
+      configRef.current = config;
       setConfig(config);
       return;
     }
     
-    // Update if config object changed (parent useMemo recomputed)
-    // This handles cases where filters, tabs, or other UI state changes
-    setConfig(config);
-    
-    // Cleanup: clear config when unmounting
+    // Only update if config reference actually changed (useMemo recomputed)
+    // This prevents updates from child re-renders when config is memoized with stable deps
+    if (configRef.current !== config) {
+      configRef.current = config;
+      setConfig(config);
+    }
+    // Only depend on config and pageId - setConfig is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, pageId]);
+  
+  // Separate cleanup effect that only runs on unmount
+  useLayoutEffect(() => {
     return () => {
       hasMountedRef.current = false;
       setConfig({});
     };
-    // Only depend on config and pageId - setConfig is stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config, pageId]);
+  }, []);
 }

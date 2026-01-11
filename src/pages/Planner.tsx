@@ -20,7 +20,7 @@ import { SkeletonCalendarPage } from '@/components/ui/page-skeleton';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useCanManageMultiple } from '@/hooks/useCanManage';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
-import { PlannerTopBarSearch } from '@/components/calendar/PlannerTopBarSearch';
+import { PlannerSearchWrapper } from '@/components/calendar/PlannerSearchWrapper';
 import { EventTypeDropdown } from '@/components/calendar/EventTypeDropdown';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { logger } from '@/utils/logger';
@@ -76,15 +76,12 @@ function Planner() {
   }, []);
   
   // Configure top bar for this page
-  // Note: PlannerTopBarSearch uses refs internally, so passing data props is safe
+  // Note: PlannerSearchWrapper fetches its own data, keeping topBarConfig stable
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={getNavigationIcon('Calendar')} title="Planner" />
-        <PlannerTopBarSearch 
-          events={dbEvents} 
-          onSelect={handleEventClick}
-        />
+        <PlannerSearchWrapper onSelect={handleEventClick} />
       </div>
     ),
     center: undefined,
@@ -101,7 +98,7 @@ function Planner() {
         )}
       </div>
     ),
-  }), [activeTab, canManageBookings, dbEvents, handleEventClick]);
+  }), [activeTab, canManageBookings, handleEventClick]);
   useTopBar(topBarConfig, 'planner');
 
   const handleAddEvent = () => {
