@@ -335,13 +335,14 @@ Deno.serve(async (req: Request) => {
 
     if (!isScheduledSync) {
       if (!authHeader?.startsWith('Bearer ')) {
+        console.log('Auth failed: Missing or invalid Authorization header');
         return new Response(
           JSON.stringify({ error: 'Missing authorization header' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Create anon client for JWT verification
+      // Create anon client for JWT verification per Lovable Cloud pattern
       const anonClient = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_ANON_KEY')!,
@@ -351,7 +352,8 @@ Deno.serve(async (req: Request) => {
       const token = authHeader.replace('Bearer ', '');
       const { data, error: authError } = await anonClient.auth.getClaims(token);
 
-      if (authError || !data?.claims?.sub) {
+      if (authError || !data?.claims) {
+        console.log('Auth failed:', authError?.message || 'No claims in token');
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -359,6 +361,9 @@ Deno.serve(async (req: Request) => {
       }
       
       userId = data.claims.sub as string;
+      console.log('Auth succeeded for user:', userId);
+    } else {
+      console.log('Scheduled sync: bypassing user auth');
     }
 
     const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter } = await req.json();

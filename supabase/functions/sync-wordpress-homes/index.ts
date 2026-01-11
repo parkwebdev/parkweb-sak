@@ -173,35 +173,47 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    const isScheduledSync = req.headers.get('x-scheduled-sync') === 'true';
+    let userId: string | null = null;
+
+    // Create service role client for database operations
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const isScheduledSync = req.headers.get('x-scheduled-sync') === 'true';
-    let userId: string | null = null;
-    
     if (!isScheduledSync) {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader) {
+      if (!authHeader?.startsWith('Bearer ')) {
+        console.log('Auth failed: Missing or invalid Authorization header');
         return new Response(
           JSON.stringify({ error: 'Missing authorization header' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const { data: { user }, error: authError } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
+      // Create anon client for JWT verification per Lovable Cloud pattern
+      const anonClient = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: authHeader } } }
       );
 
-      if (authError || !user) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data, error: authError } = await anonClient.auth.getClaims(token);
+
+      if (authError || !data?.claims) {
+        console.log('Auth failed:', authError?.message || 'No claims in token');
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      
-      userId = user.id;
+
+      userId = data.claims.sub as string;
+      console.log('Auth succeeded for user:', userId);
+    } else {
+      console.log('Scheduled sync: bypassing user auth');
     }
 
     const { action, agentId, siteUrl, homeEndpoint, useAiExtraction, modifiedAfter } = await req.json();
