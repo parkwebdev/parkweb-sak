@@ -13,7 +13,13 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { getErrorMessage } from "../_shared/errors.ts";
 
 /** Valid action types for this function */
-type ActionType = 'sync_products' | 'get_revenue_metrics';
+const VALID_ACTIONS = ['sync_products', 'get_revenue_metrics'] as const;
+type ActionType = typeof VALID_ACTIONS[number];
+
+/** Type guard to validate action at runtime */
+function isValidAction(action: unknown): action is ActionType {
+  return typeof action === 'string' && VALID_ACTIONS.includes(action as ActionType);
+}
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -62,7 +68,12 @@ Deno.serve(async (req) => {
     });
 
     const body = await req.json();
-    const { action } = body as { action: ActionType };
+    const { action } = body as { action: unknown };
+
+    // Runtime validation of action parameter
+    if (!isValidAction(action)) {
+      throw new Error(`Invalid action "${action}". Must be one of: ${VALID_ACTIONS.join(', ')}`);
+    }
 
     if (action === 'sync_products') {
       console.log('Starting Stripe product sync...');
@@ -235,7 +246,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    throw new Error('Invalid action. Must be "sync_products" or "get_revenue_metrics"');
+    // This should never be reached due to the type guard above, but TypeScript needs it
+    throw new Error(`Unhandled action: ${action satisfies never}`);
   } catch (error: unknown) {
     console.error('Admin Stripe sync error:', error);
     
