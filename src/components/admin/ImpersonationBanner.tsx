@@ -2,7 +2,12 @@
  * ImpersonationBanner Component
  * 
  * Visual indicator shown when an admin is impersonating a user.
- * Provides quick access to end impersonation.
+ * Provides quick access to end impersonation and shows remaining time.
+ * 
+ * Security features:
+ * - Always visible when impersonating
+ * - Shows remaining session time
+ * - One-click exit button
  * 
  * @module components/admin/ImpersonationBanner
  */
@@ -10,7 +15,6 @@
 import { AlertTriangle, X } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { useImpersonation } from '@/hooks/admin/useImpersonation';
-import { formatDistanceToNow } from 'date-fns';
 
 /**
  * Banner displayed when admin is impersonating a user.
@@ -20,17 +24,15 @@ export function ImpersonationBanner() {
     isImpersonating, 
     targetUserEmail, 
     targetUserName,
-    sessionId,
+    remainingMinutes,
     endImpersonation,
     isEnding,
   } = useImpersonation();
-  
-  // Extract startedAt from the session data
-  const startedAt = sessionId ? new Date().toISOString() : null;
 
   if (!isImpersonating) return null;
 
   const displayName = targetUserName || targetUserEmail || 'Unknown User';
+  const isExpiringSoon = remainingMinutes !== null && remainingMinutes <= 5;
 
   return (
     <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2">
@@ -45,9 +47,11 @@ export function ImpersonationBanner() {
                 ({targetUserEmail})
               </span>
             )}
-            {startedAt && (
-              <span className="text-amber-600 dark:text-amber-400 ml-2">
-                • Started {formatDistanceToNow(new Date(startedAt), { addSuffix: true })}
+            {remainingMinutes !== null && (
+              <span className={`ml-2 ${isExpiringSoon ? 'text-amber-700 dark:text-amber-300 font-medium' : 'text-amber-600 dark:text-amber-400'}`}>
+                • {remainingMinutes > 0 
+                    ? `${remainingMinutes} min${remainingMinutes !== 1 ? 's' : ''} remaining` 
+                    : 'Expiring soon'}
               </span>
             )}
           </span>

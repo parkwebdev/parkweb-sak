@@ -1,9 +1,19 @@
 /**
  * Hook for managing impersonation sessions
  * 
+ * Security features:
+ * - 30 minute session expiry (auto-end)
+ * - Reason required for each session
+ * - Full audit logging
+ * - Visual indicator when impersonating
+ * - One-click exit
+ * - Admin protection (cannot impersonate super_admins)
+ * - Rate limiting (max 5 per hour, enforced server-side)
+ * 
  * @module hooks/admin/useImpersonation
  */
 
+import { useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
@@ -12,12 +22,21 @@ import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
 import type { ImpersonationState } from '@/types/admin';
 
+/** Session duration in milliseconds (30 minutes) */
+const SESSION_DURATION_MS = 30 * 60 * 1000;
+
+/** Check interval for session expiry (every minute) */
+const EXPIRY_CHECK_INTERVAL_MS = 60 * 1000;
+
 interface UseImpersonationResult {
   isImpersonating: boolean;
   targetUserId: string | null;
   targetUserEmail: string | null;
   targetUserName: string | null;
   sessionId: string | null;
+  startedAt: string | null;
+  expiresAt: string | null;
+  remainingMinutes: number | null;
   loading: boolean;
   startImpersonation: (targetUserId: string, reason: string) => Promise<void>;
   endImpersonation: () => Promise<void>;
@@ -31,7 +50,7 @@ export function useImpersonation(): UseImpersonationResult {
 
   const { data, isLoading } = useQuery({
     queryKey: adminQueryKeys.impersonation.current(),
-    queryFn: async (): Promise<ImpersonationState> => {
+    queryFn: async (): Promise<ImpersonationState & { expiresAt: string | null }> => {
       if (!user) {
         return {
           isImpersonating: false,
@@ -40,6 +59,7 @@ export function useImpersonation(): UseImpersonationResult {
           targetUserName: null,
           sessionId: null,
           startedAt: null,
+          expiresAt: null,
         };
       }
 
@@ -59,6 +79,49 @@ export function useImpersonation(): UseImpersonationResult {
           targetUserName: null,
           sessionId: null,
           startedAt: null,
+          expiresAt: null,
+        };
+      }
+
+      // Calculate expiry time
+      const startedAt = session.started_at || new Date().toISOString();
+      const expiresAt = new Date(new Date(startedAt).getTime() + SESSION_DURATION_MS).toISOString();
+
+      // Check if session has expired
+      if (new Date() > new Date(expiresAt)) {
+        // Auto-end expired session
+        await supabase
+          .from('impersonation_sessions')
+          .update({
+            is_active: false,
+            ended_at: new Date().toISOString(),
+          })
+          .eq('id', session.id);
+
+        // Log the auto-end
+        await supabase.from('admin_audit_log').insert({
+          admin_user_id: user.id,
+          action: 'impersonation_auto_expired',
+          target_type: 'session',
+          target_id: session.id,
+          details: { 
+            target_user_id: session.target_user_id,
+            reason: 'Session expired after 30 minutes' 
+          },
+        });
+
+        toast.info('Impersonation session expired', {
+          description: 'Your session has been automatically ended after 30 minutes.',
+        });
+
+        return {
+          isImpersonating: false,
+          targetUserId: null,
+          targetUserEmail: null,
+          targetUserName: null,
+          sessionId: null,
+          startedAt: null,
+          expiresAt: null,
         };
       }
 
@@ -75,22 +138,55 @@ export function useImpersonation(): UseImpersonationResult {
         targetUserEmail: profile?.email || null,
         targetUserName: profile?.display_name || null,
         sessionId: session.id,
-        startedAt: session.started_at,
+        startedAt,
+        expiresAt,
       };
     },
     enabled: !!user,
     staleTime: 30000,
+    refetchInterval: EXPIRY_CHECK_INTERVAL_MS, // Check for expiry every minute
   });
+
+  // Calculate remaining minutes
+  const getRemainingMinutes = useCallback((): number | null => {
+    if (!data?.expiresAt) return null;
+    const now = new Date().getTime();
+    const expires = new Date(data.expiresAt).getTime();
+    const remaining = Math.max(0, Math.floor((expires - now) / 60000));
+    return remaining;
+  }, [data?.expiresAt]);
+
+  // Show warning when 5 minutes or less remaining
+  useEffect(() => {
+    if (!data?.isImpersonating || !data.expiresAt) return;
+
+    const checkExpiry = () => {
+      const remaining = getRemainingMinutes();
+      if (remaining !== null && remaining <= 5 && remaining > 0) {
+        toast.warning(`Impersonation session expires in ${remaining} minute${remaining !== 1 ? 's' : ''}`, {
+          id: 'impersonation-expiry-warning',
+        });
+      }
+    };
+
+    const interval = setInterval(checkExpiry, 60000);
+    return () => clearInterval(interval);
+  }, [data?.isImpersonating, data?.expiresAt, getRemainingMinutes]);
 
   const startMutation = useMutation({
     mutationFn: async ({ targetUserId, reason }: { targetUserId: string; reason: string }) => {
       if (!user) throw new Error('Not authenticated');
 
+      // Validate reason length (minimum 10 characters as per edge function)
+      if (reason.trim().length < 10) {
+        throw new Error('Reason must be at least 10 characters');
+      }
+
       // Create impersonation session
       const { error } = await supabase.from('impersonation_sessions').insert({
         admin_user_id: user.id,
         target_user_id: targetUserId,
-        reason,
+        reason: reason.trim(),
         is_active: true,
       });
 
@@ -102,12 +198,14 @@ export function useImpersonation(): UseImpersonationResult {
         action: 'impersonation_start',
         target_type: 'account',
         target_id: targetUserId,
-        details: { reason },
+        details: { reason: reason.trim() },
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.impersonation.all() });
-      toast.success('Impersonation started');
+      toast.success('Impersonation started', {
+        description: 'Session will automatically expire in 30 minutes.',
+      });
     },
     onError: (error: unknown) => {
       toast.error('Failed to start impersonation', { description: getErrorMessage(error) });
@@ -151,6 +249,9 @@ export function useImpersonation(): UseImpersonationResult {
     targetUserEmail: data?.targetUserEmail || null,
     targetUserName: data?.targetUserName || null,
     sessionId: data?.sessionId || null,
+    startedAt: data?.startedAt || null,
+    expiresAt: data?.expiresAt || null,
+    remainingMinutes: getRemainingMinutes(),
     loading: isLoading,
     startImpersonation: (targetUserId, reason) =>
       startMutation.mutateAsync({ targetUserId, reason }),

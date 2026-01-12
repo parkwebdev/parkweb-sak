@@ -227,6 +227,8 @@ export interface AuditLogEntry {
 export type AuditAction =
   | 'impersonation_start'
   | 'impersonation_end'
+  | 'impersonation_auto_expired'
+  | 'account_view'
   | 'account_suspend'
   | 'account_activate'
   | 'account_delete'
@@ -236,8 +238,10 @@ export type AuditAction =
   | 'plan_delete'
   | 'team_invite'
   | 'team_remove'
+  | 'team_role_change'
   | 'article_create'
   | 'article_update'
+  | 'article_publish'
   | 'article_delete'
   | 'category_create'
   | 'category_update'
@@ -252,7 +256,8 @@ export type AuditTargetType =
   | 'team'
   | 'article'
   | 'category'
-  | 'email';
+  | 'email'
+  | 'session';
 
 export interface AuditLogFilters {
   action?: AuditAction;
