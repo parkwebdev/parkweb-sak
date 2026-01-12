@@ -48,7 +48,6 @@ import {
   AdminLayout,
   AdminDashboard,
   AdminAccounts,
-  AdminAccountDetail,
   AdminPrompts,
   AdminPlans,
   AdminTeam,
@@ -251,7 +250,6 @@ const App = () => (
                     >
                       <Route index element={<AdminDashboard />} />
                       <Route path="accounts" element={<AdminAccounts />} />
-                      <Route path="accounts/:userId" element={<AdminAccountDetail />} />
                       <Route path="prompts" element={<AdminPrompts />} />
                       <Route path="plans" element={<AdminPlans />} />
                       <Route path="team" element={<AdminTeam />} />

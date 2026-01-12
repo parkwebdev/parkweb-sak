@@ -1,7 +1,7 @@
 /**
  * AccountDetailSheet Component
  * 
- * Slide-over sheet showing account details.
+ * Slide-over sheet showing complete account details.
  * 
  * @module components/admin/accounts/AccountDetailSheet
  */
@@ -16,12 +16,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
 import { getInitials, formatAdminDate } from '@/lib/admin/admin-utils';
 import { ImpersonateButton } from './ImpersonateButton';
 import { AccountActions } from './AccountActions';
 import { AccountUsageCard } from './AccountUsageCard';
+import { Mail01, Building02, Phone01, MarkerPin01 } from '@untitledui/icons';
 
 interface AccountDetailSheetProps {
   accountId: string | null;
@@ -30,7 +31,7 @@ interface AccountDetailSheetProps {
 }
 
 /**
- * Sheet component showing account details.
+ * Sheet component showing complete account details.
  */
 export function AccountDetailSheet({
   accountId,
@@ -41,7 +42,7 @@ export function AccountDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Account Details</SheetTitle>
           <SheetDescription>
@@ -65,12 +66,6 @@ export function AccountDetailSheet({
                 <h3 className="text-base font-semibold text-foreground">
                   {account.display_name || 'No name'}
                 </h3>
-                <p className="text-sm text-muted-foreground">{account.email}</p>
-                {account.company_name && (
-                  <p className="text-sm text-muted-foreground">
-                    {account.company_name}
-                  </p>
-                )}
                 <div className="flex gap-2 mt-2">
                   <Badge
                     variant={account.status === 'active' ? 'default' : 'destructive'}
@@ -82,8 +77,55 @@ export function AccountDetailSheet({
               </div>
             </div>
 
+            {/* Contact Info */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-foreground">Contact Information</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                  <span className="text-muted-foreground">{account.email}</span>
+                </div>
+                {account.company_name && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building02 size={16} className="text-muted-foreground" aria-hidden="true" />
+                    <span className="text-muted-foreground">{account.company_name}</span>
+                  </div>
+                )}
+                {account.company_address && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <MarkerPin01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                    <span className="text-muted-foreground">{account.company_address}</span>
+                  </div>
+                )}
+                {account.company_phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                    <span className="text-muted-foreground">{account.company_phone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
+              <div>
+                <p className="text-xs text-muted-foreground">Created</p>
+                <p className="text-sm font-medium">
+                  {formatAdminDate(account.created_at)}
+                </p>
+              </div>
+              {account.last_login_at && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Last Login</p>
+                  <p className="text-sm font-medium">
+                    {formatAdminDate(account.last_login_at)}
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Actions */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-4 border-t border-border">
               <ImpersonateButton
                 userId={account.user_id}
                 userName={account.display_name}
@@ -94,31 +136,37 @@ export function AccountDetailSheet({
               />
             </div>
 
-            {/* Account Info */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-              <div>
-                <p className="text-xs text-muted-foreground">Plan</p>
-                <p className="text-sm font-medium">
-                  {account.plan_name || 'Free'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">MRR</p>
-                <p className="text-sm font-medium">
-                  ${account.mrr.toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Created</p>
-                <p className="text-sm font-medium">
-                  {formatAdminDate(account.created_at)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Role</p>
-                <p className="text-sm font-medium capitalize">{account.role}</p>
-              </div>
-            </div>
+            {/* Subscription Card */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">Subscription</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Plan</p>
+                    <p className="text-sm font-medium">
+                      {account.plan_name || 'Free'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <Badge
+                      variant={account.subscription_status === 'active' ? 'default' : 'secondary'}
+                      className="mt-0.5"
+                    >
+                      {account.subscription_status || 'none'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">MRR</p>
+                    <p className="text-sm font-medium">
+                      ${(account.mrr / 100).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Usage Stats */}
             {usage && (
@@ -131,6 +179,24 @@ export function AccountDetailSheet({
                   locationCount: usage.locations,
                 }}
               />
+            )}
+
+            {/* Permissions */}
+            {account.permissions && account.permissions.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium">Permissions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {account.permissions.map((permission) => (
+                      <Badge key={permission} variant="outline">
+                        {permission}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
         ) : (
@@ -150,25 +216,23 @@ function AccountDetailSkeleton() {
         <Skeleton className="h-16 w-16 rounded-full" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-4 w-48" />
           <div className="flex gap-2">
             <Skeleton className="h-5 w-16" />
             <Skeleton className="h-5 w-12" />
           </div>
         </div>
       </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-4 w-36" />
+      </div>
       <div className="flex gap-2">
         <Skeleton className="h-9 w-24" />
         <Skeleton className="h-9 w-24" />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="space-y-1">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        ))}
-      </div>
+      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-32 w-full" />
     </div>
   );
 }

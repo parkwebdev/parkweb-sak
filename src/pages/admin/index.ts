@@ -10,7 +10,6 @@
 export { AdminLayout } from './AdminLayout';
 export { AdminDashboard } from './AdminDashboard';
 export { AdminAccounts } from './AdminAccounts';
-export { AdminAccountDetail } from './AdminAccountDetail';
 export { AdminPrompts } from './AdminPrompts';
 export { AdminPlans } from './AdminPlans';
 export { AdminTeam } from './AdminTeam';
