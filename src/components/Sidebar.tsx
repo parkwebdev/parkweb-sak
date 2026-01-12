@@ -415,6 +415,30 @@ function SidebarComponent({ onClose }: SidebarProps) {
               </Link>
             </motion.div>
           )}
+          
+          {/* Admin Dashboard link for super admins when not on admin routes */}
+          {isSuperAdmin && !isOnAdminRoute && (
+            <motion.div 
+              className="items-center flex w-full py-0.5 mt-2 pt-2 border-t border-border"
+              initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, ...springs.smooth }}
+            >
+              <Link 
+                to="/admin"
+                className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+              >
+                <div className="items-center flex gap-2 my-auto w-full">
+                  <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
+                    <Shield01 size={14} className="text-destructive self-stretch my-auto" />
+                  </div>
+                  <div className="text-sm font-normal leading-4 my-auto whitespace-nowrap">
+                    Admin Dashboard
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          )}
         </div>
       </nav>
     </aside>
