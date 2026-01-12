@@ -1,33 +1,54 @@
 /**
- * AccountDetailSheet Component
+ * Account Detail Sheet Component
  * 
- * Slide-over sheet showing complete account details.
+ * Displays detailed account information in a slide-over sheet.
+ * Follows the design patterns from LeadDetailsSheet and KnowledgeDetailsSheet.
  * 
  * @module components/admin/accounts/AccountDetailSheet
  */
 
+import { useState, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
 import { getInitials, formatAdminDate } from '@/lib/admin/admin-utils';
 import { ImpersonateButton } from './ImpersonateButton';
-import { AccountActions } from './AccountActions';
-import { AccountUsageCard } from './AccountUsageCard';
-import { Mail01, Building02, Phone01, MarkerPin01 } from '@untitledui/icons';
+import { Mail01, Building02, Phone01, Calendar, CreditCard01, MessageChatCircle, Users01, BookOpen01, MarkerPin01 } from '@untitledui/icons';
 
 interface AccountDetailSheetProps {
   accountId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+/**
+ * Format permission enum to readable text
+ */
+function formatPermission(permission: string): string {
+  return permission
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase());
+}
+
+/**
+ * Format currency for MRR display
+ */
+function formatMRR(amount: number | undefined): string {
+  if (!amount) return '$0';
+  // MRR is stored in cents
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+  }).format(amount / 100);
 }
 
 /**
@@ -39,169 +60,195 @@ export function AccountDetailSheet({
   onOpenChange,
 }: AccountDetailSheetProps) {
   const { account, usage, loading } = useAccountDetail(accountId || undefined);
+  const [contentReady, setContentReady] = useState(false);
+
+  // Defer content mounting for smooth animation
+  useEffect(() => {
+    if (open && account) {
+      const timer = setTimeout(() => setContentReady(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setContentReady(false);
+    }
+  }, [open, account]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Account Details</SheetTitle>
-          <SheetDescription>
-            View and manage account information
-          </SheetDescription>
-        </SheetHeader>
-
+      <SheetContent side="right" className="sm:max-w-xl overflow-y-auto">
         {loading ? (
           <AccountDetailSkeleton />
         ) : account ? (
-          <div className="mt-6 space-y-6">
-            {/* Profile Section */}
-            <div className="flex items-start gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={account.avatar_url || undefined} />
-                <AvatarFallback>
-                  {getInitials(account.display_name || account.email)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-foreground">
-                  {account.display_name || 'No name'}
-                </h3>
-                <div className="flex gap-2 mt-2">
-                  <Badge
-                    variant={account.status === 'active' ? 'default' : 'destructive'}
-                  >
-                    {account.status}
-                  </Badge>
-                  <Badge variant="outline">{account.role}</Badge>
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Info */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-foreground">Contact Information</h4>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail01 size={16} className="text-muted-foreground" aria-hidden="true" />
-                  <span className="text-muted-foreground">{account.email}</span>
-                </div>
-                {account.company_name && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Building02 size={16} className="text-muted-foreground" aria-hidden="true" />
-                    <span className="text-muted-foreground">{account.company_name}</span>
-                  </div>
-                )}
-                {account.company_address && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <MarkerPin01 size={16} className="text-muted-foreground" aria-hidden="true" />
-                    <span className="text-muted-foreground">{account.company_address}</span>
-                  </div>
-                )}
-                {account.company_phone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone01 size={16} className="text-muted-foreground" aria-hidden="true" />
-                    <span className="text-muted-foreground">{account.company_phone}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-              <div>
-                <p className="text-xs text-muted-foreground">Created</p>
-                <p className="text-sm font-medium">
-                  {formatAdminDate(account.created_at)}
-                </p>
-              </div>
-              {account.last_login_at && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Last Login</p>
-                  <p className="text-sm font-medium">
-                    {formatAdminDate(account.last_login_at)}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-4 border-t border-border">
-              <ImpersonateButton
-                userId={account.user_id}
-                userName={account.display_name}
-              />
-              <AccountActions
-                account={account}
-                onView={() => {}}
-                onImpersonate={() => {}}
-              />
-            </div>
-
-            {/* Subscription Card */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">Subscription</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Plan</p>
-                    <p className="text-sm font-medium">
-                      {account.plan_name || 'Free'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <Badge
-                      variant={account.subscription_status === 'active' ? 'default' : 'secondary'}
-                      className="mt-0.5"
+          <div className={contentReady ? 'animate-in fade-in duration-200' : 'opacity-0'}>
+            {/* Header: Avatar + Name + Badges */}
+            <SheetHeader className="mb-6">
+              <div className="flex items-start gap-3">
+                <Avatar className="h-12 w-12 shrink-0">
+                  <AvatarImage src={account.avatar_url || undefined} alt={account.display_name || 'User'} />
+                  <AvatarFallback className="text-base">
+                    {getInitials(account.display_name || account.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <SheetTitle className="truncate text-lg">
+                    {account.display_name || 'Unnamed Account'}
+                  </SheetTitle>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <Badge 
+                      variant={account.status === 'active' ? 'default' : 'secondary'}
+                      className={account.status === 'active' ? 'bg-status-active/10 text-status-active-foreground border-0' : ''}
                     >
-                      {account.subscription_status || 'none'}
+                      {account.status}
+                    </Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {account.role}
                     </Badge>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">MRR</p>
-                    <p className="text-sm font-medium">
-                      ${(account.mrr / 100).toFixed(2)}
-                    </p>
+                </div>
+              </div>
+            </SheetHeader>
+
+            <div className="space-y-6">
+              {/* Contact Section */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">Contact</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 text-sm">
+                    <Mail01 size={16} className="text-muted-foreground shrink-0" aria-hidden="true" />
+                    <span className="truncate">{account.email}</span>
+                  </div>
+                  {account.company_name && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Building02 size={16} className="text-muted-foreground shrink-0" aria-hidden="true" />
+                      <span className="truncate">{account.company_name}</span>
+                    </div>
+                  )}
+                  {account.company_phone && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Phone01 size={16} className="text-muted-foreground shrink-0" aria-hidden="true" />
+                      <span>{account.company_phone}</span>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <Separator />
+
+              {/* Account Details Section */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">Account</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">Created</p>
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-muted-foreground" aria-hidden="true" />
+                      <span>{formatAdminDate(account.created_at)}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">Last Login</p>
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-muted-foreground" aria-hidden="true" />
+                      <span>{account.last_login_at ? formatAdminDate(account.last_login_at) : 'Never'}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">Plan</p>
+                    <div className="flex items-center gap-2">
+                      <CreditCard01 size={14} className="text-muted-foreground" aria-hidden="true" />
+                      <span className="capitalize">{account.plan_name || 'Free'}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs">MRR</p>
+                    <div className="flex items-center gap-2">
+                      <CreditCard01 size={14} className="text-muted-foreground" aria-hidden="true" />
+                      <span className="font-medium">{formatMRR(account.mrr)}</span>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </section>
 
-            {/* Usage Stats */}
-            {usage && (
-              <AccountUsageCard 
-                usage={{
-                  conversationCount: usage.conversations,
-                  leadCount: usage.leads,
-                  knowledgeSourceCount: usage.knowledgeSources,
-                  locationCount: usage.locations,
-                }}
-              />
-            )}
+              <Separator />
 
-            {/* Permissions */}
-            {account.permissions && account.permissions.length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Permissions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {account.permissions.map((permission) => (
-                      <Badge key={permission} variant="outline">
-                        {permission}
-                      </Badge>
-                    ))}
+              {/* Usage Section */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">Usage</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                      <MessageChatCircle size={16} className="text-muted-foreground" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{usage?.conversations ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Conversations</p>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                      <Users01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{usage?.leads ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Leads</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                      <BookOpen01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{usage?.knowledgeSources ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Knowledge Sources</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                      <MarkerPin01 size={16} className="text-muted-foreground" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{usage?.locations ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Locations</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Permissions Section - Only show if has permissions */}
+              {account.permissions && account.permissions.length > 0 && (
+                <>
+                  <Separator />
+                  <section className="space-y-3">
+                    <h3 className="text-sm font-medium text-muted-foreground">
+                      Permissions ({account.permissions.length})
+                    </h3>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                      {account.permissions.map((permission) => (
+                        <span key={permission} className="text-sm text-muted-foreground">
+                          • {formatPermission(permission)}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+                </>
+              )}
+
+              <Separator />
+
+              {/* Actions Section */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">Actions</h3>
+                <div className="flex gap-2">
+                  <ImpersonateButton 
+                    userId={account.user_id}
+                    userName={account.display_name}
+                  />
+                </div>
+              </section>
+            </div>
           </div>
         ) : (
-          <div className="mt-6 text-center py-8">
-            <p className="text-sm text-muted-foreground">Account not found</p>
+          <div className="flex items-center justify-center h-32">
+            <p className="text-muted-foreground">Account not found</p>
           </div>
         )}
       </SheetContent>
@@ -209,30 +256,58 @@ export function AccountDetailSheet({
   );
 }
 
+/**
+ * Loading skeleton for account details
+ */
 function AccountDetailSkeleton() {
   return (
-    <div className="mt-6 space-y-6">
-      <div className="flex items-start gap-4">
-        <Skeleton className="h-16 w-16 rounded-full" />
+    <div className="space-y-6">
+      {/* Header skeleton */}
+      <div className="flex items-start gap-3">
+        <Skeleton className="h-12 w-12 rounded-full" />
         <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-40" />
           <div className="flex gap-2">
             <Skeleton className="h-5 w-16" />
-            <Skeleton className="h-5 w-12" />
+            <Skeleton className="h-5 w-16" />
           </div>
         </div>
       </div>
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-4 w-36" />
+
+      {/* Contact skeleton */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-16" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
       </div>
-      <div className="flex gap-2">
-        <Skeleton className="h-9 w-24" />
-        <Skeleton className="h-9 w-24" />
+
+      <Skeleton className="h-px w-full" />
+
+      {/* Account details skeleton */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-16" />
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
       </div>
-      <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-32 w-full" />
+
+      <Skeleton className="h-px w-full" />
+
+      {/* Usage skeleton */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-16" />
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      </div>
     </div>
   );
 }
