@@ -1,1 +1,10 @@
-export { PilotTeamTable, InviteTeamMemberDialog, TeamMemberActions, TeamMemberCard } from './PilotTeamTable';
+/**
+ * Admin Team Components Barrel Export
+ * 
+ * @module components/admin/team
+ */
+
+export { PilotTeamTable } from './PilotTeamTable';
+export { InviteTeamMemberDialog } from './InviteTeamMemberDialog';
+export { TeamMemberCard } from './TeamMemberCard';
+export { TeamMemberActions } from './TeamMemberActions';
