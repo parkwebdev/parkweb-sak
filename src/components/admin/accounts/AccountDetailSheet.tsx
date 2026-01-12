@@ -131,8 +131,9 @@ export function AccountDetailSheet({
                 userName={account.display_name}
               />
               <AccountActions
-                accountId={account.user_id}
-                status={account.status}
+                account={account}
+                onView={() => {}}
+                onImpersonate={() => {}}
               />
             </div>
 
