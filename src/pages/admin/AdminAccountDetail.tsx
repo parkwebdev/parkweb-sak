@@ -7,15 +7,16 @@
  * @module pages/admin/AdminAccountDetail
  */
 
+import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Mail01, Building02, Phone01 } from '@untitledui/icons';
+import { ArrowLeft, Mail01, Building02, Phone01, User01 } from '@untitledui/icons';
 import { AccountUsageCard, ImpersonateButton, AccountStatusBadge } from '@/components/admin/accounts';
 import { useAccountDetail } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { getInitials } from '@/lib/admin/admin-utils';
 import { format } from 'date-fns';
 
@@ -25,6 +26,12 @@ import { format } from 'date-fns';
 export function AdminAccountDetail() {
   const { userId } = useParams<{ userId: string }>();
   const { account, usage, loading, error } = useAccountDetail(userId);
+
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={User01} title="Account Details" />,
+  }), []);
+  useTopBar(topBarConfig);
 
   if (error) {
     return (

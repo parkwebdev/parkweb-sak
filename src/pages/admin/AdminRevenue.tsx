@@ -7,6 +7,8 @@
  * @module pages/admin/AdminRevenue
  */
 
+import { useMemo } from 'react';
+import { TrendUp01 } from '@untitledui/icons';
 import { 
   RevenueOverview, 
   MRRChart, 
@@ -16,11 +18,18 @@ import {
   TopAccountsTable 
 } from '@/components/admin/revenue';
 import { useRevenueAnalytics } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
 /**
  * Revenue analytics page for Super Admin.
  */
 export function AdminRevenue() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={TrendUp01} title="Revenue Analytics" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   const { data, loading } = useRevenueAnalytics();
 
   return (

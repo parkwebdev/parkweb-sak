@@ -7,6 +7,8 @@
  * @module pages/admin/AdminEmails
  */
 
+import { useMemo } from 'react';
+import { Mail01 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   EmailTemplateList, 
@@ -15,11 +17,18 @@ import {
   EmailDeliveryStats 
 } from '@/components/admin/emails';
 import { useEmailDeliveryLogs } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
 /**
  * Email templates and announcements page for Super Admin.
  */
 export function AdminEmails() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Mail01} title="Emails" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   const { logs, stats, loading } = useEmailDeliveryLogs();
 
   return (

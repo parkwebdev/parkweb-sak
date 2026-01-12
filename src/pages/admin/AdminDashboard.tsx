@@ -10,7 +10,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Users01, 
@@ -22,13 +21,14 @@ import {
   Users02,
   BookOpen01,
   Mail01,
-  ClipboardCheck
+  ClipboardCheck,
+  Shield01
 } from '@untitledui/icons';
 import { useAdminAccounts } from '@/hooks/admin/useAdminAccounts';
 import { useRevenueAnalytics } from '@/hooks/admin/useRevenueAnalytics';
 import { useAdminSubscriptions } from '@/hooks/admin/useAdminSubscriptions';
 import { formatAdminCurrency, formatCompactNumber, formatPercentage } from '@/lib/admin/admin-utils';
-import { ADMIN_SECTIONS } from '@/config/routes';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
 interface StatCardProps {
   icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -117,6 +117,12 @@ function QuickActionCard({ icon: Icon, label, description, href }: QuickActionCa
  * Super Admin Dashboard overview page.
  */
 export function AdminDashboard() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Shield01} title="Platform Overview" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   // Fetch real data from hooks
   const { totalCount: accountCount, loading: accountsLoading } = useAdminAccounts({ pageSize: 1 });
   const { data: revenueData, loading: revenueLoading } = useRevenueAnalytics();

@@ -7,7 +7,8 @@
  * @module pages/admin/AdminPlans
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { CreditCard01 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   PlansTable, 
@@ -17,12 +18,19 @@ import {
   StripeSync 
 } from '@/components/admin/plans';
 import { useAdminPlans, useAdminSubscriptions, useRevenueAnalytics } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AdminPlan } from '@/types/admin';
 
 /**
  * Plans and billing management page for Super Admin.
  */
 export function AdminPlans() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={CreditCard01} title="Plans & Billing" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   const [editingPlan, setEditingPlan] = useState<AdminPlan | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
 

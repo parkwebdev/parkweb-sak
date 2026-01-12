@@ -7,15 +7,23 @@
  * @module pages/admin/AdminKnowledge
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { BookOpen01 } from '@untitledui/icons';
 import { ArticlesTable, CategoryManager } from '@/components/admin/knowledge';
 import { useAdminArticles, useAdminCategories } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AdminArticle } from '@/types/admin';
 
 /**
  * Help articles editor page for Super Admin.
  */
 export function AdminKnowledge() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={BookOpen01} title="Help Articles" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   const { 
     articles, 
     loading: articlesLoading, 

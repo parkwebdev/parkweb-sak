@@ -3,12 +3,13 @@
  * 
  * Main navigation sidebar - always expanded at 240px width.
  * Shows unread conversation badges and filters items based on user permissions.
+ * Super admins see admin sections when on /admin/* routes.
  * 
  * @module components/Sidebar
  */
 
 import React, { useMemo } from 'react';
-import { X, Grid01 as Grid, SearchMd } from '@untitledui/icons';
+import { X, Grid01 as Grid, SearchMd, Shield01, ArrowLeft } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -19,8 +20,8 @@ import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
-import { getMainNavRoutes, getBottomNavRoutes, getRouteById, type RouteConfig } from '@/config/routes';
-import { NAVIGATION_ICON_MAP, ACTIVE_ICON_MAP } from '@/lib/navigation-icons';
+import { getMainNavRoutes, getBottomNavRoutes, getRouteById, ADMIN_SECTIONS, type RouteConfig, type AdminSectionConfig } from '@/config/routes';
+import { NAVIGATION_ICON_MAP, ACTIVE_ICON_MAP, ADMIN_ICON_MAP } from '@/lib/navigation-icons';
 import type { ConversationMetadata } from '@/types/metadata';
 import type { AppPermission } from '@/types/team';
 
@@ -60,11 +61,24 @@ function routeToNavItem(route: RouteConfig): NavigationItem {
   };
 }
 
+/** Convert AdminSectionConfig to NavigationItem */
+function adminSectionToNavItem(section: AdminSectionConfig): NavigationItem {
+  return {
+    id: section.id,
+    label: section.label,
+    icon: ADMIN_ICON_MAP[section.iconName] ?? Grid,
+    path: section.path,
+  };
+}
+
 /** Main navigation items from centralized config */
 const navigationItems: NavigationItem[] = getMainNavRoutes().map(routeToNavItem);
 
 /** Bottom navigation items from centralized config */
 const bottomItems: NavigationItem[] = getBottomNavRoutes().map(routeToNavItem);
+
+/** Admin navigation items from ADMIN_SECTIONS */
+const adminNavigationItems: NavigationItem[] = ADMIN_SECTIONS.map(adminSectionToNavItem);
 
 /**
  * Props for the Sidebar component
@@ -78,6 +92,7 @@ interface SidebarProps {
  * Application sidebar with navigation links.
  * Features hover-to-expand behavior and unread message badges.
  * Filters navigation based on user permissions.
+ * Shows admin sections when super admin is on /admin/* routes.
  * 
  * @example
  * <Sidebar />
@@ -92,11 +107,19 @@ function SidebarComponent({ onClose }: SidebarProps) {
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
   const { setOpen: setSearchOpen } = useGlobalSearch();
-  const { hasPermission, isAdmin, loading: permissionsLoading } = useRoleAuthorization();
+  const { hasPermission, isAdmin, isSuperAdmin, loading: permissionsLoading } = useRoleAuthorization();
+  
+  // Check if we're on an admin route
+  const isOnAdminRoute = location.pathname.startsWith('/admin');
   
   // Filter navigation items based on permissions and add Dashboard dynamically
   const filteredNavigationItems = useMemo(() => {
     if (permissionsLoading) return navigationItems; // Show all while loading
+    
+    // If super admin is on /admin/* routes, show admin navigation instead
+    if (isSuperAdmin && isOnAdminRoute) {
+      return adminNavigationItems;
+    }
     
     // Start with filtered main nav items
     const baseItems = navigationItems.filter(item => {
@@ -115,11 +138,17 @@ function SidebarComponent({ onClose }: SidebarProps) {
     }
     
     return baseItems;
-  }, [hasPermission, isAdmin, permissionsLoading, allComplete]);
+  }, [hasPermission, isAdmin, isSuperAdmin, isOnAdminRoute, permissionsLoading, allComplete]);
 
   // Filter bottom items - hide "Get set up" when onboarding is complete
   const filteredBottomItems = useMemo(() => {
     if (permissionsLoading) return bottomItems;
+    
+    // On admin routes, don't show regular bottom items except settings
+    if (isSuperAdmin && isOnAdminRoute) {
+      return [];
+    }
+    
     return bottomItems.filter(item => {
       // Hide "Get set up" when onboarding is complete
       if (item.id === 'get-set-up' && allComplete) {
@@ -131,7 +160,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
       if (isAdmin) return true;
       return hasPermission(item.requiredPermission);
     });
-  }, [hasPermission, isAdmin, permissionsLoading, allComplete]);
+  }, [hasPermission, isAdmin, isSuperAdmin, isOnAdminRoute, permissionsLoading, allComplete]);
 
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -155,7 +184,17 @@ function SidebarComponent({ onClose }: SidebarProps) {
         {/* Header with logo */}
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
-            <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
+            {isSuperAdmin && isOnAdminRoute ? (
+              // Admin mode header
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-destructive/10 flex items-center justify-center">
+                  <Shield01 size={14} className="text-destructive" />
+                </div>
+                <span className="text-sm font-semibold text-foreground">Super Admin</span>
+              </div>
+            ) : (
+              <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
+            )}
             {onClose && (
               <button
                 onClick={onClose}
@@ -352,6 +391,30 @@ function SidebarComponent({ onClose }: SidebarProps) {
               </motion.div>
             );
           })}
+          
+          {/* Back to Dashboard link for admin mode */}
+          {isSuperAdmin && isOnAdminRoute && (
+            <motion.div 
+              className="items-center flex w-full py-0.5 mt-2 pt-2 border-t border-border"
+              initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, ...springs.smooth }}
+            >
+              <Link 
+                to="/dashboard"
+                className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+              >
+                <div className="items-center flex gap-2 my-auto w-full">
+                  <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
+                    <ArrowLeft size={14} className="self-stretch my-auto" />
+                  </div>
+                  <div className="text-sm font-normal leading-4 my-auto whitespace-nowrap">
+                    Back to Dashboard
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          )}
         </div>
       </nav>
     </aside>
