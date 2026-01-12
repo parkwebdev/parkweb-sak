@@ -10,7 +10,6 @@ import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
 import type { AdminAccountDetail } from '@/types/admin';
 
 interface AccountUsage {
-  agents: number;
   conversations: number;
   leads: number;
   knowledgeSources: number;
@@ -69,9 +68,8 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         effectiveCompanyPhone = ownerProfile?.company_phone || profile.company_phone;
       }
 
-      // Fetch counts
-      const [agentResult, conversationResult, leadResult, knowledgeResult, locationResult] = await Promise.all([
-        supabase.from('agents').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+      // Fetch counts (without agents)
+      const [conversationResult, leadResult, knowledgeResult, locationResult] = await Promise.all([
         supabase.from('conversations').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('leads').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('knowledge_sources').select('id', { count: 'exact', head: true }).eq('user_id', userId),
@@ -93,7 +91,6 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         plan_name: null,
         subscription_status: null,
         mrr: 0,
-        agent_count: agentResult.count || 0,
         conversation_count: conversationResult.count || 0,
         lead_count: leadResult.count || 0,
         knowledge_source_count: knowledgeResult.count || 0,
@@ -103,7 +100,6 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
       };
 
       const usage: AccountUsage = {
-        agents: agentResult.count || 0,
         conversations: conversationResult.count || 0,
         leads: leadResult.count || 0,
         knowledgeSources: knowledgeResult.count || 0,

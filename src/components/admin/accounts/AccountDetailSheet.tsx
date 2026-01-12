@@ -172,7 +172,6 @@ export function AccountDetailSheet({
             {usage && (
               <AccountUsageCard 
                 usage={{
-                  agentCount: usage.agents,
                   conversationCount: usage.conversations,
                   leadCount: usage.leads,
                   knowledgeSourceCount: usage.knowledgeSources,

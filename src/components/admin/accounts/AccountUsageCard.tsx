@@ -7,11 +7,10 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users01, MessageChatSquare, Target01, BookOpen01 } from '@untitledui/icons';
+import { MessageChatSquare, Target01, BookOpen01, MarkerPin01 } from '@untitledui/icons';
 
 interface AccountUsageCardProps {
   usage: {
-    agentCount: number;
     conversationCount: number;
     leadCount: number;
     knowledgeSourceCount: number;
@@ -24,10 +23,10 @@ interface AccountUsageCardProps {
  */
 export function AccountUsageCard({ usage }: AccountUsageCardProps) {
   const stats = [
-    { label: 'Agents', value: usage.agentCount, icon: Users01 },
     { label: 'Conversations', value: usage.conversationCount, icon: MessageChatSquare },
     { label: 'Leads', value: usage.leadCount, icon: Target01 },
     { label: 'Knowledge Sources', value: usage.knowledgeSourceCount, icon: BookOpen01 },
+    { label: 'Locations', value: usage.locationCount, icon: MarkerPin01 },
   ];
 
   return (
