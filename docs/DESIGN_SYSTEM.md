@@ -203,6 +203,8 @@ All colors are defined as HSL values in CSS custom properties for theme flexibil
 
 ### Status Badge Colors
 
+> **Verified**: 2026-01-12
+
 Semantic tokens for status badges with light/dark mode support:
 
 | Token | Usage | Example |
@@ -212,6 +214,17 @@ Semantic tokens for status badges with light/dark mode support:
 | `--status-published` | Published content | `bg-status-published/10 text-status-published-foreground` |
 | `--status-draft` | Draft content | `bg-status-draft/10 text-status-draft-foreground` |
 | `--status-paused` | Paused states | `bg-status-paused/10 text-status-paused-foreground` |
+| `--status-pending` | Pending/awaiting states | `bg-status-pending/10 text-status-pending-foreground` |
+| `--status-suspended` | Suspended/blocked states | `bg-status-suspended/10 text-status-suspended-foreground` |
+
+**Admin Status Badge Usage:**
+```tsx
+// ✅ Correct - AccountStatusBadge uses semantic tokens
+import { AccountStatusBadge } from '@/components/admin/accounts';
+<AccountStatusBadge status="active" />   // Green tint
+<AccountStatusBadge status="pending" />  // Amber tint  
+<AccountStatusBadge status="suspended" /> // Red tint
+```
 
 ### Priority Colors (Centralized)
 
@@ -1567,6 +1580,89 @@ The system prefers even values (2, 4, 6) but allows intermediate values when vis
 - Webhook configuration forms
 
 > **Note:** This is an enhancement to be applied incrementally. New forms should follow this pattern.
+
+---
+
+## Admin Page Patterns
+
+> **Verified**: 2026-01-12
+
+Admin pages follow the same design patterns as userside pages to ensure consistency across the application.
+
+### TopBar Integration
+
+Admin pages must use the TopBar for:
+- Page title (via `TopBarPageContext`)
+- Search (via `AdminAccountsSearch` or similar)
+- Filter dropdowns (via compact `DropdownMenu` buttons)
+
+**Reference Implementation:**
+```tsx
+// ✅ Correct - Filters in TopBar (AdminAccounts.tsx pattern)
+const topBarConfig = useMemo(() => ({
+  left: (
+    <div className="flex items-center gap-3">
+      <TopBarPageContext icon={Users01} title="Accounts" />
+      <AdminAccountsSearch 
+        value={filters.search || ''} 
+        onChange={(search) => handleFilterChange({ ...filters, search })} 
+      />
+    </div>
+  ),
+  right: (
+    <AdminAccountsFilters
+      filters={filters}
+      onFiltersChange={handleFilterChange}
+    />
+  ),
+}), [filters, handleFilterChange]);
+useTopBar(topBarConfig);
+```
+
+### Compact Filter Dropdowns
+
+Admin filter dropdowns must match userside patterns (`LeadsSortDropdown`, `InboxFilterDropdown`):
+
+```tsx
+// ✅ Correct - Compact dropdown button with chevron
+<Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5">
+  <FilterLines size={14} aria-hidden="true" />
+  <span className="text-xs">Status</span>
+  {activeCount > 0 && (
+    <span className="min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-2xs">
+      {activeCount}
+    </span>
+  )}
+  <ChevronDown size={14} className="text-muted-foreground" aria-hidden="true" />
+</Button>
+
+// ❌ Wrong - Fixed-width Select with tall height
+<SelectTrigger className="w-[140px]">...</SelectTrigger>
+```
+
+### Status Badges
+
+Admin status badges use semantic status colors, not generic badge variants:
+
+```tsx
+// ✅ Correct - Semantic status colors
+const STATUS_STYLES = {
+  active: 'bg-status-active/10 text-status-active-foreground border-status-active/20',
+  pending: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
+  suspended: 'bg-status-suspended/10 text-status-suspended-foreground border-status-suspended/20',
+};
+
+// ❌ Wrong - Generic badge variants
+const variants = { active: 'default', suspended: 'destructive', pending: 'secondary' };
+```
+
+### Admin Components Reference
+
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| `AdminAccountsSearch` | TopBar search for accounts | `components/admin/accounts/` |
+| `AdminAccountsFilters` | Compact filter dropdowns | `components/admin/accounts/` |
+| `AccountStatusBadge` | Semantic status badge | `components/admin/accounts/` |
 
 ---
 

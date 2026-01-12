@@ -7,10 +7,10 @@
  * @module pages/admin/AdminAccounts
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users01 } from '@untitledui/icons';
-import { AccountsTable, AccountFilters, AccountDetailSheet } from '@/components/admin/accounts';
+import { AccountsTable, AccountDetailSheet, AdminAccountsSearch, AdminAccountsFilters } from '@/components/admin/accounts';
 import { useAdminAccounts } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AdminAccountFilters } from '@/types/admin';
@@ -19,16 +19,35 @@ import type { AdminAccountFilters } from '@/types/admin';
  * Accounts management page for Super Admin.
  */
 export function AdminAccounts() {
-  // Configure top bar for this page
-  const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Users01} title="Accounts" />,
-  }), []);
-  useTopBar(topBarConfig);
-
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Partial<AdminAccountFilters>>({});
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+
+  const handleFilterChange = useCallback((newFilters: Partial<AdminAccountFilters>) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page on filter change
+  }, []);
+
+  // Configure top bar with search on left, filters on right
+  const topBarConfig = useMemo(() => ({
+    left: (
+      <div className="flex items-center gap-3">
+        <TopBarPageContext icon={Users01} title="Accounts" />
+        <AdminAccountsSearch 
+          value={filters.search || ''} 
+          onChange={(search) => handleFilterChange({ ...filters, search })} 
+        />
+      </div>
+    ),
+    right: (
+      <AdminAccountsFilters
+        filters={filters}
+        onFiltersChange={handleFilterChange}
+      />
+    ),
+  }), [filters, handleFilterChange]);
+  useTopBar(topBarConfig);
 
   const { accounts, totalCount, loading } = useAdminAccounts({
     ...filters,
@@ -40,20 +59,9 @@ export function AdminAccounts() {
     navigate(`/admin/accounts/${accountId}`);
   };
 
-  const handleFilterChange = (newFilters: Partial<AdminAccountFilters>) => {
-    setFilters(newFilters);
-    setPage(1); // Reset to first page on filter change
-  };
-
   return (
     <div className="p-6 space-y-6">
-      {/* Filters - no header, TopBar handles page title */}
-      <AccountFilters
-        filters={filters as AdminAccountFilters}
-        onFiltersChange={handleFilterChange}
-      />
-
-      {/* Accounts Table */}
+      {/* Accounts Table - filters are now in TopBar */}
       <AccountsTable
         accounts={accounts}
         loading={loading}

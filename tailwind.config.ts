@@ -120,6 +120,14 @@ const config: Config = {
             DEFAULT: "hsl(var(--status-paused))",
             foreground: "hsl(var(--status-paused-foreground))",
           },
+          pending: {
+            DEFAULT: "hsl(var(--status-pending))",
+            foreground: "hsl(var(--status-pending-foreground))",
+          },
+          suspended: {
+            DEFAULT: "hsl(var(--status-suspended))",
+            foreground: "hsl(var(--status-suspended-foreground))",
+          },
         },
         wordpress: "hsl(var(--wordpress))",
         facebook: "hsl(var(--facebook))",

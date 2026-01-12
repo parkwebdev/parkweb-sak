@@ -126,6 +126,10 @@
     --status-draft-foreground: 0 0% 35%;
     --status-paused: 38 92% 50%;
     --status-paused-foreground: 38 92% 40%;
+    --status-pending: 38 92% 50%;
+    --status-pending-foreground: 38 92% 40%;
+    --status-suspended: 0 84% 60%;
+    --status-suspended-foreground: 0 84% 45%;
     
     /* Brand Colors (external platforms) */
     --wordpress: 201 100% 37%;
