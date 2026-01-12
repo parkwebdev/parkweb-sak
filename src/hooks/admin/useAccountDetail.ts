@@ -46,6 +46,29 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         .eq('user_id', userId)
         .maybeSingle();
 
+      // Check if this user is a team member (get owner's company info)
+      const { data: teamMemberData } = await supabase
+        .from('team_members')
+        .select('owner_id')
+        .eq('member_id', userId)
+        .maybeSingle();
+
+      let effectiveCompanyName = profile.company_name;
+      let effectiveCompanyAddress = profile.company_address;
+      let effectiveCompanyPhone = profile.company_phone;
+
+      if (teamMemberData?.owner_id) {
+        const { data: ownerProfile } = await supabase
+          .from('profiles')
+          .select('company_name, company_address, company_phone')
+          .eq('user_id', teamMemberData.owner_id)
+          .maybeSingle();
+        
+        effectiveCompanyName = ownerProfile?.company_name || profile.company_name;
+        effectiveCompanyAddress = ownerProfile?.company_address || profile.company_address;
+        effectiveCompanyPhone = ownerProfile?.company_phone || profile.company_phone;
+      }
+
       // Fetch counts
       const [agentResult, conversationResult, leadResult, knowledgeResult, locationResult] = await Promise.all([
         supabase.from('agents').select('id', { count: 'exact', head: true }).eq('user_id', userId),
@@ -60,9 +83,9 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         user_id: profile.user_id,
         email: profile.email || '',
         display_name: profile.display_name,
-        company_name: profile.company_name,
-        company_address: profile.company_address,
-        company_phone: profile.company_phone,
+        company_name: effectiveCompanyName,
+        company_address: effectiveCompanyAddress,
+        company_phone: effectiveCompanyPhone,
         avatar_url: profile.avatar_url,
         created_at: profile.created_at,
         role: roleData?.role || 'user',
