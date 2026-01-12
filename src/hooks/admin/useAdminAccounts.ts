@@ -49,7 +49,9 @@ export function useAdminAccounts(options: UseAdminAccountsOptions = {}): UseAdmi
           company_name,
           avatar_url,
           email,
-          created_at
+          created_at,
+          last_login_at,
+          status
         `, { count: 'exact' });
 
       // Apply search filter
@@ -123,8 +125,9 @@ export function useAdminAccounts(options: UseAdminAccountsOptions = {}): UseAdmi
           company_name: effectiveCompanyName,
           avatar_url: profile.avatar_url,
           created_at: profile.created_at,
+          last_login_at: profile.last_login_at,
           role: roleMap.get(profile.user_id) || 'user',
-          status: 'active' as const,
+          status: (profile.status || 'active') as 'active' | 'inactive' | 'suspended',
           plan_name: null,
           subscription_status: null,
           mrr: 0,
