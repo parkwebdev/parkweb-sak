@@ -1766,6 +1766,92 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_kb_articles: {
+        Row: {
+          category_id: string
+          content: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          icon_name: string | null
+          id: string
+          is_published: boolean | null
+          order_index: number | null
+          slug: string
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          category_id: string
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          is_published?: boolean | null
+          order_index?: number | null
+          slug: string
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          category_id?: string
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          is_published?: boolean | null
+          order_index?: number | null
+          slug?: string
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_kb_articles_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "platform_kb_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_kb_categories: {
+        Row: {
+          color: string
+          created_at: string | null
+          icon_name: string
+          id: string
+          label: string
+          order_index: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          color: string
+          created_at?: string | null
+          icon_name: string
+          id: string
+          label: string
+          order_index?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          icon_name?: string
+          id?: string
+          label?: string
+          order_index?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

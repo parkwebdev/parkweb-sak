@@ -94,4 +94,12 @@ export const adminQueryKeys = {
     current: () => [...adminQueryKeys.impersonation.all(), 'current'] as const,
     sessions: () => [...adminQueryKeys.impersonation.all(), 'sessions'] as const,
   },
+
+  // Platform Knowledge Base
+  platformKB: {
+    all: () => [...adminQueryKeys.all, 'platformKB'] as const,
+    articles: () => [...adminQueryKeys.platformKB.all(), 'articles'] as const,
+    article: (articleId: string) => [...adminQueryKeys.platformKB.all(), 'article', articleId] as const,
+    categories: () => [...adminQueryKeys.platformKB.all(), 'categories'] as const,
+  },
 } as const;

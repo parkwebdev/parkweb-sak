@@ -17,3 +17,5 @@ export { useRevenueAnalytics } from './useRevenueAnalytics';
 export { useAdminAuditLog } from './useAdminAuditLog';
 export { useImpersonation } from './useImpersonation';
 export { useAuditAction } from './useAuditAction';
+export { usePlatformKBArticles } from './usePlatformKBArticles';
+export { usePlatformKBCategories } from './usePlatformKBCategories';
