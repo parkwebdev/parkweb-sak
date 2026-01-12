@@ -47,17 +47,7 @@ export function AdminAccounts() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-semibold text-foreground">Accounts</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage user accounts and subscriptions
-          </p>
-        </div>
-      </div>
-
-      {/* Filters */}
+      {/* Filters - no header, TopBar handles page title */}
       <AccountFilters
         filters={filters as AdminAccountFilters}
         onFiltersChange={handleFilterChange}

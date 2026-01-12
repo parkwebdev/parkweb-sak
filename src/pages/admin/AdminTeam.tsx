@@ -7,21 +7,20 @@
  * @module pages/admin/AdminTeam
  */
 
-import { useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Users02 } from '@untitledui/icons';
 import { PilotTeamTable } from '@/components/admin/team';
 import { useAdminTeam } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { Button } from '@/components/ui/button';
+import { InviteTeamMemberDialog } from '@/components/admin/team/InviteTeamMemberDialog';
 
 /**
  * Pilot team management page for Super Admin.
  */
 export function AdminTeam() {
-  // Configure top bar for this page
-  const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Users02} title="Pilot Team" />,
-  }), []);
-  useTopBar(topBarConfig);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
 
   const { 
     team, 
@@ -32,24 +31,41 @@ export function AdminTeam() {
     isRemoving 
   } = useAdminTeam();
 
+  const handleInvite = useCallback(async () => {
+    await inviteMember(inviteEmail);
+    setInviteEmail('');
+    setInviteOpen(false);
+  }, [inviteMember, inviteEmail]);
+
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Users02} title="Pilot Team" />,
+    right: (
+      <Button size="sm" onClick={() => setInviteOpen(true)}>
+        Invite Member
+      </Button>
+    ),
+  }), []);
+  useTopBar(topBarConfig);
+
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-base font-semibold text-foreground">Pilot Team</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage internal team members and permissions
-        </p>
-      </div>
-
-      {/* Team Table */}
+      {/* Team Table - no header, TopBar handles page title */}
       <PilotTeamTable
         team={team}
         loading={loading}
-        onInvite={inviteMember}
         onRemove={removeMember}
-        isInviting={isInviting}
         isRemoving={isRemoving}
+      />
+
+      {/* Invite Dialog */}
+      <InviteTeamMemberDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        email={inviteEmail}
+        onEmailChange={setInviteEmail}
+        onInvite={handleInvite}
+        isInviting={isInviting}
       />
     </div>
   );

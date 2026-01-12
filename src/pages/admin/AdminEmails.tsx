@@ -33,15 +33,7 @@ export function AdminEmails() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-base font-semibold text-foreground">Emails</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage email templates and feature announcements
-        </p>
-      </div>
-
-      {/* Delivery Stats */}
+      {/* Delivery Stats - no header, TopBar handles page title */}
       <EmailDeliveryStats stats={stats} loading={loading} />
 
       {/* Tabs */}

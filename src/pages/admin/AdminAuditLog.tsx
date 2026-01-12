@@ -41,17 +41,7 @@ export function AdminAuditLog() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-base font-semibold text-foreground">Audit Log</h1>
-          <p className="text-sm text-muted-foreground">
-            View all administrative actions and changes
-          </p>
-        </div>
-      </div>
-
-      {/* Log Table - contains filters and export button */}
+      {/* Log Table - contains filters and export button, no header needed */}
       <AuditLogTable
         entries={entries}
         loading={loading}

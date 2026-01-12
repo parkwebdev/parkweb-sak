@@ -78,7 +78,6 @@ export function PromptTestChat({ baselinePrompt }: PromptTestChatProps) {
           </div>
           {messages.length > 0 && (
             <Button variant="ghost" size="sm" onClick={handleClear}>
-              <Trash01 size={14} className="mr-1" aria-hidden="true" />
               Clear
             </Button>
           )}
