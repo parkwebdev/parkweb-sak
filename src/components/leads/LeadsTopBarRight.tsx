@@ -8,7 +8,8 @@
  */
 
 import { useState, useCallback, useMemo, memo, useRef, useEffect } from 'react';
-import { Download01, LayersThree01 } from '@untitledui/icons';
+import { LayersThree01 } from '@untitledui/icons';
+import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { useTeam } from '@/hooks/useTeam';
 import { useCanManage } from '@/hooks/useCanManage';
@@ -181,7 +182,7 @@ export const LeadsTopBarRight = memo(function LeadsTopBarRight({
         size="sm"
         onClick={handleOpenExport}
       >
-        <Download01 size={16} />
+        <CsvExportIcon size={16} />
       </IconButton>
       {canManageLeads && (
         <IconButton

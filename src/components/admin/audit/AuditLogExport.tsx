@@ -7,7 +7,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Download01 } from '@untitledui/icons';
+import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 
 interface AuditLogExportProps {
   /** Callback when export is clicked */
@@ -20,7 +20,7 @@ interface AuditLogExportProps {
 export function AuditLogExport({ onExport }: AuditLogExportProps) {
   return (
     <Button variant="outline" size="sm" onClick={onExport}>
-      <Download01 size={14} className="mr-1" aria-hidden="true" />
+      <CsvExportIcon size={14} className="mr-1" />
       Export CSV
     </Button>
   );
