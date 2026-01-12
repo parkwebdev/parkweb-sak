@@ -23,7 +23,7 @@ import type { AuditAction, AuditTargetType } from '@/types/admin';
 interface FilterProps {
   action?: AuditAction;
   targetType?: AuditTargetType;
-  search: string;
+  search?: string;
 }
 
 interface AuditLogFiltersProps {

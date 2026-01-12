@@ -9,7 +9,7 @@
 
 import { useState, useMemo } from 'react';
 import { ClipboardCheck } from '@untitledui/icons';
-import { AuditLogTable, AuditLogFilters, AuditLogExport } from '@/components/admin/audit';
+import { AuditLogTable } from '@/components/admin/audit';
 import { useAdminAuditLog } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AuditLogFilters as AuditLogFiltersType } from '@/types/admin';
@@ -49,15 +49,9 @@ export function AdminAuditLog() {
             View all administrative actions and changes
           </p>
         </div>
-        <AuditLogExport onExport={() => {}} />
       </div>
 
-      {/* Filters */}
-      <AuditLogFilters
-        onApply={handleFiltersChange}
-      />
-
-      {/* Log Table */}
+      {/* Log Table - contains filters and export button */}
       <AuditLogTable
         entries={entries}
         loading={loading}
