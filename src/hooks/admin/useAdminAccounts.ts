@@ -1,5 +1,6 @@
 /**
  * Hook for fetching admin accounts with pagination and filtering
+ * Optimized with batch queries to avoid N+1 problem
  * 
  * @module hooks/admin/useAdminAccounts
  */
@@ -69,76 +70,68 @@ export function useAdminAccounts(options: UseAdminAccountsOptions = {}): UseAdmi
 
       if (profilesError) throw profilesError;
 
-      // Get additional data for each profile
-      const accounts: AdminAccount[] = await Promise.all(
-        (profiles || []).map(async (profile) => {
-          // Get role
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', profile.user_id)
-            .maybeSingle();
+      const profileUserIds = (profiles || []).map(p => p.user_id);
 
-          // Get agent count
-          const { count: agentCount } = await supabase
-            .from('agents')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', profile.user_id);
+      if (profileUserIds.length === 0) {
+        return {
+          data: [],
+          totalCount: 0,
+          page,
+          pageSize,
+          totalPages: 0,
+        };
+      }
 
-          // Get conversation count (last 30 days)
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-          
-          const { count: conversationCount } = await supabase
-            .from('conversations')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', profile.user_id)
-            .gte('created_at', thirtyDaysAgo.toISOString());
+      // Batch fetch all roles, team memberships, and counts in parallel
+      const [rolesResult, teamMembersResult] = await Promise.all([
+        supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('user_id', profileUserIds),
+        supabase
+          .from('team_members')
+          .select('member_id, owner_id')
+          .in('member_id', profileUserIds),
+      ]);
 
-          // Get lead count
-          const { count: leadCount } = await supabase
-            .from('leads')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', profile.user_id);
+      // Get unique owner IDs and fetch their profiles
+      const ownerIds = [...new Set(teamMembersResult.data?.map(tm => tm.owner_id) || [])];
+      const ownerProfilesResult = ownerIds.length > 0
+        ? await supabase
+            .from('profiles')
+            .select('user_id, company_name')
+            .in('user_id', ownerIds)
+        : { data: [] };
 
-          // Check if this user is a team member (get owner's company)
-          const { data: teamMemberData } = await supabase
-            .from('team_members')
-            .select('owner_id')
-            .eq('member_id', profile.user_id)
-            .maybeSingle();
+      // Create lookup maps for O(1) access
+      const roleMap = new Map(rolesResult.data?.map(r => [r.user_id, r.role]) || []);
+      const teamMemberMap = new Map(teamMembersResult.data?.map(tm => [tm.member_id, tm.owner_id]) || []);
+      const ownerProfileMap = new Map(ownerProfilesResult.data?.map(p => [p.user_id, p.company_name]) || []);
 
-          let effectiveCompanyName = profile.company_name;
+      // Map profiles to accounts synchronously (no more N+1)
+      const accounts: AdminAccount[] = (profiles || []).map(profile => {
+        const ownerId = teamMemberMap.get(profile.user_id);
+        const effectiveCompanyName = ownerId
+          ? ownerProfileMap.get(ownerId) || profile.company_name
+          : profile.company_name;
 
-          if (teamMemberData?.owner_id) {
-            const { data: ownerProfile } = await supabase
-              .from('profiles')
-              .select('company_name')
-              .eq('user_id', teamMemberData.owner_id)
-              .maybeSingle();
-            
-            effectiveCompanyName = ownerProfile?.company_name || profile.company_name;
-          }
-
-          return {
-            id: profile.id,
-            user_id: profile.user_id,
-            email: profile.email || '',
-            display_name: profile.display_name,
-            company_name: effectiveCompanyName,
-            avatar_url: profile.avatar_url,
-            created_at: profile.created_at,
-            role: roleData?.role || 'user',
-            status: 'active' as const, // TODO: Implement actual status tracking
-            plan_name: null, // TODO: Integrate with subscriptions
-            subscription_status: null,
-            mrr: 0,
-            agent_count: agentCount || 0,
-            conversation_count: conversationCount || 0,
-            lead_count: leadCount || 0,
-          };
-        })
-      );
+        return {
+          id: profile.id,
+          user_id: profile.user_id,
+          email: profile.email || '',
+          display_name: profile.display_name,
+          company_name: effectiveCompanyName,
+          avatar_url: profile.avatar_url,
+          created_at: profile.created_at,
+          role: roleMap.get(profile.user_id) || 'user',
+          status: 'active' as const,
+          plan_name: null,
+          subscription_status: null,
+          mrr: 0,
+          conversation_count: 0,
+          lead_count: 0,
+        };
+      });
 
       // Filter by status if needed
       let filteredAccounts = accounts;

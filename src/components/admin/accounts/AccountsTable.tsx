@@ -87,12 +87,6 @@ export function AccountsTable({
           <span className="text-sm">{getValue() || 'Free'}</span>
         ),
       }),
-      columnHelper.accessor('agent_count', {
-        header: 'Agents',
-        cell: ({ getValue }) => (
-          <span className="text-sm font-mono">{getValue()}</span>
-        ),
-      }),
       columnHelper.accessor('conversation_count', {
         header: 'Convos (30d)',
         cell: ({ getValue }) => (
