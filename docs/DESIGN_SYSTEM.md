@@ -1693,6 +1693,161 @@ All icon-only buttons in admin components MUST use `IconButton` with a `label` p
 
 ---
 
+## Reusable Chart Patterns
+
+These patterns are used consistently across Analytics and Admin Revenue pages.
+
+### MetricCardWithChart
+
+Use for KPI cards that display a single value with trend indicator and sparkline.
+
+**When to use:**
+- Dashboard overview sections with multiple KPIs
+- Metrics that have historical trend data
+- When you need to show both the current value AND directional trend
+
+**Props:**
+| Prop | Type | Description |
+|------|------|-------------|
+| `title` | string | The main value (e.g., "$4,500") |
+| `subtitle` | string | Label for the metric (e.g., "Monthly Revenue") |
+| `description` | string | Brief explanation of the metric |
+| `change` | number | Percentage or points change |
+| `changeType` | 'percentage' \| 'points' | How to display change |
+| `chartData` | { value: number }[] | Sparkline data (last 7 points) |
+| `animationDelay` | number | Stagger delay in seconds |
+
+**Example:**
+```tsx
+import { MetricCardWithChart } from '@/components/analytics/MetricCardWithChart';
+
+<MetricCardWithChart
+  title="$4,500"
+  subtitle="Monthly Revenue"
+  description="Total MRR from subscriptions"
+  change={12.5}
+  changeType="percentage"
+  chartData={revenueHistory.slice(-7).map(d => ({ value: d.mrr }))}
+  animationDelay={0.1}
+/>
+```
+
+---
+
+### ChartCardHeader
+
+Use as the header for any chart card to provide consistent title, trend, and context.
+
+**When to use:**
+- Any Card containing a chart or data visualization
+- When you want to show a trend indicator with the title
+- When you need a `rightSlot` for controls (dropdowns, filters)
+
+**Props:**
+| Prop | Type | Description |
+|------|------|-------------|
+| `title` | string | Chart title |
+| `trendValue` | number | Trend percentage (optional) |
+| `trendLabel` | string | What is trending (e.g., "MRR") |
+| `trendPeriod` | string | Period (e.g., "this month") |
+| `contextSummary` | string | Summary text below title |
+| `rightSlot` | ReactNode | Optional controls on right side |
+
+**Example:**
+```tsx
+import { ChartCardHeader } from '@/components/analytics/ChartCardHeader';
+
+<ChartCardHeader
+  title="MRR Over Time"
+  trendValue={8.5}
+  trendLabel="MRR"
+  trendPeriod="vs last month"
+  contextSummary="$24,500 current MRR across 12 months"
+  rightSlot={<DateRangeSelector />}
+/>
+```
+
+---
+
+### ChartTooltipContent
+
+Use for consistent tooltip styling across all Recharts visualizations.
+
+**When to use:**
+- Any Recharts `<Tooltip>` component
+- Ensures consistent card-like styling with proper colors
+
+**Example:**
+```tsx
+import { ChartTooltipContent } from '@/components/charts/charts-base';
+
+<Tooltip
+  content={<ChartTooltipContent />}
+  formatter={(value) => formatCurrency(Number(value))}
+  labelFormatter={(label) => String(label)}
+  cursor={{
+    stroke: 'hsl(var(--primary))',
+    strokeWidth: 1,
+    strokeDasharray: '4 4',
+  }}
+/>
+```
+
+---
+
+### Standard Chart Footer
+
+All chart cards should include a context summary footer.
+
+**Pattern:**
+```tsx
+<div className="mt-4 px-3 py-2 bg-muted/50 rounded-md">
+  <p className="text-xs text-muted-foreground">
+    Showing {data.length} months of data
+  </p>
+</div>
+```
+
+---
+
+### Animation Pattern
+
+All chart components must respect reduced motion preferences.
+
+**Pattern:**
+```tsx
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+const prefersReducedMotion = useReducedMotion();
+
+<Line
+  isAnimationActive={!prefersReducedMotion}
+  animationDuration={800}
+  animationEasing="ease-out"
+/>
+```
+
+---
+
+### Verified Components Using These Patterns
+
+**Analytics:**
+- `MetricCardWithChart` - KPI cards with sparklines
+- `ConversationFunnelCard` - Funnel with animations and tooltips
+- `TopPagesChart` - Horizontal bars with ChartCardHeader
+- `TrafficSourceChart` - Bars with trend indicators
+- `BookingTrendChart` - Stacked area with ChartCardHeader
+
+**Admin Revenue:**
+- `RevenueOverview` - Uses MetricCardWithChart
+- `MRRChart` - Uses ChartCardHeader, ChartTooltipContent, footer
+- `ChurnChart` - Uses ChartCardHeader, ChartTooltipContent, footer
+- `SubscriptionFunnel` - Matches ConversationFunnelCard pattern
+- `RevenueByPlan` - Uses ChartCardHeader, ChartTooltipContent, footer
+- `TopAccountsTable` - Uses ChartCardHeader, footer
+
+---
+
 ## Related Documentation
 
 - [Component Patterns](./COMPONENT_PATTERNS.md) - Component patterns and motion
