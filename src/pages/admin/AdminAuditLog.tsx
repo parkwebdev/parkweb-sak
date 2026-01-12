@@ -7,31 +7,58 @@
  * @module pages/admin/AdminAuditLog
  */
 
-import { ClipboardCheck } from '@untitledui/icons';
+import { useState } from 'react';
+import { AuditLogTable, AuditLogFilters, AuditLogExport } from '@/components/admin/audit';
+import { useAdminAuditLog } from '@/hooks/admin';
+import type { AuditLogFilters as AuditLogFiltersType } from '@/types/admin';
 
 /**
  * Audit log viewer page for Super Admin.
  */
 export function AdminAuditLog() {
+  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<Partial<AuditLogFiltersType>>({});
+  const pageSize = 50;
+
+  const { entries, totalCount, loading } = useAdminAuditLog({
+    ...filters,
+    page,
+    pageSize,
+  });
+
+  const handleFiltersChange = (newFilters: Partial<AuditLogFiltersType>) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-base font-semibold text-foreground">Audit Log</h1>
-        <p className="text-sm text-muted-foreground">
-          View all administrative actions and changes
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-base font-semibold text-foreground">Audit Log</h1>
+          <p className="text-sm text-muted-foreground">
+            View all administrative actions and changes
+          </p>
+        </div>
+        <AuditLogExport onExport={() => {}} />
       </div>
 
-      {/* Placeholder */}
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-          <ClipboardCheck size={24} className="text-muted-foreground" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Audit log components will be implemented in Phase 4.
-        </p>
-      </div>
+      {/* Filters */}
+      <AuditLogFilters
+        onApply={handleFiltersChange}
+      />
+
+      {/* Log Table */}
+      <AuditLogTable
+        entries={entries}
+        loading={loading}
+        totalCount={totalCount}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onFiltersChange={handleFiltersChange}
+      />
     </div>
   );
 }

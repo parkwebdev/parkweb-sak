@@ -7,12 +7,36 @@
  * @module pages/admin/AdminAccounts
  */
 
-import { Users01 } from '@untitledui/icons';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AccountsTable, AccountFilters, AccountDetailSheet } from '@/components/admin/accounts';
+import { useAdminAccounts } from '@/hooks/admin';
+import type { AdminAccountFilters } from '@/types/admin';
 
 /**
  * Accounts management page for Super Admin.
  */
 export function AdminAccounts() {
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<Partial<AdminAccountFilters>>({});
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+
+  const { accounts, totalCount, loading } = useAdminAccounts({
+    ...filters,
+    page,
+    pageSize: 25,
+  });
+
+  const handleSelectAccount = (accountId: string) => {
+    navigate(`/admin/accounts/${accountId}`);
+  };
+
+  const handleFilterChange = (newFilters: Partial<AdminAccountFilters>) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page on filter change
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -25,15 +49,29 @@ export function AdminAccounts() {
         </div>
       </div>
 
-      {/* Placeholder */}
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-          <Users01 size={24} className="text-muted-foreground" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Account management components will be implemented in Phase 4.
-        </p>
-      </div>
+      {/* Filters */}
+      <AccountFilters
+        filters={filters as AdminAccountFilters}
+        onFiltersChange={handleFilterChange}
+      />
+
+      {/* Accounts Table */}
+      <AccountsTable
+        accounts={accounts}
+        loading={loading}
+        totalCount={totalCount}
+        page={page}
+        pageSize={25}
+        onPageChange={setPage}
+        onSelectAccount={handleSelectAccount}
+      />
+
+      {/* Detail Sheet (optional - can navigate to detail page instead) */}
+      <AccountDetailSheet
+        accountId={selectedAccountId}
+        open={!!selectedAccountId}
+        onOpenChange={(open) => !open && setSelectedAccountId(null)}
+      />
     </div>
   );
 }
