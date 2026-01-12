@@ -3320,6 +3320,184 @@ useRegisterSectionActions('locations', sectionActions);
 
 ---
 
+## Super Admin Hooks
+
+Hooks for the Super Admin Dashboard, located in `src/hooks/admin/`.
+
+### useAdminAccounts
+
+Fetches all platform accounts with pagination and filtering.
+
+```tsx
+import { useAdminAccounts } from '@/hooks/admin';
+
+const { accounts, totalCount, loading, refetch } = useAdminAccounts({
+  search: 'john',
+  status: 'active', // 'all' | 'active' | 'suspended'
+  page: 1,
+  pageSize: 25,
+});
+```
+
+---
+
+### useAccountDetail
+
+Fetches detailed account information including usage stats.
+
+```tsx
+import { useAccountDetail } from '@/hooks/admin';
+
+const { account, loading, suspendAccount, activateAccount } = useAccountDetail(userId);
+```
+
+---
+
+### usePlatformConfig
+
+Manages platform configuration values.
+
+```tsx
+import { usePlatformConfig } from '@/hooks/admin';
+
+const { config, loading, updateConfig, isUpdating } = usePlatformConfig('baseline_prompt');
+```
+
+---
+
+### useAdminPlans
+
+Manages subscription plans CRUD.
+
+```tsx
+import { useAdminPlans } from '@/hooks/admin';
+
+const { plans, loading, createPlan, updatePlan, deletePlan } = useAdminPlans();
+```
+
+---
+
+### useAdminSubscriptions
+
+Fetches all subscriptions across the platform.
+
+```tsx
+import { useAdminSubscriptions } from '@/hooks/admin';
+
+const { subscriptions, activeSubscriptions, loading } = useAdminSubscriptions();
+```
+
+---
+
+### useAdminTeam
+
+Manages Pilot internal team members.
+
+```tsx
+import { useAdminTeam } from '@/hooks/admin';
+
+const { team, loading, inviteMember, removeMember, isInviting } = useAdminTeam();
+```
+
+---
+
+### useImpersonation
+
+Manages user impersonation sessions.
+
+```tsx
+import { useImpersonation } from '@/hooks/admin';
+
+const { 
+  isImpersonating, 
+  targetUser, 
+  startImpersonation, 
+  endImpersonation,
+  loading 
+} = useImpersonation();
+```
+
+---
+
+### useAdminArticles
+
+Manages help articles for the knowledge base.
+
+```tsx
+import { useAdminArticles } from '@/hooks/admin';
+
+const { articles, loading, createArticle, updateArticle, deleteArticle } = useAdminArticles();
+```
+
+---
+
+### useAdminCategories
+
+Manages help categories.
+
+```tsx
+import { useAdminCategories } from '@/hooks/admin';
+
+const { categories, loading, createCategory, updateCategory, deleteCategory } = useAdminCategories();
+```
+
+---
+
+### useEmailDeliveryLogs
+
+Fetches email delivery logs and statistics.
+
+```tsx
+import { useEmailDeliveryLogs } from '@/hooks/admin';
+
+const { logs, stats, loading } = useEmailDeliveryLogs();
+```
+
+---
+
+### useRevenueAnalytics
+
+Fetches revenue metrics from Stripe data.
+
+```tsx
+import { useRevenueAnalytics } from '@/hooks/admin';
+
+const { data, loading } = useRevenueAnalytics();
+// data.mrr, data.arr, data.churnRate, data.mrrHistory, etc.
+```
+
+---
+
+### useAdminAuditLog
+
+Fetches audit log entries with pagination and filtering.
+
+```tsx
+import { useAdminAuditLog } from '@/hooks/admin';
+
+const { entries, totalCount, loading } = useAdminAuditLog({
+  action: 'impersonation_start',
+  page: 1,
+  pageSize: 50,
+});
+```
+
+---
+
+### useAuditAction
+
+Logs admin actions to the audit log.
+
+```tsx
+import { useAuditAction } from '@/hooks/admin';
+
+const { logAction } = useAuditAction();
+
+await logAction('account_suspend', 'account', userId, userEmail, { reason: 'TOS violation' });
+```
+
+---
+
 ## Related Documentation
 
 - [Database Schema](./DATABASE_SCHEMA.md) - Data fetching patterns
@@ -3327,3 +3505,4 @@ useRegisterSectionActions('locations', sectionActions);
 - [Design System](./DESIGN_SYSTEM.md) - UI guidelines
 - [Component Patterns](./COMPONENT_PATTERNS.md) - TopBar System patterns
 - [PDF Generator](./PDF_GENERATOR.md) - PDF report generation
+- [Super Admin Dashboard](./SUPER_ADMIN_DASHBOARD.md) - Complete admin implementation

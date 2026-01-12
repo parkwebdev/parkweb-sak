@@ -236,7 +236,26 @@ WITH CHECK (auth.uid() = user_id);
 | `manager` | Manage agents, conversations, leads, knowledge |
 | `member` | View and respond to conversations, basic access |
 
-> **Note:** `super_admin` exists in the database for internal platform operations only and is never shown in the UI.
+### Super Admin Access
+
+The `super_admin` role provides platform-wide administrative access for internal Pilot team members. Super admins can:
+
+- **Manage Accounts**: View all accounts, suspend/activate users, impersonate for support
+- **Platform Config**: Update baseline prompts, security guardrails, feature flags
+- **Subscription Management**: Manage plans, view all subscriptions, sync Stripe data
+- **Knowledge Base**: Edit help articles and categories platform-wide
+- **Revenue Analytics**: Access MRR, churn, and subscription metrics
+- **Audit Log**: View all administrative actions for compliance
+
+**Access Path:** `/admin/*` routes with `PermissionGuard superAdminOnly`
+
+**Security Layers:**
+1. Router-level guard via `SuperAdminOnly` flag in route config
+2. Layout-level verification in `AdminLayout` component
+3. RLS policies using `is_super_admin(auth.uid())` function
+4. Edge function role verification for sensitive operations
+
+See [Super Admin Dashboard](./SUPER_ADMIN_DASHBOARD.md) for complete implementation details.
 
 ### Real-time Architecture
 

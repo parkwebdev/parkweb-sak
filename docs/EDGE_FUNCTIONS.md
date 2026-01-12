@@ -1819,6 +1819,105 @@ View logs at: `https://supabase.com/dashboard/project/{project_id}/functions/{fu
 
 ---
 
+## Super Admin Functions
+
+Edge functions for the Super Admin Dashboard.
+
+### `admin-impersonate`
+
+Manages user impersonation sessions for support.
+
+**Authentication:** Authenticated (requires `super_admin` role)
+
+**Endpoint:** `POST /functions/v1/admin-impersonate`
+
+**Request Body:**
+```typescript
+// Start impersonation
+{
+  action: 'start';
+  targetUserId: string;
+  reason: string; // Required for audit
+}
+
+// End impersonation
+{
+  action: 'end';
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  session?: {
+    id: string;
+    targetUserId: string;
+    targetUserEmail: string;
+    startedAt: string;
+    expiresAt: string;
+  };
+}
+```
+
+**Security:**
+- Verifies caller has `super_admin` role
+- Logs all actions to `admin_audit_log`
+- Rate limited: 5 sessions per hour per admin
+- Sessions auto-expire after 30 minutes
+- Cannot impersonate other super_admins
+
+---
+
+### `admin-stripe-sync`
+
+Syncs subscription data from Stripe for revenue analytics.
+
+**Authentication:** Authenticated (requires `super_admin` role)
+
+**Endpoint:** `POST /functions/v1/admin-stripe-sync`
+
+**Request Body:**
+```typescript
+{
+  action: 'sync_all' | 'sync_customer';
+  customerId?: string; // Required for sync_customer
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  syncedCount: number;
+  errors?: Array<{ customerId: string; error: string }>;
+}
+```
+
+---
+
+### `resend-webhook`
+
+Handles Resend email delivery webhooks.
+
+**Authentication:** Public (signature verified via Svix headers)
+
+**Endpoint:** `POST /functions/v1/resend-webhook`
+
+**Webhook Events:**
+- `email.sent` - Email accepted
+- `email.delivered` - Successfully delivered
+- `email.bounced` - Hard/soft bounce
+- `email.complained` - Spam complaint
+- `email.opened` - Email opened
+- `email.clicked` - Link clicked
+
+**Security:**
+- Validates Svix signature headers
+- Updates `email_delivery_logs` table
+
+---
+
 ## Related Documentation
 
 - [Hooks Reference](./HOOKS_REFERENCE.md) - Client-side Supabase patterns
@@ -1826,3 +1925,4 @@ View logs at: `https://supabase.com/dashboard/project/{project_id}/functions/{fu
 - [AI Architecture](./AI_ARCHITECTURE.md) - AI-related edge function details
 - [Database Schema](./DATABASE_SCHEMA.md) - Table structures and relationships
 - [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget-specific functions
+- [Super Admin Dashboard](./SUPER_ADMIN_DASHBOARD.md) - Complete admin implementation
