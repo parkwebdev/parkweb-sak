@@ -16,7 +16,7 @@ export const adminQueryKeys = {
   accounts: {
     all: () => [...adminQueryKeys.all, 'accounts'] as const,
     list: (filters: Partial<AdminAccountFilters>, page: number, pageSize: number) =>
-      [...adminQueryKeys.accounts.all(), 'list', { filters, page, pageSize }] as const,
+      [...adminQueryKeys.accounts.all(), 'list', JSON.stringify(filters), page, pageSize] as const,
     detail: (userId: string) => [...adminQueryKeys.accounts.all(), 'detail', userId] as const,
     usage: (userId: string) => [...adminQueryKeys.accounts.all(), 'usage', userId] as const,
   },
@@ -68,15 +68,15 @@ export const adminQueryKeys = {
     templates: () => [...adminQueryKeys.emails.all(), 'templates'] as const,
     template: (templateId: string) => [...adminQueryKeys.emails.all(), 'template', templateId] as const,
     deliveryLogs: (filters?: Record<string, unknown>) =>
-      [...adminQueryKeys.emails.all(), 'delivery-logs', filters] as const,
+      [...adminQueryKeys.emails.all(), 'delivery-logs', JSON.stringify(filters)] as const,
     deliveryStats: () => [...adminQueryKeys.emails.all(), 'delivery-stats'] as const,
   },
 
   // Revenue analytics
   revenue: {
     all: () => [...adminQueryKeys.all, 'revenue'] as const,
-    analytics: (dateRange: { from: Date; to: Date }) =>
-      [...adminQueryKeys.revenue.all(), 'analytics', dateRange] as const,
+    analytics: (dateRange: { from: string; to: string }) =>
+      [...adminQueryKeys.revenue.all(), 'analytics', dateRange.from, dateRange.to] as const,
     mrr: () => [...adminQueryKeys.revenue.all(), 'mrr'] as const,
   },
 
@@ -84,7 +84,7 @@ export const adminQueryKeys = {
   audit: {
     all: () => [...adminQueryKeys.all, 'audit'] as const,
     list: (filters: Partial<AuditLogFilters>, page: number, pageSize: number) =>
-      [...adminQueryKeys.audit.all(), 'list', { filters, page, pageSize }] as const,
+      [...adminQueryKeys.audit.all(), 'list', JSON.stringify(filters), page, pageSize] as const,
     entry: (entryId: string) => [...adminQueryKeys.audit.all(), 'entry', entryId] as const,
   },
 
