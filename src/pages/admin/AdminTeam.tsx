@@ -2,25 +2,25 @@
  * Admin Team Page
  * 
  * Manage the internal Pilot team.
- * Add/remove super_admin and internal users.
+ * Add/remove super_admin and pilot_support users.
  * 
  * @module pages/admin/AdminTeam
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { Users02 } from '@untitledui/icons';
 import { PilotTeamTable } from '@/components/admin/team';
 import { useAdminTeam } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
 import { InviteTeamMemberDialog } from '@/components/admin/team';
+import type { InvitePilotMemberData } from '@/types/admin';
 
 /**
  * Pilot team management page for Super Admin.
  */
 export function AdminTeam() {
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
 
   const { 
     team, 
@@ -31,11 +31,9 @@ export function AdminTeam() {
     isRemoving 
   } = useAdminTeam();
 
-  const handleInvite = useCallback(async () => {
-    await inviteMember(inviteEmail);
-    setInviteEmail('');
-    setInviteOpen(false);
-  }, [inviteMember, inviteEmail]);
+  const handleInvite = async (data: InvitePilotMemberData): Promise<boolean> => {
+    return inviteMember(data);
+  };
 
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
@@ -62,8 +60,6 @@ export function AdminTeam() {
       <InviteTeamMemberDialog
         open={inviteOpen}
         onOpenChange={setInviteOpen}
-        email={inviteEmail}
-        onEmailChange={setInviteEmail}
         onInvite={handleInvite}
         isInviting={isInviting}
       />

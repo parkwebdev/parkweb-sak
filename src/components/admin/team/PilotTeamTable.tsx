@@ -181,7 +181,7 @@ export function PilotTeamTable({
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove super admin access from this user. They will be downgraded to a regular admin.
+              This will remove Pilot team access from this user. They will be downgraded to a regular admin.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

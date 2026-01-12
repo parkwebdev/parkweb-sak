@@ -24,6 +24,7 @@ interface RoleBadgeProps {
 const ROLE_DISPLAY_NAMES: Record<string, string> = {
   member: 'Team Member',
   pilot_team_member: 'Pilot Team',
+  pilot_support: 'Pilot Support',
 };
 
 /**
@@ -50,6 +51,7 @@ function formatRole(role: string): string {
  */
 const ROLE_STYLES: Record<string, string> = {
   super_admin: 'bg-primary/10 text-primary border-primary/20',
+  pilot_support: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
   admin: 'bg-status-active/10 text-status-active-foreground border-status-active/20',
   manager: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
   member: 'bg-muted text-muted-foreground border-border',

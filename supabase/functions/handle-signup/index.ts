@@ -61,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Check if this email has a pending invitation
+    // Check if this email has a pending invitation (including Pilot team invites)
     const { data: invitation, error: invitationError } = await supabase
       .from('pending_invitations')
       .select('*')
@@ -87,30 +87,77 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('Error updating invitation status:', updateError);
       }
 
-      // Add user to team_members table
-      const { error: teamError } = await supabase
-        .from('team_members')
-        .insert({
-          owner_id: invitation.invited_by,
-          member_id: user_id,
-          role: 'member'
-        });
-
-      if (teamError) {
-        console.error('Error adding team member:', teamError);
-      } else {
-        console.log(`Added user ${user_id} to team of ${invitation.invited_by}`);
+      // Check if this is a Pilot team invitation
+      if (invitation.is_pilot_invite && invitation.pilot_role) {
+        console.log(`Processing Pilot team invitation for: ${email} as ${invitation.pilot_role}`);
         
-        // Notify team owner that a new member joined
+        // Assign the Pilot team role to the user
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .upsert({
+            user_id: user_id,
+            role: invitation.pilot_role,
+            admin_permissions: invitation.pilot_role === 'super_admin' 
+              ? [] 
+              : ['view_accounts', 'view_team', 'view_content', 'view_revenue', 'view_settings'],
+          }, { onConflict: 'user_id' });
+
+        if (roleError) {
+          console.error('Error assigning Pilot team role:', roleError);
+        } else {
+          console.log(`Assigned ${invitation.pilot_role} role to user ${user_id}`);
+        }
+
+        // Notify the super admin who sent the invite
         await supabase.from('notifications').insert({
           user_id: invitation.invited_by,
           type: 'team',
-          title: 'Team Member Joined',
-          message: `${email} accepted your invitation and joined the team`,
-          data: { member_id: user_id, email: email },
+          title: 'Pilot Team Member Joined',
+          message: `${email} accepted your invitation and joined as ${invitation.pilot_role === 'super_admin' ? 'Super Admin' : 'Pilot Support'}`,
+          data: { member_id: user_id, email: email, role: invitation.pilot_role },
           read: false
         });
-        console.log('Team member join notification created');
+        console.log('Pilot team member join notification created');
+
+        // Log to admin audit log
+        await supabase.from('admin_audit_log').insert({
+          admin_user_id: invitation.invited_by,
+          action: 'team_invite',
+          target_type: 'team',
+          target_id: user_id,
+          target_email: email,
+          details: {
+            action: 'pilot_invite_accepted',
+            role: invitation.pilot_role,
+            invited_by: invitation.invited_by_name
+          }
+        });
+      } else {
+        // Regular team member invitation (non-Pilot)
+        const { error: teamError } = await supabase
+          .from('team_members')
+          .insert({
+            owner_id: invitation.invited_by,
+            member_id: user_id,
+            role: 'member'
+          });
+
+        if (teamError) {
+          console.error('Error adding team member:', teamError);
+        } else {
+          console.log(`Added user ${user_id} to team of ${invitation.invited_by}`);
+          
+          // Notify team owner that a new member joined
+          await supabase.from('notifications').insert({
+            user_id: invitation.invited_by,
+            type: 'team',
+            title: 'Team Member Joined',
+            message: `${email} accepted your invitation and joined the team`,
+            data: { member_id: user_id, email: email },
+            read: false
+          });
+          console.log('Team member join notification created');
+        }
       }
 
       console.log(`Marked invitation as accepted for: ${email}`);
@@ -118,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Log the successful signup from invitation
       await supabase.rpc('log_security_event', {
         p_user_id: user_id,
-        p_action: 'team_invitation_accepted',
+        p_action: invitation.is_pilot_invite ? 'pilot_invitation_accepted' : 'team_invitation_accepted',
         p_resource_type: 'team',
         p_resource_id: email,
         p_success: true,
@@ -126,7 +173,9 @@ const handler = async (req: Request): Promise<Response> => {
           email: email,
           invitation_id: invitation.id,
           invited_by: invitation.invited_by_name,
-          owner_id: invitation.invited_by
+          owner_id: invitation.invited_by,
+          is_pilot_invite: invitation.is_pilot_invite || false,
+          role: invitation.pilot_role || 'member'
         }
       });
     }

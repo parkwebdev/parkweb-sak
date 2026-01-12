@@ -1663,6 +1663,8 @@ export type Database = {
           invited_by_name: string
           invited_first_name: string | null
           invited_last_name: string | null
+          is_pilot_invite: boolean | null
+          pilot_role: string | null
           status: string
           updated_at: string | null
         }
@@ -1676,6 +1678,8 @@ export type Database = {
           invited_by_name: string
           invited_first_name?: string | null
           invited_last_name?: string | null
+          is_pilot_invite?: boolean | null
+          pilot_role?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -1689,6 +1693,8 @@ export type Database = {
           invited_by_name?: string
           invited_first_name?: string | null
           invited_last_name?: string | null
+          is_pilot_invite?: boolean | null
+          pilot_role?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -2299,6 +2305,7 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          admin_permissions: string[] | null
           created_at: string | null
           id: string
           permissions: Database["public"]["Enums"]["app_permission"][] | null
@@ -2307,6 +2314,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_permissions?: string[] | null
           created_at?: string | null
           id?: string
           permissions?: Database["public"]["Enums"]["app_permission"][] | null
@@ -2315,6 +2323,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_permissions?: string[] | null
           created_at?: string | null
           id?: string
           permissions?: Database["public"]["Enums"]["app_permission"][] | null
@@ -2690,7 +2699,13 @@ export type Database = {
         | "manage_webhooks"
         | "view_api_keys"
         | "manage_api_keys"
-      app_role: "admin" | "manager" | "member" | "super_admin" | "client"
+      app_role:
+        | "admin"
+        | "manager"
+        | "member"
+        | "super_admin"
+        | "client"
+        | "pilot_support"
       calendar_event_status: "confirmed" | "cancelled" | "completed" | "no_show"
       calendar_provider: "google_calendar" | "outlook_calendar"
       conversation_status: "active" | "human_takeover" | "closed"
@@ -2872,7 +2887,14 @@ export const Constants = {
         "view_api_keys",
         "manage_api_keys",
       ],
-      app_role: ["admin", "manager", "member", "super_admin", "client"],
+      app_role: [
+        "admin",
+        "manager",
+        "member",
+        "super_admin",
+        "client",
+        "pilot_support",
+      ],
       calendar_event_status: ["confirmed", "cancelled", "completed", "no_show"],
       calendar_provider: ["google_calendar", "outlook_calendar"],
       conversation_status: ["active", "human_takeover", "closed"],
