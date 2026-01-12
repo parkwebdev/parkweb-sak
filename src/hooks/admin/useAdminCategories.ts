@@ -26,33 +26,35 @@ export function useAdminCategories(): UseAdminCategoriesResult {
   const { data, isLoading, error } = useQuery({
     queryKey: adminQueryKeys.categories.list(),
     queryFn: async (): Promise<AdminCategory[]> => {
-      const { data: categories, error } = await supabase
-        .from('help_categories')
-        .select('*')
-        .order('order_index', { ascending: true });
+      // Fetch categories and all articles in parallel (avoids N+1)
+      const [categoriesResult, articlesResult] = await Promise.all([
+        supabase
+          .from('help_categories')
+          .select('*')
+          .order('order_index', { ascending: true }),
+        supabase
+          .from('help_articles')
+          .select('category_id'),
+      ]);
 
-      if (error) throw error;
+      if (categoriesResult.error) throw categoriesResult.error;
 
-      // Get article counts for each category
-      const categoriesWithCounts = await Promise.all(
-        (categories || []).map(async (cat) => {
-          const { count } = await supabase
-            .from('help_articles')
-            .select('id', { count: 'exact', head: true })
-            .eq('category_id', cat.id);
+      // Count articles per category locally
+      const articleCountMap = new Map<string, number>();
+      (articlesResult.data || []).forEach((article) => {
+        const current = articleCountMap.get(article.category_id) || 0;
+        articleCountMap.set(article.category_id, current + 1);
+      });
 
-          return {
-            id: cat.id,
-            name: cat.name,
-            description: cat.description,
-            icon: cat.icon,
-            order_index: cat.order_index,
-            article_count: count || 0,
-          };
-        })
-      );
-
-      return categoriesWithCounts;
+      // Map synchronously - no more N+1
+      return (categoriesResult.data || []).map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        description: cat.description,
+        icon: cat.icon,
+        order_index: cat.order_index,
+        article_count: articleCountMap.get(cat.id) || 0,
+      }));
     },
     staleTime: 60000,
   });
