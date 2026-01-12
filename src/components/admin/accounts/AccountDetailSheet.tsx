@@ -106,9 +106,15 @@ export function AccountDetailSheet({
               <section className="space-y-3">
                 <h3 className="text-sm font-medium text-muted-foreground">Contact</h3>
                 <div className="space-y-2">
-                  <div className="flex items-center gap-3 text-sm">
-                    <Mail01 size={16} className="text-muted-foreground shrink-0" aria-hidden="true" />
-                    <span className="truncate">{account.email}</span>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Mail01 size={16} className="text-muted-foreground shrink-0" aria-hidden="true" />
+                      <span className="truncate">{account.email}</span>
+                    </div>
+                    <ImpersonateButton 
+                      userId={account.user_id}
+                      userName={account.display_name}
+                    />
                   </div>
                   {account.company_name && (
                     <div className="flex items-center gap-3 text-sm">
@@ -226,18 +232,6 @@ export function AccountDetailSheet({
                 </>
               )}
 
-              <Separator />
-
-              {/* Actions Section */}
-              <section className="space-y-3">
-                <h3 className="text-sm font-medium text-muted-foreground">Actions</h3>
-                <div className="flex gap-2">
-                  <ImpersonateButton 
-                    userId={account.user_id}
-                    userName={account.display_name}
-                  />
-                </div>
-              </section>
             </div>
           </div>
         ) : (
