@@ -57,6 +57,7 @@ export function AdminAccountDetail() {
         {account && (
           <ImpersonateButton 
             userId={account.user_id}
+            userName={account.display_name}
           />
         )}
       </div>
