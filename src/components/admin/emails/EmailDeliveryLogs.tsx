@@ -16,6 +16,7 @@ import {
 import { DataTable } from '@/components/data-table/DataTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { formatDistanceToNow } from 'date-fns';
 import type { EmailDeliveryLog } from '@/types/admin';
 
@@ -58,11 +59,7 @@ export function EmailDeliveryLogs({ logs, loading }: EmailDeliveryLogsProps) {
       }),
       logColumnHelper.accessor('status', {
         header: 'Status',
-        cell: ({ getValue }) => {
-          const status = getValue();
-          const variant = status === 'delivered' ? 'default' : status === 'bounced' || status === 'failed' ? 'destructive' : 'secondary';
-          return <Badge variant={variant}>{status}</Badge>;
-        },
+        cell: ({ getValue }) => <StatusBadge status={getValue()} type="email" />,
       }),
       logColumnHelper.accessor('created_at', {
         header: 'Sent',

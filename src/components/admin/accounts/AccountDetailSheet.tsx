@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
@@ -93,12 +94,7 @@ export function AccountDetailSheet({
                     {account.display_name || 'Unnamed Account'}
                   </SheetTitle>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <Badge 
-                      variant={account.status === 'active' ? 'default' : 'secondary'}
-                      className={account.status === 'active' ? 'bg-status-active/10 text-status-active-foreground border-0' : ''}
-                    >
-                      {account.status}
-                    </Badge>
+                    <StatusBadge status={account.status} type="account" />
                     <Badge variant="outline" className="capitalize">
                       {account.role}
                     </Badge>

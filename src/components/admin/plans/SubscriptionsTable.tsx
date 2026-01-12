@@ -15,6 +15,7 @@ import {
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 import type { AdminSubscription } from '@/types/admin';
@@ -46,16 +47,7 @@ export function SubscriptionsTable({ subscriptions, loading }: SubscriptionsTabl
       }),
       columnHelper.accessor('status', {
         header: 'Status',
-        cell: ({ getValue }) => {
-          const status = getValue();
-          const variant =
-            status === 'active'
-              ? 'default'
-              : status === 'trialing'
-              ? 'secondary'
-              : 'outline';
-          return <Badge variant={variant}>{status}</Badge>;
-        },
+        cell: ({ getValue }) => <StatusBadge status={getValue()} type="subscription" />,
       }),
       columnHelper.accessor('mrr', {
         header: 'MRR',

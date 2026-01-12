@@ -17,6 +17,7 @@ import { DataTable } from '@/components/data-table/DataTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -366,11 +367,7 @@ export function EmailDeliveryLogs({
       }),
       logColumnHelper.accessor('status', {
         header: 'Status',
-        cell: ({ getValue }) => {
-          const status = getValue();
-          const variant = status === 'delivered' ? 'default' : status === 'bounced' || status === 'failed' ? 'destructive' : 'secondary';
-          return <Badge variant={variant}>{status}</Badge>;
-        },
+        cell: ({ getValue }) => <StatusBadge status={getValue()} type="email" />,
       }),
       logColumnHelper.accessor('created_at', {
         header: 'Sent',
