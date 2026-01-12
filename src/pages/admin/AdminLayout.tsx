@@ -7,9 +7,11 @@
  * @module pages/admin/AdminLayout
  */
 
-import { Outlet, useLocation, Link } from 'react-router-dom';
+import { Outlet, useLocation, Link, Navigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ADMIN_SECTIONS } from '@/config/routes';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   LayoutAlt01, 
   Users01, 
@@ -41,6 +43,20 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
 export function AdminLayout() {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { isSuperAdmin, loading } = useRoleAuthorization();
+
+  // Defense-in-depth: Double-check super admin access at layout level
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Skeleton className="w-64 h-8" />
+      </div>
+    );
+  }
+
+  if (!isSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="flex h-full">
