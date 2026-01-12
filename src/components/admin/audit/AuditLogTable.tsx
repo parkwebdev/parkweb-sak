@@ -37,7 +37,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 import { getAuditActionLabel, getTargetTypeLabel } from '@/lib/admin/audit-actions';
 import { exportToCSV, parseUserAgent } from '@/lib/admin/admin-utils';
-import type { AuditLogEntry, AuditAction, AuditTargetType, AuditLogFilters } from '@/types/admin';
+import type { AuditLogEntry, AuditAction, AuditTargetType, AuditLogFilters as AuditLogFiltersType } from '@/types/admin';
 import {
   Sheet,
   SheetContent,
@@ -65,7 +65,7 @@ interface AuditLogTableProps {
   page: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  onFiltersChange?: (filters: Partial<AuditLogFilters>) => void;
+  onFiltersChange?: (filters: Partial<AuditLogFiltersType>) => void;
 }
 
 const columnHelper = createColumnHelper<AuditLogEntry>();
@@ -333,7 +333,7 @@ export function AuditLogFilters({
     setAction('');
     setTargetType('');
     setSearch('');
-    onApply({});
+    onApply({ search: '' });
   };
 
   return (
