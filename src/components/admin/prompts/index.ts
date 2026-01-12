@@ -4,5 +4,8 @@
  * @module components/admin/prompts
  */
 
-export { BaselinePromptEditor, PromptPreview, PromptVersionHistory, SecurityGuardrailsCard } from './BaselinePromptEditor';
+export { BaselinePromptEditor } from './BaselinePromptEditor';
+export { PromptPreview } from './PromptPreview';
+export { PromptVersionHistory } from './PromptVersionHistory';
+export { SecurityGuardrailsCard } from './SecurityGuardrailsCard';
 export { PromptTestChat } from './PromptTestChat';
