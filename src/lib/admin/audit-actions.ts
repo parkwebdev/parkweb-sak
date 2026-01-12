@@ -18,6 +18,14 @@ export const AUDIT_ACTIONS: Record<AuditAction, { label: string; description: st
     label: 'Impersonation Ended',
     description: 'Admin ended impersonation session',
   },
+  impersonation_auto_expired: {
+    label: 'Impersonation Expired',
+    description: 'Impersonation session automatically expired after 30 minutes',
+  },
+  account_view: {
+    label: 'Account Viewed',
+    description: 'Admin viewed account details',
+  },
   account_suspend: {
     label: 'Account Suspended',
     description: 'User account was suspended',
@@ -54,6 +62,10 @@ export const AUDIT_ACTIONS: Record<AuditAction, { label: string; description: st
     label: 'Team Removed',
     description: 'Team member was removed',
   },
+  team_role_change: {
+    label: 'Team Role Changed',
+    description: 'Team member role was changed',
+  },
   article_create: {
     label: 'Article Created',
     description: 'Help article was created',
@@ -61,6 +73,10 @@ export const AUDIT_ACTIONS: Record<AuditAction, { label: string; description: st
   article_update: {
     label: 'Article Updated',
     description: 'Help article was modified',
+  },
+  article_publish: {
+    label: 'Article Published',
+    description: 'Help article was published',
   },
   article_delete: {
     label: 'Article Deleted',
@@ -99,6 +115,7 @@ export const AUDIT_TARGET_TYPES: Record<AuditTargetType, string> = {
   article: 'Article',
   category: 'Category',
   email: 'Email',
+  session: 'Session',
 } as const;
 
 /**
