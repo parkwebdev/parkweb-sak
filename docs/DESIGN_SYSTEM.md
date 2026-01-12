@@ -1839,12 +1839,51 @@ const prefersReducedMotion = useReducedMotion();
 - `BookingTrendChart` - Stacked area with ChartCardHeader
 
 **Admin Revenue:**
-- `RevenueOverview` - Uses MetricCardWithChart
+- `RevenueOverview` - Uses MetricCardWithChart for KPIs
 - `MRRChart` - Uses ChartCardHeader, ChartTooltipContent, footer
+- `MRRMovementChart` - Stacked bar chart for New/Expansion/Contraction/Churned MRR
 - `ChurnChart` - Uses ChartCardHeader, ChartTooltipContent, footer
+- `ChurnByPlanChart` - Horizontal bar chart for churn by plan
 - `SubscriptionFunnel` - Matches ConversationFunnelCard pattern
 - `RevenueByPlan` - Uses ChartCardHeader, ChartTooltipContent, footer
 - `TopAccountsTable` - Uses ChartCardHeader, footer
+- `QuickRatioCard` - KPI card for SaaS Quick Ratio metric
+- `AccountConcentrationCard` - Shows revenue concentration (top 10%/25%)
+- `RevenueSectionMenu` - Sidebar navigation (240px, grouped sections)
+
+---
+
+### Revenue Page Sidebar Pattern
+
+The Revenue page uses a sidebar navigation pattern matching the Analytics page.
+
+**Structure:**
+```tsx
+<div className="flex-1 h-full bg-muted/30 flex min-h-0">
+  <RevenueSectionMenu 
+    activeSection={activeSection} 
+    onSectionChange={setActiveSection} 
+  />
+  
+  <main className="flex-1 min-w-0 overflow-y-auto">
+    <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
+      {/* Section header */}
+      {/* Render active section */}
+    </div>
+  </main>
+</div>
+```
+
+**Sections:**
+| Section | Components | Purpose |
+|---------|------------|---------|
+| Overview | `RevenueOverview` (8 KPIs) | Key metrics at a glance |
+| MRR Breakdown | `QuickRatioCard`, `MRRChart`, `MRRMovementChart` | MRR trends and movement |
+| Subscriptions | `SubscriptionFunnel`, `RevenueByPlan` | Plan distribution and funnel |
+| Churn | `ChurnChart`, `ChurnByPlanChart` | Retention analysis |
+| Accounts | `AccountConcentrationCard`, `TopAccountsTable` | Top accounts and concentration |
+
+**Constants:** Defined in `src/lib/admin/revenue-constants.ts`
 
 ---
 
