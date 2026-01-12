@@ -110,8 +110,16 @@ export function useAdminAccounts(options: UseAdminAccountsOptions = {}): UseAdmi
       const teamMemberMap = new Map(teamMembersResult.data?.map(tm => [tm.member_id, tm.owner_id]) || []);
       const ownerProfileMap = new Map(ownerProfilesResult.data?.map(p => [p.user_id, p.company_name]) || []);
 
+      // Filter out super_admin users - they belong on the Pilot Team page
+      const superAdminUserIds = new Set(
+        rolesResult.data?.filter(r => r.role === 'super_admin').map(r => r.user_id) || []
+      );
+      const filteredProfiles = (profiles || []).filter(
+        profile => !superAdminUserIds.has(profile.user_id)
+      );
+
       // Map profiles to accounts synchronously (no more N+1)
-      const accounts: AdminAccount[] = (profiles || []).map(profile => {
+      const accounts: AdminAccount[] = filteredProfiles.map(profile => {
         const ownerId = teamMemberMap.get(profile.user_id);
         const effectiveCompanyName = ownerId
           ? ownerProfileMap.get(ownerId) || profile.company_name

@@ -13,7 +13,7 @@ import { PilotTeamTable } from '@/components/admin/team';
 import { useAdminTeam } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
-import { InviteTeamMemberDialog } from '@/components/admin/team/InviteTeamMemberDialog';
+import { InviteTeamMemberDialog } from '@/components/admin/team';
 
 /**
  * Pilot team management page for Super Admin.
