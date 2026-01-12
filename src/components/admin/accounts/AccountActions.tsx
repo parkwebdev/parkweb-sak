@@ -13,30 +13,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { DotsVertical, Check, XClose, Trash01 } from '@untitledui/icons';
+import { IconButton } from '@/components/ui/icon-button';
+import { DotsVertical, Eye, SwitchHorizontal01, Check, XClose, Trash01 } from '@untitledui/icons';
 import { toast } from 'sonner';
+import type { AdminAccount } from '@/types/admin';
 
 interface AccountActionsProps {
-  accountId: string;
-  status: 'active' | 'suspended' | 'pending';
+  account: AdminAccount;
+  onView: () => void;
+  onImpersonate: () => void;
 }
 
 /**
  * Dropdown menu for account management actions.
  */
-export function AccountActions({ accountId, status }: AccountActionsProps) {
-  const handleSuspend = () => {
+export function AccountActions({ account, onView, onImpersonate }: AccountActionsProps) {
+  const handleSuspend = (e: React.MouseEvent) => {
+    e.stopPropagation();
     // TODO: Implement suspend functionality
     toast.info('Suspend functionality will be implemented');
   };
 
-  const handleActivate = () => {
+  const handleActivate = (e: React.MouseEvent) => {
+    e.stopPropagation();
     // TODO: Implement activate functionality
     toast.info('Activate functionality will be implemented');
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
     // TODO: Implement delete functionality with confirmation
     toast.info('Delete functionality will be implemented');
   };
@@ -44,12 +49,26 @@ export function AccountActions({ accountId, status }: AccountActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
-          <DotsVertical size={14} aria-hidden="true" />
-        </Button>
+        <IconButton
+          variant="ghost"
+          size="sm"
+          label="Account actions"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DotsVertical size={16} aria-hidden="true" />
+        </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {status === 'active' ? (
+        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onView(); }}>
+          <Eye size={14} className="mr-2" aria-hidden="true" />
+          View Details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onImpersonate(); }}>
+          <SwitchHorizontal01 size={14} className="mr-2" aria-hidden="true" />
+          Impersonate
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {account.status === 'active' ? (
           <DropdownMenuItem onClick={handleSuspend}>
             <XClose size={14} className="mr-2" aria-hidden="true" />
             Suspend Account

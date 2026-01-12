@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { AccountStatusBadge } from './AccountStatusBadge';
+import { AccountActions } from './AccountActions';
 import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/lib/admin/admin-utils';
 import type { AdminAccount } from '@/types/admin';
@@ -30,6 +31,7 @@ interface AccountsTableProps {
   pageSize?: number;
   onPageChange: (page: number) => void;
   onSelectAccount: (accountId: string) => void;
+  onImpersonate: (userId: string) => void;
 }
 
 const columnHelper = createColumnHelper<AdminAccount>();
@@ -45,6 +47,7 @@ export function AccountsTable({
   pageSize = 25,
   onPageChange,
   onSelectAccount,
+  onImpersonate,
 }: AccountsTableProps) {
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -101,8 +104,19 @@ export function AccountsTable({
           </span>
         ),
       }),
+      columnHelper.display({
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => (
+          <AccountActions
+            account={row.original}
+            onView={() => onSelectAccount(row.original.user_id)}
+            onImpersonate={() => onImpersonate(row.original.user_id)}
+          />
+        ),
+      }),
     ],
-    []
+    [onSelectAccount, onImpersonate]
   );
 
   const table = useReactTable({
