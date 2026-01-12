@@ -42,7 +42,7 @@ export function useAdminTeam(): UseAdminTeamResult {
       const [profilesResult, auditLogsResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('user_id, display_name, email, avatar_url')
+          .select('user_id, display_name, email, avatar_url, last_login_at')
           .in('user_id', userIds),
         supabase
           .from('admin_audit_log')
@@ -75,7 +75,7 @@ export function useAdminTeam(): UseAdminTeamResult {
           avatar_url: profile?.avatar_url ?? null,
           role: role.role,
           created_at: role.created_at,
-          last_login_at: null,
+          last_login_at: profile?.last_login_at ?? null,
           audit_action_count: auditCountMap.get(role.user_id) || 0,
         };
       });
