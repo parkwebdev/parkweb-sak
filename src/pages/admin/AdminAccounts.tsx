@@ -8,7 +8,8 @@
  */
 
 import { useState, useMemo, useCallback, useRef } from 'react';
-import { Users01, Download01 } from '@untitledui/icons';
+import { Users01 } from '@untitledui/icons';
+import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 import { AccountsTable, AccountDetailSheet, AdminAccountsSearch, AdminAccountsFilters } from '@/components/admin/accounts';
 import { useAdminAccounts } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
@@ -95,7 +96,7 @@ export function AdminAccounts() {
     right: (
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download01 size={16} className="mr-2" aria-hidden="true" />
+          <CsvExportIcon size={16} className="mr-2" />
           Export
         </Button>
         <AdminAccountsFilters
