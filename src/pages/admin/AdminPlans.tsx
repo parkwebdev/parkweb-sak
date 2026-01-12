@@ -68,15 +68,7 @@ export function AdminPlans() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-base font-semibold text-foreground">Plans & Billing</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage subscription plans and view Stripe data
-        </p>
-      </div>
-
-      {/* Revenue Metrics */}
+      {/* Revenue Metrics - no header, TopBar handles page title */}
       <RevenueMetricsCards
         mrr={mrr}
         arr={revenueData?.arr || 0}

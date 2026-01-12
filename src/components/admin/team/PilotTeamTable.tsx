@@ -39,9 +39,7 @@ import {
 interface PilotTeamTableProps {
   team: PilotTeamMember[];
   loading: boolean;
-  onInvite: (email: string) => Promise<void>;
   onRemove: (userId: string) => Promise<void>;
-  isInviting?: boolean;
   isRemoving?: boolean;
 }
 
@@ -51,22 +49,10 @@ interface PilotTeamTableProps {
 export function PilotTeamTable({
   team,
   loading,
-  onInvite,
   onRemove,
-  isInviting,
   isRemoving,
 }: PilotTeamTableProps) {
-  const [inviteOpen, setInviteOpen] = useState(false);
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
-  const [inviteEmail, setInviteEmail] = useState('');
-
-  const handleInvite = async () => {
-    if (inviteEmail) {
-      await onInvite(inviteEmail);
-      setInviteEmail('');
-      setInviteOpen(false);
-    }
-  };
 
   const handleRemove = async () => {
     if (removeConfirmId) {
@@ -103,10 +89,6 @@ export function PilotTeamTable({
             {team.length} member{team.length !== 1 ? 's' : ''} with super admin access
           </p>
         </div>
-        <Button size="sm" onClick={() => setInviteOpen(true)}>
-          <Plus size={14} className="mr-1" aria-hidden="true" />
-          Invite Member
-        </Button>
       </div>
 
       {team.length === 0 ? (
@@ -129,16 +111,6 @@ export function PilotTeamTable({
           ))}
         </div>
       )}
-
-      {/* Invite Dialog */}
-      <InviteTeamMemberDialog
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
-        email={inviteEmail}
-        onEmailChange={setInviteEmail}
-        onInvite={handleInvite}
-        isInviting={isInviting}
-      />
 
       {/* Remove Confirmation */}
       <AlertDialog open={!!removeConfirmId} onOpenChange={() => setRemoveConfirmId(null)}>

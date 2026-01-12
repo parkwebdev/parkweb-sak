@@ -203,7 +203,6 @@ export function AuditLogTable({
           <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm">
-                <FilterLines size={14} className="mr-1" aria-hidden="true" />
                 Filters
               </Button>
             </PopoverTrigger>

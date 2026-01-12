@@ -217,7 +217,6 @@ export function PlansTable({
           </p>
         </div>
         <Button size="sm" onClick={() => { resetForm(); setCreateOpen(true); }}>
-          <Plus size={14} className="mr-1" aria-hidden="true" />
           New Plan
         </Button>
       </div>

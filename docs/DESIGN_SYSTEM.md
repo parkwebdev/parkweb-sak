@@ -497,6 +497,66 @@ Use `<IconButton>` (not `<Button>`) for icon-only buttons. It provides proper ac
 | `icon` (default) | 40px | Standard icon buttons |
 | `icon-sm` | 32px | Compact icon buttons |
 
+### Button Icon Guidelines
+
+> **Rule**: Text buttons do NOT include icons. Icons are reserved for icon-only buttons.
+
+This creates a clear visual hierarchy and maintains consistency across the app.
+
+| Button Type | Icon Usage | Example |
+|-------------|-----------|---------|
+| **Primary actions** | NO icon | "Add event", "Invite Member", "Save" |
+| **Secondary actions** | NO icon | "Cancel", "Close" |
+| **Destructive actions** | NO icon | "Delete", "Remove" |
+| **Dialog footers** | NO icons | "Confirm", "Cancel", "Save" |
+| **Icon-only (toolbar)** | Use `IconButton` | Export, Settings, Filter icons |
+
+```tsx
+// ✅ Correct - text-only button
+<Button size="sm" onClick={handleInvite}>
+  Invite Member
+</Button>
+
+// ✅ Correct - icon-only button with IconButton
+<IconButton label="Export data" variant="outline" size="sm" onClick={handleExport}>
+  <Download01 size={16} />
+</IconButton>
+
+// ❌ Wrong - mixing icon + text
+<Button size="sm" onClick={handleInvite}>
+  <Plus size={14} className="mr-1" />
+  Invite Member
+</Button>
+```
+
+**Exceptions:**
+- Pagination buttons may include chevron icons ("Previous", "Next")
+- External link buttons may include an arrow icon to indicate navigation
+
+### TopBar Action Placement
+
+Primary page actions belong in the TopBar's right section, not in-page:
+
+```tsx
+// ✅ Correct - action in TopBar
+const topBarConfig = useMemo(() => ({
+  left: <TopBarPageContext icon={Users02} title="Team" />,
+  right: (
+    <Button size="sm" onClick={handleAction}>
+      Add Member
+    </Button>
+  ),
+}), []);
+useTopBar(topBarConfig);
+
+// Page content - no redundant header or action button
+return (
+  <div className="p-6 space-y-6">
+    <TeamTable ... />
+  </div>
+);
+```
+
 ### Inputs
 
 | Size | Height | Text | Usage |

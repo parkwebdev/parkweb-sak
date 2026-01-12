@@ -54,14 +54,7 @@ export function AdminPrompts() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-base font-semibold text-foreground">Baseline Prompt</h1>
-        <p className="text-sm text-muted-foreground">
-          Configure the global prompt modifier applied to all agents
-        </p>
-      </div>
-
+      {/* No header - TopBar handles page title */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left Column - Editor */}
         <div className="space-y-6">

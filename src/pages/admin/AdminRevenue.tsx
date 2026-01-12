@@ -34,15 +34,7 @@ export function AdminRevenue() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-base font-semibold text-foreground">Revenue Analytics</h1>
-        <p className="text-sm text-muted-foreground">
-          Monitor revenue, growth, and subscription metrics
-        </p>
-      </div>
-
-      {/* Overview Cards */}
+      {/* Overview Cards - no header, TopBar handles page title */}
       <RevenueOverview data={data} loading={loading} />
 
       {/* Charts Row */}
