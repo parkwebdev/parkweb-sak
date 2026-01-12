@@ -1585,7 +1585,8 @@ The system prefers even values (2, 4, 6) but allows intermediate values when vis
 
 ## Admin Page Patterns
 
-> **Verified**: 2026-01-12
+> **Verified**: 2026-01-12  
+> **IconButton Audit**: Complete - All icon-only buttons converted
 
 Admin pages follow the same design patterns as userside pages to ensure consistency across the application.
 
@@ -1655,6 +1656,32 @@ const STATUS_STYLES = {
 // ❌ Wrong - Generic badge variants
 const variants = { active: 'default', suspended: 'destructive', pending: 'secondary' };
 ```
+
+### IconButton Pattern (REQUIRED)
+
+All icon-only buttons in admin components MUST use `IconButton` with a `label` prop:
+
+```tsx
+// ✅ Correct - IconButton with accessible label
+<IconButton label="Edit plan" variant="ghost" size="sm" onClick={handleEdit}>
+  <Edit02 size={14} />
+</IconButton>
+
+// ❌ Wrong - Button without aria-label
+<Button variant="ghost" size="sm" onClick={handleEdit}>
+  <Edit02 size={14} aria-hidden="true" />
+</Button>
+```
+
+**Verified Components (2026-01-12):**
+- `PlansTable.tsx` - Edit/Delete plan buttons, Add/Remove feature buttons
+- `AuditLogTable.tsx` - View details button
+- `ArticlesTable.tsx` - Edit/Delete article buttons
+- `CategoryManager.tsx` - Add/Delete category buttons
+- `AccountsTable.tsx` - All action buttons
+- `PilotTeamTable.tsx` - Remove team member buttons
+- `TeamMemberCard.tsx` - Remove team member button
+- `TeamMemberActions.tsx` - Remove team member button
 
 ### Admin Components Reference
 
