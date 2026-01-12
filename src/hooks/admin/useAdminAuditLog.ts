@@ -84,7 +84,7 @@ export function useAdminAuditLog(options: UseAdminAuditLogOptions = {}): UseAdmi
           id: log.id,
           admin_user_id: log.admin_user_id,
           admin_email: adminProfile?.email || '',
-          admin_name: adminProfile?.display_name,
+          admin_name: adminProfile?.display_name ?? null,
           action: log.action as AuditAction,
           target_type: log.target_type as AuditTargetType | null,
           target_id: log.target_id,
