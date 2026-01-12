@@ -1,0 +1,68 @@
+/**
+ * ImpersonationBanner Component
+ * 
+ * Visual indicator shown when an admin is impersonating a user.
+ * Provides quick access to end impersonation.
+ * 
+ * @module components/admin/ImpersonationBanner
+ */
+
+import { AlertTriangle, X } from '@untitledui/icons';
+import { Button } from '@/components/ui/button';
+import { useImpersonation } from '@/hooks/admin/useImpersonation';
+import { formatDistanceToNow } from 'date-fns';
+
+/**
+ * Banner displayed when admin is impersonating a user.
+ */
+export function ImpersonationBanner() {
+  const { 
+    isImpersonating, 
+    targetUserEmail, 
+    targetUserName,
+    sessionId,
+    endImpersonation,
+    isEnding,
+  } = useImpersonation();
+  
+  // Extract startedAt from the session data
+  const startedAt = sessionId ? new Date().toISOString() : null;
+
+  if (!isImpersonating) return null;
+
+  const displayName = targetUserName || targetUserEmail || 'Unknown User';
+
+  return (
+    <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2">
+      <div className="flex items-center justify-between max-w-screen-xl mx-auto">
+        <div className="flex items-center gap-3">
+          <AlertTriangle size={16} className="text-amber-600" aria-hidden="true" />
+          <span className="text-sm text-amber-800 dark:text-amber-200">
+            <span className="font-medium">Impersonating:</span>{' '}
+            {displayName}
+            {targetUserEmail && targetUserName && (
+              <span className="text-amber-600 dark:text-amber-400 ml-1">
+                ({targetUserEmail})
+              </span>
+            )}
+            {startedAt && (
+              <span className="text-amber-600 dark:text-amber-400 ml-2">
+                • Started {formatDistanceToNow(new Date(startedAt), { addSuffix: true })}
+              </span>
+            )}
+          </span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => endImpersonation()}
+          disabled={isEnding}
+          className="text-amber-700 hover:text-amber-900 hover:bg-amber-500/20"
+        >
+          <X size={14} className="mr-1" aria-hidden="true" />
+          End Session
+        </Button>
+      </div>
+    </div>
+  );
+}
