@@ -34,41 +34,51 @@ export function useAdminTeam(): UseAdminTeamResult {
         .eq('role', 'super_admin');
 
       if (rolesError) throw rolesError;
-
       if (!roles || roles.length === 0) return [];
 
-      // Get profile data for each team member
       const userIds = roles.map((r) => r.user_id);
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, display_name, email, avatar_url')
-        .in('user_id', userIds);
 
-      if (profilesError) throw profilesError;
+      // Batch fetch profiles AND audit logs in parallel (avoids N+1)
+      const [profilesResult, auditLogsResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('user_id, display_name, email, avatar_url')
+          .in('user_id', userIds),
+        supabase
+          .from('admin_audit_log')
+          .select('admin_user_id')
+          .in('admin_user_id', userIds),
+      ]);
 
-      // Get audit action counts
-      const teamMembers: PilotTeamMember[] = await Promise.all(
-        roles.map(async (role) => {
-          const profile = profiles?.find((p) => p.user_id === role.user_id);
-          
-          const { count } = await supabase
-            .from('admin_audit_log')
-            .select('id', { count: 'exact', head: true })
-            .eq('admin_user_id', role.user_id);
+      if (profilesResult.error) throw profilesResult.error;
 
-          return {
-            id: role.user_id,
-            user_id: role.user_id,
-            email: profile?.email || '',
-            display_name: profile?.display_name ?? null,
-            avatar_url: profile?.avatar_url ?? null,
-            role: role.role,
-            created_at: role.created_at,
-            last_login_at: null,
-            audit_action_count: count || 0,
-          };
-        })
+      // Count audit logs locally (group by admin_user_id)
+      const auditCountMap = new Map<string, number>();
+      (auditLogsResult.data || []).forEach((log) => {
+        const current = auditCountMap.get(log.admin_user_id) || 0;
+        auditCountMap.set(log.admin_user_id, current + 1);
+      });
+
+      // Create profile lookup map
+      const profileMap = new Map(
+        profilesResult.data?.map((p) => [p.user_id, p]) || []
       );
+
+      // Map synchronously - no more N+1
+      const teamMembers: PilotTeamMember[] = roles.map((role) => {
+        const profile = profileMap.get(role.user_id);
+        return {
+          id: role.user_id,
+          user_id: role.user_id,
+          email: profile?.email || '',
+          display_name: profile?.display_name ?? null,
+          avatar_url: profile?.avatar_url ?? null,
+          role: role.role,
+          created_at: role.created_at,
+          last_login_at: null,
+          audit_action_count: auditCountMap.get(role.user_id) || 0,
+        };
+      });
 
       return teamMembers;
     },
