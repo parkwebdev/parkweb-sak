@@ -4,6 +4,7 @@
  * @module hooks/admin/useRevenueAnalytics
  */
 
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
 import type { RevenueData } from '@/types/admin';
@@ -22,13 +23,22 @@ interface UseRevenueAnalyticsResult {
 }
 
 export function useRevenueAnalytics(dateRange?: DateRange): UseRevenueAnalyticsResult {
-  const range = dateRange || {
+  // Memoize default date range to prevent new Date objects on every render
+  const defaultRange = useMemo(() => ({
     from: new Date(new Date().setMonth(new Date().getMonth() - 12)),
     to: new Date(),
-  };
+  }), []);
+
+  const range = dateRange || defaultRange;
+
+  // Serialize dates for stable query key
+  const serializedRange = useMemo(() => ({
+    from: range.from.toISOString(),
+    to: range.to.toISOString(),
+  }), [range.from, range.to]);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: adminQueryKeys.revenue.analytics(range),
+    queryKey: adminQueryKeys.revenue.analytics(serializedRange),
     queryFn: async (): Promise<RevenueData> => {
       // TODO: Implement actual revenue analytics from Stripe/subscriptions
       // For now, return placeholder data
