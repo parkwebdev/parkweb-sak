@@ -7,7 +7,7 @@
  * @module pages/admin/AdminAccounts
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { Users01, Download01 } from '@untitledui/icons';
 import { AccountsTable, AccountDetailSheet, AdminAccountsSearch, AdminAccountsFilters } from '@/components/admin/accounts';
 import { useAdminAccounts } from '@/hooks/admin';
@@ -46,14 +46,19 @@ export function AdminAccounts() {
     toast.info('Impersonation will be implemented');
   }, []);
 
+  // Use ref to avoid recreating handleExport when accounts change
+  const accountsRef = useRef(accounts);
+  accountsRef.current = accounts;
+
   const handleExport = useCallback(() => {
-    if (accounts.length === 0) {
+    const currentAccounts = accountsRef.current;
+    if (currentAccounts.length === 0) {
       toast.error('No accounts to export');
       return;
     }
     
     exportToCSV(
-      accounts.map(a => ({
+      currentAccounts.map(a => ({
         name: a.display_name || '',
         email: a.email,
         company: a.company_name || '',
@@ -74,7 +79,7 @@ export function AdminAccounts() {
       ]
     );
     toast.success('Accounts exported');
-  }, [accounts]);
+  }, []);
 
   // Configure top bar with search on left, filters on right
   const topBarConfig = useMemo(() => ({
@@ -100,7 +105,7 @@ export function AdminAccounts() {
       </div>
     ),
   }), [filters, handleFilterChange, handleExport]);
-  useTopBar(topBarConfig);
+  useTopBar(topBarConfig, 'admin-accounts');
 
   return (
     <div className="p-6 space-y-6">
