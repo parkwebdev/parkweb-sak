@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { SwitchHorizontal01 } from '@untitledui/icons';
 import { ImpersonateDialog } from './ImpersonateDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ImpersonateButtonProps {
   userId: string;
@@ -21,6 +22,12 @@ interface ImpersonateButtonProps {
  */
 export function ImpersonateButton({ userId, userName }: ImpersonateButtonProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { user } = useAuth();
+
+  // Don't show impersonate button for own account
+  if (user?.id === userId) {
+    return null;
+  }
 
   return (
     <>
