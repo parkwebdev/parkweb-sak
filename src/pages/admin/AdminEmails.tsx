@@ -7,12 +7,21 @@
  * @module pages/admin/AdminEmails
  */
 
-import { Mail01 } from '@untitledui/icons';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  EmailTemplateList, 
+  AnnouncementBuilder, 
+  EmailDeliveryLogs, 
+  EmailDeliveryStats 
+} from '@/components/admin/emails';
+import { useEmailDeliveryLogs } from '@/hooks/admin';
 
 /**
  * Email templates and announcements page for Super Admin.
  */
 export function AdminEmails() {
+  const { logs, stats, loading } = useEmailDeliveryLogs();
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -23,15 +32,34 @@ export function AdminEmails() {
         </p>
       </div>
 
-      {/* Placeholder */}
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-          <Mail01 size={24} className="text-muted-foreground" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Email template components will be implemented in Phase 4.
-        </p>
-      </div>
+      {/* Delivery Stats */}
+      <EmailDeliveryStats stats={stats} loading={loading} />
+
+      {/* Tabs */}
+      <Tabs defaultValue="templates" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
+          <TabsTrigger value="announcements">Announcements</TabsTrigger>
+          <TabsTrigger value="logs">Delivery Logs</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="templates">
+          <EmailTemplateList 
+            templates={[]} 
+            loading={loading} 
+            onPreview={() => {}} 
+            onEdit={() => {}} 
+          />
+        </TabsContent>
+
+        <TabsContent value="announcements">
+          <AnnouncementBuilder onSend={async () => {}} />
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <EmailDeliveryLogs logs={logs || []} loading={loading} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

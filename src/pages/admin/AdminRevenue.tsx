@@ -7,12 +7,22 @@
  * @module pages/admin/AdminRevenue
  */
 
-import { TrendUp01 } from '@untitledui/icons';
+import { 
+  RevenueOverview, 
+  MRRChart, 
+  ChurnChart, 
+  SubscriptionFunnel, 
+  RevenueByPlan, 
+  TopAccountsTable 
+} from '@/components/admin/revenue';
+import { useRevenueAnalytics } from '@/hooks/admin';
 
 /**
  * Revenue analytics page for Super Admin.
  */
 export function AdminRevenue() {
+  const { data, loading } = useRevenueAnalytics();
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -23,14 +33,20 @@ export function AdminRevenue() {
         </p>
       </div>
 
-      {/* Placeholder */}
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-          <TrendUp01 size={24} className="text-muted-foreground" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Revenue analytics components will be implemented in Phase 4.
-        </p>
+      {/* Overview Cards */}
+      <RevenueOverview data={data} loading={loading} />
+
+      {/* Charts Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <MRRChart data={data?.mrrHistory || []} loading={loading} />
+        <ChurnChart data={data?.churnHistory || []} loading={loading} />
+      </div>
+
+      {/* Bottom Row */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <SubscriptionFunnel data={data?.funnel ?? null} loading={loading} />
+        <RevenueByPlan data={data?.byPlan || []} loading={loading} />
+        <TopAccountsTable accounts={data?.topAccounts || []} loading={loading} />
       </div>
     </div>
   );

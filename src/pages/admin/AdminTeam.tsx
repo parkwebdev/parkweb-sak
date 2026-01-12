@@ -7,12 +7,22 @@
  * @module pages/admin/AdminTeam
  */
 
-import { Users01 } from '@untitledui/icons';
+import { PilotTeamTable } from '@/components/admin/team';
+import { useAdminTeam } from '@/hooks/admin';
 
 /**
  * Pilot team management page for Super Admin.
  */
 export function AdminTeam() {
+  const { 
+    team, 
+    loading, 
+    inviteMember, 
+    removeMember, 
+    isInviting, 
+    isRemoving 
+  } = useAdminTeam();
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -23,15 +33,15 @@ export function AdminTeam() {
         </p>
       </div>
 
-      {/* Placeholder */}
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-          <Users01 size={24} className="text-muted-foreground" />
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Team management components will be implemented in Phase 4.
-        </p>
-      </div>
+      {/* Team Table */}
+      <PilotTeamTable
+        team={team}
+        loading={loading}
+        onInvite={inviteMember}
+        onRemove={removeMember}
+        isInviting={isInviting}
+        isRemoving={isRemoving}
+      />
     </div>
   );
 }

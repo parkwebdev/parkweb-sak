@@ -7,12 +7,43 @@
  * @module pages/admin/AdminPrompts
  */
 
-import { FileCode01 } from '@untitledui/icons';
+import { useState, useEffect } from 'react';
+import { 
+  BaselinePromptEditor, 
+  PromptPreview, 
+  PromptVersionHistory, 
+  SecurityGuardrailsCard 
+} from '@/components/admin/prompts';
+import { PromptTestChat } from '@/components/admin/prompts';
+import { usePlatformConfig } from '@/hooks/admin';
 
 /**
  * Baseline prompt configuration page for Super Admin.
  */
 export function AdminPrompts() {
+  const { config, loading, updateConfig, isUpdating } = usePlatformConfig('baseline_prompt');
+  const { config: guardrailsConfig, loading: guardrailsLoading, updateConfig: updateGuardrails } = usePlatformConfig('security_guardrails');
+  
+  const [promptValue, setPromptValue] = useState('');
+
+  useEffect(() => {
+    if (config?.value) {
+      const value = config.value as { prompt?: string };
+      setPromptValue(value.prompt || '');
+    }
+  }, [config]);
+
+  const handlePromptChange = async (newPrompt: string) => {
+    await updateConfig({ value: { prompt: newPrompt } });
+    setPromptValue(newPrompt);
+  };
+
+  const handleGuardrailsChange = async (guardrails: Record<string, boolean>) => {
+    await updateGuardrails({ value: guardrails });
+  };
+
+  const guardrailsValue = guardrailsConfig?.value as Record<string, boolean> | undefined;
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -23,14 +54,31 @@ export function AdminPrompts() {
         </p>
       </div>
 
-      {/* Placeholder */}
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
-          <FileCode01 size={24} className="text-muted-foreground" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Left Column - Editor */}
+        <div className="space-y-6">
+          <BaselinePromptEditor
+            value={promptValue}
+            onChange={handlePromptChange}
+            loading={loading}
+            saving={isUpdating}
+            version={config?.version ?? undefined}
+            lastUpdated={config?.updated_at ?? undefined}
+          />
+          
+          <SecurityGuardrailsCard
+            config={guardrailsValue}
+            onChange={handleGuardrailsChange}
+            loading={guardrailsLoading}
+          />
         </div>
-        <p className="text-sm text-muted-foreground">
-          Prompt editor components will be implemented in Phase 4.
-        </p>
+
+        {/* Right Column - Preview & Test */}
+        <div className="space-y-6">
+          <PromptPreview prompt={promptValue} />
+          <PromptTestChat baselinePrompt={promptValue} />
+          <PromptVersionHistory />
+        </div>
       </div>
     </div>
   );
