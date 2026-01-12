@@ -28,6 +28,7 @@ import {
   Send01,
   SwitchHorizontal01
 } from '@untitledui/icons';
+import { IconButton } from '@/components/ui/icon-button';
 import { format } from 'date-fns';
 import { getAuditActionLabel, getTargetTypeLabel } from '@/lib/admin/audit-actions';
 import { exportToCSV } from '@/lib/admin/admin-utils';
@@ -153,13 +154,14 @@ export function AuditLogTable({
         id: 'actions',
         header: '',
         cell: ({ row }) => (
-          <Button
+          <IconButton
+            label="View details"
             variant="ghost"
             size="sm"
             onClick={() => setSelectedEntry(row.original)}
           >
-            <Eye size={14} aria-hidden="true" />
-          </Button>
+            <Eye size={14} />
+          </IconButton>
         ),
       }),
     ],

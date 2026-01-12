@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -231,9 +232,9 @@ export function TeamMemberCard({
           </p>
         </div>
         {onRemove && (
-          <Button variant="ghost" size="sm" onClick={onRemove}>
-            <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-          </Button>
+          <IconButton label="Remove team member" variant="ghost" size="sm" onClick={onRemove}>
+            <Trash01 size={14} className="text-destructive" />
+          </IconButton>
         )}
       </div>
     </div>
@@ -253,9 +254,9 @@ export function TeamMemberActions({
   return (
     <div className="flex items-center gap-2">
       {onRemove && (
-        <Button variant="ghost" size="sm" onClick={() => onRemove(memberId)}>
-          <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-        </Button>
+        <IconButton label="Remove team member" variant="ghost" size="sm" onClick={() => onRemove(memberId)}>
+          <Trash01 size={14} className="text-destructive" />
+        </IconButton>
       )}
     </div>
   );

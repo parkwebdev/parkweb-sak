@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit02, Trash01, Plus, Check, X } from '@untitledui/icons';
+import { IconButton } from '@/components/ui/icon-button';
 import { formatAdminCurrency } from '@/lib/admin/admin-utils';
 import type { AdminPlan, PlanLimits, PlanFeatures } from '@/types/admin';
 import {
@@ -174,7 +175,8 @@ export function PlansTable({
         header: '',
         cell: ({ row }) => (
           <div className="flex items-center gap-1 justify-end">
-            <Button
+            <IconButton
+              label="Edit plan"
               variant="ghost"
               size="sm"
               onClick={(e) => {
@@ -182,9 +184,10 @@ export function PlansTable({
                 handleEdit(row.original);
               }}
             >
-              <Edit02 size={14} aria-hidden="true" />
-            </Button>
-            <Button
+              <Edit02 size={14} />
+            </IconButton>
+            <IconButton
+              label="Delete plan"
               variant="ghost"
               size="sm"
               onClick={(e) => {
@@ -192,8 +195,8 @@ export function PlansTable({
                 setDeleteConfirmId(row.original.id);
               }}
             >
-              <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-            </Button>
+              <Trash01 size={14} className="text-destructive" />
+            </IconButton>
           </div>
         ),
       }),
@@ -409,9 +412,9 @@ export function PlanFeaturesEditor({
           onChange={(e) => setNewFeature(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
         />
-        <Button size="sm" variant="outline" onClick={handleAdd}>
-          <Plus size={14} aria-hidden="true" />
-        </Button>
+        <IconButton label="Add feature" size="sm" variant="outline" onClick={handleAdd}>
+          <Plus size={14} />
+        </IconButton>
       </div>
       <div className="space-y-2">
         {featureList.map((key) => (
@@ -429,13 +432,14 @@ export function PlanFeaturesEditor({
                 checked={features[key]}
                 onCheckedChange={() => handleToggle(key)}
               />
-              <Button
+              <IconButton
+                label="Remove feature"
                 variant="ghost"
                 size="sm"
                 onClick={() => handleRemove(key)}
               >
-                <Trash01 size={12} className="text-destructive" aria-hidden="true" />
-              </Button>
+                <Trash01 size={12} className="text-destructive" />
+              </IconButton>
             </div>
           </div>
         ))}

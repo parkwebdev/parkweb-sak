@@ -8,7 +8,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Trash01 } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/lib/admin/admin-utils';
@@ -54,9 +54,9 @@ export function TeamMemberCard({ member, onRemove }: TeamMemberCardProps) {
           </p>
         </div>
         {onRemove && (
-          <Button variant="ghost" size="sm" onClick={onRemove}>
-            <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-          </Button>
+          <IconButton label="Remove team member" variant="ghost" size="sm" onClick={onRemove}>
+            <Trash01 size={14} className="text-destructive" />
+          </IconButton>
         )}
       </div>
     </div>
