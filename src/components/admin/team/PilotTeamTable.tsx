@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/admin/shared/RoleBadge';
 import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
@@ -224,9 +224,7 @@ export function TeamMemberCard({
       </div>
       <div className="flex items-center gap-3">
         <div className="text-right">
-          <Badge variant="secondary" className="text-2xs">
-            {member.role}
-          </Badge>
+          <RoleBadge role={member.role} className="text-2xs" />
           <p className="text-2xs text-muted-foreground mt-1">
             {member.audit_action_count} action{member.audit_action_count !== 1 ? 's' : ''}
           </p>

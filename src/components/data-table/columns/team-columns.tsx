@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/admin/shared/RoleBadge';
 import { IconButton } from '@/components/ui/icon-button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -21,23 +21,6 @@ interface TeamColumnsProps {
   onRemove: (member: TeamMember) => void;
 }
 
-const getBadgeVariant = (role: string) => {
-  switch (role) {
-    case 'admin':
-      return 'default' as const;
-    case 'manager':
-      return 'secondary' as const;
-    default:
-      return 'outline' as const;
-  }
-};
-
-const formatRole = (role: string) => {
-  return role
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
 
 export const createTeamColumns = ({
   currentUserId,
@@ -84,12 +67,7 @@ export const createTeamColumns = ({
     maxSize: 150,
     header: () => <span className="text-xs font-medium">Role</span>,
     cell: ({ row }) => (
-      <Badge
-        variant={getBadgeVariant(row.original.role || 'member')}
-        className="whitespace-nowrap"
-      >
-        {formatRole(row.original.role || 'member')}
-      </Badge>
+      <RoleBadge role={row.original.role || 'member'} className="whitespace-nowrap" />
     ),
   },
   {
