@@ -18,10 +18,26 @@ interface RoleBadgeProps {
 }
 
 /**
+ * Custom display names for roles that need special formatting.
+ * Maps database values to user-friendly display text.
+ */
+const ROLE_DISPLAY_NAMES: Record<string, string> = {
+  member: 'Team Member',
+};
+
+/**
  * Format role string to readable text.
- * e.g., "super_admin" → "Super Admin", "team_member" → "Team Member"
+ * First checks for custom display names, then falls back to automatic formatting.
  */
 function formatRole(role: string): string {
+  const lowerRole = role.toLowerCase();
+
+  // Check for custom display name first
+  if (ROLE_DISPLAY_NAMES[lowerRole]) {
+    return ROLE_DISPLAY_NAMES[lowerRole];
+  }
+
+  // Fallback: capitalize each word
   return role
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
