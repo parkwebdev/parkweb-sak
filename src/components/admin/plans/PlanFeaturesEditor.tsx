@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import type { PlanFeatures } from '@/types/admin';
 
+
 interface PlanFeaturesEditorProps {
   features: PlanFeatures;
   onChange: (features: PlanFeatures) => void;
