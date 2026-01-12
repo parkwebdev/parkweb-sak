@@ -23,6 +23,7 @@ interface RoleBadgeProps {
  */
 const ROLE_DISPLAY_NAMES: Record<string, string> = {
   member: 'Team Member',
+  pilot_team_member: 'Pilot Team',
 };
 
 /**
