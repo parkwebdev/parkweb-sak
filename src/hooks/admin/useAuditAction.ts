@@ -6,8 +6,11 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import type { AuditAction, AuditTargetType } from '@/types/admin';
+import type { Database } from '@/integrations/supabase/types';
+
+type AuditLogInsert = Database['public']['Tables']['admin_audit_log']['Insert'];
 
 interface AuditActionParams {
   action: AuditAction;
@@ -29,14 +32,16 @@ export function useAuditAction(): UseAuditActionResult {
     mutationFn: async (params: AuditActionParams) => {
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('admin_audit_log').insert({
+      const insertData: AuditLogInsert = {
         admin_user_id: user.id,
         action: params.action,
         target_type: params.targetType,
         target_id: params.targetId,
         target_email: params.targetEmail,
-        details: params.details || {},
-      });
+        details: (params.details || {}) as AuditLogInsert['details'],
+      };
+
+      const { error } = await supabase.from('admin_audit_log').insert(insertData);
 
       if (error) throw error;
     },

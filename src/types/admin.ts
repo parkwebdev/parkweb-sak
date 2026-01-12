@@ -101,7 +101,7 @@ export interface PilotTeamMember {
   display_name: string | null;
   avatar_url: string | null;
   role: string;
-  created_at: string;
+  created_at: string | null;
   last_login_at: string | null;
   audit_action_count: number;
 }
