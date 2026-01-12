@@ -1331,6 +1331,109 @@ The following tables provide data for the Analytics dashboard:
 
 ---
 
+## Super Admin Tables
+
+The following tables support the Super Admin Dashboard for platform management.
+
+### `platform_config`
+Platform-wide configuration storage.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `key` | text | No | - | Unique config key |
+| `value` | jsonb | No | - | Configuration value |
+| `description` | text | Yes | - | Human-readable description |
+| `version` | integer | Yes | `1` | Version number for optimistic locking |
+| `updated_at` | timestamptz | Yes | `now()` | Last update timestamp |
+| `updated_by` | uuid | Yes | - | User who last updated |
+
+**RLS Policies:**
+- Only `super_admin` role can view: `is_super_admin(auth.uid())`
+- Only `super_admin` role can modify: `is_super_admin(auth.uid())`
+
+**Seeded Keys:**
+- `baseline_prompt` - Global prompt prepended to all agent system prompts
+- `security_guardrails` - Security guardrail configuration (JSON)
+- `feature_flags` - Global feature flags (JSON)
+
+---
+
+### `admin_audit_log`
+Tracks all administrative actions for compliance.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `admin_user_id` | uuid | No | - | FK to auth.users |
+| `action` | text | No | - | Action type (e.g., 'impersonation_start') |
+| `target_type` | text | Yes | - | Target entity type |
+| `target_id` | uuid | Yes | - | Target entity ID |
+| `target_email` | text | Yes | - | Target user email (for display) |
+| `details` | jsonb | Yes | `'{}'` | Additional action details |
+| `ip_address` | text | Yes | - | IP address (captured server-side) |
+| `user_agent` | text | Yes | - | User agent string |
+| `created_at` | timestamptz | Yes | `now()` | Action timestamp |
+
+**RLS Policies:**
+- Only `super_admin` role can view: `is_super_admin(auth.uid())`
+- Only `super_admin` role can insert: `is_super_admin(auth.uid())`
+
+**Indexes:**
+- `idx_audit_admin_user` on `admin_user_id`
+- `idx_audit_created_at` on `created_at DESC`
+- `idx_audit_action` on `action`
+
+---
+
+### `impersonation_sessions`
+Tracks user impersonation sessions by admins.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `admin_user_id` | uuid | No | - | FK to auth.users (admin) |
+| `target_user_id` | uuid | No | - | FK to auth.users (impersonated) |
+| `reason` | text | No | - | Required reason for audit |
+| `started_at` | timestamptz | Yes | `now()` | Session start time |
+| `ended_at` | timestamptz | Yes | - | Session end time |
+| `is_active` | boolean | Yes | `true` | Whether session is active |
+| `metadata` | jsonb | Yes | `'{}'` | Additional metadata |
+
+**RLS Policies:**
+- Only `super_admin` role can manage: `is_super_admin(auth.uid())`
+
+**Security:**
+- Sessions auto-expire after 30 minutes
+- Rate limited to 5 per hour per admin
+- Cannot impersonate other super_admins
+
+---
+
+### `email_delivery_logs`
+Tracks email delivery status from Resend webhooks.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `resend_email_id` | text | No | - | Resend email ID (unique) |
+| `to_email` | text | No | - | Recipient email |
+| `from_email` | text | No | - | Sender email |
+| `subject` | text | Yes | - | Email subject |
+| `template_type` | text | Yes | - | Template identifier |
+| `status` | text | No | `'sent'` | Delivery status |
+| `opened_at` | timestamptz | Yes | - | First open timestamp |
+| `clicked_at` | timestamptz | Yes | - | First click timestamp |
+| `bounce_reason` | text | Yes | - | Bounce error message |
+| `metadata` | jsonb | Yes | `'{}'` | Additional metadata |
+| `created_at` | timestamptz | Yes | `now()` | Record creation time |
+| `updated_at` | timestamptz | Yes | `now()` | Last update time |
+
+**RLS Policies:**
+- Only `super_admin` role can view: `is_super_admin(auth.uid())`
+
+---
+
 ## React Hooks Reference
 
 All hooks are documented with JSDoc comments. Key data hooks:
