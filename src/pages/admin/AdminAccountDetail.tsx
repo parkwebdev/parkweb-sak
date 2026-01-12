@@ -45,7 +45,7 @@ export function AdminAccountDetail() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
+      {/* Header with back navigation */}
       <div className="flex items-center gap-4">
         <Link 
           to="/admin/accounts" 
@@ -54,9 +54,8 @@ export function AdminAccountDetail() {
           <ArrowLeft size={20} className="text-muted-foreground" aria-hidden="true" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-base font-semibold text-foreground">Account Details</h1>
           {loading ? (
-            <Skeleton className="h-4 w-48 mt-1" />
+            <Skeleton className="h-4 w-48" />
           ) : (
             <p className="text-sm text-muted-foreground">{account?.email}</p>
           )}

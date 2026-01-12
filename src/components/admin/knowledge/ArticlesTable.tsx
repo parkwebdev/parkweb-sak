@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Edit02, Trash01, Plus, Eye } from '@untitledui/icons';
+import { IconButton } from '@/components/ui/icon-button';
 import { formatDistanceToNow } from 'date-fns';
 import type { AdminArticle, AdminCategory } from '@/types/admin';
 import {
@@ -136,7 +137,8 @@ export function ArticlesTable({
         header: '',
         cell: ({ row }) => (
           <div className="flex items-center gap-1 justify-end">
-            <Button
+            <IconButton
+              label="Preview article"
               variant="ghost"
               size="sm"
               onClick={(e) => {
@@ -144,9 +146,10 @@ export function ArticlesTable({
                 setPreviewArticle(row.original);
               }}
             >
-              <Eye size={14} aria-hidden="true" />
-            </Button>
-            <Button
+              <Eye size={14} />
+            </IconButton>
+            <IconButton
+              label="Edit article"
               variant="ghost"
               size="sm"
               onClick={(e) => {
@@ -154,9 +157,10 @@ export function ArticlesTable({
                 onEdit(row.original);
               }}
             >
-              <Edit02 size={14} aria-hidden="true" />
-            </Button>
-            <Button
+              <Edit02 size={14} />
+            </IconButton>
+            <IconButton
+              label="Delete article"
               variant="ghost"
               size="sm"
               onClick={(e) => {
@@ -164,8 +168,8 @@ export function ArticlesTable({
                 setDeleteConfirmId(row.original.id);
               }}
             >
-              <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-            </Button>
+              <Trash01 size={14} className="text-destructive" />
+            </IconButton>
           </div>
         ),
       }),
@@ -189,7 +193,6 @@ export function ArticlesTable({
           </p>
         </div>
         <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-          <Plus size={14} className="mr-1" aria-hidden="true" />
           New Article
         </Button>
       </div>
@@ -343,9 +346,9 @@ export function CategoryManager({
           onChange={(e) => setNewCategoryName(e.target.value)}
           className="flex-1"
         />
-        <Button size="sm" onClick={handleCreate} disabled={!newCategoryName}>
-          <Plus size={14} aria-hidden="true" />
-        </Button>
+        <IconButton label="Add category" size="sm" onClick={handleCreate} disabled={!newCategoryName}>
+          <Plus size={14} />
+        </IconButton>
       </div>
 
       <div className="space-y-2">
@@ -362,14 +365,15 @@ export function CategoryManager({
                   {cat.article_count} article{cat.article_count !== 1 ? 's' : ''}
                 </p>
               </div>
-              <Button
+              <IconButton
+                label="Delete category"
                 variant="ghost"
                 size="sm"
                 onClick={() => onDelete(cat.id)}
                 disabled={cat.article_count > 0}
               >
-                <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-              </Button>
+                <Trash01 size={14} className="text-destructive" />
+              </IconButton>
             </div>
           ))
         )}

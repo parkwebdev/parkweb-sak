@@ -7,8 +7,8 @@
  */
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { IconButton } from '@/components/ui/icon-button';
 import { Plus, Trash01 } from '@untitledui/icons';
 import type { AdminCategory } from '@/types/admin';
 
@@ -52,9 +52,9 @@ export function CategoryManager({
           onChange={(e) => setNewCategoryName(e.target.value)}
           className="flex-1"
         />
-        <Button size="sm" onClick={handleCreate} disabled={!newCategoryName}>
-          <Plus size={14} aria-hidden="true" />
-        </Button>
+        <IconButton label="Add category" size="sm" onClick={handleCreate} disabled={!newCategoryName}>
+          <Plus size={14} />
+        </IconButton>
       </div>
 
       <div className="space-y-2">
@@ -71,14 +71,15 @@ export function CategoryManager({
                   {cat.article_count} article{cat.article_count !== 1 ? 's' : ''}
                 </p>
               </div>
-              <Button
+              <IconButton
+                label="Delete category"
                 variant="ghost"
                 size="sm"
                 onClick={() => onDelete(cat.id)}
                 disabled={cat.article_count > 0}
               >
-                <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-              </Button>
+                <Trash01 size={14} className="text-destructive" />
+              </IconButton>
             </div>
           ))
         )}

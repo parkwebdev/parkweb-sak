@@ -199,14 +199,6 @@ export function AdminDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-base font-semibold text-foreground">Platform Overview</h1>
-        <p className="text-sm text-muted-foreground">
-          Monitor platform health and key metrics
-        </p>
-      </div>
-
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
