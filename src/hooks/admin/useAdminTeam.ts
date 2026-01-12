@@ -1,5 +1,5 @@
 /**
- * Hook for managing Pilot team (super admins)
+ * Hook for managing Pilot team (super admins and pilot support)
  * 
  * @module hooks/admin/useAdminTeam
  */
@@ -9,13 +9,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
-import type { PilotTeamMember } from '@/types/admin';
+import { useAuth } from '@/hooks/useAuth';
+import type { PilotTeamMember, InvitePilotMemberData, AdminPermission } from '@/types/admin';
 
 interface UseAdminTeamResult {
   team: PilotTeamMember[];
   loading: boolean;
   error: Error | null;
-  inviteMember: (email: string) => Promise<void>;
+  inviteMember: (data: InvitePilotMemberData) => Promise<boolean>;
   removeMember: (userId: string) => Promise<void>;
   isInviting: boolean;
   isRemoving: boolean;
@@ -23,15 +24,16 @@ interface UseAdminTeamResult {
 
 export function useAdminTeam(): UseAdminTeamResult {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data, isLoading, error } = useQuery({
     queryKey: adminQueryKeys.team.list(),
     queryFn: async (): Promise<PilotTeamMember[]> => {
-      // Get all super_admin users
+      // Get all super_admin and pilot_support users
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id, role, created_at')
-        .eq('role', 'super_admin');
+        .select('user_id, role, admin_permissions, created_at')
+        .in('role', ['super_admin', 'pilot_support']);
 
       if (rolesError) throw rolesError;
       if (!roles || roles.length === 0) return [];
@@ -73,7 +75,8 @@ export function useAdminTeam(): UseAdminTeamResult {
           email: profile?.email || '',
           display_name: profile?.display_name ?? null,
           avatar_url: profile?.avatar_url ?? null,
-          role: role.role,
+          role: role.role as PilotTeamMember['role'],
+          admin_permissions: (role.admin_permissions || []) as AdminPermission[],
           created_at: role.created_at,
           last_login_at: profile?.last_login_at ?? null,
           audit_action_count: auditCountMap.get(role.user_id) || 0,
@@ -86,12 +89,32 @@ export function useAdminTeam(): UseAdminTeamResult {
   });
 
   const inviteMutation = useMutation({
-    mutationFn: async (email: string) => {
-      // TODO: Implement invite flow - create pending invitation or directly add role
-      toast.info('Team invite functionality will be implemented in Phase 5');
+    mutationFn: async (data: InvitePilotMemberData): Promise<boolean> => {
+      if (!user) throw new Error('You must be logged in to invite team members');
+
+      // Get current super admin's name for the invite
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
+        .single();
+
+      const { error } = await supabase.functions.invoke('send-pilot-team-invitation', {
+        body: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          role: data.role,
+          invitedBy: profile?.display_name || 'Pilot Admin',
+        }
+      });
+
+      if (error) throw error;
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.team.all() });
+      toast.success('Pilot team invitation sent');
     },
     onError: (error: unknown) => {
       toast.error('Failed to invite team member', { description: getErrorMessage(error) });
@@ -104,24 +127,33 @@ export function useAdminTeam(): UseAdminTeamResult {
         .from('user_roles')
         .update({ role: 'admin' }) // Downgrade to admin instead of deleting
         .eq('user_id', userId)
-        .eq('role', 'super_admin');
+        .in('role', ['super_admin', 'pilot_support']);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.team.all() });
-      toast.success('Team member removed from super admin role');
+      toast.success('Team member removed from Pilot team');
     },
     onError: (error: unknown) => {
       toast.error('Failed to remove team member', { description: getErrorMessage(error) });
     },
   });
 
+  const inviteMember = async (data: InvitePilotMemberData): Promise<boolean> => {
+    try {
+      await inviteMutation.mutateAsync(data);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return {
     team: data || [],
     loading: isLoading,
     error: error as Error | null,
-    inviteMember: inviteMutation.mutateAsync,
+    inviteMember,
     removeMember: removeMutation.mutateAsync,
     isInviting: inviteMutation.isPending,
     isRemoving: removeMutation.isPending,

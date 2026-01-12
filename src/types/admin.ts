@@ -92,6 +92,50 @@ export interface PlanLimits {
   [key: string]: number | undefined;
 }
 
+// Pilot team specific roles
+export type PilotTeamRole = 'super_admin' | 'pilot_support';
+
+// Admin dashboard permissions (different from customer AppPermission)
+export type AdminPermission =
+  | 'view_accounts'
+  | 'manage_accounts'
+  | 'view_team'
+  | 'manage_team'
+  | 'view_content'
+  | 'manage_content'
+  | 'view_revenue'
+  | 'view_settings'
+  | 'manage_settings'
+  | 'impersonate_users';
+
+export const ADMIN_PERMISSION_GROUPS: Record<string, readonly AdminPermission[]> = {
+  'Accounts': ['view_accounts', 'manage_accounts'],
+  'Pilot Team': ['view_team', 'manage_team'],
+  'Content': ['view_content', 'manage_content'],
+  'Revenue': ['view_revenue'],
+  'Settings': ['view_settings', 'manage_settings'],
+  'Impersonation': ['impersonate_users'],
+} as const;
+
+export const DEFAULT_PILOT_ROLE_PERMISSIONS: Record<PilotTeamRole, AdminPermission[]> = {
+  super_admin: [], // Super admins have full access, no need to list
+  pilot_support: [
+    'view_accounts',
+    'view_team',
+    'view_content',
+    'view_revenue',
+    'view_settings',
+  ],
+};
+
+// Pilot invite data
+export interface InvitePilotMemberData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: PilotTeamRole;
+}
+
 // Team types
 export interface PilotTeamMember {
   id: string;
@@ -99,7 +143,8 @@ export interface PilotTeamMember {
   email: string;
   display_name: string | null;
   avatar_url: string | null;
-  role: string;
+  role: PilotTeamRole;
+  admin_permissions: AdminPermission[];
   created_at: string | null;
   last_login_at: string | null;
   audit_action_count: number;
