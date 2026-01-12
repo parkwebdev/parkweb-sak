@@ -22,8 +22,6 @@ import { getInitials, formatAdminDate } from '@/lib/admin/admin-utils';
 import { ImpersonateButton } from './ImpersonateButton';
 import { AccountActions } from './AccountActions';
 import { AccountUsageCard } from './AccountUsageCard';
-import { useNavigate } from 'react-router-dom';
-import { LinkExternal01 } from '@untitledui/icons';
 
 interface AccountDetailSheetProps {
   accountId: string | null;
@@ -39,7 +37,6 @@ export function AccountDetailSheet({
   open,
   onOpenChange,
 }: AccountDetailSheetProps) {
-  const navigate = useNavigate();
   const { account, usage, loading } = useAccountDetail(accountId || undefined);
 
   return (
@@ -95,17 +92,6 @@ export function AccountDetailSheet({
                 accountId={account.user_id}
                 status={account.status}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onOpenChange(false);
-                  navigate(`/admin/accounts/${account.user_id}`);
-                }}
-              >
-                <LinkExternal01 size={14} className="mr-1" aria-hidden="true" />
-                Full View
-              </Button>
             </div>
 
             {/* Account Info */}
