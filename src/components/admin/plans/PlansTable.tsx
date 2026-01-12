@@ -16,6 +16,7 @@ import {
 import { DataTable } from '@/components/data-table/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -495,9 +496,7 @@ export function SubscriptionsTable({
             <p className="text-xs text-muted-foreground">{sub.plan_name}</p>
           </div>
           <div className="flex items-center gap-4">
-            <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
-              {sub.status}
-            </Badge>
+            <StatusBadge status={sub.status} type="subscription" />
             <span className="font-mono text-sm">{formatAdminCurrency(sub.mrr)}/mo</span>
           </div>
         </div>
