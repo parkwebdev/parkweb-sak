@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { TopBar, TopBarProvider, useTopBarContext } from '@/components/layout/TopBar';
+import { ImpersonationBanner } from '@/components/admin/ImpersonationBanner';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -55,6 +56,9 @@ function AppLayoutInner({ children }: AppLayoutProps) {
           right={config.right}
           onMobileMenuClick={() => setSidebarOpen(true)}
         />
+        
+        {/* Impersonation Banner - shows when admin is impersonating a user */}
+        <ImpersonationBanner />
           
         {/* Page Content - flex column container so children can use flex-1 properly */}
         <main id="main-content" className="flex-1 min-h-0 overflow-hidden flex flex-col" tabIndex={-1}>
