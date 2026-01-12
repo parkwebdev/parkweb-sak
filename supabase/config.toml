@@ -152,3 +152,11 @@ verify_jwt = false
 [functions.list-user-sessions]
 verify_jwt = true
 
+[functions.admin-impersonate]
+verify_jwt = true
+
+[functions.admin-stripe-sync]
+verify_jwt = true
+
+[functions.resend-webhook]
+verify_jwt = false
