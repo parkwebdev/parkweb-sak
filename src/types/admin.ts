@@ -169,6 +169,17 @@ export interface RevenueData {
   funnel: FunnelData;
   byPlan: PlanRevenueData[];
   topAccounts: TopAccount[];
+  // MRR Movement metrics
+  newMRR: number;
+  expansionMRR: number;
+  contractionMRR: number;
+  churnedMRR: number;
+  quickRatio: number;
+  mrrMovementHistory: MRRMovementDataPoint[];
+  // Churn analysis
+  churnByPlan: ChurnByPlanData[];
+  // Account concentration
+  accountConcentration: AccountConcentration;
 }
 
 export interface MRRDataPoint {
@@ -206,6 +217,27 @@ export interface TopAccount {
   planName: string;
   mrr: number;
   lifetimeValue: number;
+}
+
+export interface MRRMovementDataPoint {
+  date: string;
+  newMRR: number;
+  expansionMRR: number;
+  contractionMRR: number;
+  churnedMRR: number;
+  netChange: number;
+}
+
+export interface ChurnByPlanData {
+  planName: string;
+  churnRate: number;
+  churnedCount: number;
+  totalCount: number;
+}
+
+export interface AccountConcentration {
+  top10Percent: number;
+  top25Percent: number;
 }
 
 // Audit log types

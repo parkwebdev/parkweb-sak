@@ -62,6 +62,20 @@ export function useRevenueAnalytics(dateRange?: DateRange): UseRevenueAnalyticsR
         },
         byPlan: [],
         topAccounts: [],
+        // MRR Movement
+        newMRR: 0,
+        expansionMRR: 0,
+        contractionMRR: 0,
+        churnedMRR: 0,
+        quickRatio: 0,
+        mrrMovementHistory: [],
+        // Churn analysis
+        churnByPlan: [],
+        // Account concentration
+        accountConcentration: {
+          top10Percent: 0,
+          top25Percent: 0,
+        },
       };
     },
     staleTime: 300000, // 5 minutes
