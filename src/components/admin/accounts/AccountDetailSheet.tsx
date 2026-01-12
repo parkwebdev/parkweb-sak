@@ -15,8 +15,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
+import { RoleBadge } from '@/components/admin/shared/RoleBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
@@ -95,9 +95,7 @@ export function AccountDetailSheet({
                   </SheetTitle>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <StatusBadge status={account.status} type="account" />
-                    <Badge variant="outline" className="capitalize">
-                      {account.role}
-                    </Badge>
+                    <RoleBadge role={account.role} />
                   </div>
                 </div>
               </div>
