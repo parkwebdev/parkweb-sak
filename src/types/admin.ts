@@ -21,8 +21,9 @@ export interface AdminAccount {
   company_name: string | null;
   avatar_url: string | null;
   created_at: string;
+  last_login_at: string | null;
   role: string;
-  status: 'active' | 'suspended' | 'pending';
+  status: 'active' | 'inactive' | 'suspended';
   plan_name: string | null;
   subscription_status: string | null;
   mrr: number;
@@ -33,8 +34,8 @@ export interface AdminAccount {
 export interface AdminAccountFilters {
   search: string;
   planId?: string;
-  status: 'all' | 'active' | 'suspended' | 'pending';
-  sortBy: 'created_at' | 'last_active' | 'mrr' | 'display_name';
+  status: 'all' | 'active' | 'inactive' | 'suspended';
+  sortBy: 'created_at' | 'last_login_at' | 'mrr' | 'display_name';
   sortOrder: 'asc' | 'desc';
 }
 
@@ -43,7 +44,6 @@ export interface AdminAccountDetail extends AdminAccount {
   company_phone: string | null;
   knowledge_source_count: number;
   location_count: number;
-  last_login_at: string | null;
   permissions: string[];
 }
 

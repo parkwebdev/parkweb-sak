@@ -109,6 +109,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (session?.user && event === 'SIGNED_IN') {
           setTimeout(async () => {
             await createOrUpdateProfile(session.user);
+            // Update last_login_at timestamp
+            await updateLastLogin(session.user.id);
             // Process signup completion (handles invitations, welcome notification, agent creation)
             await processSignupCompletion(session);
           }, 0);
@@ -243,6 +245,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (error: unknown) {
       logger.error('Error in processSignupCompletion:', error);
+    }
+  };
+
+  /**
+   * Update the user's last_login_at timestamp.
+   * Called on each successful sign-in.
+   * @internal
+   */
+  const updateLastLogin = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('user_id', userId);
+
+      if (error) {
+        logger.error('Error updating last_login_at:', error);
+      }
+    } catch (error: unknown) {
+      logger.error('Error in updateLastLogin:', error);
     }
   };
 

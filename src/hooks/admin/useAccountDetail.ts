@@ -32,7 +32,7 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
       // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, last_login_at, status')
         .eq('user_id', userId)
         .single();
 
@@ -87,7 +87,7 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         avatar_url: profile.avatar_url,
         created_at: profile.created_at,
         role: roleData?.role || 'user',
-        status: 'active',
+        status: (profile.status || 'active') as 'active' | 'inactive' | 'suspended',
         plan_name: null,
         subscription_status: null,
         mrr: 0,
@@ -95,7 +95,7 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         lead_count: leadResult.count || 0,
         knowledge_source_count: knowledgeResult.count || 0,
         location_count: locationResult.count || 0,
-        last_login_at: null,
+        last_login_at: profile.last_login_at || null,
         permissions: (roleData?.permissions as string[]) || [],
       };
 

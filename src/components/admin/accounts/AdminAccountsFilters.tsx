@@ -29,13 +29,13 @@ interface AdminAccountsFiltersProps {
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Status', dotColor: 'bg-muted-foreground' },
   { value: 'active', label: 'Active', dotColor: 'bg-status-active' },
-  { value: 'pending', label: 'Pending', dotColor: 'bg-status-pending' },
+  { value: 'inactive', label: 'Inactive', dotColor: 'bg-status-draft' },
   { value: 'suspended', label: 'Suspended', dotColor: 'bg-status-suspended' },
 ] as const;
 
 const SORT_OPTIONS = [
   { value: 'created_at', label: 'Created' },
-  { value: 'last_active', label: 'Last Active' },
+  { value: 'last_login_at', label: 'Last Login' },
   { value: 'mrr', label: 'MRR' },
   { value: 'display_name', label: 'Name' },
 ] as const;
