@@ -8,7 +8,6 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Users01 } from '@untitledui/icons';
 import { AccountsTable, AccountDetailSheet, AdminAccountsSearch, AdminAccountsFilters } from '@/components/admin/accounts';
 import { useAdminAccounts } from '@/hooks/admin';
@@ -19,7 +18,6 @@ import type { AdminAccountFilters } from '@/types/admin';
  * Accounts management page for Super Admin.
  */
 export function AdminAccounts() {
-  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Partial<AdminAccountFilters>>({});
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
@@ -55,9 +53,9 @@ export function AdminAccounts() {
     pageSize: 25,
   });
 
-  const handleSelectAccount = (accountId: string) => {
-    navigate(`/admin/accounts/${accountId}`);
-  };
+  const handleSelectAccount = useCallback((accountId: string) => {
+    setSelectedAccountId(accountId);
+  }, []);
 
   return (
     <div className="p-6 space-y-6">
