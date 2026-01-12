@@ -101,12 +101,31 @@ export function useAdminAccounts(options: UseAdminAccountsOptions = {}): UseAdmi
             .select('id', { count: 'exact', head: true })
             .eq('user_id', profile.user_id);
 
+          // Check if this user is a team member (get owner's company)
+          const { data: teamMemberData } = await supabase
+            .from('team_members')
+            .select('owner_id')
+            .eq('member_id', profile.user_id)
+            .maybeSingle();
+
+          let effectiveCompanyName = profile.company_name;
+
+          if (teamMemberData?.owner_id) {
+            const { data: ownerProfile } = await supabase
+              .from('profiles')
+              .select('company_name')
+              .eq('user_id', teamMemberData.owner_id)
+              .maybeSingle();
+            
+            effectiveCompanyName = ownerProfile?.company_name || profile.company_name;
+          }
+
           return {
             id: profile.id,
             user_id: profile.user_id,
             email: profile.email || '',
             display_name: profile.display_name,
-            company_name: profile.company_name,
+            company_name: effectiveCompanyName,
             avatar_url: profile.avatar_url,
             created_at: profile.created_at,
             role: roleData?.role || 'user',
