@@ -7,15 +7,23 @@
  * @module pages/admin/AdminAuditLog
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { ClipboardCheck } from '@untitledui/icons';
 import { AuditLogTable, AuditLogFilters, AuditLogExport } from '@/components/admin/audit';
 import { useAdminAuditLog } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AuditLogFilters as AuditLogFiltersType } from '@/types/admin';
 
 /**
  * Audit log viewer page for Super Admin.
  */
 export function AdminAuditLog() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={ClipboardCheck} title="Audit Log" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Partial<AuditLogFiltersType>>({});
   const pageSize = 50;

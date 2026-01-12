@@ -14,6 +14,7 @@ import {
   Grid01 as Grid, 
   User03, 
   User01,
+  Users02,
   PieChart01, 
   Calendar, 
   Circle, 
@@ -34,6 +35,14 @@ import {
   Share07,
   Globe01,
   BarChart01,
+  // Admin section icons
+  LayoutAlt01,
+  FileCode01,
+  CreditCard01,
+  Mail01,
+  TrendUp01,
+  ClipboardCheck,
+  Shield01,
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from '@/components/icons/DashboardIcon';
@@ -113,6 +122,20 @@ export const ACTIVE_ICON_MAP: Record<string, IconComponent | undefined> = {
   DataFlow: AriMenuIcons.DataFlowFilled,
   Key01: AriMenuIcons.KeyFilled,
   Terminal: AriMenuIcons.TerminalFilled,
+};
+
+/** Admin sidebar icon mapping from ADMIN_SECTIONS iconName to component */
+export const ADMIN_ICON_MAP: Record<string, IconComponent> = {
+  LayoutAlt01: LayoutAlt01,
+  Users01: User03,
+  FileCode01: FileCode01,
+  CreditCard01: CreditCard01,
+  UserGroup: Users02,
+  BookOpen01: BookOpen01,
+  Mail01: Mail01,
+  TrendUp01: TrendUp01,
+  ClipboardCheck: ClipboardCheck,
+  Shield01: Shield01,
 };
 
 /** Get icon component from iconName, with fallback */

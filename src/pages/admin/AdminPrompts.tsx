@@ -7,7 +7,8 @@
  * @module pages/admin/AdminPrompts
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { FileCode01 } from '@untitledui/icons';
 import { 
   BaselinePromptEditor, 
   PromptPreview, 
@@ -16,11 +17,18 @@ import {
 } from '@/components/admin/prompts';
 import { PromptTestChat } from '@/components/admin/prompts';
 import { usePlatformConfig } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
 /**
  * Baseline prompt configuration page for Super Admin.
  */
 export function AdminPrompts() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={FileCode01} title="Baseline Prompt" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   const { config, loading, updateConfig, isUpdating } = usePlatformConfig('baseline_prompt');
   const { config: guardrailsConfig, loading: guardrailsLoading, updateConfig: updateGuardrails } = usePlatformConfig('security_guardrails');
   

@@ -7,13 +7,22 @@
  * @module pages/admin/AdminTeam
  */
 
+import { useMemo } from 'react';
+import { Users02 } from '@untitledui/icons';
 import { PilotTeamTable } from '@/components/admin/team';
 import { useAdminTeam } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
 /**
  * Pilot team management page for Super Admin.
  */
 export function AdminTeam() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Users02} title="Pilot Team" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   const { 
     team, 
     loading, 

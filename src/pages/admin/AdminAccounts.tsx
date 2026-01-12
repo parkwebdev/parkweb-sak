@@ -7,16 +7,24 @@
  * @module pages/admin/AdminAccounts
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Users01 } from '@untitledui/icons';
 import { AccountsTable, AccountFilters, AccountDetailSheet } from '@/components/admin/accounts';
 import { useAdminAccounts } from '@/hooks/admin';
+import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AdminAccountFilters } from '@/types/admin';
 
 /**
  * Accounts management page for Super Admin.
  */
 export function AdminAccounts() {
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Users01} title="Accounts" />,
+  }), []);
+  useTopBar(topBarConfig);
+
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Partial<AdminAccountFilters>>({});
