@@ -64,35 +64,35 @@ const targetTypes: AuditTargetType[] = [
  * Audit log filters component.
  */
 export function AuditLogFilters({ onApply }: AuditLogFiltersProps) {
-  const [action, setAction] = useState<AuditAction | ''>('');
-  const [targetType, setTargetType] = useState<AuditTargetType | ''>('');
+  const [action, setAction] = useState<AuditAction | 'all'>('all');
+  const [targetType, setTargetType] = useState<AuditTargetType | 'all'>('all');
   const [search, setSearch] = useState('');
 
   const handleApply = () => {
     onApply({
-      action: action || undefined,
-      targetType: targetType || undefined,
+      action: action === 'all' ? undefined : action,
+      targetType: targetType === 'all' ? undefined : targetType,
       search,
     });
   };
 
   const handleClear = () => {
-    setAction('');
-    setTargetType('');
+    setAction('all');
+    setTargetType('all');
     setSearch('');
-    onApply({ search: '' });
+    onApply({});
   };
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Action</Label>
-        <Select value={action} onValueChange={(v) => setAction(v as AuditAction | '')}>
+        <Select value={action} onValueChange={(v) => setAction(v as AuditAction | 'all')}>
           <SelectTrigger>
             <SelectValue placeholder="All actions" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All actions</SelectItem>
+            <SelectItem value="all">All actions</SelectItem>
             {actionOptions.map((a) => (
               <SelectItem key={a} value={a}>
                 {getAuditActionLabel(a)}
@@ -104,12 +104,12 @@ export function AuditLogFilters({ onApply }: AuditLogFiltersProps) {
 
       <div className="space-y-2">
         <Label>Target Type</Label>
-        <Select value={targetType} onValueChange={(v) => setTargetType(v as AuditTargetType | '')}>
+        <Select value={targetType} onValueChange={(v) => setTargetType(v as AuditTargetType | 'all')}>
           <SelectTrigger>
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All types</SelectItem>
+            <SelectItem value="all">All types</SelectItem>
             {targetTypes.map((t) => (
               <SelectItem key={t} value={t}>
                 {getTargetTypeLabel(t)}
