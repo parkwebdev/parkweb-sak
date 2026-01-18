@@ -14,6 +14,7 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import { useCallback, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
 import { EditorFloatingToolbar } from './EditorFloatingToolbar';
@@ -97,6 +98,8 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           emptyEditorClass: 'is-editor-empty',
         }),
         Underline,
+        // TextStyle for color support
+        TextStyle,
         // Table extensions
         Table.configure({
           resizable: true,
