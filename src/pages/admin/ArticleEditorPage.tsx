@@ -10,12 +10,12 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen01 } from '@untitledui/icons';
+import { ArrowLeft, BookOpen01, Check } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
 import { usePlatformHCCategories } from '@/hooks/admin/usePlatformHCCategories';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { ArticleEditor, type ArticleEditorRef } from '@/components/admin/knowledge/ArticleEditor';
+import { ArticleEditor, type ArticleEditorRef, type Heading } from '@/components/admin/knowledge/ArticleEditor';
 import { HCTableOfContents } from '@/components/help-center/HCTableOfContents';
 import { EditorInsertPanel } from '@/components/admin/knowledge/EditorInsertPanel';
 import { EditorMetadataPanel } from '@/components/admin/knowledge/EditorMetadataPanel';
@@ -28,37 +28,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { PlatformHCArticleInput } from '@/types/platform-hc';
 
-interface Heading {
-  id: string;
-  text: string;
-  level: number;
-}
-
-/**
- * Extracts headings from HTML content for table of contents.
- */
-function extractHeadingsFromHTML(html: string): Heading[] {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const headingElements = doc.querySelectorAll('h1, h2, h3');
-  
-  const headings: Heading[] = [];
-  headingElements.forEach((el, index) => {
-    const tagName = el.tagName.toLowerCase();
-    const level = parseInt(tagName.replace('h', ''), 10);
-    const text = el.textContent?.trim() || '';
-    
-    if (text) {
-      headings.push({
-        id: `heading-${index}`,
-        text,
-        level,
-      });
-    }
-  });
-  
-  return headings;
-}
 
 /**
  * Generate a URL-friendly slug from title.
@@ -113,7 +82,7 @@ export function ArticleEditorPage() {
       setOrderIndex(existingArticle.order_index || 0);
       setIconName(existingArticle.icon_name || '');
       setIsPublished(existingArticle.is_published);
-      setHeadings(extractHeadingsFromHTML(existingArticle.content));
+      // Headings will be extracted by the editor when it mounts
       setHasLoaded(true);
     } else if (isNewArticle && !hasLoaded && categories.length > 0) {
       // Set default category for new articles
@@ -122,10 +91,10 @@ export function ArticleEditorPage() {
     }
   }, [existingArticle, hasLoaded, isNewArticle, categories]);
   
-  // Extract headings when content changes
-  const handleContentChange = useCallback((html: string) => {
+  // Handle content and headings changes from editor
+  const handleContentChange = useCallback((html: string, extractedHeadings: Heading[]) => {
     setContent(html);
-    setHeadings(extractHeadingsFromHTML(html));
+    setHeadings(extractedHeadings);
   }, []);
   
   // Auto-generate slug from title
@@ -138,7 +107,7 @@ export function ArticleEditorPage() {
   }, [slug, title]);
   
   // Auto-save handler
-  const { save } = useAutoSave<PlatformHCArticleInput>({
+  const { save, saveNow, status: saveStatus } = useAutoSave<PlatformHCArticleInput>({
     onSave: async (data) => {
       if (isNewArticle) {
         await createArticle(data);
@@ -150,6 +119,33 @@ export function ArticleEditorPage() {
     },
     debounceMs: 2000,
   });
+  
+  // Build current form data for save operations
+  const currentFormData = useMemo((): PlatformHCArticleInput => ({
+    title,
+    content,
+    slug: slug || generateSlug(title),
+    category_id: categoryId,
+    description,
+    order_index: orderIndex,
+    icon_name: iconName || undefined,
+    is_published: isPublished,
+  }), [title, content, slug, categoryId, description, orderIndex, iconName, isPublished]);
+  
+  // Cmd+S keyboard shortcut for force save
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        if (hasLoaded && title && categoryId) {
+          saveNow(currentFormData);
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasLoaded, title, categoryId, currentFormData, saveNow]);
   
   // Trigger auto-save on changes (only after initial load)
   useEffect(() => {
@@ -197,6 +193,23 @@ export function ArticleEditorPage() {
     ),
     right: (
       <div className="flex items-center gap-3">
+        {/* Save status indicator */}
+        {saveStatus === 'pending' && (
+          <span className="text-xs text-muted-foreground">Unsaved changes</span>
+        )}
+        {saveStatus === 'saving' && (
+          <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>
+        )}
+        {saveStatus === 'saved' && (
+          <span className="flex items-center gap-1 text-xs text-status-active">
+            <Check size={12} aria-hidden="true" />
+            Saved
+          </span>
+        )}
+        {saveStatus === 'error' && (
+          <span className="text-xs text-destructive">Save failed</span>
+        )}
+        
         <Badge variant={isPublished ? 'default' : 'secondary'}>
           {isPublished ? 'Published' : 'Draft'}
         </Badge>
@@ -207,7 +220,7 @@ export function ArticleEditorPage() {
         />
       </div>
     ),
-  }), [title, isPublished, handleBack, handleTitleChange]);
+  }), [title, isPublished, handleBack, handleTitleChange, saveStatus]);
   
   useTopBar(topBarConfig);
   

@@ -19,7 +19,7 @@
  * ```
  */
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useState } from 'react';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 
@@ -34,11 +34,15 @@ interface UseAutoSaveOptions<T> {
   savingMessage?: string;
 }
 
+type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
+
 interface UseAutoSaveReturn<T> {
   /** Call this on every change - it will debounce and save */
   save: (value: T) => void;
   /** Force immediate save (bypasses debounce) */
   saveNow: (value: T) => Promise<void>;
+  /** Current save status */
+  status: SaveStatus;
 }
 
 /**
@@ -56,7 +60,9 @@ export function useAutoSave<T>({
   onError,
   savingMessage = 'Saving...',
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn<T> {
+  const [status, setStatus] = useState<SaveStatus>('idle');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const statusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const onSaveRef = useRef(onSave);
   const onErrorRef = useRef(onError);
   const savingMessageRef = useRef(savingMessage);
@@ -80,10 +86,14 @@ export function useAutoSave<T>({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (statusTimeoutRef.current) {
+        clearTimeout(statusTimeoutRef.current);
+      }
     };
   }, []);
 
   const executeSave = useCallback(async (value: T) => {
+    setStatus('saving');
     const toastId = toast.saving(savingMessageRef.current);
     const startTime = Date.now();
     
@@ -97,8 +107,18 @@ export function useAutoSave<T>({
       setTimeout(() => {
         toast.dismiss(toastId);
       }, remainingTime);
+      
+      setStatus('saved');
+      // Reset to idle after 3 seconds
+      if (statusTimeoutRef.current) {
+        clearTimeout(statusTimeoutRef.current);
+      }
+      statusTimeoutRef.current = setTimeout(() => {
+        setStatus('idle');
+      }, 3000);
     } catch (error: unknown) {
       toast.dismiss(toastId);
+      setStatus('error');
       if (onErrorRef.current) {
         onErrorRef.current(error);
       } else {
@@ -112,6 +132,8 @@ export function useAutoSave<T>({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      
+      setStatus('pending');
 
       timeoutRef.current = setTimeout(() => {
         executeSave(value);
@@ -130,5 +152,5 @@ export function useAutoSave<T>({
     [executeSave]
   );
 
-  return { save, saveNow };
+  return { save, saveNow, status };
 }
