@@ -39,6 +39,8 @@ export interface PlatformHCArticle {
   updated_by: string | null;
   /** Joined category label */
   category_label?: string;
+  /** Joined category color (Tailwind class like 'bg-info') */
+  category_color?: string;
 }
 
 /**

@@ -34,17 +34,21 @@ export function usePlatformHCArticles(): UsePlatformHCArticlesResult {
         .from('platform_hc_articles')
         .select(`
           *,
-          category:platform_hc_categories!fk_platform_hc_articles_category(label)
+          category:platform_hc_categories!fk_platform_hc_articles_category(label, color)
         `)
         .order('category_id')
         .order('order_index');
 
       if (error) throw error;
 
-      return (data || []).map((article) => ({
-        ...article,
-        category_label: (article.category as { label: string } | null)?.label,
-      })) as PlatformHCArticle[];
+      return (data || []).map((article) => {
+        const cat = article.category as { label: string; color: string } | null;
+        return {
+          ...article,
+          category_label: cat?.label,
+          category_color: cat?.color,
+        };
+      }) as PlatformHCArticle[];
     },
     staleTime: 60000,
   });
