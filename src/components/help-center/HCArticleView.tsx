@@ -184,7 +184,7 @@ export function HCArticleView({
       {/* Article Content */}
       <div 
         ref={contentRef}
-        className="prose prose-sm dark:prose-invert max-w-none kb-article-content py-8"
+        className="prose prose-sm dark:prose-invert max-w-none hc-article-content py-8"
       >
         <ArticleComponent />
       </div>

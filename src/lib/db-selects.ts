@@ -402,9 +402,9 @@ export const WEBHOOK_COLUMNS = `
 `;
 
 /**
- * Columns for KB article popularity views.
+ * Columns for HC article popularity views.
  */
-export const KB_ARTICLE_POPULARITY_COLUMNS = `
+export const HC_ARTICLE_POPULARITY_COLUMNS = `
   article_slug,
   category_id,
   view_count,

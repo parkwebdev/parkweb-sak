@@ -140,7 +140,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       {
         id: 'get-help',
         title: 'Browse help articles',
-        subtitle: 'Find answers in our knowledge base',
+        subtitle: 'Find answers in our help center',
         icon: 'help',
         action: 'open_help',
       },

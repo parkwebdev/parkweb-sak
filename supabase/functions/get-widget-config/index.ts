@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
     }
     const quickActions = ((embeddedChatConfig.quickActions || [
       { icon: 'chat', title: 'Start a Chat', subtitle: 'Chat with our AI assistant', action: 'start_chat' },
-      { icon: 'help', title: 'Help Articles', subtitle: 'Browse our knowledge base', action: 'open_help' }
+      { icon: 'help', title: 'Help Articles', subtitle: 'Browse our help center', action: 'open_help' }
     ]) as QuickAction[]).map((qa: QuickAction) => ({
       id: qa.id || qa.action,
       label: qa.title || qa.label, // Support both label and title

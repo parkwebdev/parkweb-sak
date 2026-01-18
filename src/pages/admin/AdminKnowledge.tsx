@@ -1,7 +1,7 @@
 /**
- * Admin Knowledge Page
+ * Admin Help Center Page
  * 
- * Edit platform Knowledge Base articles shown to all users.
+ * Edit platform Help Center articles shown to all users.
  * WYSIWYG editor for article content.
  * 
  * @module pages/admin/AdminKnowledge
@@ -18,12 +18,12 @@ import { ArticleEditorSheet } from '@/components/admin/knowledge/ArticleEditorSh
 import type { PlatformHCArticle, PlatformHCArticleInput } from '@/types/platform-hc';
 
 /**
- * Platform Knowledge Base editor page for Super Admin.
+ * Platform Help Center editor page for Super Admin.
  */
 export function AdminKnowledge() {
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={BookOpen01} title="Knowledge Base" />,
+    left: <TopBarPageContext icon={BookOpen01} title="Help Center" />,
   }), []);
   useTopBar(topBarConfig);
 

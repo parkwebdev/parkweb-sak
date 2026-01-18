@@ -144,7 +144,7 @@ export function PlatformCategoryManager({
           <DialogHeader>
             <DialogTitle>New Category</DialogTitle>
             <DialogDescription>
-              Create a new knowledge base category
+              Create a new help center category
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
