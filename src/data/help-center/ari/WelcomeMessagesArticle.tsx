@@ -2,7 +2,7 @@
  * Welcome & Messages Article
  */
 
-import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
+import { HCCallout, HCRelatedArticles } from '@/components/help-center';
 
 export default function WelcomeMessagesArticle() {
   return (
@@ -30,10 +30,10 @@ export default function WelcomeMessagesArticle() {
         <li>Your changes save automatically</li>
       </ol>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Keep your welcome title short and action-oriented. 
         Example: "Hi there! 👋" or "Welcome to Sunshine Homes!"
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="welcome-subtitle">Welcome Subtitle</h2>
       <p>
@@ -46,10 +46,10 @@ export default function WelcomeMessagesArticle() {
         <li>Encourage visitors to ask questions</li>
       </ul>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         Example subtitle: "I'm here to help you find your perfect home, schedule tours, 
         and answer any questions you have."
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="quick-reply-suggestions">Quick Reply Suggestions</h2>
       <p>
@@ -93,10 +93,10 @@ export default function WelcomeMessagesArticle() {
         <li><strong>Disabled</strong> – Help tab is hidden from visitors</li>
       </ul>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         If you have extensive help documentation, keep the Help tab enabled. 
         It helps visitors find answers quickly without waiting for a response.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="best-practices">Best Practices</h2>
       <ul>
@@ -107,12 +107,12 @@ export default function WelcomeMessagesArticle() {
         <li>Use emojis sparingly – one in the title is usually enough</li>
       </ul>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         Changes to welcome messages are saved automatically and take effect 
         immediately on your live widget.
-      </KBCallout>
+      </HCCallout>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'appearance', title: 'Customizing Appearance' },
           { categoryId: 'ari', articleSlug: 'lead-capture', title: 'Lead Capture' },

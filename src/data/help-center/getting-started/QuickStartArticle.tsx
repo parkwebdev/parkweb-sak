@@ -4,7 +4,7 @@
  * Get up and running with Pilot quickly.
  */
 
-import { KBCallout, KBStepByStep, KBRelatedArticles } from '@/components/knowledge-base';
+import { HCCallout, HCStepByStep, HCRelatedArticles } from '@/components/help-center';
 
 export default function QuickStartArticle() {
   return (
@@ -15,7 +15,7 @@ export default function QuickStartArticle() {
       </p>
 
       <h2 id="setup-overview">Setup Overview</h2>
-      <KBStepByStep
+      <HCStepByStep
         steps={[
           {
             title: 'Configure Ari',
@@ -52,9 +52,9 @@ export default function QuickStartArticle() {
         <li><strong>Lead Capture</strong> – Configure contact forms to collect visitor info</li>
       </ul>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Start with the default settings and refine them as you learn how visitors interact with Ari.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="step-2-add-knowledge">Step 2: Add Knowledge Sources</h2>
       <p>
@@ -68,9 +68,9 @@ export default function QuickStartArticle() {
         <li>Wait for Pilot to process and index your content</li>
       </ol>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         The more relevant knowledge you provide, the better Ari can assist your visitors.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="step-3-customize-appearance">Step 3: Customize Appearance</h2>
       <p>
@@ -94,9 +94,9 @@ export default function QuickStartArticle() {
         <li>Publish your website changes</li>
       </ol>
 
-      <KBCallout variant="warning" title="Important">
+      <HCCallout variant="warning" title="Important">
         Make sure to test the widget on your staging environment before pushing to production.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="step-5-monitor-and-improve">Step 5: Monitor and Improve</h2>
       <p>
@@ -111,11 +111,11 @@ export default function QuickStartArticle() {
       <h2 id="next-steps">You're Ready!</h2>
       <p>
         Congratulations! Your AI agent is now live and ready to help your visitors. 
-        Continue exploring the knowledge base to learn about advanced features like 
+        Continue exploring the help center to learn about advanced features like 
         lead capture, human takeover, and custom integrations.
       </p>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'getting-started', articleSlug: 'welcome', title: 'Welcome to Pilot' },
           { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Knowledge Sources' },

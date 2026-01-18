@@ -2,7 +2,7 @@
  * Help Articles Article
  */
 
-import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
+import { HCCallout, HCRelatedArticles } from '@/components/help-center';
 
 export default function HelpArticlesArticle() {
   return (
@@ -24,10 +24,10 @@ export default function HelpArticlesArticle() {
         <li>Switch to chat if they need more help</li>
       </ul>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Well-organized help articles reduce the number of repetitive questions 
         Ari receives, freeing it up for more complex conversations.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="creating-categories">Creating Categories</h2>
       <p>
@@ -67,10 +67,10 @@ export default function HelpArticlesArticle() {
         <li><strong>Links:</strong> Reference related articles</li>
       </ul>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         Article titles that match common questions help both visitors and Ari 
         find the right information faster.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="rich-editor">Rich Text Editor</h2>
       <p>
@@ -124,7 +124,7 @@ export default function HelpArticlesArticle() {
         <li>Use consistent formatting across all articles</li>
       </ul>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Knowledge Sources' },
           { categoryId: 'ari', articleSlug: 'announcements', title: 'Announcements' },

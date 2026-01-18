@@ -2,7 +2,7 @@
  * Locations Article
  */
 
-import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
+import { HCCallout, HCRelatedArticles } from '@/components/help-center';
 
 export default function LocationsArticle() {
   return (
@@ -46,10 +46,10 @@ export default function LocationsArticle() {
         <li><strong>Timezone:</strong> For accurate scheduling</li>
       </ul>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Include the timezone for each location to ensure appointments are 
         scheduled correctly, especially for businesses spanning multiple time zones.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="business-hours">Business Hours</h2>
       <p>
@@ -92,10 +92,10 @@ export default function LocationsArticle() {
         <li>Property listings linked to communities</li>
       </ul>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         When you add a knowledge source, you can optionally assign it to a 
         specific location. This helps Ari give more relevant answers.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="managing-locations">Managing Locations</h2>
       <p>
@@ -118,7 +118,7 @@ export default function LocationsArticle() {
         <li>Availability is checked per location</li>
       </ul>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'integrations', title: 'Integrations' },
           { categoryId: 'planner', articleSlug: 'overview', title: 'Using the Planner' },

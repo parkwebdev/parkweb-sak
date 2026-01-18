@@ -2,7 +2,7 @@
  * System Prompt Article
  */
 
-import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
+import { HCCallout, HCRelatedArticles } from '@/components/help-center';
 
 export default function SystemPromptArticle() {
   return (
@@ -63,10 +63,10 @@ export default function SystemPromptArticle() {
         <li>"Never discuss competitor products"</li>
       </ul>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Use bullet points in your system prompt to make instructions clear and easy 
         for Ari to follow. Short, direct sentences work better than long paragraphs.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="example-prompt">Example System Prompt</h2>
       <p>
@@ -94,10 +94,10 @@ export default function SystemPromptArticle() {
         when your prompt has been saved successfully.
       </p>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         Changes to the system prompt take effect immediately for new conversations. 
         Existing conversations will continue with the previous prompt.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="testing-changes">Testing Your Changes</h2>
       <p>
@@ -110,7 +110,7 @@ export default function SystemPromptArticle() {
         <li>Refine your prompt based on the results</li>
       </ol>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Knowledge Sources' },
           { categoryId: 'ari', articleSlug: 'appearance', title: 'Customizing Appearance' },

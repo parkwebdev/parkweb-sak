@@ -4,8 +4,8 @@
  * Learn how to navigate around Pilot efficiently.
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
-import { KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
+import { HCCallout } from '@/components/help-center/HCCallout';
+import { HCRelatedArticles } from '@/components/help-center/HCArticleLink';
 
 export default function NavigationArticle() {
   return (
@@ -31,10 +31,10 @@ export default function NavigationArticle() {
         <li><strong>Dashboard</strong> – Your command center (visible after completing setup)</li>
       </ul>
 
-      <KBCallout variant="tip" title="Collapse the Sidebar">
+      <HCCallout variant="tip" title="Collapse the Sidebar">
         The sidebar automatically collapses when you move your mouse away, giving you more 
         screen space. Hover over it to expand.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="global-search">Global Search</h2>
       <p>
@@ -122,13 +122,13 @@ export default function NavigationArticle() {
         slide-out menu on smaller screens, and all features remain accessible.
       </p>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         For the best experience on mobile, consider adding Pilot to your home screen 
         as a Progressive Web App (PWA). This gives you a native app-like experience 
         with quick access from your device.
-      </KBCallout>
+      </HCCallout>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'getting-started', articleSlug: 'welcome', title: 'Welcome to Pilot' },
           { categoryId: 'getting-started', articleSlug: 'quick-start', title: 'Quick Start Guide' },
