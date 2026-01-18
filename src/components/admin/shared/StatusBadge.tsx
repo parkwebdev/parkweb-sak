@@ -31,6 +31,10 @@ const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
   suspended: 'bg-status-suspended/10 text-status-suspended-foreground border-status-suspended/20',
   
+  // Article/Content statuses
+  published: 'bg-status-active/10 text-status-active-foreground border-status-active/20',
+  draft: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
+  
   // Email statuses
   delivered: 'bg-status-active/10 text-status-active-foreground border-status-active/20',
   bounced: 'bg-destructive/10 text-destructive border-destructive/20',
