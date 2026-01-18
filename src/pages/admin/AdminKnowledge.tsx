@@ -99,6 +99,12 @@ export function AdminKnowledge() {
   }), [stableCategories, categoryFilter, handleCreateArticle]);
   useTopBar(topBarConfig);
 
+  const handleBulkDeleteArticles = async (ids: string[]) => {
+    for (const id of ids) {
+      await deleteArticle(id);
+    }
+  };
+
   return (
     <div className="p-6">
       <PlatformArticlesTable
@@ -106,6 +112,7 @@ export function AdminKnowledge() {
         loading={articlesLoading}
         onEdit={handleEditArticle}
         onDelete={deleteArticle}
+        onBulkDelete={handleBulkDeleteArticles}
       />
 
       {/* Article Editor Sheet */}
