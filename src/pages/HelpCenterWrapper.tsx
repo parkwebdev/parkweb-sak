@@ -1,19 +1,19 @@
 /**
- * Knowledge Base Page Wrapper
+ * Help Center Page Wrapper
  * 
- * Lazy loading wrapper for the Knowledge Base page.
+ * Lazy loading wrapper for the Help Center page.
  * Provides Suspense boundary with skeleton loading.
  * 
- * @module pages/KnowledgeBaseWrapper
+ * @module pages/HelpCenterWrapper
  */
 
 import { Suspense, lazy } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const KnowledgeBase = lazy(() => import('./KnowledgeBase'));
+const HelpCenter = lazy(() => import('./HelpCenter'));
 
-/** Skeleton loading state for Knowledge Base */
-function KnowledgeBaseSkeleton() {
+/** Skeleton loading state for Help Center */
+function HelpCenterSkeleton() {
   return (
     <div className="flex h-full">
       {/* Left sidebar skeleton */}
@@ -58,11 +58,11 @@ function KnowledgeBaseSkeleton() {
   );
 }
 
-/** Knowledge Base page wrapper with Suspense */
-export default function KnowledgeBaseWrapper() {
+/** Help Center page wrapper with Suspense */
+export default function HelpCenterWrapper() {
   return (
-    <Suspense fallback={<KnowledgeBaseSkeleton />}>
-      <KnowledgeBase />
+    <Suspense fallback={<HelpCenterSkeleton />}>
+      <HelpCenter />
     </Suspense>
   );
 }
