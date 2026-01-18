@@ -97,12 +97,11 @@ export function PlatformArticlesTable({
       columnHelper.accessor('is_published', {
         header: 'Status',
         cell: ({ getValue }) => (
-          <Badge variant={getValue() ? 'default' : 'secondary'}>
-            {getValue() ? (
-              <><Eye size={12} className="mr-1" aria-hidden="true" /> Published</>
-            ) : (
-              <><EyeOff size={12} className="mr-1" aria-hidden="true" /> Draft</>
-            )}
+          <Badge 
+            variant="outline"
+            className={getValue() ? 'bg-status-active/10 text-status-active-foreground border-status-active/20' : ''}
+          >
+            {getValue() ? 'Published' : 'Draft'}
           </Badge>
         ),
       }),
