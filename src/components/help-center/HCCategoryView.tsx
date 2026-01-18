@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { SearchMd, XClose } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
-import { KBArticleCard } from './KBArticleCard';
+import { HCArticleCard } from './HCArticleCard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
@@ -27,12 +27,12 @@ const GRADIENT_MAP: Record<string, string> = {
   'bg-muted-foreground': 'from-muted-foreground/15 via-muted-foreground/5 to-transparent',
 };
 
-interface KBCategoryViewProps {
+interface HCCategoryViewProps {
   category: HCCategory;
   onSelectArticle: (article: HCArticle) => void;
 }
 
-export function KBCategoryView({ category, onSelectArticle }: KBCategoryViewProps) {
+export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const prefersReducedMotion = useReducedMotion();
   
@@ -110,7 +110,7 @@ export function KBCategoryView({ category, onSelectArticle }: KBCategoryViewProp
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.03, ...springs.smooth }}
           >
-            <KBArticleCard
+            <HCArticleCard
               article={article}
               categoryColor={category.color}
               onClick={() => onSelectArticle(article)}

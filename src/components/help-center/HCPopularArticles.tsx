@@ -13,12 +13,12 @@ import { cn } from '@/lib/utils';
 import { usePopularArticles } from '@/hooks/useHCArticleViews';
 import type { HCArticle } from '@/config/help-center-config';
 
-interface KBPopularArticlesProps {
+interface HCPopularArticlesProps {
   categoryId: string;
   onSelectArticle: (article: HCArticle) => void;
 }
 
-export function KBPopularArticles({ categoryId, onSelectArticle }: KBPopularArticlesProps) {
+export function HCPopularArticles({ categoryId, onSelectArticle }: HCPopularArticlesProps) {
   const { data: popularArticles, isLoading } = usePopularArticles(categoryId, 10);
   
   if (isLoading) {

@@ -36,7 +36,7 @@ const HOVER_MAP: Record<string, string> = {
   'bg-muted-foreground': 'hover:bg-muted-foreground/5',
 };
 
-interface KBSidebarProps {
+interface HCSidebarProps {
   categories: HCCategory[];
   selectedCategoryId?: string;
   selectedArticleId?: string;
@@ -48,7 +48,7 @@ interface KBSidebarProps {
   searchQuery?: string;
 }
 
-export function KBSidebar({
+export function HCSidebar({
   categories,
   selectedCategoryId,
   selectedArticleId,
@@ -56,7 +56,7 @@ export function KBSidebar({
   onSelectCategory,
   onSelectArticle,
   searchQuery = '',
-}: KBSidebarProps) {
+}: HCSidebarProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const prefersReducedMotion = useReducedMotion();
   

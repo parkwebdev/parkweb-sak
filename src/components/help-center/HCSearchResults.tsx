@@ -17,7 +17,7 @@ interface SearchResult {
   article: HCArticle;
 }
 
-interface KBSearchResultsProps {
+interface HCSearchResultsProps {
   /** Current search query */
   query: string;
   /** Callback when an article is selected */
@@ -29,11 +29,11 @@ interface KBSearchResultsProps {
 /**
  * Renders KB article search results in the TopBarSearch dropdown.
  */
-export function KBSearchResults({
+export function HCSearchResults({
   query,
   onSelect,
   maxResults = 8,
-}: KBSearchResultsProps) {
+}: HCSearchResultsProps) {
   // Search across all articles
   const results = useMemo(() => {
     if (!query.trim()) return [];

@@ -1,18 +1,18 @@
 /**
- * Knowledge Base Components
+ * Help Center Components
  * 
- * Barrel export for all KB article components.
+ * Barrel export for all HC article components.
  */
 
-export { KBCallout } from './KBCallout';
-export { KBStepByStep } from './KBStepByStep';
-export { KBFeatureCard, KBFeatureGrid } from './KBFeatureCard';
-export { KBArticleLink, KBRelatedArticles } from './KBArticleLink';
-export { KBSidebar } from './KBSidebar';
-export { KBArticleView } from './KBArticleView';
-export { KBCategoryView } from './KBCategoryView';
-export { KBArticleCard } from './KBArticleCard';
-export { KBTableOfContents } from './KBTableOfContents';
-export { KBPopularArticles } from './KBPopularArticles';
-export { KBArticleFeedback } from './KBArticleFeedback';
-export { KBTopBarSearch } from './KBTopBarSearch';
+export { HCCallout } from './HCCallout';
+export { HCStepByStep } from './HCStepByStep';
+export { HCFeatureCard, HCFeatureGrid } from './HCFeatureCard';
+export { HCArticleLink, HCRelatedArticles } from './HCArticleLink';
+export { HCSidebar } from './HCSidebar';
+export { HCArticleView } from './HCArticleView';
+export { HCCategoryView } from './HCCategoryView';
+export { HCArticleCard } from './HCArticleCard';
+export { HCTableOfContents } from './HCTableOfContents';
+export { HCPopularArticles } from './HCPopularArticles';
+export { HCArticleFeedback } from './HCArticleFeedback';
+export { HCTopBarSearch } from './HCTopBarSearch';
