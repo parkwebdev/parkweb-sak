@@ -14,7 +14,7 @@ import { KBArticleCard } from './KBArticleCard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
-import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
+import type { HCCategory, HCArticle } from '@/config/help-center-config';
 
 /** Map category color classes to gradient backgrounds */
 const GRADIENT_MAP: Record<string, string> = {
@@ -28,8 +28,8 @@ const GRADIENT_MAP: Record<string, string> = {
 };
 
 interface KBCategoryViewProps {
-  category: KBCategory;
-  onSelectArticle: (article: KBArticle) => void;
+  category: HCCategory;
+  onSelectArticle: (article: HCArticle) => void;
 }
 
 export function KBCategoryView({ category, onSelectArticle }: KBCategoryViewProps) {
@@ -45,7 +45,7 @@ export function KBCategoryView({ category, onSelectArticle }: KBCategoryViewProp
     
     const query = searchQuery.toLowerCase();
     return category.articles.filter(
-      article =>
+      (article: HCArticle) =>
         article.title.toLowerCase().includes(query) ||
         article.description?.toLowerCase().includes(query)
     );
@@ -103,7 +103,7 @@ export function KBCategoryView({ category, onSelectArticle }: KBCategoryViewProp
       
       {/* Article Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-8">
-        {filteredArticles.map((article, index) => (
+        {filteredArticles.map((article: HCArticle, index: number) => (
           <motion.div
             key={article.id}
             initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}

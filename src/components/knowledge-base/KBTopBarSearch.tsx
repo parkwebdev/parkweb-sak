@@ -10,11 +10,11 @@
 import { useState, useCallback, memo } from 'react';
 import { TopBarSearch } from '@/components/layout/TopBar';
 import { KBSearchResults } from './KBSearchResults';
-import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
+import type { HCCategory, HCArticle } from '@/config/help-center-config';
 
 interface KBTopBarSearchProps {
   /** Callback when an article is selected from search results */
-  onSelect: (category: KBCategory, article: KBArticle) => void;
+  onSelect: (category: HCCategory, article: HCArticle) => void;
 }
 
 /**

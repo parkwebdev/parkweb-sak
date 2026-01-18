@@ -10,12 +10,12 @@
 import { useState, useMemo } from 'react';
 import { BookOpen01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
-import { usePlatformKBArticles } from '@/hooks/admin/usePlatformKBArticles';
-import { usePlatformKBCategories } from '@/hooks/admin/usePlatformKBCategories';
+import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
+import { usePlatformHCCategories } from '@/hooks/admin/usePlatformHCCategories';
 import { PlatformArticlesTable } from '@/components/admin/knowledge/PlatformArticlesTable';
 import { PlatformCategoryManager } from '@/components/admin/knowledge/PlatformCategoryManager';
 import { ArticleEditorSheet } from '@/components/admin/knowledge/ArticleEditorSheet';
-import type { PlatformKBArticle, PlatformKBArticleInput } from '@/types/platform-kb';
+import type { PlatformHCArticle, PlatformHCArticleInput } from '@/types/platform-hc';
 
 /**
  * Platform Knowledge Base editor page for Super Admin.
@@ -33,20 +33,20 @@ export function AdminKnowledge() {
     createArticle, 
     updateArticle, 
     deleteArticle 
-  } = usePlatformKBArticles();
+  } = usePlatformHCArticles();
   
   const { 
     categories, 
     loading: categoriesLoading, 
     createCategory, 
     deleteCategory 
-  } = usePlatformKBCategories();
+  } = usePlatformHCCategories();
 
   const [editorOpen, setEditorOpen] = useState(false);
-  const [editingArticle, setEditingArticle] = useState<PlatformKBArticle | null>(null);
+  const [editingArticle, setEditingArticle] = useState<PlatformHCArticle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleEditArticle = (article: PlatformKBArticle) => {
+  const handleEditArticle = (article: PlatformHCArticle) => {
     setEditingArticle(article);
     setEditorOpen(true);
   };
@@ -56,7 +56,7 @@ export function AdminKnowledge() {
     setEditorOpen(true);
   };
 
-  const handleSaveArticle = async (data: PlatformKBArticleInput) => {
+  const handleSaveArticle = async (data: PlatformHCArticleInput) => {
     setIsSaving(true);
     try {
       if (editingArticle) {

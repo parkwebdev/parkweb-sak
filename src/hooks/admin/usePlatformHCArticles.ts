@@ -34,7 +34,7 @@ export function usePlatformHCArticles(): UsePlatformHCArticlesResult {
         .from('platform_hc_articles')
         .select(`
           *,
-          category:platform_hc_categories(label)
+          category:platform_hc_categories!category_id(label)
         `)
         .order('category_id')
         .order('order_index');

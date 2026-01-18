@@ -22,7 +22,7 @@ import {
 } from '@/lib/db-selects';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { ROUTE_CONFIG, SETTINGS_TABS, ARI_SECTIONS } from '@/config/routes';
-import { KB_CATEGORIES } from '@/config/knowledge-base-config';
+import { HC_CATEGORIES, type HCCategory, type HCArticle } from '@/config/help-center-config';
 import { ANALYTICS_SECTION_CONFIG } from '@/lib/analytics-constants';
 import type { 
   SearchDataMap, 
@@ -295,16 +295,16 @@ export const useSearchData = () => {
         });
       });
 
-      // ============ 4. DOCS (Knowledge Base) ============
-      KB_CATEGORIES.forEach(category => {
-        category.articles.forEach(article => {
+      // ============ 4. DOCS (Help Center) ============
+      HC_CATEGORIES.forEach((category: HCCategory) => {
+        category.articles.forEach((article: HCArticle) => {
           results.push({
-            id: `kb-${category.id}-${article.id}`,
+            id: `hc-${category.id}-${article.id}`,
             title: article.title,
             description: `${category.label} • Documentation`,
             category: 'Docs',
             iconName: 'BookOpen01',
-            action: () => navigate(`/knowledge-base?category=${category.id}&article=${article.slug}`),
+            action: () => navigate(`/help-center?category=${category.id}&article=${article.slug}`),
           });
         });
       });

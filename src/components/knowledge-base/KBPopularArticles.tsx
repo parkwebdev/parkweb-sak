@@ -10,12 +10,12 @@
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { usePopularArticles } from '@/hooks/useKBArticleViews';
-import type { KBArticle } from '@/config/knowledge-base-config';
+import { usePopularArticles } from '@/hooks/useHCArticleViews';
+import type { HCArticle } from '@/config/help-center-config';
 
 interface KBPopularArticlesProps {
   categoryId: string;
-  onSelectArticle: (article: KBArticle) => void;
+  onSelectArticle: (article: HCArticle) => void;
 }
 
 export function KBPopularArticles({ categoryId, onSelectArticle }: KBPopularArticlesProps) {
@@ -55,7 +55,7 @@ export function KBPopularArticles({ categoryId, onSelectArticle }: KBPopularArti
       </h3>
       
       <nav className="space-y-1" aria-label="Popular articles">
-        {popularArticles.map(({ article }, index) => (
+        {popularArticles.map(({ article }: { article: HCArticle }, index: number) => (
           <button
             key={article.id}
             onClick={() => onSelectArticle(article)}

@@ -30,14 +30,14 @@ import {
 } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { PlatformKBArticle, PlatformKBArticleInput, PlatformKBCategory } from '@/types/platform-kb';
+import type { PlatformHCArticle, PlatformHCArticleInput, PlatformHCCategory } from '@/types/platform-hc';
 
 interface ArticleEditorSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  article: PlatformKBArticle | null;
-  categories: PlatformKBCategory[];
-  onSave: (data: PlatformKBArticleInput) => Promise<void>;
+  article: PlatformHCArticle | null;
+  categories: PlatformHCCategory[];
+  onSave: (data: PlatformHCArticleInput) => Promise<void>;
   isSaving?: boolean;
 }
 
@@ -63,7 +63,7 @@ export function ArticleEditorSheet({
 }: ArticleEditorSheetProps) {
   const isEditing = !!article;
   
-  const [formData, setFormData] = useState<PlatformKBArticleInput>({
+  const [formData, setFormData] = useState<PlatformHCArticleInput>({
     category_id: '',
     slug: '',
     title: '',
@@ -102,7 +102,7 @@ export function ArticleEditorSheet({
   }, [article, categories]);
 
   // Auto-generate slug from title when creating new article
-  const handleTitleChange = (title: string) => {
+  const handleTitleChange = (title: string): void => {
     setFormData((prev) => ({
       ...prev,
       title,
