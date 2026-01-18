@@ -14,9 +14,11 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
+import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import { useCallback, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
 import { EditorFloatingToolbar } from './EditorFloatingToolbar';
 import { HeadingWithId } from './HeadingWithId';
+import { CalloutNode } from './CalloutNode';
 import { cn } from '@/lib/utils';
 
 export interface Heading {
@@ -35,6 +37,7 @@ interface ArticleEditorProps {
 export interface ArticleEditorRef {
   editor: Editor | null;
   insertBlock: (blockType: string) => void;
+  insertTable: (rows: number, cols: number) => void;
 }
 
 /**
@@ -94,6 +97,30 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           emptyEditorClass: 'is-editor-empty',
         }),
         Underline,
+        // Table extensions
+        Table.configure({
+          resizable: true,
+          HTMLAttributes: {
+            class: 'border-collapse table-auto w-full my-4',
+          },
+        }),
+        TableRow.configure({
+          HTMLAttributes: {
+            class: 'border-b border-border',
+          },
+        }),
+        TableHeader.configure({
+          HTMLAttributes: {
+            class: 'border border-border bg-muted/50 px-3 py-2 text-left font-medium',
+          },
+        }),
+        TableCell.configure({
+          HTMLAttributes: {
+            class: 'border border-border px-3 py-2',
+          },
+        }),
+        // Callout extension
+        CalloutNode,
       ],
       content,
       editorProps: {
@@ -111,7 +138,13 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
             '[&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground',
             '[&_pre]:bg-muted [&_pre]:rounded-md [&_pre]:p-4 [&_pre]:overflow-x-auto',
             '[&_code]:bg-muted [&_code]:rounded [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-xs',
-            '[&_hr]:my-6 [&_hr]:border-border'
+            '[&_hr]:my-6 [&_hr]:border-border',
+            // Table styles
+            '[&_table]:border-collapse [&_table]:w-full [&_table]:my-4',
+            '[&_th]:border [&_th]:border-border [&_th]:bg-muted/50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-medium',
+            '[&_td]:border [&_td]:border-border [&_td]:px-3 [&_td]:py-2',
+            // Callout styles
+            '[&_.callout]:rounded-md [&_.callout]:border-l-4 [&_.callout]:p-4 [&_.callout]:my-4'
           ),
         },
       },
@@ -134,6 +167,15 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
         editor.commands.setContent(content);
       }
     }, [content, editor]);
+
+    // Insert table at cursor
+    const insertTable = useCallback(
+      (rows: number, cols: number) => {
+        if (!editor) return;
+        editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+      },
+      [editor]
+    );
 
     // Insert block command handler
     const insertBlock = useCallback(
@@ -160,6 +202,11 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
               editor.chain().focus().setImage({ src: url }).run();
             }
           },
+          // Callouts
+          'callout-info': () => editor.chain().focus().setCallout({ type: 'info' }).run(),
+          'callout-warning': () => editor.chain().focus().setCallout({ type: 'warning' }).run(),
+          'callout-success': () => editor.chain().focus().setCallout({ type: 'success' }).run(),
+          'callout-error': () => editor.chain().focus().setCallout({ type: 'error' }).run(),
         };
 
         const command = commands[blockType];
@@ -176,8 +223,9 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
       () => ({
         editor,
         insertBlock,
+        insertTable,
       }),
-      [editor, insertBlock]
+      [editor, insertBlock, insertTable]
     );
 
     return (
