@@ -43,7 +43,7 @@ import PlannerWrapper from "./pages/PlannerWrapper";
 import BookingComponentsTest from "./pages/BookingComponentsTest";
 import EmailTemplatesTest from "./pages/EmailTemplatesTest";
 import ReportBuilder from "./pages/ReportBuilder";
-import KnowledgeBaseWrapper from "./pages/KnowledgeBaseWrapper";
+import HelpCenterWrapper from "./pages/HelpCenterWrapper";
 import {
   AdminLayout,
   AdminDashboard,
@@ -212,10 +212,10 @@ const App = () => (
                       } 
                     />
                     
-                    {/* Knowledge Base - accessible to all authenticated users */}
+                    {/* Help Center - accessible to all authenticated users */}
                     <Route 
-                      path="/knowledge-base" 
-                      element={<KnowledgeBaseWrapper />} 
+                      path="/help-center" 
+                      element={<HelpCenterWrapper />} 
                     />
                     
                     
