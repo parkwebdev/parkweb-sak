@@ -34,7 +34,7 @@ export function usePlatformHCArticles(): UsePlatformHCArticlesResult {
         .from('platform_hc_articles')
         .select(`
           *,
-          category:platform_hc_categories!category_id(label)
+          category:platform_hc_categories!fk_platform_hc_articles_category(label)
         `)
         .order('category_id')
         .order('order_index');
@@ -43,7 +43,7 @@ export function usePlatformHCArticles(): UsePlatformHCArticlesResult {
 
       return (data || []).map((article) => ({
         ...article,
-        category_label: article.category?.label,
+        category_label: (article.category as { label: string } | null)?.label,
       })) as PlatformHCArticle[];
     },
     staleTime: 60000,
