@@ -125,10 +125,8 @@ The design is inspired by **Craft** (craft.do), featuring:
 | Card | `LayoutAlt02` | Custom node | Card container |
 | File Attachment | `Paperclip` | Custom node | Upload file |
 | Image | `Image01` | `setImage()` | Upload image |
-| Image from Unsplash | `Image03` | `setImage()` + Unsplash picker | Stock photo |
 | Code Block | `CodeSnippet02` | `toggleCodeBlock()` | Syntax highlighted |
 | Whiteboard | `PenTool02` | Custom node | Drawing canvas (future) |
-| TeX Formula | `Calculator` | Custom extension | LaTeX math |
 
 ### Line Types
 
@@ -165,7 +163,6 @@ Appears when text is selected. Uses TipTap's `BubbleMenu` extension.
 | ~~S~~ | Strikethrough | `Cmd+Shift+S` |
 | `</>` | Inline code | `Cmd+E` |
 | 🔗 | Insert/edit link | `Cmd+K` |
-| √x | Math formula | - |
 | @ | Mention | - |
 | 😊 | Emoji picker | - |
 

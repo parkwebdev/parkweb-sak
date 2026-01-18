@@ -15,7 +15,6 @@ import {
   List,
   Hash01,
   Image01,
-  Image03,
   CodeSnippet02,
   MessageSquare01,
   Minus,
@@ -28,7 +27,6 @@ import {
   LayoutAlt02,
   Paperclip,
   PenTool02,
-  Calculator,
   FileX01,
 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -67,7 +65,6 @@ const BASIC_BLOCKS: BlockType[] = [
  */
 const MEDIA_BLOCKS: BlockType[] = [
   { id: 'image', label: 'Image', icon: Image01, description: 'Insert image from URL' },
-  { id: 'unsplash', label: 'Unsplash', icon: Image03, description: 'Stock photo from Unsplash', disabled: true, future: true },
   { id: 'file', label: 'File Attachment', icon: Paperclip, description: 'Upload and attach file', disabled: true, future: true },
 ];
 
@@ -84,7 +81,6 @@ const STRUCTURE_BLOCKS: BlockType[] = [
  * Advanced blocks
  */
 const ADVANCED_BLOCKS: BlockType[] = [
-  { id: 'formula', label: 'Formula', icon: Calculator, description: 'TeX/LaTeX math formula', disabled: true, future: true },
   { id: 'whiteboard', label: 'Whiteboard', icon: PenTool02, description: 'Drawing canvas', disabled: true, future: true },
 ];
 

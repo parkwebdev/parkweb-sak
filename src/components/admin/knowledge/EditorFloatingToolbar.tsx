@@ -19,7 +19,6 @@ import {
   Link01,
   FaceSmile,
   AtSign,
-  Calculator,
   Palette,
 } from '@untitledui/icons';
 import { Separator } from '@/components/ui/separator';
@@ -124,14 +123,6 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
     setIsEmojiPickerOpen(false);
   }, [editor]);
 
-  const handleMathFormula = useCallback(() => {
-    // Placeholder - show toast or hint that it's coming soon
-    const formula = window.prompt('Enter LaTeX formula (preview only):', 'E = mc^2');
-    if (formula) {
-      // Insert as inline code for now until proper TeX extension is added
-      editor.chain().focus().insertContent(`$${formula}$`).run();
-    }
-  }, [editor]);
 
   const handleMention = useCallback(() => {
     // Placeholder - insert @ mention
@@ -276,26 +267,8 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
         </button>
       </div>
       
+      
       <Separator orientation="vertical" className="h-5 mx-1" />
-      
-      {/* Advanced features */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={handleMathFormula}
-            aria-label="Math formula (coming soon)"
-            className={cn(
-              'h-7 w-7 flex items-center justify-center rounded',
-              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-            )}
-          >
-            <Calculator size={14} aria-hidden="true" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">TeX Formula (Soon)</TooltipContent>
-      </Tooltip>
-      
       <Tooltip>
         <TooltipTrigger asChild>
           <button
