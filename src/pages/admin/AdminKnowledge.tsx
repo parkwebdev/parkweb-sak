@@ -8,6 +8,7 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
@@ -23,6 +24,7 @@ import type { PlatformHCArticle, PlatformHCArticleInput } from '@/types/platform
  * Platform Help Center editor page for Super Admin.
  */
 export function AdminKnowledge() {
+  const navigate = useNavigate();
   const { 
     articles, 
     loading: articlesLoading, 
@@ -51,15 +53,20 @@ export function AdminKnowledge() {
   );
   const stableCategories = useMemo(() => categories, [categoriesKey]);
 
+  // Navigate to article editor page when clicking a row
+  const handleRowClick = useCallback((article: PlatformHCArticle) => {
+    navigate(`/admin/knowledge/${article.id}`);
+  }, [navigate]);
+
   const handleEditArticle = (article: PlatformHCArticle) => {
-    setEditingArticle(article);
-    setEditorOpen(true);
+    // Also navigate to the new editor page for the Edit button
+    navigate(`/admin/knowledge/${article.id}`);
   };
 
   const handleCreateArticle = useCallback(() => {
-    setEditingArticle(null);
-    setEditorOpen(true);
-  }, []);
+    // Navigate to new article page
+    navigate('/admin/knowledge/new');
+  }, [navigate]);
 
   const handleSaveArticle = async (data: PlatformHCArticleInput) => {
     setIsSaving(true);
@@ -113,6 +120,7 @@ export function AdminKnowledge() {
         onEdit={handleEditArticle}
         onDelete={deleteArticle}
         onBulkDelete={handleBulkDeleteArticles}
+        onRowClick={handleRowClick}
       />
 
       {/* Article Editor Sheet */}

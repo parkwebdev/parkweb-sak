@@ -42,6 +42,7 @@ interface PlatformArticlesTableProps {
   onEdit: (article: PlatformHCArticle) => void;
   onDelete: (articleId: string) => Promise<void>;
   onBulkDelete?: (ids: string[]) => Promise<void>;
+  onRowClick?: (article: PlatformHCArticle) => void;
 }
 
 const columnHelper = createColumnHelper<PlatformHCArticle>();
@@ -55,6 +56,7 @@ export function PlatformArticlesTable({
   onEdit,
   onDelete,
   onBulkDelete,
+  onRowClick,
 }: PlatformArticlesTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -236,6 +238,7 @@ export function PlatformArticlesTable({
         columns={columns}
         isLoading={loading}
         emptyMessage="No articles yet. Create your first article to get started."
+        onRowClick={onRowClick}
       />
 
       {/* Floating action bar for bulk delete */}
