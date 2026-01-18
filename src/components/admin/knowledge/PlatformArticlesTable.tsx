@@ -14,9 +14,8 @@ import {
   ColumnDef,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit02, Trash01, Plus, Eye, EyeOff } from '@untitledui/icons';
+import { Edit02, Trash01, Eye } from '@untitledui/icons';
 import { IconButton } from '@/components/ui/icon-button';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -44,7 +43,6 @@ interface PlatformArticlesTableProps {
   loading: boolean;
   onEdit: (article: PlatformHCArticle) => void;
   onDelete: (articleId: string) => void;
-  onCreate: () => void;
 }
 
 const columnHelper = createColumnHelper<PlatformHCArticle>();
@@ -57,7 +55,6 @@ export function PlatformArticlesTable({
   loading,
   onEdit,
   onDelete,
-  onCreate,
 }: PlatformArticlesTableProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [previewArticle, setPreviewArticle] = useState<PlatformHCArticle | null>(null);
@@ -172,19 +169,6 @@ export function PlatformArticlesTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium">Help Center Articles</h3>
-          <p className="text-xs text-muted-foreground">
-            {articles.length} article{articles.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <Button size="sm" onClick={onCreate}>
-          <Plus size={14} className="mr-1" aria-hidden="true" />
-          New Article
-        </Button>
-      </div>
-
       <DataTable
         table={table}
         columns={columns}

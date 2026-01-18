@@ -7,26 +7,22 @@
  * @module pages/admin/AdminKnowledge
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { BookOpen01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
 import { usePlatformHCCategories } from '@/hooks/admin/usePlatformHCCategories';
 import { PlatformArticlesTable } from '@/components/admin/knowledge/PlatformArticlesTable';
-import { PlatformCategoryManager } from '@/components/admin/knowledge/PlatformCategoryManager';
+import { CategoryFilterDropdown } from '@/components/admin/knowledge/CategoryFilterDropdown';
+import { CreateCategoryDialog } from '@/components/admin/knowledge/CreateCategoryDialog';
 import { ArticleEditorSheet } from '@/components/admin/knowledge/ArticleEditorSheet';
+import { Button } from '@/components/ui/button';
 import type { PlatformHCArticle, PlatformHCArticleInput } from '@/types/platform-hc';
 
 /**
  * Platform Help Center editor page for Super Admin.
  */
 export function AdminKnowledge() {
-  // Configure top bar for this page
-  const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={BookOpen01} title="Help Center" />,
-  }), []);
-  useTopBar(topBarConfig);
-
   const { 
     articles, 
     loading: articlesLoading, 
@@ -45,16 +41,18 @@ export function AdminKnowledge() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<PlatformHCArticle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
 
   const handleEditArticle = (article: PlatformHCArticle) => {
     setEditingArticle(article);
     setEditorOpen(true);
   };
 
-  const handleCreateArticle = () => {
+  const handleCreateArticle = useCallback(() => {
     setEditingArticle(null);
     setEditorOpen(true);
-  };
+  }, []);
 
   const handleSaveArticle = async (data: PlatformHCArticleInput) => {
     setIsSaving(true);
@@ -69,30 +67,39 @@ export function AdminKnowledge() {
     }
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Articles Table */}
-        <div className="lg:col-span-2">
-          <PlatformArticlesTable
-            articles={articles}
-            loading={articlesLoading}
-            onEdit={handleEditArticle}
-            onDelete={deleteArticle}
-            onCreate={handleCreateArticle}
-          />
-        </div>
+  // Filter articles by selected category
+  const filteredArticles = useMemo(() => {
+    if (!categoryFilter) return articles;
+    return articles.filter(article => article.category_id === categoryFilter);
+  }, [articles, categoryFilter]);
 
-        {/* Categories Sidebar */}
-        <div>
-          <PlatformCategoryManager
-            categories={categories}
-            loading={categoriesLoading}
-            onCreate={createCategory}
-            onDelete={deleteCategory}
-          />
-        </div>
+  // Configure top bar for this page
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={BookOpen01} title="Help Center" />,
+    right: (
+      <div className="flex items-center gap-2">
+        <CategoryFilterDropdown
+          categories={categories}
+          activeCategory={categoryFilter}
+          onCategoryChange={setCategoryFilter}
+          onAddCategory={() => setCategoryDialogOpen(true)}
+        />
+        <Button size="sm" onClick={handleCreateArticle}>
+          Add article
+        </Button>
       </div>
+    ),
+  }), [categories, categoryFilter, handleCreateArticle]);
+  useTopBar(topBarConfig);
+
+  return (
+    <div className="p-6">
+      <PlatformArticlesTable
+        articles={filteredArticles}
+        loading={articlesLoading}
+        onEdit={handleEditArticle}
+        onDelete={deleteArticle}
+      />
 
       {/* Article Editor Sheet */}
       <ArticleEditorSheet
@@ -102,6 +109,14 @@ export function AdminKnowledge() {
         categories={categories}
         onSave={handleSaveArticle}
         isSaving={isSaving}
+      />
+
+      {/* Create Category Dialog */}
+      <CreateCategoryDialog
+        open={categoryDialogOpen}
+        onOpenChange={setCategoryDialogOpen}
+        onCreate={createCategory}
+        categoriesCount={categories.length}
       />
     </div>
   );
