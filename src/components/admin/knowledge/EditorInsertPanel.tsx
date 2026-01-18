@@ -19,9 +19,15 @@ import {
   MessageSquare01,
   Minus,
   AlertCircle,
+  Table,
+  InfoCircle,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { TableGridSelector } from './TableGridSelector';
 import { cn } from '@/lib/utils';
 
 interface BlockType {
@@ -44,18 +50,25 @@ const BLOCK_TYPES: BlockType[] = [
   { id: 'codeBlock', label: 'Code Block', icon: CodeSnippet02, description: 'Syntax highlighted code' },
   { id: 'quote', label: 'Quote', icon: MessageSquare01, description: 'Blockquote' },
   { id: 'divider', label: 'Divider', icon: Minus, description: 'Horizontal rule' },
-  { id: 'callout', label: 'Callout', icon: AlertCircle, description: 'Info callout (coming soon)', disabled: true },
+];
+
+const CALLOUT_TYPES: BlockType[] = [
+  { id: 'callout-info', label: 'Info', icon: InfoCircle, description: 'Information callout' },
+  { id: 'callout-warning', label: 'Warning', icon: AlertTriangle, description: 'Warning callout' },
+  { id: 'callout-success', label: 'Success', icon: CheckCircle, description: 'Success callout' },
+  { id: 'callout-error', label: 'Error', icon: XCircle, description: 'Error callout' },
 ];
 
 interface EditorInsertPanelProps {
   onInsert: (blockType: string) => void;
+  onInsertTable: (rows: number, cols: number) => void;
 }
 
 /**
  * Right sidebar panel for inserting content blocks.
  * Wired to TipTap editor via onInsert callback.
  */
-export function EditorInsertPanel({ onInsert }: EditorInsertPanelProps) {
+export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanelProps) {
   const handleInsert = (blockType: string) => {
     onInsert(blockType);
   };
@@ -68,6 +81,7 @@ export function EditorInsertPanel({ onInsert }: EditorInsertPanelProps) {
         </h2>
       </div>
       <ScrollArea className="flex-1">
+        {/* Basic Blocks */}
         <div className="p-2 space-y-0.5">
           {BLOCK_TYPES.map((block) => (
             <Tooltip key={block.id}>
@@ -96,8 +110,37 @@ export function EditorInsertPanel({ onInsert }: EditorInsertPanelProps) {
           ))}
         </div>
         
+        {/* Callouts Section */}
+        <div className="p-3 pt-2 border-t border-border mt-2">
+          <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">
+            Callouts
+          </h3>
+          <div className="grid grid-cols-2 gap-1">
+            {CALLOUT_TYPES.map((callout) => (
+              <Tooltip key={callout.id}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => handleInsert(callout.id)}
+                    className={cn(
+                      'flex items-center gap-1.5 px-2 py-1.5 rounded-md text-left',
+                      'text-xs text-foreground hover:bg-accent transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    )}
+                  >
+                    <callout.icon size={14} className="text-muted-foreground flex-shrink-0" aria-hidden="true" />
+                    <span>{callout.label}</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="text-xs">
+                  {callout.description}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
+        
         {/* Divider Types Section */}
-        <div className="p-3 pt-4 border-t border-border mt-2">
+        <div className="p-3 pt-2 border-t border-border">
           <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">
             Lines
           </h3>
@@ -131,6 +174,15 @@ export function EditorInsertPanel({ onInsert }: EditorInsertPanelProps) {
               ━━━
             </button>
           </div>
+        </div>
+        
+        {/* Table Section */}
+        <div className="p-3 pt-2 border-t border-border">
+          <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2 flex items-center gap-1.5">
+            <Table size={12} aria-hidden="true" />
+            Insert Table
+          </h3>
+          <TableGridSelector onSelect={onInsertTable} maxRows={6} maxCols={6} />
         </div>
       </ScrollArea>
     </aside>

@@ -132,20 +132,34 @@ export function ArticleEditorPage() {
     is_published: isPublished,
   }), [title, content, slug, categoryId, description, orderIndex, iconName, isPublished]);
   
-  // Cmd+S keyboard shortcut for force save
+  // Keyboard shortcuts: Cmd+S for force save, Escape for deselect/close panels
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+S: Force save
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
         if (hasLoaded && title && categoryId) {
           saveNow(currentFormData);
+        }
+        return;
+      }
+      
+      // Escape: Close metadata panel or deselect in editor
+      if (e.key === 'Escape') {
+        if (isMetadataOpen) {
+          setIsMetadataOpen(false);
+          return;
+        }
+        // Blur editor to deselect
+        if (editorRef.current?.editor) {
+          editorRef.current.editor.commands.blur();
         }
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasLoaded, title, categoryId, currentFormData, saveNow]);
+  }, [hasLoaded, title, categoryId, currentFormData, saveNow, isMetadataOpen]);
   
   // Trigger auto-save on changes (only after initial load)
   useEffect(() => {
@@ -279,7 +293,10 @@ export function ArticleEditorPage() {
         </main>
         
         {/* Right Sidebar - Insert Panel */}
-        <EditorInsertPanel onInsert={(blockType) => editorRef.current?.insertBlock(blockType)} />
+        <EditorInsertPanel 
+          onInsert={(blockType) => editorRef.current?.insertBlock(blockType)}
+          onInsertTable={(rows, cols) => editorRef.current?.insertTable(rows, cols)}
+        />
       </div>
       
       {/* Bottom - Metadata Panel */}
