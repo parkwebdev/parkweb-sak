@@ -55,6 +55,7 @@ import {
   AdminEmails,
   AdminRevenue,
   AdminAuditLog,
+  ArticleEditorPage,
 } from "./pages/admin";
 
 /**
@@ -254,6 +255,8 @@ const App = () => (
                       <Route path="plans" element={<AdminPlans />} />
                       <Route path="team" element={<AdminTeam />} />
                       <Route path="knowledge" element={<AdminKnowledge />} />
+                      <Route path="knowledge/new" element={<ArticleEditorPage />} />
+                      <Route path="knowledge/:articleId" element={<ArticleEditorPage />} />
                       <Route path="emails" element={<AdminEmails />} />
                       <Route path="analytics" element={<AdminRevenue />} />
                       <Route path="audit" element={<AdminAuditLog />} />

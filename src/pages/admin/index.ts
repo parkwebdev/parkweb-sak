@@ -17,3 +17,4 @@ export { AdminKnowledge } from './AdminKnowledge';
 export { AdminEmails } from './AdminEmails';
 export { AdminRevenue } from './AdminRevenue';
 export { AdminAuditLog } from './AdminAuditLog';
+export { ArticleEditorPage } from './ArticleEditorPage';
