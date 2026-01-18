@@ -2,7 +2,7 @@
  * Lead Capture Article
  */
 
-import { KBCallout, KBRelatedArticles, KBArticleLink } from '@/components/knowledge-base';
+import { HCCallout, HCRelatedArticles, HCArticleLink } from '@/components/help-center';
 
 export default function LeadCaptureArticle() {
   return (
@@ -22,9 +22,9 @@ export default function LeadCaptureArticle() {
         <li>Contact form appears with your configured fields</li>
         <li>Visitor submits their information</li>
         <li>A lead is created in your{' '}
-          <KBArticleLink categoryId="leads" articleSlug="overview">
+          <HCArticleLink categoryId="leads" articleSlug="overview">
             Leads
-          </KBArticleLink>{' '}
+          </HCArticleLink>{' '}
           dashboard
         </li>
         <li>Conversation begins with Ari</li>
@@ -87,10 +87,10 @@ export default function LeadCaptureArticle() {
         <li><strong>Options</strong> – For select fields, the dropdown choices</li>
       </ul>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Checkbox labels support rich text, making them perfect for terms and conditions 
         agreements with links to your policies.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="lead-creation">Automatic Lead Creation</h2>
       <p>
@@ -113,10 +113,10 @@ export default function LeadCaptureArticle() {
         <li>Previous conversation history is preserved</li>
       </ul>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         Duplicate detection uses email addresses. Visitors with different emails 
         will create separate lead records.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="spam-protection">Spam Protection</h2>
       <p>
@@ -140,20 +140,20 @@ export default function LeadCaptureArticle() {
         <li>You control data retention and deletion</li>
       </ul>
 
-      <KBCallout variant="warning">
+      <HCCallout variant="warning">
         Comply with GDPR, CCPA, and other privacy regulations when collecting 
         personal information. Add appropriate consent mechanisms for your region.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="notifications">Lead Notifications</h2>
       <p>
         Get notified when new leads are captured. Configure notifications in{' '}
-        <KBArticleLink categoryId="settings" articleSlug="notifications">
+        <HCArticleLink categoryId="settings" articleSlug="notifications">
           Settings → Notifications
-        </KBArticleLink>.
+        </HCArticleLink>.
       </p>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'leads', articleSlug: 'overview', title: 'Lead Management' },
           { categoryId: 'ari', articleSlug: 'welcome-messages', title: 'Welcome & Messages' },

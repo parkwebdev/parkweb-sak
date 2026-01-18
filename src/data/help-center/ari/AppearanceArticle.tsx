@@ -2,7 +2,7 @@
  * Customizing Appearance Article
  */
 
-import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
+import { HCCallout, HCRelatedArticles } from '@/components/help-center';
 
 export default function AppearanceArticle() {
   return (
@@ -33,10 +33,10 @@ export default function AppearanceArticle() {
         header is enabled.</li>
       </ul>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Choose colors with good contrast. The widget automatically adjusts text colors 
         to ensure readability against your chosen background.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="widget-preview">Live Preview</h2>
       <p>
@@ -44,10 +44,10 @@ export default function AppearanceArticle() {
         in real-time so you can see exactly how your widget will look.
       </p>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         Changes to appearance are saved automatically and take effect immediately 
         on your live widget.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="additional-styling">Additional Styling Options</h2>
       <p>
@@ -61,7 +61,7 @@ export default function AppearanceArticle() {
         <li>Bottom navigation tabs (Messages, News, Help)</li>
       </ul>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'welcome-messages', title: 'Welcome & Messages' },
           { categoryId: 'ari', articleSlug: 'installation', title: 'Installing the Widget' },

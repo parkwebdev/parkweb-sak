@@ -2,7 +2,7 @@
  * Adding Knowledge Sources Article
  */
 
-import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
+import { HCCallout, HCRelatedArticles } from '@/components/help-center';
 
 export default function KnowledgeSourcesArticle() {
   return (
@@ -57,10 +57,10 @@ export default function KnowledgeSourcesArticle() {
         <li>Edge cases and exceptions</li>
       </ul>
 
-      <KBCallout variant="tip" title="Pro Tip">
+      <HCCallout variant="tip" title="Pro Tip">
         Add your most frequently asked questions first – these will have the 
         biggest immediate impact on customer satisfaction.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="managing-sources">Managing Sources</h2>
       <p>
@@ -81,12 +81,12 @@ export default function KnowledgeSourcesArticle() {
         <li>Remove outdated information that might confuse Ari</li>
       </ol>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         It may take a few minutes for new knowledge sources to be processed 
         and available to Ari.
-      </KBCallout>
+      </HCCallout>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'overview', title: 'Understanding Ari' },
           { categoryId: 'ari', articleSlug: 'system-prompt', title: 'Writing a System Prompt' },

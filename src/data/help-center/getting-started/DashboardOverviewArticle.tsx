@@ -2,7 +2,7 @@
  * Dashboard Overview Article
  */
 
-import { KBCallout, KBRelatedArticles } from '@/components/knowledge-base';
+import { HCCallout, HCRelatedArticles } from '@/components/help-center';
 
 export default function DashboardOverviewArticle() {
   return (
@@ -12,10 +12,10 @@ export default function DashboardOverviewArticle() {
         It provides a quick overview of your Ari deployment status and key actions.
       </p>
 
-      <KBCallout variant="info">
+      <HCCallout variant="info">
         The Dashboard is only visible to account administrators after completing 
         the initial setup checklist. Team members will see the Inbox as their default view.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="accessing-dashboard">Accessing the Dashboard</h2>
       <p>
@@ -23,10 +23,10 @@ export default function DashboardOverviewArticle() {
         Before that, you'll see the "Get Set Up" page with your setup progress.
       </p>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Complete all setup steps to unlock the Dashboard. This includes 
         configuring Ari, adding knowledge, and installing the widget.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="dashboard-sections">Dashboard Sections</h2>
 
@@ -56,7 +56,7 @@ export default function DashboardOverviewArticle() {
         Access helpful resources:
       </p>
       <ul>
-        <li>Explore the Knowledge Base (this help center)</li>
+        <li>Explore the Help Center</li>
         <li>View documentation and guides</li>
       </ul>
 
@@ -71,10 +71,10 @@ export default function DashboardOverviewArticle() {
         <li>Install the widget on your website</li>
       </ol>
 
-      <KBCallout variant="tip">
+      <HCCallout variant="tip">
         Complete all setup steps to ensure Ari works optimally. Each step 
         builds on the previous one for the best visitor experience.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="navigation">Navigating from Dashboard</h2>
       <p>
@@ -92,7 +92,7 @@ export default function DashboardOverviewArticle() {
         permission. All roles have this permission by default.
       </p>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'analytics', articleSlug: 'overview', title: 'Analytics Overview' },
           { categoryId: 'inbox', articleSlug: 'overview', title: 'Inbox Overview' },

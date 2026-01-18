@@ -4,9 +4,9 @@
  * Learn what Ari is and how it can help your business.
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
-import { KBFeatureCard, KBFeatureGrid } from '@/components/knowledge-base/KBFeatureCard';
-import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
+import { HCCallout } from '@/components/help-center/HCCallout';
+import { HCFeatureCard, HCFeatureGrid } from '@/components/help-center/HCFeatureCard';
+import { HCArticleLink, HCRelatedArticles } from '@/components/help-center/HCArticleLink';
 import { MessageTextCircle01, Users01, Calendar, Repeat04 } from '@untitledui/icons';
 
 export default function AriOverviewArticle() {
@@ -23,33 +23,33 @@ export default function AriOverviewArticle() {
         Ari is designed to handle a wide range of customer interactions:
       </p>
 
-      <KBFeatureGrid columns={2}>
-        <KBFeatureCard
+      <HCFeatureGrid columns={2}>
+        <HCFeatureCard
           title="Answer Questions"
           description="Using your knowledge base, Ari provides natural, conversational responses about your products, services, and policies."
           icon={<MessageTextCircle01 size={20} aria-hidden="true" />}
         />
-        <KBFeatureCard
+        <HCFeatureCard
           title="Capture Leads"
           description="Ari collects visitor information like name, email, and phone, automatically creating leads in your CRM."
           icon={<Users01 size={20} aria-hidden="true" />}
         />
-        <KBFeatureCard
+        <HCFeatureCard
           title="Schedule Appointments"
           description="When integrated with your calendar, Ari checks availability and books appointments during conversations."
           icon={<Calendar size={20} aria-hidden="true" />}
         />
-        <KBFeatureCard
+        <HCFeatureCard
           title="Hand Off to Humans"
           description="For complex issues, Ari seamlessly transfers conversations to your team with full context."
           icon={<Repeat04 size={20} aria-hidden="true" />}
         />
-      </KBFeatureGrid>
+      </HCFeatureGrid>
 
-      <KBCallout variant="tip" title="Best Practice">
+      <HCCallout variant="tip" title="Best Practice">
         Start with a focused set of knowledge sources and gradually expand. 
         This helps Ari provide more accurate responses.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="how-ari-works">How Ari Works</h2>
       <p>
@@ -79,26 +79,26 @@ export default function AriOverviewArticle() {
       </p>
       <ul>
         <li>
-          <KBArticleLink categoryId="ari" articleSlug="system-prompt">
+          <HCArticleLink categoryId="ari" articleSlug="system-prompt">
             System Prompt
-          </KBArticleLink>{' '}
+          </HCArticleLink>{' '}
           – Define Ari's personality and guidelines
         </li>
         <li>
-          <KBArticleLink categoryId="ari" articleSlug="knowledge-sources">
+          <HCArticleLink categoryId="ari" articleSlug="knowledge-sources">
             Knowledge
-          </KBArticleLink>{' '}
+          </HCArticleLink>{' '}
           – Add sources for Ari to learn from
         </li>
         <li>
-          <KBArticleLink categoryId="ari" articleSlug="appearance">
+          <HCArticleLink categoryId="ari" articleSlug="appearance">
             Appearance
-          </KBArticleLink>{' '}
+          </HCArticleLink>{' '}
           – Customize the look of the chat widget
         </li>
       </ul>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'ari', articleSlug: 'knowledge-sources', title: 'Adding Knowledge Sources' },
           { categoryId: 'ari', articleSlug: 'installation', title: 'Installing the Widget' },

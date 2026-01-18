@@ -4,9 +4,9 @@
  * Introduction to the Pilot platform.
  */
 
-import { KBCallout } from '@/components/knowledge-base/KBCallout';
-import { KBFeatureCard, KBFeatureGrid } from '@/components/knowledge-base/KBFeatureCard';
-import { KBArticleLink, KBRelatedArticles } from '@/components/knowledge-base/KBArticleLink';
+import { HCCallout } from '@/components/help-center/HCCallout';
+import { HCFeatureCard, HCFeatureGrid } from '@/components/help-center/HCFeatureCard';
+import { HCArticleLink, HCRelatedArticles } from '@/components/help-center/HCArticleLink';
 import { MessageChatCircle, MessageSquare01, Users01, Calendar, BarChart01 } from '@untitledui/icons';
 
 export default function WelcomeArticle() {
@@ -34,41 +34,41 @@ export default function WelcomeArticle() {
 
       <h2 id="key-features">Key Features</h2>
       
-      <KBFeatureGrid columns={2}>
-        <KBFeatureCard
+      <HCFeatureGrid columns={2}>
+        <HCFeatureCard
           title="AI Agent (Ari)"
           description="Your always-on assistant that learns from your knowledge base to provide accurate, helpful responses."
           icon={<MessageChatCircle size={20} aria-hidden="true" />}
         />
-        <KBFeatureCard
+        <HCFeatureCard
           title="Unified Inbox"
           description="All conversations flow into a single inbox where you can monitor, take over, or review interactions."
           icon={<MessageSquare01 size={20} aria-hidden="true" />}
         />
-        <KBFeatureCard
+        <HCFeatureCard
           title="Lead Management"
           description="Automatically capture visitor information and organize leads through customizable stages."
           icon={<Users01 size={20} aria-hidden="true" />}
         />
-        <KBFeatureCard
+        <HCFeatureCard
           title="Planner & Bookings"
           description="Let Ari schedule appointments directly into your calendar with Google Calendar integration."
           icon={<Calendar size={20} aria-hidden="true" />}
         />
-        <KBFeatureCard
+        <HCFeatureCard
           title="Analytics & Insights"
           description="Understand how your AI is performing with detailed metrics on conversations and satisfaction."
           icon={<BarChart01 size={20} aria-hidden="true" />}
         />
-      </KBFeatureGrid>
+      </HCFeatureGrid>
 
-      <KBCallout variant="tip" title="Getting Started">
+      <HCCallout variant="tip" title="Getting Started">
         Ready to set up your first AI agent? Head to the{' '}
-        <KBArticleLink categoryId="getting-started" articleSlug="quick-start">
+        <HCArticleLink categoryId="getting-started" articleSlug="quick-start">
           Quick Start Guide
-        </KBArticleLink>{' '}
+        </HCArticleLink>{' '}
         to get Ari up and running in minutes.
-      </KBCallout>
+      </HCCallout>
 
       <h2 id="next-steps">Next Steps</h2>
       <p>
@@ -77,27 +77,27 @@ export default function WelcomeArticle() {
       <ol>
         <li>
           Complete the{' '}
-          <KBArticleLink categoryId="getting-started" articleSlug="quick-start">
+          <HCArticleLink categoryId="getting-started" articleSlug="quick-start">
             Quick Start Guide
-          </KBArticleLink>{' '}
+          </HCArticleLink>{' '}
           to configure Ari
         </li>
         <li>
-          <KBArticleLink categoryId="ari" articleSlug="knowledge-sources">
+          <HCArticleLink categoryId="ari" articleSlug="knowledge-sources">
             Add knowledge sources
-          </KBArticleLink>{' '}
+          </HCArticleLink>{' '}
           so Ari can answer questions about your business
         </li>
         <li>
-          <KBArticleLink categoryId="ari" articleSlug="appearance">
+          <HCArticleLink categoryId="ari" articleSlug="appearance">
             Customize the chat widget
-          </KBArticleLink>{' '}
+          </HCArticleLink>{' '}
           to match your brand
         </li>
         <li>
-          <KBArticleLink categoryId="ari" articleSlug="installation">
+          <HCArticleLink categoryId="ari" articleSlug="installation">
             Install the widget
-          </KBArticleLink>{' '}
+          </HCArticleLink>{' '}
           on your website
         </li>
         <li>Monitor conversations and refine Ari's responses</li>
@@ -107,7 +107,7 @@ export default function WelcomeArticle() {
         Have questions? Our support team is here to help you succeed with Pilot.
       </p>
 
-      <KBRelatedArticles
+      <HCRelatedArticles
         articles={[
           { categoryId: 'getting-started', articleSlug: 'quick-start', title: 'Quick Start Guide' },
           { categoryId: 'ari', articleSlug: 'overview', title: 'Understanding Ari' },

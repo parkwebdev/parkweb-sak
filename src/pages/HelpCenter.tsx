@@ -1,22 +1,19 @@
 /**
- * Knowledge Base Page
+ * Help Center Page
  * 
  * User-facing documentation to help users understand and use the Pilot platform.
- * Features a 3-column layout with sidebar navigation, article content, and table of contents.
- * 
- * @module pages/KnowledgeBase
  */
 
 import { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { getNavigationIcon } from '@/lib/navigation-icons';
-import { KBSidebar } from '@/components/knowledge-base/KBSidebar';
-import { KBArticleView } from '@/components/knowledge-base/KBArticleView';
-import { KBCategoryView } from '@/components/knowledge-base/KBCategoryView';
-import { KBTableOfContents } from '@/components/knowledge-base/KBTableOfContents';
-import { KBPopularArticles } from '@/components/knowledge-base/KBPopularArticles';
-import { KBTopBarSearch } from '@/components/knowledge-base/KBTopBarSearch';
+import { HCSidebar } from '@/components/help-center/HCSidebar';
+import { HCArticleView } from '@/components/help-center/HCArticleView';
+import { HCCategoryView } from '@/components/help-center/HCCategoryView';
+import { HCTableOfContents } from '@/components/help-center/HCTableOfContents';
+import { HCPopularArticles } from '@/components/help-center/HCPopularArticles';
+import { HCTopBarSearch } from '@/components/help-center/HCTopBarSearch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
@@ -31,7 +28,6 @@ import {
   type HCArticle,
 } from '@/config/help-center-config';
 
-/** Article loading skeleton */
 function ArticleSkeleton() {
   return (
     <div className="space-y-6 p-8">
@@ -46,35 +42,30 @@ function ArticleSkeleton() {
   );
 }
 
-export default function KnowledgeBase() {
+export default function HelpCenter() {
   const [searchParams, setSearchParams] = useSearchParams();
   const prefersReducedMotion = useReducedMotion();
   const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Get current selection from URL params
   const categoryId = searchParams.get('category');
   const articleSlug = searchParams.get('article');
   
-  // Resolve current category and article
   const [currentCategory, setCurrentCategory] = useState<HCCategory | undefined>();
   const [currentArticle, setCurrentArticle] = useState<HCArticle | undefined>();
   
-  // Determine if we're in category view (no article param)
   const isCategoryView = categoryId && !articleSlug;
   
-  // Handle article selection from search results
   const handleSearchSelect = useCallback((category: HCCategory, article: HCArticle) => {
     setSearchParams({ category: category.id, article: article.slug });
     setSearchQuery('');
   }, [setSearchParams]);
   
-  // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
-        <TopBarPageContext icon={getNavigationIcon('BookOpen01')} title="Knowledge Base" />
-        <KBTopBarSearch onSelect={handleSearchSelect} />
+        <TopBarPageContext icon={getNavigationIcon('BookOpen01')} title="Help Center" />
+        <HCTopBarSearch onSelect={handleSearchSelect} />
       </div>
     ),
   }), [handleSearchSelect]);
@@ -82,18 +73,15 @@ export default function KnowledgeBase() {
   
   useEffect(() => {
     if (categoryId && articleSlug) {
-      // Article view
       const category = getHCCategoryById(categoryId);
       const article = getHCArticleBySlug(categoryId, articleSlug);
       setCurrentCategory(category);
       setCurrentArticle(article);
     } else if (categoryId && !articleSlug) {
-      // Category view - just set category, no article
       const category = getHCCategoryById(categoryId);
       setCurrentCategory(category);
       setCurrentArticle(undefined);
     } else {
-      // Default to first category landing page
       const first = getFirstHCArticle();
       if (first) {
         setCurrentCategory(first.category);
@@ -103,29 +91,24 @@ export default function KnowledgeBase() {
     }
   }, [categoryId, articleSlug, setSearchParams]);
   
-  // Get adjacent articles for navigation
   const adjacent = currentCategory && currentArticle 
     ? getAdjacentArticles(currentCategory.id, currentArticle.id)
     : { prev: undefined, next: undefined };
   
-  // Handle category selection (goes to category landing page)
   const handleSelectCategory = (category: HCCategory) => {
     setSearchParams({ category: category.id });
   };
   
-  // Handle article selection
   const handleSelectArticle = (category: HCCategory, article: HCArticle) => {
     setSearchParams({ category: category.id, article: article.slug });
   };
   
-  // Handle article selection from category view (just needs article)
   const handleSelectArticleFromCategory = (article: HCArticle) => {
     if (currentCategory) {
       setSearchParams({ category: currentCategory.id, article: article.slug });
     }
   };
   
-  // Handle previous/next navigation
   const handlePrevious = () => {
     if (adjacent.prev) {
       handleSelectArticle(adjacent.prev.category, adjacent.prev.article);
@@ -140,8 +123,7 @@ export default function KnowledgeBase() {
 
   return (
     <div className="flex h-full overflow-hidden bg-background print:h-auto print:overflow-visible print:block">
-      {/* Left Sidebar - Category Navigation */}
-      <KBSidebar
+      <HCSidebar
         categories={HC_CATEGORIES as unknown as HCCategory[]}
         selectedCategoryId={currentCategory?.id}
         selectedArticleId={currentArticle?.id}
@@ -151,11 +133,9 @@ export default function KnowledgeBase() {
         searchQuery={searchQuery}
       />
       
-      {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto print:overflow-visible">
         <AnimatePresence mode="wait">
           {isCategoryView && currentCategory ? (
-            // Category landing page
             <motion.div
               key={`category-${currentCategory.id}`}
               initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
@@ -163,13 +143,12 @@ export default function KnowledgeBase() {
               exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
               transition={springs.smooth}
             >
-              <KBCategoryView
+              <HCCategoryView
                 category={currentCategory}
                 onSelectArticle={handleSelectArticleFromCategory}
               />
             </motion.div>
           ) : currentCategory && currentArticle ? (
-            // Article detail view
             <motion.div
               key={`${currentCategory.id}-${currentArticle.id}`}
               initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
@@ -178,7 +157,7 @@ export default function KnowledgeBase() {
               transition={springs.smooth}
             >
               <Suspense fallback={<ArticleSkeleton />}>
-                <KBArticleView
+                <HCArticleView
                   category={currentCategory}
                   article={currentArticle}
                   onHeadingsChange={setHeadings}
@@ -195,15 +174,14 @@ export default function KnowledgeBase() {
         </AnimatePresence>
       </main>
       
-      {/* Right Sidebar - Table of Contents or Popular Articles */}
       <aside className="w-[200px] border-l border-border hidden lg:block overflow-y-auto">
         {isCategoryView && currentCategory ? (
-          <KBPopularArticles
+          <HCPopularArticles
             categoryId={currentCategory.id}
             onSelectArticle={handleSelectArticleFromCategory}
           />
         ) : (
-          <KBTableOfContents headings={headings} />
+          <HCTableOfContents headings={headings} />
         )}
       </aside>
     </div>
