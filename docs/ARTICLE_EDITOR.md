@@ -126,7 +126,7 @@ The design is inspired by **Craft** (craft.do), featuring:
 | File Attachment | `Paperclip` | Custom node | Upload file |
 | Image | `Image01` | `setImage()` | Upload image |
 | Code Block | `CodeSnippet02` | `toggleCodeBlock()` | Syntax highlighted |
-| Whiteboard | `PenTool02` | Custom node | Drawing canvas (future) |
+
 
 ### Line Types
 
