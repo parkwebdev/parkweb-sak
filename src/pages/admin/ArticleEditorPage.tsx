@@ -8,14 +8,14 @@
  * @module pages/admin/ArticleEditorPage
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
 import { usePlatformHCCategories } from '@/hooks/admin/usePlatformHCCategories';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { ArticleEditor, type ArticleEditorRef } from '@/components/admin/knowledge/ArticleEditor';
 import { HCTableOfContents } from '@/components/help-center/HCTableOfContents';
 import { EditorInsertPanel } from '@/components/admin/knowledge/EditorInsertPanel';
 import { EditorMetadataPanel } from '@/components/admin/knowledge/EditorMetadataPanel';
@@ -74,6 +74,7 @@ export function ArticleEditorPage() {
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
   const isNewArticle = articleId === 'new' || !articleId;
+  const editorRef = React.useRef<ArticleEditorRef>(null);
   
   const { articles, loading: articlesLoading, createArticle, updateArticle } = usePlatformHCArticles();
   const { categories } = usePlatformHCCategories();
@@ -253,19 +254,19 @@ export function ArticleEditorPage() {
         <main className="flex-1 overflow-hidden flex flex-col">
           <ScrollArea className="flex-1">
             <div className="max-w-4xl mx-auto py-6 px-8">
-              <RichTextEditor
+              <ArticleEditor
+                ref={editorRef}
                 content={content}
                 onChange={handleContentChange}
                 placeholder="Start writing your article..."
                 className="border-0 shadow-none"
-                minHeight="500px"
               />
             </div>
           </ScrollArea>
         </main>
         
         {/* Right Sidebar - Insert Panel */}
-        <EditorInsertPanel />
+        <EditorInsertPanel onInsert={(blockType) => editorRef.current?.insertBlock(blockType)} />
       </div>
       
       {/* Bottom - Metadata Panel */}
