@@ -4,27 +4,34 @@
  * Full-page, Craft-inspired article editor for Platform Help Center.
  * Features three-panel layout with ToC, WYSIWYG editor, and insert panel.
  * 
+ * Draft/Publish Workflow:
+ * - Auto-saves as draft after 3 seconds of inactivity
+ * - Manual "Publish" button to make content live
+ * - "Unpublish" to revert to draft state
+ * 
  * @see docs/ARTICLE_EDITOR.md for implementation details
  * @module pages/admin/ArticleEditorPage
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen01, Check } from '@untitledui/icons';
+import { ArrowLeft, BookOpen01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
 import { usePlatformHCCategories } from '@/hooks/admin/usePlatformHCCategories';
-import { useAutoSave } from '@/hooks/useAutoSave';
 import { ArticleEditor, type ArticleEditorRef, type Heading } from '@/components/admin/knowledge/ArticleEditor';
 import { HCTableOfContents } from '@/components/help-center/HCTableOfContents';
 import { EditorInsertPanel } from '@/components/admin/knowledge/EditorInsertPanel';
 import { EditorMetadataPanel } from '@/components/admin/knowledge/EditorMetadataPanel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatusBadge } from '@/components/admin/shared/StatusBadge';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/types/errors';
+import { formatDistanceToNow } from 'date-fns';
 import type { PlatformHCArticleInput } from '@/types/platform-hc';
 
 
@@ -38,12 +45,16 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, '');
 }
 
+/** Debounce time for draft auto-save (3 seconds) */
+const DRAFT_SAVE_DELAY_MS = 3000;
+
 export function ArticleEditorPage() {
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
   const isNewArticle = articleId === 'new' || !articleId;
   const editorRef = useRef<ArticleEditorRef>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
+  const draftSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const { articles, loading: articlesLoading, createArticle, updateArticle } = usePlatformHCArticles();
   const { categories } = usePlatformHCCategories();
@@ -62,7 +73,7 @@ export function ArticleEditorPage() {
   const [description, setDescription] = useState('');
   const [orderIndex, setOrderIndex] = useState(0);
   const [iconName, setIconName] = useState('');
-  const [isPublished, setIsPublished] = useState(true);
+  const [isPublished, setIsPublished] = useState(false); // Default to draft
   const [isMetadataOpen, setIsMetadataOpen] = useState(false);
   
   // Extracted headings for ToC
@@ -70,6 +81,11 @@ export function ArticleEditorPage() {
   
   // Track if we've loaded the article data
   const [hasLoaded, setHasLoaded] = useState(false);
+  
+  // Draft save state
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   
   // Load existing article data
   useEffect(() => {
@@ -82,7 +98,6 @@ export function ArticleEditorPage() {
       setOrderIndex(existingArticle.order_index || 0);
       setIconName(existingArticle.icon_name || '');
       setIsPublished(existingArticle.is_published);
-      // Headings will be extracted by the editor when it mounts
       setHasLoaded(true);
     } else if (isNewArticle && !hasLoaded && categories.length > 0) {
       // Set default category for new articles
@@ -95,30 +110,18 @@ export function ArticleEditorPage() {
   const handleContentChange = useCallback((html: string, extractedHeadings: Heading[]) => {
     setContent(html);
     setHeadings(extractedHeadings);
+    setHasUnsavedChanges(true);
   }, []);
   
   // Auto-generate slug from title
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle);
+    setHasUnsavedChanges(true);
     // Only auto-generate slug if it's empty or matches the old auto-generated slug
     if (!slug || slug === generateSlug(title)) {
       setSlug(generateSlug(newTitle));
     }
   }, [slug, title]);
-  
-  // Auto-save handler
-  const { save, saveNow, status: saveStatus } = useAutoSave<PlatformHCArticleInput>({
-    onSave: async (data) => {
-      if (isNewArticle) {
-        await createArticle(data);
-        // After creating, the list will refresh and we'll navigate when we get the new article ID
-        // For now, just stay on the page - could improve this with a return value
-      } else if (articleId) {
-        await updateArticle(articleId, data);
-      }
-    },
-    debounceMs: 2000,
-  });
   
   // Build current form data for save operations
   const currentFormData = useMemo((): PlatformHCArticleInput => ({
@@ -132,14 +135,119 @@ export function ArticleEditorPage() {
     is_published: isPublished,
   }), [title, content, slug, categoryId, description, orderIndex, iconName, isPublished]);
   
+  // Save draft (auto-save or manual)
+  const saveDraft = useCallback(async () => {
+    if (!hasUnsavedChanges || !title || !categoryId) return;
+    
+    setIsSaving(true);
+    try {
+      const draftData: PlatformHCArticleInput = {
+        ...currentFormData,
+        is_published: isPublished, // Preserve current publish state
+      };
+      
+      if (isNewArticle) {
+        await createArticle(draftData);
+      } else if (articleId) {
+        await updateArticle(articleId, draftData);
+      }
+      
+      setHasUnsavedChanges(false);
+      setLastSavedAt(new Date());
+    } catch (error: unknown) {
+      toast.error('Failed to save draft', { description: getErrorMessage(error) });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [hasUnsavedChanges, title, categoryId, currentFormData, isPublished, isNewArticle, articleId, createArticle, updateArticle]);
+  
+  // Publish article
+  const handlePublish = useCallback(async () => {
+    if (!title || !categoryId) {
+      toast.error('Cannot publish', { description: 'Title and category are required.' });
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      const publishData: PlatformHCArticleInput = {
+        ...currentFormData,
+        is_published: true,
+      };
+      
+      if (isNewArticle) {
+        await createArticle(publishData);
+      } else if (articleId) {
+        await updateArticle(articleId, publishData);
+      }
+      
+      setIsPublished(true);
+      setHasUnsavedChanges(false);
+      setLastSavedAt(new Date());
+      toast.success('Article published');
+    } catch (error: unknown) {
+      toast.error('Failed to publish', { description: getErrorMessage(error) });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [title, categoryId, currentFormData, isNewArticle, articleId, createArticle, updateArticle]);
+  
+  // Unpublish article (revert to draft)
+  const handleUnpublish = useCallback(async () => {
+    if (!articleId) return;
+    
+    setIsSaving(true);
+    try {
+      await updateArticle(articleId, { is_published: false });
+      setIsPublished(false);
+      setHasUnsavedChanges(false);
+      setLastSavedAt(new Date());
+      toast.success('Article reverted to draft');
+    } catch (error: unknown) {
+      toast.error('Failed to unpublish', { description: getErrorMessage(error) });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [articleId, updateArticle]);
+  
+  // Debounced draft auto-save (3 seconds after last change)
+  useEffect(() => {
+    if (!hasLoaded || !hasUnsavedChanges || !title || !categoryId) return;
+    
+    // Clear existing timeout
+    if (draftSaveTimeoutRef.current) {
+      clearTimeout(draftSaveTimeoutRef.current);
+    }
+    
+    // Set new timeout for auto-save
+    draftSaveTimeoutRef.current = setTimeout(() => {
+      saveDraft();
+    }, DRAFT_SAVE_DELAY_MS);
+    
+    return () => {
+      if (draftSaveTimeoutRef.current) {
+        clearTimeout(draftSaveTimeoutRef.current);
+      }
+    };
+  }, [hasLoaded, hasUnsavedChanges, title, categoryId, saveDraft]);
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (draftSaveTimeoutRef.current) {
+        clearTimeout(draftSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+  
   // Keyboard shortcuts: Cmd+S for force save, Escape for deselect/close panels
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl+S: Force save
+      // Cmd/Ctrl+S: Force save draft
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
         if (hasLoaded && title && categoryId) {
-          saveNow(currentFormData);
+          saveDraft();
         }
         return;
       }
@@ -159,23 +267,15 @@ export function ArticleEditorPage() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasLoaded, title, categoryId, currentFormData, saveNow, isMetadataOpen]);
+  }, [hasLoaded, title, categoryId, saveDraft, isMetadataOpen]);
   
-  // Trigger auto-save on changes (only after initial load)
-  useEffect(() => {
-    if (!hasLoaded || !title || !categoryId) return;
-    
-    save({
-      title,
-      content,
-      slug: slug || generateSlug(title),
-      category_id: categoryId,
-      description,
-      order_index: orderIndex,
-      icon_name: iconName || undefined,
-      is_published: isPublished,
-    });
-  }, [title, content, slug, categoryId, description, orderIndex, iconName, isPublished, hasLoaded, save]);
+  // Track changes on metadata fields
+  const handleMetadataChange = useCallback((setter: React.Dispatch<React.SetStateAction<string | number>>) => {
+    return (value: string | number) => {
+      setter(value as never);
+      setHasUnsavedChanges(true);
+    };
+  }, []);
   
   // Handle back navigation
   const handleBack = useCallback(() => {
@@ -207,34 +307,44 @@ export function ArticleEditorPage() {
     ),
     right: (
       <div className="flex items-center gap-3">
-        {/* Save status indicator */}
-        {saveStatus === 'pending' && (
-          <span className="text-xs text-muted-foreground">Unsaved changes</span>
-        )}
-        {saveStatus === 'saving' && (
+        {/* Draft save status indicator */}
+        {isSaving && (
           <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>
         )}
-        {saveStatus === 'saved' && (
-          <span className="flex items-center gap-1 text-xs text-status-active">
-            <Check size={12} aria-hidden="true" />
-            Saved
+        {!isSaving && hasUnsavedChanges && (
+          <span className="text-xs text-muted-foreground">Unsaved changes</span>
+        )}
+        {!isSaving && !hasUnsavedChanges && lastSavedAt && (
+          <span className="text-xs text-muted-foreground">
+            Saved {formatDistanceToNow(lastSavedAt, { addSuffix: true })}
           </span>
         )}
-        {saveStatus === 'error' && (
-          <span className="text-xs text-destructive">Save failed</span>
-        )}
         
-        <Badge variant={isPublished ? 'default' : 'secondary'}>
-          {isPublished ? 'Published' : 'Draft'}
-        </Badge>
-        <Switch 
-          checked={isPublished} 
-          onCheckedChange={setIsPublished}
-          aria-label="Toggle publish status"
-        />
+        {/* Status badge */}
+        <StatusBadge status={isPublished ? 'Published' : 'Draft'} />
+        
+        {/* Publish/Unpublish button */}
+        {isPublished ? (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleUnpublish} 
+            disabled={isSaving}
+          >
+            Unpublish
+          </Button>
+        ) : (
+          <Button 
+            size="sm" 
+            onClick={handlePublish} 
+            disabled={isSaving || !title || !categoryId}
+          >
+            Publish
+          </Button>
+        )}
       </div>
     ),
-  }), [title, isPublished, handleBack, handleTitleChange, saveStatus]);
+  }), [title, isPublished, handleBack, handleTitleChange, isSaving, hasUnsavedChanges, lastSavedAt, handlePublish, handleUnpublish, categoryId]);
   
   useTopBar(topBarConfig);
   
@@ -308,16 +418,16 @@ export function ArticleEditorPage() {
         isOpen={isMetadataOpen}
         onOpenChange={setIsMetadataOpen}
         slug={slug}
-        onSlugChange={setSlug}
+        onSlugChange={(value) => { setSlug(value); setHasUnsavedChanges(true); }}
         categoryId={categoryId}
-        onCategoryChange={setCategoryId}
+        onCategoryChange={(value) => { setCategoryId(value); setHasUnsavedChanges(true); }}
         categories={categories}
         description={description}
-        onDescriptionChange={setDescription}
+        onDescriptionChange={(value) => { setDescription(value); setHasUnsavedChanges(true); }}
         orderIndex={orderIndex}
-        onOrderIndexChange={setOrderIndex}
+        onOrderIndexChange={(value) => { setOrderIndex(value); setHasUnsavedChanges(true); }}
         iconName={iconName}
-        onIconNameChange={setIconName}
+        onIconNameChange={(value) => { setIconName(value); setHasUnsavedChanges(true); }}
       />
     </div>
   );

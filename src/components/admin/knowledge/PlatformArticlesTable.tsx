@@ -20,6 +20,7 @@ import {
 import { DataTable, DataTableFloatingBar } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table/DataTableColumnHeader';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -153,12 +154,7 @@ export function PlatformArticlesTable({
           <DataTableColumnHeader column={column} title="Status" />
         ),
         cell: ({ getValue }) => (
-          <Badge 
-            variant="outline"
-            className={getValue() ? 'bg-status-active/10 text-status-active-foreground border-status-active/20' : ''}
-          >
-            {getValue() ? 'Published' : 'Draft'}
-          </Badge>
+          <StatusBadge status={getValue() ? 'Published' : 'Draft'} />
         ),
       }),
       columnHelper.accessor('order_index', {
