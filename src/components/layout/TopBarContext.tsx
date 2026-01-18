@@ -1,10 +1,12 @@
 /**
- * @fileoverview TopBar Context Provider
- * Provides a context for pages to set their top bar content dynamically.
+ * @fileoverview TopBar Context Provider (Split Architecture)
  * 
- * Uses a stable identity system to prevent re-render cascades:
- * - Each page provides a unique pageId
- * - Config updates use a ref-based approach to prevent unnecessary re-renders
+ * Uses TWO separate contexts to prevent re-render cascades:
+ * - TopBarConfigContext: For components that RENDER the top bar (read-only)
+ * - TopBarSetConfigContext: For pages that SET the top bar content (write-only)
+ * 
+ * This separation ensures that pages calling setConfig do NOT re-render
+ * when the config value changes, eliminating infinite loop possibilities.
  * 
  * @example
  * ```tsx
@@ -29,15 +31,11 @@ export interface TopBarConfig {
   right?: ReactNode;
 }
 
-interface TopBarContextValue {
-  config: TopBarConfig;
-  setConfig: (config: TopBarConfig) => void;
-}
+// Context for READING config (used by TopBar component)
+const TopBarConfigContext = createContext<TopBarConfig>({});
 
-const TopBarContext = createContext<TopBarContextValue>({
-  config: {},
-  setConfig: () => {},
-});
+// Context for SETTING config (used by pages via useTopBar) - stable setter
+const TopBarSetConfigContext = createContext<(config: TopBarConfig) => void>(() => {});
 
 interface TopBarProviderProps {
   children: ReactNode;
@@ -45,38 +43,53 @@ interface TopBarProviderProps {
 
 /**
  * Provider component that wraps the app to enable top bar configuration.
- * Should be placed inside AppLayout but outside the main content area.
+ * Uses split contexts to prevent re-render cascades.
+ * 
+ * - TopBarSetConfigContext provides a stable setConfig function
+ * - TopBarConfigContext provides the current config value
+ * 
+ * Pages that call useTopBar() only subscribe to the setter context,
+ * so they don't re-render when config changes.
  */
 export function TopBarProvider({ children }: TopBarProviderProps) {
   const [config, setConfigState] = useState<TopBarConfig>({});
   
+  // Stable setConfig that never changes identity
   const setConfig = useCallback((newConfig: TopBarConfig) => {
     setConfigState(newConfig);
   }, []);
 
   return (
-    <TopBarContext.Provider value={{ config, setConfig }}>
-      {children}
-    </TopBarContext.Provider>
+    <TopBarSetConfigContext.Provider value={setConfig}>
+      <TopBarConfigContext.Provider value={config}>
+        {children}
+      </TopBarConfigContext.Provider>
+    </TopBarSetConfigContext.Provider>
   );
 }
 
 /**
  * Hook to access the current top bar configuration.
  * Used by the TopBar component to render the configured content.
+ * 
+ * Components using this hook WILL re-render when config changes.
+ * This is intentional - the TopBar needs to re-render to show new content.
  */
 export function useTopBarContext() {
-  return useContext(TopBarContext);
+  const config = useContext(TopBarConfigContext);
+  return { config };
 }
 
 /**
  * Hook for pages to set their top bar content.
  * 
- * IMPORTANT: The pageId parameter is crucial for stable identity.
- * When a pageId is provided, the config only updates if:
- * 1. The component is mounting
- * 2. The pageId changes (navigation to a new page)
- * 3. The config reference changes (controlled updates via useMemo)
+ * IMPORTANT: This hook subscribes ONLY to the setter context, not the config context.
+ * This means pages will NOT re-render when the config changes, eliminating
+ * the possibility of infinite re-render loops from config updates.
+ * 
+ * The pageId parameter provides stable identity for the page:
+ * - When provided, config only updates if pageId changes or config reference changes
+ * - Helps prevent unnecessary updates during navigation
  * 
  * @param config - The top bar configuration for this page (should be memoized)
  * @param pageId - Unique identifier for this page (e.g., 'leads', 'conversations')
@@ -92,7 +105,7 @@ export function useTopBarContext() {
  * ```
  */
 export function useTopBar(config: TopBarConfig, pageId?: string) {
-  const { setConfig } = useContext(TopBarContext);
+  const setConfig = useContext(TopBarSetConfigContext);
   const pageIdRef = useRef(pageId);
   const configRef = useRef(config);
   const hasMountedRef = useRef(false);
@@ -123,7 +136,7 @@ export function useTopBar(config: TopBarConfig, pageId?: string) {
       configRef.current = config;
       setConfig(config);
     }
-    // Only depend on config and pageId - setConfig is stable
+    // Only depend on config and pageId - setConfig is stable from context
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, pageId]);
   

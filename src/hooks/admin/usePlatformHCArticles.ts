@@ -7,6 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -113,12 +114,38 @@ export function usePlatformHCArticles(): UsePlatformHCArticlesResult {
     },
   });
 
-  return {
-    articles,
-    loading: isLoading,
-    error: error as Error | null,
-    createArticle: async (article) => { await createMutation.mutateAsync(article); },
-    updateArticle: async (id, updates) => { await updateMutation.mutateAsync({ id, updates }); },
-    deleteArticle: async (id) => { await deleteMutation.mutateAsync(id); },
-  };
+  // Stable function references to prevent re-render cascades
+  const createArticle = useCallback(
+    async (article: PlatformHCArticleInput) => {
+      await createMutation.mutateAsync(article);
+    },
+    [createMutation]
+  );
+
+  const updateArticle = useCallback(
+    async (id: string, updates: Partial<PlatformHCArticleInput>) => {
+      await updateMutation.mutateAsync({ id, updates });
+    },
+    [updateMutation]
+  );
+
+  const deleteArticle = useCallback(
+    async (id: string) => {
+      await deleteMutation.mutateAsync(id);
+    },
+    [deleteMutation]
+  );
+
+  // Memoize return object for consumers that destructure
+  return useMemo(
+    () => ({
+      articles,
+      loading: isLoading,
+      error: error as Error | null,
+      createArticle,
+      updateArticle,
+      deleteArticle,
+    }),
+    [articles, isLoading, error, createArticle, updateArticle, deleteArticle]
+  );
 }

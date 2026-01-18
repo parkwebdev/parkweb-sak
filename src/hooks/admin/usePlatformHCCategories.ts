@@ -7,6 +7,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
@@ -108,12 +109,38 @@ export function usePlatformHCCategories(): UsePlatformHCCategoriesResult {
     },
   });
 
-  return {
-    categories,
-    loading: isLoading,
-    error: error as Error | null,
-    createCategory: async (category) => { await createMutation.mutateAsync(category); },
-    updateCategory: async (id, updates) => { await updateMutation.mutateAsync({ id, updates }); },
-    deleteCategory: async (id) => { await deleteMutation.mutateAsync(id); },
-  };
+  // Stable function references to prevent re-render cascades
+  const createCategory = useCallback(
+    async (category: PlatformHCCategoryInput) => {
+      await createMutation.mutateAsync(category);
+    },
+    [createMutation]
+  );
+
+  const updateCategory = useCallback(
+    async (id: string, updates: Partial<PlatformHCCategoryInput>) => {
+      await updateMutation.mutateAsync({ id, updates });
+    },
+    [updateMutation]
+  );
+
+  const deleteCategory = useCallback(
+    async (id: string) => {
+      await deleteMutation.mutateAsync(id);
+    },
+    [deleteMutation]
+  );
+
+  // Memoize return object for consumers that destructure
+  return useMemo(
+    () => ({
+      categories,
+      loading: isLoading,
+      error: error as Error | null,
+      createCategory,
+      updateCategory,
+      deleteCategory,
+    }),
+    [categories, isLoading, error, createCategory, updateCategory, deleteCategory]
+  );
 }

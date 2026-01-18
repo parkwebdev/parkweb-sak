@@ -377,13 +377,34 @@ export function ArticleEditorPage() {
   // Derived value for publish button enablement
   const canPublish = Boolean(title && categoryId);
   
-  // Configure TopBar with memoized components
+  // ============= Ref-based stable callback wrappers =============
+  // Route action callbacks through refs so topBarConfig dependencies
+  // don't change when the underlying callbacks are recreated
+  const handlePublishRef = useRef(handlePublish);
+  const handleUnpublishRef = useRef(handleUnpublish);
+  const handleTitleChangeRef = useRef(handleTitleChange);
+  const handleBackRef = useRef(handleBack);
+  
+  // Keep refs updated with latest callbacks
+  handlePublishRef.current = handlePublish;
+  handleUnpublishRef.current = handleUnpublish;
+  handleTitleChangeRef.current = handleTitleChange;
+  handleBackRef.current = handleBack;
+  
+  // Stable wrappers that never change identity
+  const onPublishStable = useCallback(() => handlePublishRef.current(), []);
+  const onUnpublishStable = useCallback(() => handleUnpublishRef.current(), []);
+  const onTitleChangeStable = useCallback((v: string) => handleTitleChangeRef.current(v), []);
+  const onBackStable = useCallback(() => handleBackRef.current(), []);
+  
+  // Configure TopBar with memoized components and stable callbacks
+  // Dependencies reduced to display state only - actions use stable wrappers
   const topBarConfig = useMemo(() => ({
     left: (
       <TopBarLeft
         title={title}
-        onTitleChange={handleTitleChange}
-        onBack={handleBack}
+        onTitleChange={onTitleChangeStable}
+        onBack={onBackStable}
       />
     ),
     right: (
@@ -393,13 +414,13 @@ export function ArticleEditorPage() {
         lastSavedAt={lastSavedAt}
         isPublished={isPublished}
         canPublish={canPublish}
-        onPublish={handlePublish}
-        onUnpublish={handleUnpublish}
+        onPublish={onPublishStable}
+        onUnpublish={onUnpublishStable}
       />
     ),
-  }), [title, handleTitleChange, handleBack, isSaving, hasUnsavedChanges, lastSavedAt, isPublished, canPublish, handlePublish, handleUnpublish]);
+  }), [title, onTitleChangeStable, onBackStable, isSaving, hasUnsavedChanges, lastSavedAt, isPublished, canPublish, onPublishStable, onUnpublishStable]);
   
-  useTopBar(topBarConfig);
+  useTopBar(topBarConfig, 'admin-article-editor');
   
   // Show loading skeleton
   if (articlesLoading && !isNewArticle) {
