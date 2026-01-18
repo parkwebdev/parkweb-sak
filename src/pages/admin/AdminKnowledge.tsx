@@ -44,6 +44,13 @@ export function AdminKnowledge() {
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
 
+  // Create stable reference for categories based on their IDs to prevent infinite re-renders
+  const categoriesKey = useMemo(
+    () => categories.map(c => c.id).join(','),
+    [categories]
+  );
+  const stableCategories = useMemo(() => categories, [categoriesKey]);
+
   const handleEditArticle = (article: PlatformHCArticle) => {
     setEditingArticle(article);
     setEditorOpen(true);
@@ -79,7 +86,7 @@ export function AdminKnowledge() {
     right: (
       <div className="flex items-center gap-2">
         <CategoryFilterDropdown
-          categories={categories}
+          categories={stableCategories}
           activeCategory={categoryFilter}
           onCategoryChange={setCategoryFilter}
           onAddCategory={() => setCategoryDialogOpen(true)}
@@ -89,7 +96,7 @@ export function AdminKnowledge() {
         </Button>
       </div>
     ),
-  }), [categories, categoryFilter, handleCreateArticle]);
+  }), [stableCategories, categoryFilter, handleCreateArticle]);
   useTopBar(topBarConfig);
 
   return (
