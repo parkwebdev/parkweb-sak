@@ -1766,7 +1766,7 @@ export type Database = {
         }
         Relationships: []
       }
-      platform_kb_articles: {
+      platform_hc_articles: {
         Row: {
           category_id: string
           content: string
@@ -1814,15 +1814,22 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_platform_hc_articles_category"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "platform_hc_categories"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "platform_kb_articles_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: "platform_kb_categories"
+            referencedRelation: "platform_hc_categories"
             referencedColumns: ["id"]
           },
         ]
       }
-      platform_kb_categories: {
+      platform_hc_categories: {
         Row: {
           color: string
           created_at: string | null

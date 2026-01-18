@@ -1,10 +1,10 @@
 /**
- * Knowledge Base Article Feedback Hook
+ * Help Center Article Feedback Hook
  * 
  * Handles submission and retrieval of article feedback.
  * Uses session storage for anonymous user tracking.
  * 
- * @module hooks/useKBArticleFeedback
+ * @module hooks/useHCArticleFeedback
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,7 +14,7 @@ import { getErrorMessage } from '@/types/errors';
 
 /** Get or create a session ID for feedback tracking */
 function getSessionId(): string {
-  const key = 'kb_session_id';
+  const key = 'hc_session_id';
   let sessionId = sessionStorage.getItem(key);
   
   if (!sessionId) {
@@ -27,20 +27,20 @@ function getSessionId(): string {
 
 /** Check if feedback was already submitted in this session */
 function hasFeedbackInSession(categoryId: string, articleSlug: string): boolean {
-  const key = `kb_feedback_${categoryId}_${articleSlug}`;
+  const key = `hc_feedback_${categoryId}_${articleSlug}`;
   return sessionStorage.getItem(key) !== null;
 }
 
 /** Get stored feedback value */
 function getStoredFeedback(categoryId: string, articleSlug: string): boolean | null {
-  const key = `kb_feedback_${categoryId}_${articleSlug}`;
+  const key = `hc_feedback_${categoryId}_${articleSlug}`;
   const value = sessionStorage.getItem(key);
   return value === null ? null : value === 'true';
 }
 
 /** Store feedback in session */
 function storeFeedbackInSession(categoryId: string, articleSlug: string, isHelpful: boolean): void {
-  const key = `kb_feedback_${categoryId}_${articleSlug}`;
+  const key = `hc_feedback_${categoryId}_${articleSlug}`;
   sessionStorage.setItem(key, isHelpful.toString());
 }
 
@@ -52,7 +52,7 @@ interface FeedbackState {
 /**
  * Hook to manage article feedback submission
  */
-export function useKBArticleFeedback(categoryId: string, articleSlug: string) {
+export function useHCArticleFeedback(categoryId: string, articleSlug: string) {
   const [state, setState] = useState<FeedbackState>(() => ({
     hasFeedback: hasFeedbackInSession(categoryId, articleSlug),
     isHelpful: getStoredFeedback(categoryId, articleSlug),

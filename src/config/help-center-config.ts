@@ -1,18 +1,18 @@
 /**
- * Knowledge Base Configuration
+ * Help Center Configuration
  * 
- * Centralized configuration for all Knowledge Base categories and articles.
+ * Centralized configuration for all Help Center categories and articles.
  * This is user-facing documentation to help users understand the app.
  * 
- * @module config/knowledge-base-config
+ * @module config/help-center-config
  */
 
 import { lazy, type LazyExoticComponent, type ComponentType } from 'react';
 
 /**
- * Knowledge Base Article
+ * Help Center Article
  */
-export interface KBArticle {
+export interface HCArticle {
   /** Unique article identifier */
   id: string;
   /** URL-friendly slug */
@@ -26,9 +26,9 @@ export interface KBArticle {
 }
 
 /**
- * Knowledge Base Category
+ * Help Center Category
  */
-export interface KBCategory {
+export interface HCCategory {
   /** Unique category identifier */
   id: string;
   /** Display label */
@@ -38,13 +38,13 @@ export interface KBCategory {
   /** UntitledUI icon name */
   iconName: string;
   /** Articles in this category */
-  articles: KBArticle[];
+  articles: HCArticle[];
 }
 
 /**
- * All Knowledge Base categories and articles
+ * All Help Center categories and articles
  */
-export const KB_CATEGORIES: readonly KBCategory[] = [
+export const HC_CATEGORIES: readonly HCCategory[] = [
   {
     id: 'getting-started',
     label: 'Getting Started',
@@ -92,105 +92,105 @@ export const KB_CATEGORIES: readonly KBCategory[] = [
         slug: 'overview',
         title: 'Understanding Ari',
         description: 'Learn what Ari is and how it can help your business.',
-        component: lazy(() => import('@/data/knowledge-base/ari/AriOverviewArticle')),
+        component: lazy(() => import('@/data/help-center/ari/AriOverviewArticle')),
       },
       {
         id: 'system-prompt',
         slug: 'system-prompt',
         title: 'Writing a System Prompt',
         description: 'Define Ari\'s personality and guidelines.',
-        component: lazy(() => import('@/data/knowledge-base/ari/SystemPromptArticle')),
+        component: lazy(() => import('@/data/help-center/ari/SystemPromptArticle')),
       },
       {
         id: 'appearance',
         slug: 'appearance',
         title: 'Customizing Appearance',
         description: 'Make the chat widget match your brand.',
-        component: lazy(() => import('@/data/knowledge-base/ari/AppearanceArticle')),
+        component: lazy(() => import('@/data/help-center/ari/AppearanceArticle')),
       },
       {
         id: 'welcome-messages',
         slug: 'welcome-messages',
         title: 'Welcome & Messages',
         description: 'Configure greetings and quick actions.',
-        component: lazy(() => import('@/data/knowledge-base/ari/WelcomeMessagesArticle')),
+        component: lazy(() => import('@/data/help-center/ari/WelcomeMessagesArticle')),
       },
       {
         id: 'lead-capture',
         slug: 'lead-capture',
         title: 'Lead Capture',
         description: 'Collect visitor information during conversations.',
-        component: lazy(() => import('@/data/knowledge-base/ari/LeadCaptureArticle')),
+        component: lazy(() => import('@/data/help-center/ari/LeadCaptureArticle')),
       },
       {
         id: 'knowledge-sources',
         slug: 'knowledge-sources',
         title: 'Adding Knowledge Sources',
         description: 'Teach Ari about your business with knowledge sources.',
-        component: lazy(() => import('@/data/knowledge-base/ari/KnowledgeSourcesArticle')),
+        component: lazy(() => import('@/data/help-center/ari/KnowledgeSourcesArticle')),
       },
       {
         id: 'locations',
         slug: 'locations',
         title: 'Managing Locations',
         description: 'Configure multiple business locations.',
-        component: lazy(() => import('@/data/knowledge-base/ari/LocationsArticle')),
+        component: lazy(() => import('@/data/help-center/ari/LocationsArticle')),
       },
       {
         id: 'help-articles',
         slug: 'help-articles',
         title: 'Help Articles',
         description: 'Create self-service content for visitors.',
-        component: lazy(() => import('@/data/knowledge-base/ari/HelpArticlesArticle')),
+        component: lazy(() => import('@/data/help-center/ari/HelpArticlesArticle')),
       },
       {
         id: 'announcements',
         slug: 'announcements',
         title: 'Announcements',
         description: 'Display promotional banners in the widget.',
-        component: lazy(() => import('@/data/knowledge-base/ari/AnnouncementsArticle')),
+        component: lazy(() => import('@/data/help-center/ari/AnnouncementsArticle')),
       },
       {
         id: 'news',
         slug: 'news',
         title: 'News',
         description: 'Share updates and stories with visitors.',
-        component: lazy(() => import('@/data/knowledge-base/ari/NewsArticle')),
+        component: lazy(() => import('@/data/help-center/ari/NewsArticle')),
       },
       {
         id: 'custom-tools',
         slug: 'custom-tools',
         title: 'Custom Tools',
         description: 'Extend Ari with custom API integrations.',
-        component: lazy(() => import('@/data/knowledge-base/ari/CustomToolsArticle')),
+        component: lazy(() => import('@/data/help-center/ari/CustomToolsArticle')),
       },
       {
         id: 'webhooks',
         slug: 'webhooks',
         title: 'Webhooks',
         description: 'Send real-time notifications to external systems.',
-        component: lazy(() => import('@/data/knowledge-base/ari/WebhooksArticle')),
+        component: lazy(() => import('@/data/help-center/ari/WebhooksArticle')),
       },
       {
         id: 'integrations',
         slug: 'integrations',
         title: 'Integrations',
         description: 'Connect to calendars, CRMs, and more.',
-        component: lazy(() => import('@/data/knowledge-base/ari/IntegrationsArticle')),
+        component: lazy(() => import('@/data/help-center/ari/IntegrationsArticle')),
       },
       {
         id: 'api-access',
         slug: 'api-access',
         title: 'API Access',
         description: 'Use the API for custom integrations.',
-        component: lazy(() => import('@/data/knowledge-base/ari/ApiAccessArticle')),
+        component: lazy(() => import('@/data/help-center/ari/ApiAccessArticle')),
       },
       {
         id: 'installation',
         slug: 'installation',
         title: 'Installing the Widget',
         description: 'Add Ari to your website in minutes.',
-        component: lazy(() => import('@/data/knowledge-base/ari/InstallationArticle')),
+        component: lazy(() => import('@/data/help-center/ari/InstallationArticle')),
       },
     ],
   },
@@ -205,14 +205,14 @@ export const KB_CATEGORIES: readonly KBCategory[] = [
         slug: 'overview',
         title: 'Managing Conversations',
         description: 'View and manage all conversations with your visitors.',
-        component: lazy(() => import('@/data/knowledge-base/inbox/InboxOverviewArticle')),
+        component: lazy(() => import('@/data/help-center/inbox/InboxOverviewArticle')),
       },
       {
         id: 'takeover',
         slug: 'takeover',
         title: 'Human Takeover',
         description: 'Take over conversations from Ari when needed.',
-        component: lazy(() => import('@/data/knowledge-base/inbox/TakeoverArticle')),
+        component: lazy(() => import('@/data/help-center/inbox/TakeoverArticle')),
       },
     ],
   },
@@ -227,14 +227,14 @@ export const KB_CATEGORIES: readonly KBCategory[] = [
         slug: 'overview',
         title: 'Lead Management',
         description: 'Capture and manage leads from conversations.',
-        component: lazy(() => import('@/data/knowledge-base/leads/LeadsOverviewArticle')),
+        component: lazy(() => import('@/data/help-center/leads/LeadsOverviewArticle')),
       },
       {
         id: 'lead-stages',
         slug: 'stages',
         title: 'Lead Stages',
         description: 'Organize leads with customizable stages.',
-        component: lazy(() => import('@/data/knowledge-base/leads/LeadStagesArticle')),
+        component: lazy(() => import('@/data/help-center/leads/LeadStagesArticle')),
       },
     ],
   },
@@ -249,7 +249,7 @@ export const KB_CATEGORIES: readonly KBCategory[] = [
         slug: 'overview',
         title: 'Using the Planner',
         description: 'Schedule and manage bookings with the Planner.',
-        component: lazy(() => import('@/data/knowledge-base/planner/PlannerOverviewArticle')),
+        component: lazy(() => import('@/data/help-center/planner/PlannerOverviewArticle')),
       },
     ],
   },
@@ -264,14 +264,14 @@ export const KB_CATEGORIES: readonly KBCategory[] = [
         slug: 'overview',
         title: 'Understanding Your Data',
         description: 'Gain insights from your conversation analytics.',
-        component: lazy(() => import('@/data/knowledge-base/analytics/AnalyticsOverviewArticle')),
+        component: lazy(() => import('@/data/help-center/analytics/AnalyticsOverviewArticle')),
       },
       {
         id: 'report-builder',
         slug: 'report-builder',
         title: 'Report Builder',
         description: 'Create and schedule custom reports.',
-        component: lazy(() => import('@/data/knowledge-base/analytics/ReportBuilderArticle')),
+        component: lazy(() => import('@/data/help-center/analytics/ReportBuilderArticle')),
       },
     ],
   },
@@ -286,77 +286,77 @@ export const KB_CATEGORIES: readonly KBCategory[] = [
         slug: 'general',
         title: 'General Settings',
         description: 'Configure organization information and preferences.',
-        component: lazy(() => import('@/data/knowledge-base/settings/GeneralSettingsArticle')),
+        component: lazy(() => import('@/data/help-center/settings/GeneralSettingsArticle')),
       },
       {
         id: 'profile-settings',
         slug: 'profile',
         title: 'Profile Settings',
         description: 'Manage your personal profile information.',
-        component: lazy(() => import('@/data/knowledge-base/settings/ProfileSettingsArticle')),
+        component: lazy(() => import('@/data/help-center/settings/ProfileSettingsArticle')),
       },
       {
         id: 'team-management',
         slug: 'team',
         title: 'Managing Your Team',
         description: 'Invite team members and manage roles.',
-        component: lazy(() => import('@/data/knowledge-base/settings/TeamManagementArticle')),
+        component: lazy(() => import('@/data/help-center/settings/TeamManagementArticle')),
       },
       {
         id: 'billing',
         slug: 'billing',
         title: 'Billing & Subscription',
         description: 'Manage your subscription and billing.',
-        component: lazy(() => import('@/data/knowledge-base/settings/BillingArticle')),
+        component: lazy(() => import('@/data/help-center/settings/BillingArticle')),
       },
       {
         id: 'usage',
         slug: 'usage',
         title: 'Usage Metrics',
         description: 'Monitor your conversation and API usage.',
-        component: lazy(() => import('@/data/knowledge-base/settings/UsageArticle')),
+        component: lazy(() => import('@/data/help-center/settings/UsageArticle')),
       },
       {
         id: 'notifications',
         slug: 'notifications',
         title: 'Notification Preferences',
         description: 'Control how and when you receive notifications.',
-        component: lazy(() => import('@/data/knowledge-base/settings/NotificationsArticle')),
+        component: lazy(() => import('@/data/help-center/settings/NotificationsArticle')),
       },
       {
         id: 'sessions',
         slug: 'sessions',
         title: 'Active Sessions',
         description: 'Manage your active login sessions.',
-        component: lazy(() => import('@/data/knowledge-base/settings/SessionsArticle')),
+        component: lazy(() => import('@/data/help-center/settings/SessionsArticle')),
       },
     ],
   },
 ] as const;
 
 /** Type for valid category IDs */
-export type KBCategoryId = typeof KB_CATEGORIES[number]['id'];
+export type HCCategoryId = typeof HC_CATEGORIES[number]['id'];
 
 /** Get category by ID */
-export function getKBCategoryById(id: string): KBCategory | undefined {
-  return KB_CATEGORIES.find(c => c.id === id);
+export function getHCCategoryById(id: string): HCCategory | undefined {
+  return HC_CATEGORIES.find(c => c.id === id);
 }
 
 /** Get article by category and article ID */
-export function getKBArticle(categoryId: string, articleId: string): KBArticle | undefined {
-  const category = getKBCategoryById(categoryId);
+export function getHCArticle(categoryId: string, articleId: string): HCArticle | undefined {
+  const category = getHCCategoryById(categoryId);
   return category?.articles.find(a => a.id === articleId);
 }
 
 /** Get article by slug (searches all categories) */
-export function getKBArticleBySlug(categoryId: string, slug: string): KBArticle | undefined {
-  const category = getKBCategoryById(categoryId);
+export function getHCArticleBySlug(categoryId: string, slug: string): HCArticle | undefined {
+  const category = getHCCategoryById(categoryId);
   return category?.articles.find(a => a.slug === slug);
 }
 
 /** Get first article (for default view) */
-export function getFirstKBArticle(): { category: KBCategory; article: KBArticle } | undefined {
-  const firstCategory = KB_CATEGORIES[0];
+export function getFirstHCArticle(): { category: HCCategory; article: HCArticle } | undefined {
+  const firstCategory = HC_CATEGORIES[0];
   const firstArticle = firstCategory?.articles[0];
   if (firstCategory && firstArticle) {
     return { category: firstCategory, article: firstArticle };
@@ -366,12 +366,12 @@ export function getFirstKBArticle(): { category: KBCategory; article: KBArticle 
 
 /** Get previous and next articles for navigation */
 export function getAdjacentArticles(categoryId: string, articleId: string): {
-  prev?: { category: KBCategory; article: KBArticle };
-  next?: { category: KBCategory; article: KBArticle };
+  prev?: { category: HCCategory; article: HCArticle };
+  next?: { category: HCCategory; article: HCArticle };
 } {
   // Flatten all articles with their categories
-  const allArticles: { category: KBCategory; article: KBArticle }[] = [];
-  for (const category of KB_CATEGORIES) {
+  const allArticles: { category: HCCategory; article: HCArticle }[] = [];
+  for (const category of HC_CATEGORIES) {
     for (const article of category.articles) {
       allArticles.push({ category, article });
     }

@@ -228,10 +228,10 @@ export const queryKeys = {
     progress: (userId: string) => [...queryKeys.onboarding.all, 'progress', userId] as const,
   },
 
-  // Knowledge base
-  kb: {
-    all: ['kb'] as const,
-    popularity: (categoryId: string) => [...queryKeys.kb.all, 'popularity', categoryId] as const,
+  // Help center
+  hc: {
+    all: ['hc'] as const,
+    popularity: (categoryId: string) => [...queryKeys.hc.all, 'popularity', categoryId] as const,
   },
 
 } as const;
