@@ -17,12 +17,40 @@ import {
   Strikethrough01,
   Code01,
   Link01,
-  Type01,
+  FaceSmile,
+  AtSign,
+  Calculator,
+  Palette,
 } from '@untitledui/icons';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useCallback, useState } from 'react';
+
+// Common text colors for the color picker
+const TEXT_COLORS = [
+  { name: 'Default', color: null },
+  { name: 'Gray', color: 'hsl(var(--muted-foreground))' },
+  { name: 'Red', color: 'hsl(0 84% 60%)' },
+  { name: 'Orange', color: 'hsl(25 95% 53%)' },
+  { name: 'Yellow', color: 'hsl(48 96% 53%)' },
+  { name: 'Green', color: 'hsl(142 76% 36%)' },
+  { name: 'Blue', color: 'hsl(217 91% 60%)' },
+  { name: 'Purple', color: 'hsl(262 83% 58%)' },
+  { name: 'Pink', color: 'hsl(330 81% 60%)' },
+] as const;
+
+// Common emoji for quick insert
+const QUICK_EMOJIS = ['😊', '👍', '❤️', '🎉', '🚀', '💡', '⭐', '✅', '❌', '⚠️', '📌', '🔥'];
 
 interface EditorFloatingToolbarProps {
   editor: Editor;
@@ -62,23 +90,54 @@ function ToolbarButton({ icon: Icon, isActive, onClick, label, disabled }: Toolb
  * Uses TipTap's BubbleMenu extension.
  */
 export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
-  const [isAddingLink, setIsAddingLink] = useState(false);
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
   const handleLink = useCallback(() => {
     const previousUrl = editor.getAttributes('link').href;
     const url = window.prompt('Enter URL:', previousUrl || 'https://');
     
     if (url === null) {
-      // Cancelled
       return;
     }
     
     if (url === '') {
-      // Remove link
       editor.chain().focus().unsetLink().run();
     } else {
-      // Set link
       editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    }
+  }, [editor]);
+
+  const handleColorSelect = useCallback((color: string | null) => {
+    if (color === null) {
+      // Remove color (reset to default)
+      editor.chain().focus().unsetMark('textStyle').run();
+    } else {
+      // Apply color using inline style
+      editor.chain().focus().setMark('textStyle', { style: `color: ${color}` }).run();
+    }
+    setIsColorPickerOpen(false);
+  }, [editor]);
+
+  const handleEmojiSelect = useCallback((emoji: string) => {
+    editor.chain().focus().insertContent(emoji).run();
+    setIsEmojiPickerOpen(false);
+  }, [editor]);
+
+  const handleMathFormula = useCallback(() => {
+    // Placeholder - show toast or hint that it's coming soon
+    const formula = window.prompt('Enter LaTeX formula (preview only):', 'E = mc^2');
+    if (formula) {
+      // Insert as inline code for now until proper TeX extension is added
+      editor.chain().focus().insertContent(`$${formula}$`).run();
+    }
+  }, [editor]);
+
+  const handleMention = useCallback(() => {
+    // Placeholder - insert @ mention
+    const mention = window.prompt('Enter mention:', '@');
+    if (mention) {
+      editor.chain().focus().insertContent(mention).run();
     }
   }, [editor]);
 
@@ -139,6 +198,44 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
       
       <Separator orientation="vertical" className="h-5 mx-1" />
       
+      {/* Text Color Picker */}
+      <Popover open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+        <PopoverTrigger asChild>
+          <button
+            aria-label="Text color"
+            className={cn(
+              'h-7 w-7 flex items-center justify-center rounded',
+              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+            )}
+          >
+            <Palette size={14} aria-hidden="true" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2" align="start">
+          <div className="grid grid-cols-3 gap-1">
+            {TEXT_COLORS.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => handleColorSelect(item.color)}
+                className={cn(
+                  'flex items-center gap-2 px-2 py-1.5 rounded text-xs',
+                  'hover:bg-accent transition-colors'
+                )}
+              >
+                <span
+                  className="h-3 w-3 rounded-full border border-border"
+                  style={{ backgroundColor: item.color || 'hsl(var(--foreground))' }}
+                />
+                {item.name}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      <Separator orientation="vertical" className="h-5 mx-1" />
+      
       {/* Heading shortcuts */}
       <div className="flex items-center">
         <button
@@ -178,6 +275,72 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
           H3
         </button>
       </div>
+      
+      <Separator orientation="vertical" className="h-5 mx-1" />
+      
+      {/* Advanced features */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={handleMathFormula}
+            aria-label="Math formula (coming soon)"
+            className={cn(
+              'h-7 w-7 flex items-center justify-center rounded',
+              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+            )}
+          >
+            <Calculator size={14} aria-hidden="true" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">TeX Formula (Soon)</TooltipContent>
+      </Tooltip>
+      
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={handleMention}
+            aria-label="Mention (coming soon)"
+            className={cn(
+              'h-7 w-7 flex items-center justify-center rounded',
+              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+            )}
+          >
+            <AtSign size={14} aria-hidden="true" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Mention (Soon)</TooltipContent>
+      </Tooltip>
+      
+      {/* Emoji Picker */}
+      <Popover open={isEmojiPickerOpen} onOpenChange={setIsEmojiPickerOpen}>
+        <PopoverTrigger asChild>
+          <button
+            aria-label="Insert emoji"
+            className={cn(
+              'h-7 w-7 flex items-center justify-center rounded',
+              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+            )}
+          >
+            <FaceSmile size={14} aria-hidden="true" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2" align="end">
+          <div className="grid grid-cols-6 gap-1">
+            {QUICK_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleEmojiSelect(emoji)}
+                className="h-8 w-8 flex items-center justify-center rounded hover:bg-accent transition-colors text-base"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
     </BubbleMenu>
   );
 }
