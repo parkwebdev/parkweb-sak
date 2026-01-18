@@ -646,76 +646,76 @@ html::view-transition {
   border-radius: 0.75rem;
 }
 
-/* Knowledge Base article content styles */
-.kb-article-content {
+/* Help Center article content styles */
+.hc-article-content {
   @apply text-sm leading-relaxed text-foreground;
 }
 
-.kb-article-content h2 {
+.hc-article-content h2 {
   @apply text-lg font-semibold mb-3 mt-8 first:mt-0 text-foreground scroll-mt-20;
 }
 
-.kb-article-content h3 {
+.hc-article-content h3 {
   @apply text-base font-medium mb-2 mt-6 first:mt-0 text-foreground scroll-mt-20;
 }
 
-.kb-article-content h4 {
+.hc-article-content h4 {
   @apply text-sm font-medium mb-2 mt-4 first:mt-0 text-foreground scroll-mt-20;
 }
 
-.kb-article-content p {
+.hc-article-content p {
   @apply mb-4 last:mb-0 text-foreground/90;
 }
 
-.kb-article-content ul {
+.hc-article-content ul {
   @apply list-disc pl-5 mb-4 space-y-1.5;
 }
 
-.kb-article-content ol {
+.hc-article-content ol {
   @apply list-decimal pl-5 mb-4 space-y-1.5;
 }
 
-.kb-article-content li {
+.hc-article-content li {
   @apply text-sm text-foreground/90;
 }
 
-.kb-article-content a {
+.hc-article-content a {
   @apply text-primary underline underline-offset-2 hover:no-underline;
 }
 
-.kb-article-content strong, .kb-article-content b {
+.hc-article-content strong, .hc-article-content b {
   @apply font-semibold text-foreground;
 }
 
-.kb-article-content code {
+.hc-article-content code {
   @apply bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-foreground;
 }
 
-.kb-article-content pre {
+.hc-article-content pre {
   @apply bg-muted p-4 rounded-lg overflow-x-auto mb-4;
 }
 
-.kb-article-content pre code {
+.hc-article-content pre code {
   @apply bg-transparent p-0;
 }
 
-.kb-article-content table {
+.hc-article-content table {
   @apply w-full mb-4 text-sm;
 }
 
-.kb-article-content th {
+.hc-article-content th {
   @apply text-left font-medium text-foreground p-2 border-b border-border;
 }
 
-.kb-article-content td {
+.hc-article-content td {
   @apply p-2 border-b border-border text-foreground/90;
 }
 
-.kb-article-content kbd {
+.hc-article-content kbd {
   @apply inline-flex items-center justify-center px-1.5 py-0.5 text-2xs font-medium bg-muted border border-border rounded text-muted-foreground;
 }
 
-.kb-article-content img {
+.hc-article-content img {
   @apply max-w-full h-auto my-4 rounded-lg;
 }
 
@@ -781,7 +781,7 @@ html::view-transition {
   /* Full width content */
   main,
   article,
-  .kb-article-content {
+  .hc-article-content {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -861,7 +861,7 @@ html::view-transition {
   }
 
   /* Callouts and cards */
-  .kb-callout,
+  .hc-callout,
   [class*="callout"],
   [class*="card"] {
     border: 1px solid #ddd !important;

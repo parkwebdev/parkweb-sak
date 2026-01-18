@@ -210,7 +210,7 @@ export function ArticlesTable({
           <DialogHeader>
             <DialogTitle>Create Article</DialogTitle>
             <DialogDescription>
-              Add a new help article to the knowledge base
+              Add a new help article to the help center
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

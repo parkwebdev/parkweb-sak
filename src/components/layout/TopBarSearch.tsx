@@ -2,7 +2,7 @@
  * @fileoverview Reusable TopBar Search Component
  * 
  * A search input with popover dropdown for live results.
- * Used across multiple pages (Inbox, Knowledge Base, etc.).
+ * Used across multiple pages (Inbox, Help Center, etc.).
  * 
  * @module components/layout/TopBarSearch
  */

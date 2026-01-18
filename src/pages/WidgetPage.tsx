@@ -35,7 +35,7 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
   customFields: [],
   quickActions: [
     { id: 'chat', label: 'Start a Chat', title: 'Start a Chat', subtitle: 'Chat with our AI assistant', icon: 'chat', actionType: 'start_chat' },
-    { id: 'help', label: 'Help Articles', title: 'Help Articles', subtitle: 'Browse our knowledge base', icon: 'help', actionType: 'open_help' }
+    { id: 'help', label: 'Help Articles', title: 'Help Articles', subtitle: 'Browse our help center', icon: 'help', actionType: 'open_help' }
   ],
   announcements: [],
   helpCategories: [],

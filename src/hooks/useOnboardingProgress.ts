@@ -186,7 +186,7 @@ export function useOnboardingProgress(): OnboardingProgress {
       {
         id: 'help-articles',
         title: 'Create help articles',
-        subtitle: 'Build a knowledge base for self-service support',
+        subtitle: 'Build a help center for self-service support',
         description: 'Write help articles that visitors can browse. Ari will also use these to answer questions accurately.',
         icon: BookOpen01,
         isComplete: helpArticlesComplete,

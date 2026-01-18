@@ -18,7 +18,7 @@ interface HCTopBarSearchProps {
 }
 
 /**
- * Self-contained search component for the Knowledge Base page.
+ * Self-contained search component for the Help Center page.
  * Manages search state internally to avoid triggering parent re-renders.
  */
 export const HCTopBarSearch = memo(function HCTopBarSearch({

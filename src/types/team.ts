@@ -111,7 +111,7 @@ export const PERMISSION_GROUPS: Record<string, readonly AppPermission[]> = {
   'Conversations': ['view_conversations', 'manage_conversations'],
   'Leads': ['view_leads', 'manage_leads'],
   'Bookings': ['view_bookings', 'manage_bookings'],
-  'Knowledge Base': ['view_knowledge', 'manage_knowledge'],
+  'Knowledge Sources': ['view_knowledge', 'manage_knowledge'],
   'Help Center': ['view_help_articles', 'manage_help_articles'],
   'Team': ['view_team', 'manage_team'],
   'Settings': ['view_settings', 'manage_settings'],
