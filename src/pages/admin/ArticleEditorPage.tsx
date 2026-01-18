@@ -8,7 +8,7 @@
  * @module pages/admin/ArticleEditorPage
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen01, Check } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
@@ -25,7 +25,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { IconButton } from '@/components/ui/icon-button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import type { PlatformHCArticleInput } from '@/types/platform-hc';
 
 
@@ -43,7 +42,8 @@ export function ArticleEditorPage() {
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
   const isNewArticle = articleId === 'new' || !articleId;
-  const editorRef = React.useRef<ArticleEditorRef>(null);
+  const editorRef = useRef<ArticleEditorRef>(null);
+  const editorScrollRef = useRef<HTMLDivElement>(null);
   
   const { articles, loading: articlesLoading, createArticle, updateArticle } = usePlatformHCArticles();
   const { categories } = usePlatformHCCategories();
@@ -273,14 +273,18 @@ export function ArticleEditorPage() {
         {/* Left Sidebar - Table of Contents */}
         <aside className="w-[200px] border-r border-border bg-background flex-shrink-0">
           <ScrollArea className="h-full">
-            <HCTableOfContents headings={headings} />
+            <HCTableOfContents 
+              headings={headings} 
+              scrollContainerRef={editorScrollRef}
+              showSearch={headings.length > 5}
+            />
           </ScrollArea>
         </aside>
         
         {/* Center - Main Editor */}
         <main className="flex-1 overflow-hidden flex flex-col">
           <ScrollArea className="flex-1">
-            <div className="max-w-4xl mx-auto py-6 px-8">
+            <div ref={editorScrollRef} className="max-w-4xl mx-auto py-6 px-8">
               <ArticleEditor
                 ref={editorRef}
                 content={content}
