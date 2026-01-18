@@ -1,21 +1,21 @@
 /**
- * Knowledge Base Article Views Hook
+ * Help Center Article Views Hook
  * 
- * Tracks article views and fetches popularity data for KB articles.
+ * Tracks article views and fetches popularity data for HC articles.
  * Uses session storage to prevent duplicate views within a session.
  * 
- * @module hooks/useKBArticleViews
+ * @module hooks/useHCArticleViews
  */
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
-import { getKBArticleBySlug, type KBArticle } from '@/config/knowledge-base-config';
+import { getHCArticleBySlug, type HCArticle } from '@/config/help-center-config';
 
 /** Get or create a session ID for view tracking */
 function getSessionId(): string {
-  const key = 'kb_session_id';
+  const key = 'hc_session_id';
   let sessionId = sessionStorage.getItem(key);
   
   if (!sessionId) {
@@ -28,18 +28,18 @@ function getSessionId(): string {
 
 /** Check if we've already recorded a view for this article in this session */
 function hasViewedInSession(categoryId: string, articleSlug: string): boolean {
-  const key = `kb_viewed_${categoryId}_${articleSlug}`;
+  const key = `hc_viewed_${categoryId}_${articleSlug}`;
   return sessionStorage.getItem(key) === 'true';
 }
 
 /** Mark article as viewed in this session */
 function markViewedInSession(categoryId: string, articleSlug: string): void {
-  const key = `kb_viewed_${categoryId}_${articleSlug}`;
+  const key = `hc_viewed_${categoryId}_${articleSlug}`;
   sessionStorage.setItem(key, 'true');
 }
 
 interface PopularArticle {
-  article: KBArticle;
+  article: HCArticle;
   viewCount: number;
   uniqueViews: number;
 }
@@ -95,7 +95,7 @@ export function useRecordArticleView() {
  */
 export function usePopularArticles(categoryId: string | undefined, limit = 5) {
   return useQuery({
-    queryKey: queryKeys.kb.popularity(categoryId ?? ''),
+    queryKey: queryKeys.hc.popularity(categoryId ?? ''),
     queryFn: async (): Promise<PopularArticle[]> => {
       if (!categoryId) return [];
       
@@ -116,7 +116,7 @@ export function usePopularArticles(categoryId: string | undefined, limit = 5) {
       const articles: PopularArticle[] = [];
       
       for (const row of data ?? []) {
-        const article = getKBArticleBySlug(categoryId, row.article_slug as string);
+        const article = getHCArticleBySlug(categoryId, row.article_slug as string);
         if (article) {
           articles.push({
             article,

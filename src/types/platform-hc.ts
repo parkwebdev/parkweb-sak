@@ -1,15 +1,15 @@
 /**
- * Platform Knowledge Base Types
+ * Platform Help Center Types
  * 
- * Types for the admin-editable platform KB articles and categories.
+ * Types for the admin-editable platform HC articles and categories.
  * 
- * @module types/platform-kb
+ * @module types/platform-hc
  */
 
 /**
- * Platform KB Category (editable by super admins)
+ * Platform HC Category (editable by super admins)
  */
-export interface PlatformKBCategory {
+export interface PlatformHCCategory {
   id: string;
   label: string;
   color: string;
@@ -21,9 +21,9 @@ export interface PlatformKBCategory {
 }
 
 /**
- * Platform KB Article (editable by super admins)
+ * Platform HC Article (editable by super admins)
  */
-export interface PlatformKBArticle {
+export interface PlatformHCArticle {
   id: string;
   category_id: string;
   slug: string;
@@ -42,9 +42,9 @@ export interface PlatformKBArticle {
 }
 
 /**
- * Data for creating/updating a platform KB article
+ * Data for creating/updating a platform HC article
  */
-export interface PlatformKBArticleInput {
+export interface PlatformHCArticleInput {
   category_id: string;
   slug: string;
   title: string;
@@ -56,9 +56,9 @@ export interface PlatformKBArticleInput {
 }
 
 /**
- * Data for creating/updating a platform KB category
+ * Data for creating/updating a platform HC category
  */
-export interface PlatformKBCategoryInput {
+export interface PlatformHCCategoryInput {
   id: string;
   label: string;
   color: string;

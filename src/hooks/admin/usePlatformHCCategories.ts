@@ -1,9 +1,9 @@
 /**
- * usePlatformKBCategories Hook
+ * usePlatformHCCategories Hook
  * 
- * CRUD operations for platform KB categories (super admin only).
+ * CRUD operations for platform HC categories (super admin only).
  * 
- * @module hooks/admin/usePlatformKBCategories
+ * @module hooks/admin/usePlatformHCCategories
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,31 +11,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
-import type { PlatformKBCategory, PlatformKBCategoryInput } from '@/types/platform-kb';
+import type { PlatformHCCategory, PlatformHCCategoryInput } from '@/types/platform-hc';
 
-interface UsePlatformKBCategoriesResult {
-  categories: PlatformKBCategory[];
+interface UsePlatformHCCategoriesResult {
+  categories: PlatformHCCategory[];
   loading: boolean;
   error: Error | null;
-  createCategory: (category: PlatformKBCategoryInput) => Promise<void>;
-  updateCategory: (id: string, updates: Partial<PlatformKBCategoryInput>) => Promise<void>;
+  createCategory: (category: PlatformHCCategoryInput) => Promise<void>;
+  updateCategory: (id: string, updates: Partial<PlatformHCCategoryInput>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
 }
 
-export function usePlatformKBCategories(): UsePlatformKBCategoriesResult {
+export function usePlatformHCCategories(): UsePlatformHCCategoriesResult {
   const queryClient = useQueryClient();
 
   const { data: categories = [], isLoading, error } = useQuery({
-    queryKey: adminQueryKeys.platformKB.categories(),
+    queryKey: adminQueryKeys.platformHC.categories(),
     queryFn: async () => {
       // Fetch categories and articles count in parallel
       const [categoriesResult, articlesResult] = await Promise.all([
         supabase
-          .from('platform_kb_categories')
+          .from('platform_hc_categories')
           .select('*')
           .order('order_index'),
         supabase
-          .from('platform_kb_articles')
+          .from('platform_hc_articles')
           .select('category_id'),
       ]);
 
@@ -50,21 +50,21 @@ export function usePlatformKBCategories(): UsePlatformKBCategoriesResult {
       return (categoriesResult.data || []).map((cat) => ({
         ...cat,
         article_count: articleCounts[cat.id] || 0,
-      })) as PlatformKBCategory[];
+      })) as PlatformHCCategory[];
     },
     staleTime: 60000,
   });
 
   const createMutation = useMutation({
-    mutationFn: async (category: PlatformKBCategoryInput) => {
+    mutationFn: async (category: PlatformHCCategoryInput) => {
       const { error } = await supabase
-        .from('platform_kb_categories')
+        .from('platform_hc_categories')
         .insert(category);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.platformKB.all() });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.platformHC.all() });
       toast.success('Category created');
     },
     onError: (error: unknown) => {
@@ -73,16 +73,16 @@ export function usePlatformKBCategories(): UsePlatformKBCategoriesResult {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<PlatformKBCategoryInput> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<PlatformHCCategoryInput> }) => {
       const { error } = await supabase
-        .from('platform_kb_categories')
+        .from('platform_hc_categories')
         .update(updates)
         .eq('id', id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.platformKB.all() });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.platformHC.all() });
       toast.success('Category updated');
     },
     onError: (error: unknown) => {
@@ -93,14 +93,14 @@ export function usePlatformKBCategories(): UsePlatformKBCategoriesResult {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('platform_kb_categories')
+        .from('platform_hc_categories')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.platformKB.all() });
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.platformHC.all() });
       toast.success('Category deleted');
     },
     onError: (error: unknown) => {
