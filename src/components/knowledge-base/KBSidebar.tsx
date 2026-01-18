@@ -13,7 +13,7 @@ import { ChevronDown } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
-import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
+import type { HCCategory, HCArticle } from '@/config/help-center-config';
 
 /** Map category bg colors to ring/border colors for active states */
 const ACTIVE_RING_MAP: Record<string, string> = {
@@ -37,13 +37,13 @@ const HOVER_MAP: Record<string, string> = {
 };
 
 interface KBSidebarProps {
-  categories: KBCategory[];
+  categories: HCCategory[];
   selectedCategoryId?: string;
   selectedArticleId?: string;
   /** True when viewing a category landing page (no article selected) */
   isCategoryView?: boolean;
-  onSelectCategory: (category: KBCategory) => void;
-  onSelectArticle: (category: KBCategory, article: KBArticle) => void;
+  onSelectCategory: (category: HCCategory) => void;
+  onSelectArticle: (category: HCCategory, article: HCArticle) => void;
   /** Search query from TopBar */
   searchQuery?: string;
 }
@@ -93,7 +93,7 @@ export function KBSidebar({
       .map(category => ({
         ...category,
         articles: category.articles.filter(
-          article =>
+          (article: HCArticle) =>
             article.title.toLowerCase().includes(query) ||
             article.description?.toLowerCase().includes(query)
         ),
@@ -183,7 +183,7 @@ export function KBSidebar({
                     style={{ overflow: 'hidden' }}
                   >
                     <div className="space-y-0.5 mt-0.5 ml-5">
-                      {category.articles.map((article) => {
+                      {category.articles.map((article: HCArticle) => {
                         const isSelected = 
                           category.id === selectedCategoryId && article.id === selectedArticleId;
                         

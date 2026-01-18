@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { Check, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useKBArticleFeedback } from '@/hooks/useKBArticleFeedback';
+import { useHCArticleFeedback } from '@/hooks/useHCArticleFeedback';
 import { cn } from '@/lib/utils';
 
 interface KBArticleFeedbackProps {
@@ -20,7 +20,7 @@ interface KBArticleFeedbackProps {
 }
 
 export function KBArticleFeedback({ categoryId, articleSlug }: KBArticleFeedbackProps) {
-  const { hasFeedback, isHelpful, isSubmitting, submitFeedback } = useKBArticleFeedback(
+  const { hasFeedback, isHelpful, isSubmitting, submitFeedback } = useHCArticleFeedback(
     categoryId, 
     articleSlug
   );

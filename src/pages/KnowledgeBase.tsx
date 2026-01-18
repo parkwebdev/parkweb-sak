@@ -22,14 +22,14 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { 
-  KB_CATEGORIES, 
-  getKBCategoryById, 
-  getKBArticleBySlug,
-  getFirstKBArticle,
+  HC_CATEGORIES, 
+  getHCCategoryById, 
+  getHCArticleBySlug,
+  getFirstHCArticle,
   getAdjacentArticles,
-  type KBCategory,
-  type KBArticle,
-} from '@/config/knowledge-base-config';
+  type HCCategory,
+  type HCArticle,
+} from '@/config/help-center-config';
 
 /** Article loading skeleton */
 function ArticleSkeleton() {
@@ -57,14 +57,14 @@ export default function KnowledgeBase() {
   const articleSlug = searchParams.get('article');
   
   // Resolve current category and article
-  const [currentCategory, setCurrentCategory] = useState<KBCategory | undefined>();
-  const [currentArticle, setCurrentArticle] = useState<KBArticle | undefined>();
+  const [currentCategory, setCurrentCategory] = useState<HCCategory | undefined>();
+  const [currentArticle, setCurrentArticle] = useState<HCArticle | undefined>();
   
   // Determine if we're in category view (no article param)
   const isCategoryView = categoryId && !articleSlug;
   
   // Handle article selection from search results
-  const handleSearchSelect = useCallback((category: KBCategory, article: KBArticle) => {
+  const handleSearchSelect = useCallback((category: HCCategory, article: HCArticle) => {
     setSearchParams({ category: category.id, article: article.slug });
     setSearchQuery('');
   }, [setSearchParams]);
@@ -83,18 +83,18 @@ export default function KnowledgeBase() {
   useEffect(() => {
     if (categoryId && articleSlug) {
       // Article view
-      const category = getKBCategoryById(categoryId);
-      const article = getKBArticleBySlug(categoryId, articleSlug);
+      const category = getHCCategoryById(categoryId);
+      const article = getHCArticleBySlug(categoryId, articleSlug);
       setCurrentCategory(category);
       setCurrentArticle(article);
     } else if (categoryId && !articleSlug) {
       // Category view - just set category, no article
-      const category = getKBCategoryById(categoryId);
+      const category = getHCCategoryById(categoryId);
       setCurrentCategory(category);
       setCurrentArticle(undefined);
     } else {
       // Default to first category landing page
-      const first = getFirstKBArticle();
+      const first = getFirstHCArticle();
       if (first) {
         setCurrentCategory(first.category);
         setCurrentArticle(undefined);
@@ -109,17 +109,17 @@ export default function KnowledgeBase() {
     : { prev: undefined, next: undefined };
   
   // Handle category selection (goes to category landing page)
-  const handleSelectCategory = (category: KBCategory) => {
+  const handleSelectCategory = (category: HCCategory) => {
     setSearchParams({ category: category.id });
   };
   
   // Handle article selection
-  const handleSelectArticle = (category: KBCategory, article: KBArticle) => {
+  const handleSelectArticle = (category: HCCategory, article: HCArticle) => {
     setSearchParams({ category: category.id, article: article.slug });
   };
   
   // Handle article selection from category view (just needs article)
-  const handleSelectArticleFromCategory = (article: KBArticle) => {
+  const handleSelectArticleFromCategory = (article: HCArticle) => {
     if (currentCategory) {
       setSearchParams({ category: currentCategory.id, article: article.slug });
     }
@@ -142,7 +142,7 @@ export default function KnowledgeBase() {
     <div className="flex h-full overflow-hidden bg-background print:h-auto print:overflow-visible print:block">
       {/* Left Sidebar - Category Navigation */}
       <KBSidebar
-        categories={KB_CATEGORIES as unknown as KBCategory[]}
+        categories={HC_CATEGORIES as unknown as HCCategory[]}
         selectedCategoryId={currentCategory?.id}
         selectedArticleId={currentArticle?.id}
         isCategoryView={!!isCategoryView}

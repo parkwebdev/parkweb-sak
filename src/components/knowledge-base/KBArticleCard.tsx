@@ -11,10 +11,10 @@ import { ArrowRight } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
-import type { KBArticle } from '@/config/knowledge-base-config';
+import type { HCArticle } from '@/config/help-center-config';
 
 interface KBArticleCardProps {
-  article: KBArticle;
+  article: HCArticle;
   categoryColor: string;
   onClick: () => void;
 }

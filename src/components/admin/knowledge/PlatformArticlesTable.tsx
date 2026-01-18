@@ -37,17 +37,17 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import DOMPurify from 'isomorphic-dompurify';
-import type { PlatformKBArticle } from '@/types/platform-kb';
+import type { PlatformHCArticle } from '@/types/platform-hc';
 
 interface PlatformArticlesTableProps {
-  articles: PlatformKBArticle[];
+  articles: PlatformHCArticle[];
   loading: boolean;
-  onEdit: (article: PlatformKBArticle) => void;
+  onEdit: (article: PlatformHCArticle) => void;
   onDelete: (articleId: string) => void;
   onCreate: () => void;
 }
 
-const columnHelper = createColumnHelper<PlatformKBArticle>();
+const columnHelper = createColumnHelper<PlatformHCArticle>();
 
 /**
  * Table component for displaying platform KB articles.
@@ -60,7 +60,7 @@ export function PlatformArticlesTable({
   onCreate,
 }: PlatformArticlesTableProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [previewArticle, setPreviewArticle] = useState<PlatformKBArticle | null>(null);
+  const [previewArticle, setPreviewArticle] = useState<PlatformHCArticle | null>(null);
 
   const handleDelete = () => {
     if (deleteConfirmId) {
@@ -69,7 +69,7 @@ export function PlatformArticlesTable({
     }
   };
 
-  const columns = useMemo<ColumnDef<PlatformKBArticle, unknown>[]>(
+  const columns = useMemo<ColumnDef<PlatformHCArticle, string | number | boolean | null>[]>(
     () => [
       columnHelper.accessor('title', {
         header: 'Title',

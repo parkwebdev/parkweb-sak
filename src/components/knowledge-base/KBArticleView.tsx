@@ -15,10 +15,10 @@ import { Badge } from '@/components/ui/badge';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
-import { useTrackArticleView } from '@/hooks/useKBArticleViews';
+import { useTrackArticleView } from '@/hooks/useHCArticleViews';
 import { useReadingTime } from '@/hooks/useReadingTime';
 import { KBArticleFeedback } from './KBArticleFeedback';
-import type { KBCategory, KBArticle } from '@/config/knowledge-base-config';
+import type { HCCategory, HCArticle } from '@/config/help-center-config';
 
 /** Map category bg colors to gradient CSS variables */
 const GRADIENT_MAP: Record<string, string> = {
@@ -32,13 +32,13 @@ const GRADIENT_MAP: Record<string, string> = {
 };
 
 interface KBArticleViewProps {
-  category: KBCategory;
-  article: KBArticle;
+  category: HCCategory;
+  article: HCArticle;
   onHeadingsChange: (headings: { id: string; text: string; level: number }[]) => void;
   onPrevious?: () => void;
   onNext?: () => void;
-  prevArticle?: KBArticle;
-  nextArticle?: KBArticle;
+  prevArticle?: HCArticle;
+  nextArticle?: HCArticle;
 }
 
 export function KBArticleView({

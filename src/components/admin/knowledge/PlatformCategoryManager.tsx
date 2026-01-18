@@ -28,12 +28,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { PlatformKBCategory, PlatformKBCategoryInput } from '@/types/platform-kb';
+import type { PlatformHCCategory, PlatformHCCategoryInput } from '@/types/platform-hc';
 
 interface PlatformCategoryManagerProps {
-  categories: PlatformKBCategory[];
+  categories: PlatformHCCategory[];
   loading: boolean;
-  onCreate: (category: PlatformKBCategoryInput) => void;
+  onCreate: (category: PlatformHCCategoryInput) => void;
   onDelete: (id: string) => void;
 }
 
@@ -62,7 +62,7 @@ export function PlatformCategoryManager({
   onDelete,
 }: PlatformCategoryManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newCategory, setNewCategory] = useState<PlatformKBCategoryInput>({
+  const [newCategory, setNewCategory] = useState<PlatformHCCategoryInput>({
     id: '',
     label: '',
     color: 'bg-info',

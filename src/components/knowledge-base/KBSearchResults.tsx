@@ -10,18 +10,18 @@ import { useMemo } from 'react';
 import { BookOpen01 } from '@untitledui/icons';
 import { TopBarSearchResultItem, TopBarSearchEmptyState } from '@/components/layout/TopBarSearchResultItem';
 import { Badge } from '@/components/ui/badge';
-import { KB_CATEGORIES, type KBCategory, type KBArticle } from '@/config/knowledge-base-config';
+import { HC_CATEGORIES, type HCCategory, type HCArticle } from '@/config/help-center-config';
 
 interface SearchResult {
-  category: KBCategory;
-  article: KBArticle;
+  category: HCCategory;
+  article: HCArticle;
 }
 
 interface KBSearchResultsProps {
   /** Current search query */
   query: string;
   /** Callback when an article is selected */
-  onSelect: (category: KBCategory, article: KBArticle) => void;
+  onSelect: (category: HCCategory, article: HCArticle) => void;
   /** Maximum number of results to show (default: 8) */
   maxResults?: number;
 }
@@ -41,7 +41,7 @@ export function KBSearchResults({
     const searchTerm = query.toLowerCase();
     const matches: SearchResult[] = [];
     
-    for (const category of KB_CATEGORIES) {
+    for (const category of HC_CATEGORIES) {
       for (const article of category.articles) {
         const titleMatch = article.title.toLowerCase().includes(searchTerm);
         const descMatch = article.description?.toLowerCase().includes(searchTerm);
