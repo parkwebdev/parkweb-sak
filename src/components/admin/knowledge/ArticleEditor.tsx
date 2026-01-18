@@ -16,11 +16,18 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import { useCallback, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
 import { EditorFloatingToolbar } from './EditorFloatingToolbar';
+import { HeadingWithId } from './HeadingWithId';
 import { cn } from '@/lib/utils';
+
+export interface Heading {
+  id: string;
+  text: string;
+  level: number;
+}
 
 interface ArticleEditorProps {
   content: string;
-  onChange: (html: string) => void;
+  onChange: (html: string, headings: Heading[]) => void;
   placeholder?: string;
   className?: string;
 }
@@ -28,6 +35,28 @@ interface ArticleEditorProps {
 export interface ArticleEditorRef {
   editor: Editor | null;
   insertBlock: (blockType: string) => void;
+}
+
+/**
+ * Extracts headings from the TipTap editor DOM with their IDs.
+ */
+function extractHeadingsFromEditor(editor: Editor): Heading[] {
+  const headings: Heading[] = [];
+  const editorElement = editor.view.dom;
+  const headingElements = editorElement.querySelectorAll('h1, h2, h3');
+  
+  headingElements.forEach((el, index) => {
+    const tagName = el.tagName.toLowerCase();
+    const level = parseInt(tagName.replace('h', ''), 10);
+    const text = el.textContent?.trim() || '';
+    const id = el.getAttribute('id') || `heading-${index}`;
+    
+    if (text) {
+      headings.push({ id, text, level });
+    }
+  });
+  
+  return headings;
 }
 
 /**
@@ -40,9 +69,10 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
     const editor = useEditor({
       extensions: [
         StarterKit.configure({
-          heading: {
-            levels: [1, 2, 3],
-          },
+          heading: false, // Disable default heading, use HeadingWithId instead
+        }),
+        HeadingWithId.configure({
+          levels: [1, 2, 3],
         }),
         Image.configure({
           inline: false,
@@ -86,10 +116,15 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
         },
       },
       onUpdate: ({ editor }) => {
-        onChange(editor.getHTML());
+        const html = editor.getHTML();
+        const headings = extractHeadingsFromEditor(editor);
+        onChange(html, headings);
       },
-      onCreate: () => {
+      onCreate: ({ editor }) => {
         setIsReady(true);
+        // Initial headings extraction
+        const headings = extractHeadingsFromEditor(editor);
+        onChange(editor.getHTML(), headings);
       },
     });
 
