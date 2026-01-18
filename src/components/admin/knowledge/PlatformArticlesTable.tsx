@@ -84,9 +84,15 @@ export function PlatformArticlesTable({
       }),
       columnHelper.accessor('category_label', {
         header: 'Category',
-        cell: ({ getValue }) => (
-          <Badge variant="outline">{getValue()}</Badge>
-        ),
+        cell: ({ getValue, row }) => {
+          const color = row.original.category_color || 'bg-muted';
+          return (
+            <Badge variant="outline" className="gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${color}`} aria-hidden="true" />
+              {getValue()}
+            </Badge>
+          );
+        },
       }),
       columnHelper.accessor('is_published', {
         header: 'Status',
