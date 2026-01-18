@@ -1,7 +1,8 @@
 /**
  * PlatformArticlesTable Component
  * 
- * Data table for displaying and managing platform help articles.
+ * Data table for displaying and managing platform help articles
+ * with row selection for bulk operations.
  * 
  * @module components/admin/knowledge/PlatformArticlesTable
  */
@@ -10,24 +11,21 @@ import { useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   createColumnHelper,
   ColumnDef,
+  SortingState,
+  RowSelectionState,
 } from '@tanstack/react-table';
-import { DataTable } from '@/components/data-table/DataTable';
+import { DataTable, DataTableFloatingBar } from '@/components/data-table';
+import { DataTableColumnHeader } from '@/components/data-table/DataTableColumnHeader';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Edit02, Trash01, Eye } from '@untitledui/icons';
 import { IconButton } from '@/components/ui/icon-button';
 import { formatDistanceToNow } from 'date-fns';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import {
   Sheet,
   SheetContent,
@@ -42,34 +40,89 @@ interface PlatformArticlesTableProps {
   articles: PlatformHCArticle[];
   loading: boolean;
   onEdit: (article: PlatformHCArticle) => void;
-  onDelete: (articleId: string) => void;
+  onDelete: (articleId: string) => Promise<void>;
+  onBulkDelete?: (ids: string[]) => Promise<void>;
 }
 
 const columnHelper = createColumnHelper<PlatformHCArticle>();
 
 /**
- * Table component for displaying platform help articles.
+ * Table component for displaying platform help articles with bulk selection.
  */
 export function PlatformArticlesTable({
   articles,
   loading,
   onEdit,
   onDelete,
+  onBulkDelete,
 }: PlatformArticlesTableProps) {
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [previewArticle, setPreviewArticle] = useState<PlatformHCArticle | null>(null);
+  
+  // Single delete state
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isSingleDeleting, setIsSingleDeleting] = useState(false);
+  
+  // Bulk delete state
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  const handleDelete = () => {
-    if (deleteConfirmId) {
-      onDelete(deleteConfirmId);
+  const handleSingleDelete = async () => {
+    if (!deleteConfirmId) return;
+    setIsSingleDeleting(true);
+    try {
+      await onDelete(deleteConfirmId);
+    } finally {
+      setIsSingleDeleting(false);
       setDeleteConfirmId(null);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!onBulkDelete) return;
+    setIsBulkDeleting(true);
+    try {
+      const selectedIds = table.getFilteredSelectedRowModel().rows.map(row => row.original.id);
+      await onBulkDelete(selectedIds);
+      setRowSelection({});
+    } finally {
+      setIsBulkDeleting(false);
+      setBulkDeleteOpen(false);
     }
   };
 
   const columns = useMemo<ColumnDef<PlatformHCArticle, string | number | boolean | null>[]>(
     () => [
+      // Checkbox column for row selection
+      {
+        id: 'select',
+        size: 40,
+        minSize: 40,
+        maxSize: 40,
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label={`Select ${row.original.title}`}
+            />
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
       columnHelper.accessor('title', {
-        header: 'Title',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Title" />
+        ),
         cell: ({ getValue, row }) => (
           <div className="space-y-0.5">
             <span className="text-sm font-medium">{getValue()}</span>
@@ -80,7 +133,9 @@ export function PlatformArticlesTable({
         ),
       }),
       columnHelper.accessor('category_label', {
-        header: 'Category',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Category" />
+        ),
         cell: ({ getValue, row }) => {
           const color = row.original.category_color || 'bg-muted';
           return (
@@ -92,7 +147,9 @@ export function PlatformArticlesTable({
         },
       }),
       columnHelper.accessor('is_published', {
-        header: 'Status',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Status" />
+        ),
         cell: ({ getValue }) => (
           <Badge 
             variant="outline"
@@ -103,13 +160,17 @@ export function PlatformArticlesTable({
         ),
       }),
       columnHelper.accessor('order_index', {
-        header: 'Order',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Order" />
+        ),
         cell: ({ getValue }) => (
           <span className="text-sm text-muted-foreground">{getValue()}</span>
         ),
       }),
       columnHelper.accessor('updated_at', {
-        header: 'Updated',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Updated" />
+        ),
         cell: ({ getValue }) => (
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(getValue()), { addSuffix: true })}
@@ -120,15 +181,12 @@ export function PlatformArticlesTable({
         id: 'actions',
         header: '',
         cell: ({ row }) => (
-          <div className="flex items-center gap-1 justify-end">
+          <div className="flex items-center gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
             <IconButton
               label="Preview article"
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPreviewArticle(row.original);
-              }}
+              onClick={() => setPreviewArticle(row.original)}
             >
               <Eye size={14} />
             </IconButton>
@@ -136,10 +194,7 @@ export function PlatformArticlesTable({
               label="Edit article"
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(row.original);
-              }}
+              onClick={() => onEdit(row.original)}
             >
               <Edit02 size={14} />
             </IconButton>
@@ -147,10 +202,7 @@ export function PlatformArticlesTable({
               label="Delete article"
               variant="ghost"
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDeleteConfirmId(row.original.id);
-              }}
+              onClick={() => setDeleteConfirmId(row.original.id)}
             >
               <Trash01 size={14} className="text-destructive" />
             </IconButton>
@@ -164,8 +216,18 @@ export function PlatformArticlesTable({
   const table = useReactTable({
     data: articles,
     columns,
+    state: {
+      sorting,
+      rowSelection,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
+
+  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
 
   return (
     <div className="space-y-4">
@@ -175,6 +237,19 @@ export function PlatformArticlesTable({
         isLoading={loading}
         emptyMessage="No articles yet. Create your first article to get started."
       />
+
+      {/* Floating action bar for bulk delete */}
+      <DataTableFloatingBar table={table}>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setBulkDeleteOpen(true)}
+          className="h-7"
+        >
+          <Trash01 className="mr-2 h-4 w-4" />
+          Delete
+        </Button>
+      </DataTableFloatingBar>
 
       {/* Article Preview Sheet */}
       <Sheet open={!!previewArticle} onOpenChange={() => setPreviewArticle(null)}>
@@ -195,23 +270,25 @@ export function PlatformArticlesTable({
         </SheetContent>
       </Sheet>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Article</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this article? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Single Delete Confirmation */}
+      <DeleteConfirmationDialog
+        open={!!deleteConfirmId}
+        onOpenChange={(open) => !open && setDeleteConfirmId(null)}
+        title="Delete Article"
+        description="This will permanently delete this article. This action cannot be undone."
+        onConfirm={handleSingleDelete}
+        isDeleting={isSingleDeleting}
+      />
+
+      {/* Bulk Delete Confirmation */}
+      <DeleteConfirmationDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title="Delete Articles"
+        description={`This will permanently delete ${selectedCount} article${selectedCount !== 1 ? 's' : ''}. This action cannot be undone.`}
+        onConfirm={handleBulkDelete}
+        isDeleting={isBulkDeleting}
+      />
     </div>
   );
 }
