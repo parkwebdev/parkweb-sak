@@ -13,7 +13,7 @@
  * @module pages/admin/ArticleEditorPage
  */
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
@@ -47,6 +47,102 @@ function generateSlug(title: string): string {
 
 /** Debounce time for draft auto-save (3 seconds) */
 const DRAFT_SAVE_DELAY_MS = 3000;
+
+/**
+ * TopBar Left Content - Memoized for stability
+ */
+interface TopBarLeftProps {
+  title: string;
+  onTitleChange: (value: string) => void;
+  onBack: () => void;
+}
+
+const TopBarLeft = memo(function TopBarLeft({ title, onTitleChange, onBack }: TopBarLeftProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <IconButton 
+        label="Back to Knowledge" 
+        variant="ghost" 
+        size="sm"
+        onClick={onBack}
+      >
+        <ArrowLeft size={16} />
+      </IconButton>
+      <span className="text-muted-foreground">/</span>
+      <TopBarPageContext icon={BookOpen01} title="Knowledge" />
+      <span className="text-muted-foreground">/</span>
+      <Input
+        value={title}
+        onChange={(e) => onTitleChange(e.target.value)}
+        placeholder="Untitled Article"
+        className="border-0 bg-transparent font-medium text-sm h-8 w-auto min-w-[200px] max-w-[400px] focus-visible:ring-0 focus-visible:ring-offset-0"
+      />
+    </div>
+  );
+});
+
+/**
+ * TopBar Right Content - Memoized for stability
+ */
+interface TopBarRightProps {
+  isSaving: boolean;
+  hasUnsavedChanges: boolean;
+  lastSavedAt: Date | null;
+  isPublished: boolean;
+  canPublish: boolean;
+  onPublish: () => void;
+  onUnpublish: () => void;
+}
+
+const TopBarRight = memo(function TopBarRight({
+  isSaving,
+  hasUnsavedChanges,
+  lastSavedAt,
+  isPublished,
+  canPublish,
+  onPublish,
+  onUnpublish,
+}: TopBarRightProps) {
+  return (
+    <div className="flex items-center gap-3">
+      {/* Draft save status indicator */}
+      {isSaving && (
+        <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>
+      )}
+      {!isSaving && hasUnsavedChanges && (
+        <span className="text-xs text-muted-foreground">Unsaved changes</span>
+      )}
+      {!isSaving && !hasUnsavedChanges && lastSavedAt && (
+        <span className="text-xs text-muted-foreground">
+          Saved {formatDistanceToNow(lastSavedAt, { addSuffix: true })}
+        </span>
+      )}
+      
+      {/* Status badge */}
+      <StatusBadge status={isPublished ? 'Published' : 'Draft'} />
+      
+      {/* Publish/Unpublish button */}
+      {isPublished ? (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onUnpublish} 
+          disabled={isSaving}
+        >
+          Unpublish
+        </Button>
+      ) : (
+        <Button 
+          size="sm" 
+          onClick={onPublish} 
+          disabled={isSaving || !canPublish}
+        >
+          Publish
+        </Button>
+      )}
+    </div>
+  );
+});
 
 export function ArticleEditorPage() {
   const { articleId } = useParams<{ articleId: string }>();
@@ -115,13 +211,18 @@ export function ArticleEditorPage() {
   
   // Auto-generate slug from title
   const handleTitleChange = useCallback((newTitle: string) => {
-    setTitle(newTitle);
+    setTitle((prevTitle) => {
+      // Only auto-generate slug if it's empty or matches the old auto-generated slug
+      setSlug((prevSlug) => {
+        if (!prevSlug || prevSlug === generateSlug(prevTitle)) {
+          return generateSlug(newTitle);
+        }
+        return prevSlug;
+      });
+      return newTitle;
+    });
     setHasUnsavedChanges(true);
-    // Only auto-generate slug if it's empty or matches the old auto-generated slug
-    if (!slug || slug === generateSlug(title)) {
-      setSlug(generateSlug(newTitle));
-    }
-  }, [slug, title]);
+  }, []);
   
   // Build current form data for save operations
   const currentFormData = useMemo((): PlatformHCArticleInput => ({
@@ -135,21 +236,21 @@ export function ArticleEditorPage() {
     is_published: isPublished,
   }), [title, content, slug, categoryId, description, orderIndex, iconName, isPublished]);
   
-  // Save draft (auto-save or manual)
+  // Ref for current form data to avoid stale closures
+  const currentFormDataRef = useRef(currentFormData);
+  currentFormDataRef.current = currentFormData;
+  
+  // Save draft (auto-save or manual) - stable callback using refs
   const saveDraft = useCallback(async () => {
-    if (!hasUnsavedChanges || !title || !categoryId) return;
+    const formData = currentFormDataRef.current;
+    if (!formData.title || !formData.category_id) return;
     
     setIsSaving(true);
     try {
-      const draftData: PlatformHCArticleInput = {
-        ...currentFormData,
-        is_published: isPublished, // Preserve current publish state
-      };
-      
       if (isNewArticle) {
-        await createArticle(draftData);
+        await createArticle(formData);
       } else if (articleId) {
-        await updateArticle(articleId, draftData);
+        await updateArticle(articleId, formData);
       }
       
       setHasUnsavedChanges(false);
@@ -159,11 +260,12 @@ export function ArticleEditorPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [hasUnsavedChanges, title, categoryId, currentFormData, isPublished, isNewArticle, articleId, createArticle, updateArticle]);
+  }, [isNewArticle, articleId, createArticle, updateArticle]);
   
-  // Publish article
+  // Publish article - stable callback using refs
   const handlePublish = useCallback(async () => {
-    if (!title || !categoryId) {
+    const formData = currentFormDataRef.current;
+    if (!formData.title || !formData.category_id) {
       toast.error('Cannot publish', { description: 'Title and category are required.' });
       return;
     }
@@ -171,7 +273,7 @@ export function ArticleEditorPage() {
     setIsSaving(true);
     try {
       const publishData: PlatformHCArticleInput = {
-        ...currentFormData,
+        ...formData,
         is_published: true,
       };
       
@@ -190,9 +292,9 @@ export function ArticleEditorPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [title, categoryId, currentFormData, isNewArticle, articleId, createArticle, updateArticle]);
+  }, [isNewArticle, articleId, createArticle, updateArticle]);
   
-  // Unpublish article (revert to draft)
+  // Unpublish article (revert to draft) - stable callback
   const handleUnpublish = useCallback(async () => {
     if (!articleId) return;
     
@@ -246,9 +348,7 @@ export function ArticleEditorPage() {
       // Cmd/Ctrl+S: Force save draft
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        if (hasLoaded && title && categoryId) {
-          saveDraft();
-        }
+        saveDraft();
         return;
       }
       
@@ -267,84 +367,37 @@ export function ArticleEditorPage() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasLoaded, title, categoryId, saveDraft, isMetadataOpen]);
+  }, [saveDraft, isMetadataOpen]);
   
-  // Track changes on metadata fields
-  const handleMetadataChange = useCallback((setter: React.Dispatch<React.SetStateAction<string | number>>) => {
-    return (value: string | number) => {
-      setter(value as never);
-      setHasUnsavedChanges(true);
-    };
-  }, []);
-  
-  // Handle back navigation
+  // Handle back navigation - stable callback
   const handleBack = useCallback(() => {
     navigate('/admin/knowledge');
   }, [navigate]);
   
-  // Configure TopBar
+  // Derived value for publish button enablement
+  const canPublish = Boolean(title && categoryId);
+  
+  // Configure TopBar with memoized components
   const topBarConfig = useMemo(() => ({
     left: (
-      <div className="flex items-center gap-2">
-        <IconButton 
-          label="Back to Knowledge" 
-          variant="ghost" 
-          size="sm"
-          onClick={handleBack}
-        >
-          <ArrowLeft size={16} />
-        </IconButton>
-        <span className="text-muted-foreground">/</span>
-        <TopBarPageContext icon={BookOpen01} title="Knowledge" />
-        <span className="text-muted-foreground">/</span>
-        <Input
-          value={title}
-          onChange={(e) => handleTitleChange(e.target.value)}
-          placeholder="Untitled Article"
-          className="border-0 bg-transparent font-medium text-sm h-8 w-auto min-w-[200px] max-w-[400px] focus-visible:ring-0 focus-visible:ring-offset-0"
-        />
-      </div>
+      <TopBarLeft
+        title={title}
+        onTitleChange={handleTitleChange}
+        onBack={handleBack}
+      />
     ),
     right: (
-      <div className="flex items-center gap-3">
-        {/* Draft save status indicator */}
-        {isSaving && (
-          <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>
-        )}
-        {!isSaving && hasUnsavedChanges && (
-          <span className="text-xs text-muted-foreground">Unsaved changes</span>
-        )}
-        {!isSaving && !hasUnsavedChanges && lastSavedAt && (
-          <span className="text-xs text-muted-foreground">
-            Saved {formatDistanceToNow(lastSavedAt, { addSuffix: true })}
-          </span>
-        )}
-        
-        {/* Status badge */}
-        <StatusBadge status={isPublished ? 'Published' : 'Draft'} />
-        
-        {/* Publish/Unpublish button */}
-        {isPublished ? (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleUnpublish} 
-            disabled={isSaving}
-          >
-            Unpublish
-          </Button>
-        ) : (
-          <Button 
-            size="sm" 
-            onClick={handlePublish} 
-            disabled={isSaving || !title || !categoryId}
-          >
-            Publish
-          </Button>
-        )}
-      </div>
+      <TopBarRight
+        isSaving={isSaving}
+        hasUnsavedChanges={hasUnsavedChanges}
+        lastSavedAt={lastSavedAt}
+        isPublished={isPublished}
+        canPublish={canPublish}
+        onPublish={handlePublish}
+        onUnpublish={handleUnpublish}
+      />
     ),
-  }), [title, isPublished, handleBack, handleTitleChange, isSaving, hasUnsavedChanges, lastSavedAt, handlePublish, handleUnpublish, categoryId]);
+  }), [title, handleTitleChange, handleBack, isSaving, hasUnsavedChanges, lastSavedAt, isPublished, canPublish, handlePublish, handleUnpublish]);
   
   useTopBar(topBarConfig);
   
