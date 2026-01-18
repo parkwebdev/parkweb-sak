@@ -1,7 +1,7 @@
 /**
  * PlatformArticlesTable Component
  * 
- * Data table for displaying and managing platform KB articles.
+ * Data table for displaying and managing platform help articles.
  * 
  * @module components/admin/knowledge/PlatformArticlesTable
  */
@@ -50,7 +50,7 @@ interface PlatformArticlesTableProps {
 const columnHelper = createColumnHelper<PlatformHCArticle>();
 
 /**
- * Table component for displaying platform KB articles.
+ * Table component for displaying platform help articles.
  */
 export function PlatformArticlesTable({
   articles,
@@ -169,7 +169,7 @@ export function PlatformArticlesTable({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium">Knowledge Base Articles</h3>
+          <h3 className="text-sm font-medium">Help Center Articles</h3>
           <p className="text-xs text-muted-foreground">
             {articles.length} article{articles.length !== 1 ? 's' : ''}
           </p>

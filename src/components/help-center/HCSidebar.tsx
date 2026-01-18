@@ -112,7 +112,7 @@ export function HCSidebar({
   return (
     <aside className="w-[260px] border-r border-border flex flex-col h-full bg-background">
       {/* Categories and Articles */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Knowledge Base navigation">
+      <nav className="flex-1 overflow-y-auto p-3 space-y-1" aria-label="Help Center navigation">
         {filteredCategories.map((category, categoryIndex) => {
           const isExpanded = expandedCategories.has(category.id);
           const isCategoryActive = isCategoryView && category.id === selectedCategoryId;

@@ -79,7 +79,7 @@ export type AppPermission =
   // Knowledge Base
   | 'view_knowledge'
   | 'manage_knowledge'
-  // Help Center
+  // Help Center (user-facing docs)
   | 'view_help_articles'
   | 'manage_help_articles'
   // Team
