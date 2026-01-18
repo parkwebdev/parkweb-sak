@@ -15,18 +15,25 @@ import {
   List,
   Hash01,
   Image01,
+  Image03,
   CodeSnippet02,
   MessageSquare01,
   Minus,
-  AlertCircle,
   Table,
   InfoCircle,
   AlertTriangle,
   CheckCircle,
   XCircle,
+  File06,
+  LayoutAlt02,
+  Paperclip,
+  PenTool02,
+  Calculator,
+  FileX01,
 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { TableGridSelector } from './TableGridSelector';
 import { cn } from '@/lib/utils';
 
@@ -37,21 +44,53 @@ interface BlockType {
   description?: string;
   shortcut?: string;
   disabled?: boolean;
+  future?: boolean;
 }
 
-const BLOCK_TYPES: BlockType[] = [
+/**
+ * Basic content blocks - always available
+ */
+const BASIC_BLOCKS: BlockType[] = [
   { id: 'text', label: 'Text', icon: Type01, description: 'Paragraph text' },
   { id: 'heading1', label: 'Heading 1', icon: Heading01, description: 'Large heading', shortcut: '⌘⇧1' },
   { id: 'heading2', label: 'Heading 2', icon: Heading02, description: 'Medium heading', shortcut: '⌘⇧2' },
   { id: 'heading3', label: 'Heading 3', icon: Heading02, description: 'Small heading', shortcut: '⌘⇧3' },
   { id: 'bulletList', label: 'Bullet List', icon: List, description: 'Unordered list', shortcut: '⌘⇧8' },
   { id: 'numberedList', label: 'Numbered List', icon: Hash01, description: 'Ordered list', shortcut: '⌘⇧9' },
-  { id: 'image', label: 'Image', icon: Image01, description: 'Insert image from URL' },
-  { id: 'codeBlock', label: 'Code Block', icon: CodeSnippet02, description: 'Syntax highlighted code' },
   { id: 'quote', label: 'Quote', icon: MessageSquare01, description: 'Blockquote' },
+  { id: 'codeBlock', label: 'Code Block', icon: CodeSnippet02, description: 'Syntax highlighted code' },
   { id: 'divider', label: 'Divider', icon: Minus, description: 'Horizontal rule' },
 ];
 
+/**
+ * Media and content blocks
+ */
+const MEDIA_BLOCKS: BlockType[] = [
+  { id: 'image', label: 'Image', icon: Image01, description: 'Insert image from URL' },
+  { id: 'unsplash', label: 'Unsplash', icon: Image03, description: 'Stock photo from Unsplash', disabled: true, future: true },
+  { id: 'file', label: 'File Attachment', icon: Paperclip, description: 'Upload and attach file', disabled: true, future: true },
+];
+
+/**
+ * Structural blocks
+ */
+const STRUCTURE_BLOCKS: BlockType[] = [
+  { id: 'page', label: 'Page', icon: File06, description: 'Nested page/section', disabled: true, future: true },
+  { id: 'card', label: 'Card', icon: LayoutAlt02, description: 'Card container block', disabled: true, future: true },
+  { id: 'pageBreak', label: 'Page Break', icon: FileX01, description: 'Visual page break separator' },
+];
+
+/**
+ * Advanced blocks
+ */
+const ADVANCED_BLOCKS: BlockType[] = [
+  { id: 'formula', label: 'Formula', icon: Calculator, description: 'TeX/LaTeX math formula', disabled: true, future: true },
+  { id: 'whiteboard', label: 'Whiteboard', icon: PenTool02, description: 'Drawing canvas', disabled: true, future: true },
+];
+
+/**
+ * Callout blocks for highlighting content
+ */
 const CALLOUT_TYPES: BlockType[] = [
   { id: 'callout-info', label: 'Info', icon: InfoCircle, description: 'Information callout' },
   { id: 'callout-warning', label: 'Warning', icon: AlertTriangle, description: 'Warning callout' },
@@ -64,15 +103,60 @@ interface EditorInsertPanelProps {
   onInsertTable: (rows: number, cols: number) => void;
 }
 
+interface BlockButtonProps {
+  block: BlockType;
+  onClick: () => void;
+  compact?: boolean;
+}
+
+function BlockButton({ block, onClick, compact }: BlockButtonProps) {
+  const content = (
+    <button
+      onClick={onClick}
+      disabled={block.disabled}
+      className={cn(
+        'w-full flex items-center gap-2.5 px-2.5 rounded-md text-left',
+        'text-sm text-foreground hover:bg-accent transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent',
+        compact ? 'py-1.5' : 'py-2'
+      )}
+    >
+      <block.icon size={16} className="text-muted-foreground flex-shrink-0" aria-hidden="true" />
+      <span className="flex-1 truncate">{block.label}</span>
+      {block.future && (
+        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 text-muted-foreground">
+          Soon
+        </Badge>
+      )}
+      {block.shortcut && !block.future && (
+        <span className="text-2xs text-muted-foreground/60">{block.shortcut}</span>
+      )}
+    </button>
+  );
+
+  if (!block.description) {
+    return content;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {content}
+      </TooltipTrigger>
+      <TooltipContent side="left" className="text-xs">
+        {block.description}
+        {block.future && <span className="text-muted-foreground ml-1">(Coming soon)</span>}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 /**
  * Right sidebar panel for inserting content blocks.
  * Wired to TipTap editor via onInsert callback.
  */
 export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanelProps) {
-  const handleInsert = (blockType: string) => {
-    onInsert(blockType);
-  };
-
   return (
     <aside className="w-[200px] border-l border-border bg-background flex-shrink-0 flex flex-col">
       <div className="p-3 border-b border-border">
@@ -83,35 +167,65 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
       <ScrollArea className="flex-1">
         {/* Basic Blocks */}
         <div className="p-2 space-y-0.5">
-          {BLOCK_TYPES.map((block) => (
-            <Tooltip key={block.id}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => handleInsert(block.id)}
-                  disabled={block.disabled}
-                  className={cn(
-                    'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left',
-                    'text-sm text-foreground hover:bg-accent transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-                  )}
-                >
-                  <block.icon size={16} className="text-muted-foreground flex-shrink-0" aria-hidden="true" />
-                  <span className="flex-1">{block.label}</span>
-                  {block.shortcut && (
-                    <span className="text-2xs text-muted-foreground/60">{block.shortcut}</span>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="text-xs">
-                {block.description}
-              </TooltipContent>
-            </Tooltip>
+          <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
+            Basic
+          </h3>
+          {BASIC_BLOCKS.map((block) => (
+            <BlockButton
+              key={block.id}
+              block={block}
+              onClick={() => onInsert(block.id)}
+            />
+          ))}
+        </div>
+        
+        {/* Media Blocks */}
+        <div className="p-2 space-y-0.5 border-t border-border">
+          <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
+            Media
+          </h3>
+          {MEDIA_BLOCKS.map((block) => (
+            <BlockButton
+              key={block.id}
+              block={block}
+              onClick={() => onInsert(block.id)}
+              compact
+            />
+          ))}
+        </div>
+        
+        {/* Structure Blocks */}
+        <div className="p-2 space-y-0.5 border-t border-border">
+          <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
+            Structure
+          </h3>
+          {STRUCTURE_BLOCKS.map((block) => (
+            <BlockButton
+              key={block.id}
+              block={block}
+              onClick={() => onInsert(block.id)}
+              compact
+            />
+          ))}
+        </div>
+        
+        {/* Advanced Blocks */}
+        <div className="p-2 space-y-0.5 border-t border-border">
+          <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
+            Advanced
+          </h3>
+          {ADVANCED_BLOCKS.map((block) => (
+            <BlockButton
+              key={block.id}
+              block={block}
+              onClick={() => onInsert(block.id)}
+              compact
+            />
           ))}
         </div>
         
         {/* Callouts Section */}
-        <div className="p-3 pt-2 border-t border-border mt-2">
+        <div className="p-3 pt-2 border-t border-border">
           <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">
             Callouts
           </h3>
@@ -120,7 +234,7 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
               <Tooltip key={callout.id}>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => handleInsert(callout.id)}
+                    onClick={() => onInsert(callout.id)}
                     className={cn(
                       'flex items-center gap-1.5 px-2 py-1.5 rounded-md text-left',
                       'text-xs text-foreground hover:bg-accent transition-colors',
@@ -139,40 +253,60 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
           </div>
         </div>
         
-        {/* Divider Types Section */}
+        {/* Line Types Section */}
         <div className="p-3 pt-2 border-t border-border">
           <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">
             Lines
           </h3>
           <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleInsert('divider-dots')}
-              className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs"
-              title="Dotted line"
-            >
-              · · ·
-            </button>
-            <button
-              onClick={() => handleInsert('divider-dashes')}
-              className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs"
-              title="Dashed line"
-            >
-              - - -
-            </button>
-            <button
-              onClick={() => handleInsert('divider-light')}
-              className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs"
-              title="Light line"
-            >
-              ───
-            </button>
-            <button
-              onClick={() => handleInsert('divider-heavy')}
-              className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs"
-              title="Heavy line"
-            >
-              ━━━
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onInsert('divider-dots')}
+                  className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Dotted line"
+                >
+                  · · ·
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="text-xs">Dotted line</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onInsert('divider-dashes')}
+                  className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Dashed line"
+                >
+                  - - -
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="text-xs">Dashed line</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onInsert('divider-light')}
+                  className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Light line"
+                >
+                  ───
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="text-xs">Light line</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onInsert('divider-heavy')}
+                  className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label="Heavy line"
+                >
+                  ━━━
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="text-xs">Heavy line</TooltipContent>
+            </Tooltip>
           </div>
         </div>
         
