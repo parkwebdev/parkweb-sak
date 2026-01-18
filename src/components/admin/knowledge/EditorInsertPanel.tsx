@@ -21,6 +21,7 @@ import {
   AlertCircle,
 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface BlockType {
@@ -28,37 +29,35 @@ interface BlockType {
   label: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
   description?: string;
+  shortcut?: string;
   disabled?: boolean;
 }
 
 const BLOCK_TYPES: BlockType[] = [
   { id: 'text', label: 'Text', icon: Type01, description: 'Paragraph text' },
-  { id: 'heading1', label: 'Heading 1', icon: Heading01, description: 'Large heading' },
-  { id: 'heading2', label: 'Heading 2', icon: Heading02, description: 'Medium heading' },
-  { id: 'bulletList', label: 'Bullet List', icon: List, description: 'Unordered list' },
-  { id: 'numberedList', label: 'Numbered List', icon: Hash01, description: 'Ordered list' },
-  { id: 'image', label: 'Image', icon: Image01, description: 'Upload image' },
-  { id: 'codeBlock', label: 'Code Block', icon: CodeSnippet02, description: 'Code snippet' },
+  { id: 'heading1', label: 'Heading 1', icon: Heading01, description: 'Large heading', shortcut: '⌘⇧1' },
+  { id: 'heading2', label: 'Heading 2', icon: Heading02, description: 'Medium heading', shortcut: '⌘⇧2' },
+  { id: 'heading3', label: 'Heading 3', icon: Heading02, description: 'Small heading', shortcut: '⌘⇧3' },
+  { id: 'bulletList', label: 'Bullet List', icon: List, description: 'Unordered list', shortcut: '⌘⇧8' },
+  { id: 'numberedList', label: 'Numbered List', icon: Hash01, description: 'Ordered list', shortcut: '⌘⇧9' },
+  { id: 'image', label: 'Image', icon: Image01, description: 'Insert image from URL' },
+  { id: 'codeBlock', label: 'Code Block', icon: CodeSnippet02, description: 'Syntax highlighted code' },
   { id: 'quote', label: 'Quote', icon: MessageSquare01, description: 'Blockquote' },
   { id: 'divider', label: 'Divider', icon: Minus, description: 'Horizontal rule' },
-  { id: 'callout', label: 'Callout', icon: AlertCircle, description: 'Info callout', disabled: true },
+  { id: 'callout', label: 'Callout', icon: AlertCircle, description: 'Info callout (coming soon)', disabled: true },
 ];
 
 interface EditorInsertPanelProps {
-  onInsert?: (blockType: string) => void;
+  onInsert: (blockType: string) => void;
 }
 
 /**
  * Right sidebar panel for inserting content blocks.
- * Currently displays available block types.
- * Future: Will integrate with TipTap editor to insert at cursor.
+ * Wired to TipTap editor via onInsert callback.
  */
 export function EditorInsertPanel({ onInsert }: EditorInsertPanelProps) {
   const handleInsert = (blockType: string) => {
-    if (onInsert) {
-      onInsert(blockType);
-    }
-    // TODO: Integrate with TipTap editor via ref/context
+    onInsert(blockType);
   };
 
   return (
@@ -69,23 +68,31 @@ export function EditorInsertPanel({ onInsert }: EditorInsertPanelProps) {
         </h2>
       </div>
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+        <div className="p-2 space-y-0.5">
           {BLOCK_TYPES.map((block) => (
-            <button
-              key={block.id}
-              onClick={() => handleInsert(block.id)}
-              disabled={block.disabled}
-              className={cn(
-                'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left',
-                'text-sm text-foreground hover:bg-accent/50 transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
-              )}
-              title={block.description}
-            >
-              <block.icon size={16} className="text-muted-foreground flex-shrink-0" />
-              <span>{block.label}</span>
-            </button>
+            <Tooltip key={block.id}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => handleInsert(block.id)}
+                  disabled={block.disabled}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left',
+                    'text-sm text-foreground hover:bg-accent transition-colors',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent'
+                  )}
+                >
+                  <block.icon size={16} className="text-muted-foreground flex-shrink-0" aria-hidden="true" />
+                  <span className="flex-1">{block.label}</span>
+                  {block.shortcut && (
+                    <span className="text-2xs text-muted-foreground/60">{block.shortcut}</span>
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="text-xs">
+                {block.description}
+              </TooltipContent>
+            </Tooltip>
           ))}
         </div>
         
