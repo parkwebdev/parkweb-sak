@@ -46,7 +46,7 @@ import {
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from '@/components/icons/DashboardIcon';
-import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled, KnowledgeBaseFilled } from '@/components/icons/SidebarIcons';
+import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled, HelpCenterFilled } from '@/components/icons/SidebarIcons';
 import * as AriMenuIcons from '@/components/icons/AriMenuIcons';
 
 type IconComponent = ComponentType<{ size?: number; className?: string }>;
@@ -106,7 +106,7 @@ export const ACTIVE_ICON_MAP: Record<string, IconComponent | undefined> = {
   Users01: LeadsFilled,
   TrendUp01: AnalyticsFilled,
   Settings01: SettingsFilled,
-  BookOpen01: KnowledgeBaseFilled,
+  BookOpen01: HelpCenterFilled,
   
   // Ari section filled icons
   File02: AriMenuIcons.FileFilled,

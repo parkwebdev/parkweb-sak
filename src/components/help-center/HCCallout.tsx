@@ -1,9 +1,9 @@
 /**
- * Knowledge Base Callout
+ * Help Center Callout
  * 
  * Highlighted callout boxes for tips, warnings, and notes in articles.
  * 
- * @module components/knowledge-base/KBCallout
+ * @module components/help-center/HCCallout
  */
 
 import { AlertCircle, Lightbulb01, AlertTriangle, File02 } from '@untitledui/icons';

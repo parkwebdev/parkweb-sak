@@ -1,9 +1,9 @@
 /**
- * Knowledge Base Feature Highlight Component
+ * Help Center Feature Highlight Component
  * 
  * Highlights a feature with a bordered card and optional icon.
  * 
- * @module components/knowledge-base/KBFeatureCard
+ * @module components/help-center/HCFeatureCard
  */
 
 import { cn } from '@/lib/utils';

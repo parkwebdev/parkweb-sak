@@ -1,9 +1,9 @@
 /**
- * Knowledge Base Step-by-Step Component
+ * Help Center Step-by-Step Component
  * 
  * Displays a numbered list of steps with optional screenshots.
  * 
- * @module components/knowledge-base/KBStepByStep
+ * @module components/help-center/HCStepByStep
  */
 
 import { cn } from '@/lib/utils';

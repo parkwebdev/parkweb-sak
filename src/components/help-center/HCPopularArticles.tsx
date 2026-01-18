@@ -1,10 +1,10 @@
 /**
- * Knowledge Base Popular Articles
+ * Help Center Popular Articles
  * 
  * Displays the most popular articles in a category based on view counts.
  * Used in the right sidebar when viewing category landing pages.
  * 
- * @module components/knowledge-base/KBPopularArticles
+ * @module components/help-center/HCPopularArticles
  */
 
 
