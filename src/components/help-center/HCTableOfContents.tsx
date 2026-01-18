@@ -15,11 +15,11 @@ interface Heading {
   level: number;
 }
 
-interface KBTableOfContentsProps {
+interface HCTableOfContentsProps {
   headings: Heading[];
 }
 
-export function KBTableOfContents({ headings }: KBTableOfContentsProps) {
+export function HCTableOfContents({ headings }: HCTableOfContentsProps) {
   const [activeId, setActiveId] = useState<string>('');
   
   // Track active heading based on scroll position

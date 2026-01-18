@@ -14,12 +14,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useHCArticleFeedback } from '@/hooks/useHCArticleFeedback';
 import { cn } from '@/lib/utils';
 
-interface KBArticleFeedbackProps {
+interface HCArticleFeedbackProps {
   categoryId: string;
   articleSlug: string;
 }
 
-export function KBArticleFeedback({ categoryId, articleSlug }: KBArticleFeedbackProps) {
+export function HCArticleFeedback({ categoryId, articleSlug }: HCArticleFeedbackProps) {
   const { hasFeedback, isHelpful, isSubmitting, submitFeedback } = useHCArticleFeedback(
     categoryId, 
     articleSlug

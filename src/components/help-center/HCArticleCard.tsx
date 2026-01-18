@@ -13,13 +13,13 @@ import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
 import type { HCArticle } from '@/config/help-center-config';
 
-interface KBArticleCardProps {
+interface HCArticleCardProps {
   article: HCArticle;
   categoryColor: string;
   onClick: () => void;
 }
 
-export function KBArticleCard({ article, categoryColor, onClick }: KBArticleCardProps) {
+export function HCArticleCard({ article, categoryColor, onClick }: HCArticleCardProps) {
   const prefersReducedMotion = useReducedMotion();
   
   return (

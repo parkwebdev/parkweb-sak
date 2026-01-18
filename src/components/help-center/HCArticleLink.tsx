@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
-interface KBArticleLinkProps {
+interface HCArticleLinkProps {
   /** Category ID for the linked article */
   categoryId: string;
   /** Article slug for the linked article */
@@ -21,7 +21,7 @@ interface KBArticleLinkProps {
   className?: string;
 }
 
-export function KBArticleLink({ categoryId, articleSlug, children, className }: KBArticleLinkProps) {
+export function HCArticleLink({ categoryId, articleSlug, children, className }: HCArticleLinkProps) {
   return (
     <Link
       to={`/knowledge-base?category=${categoryId}&article=${articleSlug}`}
@@ -36,7 +36,7 @@ export function KBArticleLink({ categoryId, articleSlug, children, className }: 
   );
 }
 
-interface KBRelatedArticlesProps {
+interface HCRelatedArticlesProps {
   /** Array of related articles */
   articles: Array<{
     categoryId: string;
@@ -47,7 +47,7 @@ interface KBRelatedArticlesProps {
   className?: string;
 }
 
-export function KBRelatedArticles({ articles, className }: KBRelatedArticlesProps) {
+export function HCRelatedArticles({ articles, className }: HCRelatedArticlesProps) {
   if (articles.length === 0) return null;
 
   return (

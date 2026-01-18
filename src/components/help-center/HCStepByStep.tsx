@@ -19,14 +19,14 @@ interface Step {
   screenshotAlt?: string;
 }
 
-interface KBStepByStepProps {
+interface HCStepByStepProps {
   /** Array of steps */
   steps: Step[];
   /** Optional additional className */
   className?: string;
 }
 
-export function KBStepByStep({ steps, className }: KBStepByStepProps) {
+export function HCStepByStep({ steps, className }: HCStepByStepProps) {
   return (
     <div className={cn('my-6 space-y-6', className)}>
       {steps.map((step, index) => (

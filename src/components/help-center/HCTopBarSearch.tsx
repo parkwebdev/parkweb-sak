@@ -9,10 +9,10 @@
 
 import { useState, useCallback, memo } from 'react';
 import { TopBarSearch } from '@/components/layout/TopBar';
-import { KBSearchResults } from './KBSearchResults';
+import { HCSearchResults } from './HCSearchResults';
 import type { HCCategory, HCArticle } from '@/config/help-center-config';
 
-interface KBTopBarSearchProps {
+interface HCTopBarSearchProps {
   /** Callback when an article is selected from search results */
   onSelect: (category: HCCategory, article: HCArticle) => void;
 }
@@ -21,13 +21,13 @@ interface KBTopBarSearchProps {
  * Self-contained search component for the Knowledge Base page.
  * Manages search state internally to avoid triggering parent re-renders.
  */
-export const KBTopBarSearch = memo(function KBTopBarSearch({
+export const HCTopBarSearch = memo(function HCTopBarSearch({
   onSelect,
-}: KBTopBarSearchProps) {
+}: HCTopBarSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   
   const renderResults = useCallback((query: string) => (
-    <KBSearchResults
+    <HCSearchResults
       query={query}
       onSelect={onSelect}
     />

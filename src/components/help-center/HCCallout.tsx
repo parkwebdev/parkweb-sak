@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 type CalloutVariant = 'info' | 'tip' | 'warning' | 'note';
 
-interface KBCalloutProps {
+interface HCCalloutProps {
   variant?: CalloutVariant;
   title?: string;
   children: React.ReactNode;
@@ -56,7 +56,7 @@ const defaultTitles: Record<CalloutVariant, string> = {
   note: 'Note',
 };
 
-export function KBCallout({ variant = 'info', title, children }: KBCalloutProps) {
+export function HCCallout({ variant = 'info', title, children }: HCCalloutProps) {
   const config = variantConfig[variant];
   const Icon = config.icon;
   const displayTitle = title ?? defaultTitles[variant];

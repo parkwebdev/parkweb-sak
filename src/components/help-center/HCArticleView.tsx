@@ -17,7 +17,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 import { useTrackArticleView } from '@/hooks/useHCArticleViews';
 import { useReadingTime } from '@/hooks/useReadingTime';
-import { KBArticleFeedback } from './KBArticleFeedback';
+import { HCArticleFeedback } from './HCArticleFeedback';
 import type { HCCategory, HCArticle } from '@/config/help-center-config';
 
 /** Map category bg colors to gradient CSS variables */
@@ -31,7 +31,7 @@ const GRADIENT_MAP: Record<string, string> = {
   'bg-muted-foreground': 'from-muted-foreground/10 via-muted-foreground/3 to-transparent',
 };
 
-interface KBArticleViewProps {
+interface HCArticleViewProps {
   category: HCCategory;
   article: HCArticle;
   onHeadingsChange: (headings: { id: string; text: string; level: number }[]) => void;
@@ -41,7 +41,7 @@ interface KBArticleViewProps {
   nextArticle?: HCArticle;
 }
 
-export function KBArticleView({
+export function HCArticleView({
   category,
   article,
   onHeadingsChange,
@@ -49,7 +49,7 @@ export function KBArticleView({
   onNext,
   prevArticle,
   nextArticle,
-}: KBArticleViewProps) {
+}: HCArticleViewProps) {
   const [, setSearchParams] = useSearchParams();
   const contentRef = useRef<HTMLDivElement>(null);
   const ArticleComponent = article.component;
@@ -190,7 +190,7 @@ export function KBArticleView({
       </div>
       
       {/* Article Feedback */}
-      <KBArticleFeedback categoryId={category.id} articleSlug={article.slug} />
+      <HCArticleFeedback categoryId={category.id} articleSlug={article.slug} />
       
       {/* Navigation */}
       <footer className="mt-4 py-6 border-t border-border no-print" data-print="hide">

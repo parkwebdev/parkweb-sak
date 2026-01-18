@@ -8,7 +8,7 @@
 
 import { cn } from '@/lib/utils';
 
-interface KBFeatureCardProps {
+interface HCFeatureCardProps {
   /** Feature title */
   title: string;
   /** Feature description */
@@ -19,7 +19,7 @@ interface KBFeatureCardProps {
   className?: string;
 }
 
-export function KBFeatureCard({ title, description, icon, className }: KBFeatureCardProps) {
+export function HCFeatureCard({ title, description, icon, className }: HCFeatureCardProps) {
   return (
     <div className={cn(
       'rounded-lg border border-border bg-card p-4 shadow-sm',
@@ -44,7 +44,7 @@ export function KBFeatureCard({ title, description, icon, className }: KBFeature
   );
 }
 
-interface KBFeatureGridProps {
+interface HCFeatureGridProps {
   /** Children feature cards */
   children: React.ReactNode;
   /** Number of columns (2 or 3) */
@@ -53,7 +53,7 @@ interface KBFeatureGridProps {
   className?: string;
 }
 
-export function KBFeatureGrid({ children, columns = 2, className }: KBFeatureGridProps) {
+export function HCFeatureGrid({ children, columns = 2, className }: HCFeatureGridProps) {
   return (
     <div className={cn(
       'my-6 grid gap-4',
