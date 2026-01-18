@@ -1,9 +1,9 @@
 /**
- * Knowledge Base Category View
+ * Help Center Category View
  * 
  * Category landing page with search and article cards grid.
  * 
- * @module components/knowledge-base/KBCategoryView
+ * @module components/help-center/HCCategoryView
  */
 
 import { useState, useMemo } from 'react';

@@ -1,9 +1,9 @@
 /**
- * Knowledge Base Article Link Component
+ * Help Center Article Link Component
  * 
- * Renders a styled link to another KB article for cross-referencing.
+ * Renders a styled link to another HC article for cross-referencing.
  * 
- * @module components/knowledge-base/KBArticleLink
+ * @module components/help-center/HCArticleLink
  */
 
 import { Link } from 'react-router-dom';
@@ -24,7 +24,7 @@ interface HCArticleLinkProps {
 export function HCArticleLink({ categoryId, articleSlug, children, className }: HCArticleLinkProps) {
   return (
     <Link
-      to={`/knowledge-base?category=${categoryId}&article=${articleSlug}`}
+      to={`/help-center?category=${categoryId}&article=${articleSlug}`}
       className={cn(
         'inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium transition-colors',
         className
@@ -57,7 +57,7 @@ export function HCRelatedArticles({ articles, className }: HCRelatedArticlesProp
         {articles.map((article) => (
           <Link
             key={`${article.categoryId}-${article.articleSlug}`}
-            to={`/knowledge-base?category=${article.categoryId}&article=${article.articleSlug}`}
+            to={`/help-center?category=${article.categoryId}&article=${article.articleSlug}`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-sm text-foreground hover:bg-muted/80 transition-colors"
           >
             {article.title}

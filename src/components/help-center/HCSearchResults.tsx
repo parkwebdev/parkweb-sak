@@ -1,9 +1,9 @@
 /**
- * @fileoverview Knowledge Base Search Results Component
+ * @fileoverview Help Center Search Results Component
  * 
- * Renders KB article search results for the TopBarSearch dropdown.
+ * Renders HC article search results for the TopBarSearch dropdown.
  * 
- * @module components/knowledge-base/KBSearchResults
+ * @module components/help-center/HCSearchResults
  */
 
 import { useMemo } from 'react';

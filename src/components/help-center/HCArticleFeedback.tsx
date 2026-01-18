@@ -1,10 +1,10 @@
 /**
- * Knowledge Base Article Feedback Component
+ * Help Center Article Feedback Component
  * 
  * Displays a "Was this helpful?" prompt and collects user feedback.
  * Optionally allows users to provide additional text feedback.
  * 
- * @module components/knowledge-base/KBArticleFeedback
+ * @module components/help-center/HCArticleFeedback
  */
 
 import { useState } from 'react';

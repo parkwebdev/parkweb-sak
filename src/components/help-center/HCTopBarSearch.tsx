@@ -1,10 +1,10 @@
 /**
- * @fileoverview Knowledge Base TopBar Search Component
+ * @fileoverview Help Center TopBar Search Component
  * 
- * Encapsulates search state and results rendering for the Knowledge Base page.
+ * Encapsulates search state and results rendering for the Help Center page.
  * Manages its own search query state to prevent parent re-renders.
  * 
- * @module components/knowledge-base/KBTopBarSearch
+ * @module components/help-center/HCTopBarSearch
  */
 
 import { useState, useCallback, memo } from 'react';

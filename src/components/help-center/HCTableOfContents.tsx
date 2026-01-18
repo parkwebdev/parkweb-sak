@@ -1,9 +1,9 @@
 /**
- * Knowledge Base Table of Contents
+ * Help Center Table of Contents
  * 
  * Right sidebar showing article headings with scroll tracking.
  * 
- * @module components/knowledge-base/KBTableOfContents
+ * @module components/help-center/HCTableOfContents
  */
 
 import { useState, useEffect } from 'react';

@@ -198,8 +198,8 @@ export function TopBarUserMenu() {
                   Settings
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className={cn(isActiveRoute('/knowledge-base') && 'bg-accent')}>
-                <Link to="/knowledge-base" className="w-full cursor-pointer">
+              <DropdownMenuItem asChild className={cn(isActiveRoute('/help-center') && 'bg-accent')}>
+                <Link to="/help-center" className="w-full cursor-pointer">
                   Help Center
                 </Link>
               </DropdownMenuItem>

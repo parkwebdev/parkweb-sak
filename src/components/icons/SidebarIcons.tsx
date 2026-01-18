@@ -196,9 +196,9 @@ export function SettingsFilled({ size = 24, className }: IconProps) {
 }
 
 /**
- * Knowledge Base filled icon (active state)
+ * Help Center filled icon (active state)
  */
-export function KnowledgeBaseFilled({ size = 24, className }: IconProps) {
+export function HelpCenterFilled({ size = 24, className }: IconProps) {
   return (
     <svg
       width={size}

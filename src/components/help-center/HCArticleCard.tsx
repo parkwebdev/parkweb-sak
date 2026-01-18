@@ -1,9 +1,9 @@
 /**
- * Knowledge Base Article Card
+ * Help Center Article Card
  * 
  * Displays an article preview card for category landing pages.
  * 
- * @module components/knowledge-base/KBArticleCard
+ * @module components/help-center/HCArticleCard
  */
 
 import { motion } from 'motion/react';

@@ -97,7 +97,7 @@ export function Dashboard() {
                 </motion.p>
                 <motion.div variants={itemVariants} className="mb-4">
                   <Link 
-                    to="/knowledge-base"
+                    to="/help-center"
                     className="group inline-flex items-center gap-1.5 text-sm text-primary hover:underline transition-colors"
                   >
                     Explore the Help Center

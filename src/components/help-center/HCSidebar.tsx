@@ -1,10 +1,10 @@
 /**
- * Knowledge Base Sidebar
+ * Help Center Sidebar
  * 
  * Left navigation sidebar with search and categorized article list.
  * Categories are collapsible accordion-style for better navigation.
  * 
- * @module components/knowledge-base/KBSidebar
+ * @module components/help-center/HCSidebar
  */
 
 import { useState, useMemo, useEffect } from 'react';

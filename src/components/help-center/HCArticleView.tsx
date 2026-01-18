@@ -1,10 +1,10 @@
 /**
- * Knowledge Base Article View
+ * Help Center Article View
  * 
- * Main content area for displaying knowledge base articles.
+ * Main content area for displaying help center articles.
  * Renders the article component and provides navigation.
  * 
- * @module components/knowledge-base/KBArticleView
+ * @module components/help-center/HCArticleView
  */
 
 import { useEffect, useRef } from 'react';
@@ -65,7 +65,7 @@ export function HCArticleView({
   
   // Get the current article URL for sharing
   const articleUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/knowledge-base?category=${category.id}&article=${article.slug}`
+    ? `${window.location.origin}/help-center?category=${category.id}&article=${article.slug}`
     : '';
   
   // Handle native share (only reliable on mobile)

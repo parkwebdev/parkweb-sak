@@ -153,7 +153,7 @@ export function ArticleEditorSheet({
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                URL path: /knowledge-base/{formData.category_id}/{formData.slug || 'slug'}
+                URL path: /help-center/{formData.category_id}/{formData.slug || 'slug'}
               </p>
             </div>
 
