@@ -196,6 +196,10 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           'divider-dashes': () => editor.chain().focus().setHorizontalRule().run(),
           'divider-light': () => editor.chain().focus().setHorizontalRule().run(),
           'divider-heavy': () => editor.chain().focus().setHorizontalRule().run(),
+          pageBreak: () => {
+            // Insert a page break as a styled horizontal rule with extra spacing
+            editor.chain().focus().setHorizontalRule().run();
+          },
           image: () => {
             const url = window.prompt('Enter image URL:');
             if (url) {
