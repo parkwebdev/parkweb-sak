@@ -26,7 +26,7 @@ import {
   File06,
   LayoutAlt02,
   Paperclip,
-  PenTool02,
+  
   FileX01,
 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -77,12 +77,6 @@ const STRUCTURE_BLOCKS: BlockType[] = [
   { id: 'pageBreak', label: 'Page Break', icon: FileX01, description: 'Visual page break separator' },
 ];
 
-/**
- * Advanced blocks
- */
-const ADVANCED_BLOCKS: BlockType[] = [
-  { id: 'whiteboard', label: 'Whiteboard', icon: PenTool02, description: 'Drawing canvas', disabled: true, future: true },
-];
 
 /**
  * Callout blocks for highlighting content
@@ -205,20 +199,6 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
           ))}
         </div>
         
-        {/* Advanced Blocks */}
-        <div className="p-2 space-y-0.5 border-t border-border">
-          <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
-            Advanced
-          </h3>
-          {ADVANCED_BLOCKS.map((block) => (
-            <BlockButton
-              key={block.id}
-              block={block}
-              onClick={() => onInsert(block.id)}
-              compact
-            />
-          ))}
-        </div>
         
         {/* Callouts Section */}
         <div className="p-3 pt-2 border-t border-border">
