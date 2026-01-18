@@ -1,7 +1,7 @@
 /**
  * ArticleEditorSheet Component
  * 
- * Full-featured editor sheet for platform KB articles.
+ * Full-featured editor sheet for platform help articles.
  * Uses TipTap rich text editor for content.
  * 
  * @module components/admin/knowledge/ArticleEditorSheet
@@ -126,7 +126,7 @@ export function ArticleEditorSheet({
           <SheetDescription>
             {isEditing
               ? 'Update the article content and settings'
-              : 'Create a new knowledge base article'}
+              : 'Create a new help article'}
           </SheetDescription>
         </SheetHeader>
 
