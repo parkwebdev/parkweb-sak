@@ -281,7 +281,12 @@ export function ArticleEditorPage() {
     setIsSaving(true);
     try {
       if (isNewArticle) {
-        await createArticle(formData);
+        const newId = await createArticle(formData);
+        // Navigate to the created article to prevent duplicate inserts on subsequent saves
+        navigate(`/admin/knowledge/${newId}`, { replace: true });
+        setHasUnsavedChanges(false);
+        setLastSavedAt(new Date());
+        return;
       } else if (articleId) {
         await updateArticle(articleId, formData);
       }
@@ -289,11 +294,18 @@ export function ArticleEditorPage() {
       setHasUnsavedChanges(false);
       setLastSavedAt(new Date());
     } catch (error: unknown) {
-      toast.error('Failed to save draft', { description: getErrorMessage(error) });
+      const message = getErrorMessage(error);
+      if (message.includes('duplicate key') || message.includes('unique constraint')) {
+        toast.error('Slug conflict', { 
+          description: 'An article with this slug already exists in this category. Please use a different title or slug.' 
+        });
+      } else {
+        toast.error('Failed to save draft', { description: message });
+      }
     } finally {
       setIsSaving(false);
     }
-  }, [isNewArticle, articleId, createArticle, updateArticle, isContentEmpty, existingArticle]);
+  }, [isNewArticle, articleId, createArticle, updateArticle, isContentEmpty, existingArticle, navigate]);
   
   // Publish article - stable callback using refs
   const handlePublish = useCallback(async () => {
@@ -311,7 +323,14 @@ export function ArticleEditorPage() {
       };
       
       if (isNewArticle) {
-        await createArticle(publishData);
+        const newId = await createArticle(publishData);
+        // Navigate to the created article to prevent duplicate inserts
+        navigate(`/admin/knowledge/${newId}`, { replace: true });
+        setIsPublished(true);
+        setHasUnsavedChanges(false);
+        setLastSavedAt(new Date());
+        toast.success('Article published');
+        return;
       } else if (articleId) {
         await updateArticle(articleId, publishData);
       }
@@ -321,11 +340,18 @@ export function ArticleEditorPage() {
       setLastSavedAt(new Date());
       toast.success('Article published');
     } catch (error: unknown) {
-      toast.error('Failed to publish', { description: getErrorMessage(error) });
+      const message = getErrorMessage(error);
+      if (message.includes('duplicate key') || message.includes('unique constraint')) {
+        toast.error('Slug conflict', { 
+          description: 'An article with this slug already exists in this category. Please use a different title or slug.' 
+        });
+      } else {
+        toast.error('Failed to publish', { description: message });
+      }
     } finally {
       setIsSaving(false);
     }
-  }, [isNewArticle, articleId, createArticle, updateArticle]);
+  }, [isNewArticle, articleId, createArticle, updateArticle, navigate]);
   
   // Unpublish article (revert to draft) - stable callback
   const handleUnpublish = useCallback(async () => {
