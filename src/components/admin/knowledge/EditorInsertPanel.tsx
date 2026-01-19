@@ -255,62 +255,6 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
           </div>
         </div>
         
-        {/* Line Types Section */}
-        <div className="p-3 pt-2 border-t border-border">
-          <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">
-            Lines
-          </h3>
-          <div className="grid grid-cols-2 gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onInsert('divider-dots')}
-                  className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label="Dotted line"
-                >
-                  · · ·
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="text-xs">Dotted line</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onInsert('divider-dashes')}
-                  className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label="Dashed line"
-                >
-                  - - -
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="text-xs">Dashed line</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onInsert('divider-light')}
-                  className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label="Light line"
-                >
-                  ───
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="text-xs">Light line</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onInsert('divider-heavy')}
-                  className="flex items-center justify-center px-2 py-2 rounded-md border border-border hover:bg-accent/50 transition-colors text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  aria-label="Heavy line"
-                >
-                  ━━━
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="text-xs">Heavy line</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
         
         {/* Table Section */}
         <div className="p-3 pt-2 border-t border-border">

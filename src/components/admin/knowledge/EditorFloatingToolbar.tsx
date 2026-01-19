@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useCallback, useState } from 'react';
+import { ArticleLinkPicker } from './ArticleLinkPicker';
 
 // Common text colors for the color picker
 const TEXT_COLORS = [
@@ -92,6 +93,7 @@ function ToolbarButton({ icon: Icon, isActive, onClick, label, disabled }: Toolb
 export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+  const [isArticleLinkPickerOpen, setIsArticleLinkPickerOpen] = useState(false);
 
   const handleLink = useCallback(() => {
     const previousUrl = editor.getAttributes('link').href;
@@ -134,20 +136,17 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
   }, [editor]);
 
   const handleArticleLink = useCallback(() => {
-    // Check if articleLink mark is active
+    // Check if articleLink mark is active - if so, remove it
     if (editor.isActive('articleLink')) {
-      // Remove the article link
       editor.chain().focus().unsetMark('articleLink').run();
       return;
     }
     
-    // Prompt for category ID and article slug
-    const categoryId = window.prompt('Enter category ID (e.g., getting-started):');
-    if (!categoryId) return;
-    
-    const articleSlug = window.prompt('Enter article slug (e.g., welcome):');
-    if (!articleSlug) return;
-    
+    // Open the article picker dialog
+    setIsArticleLinkPickerOpen(true);
+  }, [editor]);
+
+  const handleArticleLinkSelect = useCallback((categoryId: string, articleSlug: string) => {
     // Apply the article link mark to the selection
     editor
       .chain()
@@ -357,6 +356,13 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Article Link Picker Dialog */}
+      <ArticleLinkPicker
+        open={isArticleLinkPickerOpen}
+        onOpenChange={setIsArticleLinkPickerOpen}
+        onSelect={handleArticleLinkSelect}
+      />
     </BubbleMenu>
   );
 }
