@@ -1,17 +1,18 @@
 /**
  * VideoBlockHydrator
  * 
- * Hydrates [data-video] DOM elements into interactive VideoEmbed React components
+ * Hydrates [data-video] DOM elements into interactive HelpCenterVideoPlayer components
  * using React portals. This enables video playback in HTML content rendered from
  * the database.
+ * 
+ * Uses self-hosted videos from AWS S3/CloudFront.
  * 
  * @module components/help-center/VideoBlockHydrator
  */
 
 import { useState, useEffect, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { VideoEmbed } from '@/components/chat/VideoEmbed';
-import { getEmbedUrl, type VideoType } from '@/lib/video-utils';
+import { HelpCenterVideoPlayer } from './HelpCenterVideoPlayer';
 
 interface VideoBlockHydratorProps {
   /** Ref to the container element to scan for [data-video] elements */
@@ -23,15 +24,13 @@ interface VideoBlockHydratorProps {
 interface VideoData {
   element: HTMLElement;
   src: string;
-  embedUrl: string;
-  videoType: VideoType;
   title: string;
   thumbnail: string;
 }
 
 /**
- * Scans a container for [data-video] elements and renders VideoEmbed components
- * inside them using React portals.
+ * Scans a container for [data-video] elements and renders HelpCenterVideoPlayer
+ * components inside them using React portals.
  */
 export function VideoBlockHydrator({ containerRef, contentKey }: VideoBlockHydratorProps) {
   const [videoElements, setVideoElements] = useState<VideoData[]>([]);
@@ -50,16 +49,12 @@ export function VideoBlockHydrator({ containerRef, contentKey }: VideoBlockHydra
       
       const videos = elements.map((el) => {
         const src = el.getAttribute('data-src') || '';
-        const videoType = (el.getAttribute('data-video-type') || 'self-hosted') as VideoType;
         const title = el.getAttribute('data-title') || '';
         const thumbnail = el.getAttribute('data-thumbnail') || '';
-        const embedUrl = getEmbedUrl(src, videoType);
         
         return {
           element: el,
           src,
-          embedUrl,
-          videoType,
           title,
           thumbnail,
         };
@@ -77,13 +72,11 @@ export function VideoBlockHydrator({ containerRef, contentKey }: VideoBlockHydra
     <>
       {videoElements.map((video, index) => 
         createPortal(
-          <VideoEmbed
+          <HelpCenterVideoPlayer
             key={`${contentKey}-video-${index}`}
-            embedUrl={video.embedUrl}
-            videoType={video.videoType}
-            title={video.title}
+            src={video.src}
             thumbnail={video.thumbnail}
-            noBg
+            title={video.title}
           />,
           video.element
         )
