@@ -38,14 +38,26 @@ export function VideoPlayer({
   const [videoError, setVideoError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Sanitize and validate the URL
+  const sanitizedSrc = src?.trim() || '';
+  const isValidUrl = (() => {
+    if (!sanitizedSrc) return false;
+    try {
+      const url = new URL(sanitizedSrc);
+      return url.protocol === 'https:' || url.protocol === 'http:';
+    } catch {
+      return false;
+    }
+  })();
+
   const handlePlay = useCallback(() => {
+    if (!isValidUrl) {
+      setVideoError('Invalid video URL');
+      return;
+    }
     setHasStarted(true);
     setIsPlaying(true);
-    // Small delay to ensure video element is mounted
-    setTimeout(() => {
-      videoRef.current?.play();
-    }, 50);
-  }, []);
+  }, [isValidUrl]);
 
   const handleVideoClick = useCallback(() => {
     if (!videoRef.current) return;
@@ -87,6 +99,21 @@ export function VideoPlayer({
     md: 20,
     lg: 28,
   };
+
+  // Show error if URL is invalid
+  if (!isValidUrl && sanitizedSrc) {
+    return (
+      <div 
+        className={cn(
+          'relative rounded-lg overflow-hidden bg-destructive/10 flex items-center justify-center',
+          sizeClasses[size],
+          className
+        )}
+      >
+        <span className="text-sm text-destructive-foreground p-4">Invalid video URL</span>
+      </div>
+    );
+  }
 
   // Show thumbnail with play button before video starts
   if (!hasStarted) {
@@ -154,7 +181,8 @@ export function VideoPlayer({
       ) : (
         <video
           ref={videoRef}
-          src={src}
+          src={sanitizedSrc}
+          autoPlay
           className="w-full h-full object-contain cursor-pointer"
           controls
           controlsList="nodownload"

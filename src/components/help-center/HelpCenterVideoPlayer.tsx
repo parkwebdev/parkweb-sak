@@ -22,9 +22,9 @@ export function HelpCenterVideoPlayer({ src, thumbnail, title }: HelpCenterVideo
   return (
     <VideoPlayer
       size="lg"
-      src={src}
-      thumbnailUrl={thumbnail}
-      title={title}
+      src={src?.trim() || ''}
+      thumbnailUrl={thumbnail?.trim()}
+      title={title?.trim()}
       className="aspect-video w-full overflow-hidden rounded-lg"
     />
   );
