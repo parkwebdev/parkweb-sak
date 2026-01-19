@@ -55,6 +55,8 @@ interface ArticleEditorProps {
   onHeadingsChange: (headings: Heading[]) => void;
   placeholder?: string;
   className?: string;
+  /** User ID for file uploads (thumbnails, etc.) */
+  userId: string;
 }
 
 export interface ArticleEditorRef {
@@ -111,7 +113,7 @@ function extractHeadingsFromDocument(editor: Editor): Heading[] {
  * 4. External content sync does NOT trigger onChange
  */
 export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
-  ({ content, onChange, onHeadingsChange, placeholder = 'Start writing your article...', className }, ref) => {
+  ({ content, onChange, onHeadingsChange, placeholder = 'Start writing your article...', className, userId }, ref) => {
     const [isReady, setIsReady] = useState(false);
     
     // Dialog states
@@ -336,13 +338,14 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
       [editor, insertBlock, insertTable]
     );
     // Handlers for dialogs
-    const handleVideoSubmit = useCallback((url: string) => {
+    const handleVideoSubmit = useCallback((url: string, thumbnailUrl?: string) => {
       if (!editor || !url) return;
       const videoType = detectVideoType(url);
       const embedUrl = getEmbedUrl(url, videoType);
-      const thumbnail = videoType === 'youtube' 
+      // Use uploaded thumbnail, or auto-generate for YouTube
+      const thumbnail = thumbnailUrl || (videoType === 'youtube' 
         ? getYouTubeThumbnail(extractYouTubeId(url) || '') 
-        : '';
+        : '');
       
       editor.chain().focus().setVideo({
         src: embedUrl,
@@ -371,6 +374,7 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           open={videoDialogOpen}
           onOpenChange={setVideoDialogOpen}
           onSubmit={handleVideoSubmit}
+          userId={userId}
         />
 
         {/* Image input dialog */}

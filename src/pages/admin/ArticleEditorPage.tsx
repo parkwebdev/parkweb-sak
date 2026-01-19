@@ -15,6 +15,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, BookOpen01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
@@ -146,6 +147,7 @@ const TopBarRight = memo(function TopBarRight({
 export function ArticleEditorPage() {
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isNewArticle = articleId === 'new' || !articleId;
   const editorRef = useRef<ArticleEditorRef>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
@@ -551,6 +553,7 @@ export function ArticleEditorPage() {
                 onHeadingsChange={handleHeadingsChange}
                 placeholder="Start writing your article..."
                 className="border-0 shadow-none"
+                userId={user?.id || ''}
               />
             </div>
           </ScrollArea>
