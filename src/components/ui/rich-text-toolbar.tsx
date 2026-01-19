@@ -6,6 +6,7 @@
  * @module components/ui/rich-text-toolbar
  */
 
+import { useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -24,7 +25,7 @@ import {
   Code02,
   CodeSnippet02,
 } from '@untitledui/icons';
-import { useRef } from 'react';
+import { LinkInputDialog } from '@/components/admin/knowledge/LinkInputDialog';
 
 interface RichTextToolbarProps {
   editor: Editor | null;
@@ -64,6 +65,7 @@ const ToolbarButton = ({ icon, label, isActive, onClick, disabled }: ToolbarButt
 
 export const RichTextToolbar = ({ editor, onImageUpload, isUploading, minimalMode }: RichTextToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   if (!editor) return null;
 
@@ -81,36 +83,46 @@ export const RichTextToolbar = ({ editor, onImageUpload, isUploading, minimalMod
     }
   };
 
-  const addLink = () => {
-    const url = window.prompt('Enter URL:');
+  const handleLinkSubmit = (url: string) => {
     if (url) {
       editor.chain().focus().setLink({ href: url }).run();
+    } else {
+      // Remove link if empty URL
+      editor.chain().focus().unsetLink().run();
     }
   };
 
   // Minimal mode: Only Bold, Italic, Link
   if (minimalMode) {
     return (
-      <div className="flex items-center gap-0.5 p-2 border-b border-border bg-muted/30 rounded-t-md">
-        <ToolbarButton
-          icon={<Bold01 className="h-4 w-4" />}
-          label="Bold"
-          isActive={editor.isActive('bold')}
-          onClick={() => editor.chain().focus().toggleBold().run()}
+      <>
+        <div className="flex items-center gap-0.5 p-2 border-b border-border bg-muted/30 rounded-t-md">
+          <ToolbarButton
+            icon={<Bold01 className="h-4 w-4" />}
+            label="Bold"
+            isActive={editor.isActive('bold')}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          />
+          <ToolbarButton
+            icon={<Italic01 className="h-4 w-4" />}
+            label="Italic"
+            isActive={editor.isActive('italic')}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          />
+          <ToolbarButton
+            icon={<Link01 className="h-4 w-4" />}
+            label="Add Link"
+            isActive={editor.isActive('link')}
+            onClick={() => setLinkDialogOpen(true)}
+          />
+        </div>
+        <LinkInputDialog
+          open={linkDialogOpen}
+          onOpenChange={setLinkDialogOpen}
+          onSubmit={handleLinkSubmit}
+          initialUrl={editor.getAttributes('link').href}
         />
-        <ToolbarButton
-          icon={<Italic01 className="h-4 w-4" />}
-          label="Italic"
-          isActive={editor.isActive('italic')}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-        />
-        <ToolbarButton
-          icon={<Link01 className="h-4 w-4" />}
-          label="Add Link"
-          isActive={editor.isActive('link')}
-          onClick={addLink}
-        />
-      </div>
+      </>
     );
   }
 
@@ -181,7 +193,7 @@ export const RichTextToolbar = ({ editor, onImageUpload, isUploading, minimalMod
         icon={<Link01 className="h-4 w-4" />}
         label="Add Link"
         isActive={editor.isActive('link')}
-        onClick={addLink}
+        onClick={() => setLinkDialogOpen(true)}
       />
       <ToolbarButton
         icon={<Image01 className="h-4 w-4" />}
@@ -218,6 +230,14 @@ export const RichTextToolbar = ({ editor, onImageUpload, isUploading, minimalMod
       {isUploading && (
         <span className="ml-2 text-xs text-muted-foreground">Uploading...</span>
       )}
+
+      {/* Link input dialog */}
+      <LinkInputDialog
+        open={linkDialogOpen}
+        onOpenChange={setLinkDialogOpen}
+        onSubmit={handleLinkSubmit}
+        initialUrl={editor.getAttributes('link').href}
+      />
     </div>
   );
 };

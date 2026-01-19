@@ -22,6 +22,8 @@ import Underline from '@tiptap/extension-underline';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import { useCallback, useEffect, useImperativeHandle, forwardRef, useState, useRef } from 'react';
+import { VideoInputDialog } from './VideoInputDialog';
+import { ImageInputDialog } from './ImageInputDialog';
 import { EditorFloatingToolbar } from './EditorFloatingToolbar';
 import { HeadingWithId } from './HeadingWithId';
 import { CalloutNode } from './CalloutNode';
@@ -111,6 +113,10 @@ function extractHeadingsFromDocument(editor: Editor): Heading[] {
 export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
   ({ content, onChange, onHeadingsChange, placeholder = 'Start writing your article...', className }, ref) => {
     const [isReady, setIsReady] = useState(false);
+    
+    // Dialog states
+    const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+    const [imageDialogOpen, setImageDialogOpen] = useState(false);
     
     // Track last synced content to detect external vs internal changes
     const lastSyncedContentRef = useRef(content);
@@ -288,30 +294,8 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
             // Insert a page break as a styled horizontal rule with extra spacing
             editor.chain().focus().setHorizontalRule().run();
           },
-          image: () => {
-            const url = window.prompt('Enter image URL:');
-            if (url) {
-              editor.chain().focus().setImage({ src: url }).run();
-            }
-          },
-          video: () => {
-            const url = window.prompt('Enter video URL (YouTube, Vimeo, Loom, Wistia, or direct video file):');
-            if (url && isValidVideoUrl(url)) {
-              const videoType = detectVideoType(url);
-              const embedUrl = getEmbedUrl(url, videoType);
-              const thumbnail = videoType === 'youtube' 
-                ? getYouTubeThumbnail(extractYouTubeId(url) || '') 
-                : '';
-              
-              editor.chain().focus().setVideo({
-                src: embedUrl,
-                videoType,
-                thumbnail,
-              }).run();
-            } else if (url) {
-              window.alert('Please enter a valid video URL (YouTube, Vimeo, Loom, Wistia, or direct video file)');
-            }
-          },
+          image: () => setImageDialogOpen(true),
+          video: () => setVideoDialogOpen(true),
           // Callouts
           'callout-info': () => editor.chain().focus().setCallout({ type: 'info' }).run(),
           'callout-warning': () => editor.chain().focus().setCallout({ type: 'warning' }).run(),
@@ -351,15 +335,51 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
       }),
       [editor, insertBlock, insertTable]
     );
+    // Handlers for dialogs
+    const handleVideoSubmit = useCallback((url: string) => {
+      if (!editor || !url) return;
+      const videoType = detectVideoType(url);
+      const embedUrl = getEmbedUrl(url, videoType);
+      const thumbnail = videoType === 'youtube' 
+        ? getYouTubeThumbnail(extractYouTubeId(url) || '') 
+        : '';
+      
+      editor.chain().focus().setVideo({
+        src: embedUrl,
+        videoType,
+        thumbnail,
+      }).run();
+    }, [editor]);
+
+    const handleImageSubmit = useCallback((url: string, alt?: string) => {
+      if (!editor || !url) return;
+      editor.chain().focus().setImage({ src: url, alt }).run();
+    }, [editor]);
 
     return (
-      <div className={cn('relative min-h-[500px]', className)}>
-        {/* Floating toolbar (BubbleMenu) */}
-        {isReady && editor && <EditorFloatingToolbar editor={editor} />}
-        
-        {/* Editor content */}
-        <EditorContent editor={editor} />
-      </div>
+      <>
+        <div className={cn('relative min-h-[500px]', className)}>
+          {/* Floating toolbar (BubbleMenu) */}
+          {isReady && editor && <EditorFloatingToolbar editor={editor} />}
+          
+          {/* Editor content */}
+          <EditorContent editor={editor} />
+        </div>
+
+        {/* Video input dialog */}
+        <VideoInputDialog
+          open={videoDialogOpen}
+          onOpenChange={setVideoDialogOpen}
+          onSubmit={handleVideoSubmit}
+        />
+
+        {/* Image input dialog */}
+        <ImageInputDialog
+          open={imageDialogOpen}
+          onOpenChange={setImageDialogOpen}
+          onSubmit={handleImageSubmit}
+        />
+      </>
     );
   }
 );
