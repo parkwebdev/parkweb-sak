@@ -2,13 +2,15 @@
  * Related Articles Node Extension for TipTap
  * 
  * Provides a block for linking to related Help Center articles
- * with styled link pills.
+ * with styled link pills. Uses a React NodeView for interactivity.
  * 
  * @module components/admin/knowledge/RelatedArticlesNode
  */
 
 import { Node, mergeAttributes } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
 import type { DOMOutputSpec } from '@tiptap/pm/model';
+import { RelatedArticlesNodeView } from './RelatedArticlesNodeView';
 
 export interface RelatedArticle {
   categoryId: string;
@@ -40,7 +42,7 @@ declare module '@tiptap/core' {
 }
 
 /**
- * Related articles block node
+ * Related articles block node with React NodeView
  */
 export const RelatedArticlesNode = Node.create<RelatedArticlesOptions>({
   name: 'relatedArticles',
@@ -55,6 +57,9 @@ export const RelatedArticlesNode = Node.create<RelatedArticlesOptions>({
 
   // Atom means it's treated as a single unit, not editable inline
   atom: true,
+
+  // Draggable for reordering
+  draggable: true,
 
   addAttributes() {
     return {
@@ -103,61 +108,19 @@ export const RelatedArticlesNode = Node.create<RelatedArticlesOptions>({
   renderHTML({ HTMLAttributes, node }): DOMOutputSpec {
     const articles = (node.attrs.articles as RelatedArticle[]) || [];
 
-    // Store articles as JSON in data attribute, CSS/JS will handle visual rendering
+    // Store articles as JSON in data attribute for serialization
     const containerAttrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
       'data-related-articles': '',
       'data-articles': JSON.stringify(articles),
       class: 'related-articles mt-8 pt-6 border-t border-border',
     });
 
-    // atom: true nodes must NOT have a content hole (0) - they are leaf nodes
     return ['div', containerAttrs];
   },
 
+  // Use React NodeView for interactive editing
   addNodeView() {
-    return ({ node }) => {
-      const dom = document.createElement('div');
-      dom.setAttribute('data-related-articles', '');
-      dom.className = 'related-articles mt-8 pt-6 border-t border-border';
-
-      // Add "Related Articles" heading
-      const heading = document.createElement('span');
-      heading.className = 'text-sm font-medium text-muted-foreground block mb-3';
-      heading.textContent = 'Related Articles';
-      dom.appendChild(heading);
-
-      // Add container for article links
-      const linksContainer = document.createElement('div');
-      linksContainer.className = 'flex flex-wrap gap-2';
-
-      const articles = (node.attrs.articles || []) as RelatedArticle[];
-
-      if (articles.length === 0) {
-        // Show placeholder for empty state
-        const placeholder = document.createElement('span');
-        placeholder.className = 'text-sm text-muted-foreground italic';
-        placeholder.textContent = 'Click to add related articles...';
-        linksContainer.appendChild(placeholder);
-      } else {
-        // Render each article as a styled pill
-        articles.forEach((article) => {
-          const pill = document.createElement('span');
-          pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-sm text-foreground';
-          pill.textContent = article.title;
-          
-          const arrow = document.createElement('span');
-          arrow.className = 'text-muted-foreground ml-1';
-          arrow.textContent = '→';
-          pill.appendChild(arrow);
-          
-          linksContainer.appendChild(pill);
-        });
-      }
-
-      dom.appendChild(linksContainer);
-
-      return { dom };
-    };
+    return ReactNodeViewRenderer(RelatedArticlesNodeView);
   },
 
   addCommands() {
@@ -176,7 +139,7 @@ export const RelatedArticlesNode = Node.create<RelatedArticlesOptions>({
         ({ tr, state }) => {
           const { selection } = state;
           const node = state.doc.nodeAt(selection.from);
-          
+
           if (node?.type.name === 'relatedArticles') {
             tr.setNodeMarkup(selection.from, undefined, { articles });
             return true;
