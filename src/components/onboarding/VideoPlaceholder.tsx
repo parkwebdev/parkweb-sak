@@ -66,11 +66,11 @@ function GradientPlaceholder({ stepId }: { stepId: string }) {
         {/* Play button */}
         <div className="absolute inset-0 flex items-center justify-center">
           <button
-            className="group flex items-center justify-center w-20 h-20 rounded-full bg-white/50 backdrop-blur-sm shadow-md hover:bg-white/60 transition-colors"
+            className="group flex items-center justify-center w-20 h-20 rounded-full bg-white/30 backdrop-blur-sm shadow-md hover:bg-white/40 transition-colors"
             aria-label="Video coming soon"
             disabled
           >
-            <PlayTriangleIcon size={32} className="text-white/80 ml-1" />
+            <PlayTriangleIcon size={32} className="text-white/90" />
           </button>
         </div>
       </motion.div>
