@@ -175,17 +175,33 @@ export function ArticleEditorPage() {
   // Extracted headings for ToC
   const [headings, setHeadings] = useState<Heading[]>([]);
   
-  // Track if we've loaded the article data
-  const [hasLoaded, setHasLoaded] = useState(false);
+  // Track which article ID we've loaded (null = not loaded yet)
+  const [loadedArticleId, setLoadedArticleId] = useState<string | null>(null);
+  
+  // Guard to prevent autosave during hydration
+  const isHydratingRef = useRef(false);
   
   // Draft save state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   
+  // Reset state when articleId changes (navigating between articles)
+  useEffect(() => {
+    // If we're navigating to a different article, reset the loaded state
+    if (!isNewArticle && articleId && loadedArticleId !== null && loadedArticleId !== articleId) {
+      setLoadedArticleId(null);
+      setHasUnsavedChanges(false);
+      setLastSavedAt(null);
+    }
+  }, [articleId, isNewArticle, loadedArticleId]);
+  
   // Load existing article data
   useEffect(() => {
-    if (existingArticle && !hasLoaded) {
+    if (existingArticle && loadedArticleId !== existingArticle.id) {
+      // Mark as hydrating to prevent autosave triggers
+      isHydratingRef.current = true;
+      
       setTitle(existingArticle.title);
       setContent(existingArticle.content);
       setSlug(existingArticle.slug);
@@ -194,19 +210,31 @@ export function ArticleEditorPage() {
       setOrderIndex(existingArticle.order_index || 0);
       setIconName(existingArticle.icon_name || '');
       setIsPublished(existingArticle.is_published);
-      setHasLoaded(true);
-    } else if (isNewArticle && !hasLoaded && categories.length > 0) {
+      setLoadedArticleId(existingArticle.id);
+      
+      // Clear hydrating flag after a tick to allow state to settle
+      requestAnimationFrame(() => {
+        isHydratingRef.current = false;
+      });
+    } else if (isNewArticle && loadedArticleId !== 'new' && categories.length > 0) {
       // Set default category for new articles
+      isHydratingRef.current = true;
       setCategoryId(categories[0]?.id || '');
-      setHasLoaded(true);
+      setLoadedArticleId('new');
+      requestAnimationFrame(() => {
+        isHydratingRef.current = false;
+      });
     }
-  }, [existingArticle, hasLoaded, isNewArticle, categories]);
+  }, [existingArticle, loadedArticleId, isNewArticle, categories]);
   
   // Handle content and headings changes from editor
   const handleContentChange = useCallback((html: string, extractedHeadings: Heading[]) => {
     setContent(html);
     setHeadings(extractedHeadings);
-    setHasUnsavedChanges(true);
+    // Only mark as unsaved if we're not hydrating
+    if (!isHydratingRef.current) {
+      setHasUnsavedChanges(true);
+    }
   }, []);
   
   // Auto-generate slug from title
@@ -314,7 +342,7 @@ export function ArticleEditorPage() {
   
   // Debounced draft auto-save (3 seconds after last change)
   useEffect(() => {
-    if (!hasLoaded || !hasUnsavedChanges || !title || !categoryId) return;
+    if (!loadedArticleId || !hasUnsavedChanges || !title || !categoryId) return;
     
     // Clear existing timeout
     if (draftSaveTimeoutRef.current) {
@@ -331,7 +359,7 @@ export function ArticleEditorPage() {
         clearTimeout(draftSaveTimeoutRef.current);
       }
     };
-  }, [hasLoaded, hasUnsavedChanges, title, categoryId, saveDraft]);
+  }, [loadedArticleId, hasUnsavedChanges, title, categoryId, saveDraft]);
   
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -422,8 +450,10 @@ export function ArticleEditorPage() {
   
   useTopBar(topBarConfig, 'admin-article-editor');
   
-  // Show loading skeleton
-  if (articlesLoading && !isNewArticle) {
+  // Show loading skeleton while fetching or waiting for article data
+  const isLoading = articlesLoading || (!isNewArticle && !existingArticle && !loadedArticleId);
+  
+  if (isLoading) {
     return (
       <div className="flex h-[calc(100vh-56px)]">
         <div className="w-[200px] border-r border-border p-4">
@@ -445,6 +475,20 @@ export function ArticleEditorPage() {
               <Skeleton key={i} className="h-8 w-full" />
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show article not found if we're done loading but article doesn't exist
+  if (!isNewArticle && !existingArticle) {
+    return (
+      <div className="flex h-[calc(100vh-56px)] items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">Article not found</p>
+          <Button variant="outline" onClick={handleBack}>
+            Back to Knowledge
+          </Button>
         </div>
       </div>
     );
