@@ -131,14 +131,14 @@ export function Dashboard() {
                     <motion.button
                       whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
                       whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                      className="flex items-center justify-center w-20 h-20 rounded-full bg-white/30 backdrop-blur-sm shadow-md hover:bg-white/40 transition-colors"
+                      className="flex items-center justify-center w-16 h-16 rounded-full bg-white/30 backdrop-blur-sm shadow-md hover:bg-white/40 transition-colors"
                       onClick={() => {
                         // TODO: Open video modal
                         logger.debug('Play next level video');
                       }}
                       aria-label="Play tutorial video"
                     >
-                      <PlayTriangleIcon size={32} className="text-white/90" />
+                      <PlayTriangleIcon size={28} className="text-white/90" />
                     </motion.button>
                   </div>
                   {/* Duration badge */}
