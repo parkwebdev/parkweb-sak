@@ -4,7 +4,6 @@
  * Provides an inline mark for linking to other Help Center articles.
  * Similar to the regular link mark but with article-specific attributes.
  * 
- * @see docs/HC_DATABASE_MIGRATION_PLAN.md
  * @module components/admin/knowledge/ArticleLinkMark
  */
 

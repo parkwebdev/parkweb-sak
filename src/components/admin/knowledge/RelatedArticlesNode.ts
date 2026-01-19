@@ -4,7 +4,6 @@
  * Provides a block for linking to related Help Center articles
  * with styled link pills.
  * 
- * @see docs/HC_DATABASE_MIGRATION_PLAN.md
  * @module components/admin/knowledge/RelatedArticlesNode
  */
 

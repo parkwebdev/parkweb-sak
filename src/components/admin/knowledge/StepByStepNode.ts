@@ -4,7 +4,6 @@
  * Provides a numbered step-by-step guide block with optional
  * descriptions and screenshots for each step.
  * 
- * @see docs/HC_DATABASE_MIGRATION_PLAN.md
  * @module components/admin/knowledge/StepByStepNode
  */
 

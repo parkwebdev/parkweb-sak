@@ -12,7 +12,6 @@
  * - data-related-articles
  * - data-article-link (inline links)
  * 
- * @see docs/HC_DATABASE_MIGRATION_PLAN.md
  * @module components/help-center/HCDatabaseArticleRenderer
  */
 
