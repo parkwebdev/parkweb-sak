@@ -124,7 +124,6 @@ const TopBarRight = memo(function TopBarRight({
       {/* Publish/Unpublish button */}
       {isPublished ? (
         <Button 
-          variant="outline" 
           size="sm" 
           onClick={onUnpublish} 
           disabled={isSaving}
@@ -133,7 +132,6 @@ const TopBarRight = memo(function TopBarRight({
         </Button>
       ) : (
         <Button 
-          variant="default"
           size="sm" 
           onClick={onPublish} 
           disabled={isSaving || !canPublish}
