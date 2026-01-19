@@ -10,7 +10,7 @@
  */
 
 import { useState, useRef, useCallback } from 'react';
-import { PlayIcon } from '@/components/icons/PlayIcon';
+import { PlayTriangleIcon } from '@/components/icons/PlayTriangleIcon';
 import { cn } from '@/lib/utils';
 
 interface VideoPlayerProps {
@@ -69,15 +69,15 @@ export function VideoPlayer({
   };
 
   const playButtonSizes = {
-    sm: 'w-10 h-10',
-    md: 'w-14 h-14',
-    lg: 'w-16 h-16',
+    sm: 'w-12 h-12',
+    md: 'w-16 h-16',
+    lg: 'w-20 h-20',
   };
 
   const playIconSizes = {
-    sm: 24,
-    md: 32,
-    lg: 36,
+    sm: 20,
+    md: 28,
+    lg: 32,
   };
 
   // Show thumbnail with play button before video starts
@@ -113,16 +113,16 @@ export function VideoPlayer({
         )}
         
         {/* Play button overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
+        <div className="absolute inset-0 flex items-center justify-center">
           <div 
             className={cn(
-              'flex items-center justify-center rounded-full bg-white/20 backdrop-blur-md shadow-lg group-hover:bg-white/30 transition-colors',
+              'flex items-center justify-center rounded-full bg-white/50 backdrop-blur-sm shadow-md group-hover:bg-white/60 transition-colors',
               playButtonSizes[size]
             )}
           >
-            <PlayIcon 
+            <PlayTriangleIcon 
               size={playIconSizes[size]} 
-              className="text-white group-hover:text-white/90 transition-colors" 
+              className="text-white/80 ml-1" 
             />
           </div>
         </div>
