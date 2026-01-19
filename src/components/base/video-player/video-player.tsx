@@ -1,10 +1,13 @@
 /**
  * VideoPlayer Component
  * 
- * A polished native HTML5 video player with thumbnail preview,
- * click-to-play functionality, and clean controls.
+ * Industry-standard video player with fixed 16:9 aspect ratio container,
+ * thumbnail preview, and clean controls.
  * 
- * Based on UntitledUI design patterns.
+ * Follows YouTube/Vimeo/Notion pattern:
+ * - Fixed aspect ratio container (always stable sizing)
+ * - Poster frame or placeholder before play
+ * - Video letterboxed if non-16:9 source
  * 
  * @module components/base/video-player/video-player
  */
@@ -18,7 +21,7 @@ interface VideoPlayerProps {
   src: string;
   /** Thumbnail image URL */
   thumbnailUrl?: string;
-  /** Additional className */
+  /** Additional className for container */
   className?: string;
   /** Video title for accessibility */
   title?: string;
@@ -79,29 +82,28 @@ export function VideoPlayer({
     setVideoError(error?.message || 'Failed to load video');
   }, [src]);
 
-  // Show error if URL is invalid
-  if (!isValidUrl && sanitizedSrc) {
+  // Standard container classes - 16:9 aspect ratio, reasonable max-width
+  const containerClasses = cn(
+    'relative w-full max-w-3xl aspect-video rounded-lg overflow-hidden',
+    className
+  );
+
+  // Show error state
+  if (videoError || (!isValidUrl && sanitizedSrc)) {
     return (
-      <div 
-        className={cn(
-          'relative rounded-lg overflow-hidden bg-destructive/10 flex items-center justify-center aspect-video max-w-[35rem]',
-          className
-        )}
-      >
-        <span className="text-sm text-destructive-foreground p-4">Invalid video URL</span>
+      <div className={cn(containerClasses, 'bg-destructive/10 flex items-center justify-center')}>
+        <span className="text-sm text-destructive-foreground">
+          {videoError || 'Invalid video URL'}
+        </span>
       </div>
     );
   }
 
-  // Show thumbnail with play button before video starts
+  // Show thumbnail/placeholder with play button before video starts
   if (!hasStarted) {
     return (
       <div 
-        className={cn(
-          'relative cursor-pointer group rounded-lg overflow-hidden inline-block',
-          !thumbnailUrl && 'bg-muted aspect-video max-w-[35rem]',
-          className
-        )}
+        className={cn(containerClasses, 'bg-muted cursor-pointer group')}
         onClick={handlePlay}
         role="button"
         tabIndex={0}
@@ -113,24 +115,21 @@ export function VideoPlayer({
         }}
         aria-label={`Play ${title}`}
       >
-        {thumbnailUrl ? (
+        {/* Thumbnail fills container if provided */}
+        {thumbnailUrl && (
           <img 
             src={thumbnailUrl} 
             alt={`${title} thumbnail`}
-            className="block max-w-full h-auto object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-xs text-muted-foreground">Video</span>
-          </div>
         )}
         
-        {/* Play button overlay */}
+        {/* Play button overlay - always centered */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm shadow-md group-hover:bg-white/40 transition-colors w-14 h-14">
+          <div className="flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm shadow-md group-hover:bg-white/40 transition-colors w-16 h-16">
             <PlayTriangleIcon 
-              size={24} 
-              className="text-white/90" 
+              size={28} 
+              className="text-white" 
             />
           </div>
         </div>
@@ -140,35 +139,24 @@ export function VideoPlayer({
 
   // Show native video player after play is clicked
   return (
-    <div 
-      className={cn(
-        'relative rounded-lg overflow-hidden inline-block',
-        className
-      )}
-    >
-      {videoError ? (
-        <div className="aspect-video max-w-[35rem] flex items-center justify-center text-destructive-foreground bg-destructive/10 p-4">
-          <span className="text-sm">{videoError}</span>
-        </div>
-      ) : (
-        <video
-          ref={videoRef}
-          src={sanitizedSrc}
-          poster={thumbnailUrl || undefined}
-          autoPlay
-          className="block max-w-full h-auto cursor-pointer"
-          controls
-          controlsList="nodownload"
-          playsInline
-          onClick={handleVideoClick}
-          onEnded={handleVideoEnded}
-          onError={handleVideoError}
-          title={title}
-        >
-          <track kind="captions" />
-          Your browser does not support the video tag.
-        </video>
-      )}
+    <div className={cn(containerClasses, 'bg-black')}>
+      <video
+        ref={videoRef}
+        src={sanitizedSrc}
+        poster={thumbnailUrl || undefined}
+        autoPlay
+        className="absolute inset-0 w-full h-full object-contain cursor-pointer"
+        controls
+        controlsList="nodownload"
+        playsInline
+        onClick={handleVideoClick}
+        onEnded={handleVideoEnded}
+        onError={handleVideoError}
+        title={title}
+      >
+        <track kind="captions" />
+        Your browser does not support the video tag.
+      </video>
     </div>
   );
 }

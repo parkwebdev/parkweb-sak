@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { VideoInputDialog } from './VideoInputDialog';
 
 export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
-  const { src, videoType, title, thumbnail } = node.attrs;
+  const { src, title, thumbnail } = node.attrs;
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleEditSubmit = (newUrl: string) => {
@@ -37,11 +37,11 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
   };
 
   return (
-    <NodeViewWrapper className="video-node-wrapper inline-block">
+    <NodeViewWrapper className="video-node-wrapper my-4">
       <div 
         className={cn(
-          'relative group rounded-lg overflow-hidden inline-block',
-          selected && 'ring-2 ring-ring ring-offset-2'
+          'relative group inline-block',
+          selected && 'ring-2 ring-ring ring-offset-2 rounded-lg'
         )}
       >
         {/* Video player */}
@@ -52,7 +52,7 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
         />
 
         {/* Action buttons - visible on hover */}
-        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <IconButton
             variant="secondary"
             size="sm"
