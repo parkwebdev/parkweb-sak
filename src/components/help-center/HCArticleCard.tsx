@@ -2,6 +2,7 @@
  * Help Center Article Card
  * 
  * Displays an article preview card for category landing pages.
+ * Now uses DB-driven types from usePlatformHelpCenter.
  * 
  * @module components/help-center/HCArticleCard
  */
@@ -11,10 +12,10 @@ import { ArrowRight } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
-import type { HCArticle } from '@/config/help-center-config';
+import type { PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
 
 interface HCArticleCardProps {
-  article: HCArticle;
+  article: PlatformHCArticle;
   categoryColor: string;
   onClick: () => void;
 }

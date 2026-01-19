@@ -2,6 +2,7 @@
  * Help Center Category View
  * 
  * Category landing page with search and article cards grid.
+ * Now uses DB-driven types from usePlatformHelpCenter.
  * 
  * @module components/help-center/HCCategoryView
  */
@@ -14,7 +15,18 @@ import { HCArticleCard } from './HCArticleCard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
-import type { HCCategory, HCArticle } from '@/config/help-center-config';
+import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
+
+/** Map category ID to color class */
+const CATEGORY_COLOR_MAP: Record<string, string> = {
+  'getting-started': 'bg-info',
+  'ari': 'bg-accent-purple',
+  'inbox': 'bg-success',
+  'leads': 'bg-warning',
+  'planner': 'bg-status-active',
+  'analytics': 'bg-destructive',
+  'settings': 'bg-muted-foreground',
+};
 
 /** Map category color classes to gradient backgrounds */
 const GRADIENT_MAP: Record<string, string> = {
@@ -28,16 +40,17 @@ const GRADIENT_MAP: Record<string, string> = {
 };
 
 interface HCCategoryViewProps {
-  category: HCCategory;
-  onSelectArticle: (article: HCArticle) => void;
+  category: PlatformHCCategory;
+  onSelectArticle: (article: PlatformHCArticle) => void;
 }
 
 export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const prefersReducedMotion = useReducedMotion();
   
-  // Get gradient class for header
-  const gradientClasses = GRADIENT_MAP[category.color] || 'from-muted/15 via-muted/5 to-transparent';
+  // Get color class for this category
+  const colorClass = category.color.startsWith('bg-') ? category.color : CATEGORY_COLOR_MAP[category.id] || 'bg-muted-foreground';
+  const gradientClasses = GRADIENT_MAP[colorClass] || 'from-muted/15 via-muted/5 to-transparent';
   
   // Filter articles based on search
   const filteredArticles = useMemo(() => {
@@ -45,7 +58,7 @@ export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProp
     
     const query = searchQuery.toLowerCase();
     return category.articles.filter(
-      (article: HCArticle) =>
+      (article) =>
         article.title.toLowerCase().includes(query) ||
         article.description?.toLowerCase().includes(query)
     );
@@ -58,7 +71,7 @@ export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProp
         className="sticky top-0 z-10 flex items-center gap-2 text-sm text-muted-foreground py-3 -mx-8 px-8 bg-background border-b border-border" 
         aria-label="Breadcrumb"
       >
-        <span className={cn('w-2 h-2 rounded-full', category.color)} aria-hidden="true" />
+        <span className={cn('w-2 h-2 rounded-full', colorClass)} aria-hidden="true" />
         <span className="text-foreground font-medium">{category.label}</span>
       </nav>
       
@@ -103,7 +116,7 @@ export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProp
       
       {/* Article Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-8">
-        {filteredArticles.map((article: HCArticle, index: number) => (
+        {filteredArticles.map((article, index) => (
           <motion.div
             key={article.id}
             initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
@@ -112,7 +125,7 @@ export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProp
           >
             <HCArticleCard
               article={article}
-              categoryColor={category.color}
+              categoryColor={colorClass}
               onClick={() => onSelectArticle(article)}
             />
           </motion.div>

@@ -3,19 +3,19 @@
  * 
  * Displays the most popular articles in a category based on view counts.
  * Used in the right sidebar when viewing category landing pages.
+ * Now uses DB-driven types from usePlatformHelpCenter.
  * 
  * @module components/help-center/HCPopularArticles
  */
 
-
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { usePopularArticles } from '@/hooks/useHCArticleViews';
-import type { HCArticle } from '@/config/help-center-config';
+import type { PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
 
 interface HCPopularArticlesProps {
   categoryId: string;
-  onSelectArticle: (article: HCArticle) => void;
+  onSelectArticle: (article: PlatformHCArticle) => void;
 }
 
 export function HCPopularArticles({ categoryId, onSelectArticle }: HCPopularArticlesProps) {
@@ -55,10 +55,20 @@ export function HCPopularArticles({ categoryId, onSelectArticle }: HCPopularArti
       </h3>
       
       <nav className="space-y-1" aria-label="Popular articles">
-        {popularArticles.map(({ article }: { article: HCArticle }, index: number) => (
+        {popularArticles.map(({ article }, index: number) => (
           <button
-            key={article.id}
-            onClick={() => onSelectArticle(article)}
+            key={article.id || article.slug}
+            onClick={() => onSelectArticle({ 
+              id: article.id, 
+              slug: article.slug, 
+              title: article.title, 
+              description: article.description || null,
+              content: '',
+              category_id: '',
+              icon_name: null,
+              order_index: null,
+              is_published: true 
+            })}
             className={cn(
               'w-full text-left px-2 py-2 rounded-md',
               'flex items-start gap-2',

@@ -2,6 +2,7 @@
  * @fileoverview Help Center Search Results Component
  * 
  * Renders HC article search results for the TopBarSearch dropdown.
+ * Now uses DB-driven data from usePlatformHelpCenter.
  * 
  * @module components/help-center/HCSearchResults
  */
@@ -10,18 +11,18 @@ import { useMemo } from 'react';
 import { BookOpen01 } from '@untitledui/icons';
 import { TopBarSearchResultItem, TopBarSearchEmptyState } from '@/components/layout/TopBarSearchResultItem';
 import { Badge } from '@/components/ui/badge';
-import { HC_CATEGORIES, type HCCategory, type HCArticle } from '@/config/help-center-config';
+import { usePlatformHelpCenter, type PlatformHCCategory, type PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
 
 interface SearchResult {
-  category: HCCategory;
-  article: HCArticle;
+  category: PlatformHCCategory;
+  article: PlatformHCArticle;
 }
 
 interface HCSearchResultsProps {
   /** Current search query */
   query: string;
   /** Callback when an article is selected */
-  onSelect: (category: HCCategory, article: HCArticle) => void;
+  onSelect: (category: PlatformHCCategory, article: PlatformHCArticle) => void;
   /** Maximum number of results to show (default: 8) */
   maxResults?: number;
 }
@@ -34,14 +35,16 @@ export function HCSearchResults({
   onSelect,
   maxResults = 8,
 }: HCSearchResultsProps) {
+  const { categories, isLoading } = usePlatformHelpCenter();
+  
   // Search across all articles
   const results = useMemo(() => {
-    if (!query.trim()) return [];
+    if (!query.trim() || isLoading) return [];
     
     const searchTerm = query.toLowerCase();
     const matches: SearchResult[] = [];
     
-    for (const category of HC_CATEGORIES) {
+    for (const category of categories) {
       for (const article of category.articles) {
         const titleMatch = article.title.toLowerCase().includes(searchTerm);
         const descMatch = article.description?.toLowerCase().includes(searchTerm);
@@ -53,7 +56,11 @@ export function HCSearchResults({
     }
     
     return matches.slice(0, maxResults);
-  }, [query, maxResults]);
+  }, [query, maxResults, categories, isLoading]);
+
+  if (isLoading) {
+    return <TopBarSearchEmptyState message="Loading..." />;
+  }
 
   if (results.length === 0) {
     return <TopBarSearchEmptyState message="No articles found" />;
