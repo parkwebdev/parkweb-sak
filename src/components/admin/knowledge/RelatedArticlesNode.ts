@@ -111,7 +111,8 @@ export const RelatedArticlesNode = Node.create<RelatedArticlesOptions>({
       class: 'related-articles mt-8 pt-6 border-t border-border',
     });
 
-    return ['div', containerAttrs, 0];
+    // atom: true nodes must NOT have a content hole (0) - they are leaf nodes
+    return ['div', containerAttrs];
   },
 
   addCommands() {
