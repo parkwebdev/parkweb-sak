@@ -116,13 +116,13 @@ export function VideoPlayer({
         <div className="absolute inset-0 flex items-center justify-center">
           <div 
             className={cn(
-              'flex items-center justify-center rounded-full bg-white/50 backdrop-blur-sm shadow-md group-hover:bg-white/60 transition-colors',
+              'flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm shadow-md group-hover:bg-white/40 transition-colors',
               playButtonSizes[size]
             )}
           >
             <PlayTriangleIcon 
               size={playIconSizes[size]} 
-              className="text-white/80 ml-1" 
+              className="text-white/90" 
             />
           </div>
         </div>

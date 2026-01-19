@@ -65,8 +65,8 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
         
         {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/50 backdrop-blur-sm shadow-md group-hover:bg-white/60 transition-colors">
-            <PlayTriangleIcon size={28} className="text-white/80 ml-1" />
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/30 backdrop-blur-sm shadow-md group-hover:bg-white/40 transition-colors">
+            <PlayTriangleIcon size={28} className="text-white/90" />
           </div>
         </div>
 
