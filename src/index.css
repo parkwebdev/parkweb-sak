@@ -859,18 +859,34 @@ html::view-transition {
   @apply pt-0.5;
 }
 
-/* Step title styling */
-.hc-article-content [data-step] > h4:first-child,
-.hc-database-content [data-step] > h4:first-child,
-.article-content [data-step] > h4:first-child {
+/* Step title styling - h4 or first element in step-content */
+.hc-article-content [data-step] h4,
+.hc-database-content [data-step] h4,
+.article-content [data-step] h4,
+.hc-article-content [data-step] .step-content > h4:first-child,
+.hc-database-content [data-step] .step-content > h4:first-child,
+.article-content [data-step] .step-content > h4:first-child {
   @apply text-sm font-medium text-foreground mb-1 mt-0;
 }
 
 /* Step description */
-.hc-article-content [data-step] > p,
-.hc-database-content [data-step] > p,
-.article-content [data-step] > p {
+.hc-article-content [data-step] p,
+.hc-database-content [data-step] p,
+.article-content [data-step] p,
+.hc-article-content [data-step] .step-content > p,
+.hc-database-content [data-step] .step-content > p,
+.article-content [data-step] .step-content > p {
   @apply text-sm text-muted-foreground mb-3;
+}
+
+/* Editor step-number circle (rendered via NodeView, not ::before) */
+.ProseMirror [data-step] .step-number {
+  @apply absolute left-0 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium;
+}
+
+/* Hide CSS-based step number in editor since NodeView renders it */
+.ProseMirror [data-step]::before {
+  display: none;
 }
 
 /* Step screenshot */

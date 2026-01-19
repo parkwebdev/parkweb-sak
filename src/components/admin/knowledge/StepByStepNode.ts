@@ -1,8 +1,9 @@
 /**
  * Step-by-Step Node Extension for TipTap
  * 
- * Provides a numbered step-by-step guide block with optional
- * descriptions and screenshots for each step.
+ * Provides a numbered step-by-step guide block. Content (title, description)
+ * is stored as heading/paragraph nodes INSIDE the step, not as attributes.
+ * This is the industry-standard content-based architecture.
  * 
  * @module components/admin/knowledge/StepByStepNode
  */
@@ -13,8 +14,6 @@ import type { DOMOutputSpec } from '@tiptap/pm/model';
 export interface StepData {
   title: string;
   description?: string;
-  screenshot?: string;
-  screenshotAlt?: string;
 }
 
 export interface StepByStepOptions {
@@ -87,16 +86,10 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
             { title: 'Step 2', description: '' },
           ];
           
-          // Create the step nodes with actual content nodes for proper HTML output
+          // Create step nodes with content as heading/paragraph nodes
           const stepNodes = steps.map((step, index) => ({
             type: 'step',
-            attrs: {
-              stepNumber: index + 1,
-              title: step.title,
-              description: step.description || '',
-              screenshot: step.screenshot || '',
-              screenshotAlt: step.screenshotAlt || '',
-            },
+            attrs: { stepNumber: index + 1 },
             content: [
               { 
                 type: 'heading', 
@@ -118,7 +111,6 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
       addStep:
         () =>
         ({ state, chain }) => {
-          // Find current stepByStep node and add a step
           const { selection } = state;
           const stepByStepNode = state.doc.resolve(selection.from).node(1);
           
@@ -128,13 +120,7 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
             return chain()
               .insertContentAt(selection.from, {
                 type: 'step',
-                attrs: {
-                  stepNumber: newStepNum,
-                  title: `Step ${newStepNum}`,
-                  description: '',
-                  screenshot: '',
-                  screenshotAlt: '',
-                },
+                attrs: { stepNumber: newStepNum },
                 content: [
                   { 
                     type: 'heading', 
@@ -157,14 +143,16 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
 });
 
 /**
- * Individual step node within a step-by-step guide
+ * Individual step node within a step-by-step guide.
+ * Content (title as h4, description as p) is edited directly in TipTap.
+ * Only stepNumber is stored as an attribute.
  */
 export const StepNode = Node.create({
   name: 'step',
 
   group: 'block',
 
-  content: 'block*',
+  content: 'block+',
 
   defining: true,
 
@@ -175,46 +163,6 @@ export const StepNode = Node.create({
         parseHTML: (element) => parseInt(element.getAttribute('data-step-number') || '1', 10),
         renderHTML: (attributes) => ({
           'data-step-number': attributes.stepNumber,
-        }),
-      },
-      title: {
-        default: '',
-        parseHTML: (element) => {
-          const titleEl = element.querySelector('[data-step-title]');
-          return titleEl?.textContent || element.getAttribute('data-step-title') || '';
-        },
-        renderHTML: (attributes) => ({
-          'data-step-title': attributes.title,
-        }),
-      },
-      description: {
-        default: '',
-        parseHTML: (element) => {
-          const descEl = element.querySelector('[data-step-description]');
-          return descEl?.textContent || element.getAttribute('data-step-description') || '';
-        },
-        renderHTML: (attributes) => ({
-          'data-step-description': attributes.description,
-        }),
-      },
-      screenshot: {
-        default: '',
-        parseHTML: (element) => {
-          const imgEl = element.querySelector('[data-step-screenshot]');
-          return imgEl?.getAttribute('src') || element.getAttribute('data-step-screenshot') || '';
-        },
-        renderHTML: (attributes) => ({
-          'data-step-screenshot': attributes.screenshot,
-        }),
-      },
-      screenshotAlt: {
-        default: '',
-        parseHTML: (element) => {
-          const imgEl = element.querySelector('[data-step-screenshot]');
-          return imgEl?.getAttribute('alt') || element.getAttribute('data-step-screenshot-alt') || '';
-        },
-        renderHTML: (attributes) => ({
-          'data-step-screenshot-alt': attributes.screenshotAlt,
         }),
       },
     };
@@ -229,93 +177,39 @@ export const StepNode = Node.create({
   },
 
   renderHTML({ HTMLAttributes, node }): DOMOutputSpec {
-    const stepNumber = node.attrs.stepNumber || 1;
-    const title = node.attrs.title || '';
-    const description = node.attrs.description || '';
-    const screenshot = node.attrs.screenshot || '';
-    const screenshotAlt = node.attrs.screenshotAlt || title;
-
-    const stepAttrs = mergeAttributes(HTMLAttributes, {
-      'data-step': '',
-      'data-step-number': stepNumber,
-      'data-step-title': title,
-      'data-step-description': description,
-      'data-step-screenshot': screenshot,
-      'data-step-screenshot-alt': screenshotAlt,
-      class: 'step relative pl-12',
-    });
-
-    return ['div', stepAttrs, 0];
+    return [
+      'div',
+      mergeAttributes(HTMLAttributes, {
+        'data-step': '',
+        'data-step-number': node.attrs.stepNumber,
+        class: 'step relative pl-12',
+      }),
+      0, // Content slot - TipTap renders h4/p nodes here
+    ];
   },
 
+  /**
+   * Simple NodeView that renders the step number circle.
+   * Content (h4/p) is editable directly by TipTap - no custom inputs.
+   */
   addNodeView() {
-    return ({ node, editor, getPos }) => {
+    return ({ node }) => {
       const dom = document.createElement('div');
-      dom.setAttribute('data-step', '');
-      dom.setAttribute('data-step-number', String(node.attrs.stepNumber || 1));
       dom.className = 'step relative pl-12 py-2';
+      dom.setAttribute('data-step', '');
+      dom.setAttribute('data-step-number', String(node.attrs.stepNumber));
 
-      // Step number circle
+      // Step number circle (non-editable)
       const numberCircle = document.createElement('div');
-      numberCircle.className = 'absolute left-0 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium';
-      numberCircle.textContent = String(node.attrs.stepNumber || 1);
+      numberCircle.className = 'step-number absolute left-0 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium';
+      numberCircle.textContent = String(node.attrs.stepNumber);
+      numberCircle.contentEditable = 'false';
       dom.appendChild(numberCircle);
 
-      // Connector line (except for last step - handled by CSS)
-      const connectorLine = document.createElement('div');
-      connectorLine.className = 'absolute left-4 top-10 bottom-0 w-px bg-border -translate-x-1/2';
-      dom.appendChild(connectorLine);
-
-      // Content container
-      const contentContainer = document.createElement('div');
-      contentContainer.className = 'space-y-2';
-
-      // Title input
-      const titleInput = document.createElement('input');
-      titleInput.type = 'text';
-      titleInput.value = node.attrs.title || '';
-      titleInput.placeholder = 'Step title...';
-      titleInput.className = 'block w-full bg-transparent text-base font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none border-b border-transparent hover:border-border focus:border-primary pb-1';
-      titleInput.addEventListener('input', (e) => {
-        const pos = getPos();
-        if (typeof pos === 'number') {
-          editor.chain().focus().updateAttributes('step', { title: (e.target as HTMLInputElement).value }).run();
-        }
-      });
-      contentContainer.appendChild(titleInput);
-
-      // Description textarea
-      const descInput = document.createElement('textarea');
-      descInput.value = node.attrs.description || '';
-      descInput.placeholder = 'Step description (optional)...';
-      descInput.rows = 2;
-      descInput.className = 'block w-full bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground/60 focus:outline-none resize-none border border-transparent rounded hover:border-border focus:border-primary p-1';
-      descInput.addEventListener('input', (e) => {
-        const pos = getPos();
-        if (typeof pos === 'number') {
-          editor.chain().focus().updateAttributes('step', { description: (e.target as HTMLTextAreaElement).value }).run();
-        }
-      });
-      contentContainer.appendChild(descInput);
-
-      // Screenshot display (if present)
-      if (node.attrs.screenshot) {
-        const screenshotContainer = document.createElement('div');
-        screenshotContainer.className = 'mt-3 rounded-lg overflow-hidden border border-border';
-        const img = document.createElement('img');
-        img.src = node.attrs.screenshot;
-        img.alt = node.attrs.screenshotAlt || node.attrs.title || 'Step screenshot';
-        img.className = 'w-full h-auto';
-        screenshotContainer.appendChild(img);
-        contentContainer.appendChild(screenshotContainer);
-      }
-
-      // Content hole for additional blocks
+      // Content area - TipTap renders the heading/paragraph nodes here
       const contentDOM = document.createElement('div');
-      contentDOM.className = 'step-content mt-2';
-      contentContainer.appendChild(contentDOM);
-
-      dom.appendChild(contentContainer);
+      contentDOM.className = 'step-content space-y-1';
+      dom.appendChild(contentDOM);
 
       return { dom, contentDOM };
     };
