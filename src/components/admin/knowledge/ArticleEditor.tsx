@@ -196,7 +196,7 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
       (blockType: string) => {
         if (!editor) return;
 
-        const commands: Record<string, () => void> = {
+        const blockCommands: Record<string, () => void> = {
           text: () => editor.chain().focus().setParagraph().run(),
           heading1: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
           heading2: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
@@ -240,6 +240,14 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
             }
           },
         };
+
+        // Execute the block command if it exists
+        const command = blockCommands[blockType];
+        if (command) {
+          command();
+        } else {
+          console.warn(`Unknown block type: ${blockType}`);
+        }
       },
       [editor]
     );

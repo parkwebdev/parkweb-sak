@@ -17,6 +17,7 @@ import {
   Strikethrough01,
   Code01,
   Link01,
+  Link03,
   FaceSmile,
   AtSign,
   Palette,
@@ -132,6 +133,30 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
     }
   }, [editor]);
 
+  const handleArticleLink = useCallback(() => {
+    // Check if articleLink mark is active
+    if (editor.isActive('articleLink')) {
+      // Remove the article link
+      editor.chain().focus().unsetMark('articleLink').run();
+      return;
+    }
+    
+    // Prompt for category ID and article slug
+    const categoryId = window.prompt('Enter category ID (e.g., getting-started):');
+    if (!categoryId) return;
+    
+    const articleSlug = window.prompt('Enter article slug (e.g., welcome):');
+    if (!articleSlug) return;
+    
+    // Apply the article link mark to the selection
+    editor
+      .chain()
+      .focus()
+      .extendMarkRange('articleLink')
+      .setMark('articleLink', { categoryId, articleSlug })
+      .run();
+  }, [editor]);
+
   return (
     <BubbleMenu
       editor={editor}
@@ -186,6 +211,24 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
         onClick={handleLink}
         label="Insert Link (Cmd+K)"
       />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={handleArticleLink}
+            aria-label="Link to Help Center Article"
+            className={cn(
+              'h-7 w-7 flex items-center justify-center rounded',
+              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              editor.isActive('articleLink')
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+            )}
+          >
+            <Link03 size={14} aria-hidden="true" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Article Link</TooltipContent>
+      </Tooltip>
       
       <Separator orientation="vertical" className="h-5 mx-1" />
       
