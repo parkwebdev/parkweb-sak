@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { Users01 } from '@untitledui/icons';
 import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
-import { AccountsTable, AccountDetailSheet, AdminAccountsSearch, AdminAccountsFilters } from '@/components/admin/accounts';
+import { AccountsTable, AccountDetailSheet, AccountsTopBarSearch, AdminAccountsFilters } from '@/components/admin/accounts';
 import { useAdminAccounts } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
@@ -82,14 +82,19 @@ export function AdminAccounts() {
     toast.success('Accounts exported');
   }, []);
 
+  // Handle account selection from search dropdown
+  const handleSearchSelect = useCallback((account: { id: string }) => {
+    setSelectedAccountId(account.id);
+  }, []);
+
   // Configure top bar with search on left, filters on right
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
         <TopBarPageContext icon={Users01} title="Accounts" />
-        <AdminAccountsSearch 
-          value={filters.search || ''} 
-          onChange={(search) => handleFilterChange({ ...filters, search })} 
+        <AccountsTopBarSearch 
+          accounts={accounts}
+          onSelect={handleSearchSelect}
         />
       </div>
     ),
@@ -105,7 +110,7 @@ export function AdminAccounts() {
         />
       </div>
     ),
-  }), [filters, handleFilterChange, handleExport]);
+  }), [accounts, handleSearchSelect, handleExport, filters, handleFilterChange]);
   useTopBar(topBarConfig, 'admin-accounts');
 
   return (
