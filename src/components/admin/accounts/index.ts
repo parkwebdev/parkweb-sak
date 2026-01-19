@@ -13,3 +13,5 @@ export { ImpersonateDialog } from './ImpersonateDialog';
 export { AccountActions } from './AccountActions';
 export { AdminAccountsSearch } from './AdminAccountsSearch';
 export { AdminAccountsFilters } from './AdminAccountsFilters';
+export { AccountsTopBarSearch } from './AccountsTopBarSearch';
+export { AccountsSearchResults } from './AccountsSearchResults';
