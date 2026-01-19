@@ -133,6 +133,7 @@ const TopBarRight = memo(function TopBarRight({
         </Button>
       ) : (
         <Button 
+          variant="default"
           size="sm" 
           onClick={onPublish} 
           disabled={isSaving || !canPublish}
