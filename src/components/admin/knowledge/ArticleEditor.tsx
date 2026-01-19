@@ -20,6 +20,10 @@ import { useCallback, useEffect, useImperativeHandle, forwardRef, useState } fro
 import { EditorFloatingToolbar } from './EditorFloatingToolbar';
 import { HeadingWithId } from './HeadingWithId';
 import { CalloutNode } from './CalloutNode';
+import { StepByStepNode, StepNode } from './StepByStepNode';
+import { FeatureGridNode, FeatureCardNode } from './FeatureCardNode';
+import { RelatedArticlesNode } from './RelatedArticlesNode';
+import { ArticleLinkMark } from './ArticleLinkMark';
 import { cn } from '@/lib/utils';
 
 export interface Heading {
@@ -124,6 +128,13 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
         }),
         // Callout extension
         CalloutNode,
+        // Help Center component extensions
+        StepByStepNode,
+        StepNode,
+        FeatureGridNode,
+        FeatureCardNode,
+        RelatedArticlesNode,
+        ArticleLinkMark,
       ],
       content,
       editorProps: {
@@ -214,12 +225,21 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           'callout-warning': () => editor.chain().focus().setCallout({ type: 'warning' }).run(),
           'callout-success': () => editor.chain().focus().setCallout({ type: 'success' }).run(),
           'callout-error': () => editor.chain().focus().setCallout({ type: 'error' }).run(),
+          // Help Center blocks
+          stepByStep: () => editor.chain().focus().setStepByStep().run(),
+          featureGrid2: () => editor.chain().focus().setFeatureGrid({ columns: 2, cardCount: 2 }).run(),
+          featureGrid3: () => editor.chain().focus().setFeatureGrid({ columns: 3, cardCount: 3 }).run(),
+          featureCard: () => editor.chain().focus().setFeatureCard().run(),
+          relatedArticles: () => editor.chain().focus().setRelatedArticles({ articles: [] }).run(),
+          articleLink: () => {
+            // For inline article links, prompt for category and slug
+            const categoryId = window.prompt('Enter category ID:');
+            const articleSlug = window.prompt('Enter article slug:');
+            if (categoryId && articleSlug) {
+              editor.chain().focus().setArticleLink({ categoryId, articleSlug }).run();
+            }
+          },
         };
-
-        const command = commands[blockType];
-        if (command) {
-          command();
-        }
       },
       [editor]
     );

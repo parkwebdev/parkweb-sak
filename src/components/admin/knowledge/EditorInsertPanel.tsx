@@ -26,8 +26,12 @@ import {
   File06,
   LayoutAlt02,
   Paperclip,
-  
   FileX01,
+  // New icons for HC components
+  CheckSquare,
+  Grid01,
+  Link01,
+  BookOpen01,
 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -77,6 +81,17 @@ const STRUCTURE_BLOCKS: BlockType[] = [
   { id: 'pageBreak', label: 'Page Break', icon: FileX01, description: 'Visual page break separator' },
 ];
 
+/**
+ * Help Center specific blocks for component parity
+ */
+const HC_BLOCKS: BlockType[] = [
+  { id: 'stepByStep', label: 'Step-by-Step', icon: CheckSquare, description: 'Numbered step guide' },
+  { id: 'featureGrid2', label: 'Feature Grid (2)', icon: Grid01, description: '2-column feature cards' },
+  { id: 'featureGrid3', label: 'Feature Grid (3)', icon: Grid01, description: '3-column feature cards' },
+  { id: 'featureCard', label: 'Feature Card', icon: LayoutAlt02, description: 'Single feature highlight' },
+  { id: 'relatedArticles', label: 'Related Articles', icon: Link01, description: 'Links to other articles' },
+  { id: 'articleLink', label: 'Article Link', icon: BookOpen01, description: 'Inline link to article' },
+];
 
 /**
  * Callout blocks for highlighting content
@@ -199,6 +214,20 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
           ))}
         </div>
         
+        {/* Help Center Blocks Section */}
+        <div className="p-2 space-y-0.5 border-t border-border">
+          <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
+            Help Center
+          </h3>
+          {HC_BLOCKS.map((block) => (
+            <BlockButton
+              key={block.id}
+              block={block}
+              onClick={() => onInsert(block.id)}
+              compact
+            />
+          ))}
+        </div>
         
         {/* Callouts Section */}
         <div className="p-3 pt-2 border-t border-border">
