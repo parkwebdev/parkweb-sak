@@ -15,29 +15,8 @@ import { HCArticleCard } from './HCArticleCard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
+import { getCategoryColor, getGradientClass } from '@/lib/hc-category-colors';
 import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
-
-/** Map category ID to color class */
-const CATEGORY_COLOR_MAP: Record<string, string> = {
-  'getting-started': 'bg-info',
-  'ari': 'bg-accent-purple',
-  'inbox': 'bg-success',
-  'leads': 'bg-warning',
-  'planner': 'bg-status-active',
-  'analytics': 'bg-destructive',
-  'settings': 'bg-muted-foreground',
-};
-
-/** Map category color classes to gradient backgrounds */
-const GRADIENT_MAP: Record<string, string> = {
-  'bg-info': 'from-info/15 via-info/5 to-transparent',
-  'bg-accent-purple': 'from-accent-purple/15 via-accent-purple/5 to-transparent',
-  'bg-success': 'from-success/15 via-success/5 to-transparent',
-  'bg-warning': 'from-warning/15 via-warning/5 to-transparent',
-  'bg-status-active': 'from-status-active/15 via-status-active/5 to-transparent',
-  'bg-destructive': 'from-destructive/15 via-destructive/5 to-transparent',
-  'bg-muted-foreground': 'from-muted-foreground/15 via-muted-foreground/5 to-transparent',
-};
 
 interface HCCategoryViewProps {
   category: PlatformHCCategory;
@@ -49,8 +28,8 @@ export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProp
   const prefersReducedMotion = useReducedMotion();
   
   // Get color class for this category
-  const colorClass = category.color.startsWith('bg-') ? category.color : CATEGORY_COLOR_MAP[category.id] || 'bg-muted-foreground';
-  const gradientClasses = GRADIENT_MAP[colorClass] || 'from-muted/15 via-muted/5 to-transparent';
+  const colorClass = getCategoryColor(category.id, category.color);
+  const gradientClasses = getGradientClass(colorClass);
   
   // Filter articles based on search
   const filteredArticles = useMemo(() => {

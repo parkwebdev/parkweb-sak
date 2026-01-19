@@ -18,29 +18,8 @@ import { cn } from '@/lib/utils';
 import { useTrackArticleView } from '@/hooks/useHCArticleViews';
 import { HCArticleFeedback } from './HCArticleFeedback';
 import { HCDatabaseArticleRenderer } from './HCDatabaseArticleRenderer';
+import { getCategoryColor, getGradientClass } from '@/lib/hc-category-colors';
 import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
-
-/** Map category bg colors to gradient CSS variables */
-const GRADIENT_MAP: Record<string, string> = {
-  'bg-info': 'from-info/15 via-info/5 to-transparent',
-  'bg-accent-purple': 'from-accent-purple/15 via-accent-purple/5 to-transparent',
-  'bg-success': 'from-success/15 via-success/5 to-transparent',
-  'bg-warning': 'from-warning/15 via-warning/5 to-transparent',
-  'bg-status-active': 'from-status-active/15 via-status-active/5 to-transparent',
-  'bg-destructive': 'from-destructive/15 via-destructive/5 to-transparent',
-  'bg-muted-foreground': 'from-muted-foreground/10 via-muted-foreground/3 to-transparent',
-};
-
-/** Map category ID to color class */
-const CATEGORY_COLOR_MAP: Record<string, string> = {
-  'getting-started': 'bg-info',
-  'ari': 'bg-accent-purple',
-  'inbox': 'bg-success',
-  'leads': 'bg-warning',
-  'planner': 'bg-status-active',
-  'analytics': 'bg-destructive',
-  'settings': 'bg-muted-foreground',
-};
 
 interface HCArticleViewProps {
   category: PlatformHCCategory;
@@ -71,8 +50,8 @@ export function HCArticleView({
   const readingTime = Math.max(1, Math.ceil((article.content?.length || 0) / 1500));
   
   // Get color class for this category
-  const colorClass = category.color.startsWith('bg-') ? category.color : CATEGORY_COLOR_MAP[category.id] || 'bg-muted-foreground';
-  const gradientClasses = GRADIENT_MAP[colorClass] || 'from-muted/10 to-transparent';
+  const colorClass = getCategoryColor(category.id, category.color);
+  const gradientClasses = getGradientClass(colorClass);
   
   // Get the current article URL for sharing
   const articleUrl = typeof window !== 'undefined' 
