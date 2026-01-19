@@ -24,7 +24,6 @@ export function HelpCenterVideoPlayer({ src, thumbnail, title }: HelpCenterVideo
       src={src?.trim() || ''}
       thumbnailUrl={thumbnail?.trim()}
       title={title?.trim()}
-      className="inline-block max-w-full overflow-hidden rounded-lg"
     />
   );
 }
