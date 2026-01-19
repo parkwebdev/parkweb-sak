@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { HC_COLOR_OPTIONS } from '@/lib/hc-category-colors';
 import type { PlatformHCCategory, PlatformHCCategoryInput } from '@/types/platform-hc';
 
 interface PlatformCategoryManagerProps {
@@ -36,16 +37,6 @@ interface PlatformCategoryManagerProps {
   onCreate: (category: PlatformHCCategoryInput) => void;
   onDelete: (id: string) => void;
 }
-
-const COLOR_OPTIONS = [
-  { value: 'bg-info', label: 'Blue' },
-  { value: 'bg-success', label: 'Green' },
-  { value: 'bg-warning', label: 'Yellow' },
-  { value: 'bg-destructive', label: 'Red' },
-  { value: 'bg-accent-purple', label: 'Purple' },
-  { value: 'bg-status-active', label: 'Teal' },
-  { value: 'bg-muted-foreground', label: 'Gray' },
-];
 
 const ICON_OPTIONS = [
   'Flag01', 'Bot', 'MessageSquare01', 'Users01', 'Calendar', 
@@ -176,7 +167,7 @@ export function PlatformCategoryManager({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {COLOR_OPTIONS.map((color) => (
+                  {HC_COLOR_OPTIONS.map((color) => (
                     <SelectItem key={color.value} value={color.value}>
                       <div className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${color.value}`} />
