@@ -48,10 +48,10 @@ export function RelatedArticlesNodeView({ node, updateAttributes }: NodeViewProp
 
   return (
     <NodeViewWrapper
-      className="related-articles mt-8 pt-6 border-t border-border"
+      className="related-articles-editor mt-8 pt-6 border-t border-border"
       data-related-articles=""
     >
-      {/* Heading */}
+      {/* Heading - only shown in editor (CSS ::before handles read-only views) */}
       <span className="text-sm font-medium text-muted-foreground block mb-3">
         Related Articles
       </span>

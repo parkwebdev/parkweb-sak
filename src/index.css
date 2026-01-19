@@ -918,9 +918,10 @@ html::view-transition {
   @apply mt-8 pt-6 border-t border-border;
 }
 
-.hc-article-content [data-related-articles]::before,
-.hc-database-content [data-related-articles]::before,
-.article-content [data-related-articles]::before {
+/* Editor uses React component for heading, so skip ::before there */
+.hc-article-content [data-related-articles]:not(.related-articles-editor)::before,
+.hc-database-content [data-related-articles]:not(.related-articles-editor)::before,
+.article-content [data-related-articles]:not(.related-articles-editor)::before {
   content: "Related Articles";
   @apply text-sm font-medium text-muted-foreground block mb-3;
 }
