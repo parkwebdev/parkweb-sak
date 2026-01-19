@@ -10,7 +10,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { VideoPlayer } from '@/components/base/video-player/video-player';
-import { PlayIcon } from '@/components/icons/PlayIcon';
+import { PlayTriangleIcon } from '@/components/icons/PlayTriangleIcon';
 
 interface VideoPlaceholderProps {
   stepId: string;
@@ -66,11 +66,11 @@ function GradientPlaceholder({ stepId }: { stepId: string }) {
         {/* Play button */}
         <div className="absolute inset-0 flex items-center justify-center">
           <button
-            className="group flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:bg-white/30 transition-colors"
+            className="group flex items-center justify-center w-20 h-20 rounded-full bg-white/50 backdrop-blur-sm shadow-md hover:bg-white/60 transition-colors"
             aria-label="Video coming soon"
             disabled
           >
-            <PlayIcon size={32} className="text-white group-hover:text-white/90 transition-colors" />
+            <PlayTriangleIcon size={32} className="text-white/80 ml-1" />
           </button>
         </div>
       </motion.div>

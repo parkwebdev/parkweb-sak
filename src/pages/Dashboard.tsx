@@ -15,7 +15,7 @@ import { motion } from 'motion/react';
 import { Separator } from '@/components/ui/separator';
 import { InviteTeamInline } from '@/components/onboarding/InviteTeamInline';
 import { GoFurtherSection } from '@/components/onboarding';
-import { PlayIcon } from '@/components/icons/PlayIcon';
+import { PlayTriangleIcon } from '@/components/icons/PlayTriangleIcon';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { logger } from '@/utils/logger';
@@ -131,14 +131,14 @@ export function Dashboard() {
                     <motion.button
                       whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
                       whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                      className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:bg-white/30 transition-colors"
+                      className="flex items-center justify-center w-20 h-20 rounded-full bg-white/50 backdrop-blur-sm shadow-md hover:bg-white/60 transition-colors"
                       onClick={() => {
                         // TODO: Open video modal
                         logger.debug('Play next level video');
                       }}
                       aria-label="Play tutorial video"
                     >
-                      <PlayIcon size={32} className="text-white group-hover:text-white/90 transition-colors" />
+                      <PlayTriangleIcon size={32} className="text-white/80 ml-1" />
                     </motion.button>
                   </div>
                   {/* Duration badge */}
