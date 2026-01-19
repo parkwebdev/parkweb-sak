@@ -87,7 +87,7 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
             { title: 'Step 2', description: '' },
           ];
           
-          // Create the step nodes content
+          // Create the step nodes with actual content nodes for proper HTML output
           const stepNodes = steps.map((step, index) => ({
             type: 'step',
             attrs: {
@@ -97,6 +97,17 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
               screenshot: step.screenshot || '',
               screenshotAlt: step.screenshotAlt || '',
             },
+            content: [
+              { 
+                type: 'heading', 
+                attrs: { level: 4 }, 
+                content: step.title ? [{ type: 'text', text: step.title }] : [] 
+              },
+              ...(step.description 
+                ? [{ type: 'paragraph', content: [{ type: 'text', text: step.description }] }] 
+                : []
+              ),
+            ],
           }));
 
           return commands.insertContent({
@@ -113,16 +124,24 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
           
           if (stepByStepNode?.type.name === 'stepByStep') {
             const stepCount = stepByStepNode.childCount;
+            const newStepNum = stepCount + 1;
             return chain()
               .insertContentAt(selection.from, {
                 type: 'step',
                 attrs: {
-                  stepNumber: stepCount + 1,
-                  title: `Step ${stepCount + 1}`,
+                  stepNumber: newStepNum,
+                  title: `Step ${newStepNum}`,
                   description: '',
                   screenshot: '',
                   screenshotAlt: '',
                 },
+                content: [
+                  { 
+                    type: 'heading', 
+                    attrs: { level: 4 }, 
+                    content: [{ type: 'text', text: `Step ${newStepNum}` }] 
+                  },
+                ],
               })
               .run();
           }

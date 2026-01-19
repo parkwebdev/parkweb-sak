@@ -106,7 +106,7 @@ export const FeatureGridNode = Node.create<FeatureGridOptions>({
           const columns = attrs?.columns || 2;
           const cardCount = attrs?.cardCount || columns;
 
-          // Create empty feature cards
+          // Create feature cards with actual content nodes for proper HTML output
           const cards = Array.from({ length: cardCount }, (_, i) => ({
             type: 'featureCard',
             attrs: {
@@ -114,6 +114,17 @@ export const FeatureGridNode = Node.create<FeatureGridOptions>({
               description: 'Description here',
               iconName: '',
             },
+            content: [
+              { 
+                type: 'heading', 
+                attrs: { level: 4 }, 
+                content: [{ type: 'text', text: `Feature ${i + 1}` }] 
+              },
+              { 
+                type: 'paragraph', 
+                content: [{ type: 'text', text: 'Description here' }] 
+              },
+            ],
           }));
 
           return commands.insertContent({
@@ -270,13 +281,27 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
       setFeatureCard:
         (attrs) =>
         ({ commands }) => {
+          const title = attrs?.title || 'Feature Title';
+          const description = attrs?.description || 'Feature description here';
+          
           return commands.insertContent({
             type: this.name,
             attrs: {
-              title: attrs?.title || 'Feature Title',
-              description: attrs?.description || 'Feature description here',
+              title,
+              description,
               iconName: attrs?.iconName || '',
             },
+            content: [
+              { 
+                type: 'heading', 
+                attrs: { level: 4 }, 
+                content: [{ type: 'text', text: title }] 
+              },
+              { 
+                type: 'paragraph', 
+                content: [{ type: 'text', text: description }] 
+              },
+            ],
           });
         },
     };
