@@ -179,8 +179,15 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
       if (editor && content !== editor.getHTML()) {
         // Use emitUpdate: false to prevent triggering onUpdate during hydration
         editor.commands.setContent(content, { emitUpdate: false });
+        
+        // Manually extract headings and notify parent after DOM updates
+        // Parent's isHydratingRef is still true, so hasUnsavedChanges won't be set
+        requestAnimationFrame(() => {
+          const headings = extractHeadingsFromEditor(editor);
+          onChange(editor.getHTML(), headings);
+        });
       }
-    }, [content, editor]);
+    }, [content, editor, onChange]);
 
     // Insert table at cursor
     const insertTable = useCallback(
