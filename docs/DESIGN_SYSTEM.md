@@ -1673,11 +1673,11 @@ All icon-only buttons in admin components MUST use `IconButton` with a `label` p
 </Button>
 ```
 
-**Verified Components (2026-01-12):**
+**Verified Components (2026-01-19):**
 - `PlansTable.tsx` - Edit/Delete plan buttons, Add/Remove feature buttons
 - `AuditLogTable.tsx` - View details button
-- `ArticlesTable.tsx` - Edit/Delete article buttons
-- `CategoryManager.tsx` - Add/Delete category buttons
+- `PlatformArticlesTable.tsx` - Edit/Delete article buttons
+- `CreateCategoryDialog.tsx` - Category management buttons
 - `AccountsTable.tsx` - All action buttons
 - `PilotTeamTable.tsx` - Remove team member buttons
 - `TeamMemberCard.tsx` - Remove team member button
