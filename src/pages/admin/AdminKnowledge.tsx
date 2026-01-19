@@ -95,13 +95,17 @@ export function AdminKnowledge() {
 
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={BookOpen01} title="Help Center" />,
-    right: (
-      <div className="flex items-center gap-2">
+    left: (
+      <div className="flex items-center gap-4">
+        <TopBarPageContext icon={BookOpen01} title="Help Center" />
         <KnowledgeTopBarSearch
           articles={articles}
           onSelect={handleSearchSelect}
         />
+      </div>
+    ),
+    right: (
+      <div className="flex items-center gap-2">
         <CategoryFilterDropdown
           categories={stableCategories}
           activeCategory={categoryFilter}
