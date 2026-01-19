@@ -73,6 +73,40 @@ export function HCArticleView({
     }
   };
   
+  // Intercept article link clicks for client-side navigation
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const link = target.closest('a[data-article-link], [data-related-articles] a');
+      
+      if (link instanceof HTMLAnchorElement) {
+        // Try data attributes first
+        const categoryId = link.getAttribute('data-category-id');
+        const articleSlug = link.getAttribute('data-article-slug');
+        
+        if (categoryId && articleSlug) {
+          event.preventDefault();
+          setSearchParams({ category: categoryId, article: articleSlug });
+          return;
+        }
+        
+        // Parse from href as fallback
+        const href = link.getAttribute('href');
+        const match = href?.match(/[?&]category=([^&]+).*[?&]article=([^&]+)/);
+        if (match) {
+          event.preventDefault();
+          setSearchParams({ category: match[1], article: match[2] });
+        }
+      }
+    };
+
+    container.addEventListener('click', handleClick);
+    return () => container.removeEventListener('click', handleClick);
+  }, [setSearchParams]);
+  
   // Extract headings from content for ToC
   useEffect(() => {
     const extractHeadings = () => {
