@@ -1,24 +1,35 @@
 /**
  * Video Placeholder Component
  * 
- * Placeholder for onboarding video that spans the full height of the step list.
- * Shows a play button overlay with step-specific gradient backgrounds.
+ * Video player for onboarding steps using self-hosted videos from AWS.
+ * Falls back to gradient placeholder if video URL not yet configured.
  * 
  * @module components/onboarding/VideoPlaceholder
  */
 
-import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { VideoPlayer } from '@/components/base/video-player/video-player';
 import { PlayIcon } from '@/components/icons/PlayIcon';
-import { logger } from '@/utils/logger';
 
 interface VideoPlaceholderProps {
   stepId: string;
 }
 
 /**
- * Step-specific gradient configurations
+ * Step-specific video configurations (AWS S3/CloudFront URLs)
+ * Replace these placeholder URLs with actual video URLs when available
+ */
+const STEP_VIDEOS: Record<string, { src: string; thumbnail: string }> = {
+  // Placeholder structure - update with actual AWS URLs when videos are uploaded
+  // personality: { 
+  //   src: 'https://your-cdn.cloudfront.net/onboarding/personality.mp4',
+  //   thumbnail: 'https://your-cdn.cloudfront.net/onboarding/personality-thumb.webp'
+  // },
+};
+
+/**
+ * Step-specific gradient configurations (fallback when no video)
  */
 const STEP_GRADIENTS: Record<string, string> = {
   personality: 'from-violet-600 via-purple-500 to-fuchsia-500',
@@ -30,11 +41,15 @@ const STEP_GRADIENTS: Record<string, string> = {
   'help-articles': 'from-teal-600 via-emerald-500 to-green-500',
   announcements: 'from-amber-600 via-orange-500 to-red-500',
   news: 'from-indigo-600 via-purple-500 to-pink-500',
+  'whats-next': 'from-violet-600 via-purple-500 to-fuchsia-500',
 };
 
 const DEFAULT_GRADIENT = STEP_GRADIENTS.personality;
 
-export function VideoPlaceholder({ stepId }: VideoPlaceholderProps) {
+/**
+ * Gradient placeholder for steps without videos yet
+ */
+function GradientPlaceholder({ stepId }: { stepId: string }) {
   const prefersReducedMotion = useReducedMotion();
   const gradient = STEP_GRADIENTS[stepId] || DEFAULT_GRADIENT;
 
@@ -48,16 +63,12 @@ export function VideoPlaceholder({ stepId }: VideoPlaceholderProps) {
         transition={{ duration: 0.3 }}
         className={`relative w-full h-full min-h-[280px] rounded-xl overflow-hidden bg-gradient-to-br ${gradient} shadow-lg`}
       >
-
         {/* Play button */}
         <div className="absolute inset-0 flex items-center justify-center">
           <button
             className="group flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:bg-white/30 transition-colors"
-            onClick={() => {
-              // TODO: Open video modal
-              logger.debug('Play video for step:', stepId);
-            }}
-            aria-label="Play tutorial video"
+            aria-label="Video coming soon"
+            disabled
           >
             <PlayIcon size={32} className="text-white group-hover:text-white/90 transition-colors" />
           </button>
@@ -65,4 +76,24 @@ export function VideoPlaceholder({ stepId }: VideoPlaceholderProps) {
       </motion.div>
     </AnimatePresence>
   );
-};
+}
+
+export function VideoPlaceholder({ stepId }: VideoPlaceholderProps) {
+  const video = STEP_VIDEOS[stepId];
+  
+  // If no video configured yet, show gradient placeholder
+  if (!video) {
+    return <GradientPlaceholder stepId={stepId} />;
+  }
+  
+  // Show native video player
+  return (
+    <VideoPlayer
+      size="lg"
+      src={video.src}
+      thumbnailUrl={video.thumbnail}
+      title={`${stepId} tutorial`}
+      className="aspect-video w-full h-full min-h-[280px] overflow-hidden rounded-xl"
+    />
+  );
+}

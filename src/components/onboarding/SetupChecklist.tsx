@@ -159,34 +159,14 @@ export function SetupChecklist({
               </motion.div>
             </motion.div>
 
-            {/* Right column: Video placeholder (same style as steps page) */}
+          {/* Right column: Video player */}
             <motion.div 
               initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 24, delay: 0.2 }}
               className="hidden sm:flex w-72 md:w-96 lg:w-[28rem] flex-shrink-0"
             >
-              <div className="relative w-full h-full min-h-[280px] rounded-xl overflow-hidden bg-gradient-to-br from-violet-600 via-purple-500 to-fuchsia-500 shadow-lg group">
-                {/* Play button */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.button
-                    whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
-                    whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                    className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:bg-white/30 transition-colors"
-                    onClick={() => {
-                      // TODO: Open video modal
-                      logger.debug('Play next level video');
-                    }}
-                    aria-label="Play tutorial video"
-                  >
-                    <PlayIcon size={32} className="text-white group-hover:text-white/90 transition-colors" />
-                  </motion.button>
-                </div>
-                {/* Duration badge */}
-                <div className="absolute bottom-3 right-3 px-2 py-1 rounded bg-white/20 backdrop-blur-sm text-xs text-white font-medium">
-                  3:24
-                </div>
-              </div>
+              <VideoPlaceholder stepId="whats-next" />
             </motion.div>
           </div>
         </motion.div>
