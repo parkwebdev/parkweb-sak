@@ -22,7 +22,6 @@ import {
 } from '@/lib/db-selects';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { ROUTE_CONFIG, SETTINGS_TABS, ARI_SECTIONS } from '@/config/routes';
-import { HC_CATEGORIES, type HCCategory, type HCArticle } from '@/config/help-center-config';
 import { ANALYTICS_SECTION_CONFIG } from '@/lib/analytics-constants';
 import type { 
   SearchDataMap, 
@@ -295,19 +294,38 @@ export const useSearchData = () => {
         });
       });
 
-      // ============ 4. DOCS (Help Center) ============
-      HC_CATEGORIES.forEach((category: HCCategory) => {
-        category.articles.forEach((article: HCArticle) => {
-          results.push({
-            id: `hc-${category.id}-${article.id}`,
-            title: article.title,
-            description: `${category.label} • Documentation`,
-            category: 'Docs',
-            iconName: 'BookOpen01',
-            action: () => navigate(`/help-center?category=${category.id}&article=${article.slug}`),
+      // ============ 4. DOCS (Help Center from Database) ============
+      // Fetch published platform HC articles for search
+      try {
+        const { data: platformCategories } = await supabase
+          .from('platform_hc_categories')
+          .select('id, label')
+          .order('order_index');
+        
+        const { data: platformArticles } = await supabase
+          .from('platform_hc_articles')
+          .select('id, slug, title, category_id')
+          .eq('is_published', true)
+          .order('order_index');
+        
+        if (platformCategories && platformArticles) {
+          const categoryMap = new Map(platformCategories.map(c => [c.id, c.label]));
+          
+          platformArticles.forEach((article) => {
+            const categoryLabel = categoryMap.get(article.category_id) || 'Documentation';
+            results.push({
+              id: `hc-${article.category_id}-${article.id}`,
+              title: article.title,
+              description: `${categoryLabel} • Documentation`,
+              category: 'Docs',
+              iconName: 'BookOpen01',
+              action: () => navigate(`/help-center?category=${article.category_id}&article=${article.slug}`),
+            });
           });
-        });
-      });
+        }
+      } catch (err) {
+        logger.warn('Failed to fetch platform HC articles for search', err);
+      }
 
       // ============ 5. INBOX FILTERS ============
       const INBOX_FILTERS = [
