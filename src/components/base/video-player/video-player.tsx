@@ -9,7 +9,7 @@
  * @module components/base/video-player/video-player
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, type SyntheticEvent } from 'react';
 import { PlayTriangleIcon } from '@/components/icons/PlayTriangleIcon';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +35,7 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handlePlay = useCallback(() => {
@@ -61,6 +62,13 @@ export function VideoPlayer({
   const handleVideoEnded = useCallback(() => {
     setIsPlaying(false);
   }, []);
+
+  const handleVideoError = useCallback((e: SyntheticEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    const error = video.error;
+    console.error('Video load error:', error?.code, error?.message, src);
+    setVideoError(error?.message || 'Failed to load video');
+  }, [src]);
 
   const sizeClasses = {
     sm: 'max-w-80',
@@ -139,20 +147,28 @@ export function VideoPlayer({
         className
       )}
     >
-      <video
-        ref={videoRef}
-        src={src}
-        className="w-full h-full object-contain cursor-pointer"
-        controls
-        controlsList="nodownload"
-        playsInline
-        onClick={handleVideoClick}
-        onEnded={handleVideoEnded}
-        title={title}
-      >
-        <track kind="captions" />
-        Your browser does not support the video tag.
-      </video>
+      {videoError ? (
+        <div className="w-full h-full flex items-center justify-center text-destructive-foreground bg-destructive/10 p-4">
+          <span className="text-sm">{videoError}</span>
+        </div>
+      ) : (
+        <video
+          ref={videoRef}
+          src={src}
+          crossOrigin="anonymous"
+          className="w-full h-full object-contain cursor-pointer"
+          controls
+          controlsList="nodownload"
+          playsInline
+          onClick={handleVideoClick}
+          onEnded={handleVideoEnded}
+          onError={handleVideoError}
+          title={title}
+        >
+          <track kind="captions" />
+          Your browser does not support the video tag.
+        </video>
+      )}
     </div>
   );
 }
