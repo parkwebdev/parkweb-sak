@@ -8,15 +8,9 @@
 
 import { useState } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
-import { VideoEmbed } from '@/components/chat/VideoEmbed';
+import { HelpCenterVideoPlayer } from '@/components/help-center/HelpCenterVideoPlayer';
 import { IconButton } from '@/components/ui/icon-button';
 import { Edit03, Trash01 } from '@untitledui/icons';
-import { 
-  detectVideoType, 
-  getEmbedUrl, 
-  extractYouTubeId, 
-  getYouTubeThumbnail,
-} from '@/lib/video-utils';
 import { cn } from '@/lib/utils';
 import { VideoInputDialog } from './VideoInputDialog';
 
@@ -26,21 +20,15 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
 
   const handleEditSubmit = (newUrl: string) => {
     if (!newUrl) {
-      // User clicked "Remove Video"
       deleteNode();
       return;
     }
     
-    const newType = detectVideoType(newUrl);
-    const newEmbedUrl = getEmbedUrl(newUrl, newType);
-    const newThumbnail = newType === 'youtube' 
-      ? getYouTubeThumbnail(extractYouTubeId(newUrl) || '') 
-      : '';
-    
+    // Store direct URL for self-hosted videos
     updateAttributes({
-      src: newEmbedUrl,
-      videoType: newType,
-      thumbnail: newThumbnail,
+      src: newUrl,
+      videoType: 'self-hosted',
+      thumbnail: '',
     });
   };
 
@@ -56,10 +44,9 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
           selected && 'ring-2 ring-ring ring-offset-2'
         )}
       >
-        {/* Video embed */}
-        <VideoEmbed
-          embedUrl={src}
-          videoType={videoType}
+        {/* Video player */}
+        <HelpCenterVideoPlayer
+          src={src}
           title={title}
           thumbnail={thumbnail}
         />

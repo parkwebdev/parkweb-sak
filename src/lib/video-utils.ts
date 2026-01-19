@@ -125,3 +125,22 @@ export function isValidVideoUrl(url: string): boolean {
   
   return false;
 }
+
+/**
+ * Check if a URL is a valid self-hosted video URL (direct video files only)
+ */
+export function isValidSelfHostedVideoUrl(url: string): boolean {
+  if (!url) return false;
+  
+  try {
+    const parsed = new URL(url);
+    const isHttps = parsed.protocol === 'https:';
+    const hasVideoExtension = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(parsed.pathname);
+    const isCdnUrl = /cloudfront\.net|s3\.amazonaws\.com|s3-[\w-]+\.amazonaws\.com/i.test(parsed.hostname);
+    
+    // Accept HTTPS URLs that either have video extension or are from known CDNs
+    return isHttps && (hasVideoExtension || isCdnUrl);
+  } catch {
+    return false;
+  }
+}
