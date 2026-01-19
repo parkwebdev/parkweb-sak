@@ -4,7 +4,6 @@
  * Provides feature card blocks with icons, titles, and descriptions,
  * and a grid container for grouping cards.
  * 
- * @see docs/HC_DATABASE_MIGRATION_PLAN.md
  * @module components/admin/knowledge/FeatureCardNode
  */
 

@@ -150,31 +150,6 @@ export interface PilotTeamMember {
   audit_action_count: number;
 }
 
-// Article types for admin
-export interface AdminArticle {
-  id: string;
-  title: string;
-  content: string;
-  category_id: string;
-  category_name: string;
-  agent_id: string;
-  agent_name: string | null;
-  icon: string | null;
-  featured_image: string | null;
-  order_index: number | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface AdminCategory {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  order_index: number | null;
-  article_count: number;
-}
-
 // Email types
 export interface EmailTemplate {
   id: string;

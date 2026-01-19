@@ -10,8 +10,6 @@ export { usePlatformConfig } from './usePlatformConfig';
 export { useAdminPlans } from './useAdminPlans';
 export { useAdminSubscriptions } from './useAdminSubscriptions';
 export { useAdminTeam } from './useAdminTeam';
-export { useAdminArticles } from './useAdminArticles';
-export { useAdminCategories } from './useAdminCategories';
 export { useEmailDeliveryLogs } from './useEmailDeliveryLogs';
 export { useRevenueAnalytics } from './useRevenueAnalytics';
 export { useAdminAuditLog } from './useAdminAuditLog';
