@@ -48,9 +48,9 @@ export function VideoBlockHydrator({ containerRef, contentKey }: VideoBlockHydra
       ) as HTMLElement[];
       
       const videos = elements.map((el) => {
-        const src = el.getAttribute('data-src') || '';
-        const title = el.getAttribute('data-title') || '';
-        const thumbnail = el.getAttribute('data-thumbnail') || '';
+        const src = (el.getAttribute('data-src') || '').trim();
+        const title = (el.getAttribute('data-title') || '').trim();
+        const thumbnail = (el.getAttribute('data-thumbnail') || '').trim();
         
         // Clear any existing content before portal renders
         el.innerHTML = '';
