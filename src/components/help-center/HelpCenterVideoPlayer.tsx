@@ -21,11 +21,10 @@ interface HelpCenterVideoPlayerProps {
 export function HelpCenterVideoPlayer({ src, thumbnail, title }: HelpCenterVideoPlayerProps) {
   return (
     <VideoPlayer
-      size="lg"
       src={src?.trim() || ''}
       thumbnailUrl={thumbnail?.trim()}
       title={title?.trim()}
-      className="aspect-video w-full overflow-hidden rounded-lg"
+      className="inline-block max-w-full overflow-hidden rounded-lg"
     />
   );
 }

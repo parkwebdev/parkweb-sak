@@ -37,10 +37,10 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
   };
 
   return (
-    <NodeViewWrapper className="video-node-wrapper">
+    <NodeViewWrapper className="video-node-wrapper inline-block">
       <div 
         className={cn(
-          'relative group rounded-lg overflow-hidden',
+          'relative group rounded-lg overflow-hidden inline-block',
           selected && 'ring-2 ring-ring ring-offset-2'
         )}
       >

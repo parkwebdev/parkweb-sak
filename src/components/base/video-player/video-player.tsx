@@ -18,8 +18,6 @@ interface VideoPlayerProps {
   src: string;
   /** Thumbnail image URL */
   thumbnailUrl?: string;
-  /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
   /** Additional className */
   className?: string;
   /** Video title for accessibility */
@@ -29,7 +27,6 @@ interface VideoPlayerProps {
 export function VideoPlayer({
   src,
   thumbnailUrl,
-  size = 'md',
   className,
   title = 'Video player',
 }: VideoPlayerProps) {
@@ -82,31 +79,12 @@ export function VideoPlayer({
     setVideoError(error?.message || 'Failed to load video');
   }, [src]);
 
-  const sizeClasses = {
-    sm: 'max-w-80',
-    md: 'max-w-[35rem]',
-    lg: 'max-w-[45rem]',
-  };
-
-  const playButtonSizes = {
-    sm: 'w-10 h-10',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16',
-  };
-
-  const playIconSizes = {
-    sm: 16,
-    md: 20,
-    lg: 28,
-  };
-
   // Show error if URL is invalid
   if (!isValidUrl && sanitizedSrc) {
     return (
       <div 
         className={cn(
-          'relative rounded-lg overflow-hidden bg-destructive/10 flex items-center justify-center',
-          sizeClasses[size],
+          'relative rounded-lg overflow-hidden bg-destructive/10 flex items-center justify-center aspect-video max-w-[35rem]',
           className
         )}
       >
@@ -120,8 +98,8 @@ export function VideoPlayer({
     return (
       <div 
         className={cn(
-          'relative cursor-pointer group rounded-lg overflow-hidden bg-muted',
-          sizeClasses[size],
+          'relative cursor-pointer group rounded-lg overflow-hidden inline-block',
+          !thumbnailUrl && 'bg-muted aspect-video max-w-[35rem]',
           className
         )}
         onClick={handlePlay}
@@ -139,24 +117,19 @@ export function VideoPlayer({
           <img 
             src={thumbnailUrl} 
             alt={`${title} thumbnail`}
-            className="w-full h-full object-cover"
+            className="block max-w-full h-auto object-cover"
           />
         ) : (
-          <div className="w-full h-full aspect-video bg-muted flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center">
             <span className="text-xs text-muted-foreground">Video</span>
           </div>
         )}
         
         {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div 
-            className={cn(
-              'flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm shadow-md group-hover:bg-white/40 transition-colors',
-              playButtonSizes[size]
-            )}
-          >
+          <div className="flex items-center justify-center rounded-full bg-white/30 backdrop-blur-sm shadow-md group-hover:bg-white/40 transition-colors w-14 h-14">
             <PlayTriangleIcon 
-              size={playIconSizes[size]} 
+              size={24} 
               className="text-white/90" 
             />
           </div>
@@ -169,21 +142,21 @@ export function VideoPlayer({
   return (
     <div 
       className={cn(
-        'relative rounded-lg overflow-hidden bg-black',
-        sizeClasses[size],
+        'relative rounded-lg overflow-hidden inline-block',
         className
       )}
     >
       {videoError ? (
-        <div className="w-full h-full flex items-center justify-center text-destructive-foreground bg-destructive/10 p-4">
+        <div className="aspect-video max-w-[35rem] flex items-center justify-center text-destructive-foreground bg-destructive/10 p-4">
           <span className="text-sm">{videoError}</span>
         </div>
       ) : (
         <video
           ref={videoRef}
           src={sanitizedSrc}
+          poster={thumbnailUrl || undefined}
           autoPlay
-          className="w-full h-full object-contain cursor-pointer"
+          className="block max-w-full h-auto cursor-pointer"
           controls
           controlsList="nodownload"
           playsInline

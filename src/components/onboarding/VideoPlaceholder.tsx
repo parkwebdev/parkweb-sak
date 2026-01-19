@@ -89,11 +89,10 @@ export function VideoPlaceholder({ stepId }: VideoPlaceholderProps) {
   // Show native video player
   return (
     <VideoPlayer
-      size="lg"
       src={video.src}
       thumbnailUrl={video.thumbnail}
       title={`${stepId} tutorial`}
-      className="aspect-video w-full h-full min-h-[280px] overflow-hidden rounded-xl"
+      className="aspect-video w-full min-h-[280px] overflow-hidden rounded-xl"
     />
   );
 }
