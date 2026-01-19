@@ -19,7 +19,7 @@ interface UsePlatformHCArticlesResult {
   articles: PlatformHCArticle[];
   loading: boolean;
   error: Error | null;
-  createArticle: (article: PlatformHCArticleInput) => Promise<void>;
+  createArticle: (article: PlatformHCArticleInput) => Promise<string>;
   updateArticle: (id: string, updates: Partial<PlatformHCArticleInput>) => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
 }
@@ -55,16 +55,19 @@ export function usePlatformHCArticles(): UsePlatformHCArticlesResult {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (article: PlatformHCArticleInput) => {
-      const { error } = await supabase
+    mutationFn: async (article: PlatformHCArticleInput): Promise<string> => {
+      const { data, error } = await supabase
         .from('platform_hc_articles')
         .insert({
           ...article,
           created_by: user?.id,
           updated_by: user?.id,
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+      return data.id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.platformHC.all() });
@@ -116,8 +119,8 @@ export function usePlatformHCArticles(): UsePlatformHCArticlesResult {
 
   // Stable function references to prevent re-render cascades
   const createArticle = useCallback(
-    async (article: PlatformHCArticleInput) => {
-      await createMutation.mutateAsync(article);
+    async (article: PlatformHCArticleInput): Promise<string> => {
+      return await createMutation.mutateAsync(article);
     },
     [createMutation]
   );
