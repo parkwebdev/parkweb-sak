@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { isValidVideoUrl } from '@/lib/video-utils';
+import { isValidSelfHostedVideoUrl } from '@/lib/video-utils';
 import { AlertCircle } from '@untitledui/icons';
 
 interface VideoInputDialogProps {
@@ -52,8 +52,8 @@ export function VideoInputDialog({
       return;
     }
 
-    if (!isValidVideoUrl(url)) {
-      setError('Please enter a valid video URL (YouTube, Vimeo, Loom, Wistia, or direct video file)');
+    if (!isValidSelfHostedVideoUrl(url)) {
+      setError('Please enter a valid video URL (.mp4, .webm, .ogg, or .mov from your CDN)');
       return;
     }
 
@@ -77,7 +77,7 @@ export function VideoInputDialog({
         <DialogHeader>
           <DialogTitle>{initialUrl ? 'Edit Video' : 'Insert Video'}</DialogTitle>
           <DialogDescription>
-            Supports YouTube, Vimeo, Loom, Wistia, or direct video file URLs.
+            Enter the URL of a self-hosted video file (e.g., AWS S3/CloudFront .mp4).
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -89,7 +89,7 @@ export function VideoInputDialog({
                 type="url"
                 value={url}
                 onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder="https://www.youtube.com/watch?v=..."
+                placeholder="https://cdn.example.com/videos/tutorial.mp4"
                 autoFocus
                 error={!!error}
               />
