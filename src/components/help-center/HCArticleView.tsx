@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { useTrackArticleView } from '@/hooks/useHCArticleViews';
 import { HCArticleFeedback } from './HCArticleFeedback';
 import { HCDatabaseArticleRenderer } from './HCDatabaseArticleRenderer';
+import { VideoBlockHydrator } from './VideoBlockHydrator';
 import { getCategoryColor, getGradientClass } from '@/lib/hc-category-colors';
 import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
 
@@ -211,6 +212,7 @@ export function HCArticleView({
         className="prose prose-sm dark:prose-invert max-w-none py-8"
       >
         <HCDatabaseArticleRenderer content={article.content} />
+        <VideoBlockHydrator containerRef={contentRef} contentKey={article.slug} />
       </div>
       
       {/* Article Feedback */}

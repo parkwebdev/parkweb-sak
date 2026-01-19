@@ -8,7 +8,7 @@
  * @module widget/views/HelpView
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WidgetButton, WidgetInput, WidgetSkeletonArticleContent, CSSAnimatedList, CSSAnimatedItem } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +56,7 @@ const ALLOWED_TAGS = [
   // Headings
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
   // Links and media
-  'a', 'img',
+  'a', 'img', 'iframe',
   // Lists
   'ul', 'ol', 'li',
   // Code
@@ -69,6 +69,9 @@ const ALLOWED_ATTR = [
   // Standard attributes
   'href', 'target', 'rel', 'class', 'id',
   'src', 'alt', 'width', 'height', 'style',
+  // Video attributes
+  'data-video', 'data-src', 'data-video-type', 'data-title', 'data-thumbnail',
+  'allow', 'allowfullscreen', 'frameborder',
   // Callout attributes
   'data-callout', 'data-callout-type',
   // Step-by-step attributes
@@ -82,6 +85,102 @@ const ALLOWED_ATTR = [
   // Article link attributes
   'data-article-link', 'data-category-id', 'data-article-slug',
 ];
+
+// Video utility functions for widget (lightweight, no external dependencies)
+function extractYouTubeId(url: string): string | null {
+  const watchMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/);
+  if (watchMatch) return watchMatch[1];
+  const shortMatch = url.match(/youtu\.be\/([^?]+)/);
+  if (shortMatch) return shortMatch[1];
+  const embedMatch = url.match(/youtube\.com\/embed\/([^?]+)/);
+  if (embedMatch) return embedMatch[1];
+  return null;
+}
+
+function extractVimeoId(url: string): string | null {
+  const match = url.match(/vimeo\.com\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+function extractLoomId(url: string): string | null {
+  const match = url.match(/loom\.com\/share\/([^?]+)/);
+  return match ? match[1] : null;
+}
+
+function getEmbedUrl(url: string, type: string): string {
+  switch (type) {
+    case 'youtube': {
+      const id = extractYouTubeId(url);
+      return id ? `https://www.youtube.com/embed/${id}?autoplay=1` : url;
+    }
+    case 'vimeo': {
+      const id = extractVimeoId(url);
+      return id ? `https://player.vimeo.com/video/${id}?autoplay=1` : url;
+    }
+    case 'loom': {
+      const id = extractLoomId(url);
+      return id ? `https://www.loom.com/embed/${id}` : url;
+    }
+    default:
+      return url;
+  }
+}
+
+function getVideoThumbnail(url: string, type: string, customThumbnail?: string): string | null {
+  if (customThumbnail) return customThumbnail;
+  if (type === 'youtube') {
+    const id = extractYouTubeId(url);
+    if (id) return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+  }
+  return null;
+}
+
+/** Hydrate video blocks in article content with click-to-play functionality */
+function hydrateVideoBlocks(container: HTMLElement) {
+  const videoElements = container.querySelectorAll('[data-video]');
+  
+  videoElements.forEach((el) => {
+    const element = el as HTMLElement;
+    const src = element.getAttribute('data-src') || '';
+    const videoType = element.getAttribute('data-video-type') || 'self-hosted';
+    const title = element.getAttribute('data-title') || 'Video';
+    const thumbnail = element.getAttribute('data-thumbnail') || '';
+    
+    // Skip if already hydrated
+    if (element.dataset.hydrated === 'true') return;
+    element.dataset.hydrated = 'true';
+    
+    const thumbnailUrl = getVideoThumbnail(src, videoType, thumbnail);
+    const embedUrl = getEmbedUrl(src, videoType);
+    
+    // Create thumbnail with play button
+    element.innerHTML = `
+      <div class="widget-video-container" style="position: relative; width: 100%; aspect-ratio: 16/9; background: var(--muted); border-radius: 8px; overflow: hidden; cursor: pointer;">
+        ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover;" />` : ''}
+        <div class="widget-video-play" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3);">
+          <div style="width: 64px; height: 64px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Add click handler to replace with iframe
+    element.addEventListener('click', () => {
+      element.innerHTML = `
+        <iframe
+          src="${embedUrl}"
+          title="${title}"
+          style="width: 100%; aspect-ratio: 16/9; border: none; border-radius: 8px;"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      `;
+    }, { once: true });
+  });
+}
 
 export const HelpView = ({
   config,
@@ -97,6 +196,7 @@ export const HelpView = ({
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [sanitizedContent, setSanitizedContent] = useState<string>('');
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const articleContentRef = useRef<HTMLDivElement>(null);
   const systemTheme = useSystemTheme();
 
   // Theme-aware colors: white in dark mode, black in light mode (inverted high-contrast)
@@ -120,6 +220,20 @@ export const HelpView = ({
       setIsLoadingContent(false);
     });
   }, [selectedArticle]);
+
+  // Hydrate video blocks after content is rendered
+  useEffect(() => {
+    if (!sanitizedContent || isLoadingContent) return;
+    
+    // Small delay to ensure DOM is updated
+    const timer = setTimeout(() => {
+      if (articleContentRef.current) {
+        hydrateVideoBlocks(articleContentRef.current);
+      }
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [sanitizedContent, isLoadingContent]);
 
   const filteredArticles = helpArticles.filter(article => {
     const matchesSearch = !helpSearchQuery || article.title.toLowerCase().includes(helpSearchQuery.toLowerCase()) || article.content.toLowerCase().includes(helpSearchQuery.toLowerCase());
@@ -343,6 +457,7 @@ export const HelpView = ({
                     <WidgetSkeletonArticleContent lines={3} />
                   ) : (
                     <div 
+                      ref={articleContentRef}
                       className="article-content max-w-none" 
                       dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
                     />
@@ -370,6 +485,7 @@ export const HelpView = ({
                   <WidgetSkeletonArticleContent lines={3} />
                 ) : (
                   <div 
+                    ref={articleContentRef}
                     className="article-content max-w-none" 
                     dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
                   />
