@@ -105,7 +105,7 @@ export function HCArticleView({
 
     container.addEventListener('click', handleClick);
     return () => container.removeEventListener('click', handleClick);
-  }, [setSearchParams]);
+  }, [setSearchParams, article.slug]);
   
   // Extract headings from content for ToC
   useEffect(() => {
