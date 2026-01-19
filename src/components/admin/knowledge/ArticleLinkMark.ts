@@ -93,16 +93,16 @@ export const ArticleLinkMark = Mark.create<ArticleLinkMarkOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
+    // Note: Content hole (0) must be the only child in ProseMirror marks
+    // Arrow icon is added via CSS ::after pseudo-element instead
     return [
       'a',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
         'data-article-link': '',
-        class: 'article-link inline-flex items-center gap-1 text-primary hover:text-primary/80 font-medium transition-colors cursor-pointer',
+        class: 'article-link text-primary hover:text-primary/80 font-medium transition-colors cursor-pointer',
         target: '_self',
       }),
       0,
-      // Arrow icon after content
-      ['span', { class: 'article-link-arrow text-xs ml-0.5', 'aria-hidden': 'true' }, '→'],
     ];
   },
 
