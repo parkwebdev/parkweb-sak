@@ -205,10 +205,6 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           codeBlock: () => editor.chain().focus().toggleCodeBlock().run(),
           quote: () => editor.chain().focus().toggleBlockquote().run(),
           divider: () => editor.chain().focus().setHorizontalRule().run(),
-          'divider-dots': () => editor.chain().focus().setHorizontalRule().run(),
-          'divider-dashes': () => editor.chain().focus().setHorizontalRule().run(),
-          'divider-light': () => editor.chain().focus().setHorizontalRule().run(),
-          'divider-heavy': () => editor.chain().focus().setHorizontalRule().run(),
           pageBreak: () => {
             // Insert a page break as a styled horizontal rule with extra spacing
             editor.chain().focus().setHorizontalRule().run();
@@ -231,12 +227,9 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           featureCard: () => editor.chain().focus().setFeatureCard().run(),
           relatedArticles: () => editor.chain().focus().setRelatedArticles({ articles: [] }).run(),
           articleLink: () => {
-            // For inline article links, prompt for category and slug
-            const categoryId = window.prompt('Enter category ID:');
-            const articleSlug = window.prompt('Enter article slug:');
-            if (categoryId && articleSlug) {
-              editor.chain().focus().setArticleLink({ categoryId, articleSlug }).run();
-            }
+            // Article links should be created from the floating toolbar with text selected
+            // This shows an info message when trying to insert from the panel
+            window.alert('To create an article link, select text first then use the Article Link button in the floating toolbar.');
           },
         };
 
