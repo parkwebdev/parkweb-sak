@@ -268,10 +268,28 @@ export function ArticleEditorPage() {
   const currentFormDataRef = useRef(currentFormData);
   currentFormDataRef.current = currentFormData;
   
+  // Check if content is essentially empty (just empty paragraph tags)
+  const isContentEmpty = useCallback((htmlContent: string): boolean => {
+    // Strip HTML tags and whitespace to check for actual content
+    const textContent = htmlContent.replace(/<[^>]*>/g, '').trim();
+    // Also check if it's just empty paragraph(s)
+    const justEmptyParagraphs = /^(<p>\s*<\/p>\s*)*$/.test(htmlContent.trim());
+    return textContent.length === 0 || justEmptyParagraphs;
+  }, []);
+  
   // Save draft (auto-save or manual) - stable callback using refs
   const saveDraft = useCallback(async () => {
     const formData = currentFormDataRef.current;
     if (!formData.title || !formData.category_id) return;
+    
+    // Guard: Don't save if content is empty but article previously had content
+    if (isContentEmpty(formData.content)) {
+      // If this is an existing article, don't save empty content
+      if (!isNewArticle && existingArticle && !isContentEmpty(existingArticle.content)) {
+        console.warn('Prevented saving empty content over existing article content');
+        return;
+      }
+    }
     
     setIsSaving(true);
     try {
@@ -288,7 +306,7 @@ export function ArticleEditorPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [isNewArticle, articleId, createArticle, updateArticle]);
+  }, [isNewArticle, articleId, createArticle, updateArticle, isContentEmpty, existingArticle]);
   
   // Publish article - stable callback using refs
   const handlePublish = useCallback(async () => {

@@ -167,11 +167,10 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
         const headings = extractHeadingsFromEditor(editor);
         onChange(html, headings);
       },
-      onCreate: ({ editor }) => {
+      onCreate: () => {
+        // Only set ready state - do NOT call onChange here
+        // This prevents empty content from being saved during hydration
         setIsReady(true);
-        // Initial headings extraction
-        const headings = extractHeadingsFromEditor(editor);
-        onChange(editor.getHTML(), headings);
       },
     });
 
