@@ -16,7 +16,7 @@
       img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://flagcdn.com https://i.ytimg.com https://img.youtube.com https://i.vimeocdn.com https://*.basemaps.cartocdn.com;
       connect-src 'self' data: https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co https://basemaps.cartocdn.com https://*.basemaps.cartocdn.com https://cdn.jsdelivr.net https://lovable.dev https://fonts.gstatic.com https://fonts.googleapis.com;
       worker-src 'self' blob:;
-      media-src 'self';
+      media-src 'self' https://*.s3.amazonaws.com https://*.s3.*.amazonaws.com https://*.cloudfront.net;
       frame-src 'self' blob: https://www.youtube.com https://youtube.com https://player.vimeo.com https://www.loom.com https://fast.wistia.net https://lovable.dev https://challenges.cloudflare.com;
       manifest-src 'self' https://lovable.dev;
       object-src 'self' blob:;
