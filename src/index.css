@@ -978,7 +978,7 @@ html::view-transition {
 /* ---------------- Video Embeds ---------------- */
 .hc-article-content [data-video],
 .hc-database-content [data-video] {
-  @apply w-full max-w-3xl mx-auto aspect-video rounded-lg overflow-hidden bg-muted my-4;
+  @apply w-full max-w-3xl aspect-video rounded-lg overflow-hidden bg-muted my-4;
 }
 
 .article-content [data-video] {
