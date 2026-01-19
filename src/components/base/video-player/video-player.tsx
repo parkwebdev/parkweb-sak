@@ -82,16 +82,16 @@ export function VideoPlayer({
     setVideoError(error?.message || 'Failed to load video');
   }, [src]);
 
-  // Standard container classes - 16:9 aspect ratio, reasonable max-width
-  const containerClasses = cn(
-    'relative w-full max-w-3xl aspect-video rounded-lg overflow-hidden',
+  // Base container classes - video uses 16:9, thumbnail hugs content
+  const baseContainerClasses = cn(
+    'relative w-full max-w-3xl rounded-lg overflow-hidden',
     className
   );
 
   // Show error state
   if (videoError || (!isValidUrl && sanitizedSrc)) {
     return (
-      <div className={cn(containerClasses, 'bg-destructive/10 flex items-center justify-center')}>
+      <div className={cn(baseContainerClasses, 'aspect-video bg-destructive/10 flex items-center justify-center')}>
         <span className="text-sm text-destructive-foreground">
           {videoError || 'Invalid video URL'}
         </span>
@@ -103,7 +103,12 @@ export function VideoPlayer({
   if (!hasStarted) {
     return (
       <div 
-        className={cn(containerClasses, 'bg-muted cursor-pointer group')}
+        className={cn(
+          baseContainerClasses, 
+          // Hug thumbnail height if provided, otherwise use 16:9
+          thumbnailUrl ? 'bg-black' : 'aspect-video bg-muted',
+          'cursor-pointer group'
+        )}
         onClick={handlePlay}
         role="button"
         tabIndex={0}
@@ -115,14 +120,14 @@ export function VideoPlayer({
         }}
         aria-label={`Play ${title}`}
       >
-        {/* Thumbnail fills container if provided */}
-        {thumbnailUrl && (
+        {/* Thumbnail determines container height when provided */}
+        {thumbnailUrl ? (
           <img 
             src={thumbnailUrl} 
             alt={`${title} thumbnail`}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="w-full h-auto block"
           />
-        )}
+        ) : null}
         
         {/* Play button overlay - always centered */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -137,9 +142,9 @@ export function VideoPlayer({
     );
   }
 
-  // Show native video player after play is clicked
+  // Show native video player after play is clicked - always 16:9 for video
   return (
-    <div className={cn(containerClasses, 'bg-black')}>
+    <div className={cn(baseContainerClasses, 'aspect-video bg-black')}>
       <video
         ref={videoRef}
         src={sanitizedSrc}
