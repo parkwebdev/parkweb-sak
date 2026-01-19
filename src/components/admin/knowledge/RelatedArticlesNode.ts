@@ -114,6 +114,52 @@ export const RelatedArticlesNode = Node.create<RelatedArticlesOptions>({
     return ['div', containerAttrs];
   },
 
+  addNodeView() {
+    return ({ node }) => {
+      const dom = document.createElement('div');
+      dom.setAttribute('data-related-articles', '');
+      dom.className = 'related-articles mt-8 pt-6 border-t border-border';
+
+      // Add "Related Articles" heading
+      const heading = document.createElement('span');
+      heading.className = 'text-sm font-medium text-muted-foreground block mb-3';
+      heading.textContent = 'Related Articles';
+      dom.appendChild(heading);
+
+      // Add container for article links
+      const linksContainer = document.createElement('div');
+      linksContainer.className = 'flex flex-wrap gap-2';
+
+      const articles = (node.attrs.articles || []) as RelatedArticle[];
+
+      if (articles.length === 0) {
+        // Show placeholder for empty state
+        const placeholder = document.createElement('span');
+        placeholder.className = 'text-sm text-muted-foreground italic';
+        placeholder.textContent = 'Click to add related articles...';
+        linksContainer.appendChild(placeholder);
+      } else {
+        // Render each article as a styled pill
+        articles.forEach((article) => {
+          const pill = document.createElement('span');
+          pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-sm text-foreground';
+          pill.textContent = article.title;
+          
+          const arrow = document.createElement('span');
+          arrow.className = 'text-muted-foreground ml-1';
+          arrow.textContent = '→';
+          pill.appendChild(arrow);
+          
+          linksContainer.appendChild(pill);
+        });
+      }
+
+      dom.appendChild(linksContainer);
+
+      return { dom };
+    };
+  },
+
   addCommands() {
     return {
       setRelatedArticles:

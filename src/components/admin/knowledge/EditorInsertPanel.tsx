@@ -23,15 +23,14 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  File06,
-  LayoutAlt02,
   Paperclip,
   FileX01,
-  // New icons for HC components
+  // Icons for HC components
   CheckSquare,
   Grid01,
   Link01,
   BookOpen01,
+  LayoutAlt02,
 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -76,8 +75,6 @@ const MEDIA_BLOCKS: BlockType[] = [
  * Structural blocks
  */
 const STRUCTURE_BLOCKS: BlockType[] = [
-  { id: 'page', label: 'Page', icon: File06, description: 'Nested page/section', disabled: true, future: true },
-  { id: 'card', label: 'Card', icon: LayoutAlt02, description: 'Card container block', disabled: true, future: true },
   { id: 'pageBreak', label: 'Page Break', icon: FileX01, description: 'Visual page break separator' },
 ];
 
