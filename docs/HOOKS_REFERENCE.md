@@ -3419,26 +3419,40 @@ const {
 
 ---
 
-### useAdminArticles
+### usePlatformHCArticles
 
-Manages help articles for the knowledge base.
+Manages platform Help Center articles (super admin only).
 
 ```tsx
-import { useAdminArticles } from '@/hooks/admin';
+import { usePlatformHCArticles } from '@/hooks/admin';
 
-const { articles, loading, createArticle, updateArticle, deleteArticle } = useAdminArticles();
+const { 
+  articles, 
+  loading, 
+  error,
+  createArticle, 
+  updateArticle, 
+  deleteArticle 
+} = usePlatformHCArticles();
 ```
 
 ---
 
-### useAdminCategories
+### usePlatformHCCategories
 
-Manages help categories.
+Manages platform Help Center categories (super admin only).
 
 ```tsx
-import { useAdminCategories } from '@/hooks/admin';
+import { usePlatformHCCategories } from '@/hooks/admin';
 
-const { categories, loading, createCategory, updateCategory, deleteCategory } = useAdminCategories();
+const { 
+  categories, 
+  loading, 
+  error,
+  createCategory, 
+  updateCategory, 
+  deleteCategory 
+} = usePlatformHCCategories();
 ```
 
 ---

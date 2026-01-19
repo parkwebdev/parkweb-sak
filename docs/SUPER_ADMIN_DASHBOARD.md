@@ -398,11 +398,21 @@ src/
 │       │
 │       ├── knowledge/
 │       │   ├── index.ts
-│       │   ├── ArticlesTable.tsx        # Help articles list
-│       │   ├── ArticleEditor.tsx        # WYSIWYG article editor
-│       │   ├── CategoryManager.tsx      # Category CRUD
-│       │   ├── CategoryEditorDialog.tsx # Category edit dialog
-│       │   └── ArticlePreview.tsx       # Preview rendering
+│       │   ├── ArticleEditor.tsx           # WYSIWYG TipTap article editor
+│       │   ├── ArticleEditorSheet.tsx      # Sheet wrapper for editor
+│       │   ├── ArticleLinkMark.ts          # TipTap inline article links
+│       │   ├── CalloutNode.ts              # TipTap callout blocks
+│       │   ├── CategoryFilterDropdown.tsx  # Category filter dropdown
+│       │   ├── CreateCategoryDialog.tsx    # Category creation dialog
+│       │   ├── EditorFloatingToolbar.tsx   # Floating format toolbar
+│       │   ├── EditorInsertPanel.tsx       # Insert blocks panel
+│       │   ├── EditorMetadataPanel.tsx     # Metadata sidebar panel
+│       │   ├── FeatureCardNode.ts          # TipTap feature cards
+│       │   ├── HeadingWithId.ts            # TipTap heading with IDs
+│       │   ├── PlatformArticlesTable.tsx   # Articles data table
+│       │   ├── RelatedArticlesNode.ts      # TipTap related articles
+│       │   ├── StepByStepNode.ts           # TipTap step-by-step blocks
+│       │   └── TableGridSelector.tsx       # Table insertion grid
 │       │
 │       ├── emails/
 │       │   ├── index.ts
@@ -439,8 +449,8 @@ src/
 │       ├── useAdminPlans.ts             # Plans management
 │       ├── useAdminSubscriptions.ts     # All subscriptions
 │       ├── useAdminTeam.ts              # Pilot team management
-│       ├── useAdminArticles.ts          # Help articles CRUD
-│       ├── useAdminCategories.ts        # Help categories CRUD
+│       ├── usePlatformHCArticles.ts     # Platform HC articles CRUD
+│       ├── usePlatformHCCategories.ts   # Platform HC categories CRUD
 │       ├── useEmailDeliveryLogs.ts      # Email delivery tracking
 │       ├── useRevenueAnalytics.ts       # Stripe revenue metrics
 │       ├── useAdminAuditLog.ts          # Audit log queries
