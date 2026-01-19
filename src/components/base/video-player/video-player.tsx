@@ -69,15 +69,15 @@ export function VideoPlayer({
   };
 
   const playButtonSizes = {
-    sm: 'w-12 h-12',
-    md: 'w-16 h-16',
-    lg: 'w-20 h-20',
+    sm: 'w-10 h-10',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
   };
 
   const playIconSizes = {
-    sm: 20,
-    md: 28,
-    lg: 32,
+    sm: 16,
+    md: 20,
+    lg: 28,
   };
 
   // Show thumbnail with play button before video starts
