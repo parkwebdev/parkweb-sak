@@ -40,7 +40,7 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
     <NodeViewWrapper className="video-node-wrapper my-4">
       <div 
         className={cn(
-          'relative group w-fit',
+          'relative group',
           selected && 'ring-2 ring-ring ring-offset-2 rounded-lg'
         )}
       >
