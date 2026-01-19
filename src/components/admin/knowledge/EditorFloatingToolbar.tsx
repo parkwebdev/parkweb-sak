@@ -19,7 +19,6 @@ import {
   Link01,
   Link03,
   FaceSmile,
-  AtSign,
   Palette,
 } from '@untitledui/icons';
 import { Separator } from '@/components/ui/separator';
@@ -36,6 +35,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useCallback, useState } from 'react';
 import { ArticleLinkPicker } from './ArticleLinkPicker';
+import { LinkInputDialog } from './LinkInputDialog';
+import { toast } from '@/lib/toast';
 
 // Common text colors for the color picker
 const TEXT_COLORS = [
@@ -94,15 +95,16 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isArticleLinkPickerOpen, setIsArticleLinkPickerOpen] = useState(false);
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [currentLinkUrl, setCurrentLinkUrl] = useState('');
 
-  const handleLink = useCallback(() => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('Enter URL:', previousUrl || 'https://');
-    
-    if (url === null) {
-      return;
-    }
-    
+  const handleLinkClick = useCallback(() => {
+    const previousUrl = editor.getAttributes('link').href || '';
+    setCurrentLinkUrl(previousUrl);
+    setIsLinkDialogOpen(true);
+  }, [editor]);
+
+  const handleLinkSubmit = useCallback((url: string) => {
     if (url === '') {
       editor.chain().focus().unsetLink().run();
     } else {
@@ -112,10 +114,8 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
 
   const handleColorSelect = useCallback((color: string | null) => {
     if (color === null) {
-      // Remove color (reset to default)
       editor.chain().focus().unsetMark('textStyle').run();
     } else {
-      // Apply color using inline style
       editor.chain().focus().setMark('textStyle', { style: `color: ${color}` }).run();
     }
     setIsColorPickerOpen(false);
@@ -126,28 +126,19 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
     setIsEmojiPickerOpen(false);
   }, [editor]);
 
-
   const handleMention = useCallback(() => {
-    // Placeholder - insert @ mention
-    const mention = window.prompt('Enter mention:', '@');
-    if (mention) {
-      editor.chain().focus().insertContent(mention).run();
-    }
-  }, [editor]);
+    toast.info('Coming soon', { description: 'Mentions will be available in a future update.' });
+  }, []);
 
   const handleArticleLink = useCallback(() => {
-    // Check if articleLink mark is active - if so, remove it
     if (editor.isActive('articleLink')) {
       editor.chain().focus().unsetMark('articleLink').run();
       return;
     }
-    
-    // Open the article picker dialog
     setIsArticleLinkPickerOpen(true);
   }, [editor]);
 
   const handleArticleLinkSelect = useCallback((categoryId: string, articleSlug: string) => {
-    // Apply the article link mark to the selection
     editor
       .chain()
       .focus()
@@ -157,6 +148,7 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
   }, [editor]);
 
   return (
+    <>
     <BubbleMenu
       editor={editor}
       options={{
@@ -207,7 +199,7 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
       <ToolbarButton
         icon={Link01}
         isActive={editor.isActive('link')}
-        onClick={handleLink}
+        onClick={handleLinkClick}
         label="Insert Link (Cmd+K)"
       />
       <Tooltip>
@@ -311,22 +303,6 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
       
       
       <Separator orientation="vertical" className="h-5 mx-1" />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={handleMention}
-            aria-label="Mention (coming soon)"
-            className={cn(
-              'h-7 w-7 flex items-center justify-center rounded',
-              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-            )}
-          >
-            <AtSign size={14} aria-hidden="true" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">Mention (Soon)</TooltipContent>
-      </Tooltip>
       
       {/* Emoji Picker */}
       <Popover open={isEmojiPickerOpen} onOpenChange={setIsEmojiPickerOpen}>
@@ -356,13 +332,20 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
           </div>
         </PopoverContent>
       </Popover>
-
-      {/* Article Link Picker Dialog */}
-      <ArticleLinkPicker
-        open={isArticleLinkPickerOpen}
-        onOpenChange={setIsArticleLinkPickerOpen}
-        onSelect={handleArticleLinkSelect}
-      />
     </BubbleMenu>
+
+    {/* Dialogs rendered outside BubbleMenu to stay open */}
+    <ArticleLinkPicker
+      open={isArticleLinkPickerOpen}
+      onOpenChange={setIsArticleLinkPickerOpen}
+      onSelect={handleArticleLinkSelect}
+    />
+    <LinkInputDialog
+      open={isLinkDialogOpen}
+      onOpenChange={setIsLinkDialogOpen}
+      onSubmit={handleLinkSubmit}
+      initialUrl={currentLinkUrl}
+    />
+    </>
   );
 }
