@@ -130,11 +130,11 @@ function HeadingItem({ node, activeId, collapsedIds, onToggle, onScrollTo, depth
           )}
           aria-current={isActive ? 'true' : undefined}
         >
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5">
             {isActive && (
               <span className="w-0.5 h-3.5 bg-foreground rounded-full flex-shrink-0" aria-hidden="true" />
             )}
-            <span className={cn(!isActive && 'pl-2.5', 'truncate')}>
+            <span className="truncate">
               {node.text || 'Untitled'}
             </span>
           </span>

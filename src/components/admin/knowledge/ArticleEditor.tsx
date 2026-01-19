@@ -66,22 +66,24 @@ function slugify(text: string): string {
 /**
  * Extracts headings from the ProseMirror document (not DOM).
  * This is more reliable than DOM extraction because it doesn't depend on render timing.
+ * 
+ * IMPORTANT: The ID format must match HeadingWithId NodeView exactly:
+ * `heading-${pos}-${slug}` for proper ToC click-to-scroll functionality.
  */
 function extractHeadingsFromDocument(editor: Editor): Heading[] {
   const headings: Heading[] = [];
-  let headingIndex = 0;
   
   editor.state.doc.descendants((node, pos) => {
     if (node.type.name === 'heading') {
       const level = node.attrs.level as number;
       const text = node.textContent?.trim() || '';
-      // Get ID from node attrs (set by HeadingWithId extension) or generate fallback
-      const id = node.attrs.id || slugify(text) || `heading-${headingIndex}`;
       
       if (text) {
+        // Match the ID format used by HeadingWithId NodeView: heading-${pos}-${slug}
+        const baseSlug = slugify(text);
+        const id = baseSlug ? `heading-${pos}-${baseSlug}`.slice(0, 50) : `heading-${pos}`;
         headings.push({ id, text, level });
       }
-      headingIndex++;
     }
     return true; // Continue traversing
   });
