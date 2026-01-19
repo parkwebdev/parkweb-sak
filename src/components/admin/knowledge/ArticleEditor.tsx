@@ -16,7 +16,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
-import { useCallback, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, forwardRef, useState, useRef } from 'react';
 import { EditorFloatingToolbar } from './EditorFloatingToolbar';
 import { HeadingWithId } from './HeadingWithId';
 import { CalloutNode } from './CalloutNode';
@@ -73,6 +73,8 @@ function extractHeadingsFromEditor(editor: Editor): Heading[] {
 export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
   ({ content, onChange, placeholder = 'Start writing your article...', className }, ref) => {
     const [isReady, setIsReady] = useState(false);
+    // Track the last content value to distinguish external prop changes from internal editor updates
+    const lastContentRef = useRef(content);
 
     const editor = useEditor({
       extensions: [
@@ -164,27 +166,46 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
       },
       onUpdate: ({ editor }) => {
         const html = editor.getHTML();
+        // Update ref to track that this change came from internal editing
+        lastContentRef.current = html;
         const headings = extractHeadingsFromEditor(editor);
         onChange(html, headings);
       },
-      onCreate: () => {
-        // Only set ready state - do NOT call onChange here
-        // This prevents empty content from being saved during hydration
+      onCreate: ({ editor }) => {
         setIsReady(true);
+        // Extract headings on initial mount for ToC
+        queueMicrotask(() => {
+          if (editor && !editor.isDestroyed) {
+            const headings = extractHeadingsFromEditor(editor);
+            onChange(editor.getHTML(), headings);
+            lastContentRef.current = editor.getHTML();
+          }
+        });
       },
     });
 
-    // Update editor content when prop changes (for edit mode)
+    // Update editor content when prop changes externally (e.g., loading from DB)
     useEffect(() => {
-      if (editor && content !== editor.getHTML()) {
-        // Use emitUpdate: false to prevent triggering onUpdate during hydration
+      if (!editor || editor.isDestroyed) return;
+      
+      // Only sync if content prop changed externally (not from our own onUpdate)
+      if (content === lastContentRef.current) return;
+      
+      // Update ref to track the new external content
+      lastContentRef.current = content;
+      
+      // Only update editor if content actually differs
+      if (content !== editor.getHTML()) {
         editor.commands.setContent(content, { emitUpdate: false });
         
-        // Manually extract headings and notify parent after DOM updates
-        // Parent's isHydratingRef is still true, so hasUnsavedChanges won't be set
-        requestAnimationFrame(() => {
-          const headings = extractHeadingsFromEditor(editor);
-          onChange(editor.getHTML(), headings);
+        // Extract headings and notify parent
+        // Parent's isHydratingRef handles preventing hasUnsavedChanges
+        queueMicrotask(() => {
+          if (editor && !editor.isDestroyed) {
+            const headings = extractHeadingsFromEditor(editor);
+            onChange(editor.getHTML(), headings);
+            lastContentRef.current = editor.getHTML();
+          }
         });
       }
     }, [content, editor, onChange]);
