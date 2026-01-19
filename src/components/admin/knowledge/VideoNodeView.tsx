@@ -13,13 +13,20 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Edit03, Trash01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { VideoInputDialog } from './VideoInputDialog';
+import { deleteVideoThumbnail } from '@/lib/video-thumbnail-upload';
+import { useAuth } from '@/hooks/useAuth';
 
 export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
   const { src, title, thumbnail } = node.attrs;
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { user } = useAuth();
 
-  const handleEditSubmit = (newUrl: string) => {
+  const handleEditSubmit = (newUrl: string, thumbnailUrl?: string) => {
     if (!newUrl) {
+      // If removing video, also delete the thumbnail from storage
+      if (thumbnail) {
+        deleteVideoThumbnail(thumbnail);
+      }
       deleteNode();
       return;
     }
@@ -28,11 +35,15 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
     updateAttributes({
       src: newUrl,
       videoType: 'self-hosted',
-      thumbnail: '',
+      thumbnail: thumbnailUrl ?? thumbnail ?? '',
     });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    // Delete thumbnail from storage if it exists
+    if (thumbnail) {
+      await deleteVideoThumbnail(thumbnail);
+    }
     deleteNode();
   };
 
@@ -79,7 +90,9 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         initialUrl={src}
+        initialThumbnail={thumbnail}
         onSubmit={handleEditSubmit}
+        userId={user?.id || ''}
       />
     </NodeViewWrapper>
   );
