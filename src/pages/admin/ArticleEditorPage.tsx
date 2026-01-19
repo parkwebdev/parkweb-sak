@@ -177,9 +177,6 @@ export function ArticleEditorPage() {
   // Track which article ID we've loaded (null = not loaded yet)
   const [loadedArticleId, setLoadedArticleId] = useState<string | null>(null);
   
-  // Guard to prevent autosave during hydration
-  const isHydratingRef = useRef(false);
-  
   // Draft save state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -198,9 +195,6 @@ export function ArticleEditorPage() {
   // Load existing article data
   useEffect(() => {
     if (existingArticle && loadedArticleId !== existingArticle.id) {
-      // Mark as hydrating to prevent autosave triggers
-      isHydratingRef.current = true;
-      
       setTitle(existingArticle.title);
       setContent(existingArticle.content);
       setSlug(existingArticle.slug);
@@ -210,30 +204,24 @@ export function ArticleEditorPage() {
       setIconName(existingArticle.icon_name || '');
       setIsPublished(existingArticle.is_published);
       setLoadedArticleId(existingArticle.id);
-      
-      // Clear hydrating flag after a tick to allow state to settle
-      requestAnimationFrame(() => {
-        isHydratingRef.current = false;
-      });
     } else if (isNewArticle && loadedArticleId !== 'new' && categories.length > 0) {
       // Set default category for new articles
-      isHydratingRef.current = true;
       setCategoryId(categories[0]?.id || '');
       setLoadedArticleId('new');
-      requestAnimationFrame(() => {
-        isHydratingRef.current = false;
-      });
     }
   }, [existingArticle, loadedArticleId, isNewArticle, categories]);
   
-  // Handle content and headings changes from editor
-  const handleContentChange = useCallback((html: string, extractedHeadings: Heading[]) => {
+  // Handle content changes from editor (user edits only)
+  const handleContentChange = useCallback((html: string) => {
     setContent(html);
+    // Content changes are only triggered by user edits (not hydration)
+    // so we can safely mark as unsaved
+    setHasUnsavedChanges(true);
+  }, []);
+  
+  // Handle headings changes from editor (can be called during hydration)
+  const handleHeadingsChange = useCallback((extractedHeadings: Heading[]) => {
     setHeadings(extractedHeadings);
-    // Only mark as unsaved if we're not hydrating
-    if (!isHydratingRef.current) {
-      setHasUnsavedChanges(true);
-    }
   }, []);
   
   // Auto-generate slug from title
@@ -534,6 +522,7 @@ export function ArticleEditorPage() {
                 ref={editorRef}
                 content={content}
                 onChange={handleContentChange}
+                onHeadingsChange={handleHeadingsChange}
                 placeholder="Start writing your article..."
                 className="border-0 shadow-none"
               />

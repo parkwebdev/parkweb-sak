@@ -4,6 +4,11 @@
  * Custom TipTap editor for the article editor page.
  * Exposes editor instance via ref for external control.
  * 
+ * ARCHITECTURE:
+ * - onChange: Called ONLY for user edits (not during hydration)
+ * - onHeadingsChange: Called for ToC updates (including during hydration)
+ * - Headings extracted from ProseMirror document (not DOM) for reliability
+ * 
  * @see docs/ARTICLE_EDITOR.md
  * @module components/admin/knowledge/ArticleEditor
  */
@@ -34,7 +39,10 @@ export interface Heading {
 
 interface ArticleEditorProps {
   content: string;
-  onChange: (html: string, headings: Heading[]) => void;
+  /** Called ONLY for user edits - not during hydration/external sync */
+  onChange: (html: string) => void;
+  /** Called for ToC updates - safe to call during hydration */
+  onHeadingsChange: (headings: Heading[]) => void;
   placeholder?: string;
   className?: string;
 }
@@ -46,22 +54,36 @@ export interface ArticleEditorRef {
 }
 
 /**
- * Extracts headings from the TipTap editor DOM with their IDs.
+ * Slugify text for heading IDs
  */
-function extractHeadingsFromEditor(editor: Editor): Heading[] {
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/**
+ * Extracts headings from the ProseMirror document (not DOM).
+ * This is more reliable than DOM extraction because it doesn't depend on render timing.
+ */
+function extractHeadingsFromDocument(editor: Editor): Heading[] {
   const headings: Heading[] = [];
-  const editorElement = editor.view.dom;
-  const headingElements = editorElement.querySelectorAll('h1, h2, h3');
+  let headingIndex = 0;
   
-  headingElements.forEach((el, index) => {
-    const tagName = el.tagName.toLowerCase();
-    const level = parseInt(tagName.replace('h', ''), 10);
-    const text = el.textContent?.trim() || '';
-    const id = el.getAttribute('id') || `heading-${index}`;
-    
-    if (text) {
-      headings.push({ id, text, level });
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name === 'heading') {
+      const level = node.attrs.level as number;
+      const text = node.textContent?.trim() || '';
+      // Get ID from node attrs (set by HeadingWithId extension) or generate fallback
+      const id = node.attrs.id || slugify(text) || `heading-${headingIndex}`;
+      
+      if (text) {
+        headings.push({ id, text, level });
+      }
+      headingIndex++;
     }
+    return true; // Continue traversing
   });
   
   return headings;
@@ -69,12 +91,22 @@ function extractHeadingsFromEditor(editor: Editor): Heading[] {
 
 /**
  * Article editor with exposed editor ref for external control.
+ * 
+ * Key architectural decisions:
+ * 1. onChange is ONLY called for user edits (via onUpdate)
+ * 2. onHeadingsChange is called separately for ToC updates
+ * 3. Headings are extracted from ProseMirror doc, not DOM
+ * 4. External content sync does NOT trigger onChange
  */
 export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
-  ({ content, onChange, placeholder = 'Start writing your article...', className }, ref) => {
+  ({ content, onChange, onHeadingsChange, placeholder = 'Start writing your article...', className }, ref) => {
     const [isReady, setIsReady] = useState(false);
-    // Track the last content value to distinguish external prop changes from internal editor updates
-    const lastContentRef = useRef(content);
+    
+    // Track last synced content to detect external vs internal changes
+    const lastSyncedContentRef = useRef(content);
+    
+    // Track if we're in the initial mount phase
+    const isInitialMountRef = useRef(true);
 
     const editor = useEditor({
       extensions: [
@@ -138,7 +170,7 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
         RelatedArticlesNode,
         ArticleLinkMark,
       ],
-      content,
+      content, // Initial content from prop
       editorProps: {
         attributes: {
           class: cn(
@@ -164,51 +196,58 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           ),
         },
       },
+      // CRITICAL: onUpdate is called ONLY for user edits
       onUpdate: ({ editor }) => {
         const html = editor.getHTML();
-        // Update ref to track that this change came from internal editing
-        lastContentRef.current = html;
-        const headings = extractHeadingsFromEditor(editor);
-        onChange(html, headings);
+        lastSyncedContentRef.current = html;
+        
+        // Only call onChange for user edits - this triggers hasUnsavedChanges
+        onChange(html);
+        
+        // Update headings for ToC
+        const headings = extractHeadingsFromDocument(editor);
+        onHeadingsChange(headings);
       },
       onCreate: ({ editor }) => {
         setIsReady(true);
-        // Extract headings on initial mount for ToC
+        
+        // Extract and send headings on initial mount (for ToC)
+        // This does NOT call onChange, so it won't trigger hasUnsavedChanges
         queueMicrotask(() => {
           if (editor && !editor.isDestroyed) {
-            const headings = extractHeadingsFromEditor(editor);
-            onChange(editor.getHTML(), headings);
-            lastContentRef.current = editor.getHTML();
+            const headings = extractHeadingsFromDocument(editor);
+            onHeadingsChange(headings);
+            isInitialMountRef.current = false;
           }
         });
       },
     });
 
-    // Update editor content when prop changes externally (e.g., loading from DB)
+    // Sync editor content when prop changes externally (e.g., loading from DB)
+    // This does NOT call onChange - only updates the editor and headings
     useEffect(() => {
       if (!editor || editor.isDestroyed) return;
       
-      // Only sync if content prop changed externally (not from our own onUpdate)
-      if (content === lastContentRef.current) return;
+      // Skip if content hasn't changed from what we last synced
+      if (content === lastSyncedContentRef.current) return;
       
       // Update ref to track the new external content
-      lastContentRef.current = content;
+      lastSyncedContentRef.current = content;
       
-      // Only update editor if content actually differs
+      // Only update editor if content actually differs from current editor state
       if (content !== editor.getHTML()) {
+        // emitUpdate: false prevents onUpdate from firing
         editor.commands.setContent(content, { emitUpdate: false });
         
-        // Extract headings and notify parent
-        // Parent's isHydratingRef handles preventing hasUnsavedChanges
+        // Update headings for ToC (safe during hydration)
         queueMicrotask(() => {
           if (editor && !editor.isDestroyed) {
-            const headings = extractHeadingsFromEditor(editor);
-            onChange(editor.getHTML(), headings);
-            lastContentRef.current = editor.getHTML();
+            const headings = extractHeadingsFromDocument(editor);
+            onHeadingsChange(headings);
           }
         });
       }
-    }, [content, editor, onChange]);
+    }, [content, editor, onHeadingsChange]);
 
     // Insert table at cursor
     const insertTable = useCallback(
