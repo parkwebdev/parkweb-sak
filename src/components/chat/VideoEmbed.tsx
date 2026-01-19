@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { PlayIcon } from '@/components/icons/PlayIcon';
+import { PlayTriangleIcon } from '@/components/icons/PlayTriangleIcon';
 
 // YouTube thumbnail resolutions in priority order (highest to lowest)
 const YOUTUBE_THUMBNAILS = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault', 'default'];
@@ -63,10 +63,10 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
           </div>
         )}
         
-        {/* Play button overlay - frosted glass style */}
+        {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg group-hover:bg-white/30 transition-colors">
-            <PlayIcon size={32} className="text-white group-hover:text-white/90 transition-colors" />
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/50 backdrop-blur-sm shadow-md group-hover:bg-white/60 transition-colors">
+            <PlayTriangleIcon size={28} className="text-white/80 ml-1" />
           </div>
         </div>
 
