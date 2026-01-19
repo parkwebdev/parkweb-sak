@@ -25,6 +25,7 @@ import {
   XCircle,
   Paperclip,
   FileX01,
+  PlayCircle,
   // Icons for HC components
   CheckSquare,
   Grid01,
@@ -68,6 +69,7 @@ const BASIC_BLOCKS: BlockType[] = [
  */
 const MEDIA_BLOCKS: BlockType[] = [
   { id: 'image', label: 'Image', icon: Image01, description: 'Insert image from URL' },
+  { id: 'video', label: 'Video', icon: PlayCircle, description: 'YouTube or self-hosted video' },
   { id: 'file', label: 'File Attachment', icon: Paperclip, description: 'Upload and attach file', disabled: true, future: true },
 ];
 

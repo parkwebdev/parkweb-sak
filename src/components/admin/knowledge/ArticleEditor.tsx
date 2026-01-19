@@ -29,7 +29,15 @@ import { StepByStepNode, StepNode } from './StepByStepNode';
 import { FeatureGridNode, FeatureCardNode } from './FeatureCardNode';
 import { RelatedArticlesNode } from './RelatedArticlesNode';
 import { ArticleLinkMark } from './ArticleLinkMark';
+import { VideoNode } from './VideoNode';
 import { cn } from '@/lib/utils';
+import { 
+  detectVideoType, 
+  getEmbedUrl, 
+  extractYouTubeId, 
+  getYouTubeThumbnail,
+  isValidVideoUrl 
+} from '@/lib/video-utils';
 
 export interface Heading {
   id: string;
@@ -171,6 +179,7 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
         FeatureCardNode,
         RelatedArticlesNode,
         ArticleLinkMark,
+        VideoNode,
       ],
       content, // Initial content from prop
       editorProps: {
@@ -283,6 +292,24 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
             const url = window.prompt('Enter image URL:');
             if (url) {
               editor.chain().focus().setImage({ src: url }).run();
+            }
+          },
+          video: () => {
+            const url = window.prompt('Enter video URL (YouTube, Vimeo, Loom, Wistia, or direct video file):');
+            if (url && isValidVideoUrl(url)) {
+              const videoType = detectVideoType(url);
+              const embedUrl = getEmbedUrl(url, videoType);
+              const thumbnail = videoType === 'youtube' 
+                ? getYouTubeThumbnail(extractYouTubeId(url) || '') 
+                : '';
+              
+              editor.chain().focus().setVideo({
+                src: embedUrl,
+                videoType,
+                thumbnail,
+              }).run();
+            } else if (url) {
+              window.alert('Please enter a valid video URL (YouTube, Vimeo, Loom, Wistia, or direct video file)');
             }
           },
           // Callouts

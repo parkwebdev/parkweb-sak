@@ -61,6 +61,8 @@ const ALLOWED_ATTR = [
   'data-related-articles', 'data-articles',
   // Article link attributes
   'data-article-link', 'data-category-id', 'data-article-slug',
+  // Video embed attributes
+  'data-video', 'data-src', 'data-video-type', 'data-title', 'data-thumbnail',
   // Table attributes
   'colspan', 'rowspan',
 ];

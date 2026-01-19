@@ -975,6 +975,28 @@ html::view-transition {
   @apply text-xs;
 }
 
+/* ---------------- Video Embeds ---------------- */
+.hc-article-content [data-video],
+.hc-database-content [data-video],
+.article-content [data-video] {
+  @apply aspect-video rounded-lg overflow-hidden bg-muted my-4;
+}
+
+/* Self-hosted video element styling */
+.hc-article-content [data-video] video,
+.hc-database-content [data-video] video,
+.article-content [data-video] video {
+  @apply w-full h-full object-cover;
+}
+
+/* Video placeholder when no thumbnail */
+.hc-article-content [data-video]:empty::before,
+.hc-database-content [data-video]:empty::before,
+.article-content [data-video]:empty::before {
+  content: "Video";
+  @apply flex items-center justify-center h-full text-muted-foreground text-sm;
+}
+
 
 /* MapLibre popup overrides for consistent styling */
 .maplibregl-popup-content {
