@@ -52,6 +52,9 @@ export function VideoBlockHydrator({ containerRef, contentKey }: VideoBlockHydra
         const title = el.getAttribute('data-title') || '';
         const thumbnail = el.getAttribute('data-thumbnail') || '';
         
+        // Clear any existing content before portal renders
+        el.innerHTML = '';
+        
         return {
           element: el,
           src,
