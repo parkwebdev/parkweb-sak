@@ -55,16 +55,16 @@ export function HCPopularArticles({ categoryId, onSelectArticle }: HCPopularArti
       </h3>
       
       <nav className="space-y-1" aria-label="Popular articles">
-        {popularArticles.map(({ article }, index: number) => (
+        {popularArticles.map((popularArticle, index: number) => (
           <button
-            key={article.id || article.slug}
+            key={popularArticle.id || popularArticle.slug}
             onClick={() => onSelectArticle({ 
-              id: article.id, 
-              slug: article.slug, 
-              title: article.title, 
-              description: article.description || null,
+              id: popularArticle.id, 
+              slug: popularArticle.slug, 
+              title: popularArticle.title, 
+              description: null,
               content: '',
-              category_id: '',
+              category_id: categoryId,
               icon_name: null,
               order_index: null,
               is_published: true 
@@ -80,7 +80,7 @@ export function HCPopularArticles({ categoryId, onSelectArticle }: HCPopularArti
             <span className="text-2xs text-muted-foreground/50 font-medium mt-0.5 w-3">
               {index + 1}.
             </span>
-            <span className="flex-1 line-clamp-2">{article.title}</span>
+            <span className="flex-1 line-clamp-2">{popularArticle.title}</span>
           </button>
         ))}
       </nav>

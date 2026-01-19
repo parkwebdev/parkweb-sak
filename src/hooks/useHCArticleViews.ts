@@ -11,7 +11,6 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/query-keys';
-import { getHCArticleBySlug, type HCArticle } from '@/config/help-center-config';
 
 /** Get or create a session ID for view tracking */
 function getSessionId(): string {
@@ -39,7 +38,9 @@ function markViewedInSession(categoryId: string, articleSlug: string): void {
 }
 
 interface PopularArticle {
-  article: HCArticle;
+  id: string;
+  slug: string;
+  title: string;
   viewCount: number;
   uniqueViews: number;
 }
@@ -91,7 +92,7 @@ export function useRecordArticleView() {
 }
 
 /**
- * Hook to fetch popular articles for a category
+ * Hook to fetch popular articles for a category (from database)
  */
 export function usePopularArticles(categoryId: string | undefined, limit = 5) {
   return useQuery({
@@ -99,7 +100,8 @@ export function usePopularArticles(categoryId: string | undefined, limit = 5) {
     queryFn: async (): Promise<PopularArticle[]> => {
       if (!categoryId) return [];
       
-      const { data, error } = await supabase
+      // First get popularity data
+      const { data: popularityData, error: popError } = await supabase
         .from('kb_article_popularity')
         .select(`
           article_slug,
@@ -110,23 +112,40 @@ export function usePopularArticles(categoryId: string | undefined, limit = 5) {
         .eq('category_id', categoryId)
         .limit(limit);
       
-      if (error) throw error;
+      if (popError) throw popError;
+      if (!popularityData?.length) return [];
       
-      // Map to articles with view counts
-      const articles: PopularArticle[] = [];
+      // Then fetch the actual articles from the database
+      const slugs = popularityData.map(p => p.article_slug).filter((s): s is string => s !== null);
+      if (!slugs.length) return [];
       
-      for (const row of data ?? []) {
-        const article = getHCArticleBySlug(categoryId, row.article_slug as string);
+      const { data: articles, error: articlesError } = await supabase
+        .from('platform_hc_articles')
+        .select('id, slug, title')
+        .eq('category_id', categoryId)
+        .eq('is_published', true)
+        .in('slug', slugs);
+      
+      if (articlesError) throw articlesError;
+      
+      // Map articles with their view counts
+      const articleMap = new Map(articles?.map(a => [a.slug, a]) ?? []);
+      const result: PopularArticle[] = [];
+      
+      for (const row of popularityData) {
+        const article = articleMap.get(row.article_slug as string);
         if (article) {
-          articles.push({
-            article,
+          result.push({
+            id: article.id,
+            slug: article.slug,
+            title: article.title,
             viewCount: (row.view_count as number) ?? 0,
             uniqueViews: (row.unique_views as number) ?? 0,
           });
         }
       }
       
-      return articles;
+      return result;
     },
     enabled: !!categoryId,
     staleTime: 60 * 1000, // 1 minute
