@@ -259,13 +259,12 @@ export function PlatformArticlesTable({
               {previewArticle?.category_label} • {previewArticle?.is_published ? 'Published' : 'Draft'}
             </SheetDescription>
           </SheetHeader>
-          <div className="mt-6 article-content prose prose-sm dark:prose-invert max-w-none">
-            <div
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(previewArticle?.content || ''),
-              }}
-            />
-          </div>
+          <div 
+            className="mt-6 hc-article-content hc-database-content max-w-none"
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(previewArticle?.content || ''),
+            }}
+          />
         </SheetContent>
       </Sheet>
 

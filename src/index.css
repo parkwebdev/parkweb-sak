@@ -726,23 +726,27 @@ html::view-transition {
 
 /* ---------------- Callouts ---------------- */
 .hc-article-content [data-callout],
-.hc-database-content [data-callout] {
+.hc-database-content [data-callout],
+.article-content [data-callout] {
   @apply rounded-lg border p-4 my-4;
 }
 
 .hc-article-content [data-callout]::before,
-.hc-database-content [data-callout]::before {
+.hc-database-content [data-callout]::before,
+.article-content [data-callout]::before {
   @apply text-sm font-medium block mb-1;
 }
 
 /* Info callout (default) */
 .hc-article-content [data-callout-type="info"],
-.hc-database-content [data-callout-type="info"] {
+.hc-database-content [data-callout-type="info"],
+.article-content [data-callout-type="info"] {
   @apply bg-info/10 border-info/30;
 }
 
 .hc-article-content [data-callout-type="info"]::before,
-.hc-database-content [data-callout-type="info"]::before {
+.hc-database-content [data-callout-type="info"]::before,
+.article-content [data-callout-type="info"]::before {
   content: "ℹ️ Info";
   @apply text-info;
 }
@@ -751,81 +755,96 @@ html::view-transition {
 .hc-article-content [data-callout-type="tip"],
 .hc-article-content [data-callout-type="success"],
 .hc-database-content [data-callout-type="tip"],
-.hc-database-content [data-callout-type="success"] {
+.hc-database-content [data-callout-type="success"],
+.article-content [data-callout-type="tip"],
+.article-content [data-callout-type="success"] {
   @apply bg-success/10 border-success/30;
 }
 
 .hc-article-content [data-callout-type="tip"]::before,
 .hc-article-content [data-callout-type="success"]::before,
 .hc-database-content [data-callout-type="tip"]::before,
-.hc-database-content [data-callout-type="success"]::before {
+.hc-database-content [data-callout-type="success"]::before,
+.article-content [data-callout-type="tip"]::before,
+.article-content [data-callout-type="success"]::before {
   content: "💡 Tip";
   @apply text-success;
 }
 
 /* Warning callout */
 .hc-article-content [data-callout-type="warning"],
-.hc-database-content [data-callout-type="warning"] {
+.hc-database-content [data-callout-type="warning"],
+.article-content [data-callout-type="warning"] {
   @apply bg-warning/10 border-warning/30;
 }
 
 .hc-article-content [data-callout-type="warning"]::before,
-.hc-database-content [data-callout-type="warning"]::before {
+.hc-database-content [data-callout-type="warning"]::before,
+.article-content [data-callout-type="warning"]::before {
   content: "⚠️ Warning";
   @apply text-warning;
 }
 
 /* Error callout */
 .hc-article-content [data-callout-type="error"],
-.hc-database-content [data-callout-type="error"] {
+.hc-database-content [data-callout-type="error"],
+.article-content [data-callout-type="error"] {
   @apply bg-destructive/10 border-destructive/30;
 }
 
 .hc-article-content [data-callout-type="error"]::before,
-.hc-database-content [data-callout-type="error"]::before {
+.hc-database-content [data-callout-type="error"]::before,
+.article-content [data-callout-type="error"]::before {
   content: "❌ Error";
   @apply text-destructive;
 }
 
 /* Note callout */
 .hc-article-content [data-callout-type="note"],
-.hc-database-content [data-callout-type="note"] {
+.hc-database-content [data-callout-type="note"],
+.article-content [data-callout-type="note"] {
   @apply bg-muted border-border;
 }
 
 .hc-article-content [data-callout-type="note"]::before,
-.hc-database-content [data-callout-type="note"]::before {
+.hc-database-content [data-callout-type="note"]::before,
+.article-content [data-callout-type="note"]::before {
   content: "📝 Note";
   @apply text-foreground;
 }
 
 /* Callout content styling */
 .hc-article-content [data-callout] > *:not(:first-child),
-.hc-database-content [data-callout] > *:not(:first-child) {
+.hc-database-content [data-callout] > *:not(:first-child),
+.article-content [data-callout] > *:not(:first-child) {
   @apply text-sm text-foreground/80;
 }
 
 /* ---------------- Step-by-Step ---------------- */
 .hc-article-content [data-stepbystep],
-.hc-database-content [data-stepbystep] {
+.hc-database-content [data-stepbystep],
+.article-content [data-stepbystep] {
   @apply my-6 space-y-6;
 }
 
 .hc-article-content [data-step],
-.hc-database-content [data-step] {
+.hc-database-content [data-step],
+.article-content [data-step] {
   @apply relative pl-12;
 }
 
 /* Step number circle */
 .hc-article-content [data-step]::before,
-.hc-database-content [data-step]::before {
+.hc-database-content [data-step]::before,
+.article-content [data-step]::before {
   content: attr(data-step-number);
   @apply absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold;
 }
 
 /* Step connector line */
 .hc-article-content [data-step]:not(:last-child)::after,
-.hc-database-content [data-step]:not(:last-child)::after {
+.hc-database-content [data-step]:not(:last-child)::after,
+.article-content [data-step]:not(:last-child)::after {
   content: "";
   @apply absolute w-0.5 bg-border;
   left: 15px;
@@ -833,98 +852,108 @@ html::view-transition {
   height: calc(100% + 0.5rem);
 }
 
-/* Step title from data attribute */
-.hc-article-content [data-step][data-step-title]::before,
-.hc-database-content [data-step][data-step-title]::before {
-  content: attr(data-step-number);
-}
-
 /* Step content area */
 .hc-article-content [data-step] > *,
-.hc-database-content [data-step] > * {
+.hc-database-content [data-step] > *,
+.article-content [data-step] > * {
   @apply pt-0.5;
 }
 
 /* Step title styling */
 .hc-article-content [data-step] > h4:first-child,
-.hc-database-content [data-step] > h4:first-child {
+.hc-database-content [data-step] > h4:first-child,
+.article-content [data-step] > h4:first-child {
   @apply text-sm font-medium text-foreground mb-1 mt-0;
 }
 
 /* Step description */
 .hc-article-content [data-step] > p,
-.hc-database-content [data-step] > p {
+.hc-database-content [data-step] > p,
+.article-content [data-step] > p {
   @apply text-sm text-muted-foreground mb-3;
 }
 
 /* Step screenshot */
 .hc-article-content [data-step] img,
-.hc-database-content [data-step] img {
+.hc-database-content [data-step] img,
+.article-content [data-step] img {
   @apply overflow-hidden rounded-lg border border-border bg-muted/30 shadow-sm w-full h-auto;
 }
 
 /* ---------------- Feature Grid/Cards ---------------- */
 .hc-article-content [data-feature-grid],
-.hc-database-content [data-feature-grid] {
+.hc-database-content [data-feature-grid],
+.article-content [data-feature-grid] {
   @apply my-6 grid gap-4 grid-cols-1 md:grid-cols-2;
 }
 
 .hc-article-content [data-feature-grid][data-columns="3"],
-.hc-database-content [data-feature-grid][data-columns="3"] {
+.hc-database-content [data-feature-grid][data-columns="3"],
+.article-content [data-feature-grid][data-columns="3"] {
   @apply md:grid-cols-2 lg:grid-cols-3;
 }
 
 .hc-article-content [data-feature-card],
-.hc-database-content [data-feature-card] {
+.hc-database-content [data-feature-card],
+.article-content [data-feature-card] {
   @apply rounded-lg border border-border bg-card p-4 shadow-sm;
 }
 
 .hc-article-content [data-feature-card] > h4:first-child,
-.hc-database-content [data-feature-card] > h4:first-child {
+.hc-database-content [data-feature-card] > h4:first-child,
+.article-content [data-feature-card] > h4:first-child {
   @apply text-sm font-medium text-foreground mb-1 mt-0;
 }
 
 .hc-article-content [data-feature-card] > p,
-.hc-database-content [data-feature-card] > p {
+.hc-database-content [data-feature-card] > p,
+.article-content [data-feature-card] > p {
   @apply text-sm text-muted-foreground mb-0;
 }
 
 /* ---------------- Related Articles ---------------- */
 .hc-article-content [data-related-articles],
-.hc-database-content [data-related-articles] {
+.hc-database-content [data-related-articles],
+.article-content [data-related-articles] {
   @apply mt-8 pt-6 border-t border-border;
 }
 
 .hc-article-content [data-related-articles]::before,
-.hc-database-content [data-related-articles]::before {
+.hc-database-content [data-related-articles]::before,
+.article-content [data-related-articles]::before {
   content: "Related Articles";
   @apply text-sm font-medium text-muted-foreground block mb-3;
 }
 
 .hc-article-content [data-related-articles] a,
-.hc-database-content [data-related-articles] a {
+.hc-database-content [data-related-articles] a,
+.article-content [data-related-articles] a {
   @apply inline-flex items-center gap-1.5 px-3 py-1.5 mr-2 mb-2 rounded-md bg-muted text-sm text-foreground hover:bg-muted/80 transition-colors no-underline;
 }
 
 .hc-article-content [data-related-articles] a::after,
-.hc-database-content [data-related-articles] a::after {
+.hc-database-content [data-related-articles] a::after,
+.article-content [data-related-articles] a::after {
   content: "→";
   @apply text-xs;
 }
 
 /* ---------------- Article Links (inline) ---------------- */
 .hc-article-content a[data-article-link],
-.hc-database-content a[data-article-link] {
+.hc-database-content a[data-article-link],
+.article-content a[data-article-link] {
   @apply inline-flex items-center gap-1 text-primary font-medium transition-colors no-underline;
 }
 
 .hc-article-content a[data-article-link]:hover,
-.hc-database-content a[data-article-link]:hover {
+.hc-database-content a[data-article-link]:hover,
+.article-content a[data-article-link]:hover {
   @apply text-primary/80;
 }
 
 .hc-article-content a[data-article-link]::after,
-.hc-database-content a[data-article-link]::after {
+.hc-database-content a[data-article-link]::after,
+.article-content a[data-article-link]::after {
   content: "→";
   @apply text-xs;
 }
