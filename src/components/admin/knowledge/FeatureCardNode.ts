@@ -197,7 +197,6 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
     const description = node.attrs.description || '';
     const iconName = node.attrs.iconName || '';
 
-    // Store all data in attributes, CSS will handle visual rendering
     const cardAttrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
       'data-feature-card': '',
       'data-feature-title': title,
@@ -207,6 +206,63 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
     });
 
     return ['div', cardAttrs, 0];
+  },
+
+  addNodeView() {
+    return ({ node, editor, getPos }) => {
+      const dom = document.createElement('div');
+      dom.setAttribute('data-feature-card', '');
+      dom.className = 'feature-card rounded-lg border border-border bg-card p-4 shadow-sm';
+
+      // Icon placeholder (optional)
+      if (node.attrs.iconName) {
+        const iconContainer = document.createElement('div');
+        iconContainer.className = 'mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary';
+        iconContainer.innerHTML = `<span class="text-sm font-medium">${node.attrs.iconName.slice(0, 2).toUpperCase()}</span>`;
+        dom.appendChild(iconContainer);
+      } else {
+        // Empty icon placeholder for adding
+        const iconPlaceholder = document.createElement('div');
+        iconPlaceholder.className = 'mb-3 flex h-10 w-10 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 text-muted-foreground/50';
+        iconPlaceholder.innerHTML = `<span class="text-xs">Icon</span>`;
+        dom.appendChild(iconPlaceholder);
+      }
+
+      // Title input
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.value = node.attrs.title || '';
+      titleInput.placeholder = 'Feature title...';
+      titleInput.className = 'block w-full bg-transparent text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none border-b border-transparent hover:border-border focus:border-primary pb-1 mb-2';
+      titleInput.addEventListener('input', (e) => {
+        const pos = getPos();
+        if (typeof pos === 'number') {
+          editor.chain().focus().updateAttributes('featureCard', { title: (e.target as HTMLInputElement).value }).run();
+        }
+      });
+      dom.appendChild(titleInput);
+
+      // Description textarea
+      const descInput = document.createElement('textarea');
+      descInput.value = node.attrs.description || '';
+      descInput.placeholder = 'Feature description...';
+      descInput.rows = 2;
+      descInput.className = 'block w-full bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground/60 focus:outline-none resize-none border border-transparent rounded hover:border-border focus:border-primary p-1';
+      descInput.addEventListener('input', (e) => {
+        const pos = getPos();
+        if (typeof pos === 'number') {
+          editor.chain().focus().updateAttributes('featureCard', { description: (e.target as HTMLTextAreaElement).value }).run();
+        }
+      });
+      dom.appendChild(descInput);
+
+      // Content hole for additional blocks
+      const contentDOM = document.createElement('div');
+      contentDOM.className = 'feature-card-content mt-2';
+      dom.appendChild(contentDOM);
+
+      return { dom, contentDOM };
+    };
   },
 
   addCommands() {

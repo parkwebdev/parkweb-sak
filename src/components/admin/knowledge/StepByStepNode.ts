@@ -162,33 +162,41 @@ export const StepNode = Node.create({
         default: '',
         parseHTML: (element) => {
           const titleEl = element.querySelector('[data-step-title]');
-          return titleEl?.textContent || '';
+          return titleEl?.textContent || element.getAttribute('data-step-title') || '';
         },
-        renderHTML: () => ({}), // Title is rendered as child element
+        renderHTML: (attributes) => ({
+          'data-step-title': attributes.title,
+        }),
       },
       description: {
         default: '',
         parseHTML: (element) => {
           const descEl = element.querySelector('[data-step-description]');
-          return descEl?.textContent || '';
+          return descEl?.textContent || element.getAttribute('data-step-description') || '';
         },
-        renderHTML: () => ({}), // Description is rendered as child element
+        renderHTML: (attributes) => ({
+          'data-step-description': attributes.description,
+        }),
       },
       screenshot: {
         default: '',
         parseHTML: (element) => {
           const imgEl = element.querySelector('[data-step-screenshot]');
-          return imgEl?.getAttribute('src') || '';
+          return imgEl?.getAttribute('src') || element.getAttribute('data-step-screenshot') || '';
         },
-        renderHTML: () => ({}), // Screenshot is rendered as child element
+        renderHTML: (attributes) => ({
+          'data-step-screenshot': attributes.screenshot,
+        }),
       },
       screenshotAlt: {
         default: '',
         parseHTML: (element) => {
           const imgEl = element.querySelector('[data-step-screenshot]');
-          return imgEl?.getAttribute('alt') || '';
+          return imgEl?.getAttribute('alt') || element.getAttribute('data-step-screenshot-alt') || '';
         },
-        renderHTML: () => ({}),
+        renderHTML: (attributes) => ({
+          'data-step-screenshot-alt': attributes.screenshotAlt,
+        }),
       },
     };
   },
@@ -208,8 +216,6 @@ export const StepNode = Node.create({
     const screenshot = node.attrs.screenshot || '';
     const screenshotAlt = node.attrs.screenshotAlt || title;
 
-    // Build content for the step - keeping it simpler to avoid type issues
-    // The step structure will be rendered with data attributes for styling
     const stepAttrs = mergeAttributes(HTMLAttributes, {
       'data-step': '',
       'data-step-number': stepNumber,
@@ -220,7 +226,79 @@ export const StepNode = Node.create({
       class: 'step relative pl-12',
     });
 
-    // Use a simpler structure that TipTap can handle
     return ['div', stepAttrs, 0];
+  },
+
+  addNodeView() {
+    return ({ node, editor, getPos }) => {
+      const dom = document.createElement('div');
+      dom.setAttribute('data-step', '');
+      dom.setAttribute('data-step-number', String(node.attrs.stepNumber || 1));
+      dom.className = 'step relative pl-12 py-2';
+
+      // Step number circle
+      const numberCircle = document.createElement('div');
+      numberCircle.className = 'absolute left-0 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium';
+      numberCircle.textContent = String(node.attrs.stepNumber || 1);
+      dom.appendChild(numberCircle);
+
+      // Connector line (except for last step - handled by CSS)
+      const connectorLine = document.createElement('div');
+      connectorLine.className = 'absolute left-4 top-10 bottom-0 w-px bg-border -translate-x-1/2';
+      dom.appendChild(connectorLine);
+
+      // Content container
+      const contentContainer = document.createElement('div');
+      contentContainer.className = 'space-y-2';
+
+      // Title input
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.value = node.attrs.title || '';
+      titleInput.placeholder = 'Step title...';
+      titleInput.className = 'block w-full bg-transparent text-base font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none border-b border-transparent hover:border-border focus:border-primary pb-1';
+      titleInput.addEventListener('input', (e) => {
+        const pos = getPos();
+        if (typeof pos === 'number') {
+          editor.chain().focus().updateAttributes('step', { title: (e.target as HTMLInputElement).value }).run();
+        }
+      });
+      contentContainer.appendChild(titleInput);
+
+      // Description textarea
+      const descInput = document.createElement('textarea');
+      descInput.value = node.attrs.description || '';
+      descInput.placeholder = 'Step description (optional)...';
+      descInput.rows = 2;
+      descInput.className = 'block w-full bg-transparent text-sm text-muted-foreground placeholder:text-muted-foreground/60 focus:outline-none resize-none border border-transparent rounded hover:border-border focus:border-primary p-1';
+      descInput.addEventListener('input', (e) => {
+        const pos = getPos();
+        if (typeof pos === 'number') {
+          editor.chain().focus().updateAttributes('step', { description: (e.target as HTMLTextAreaElement).value }).run();
+        }
+      });
+      contentContainer.appendChild(descInput);
+
+      // Screenshot display (if present)
+      if (node.attrs.screenshot) {
+        const screenshotContainer = document.createElement('div');
+        screenshotContainer.className = 'mt-3 rounded-lg overflow-hidden border border-border';
+        const img = document.createElement('img');
+        img.src = node.attrs.screenshot;
+        img.alt = node.attrs.screenshotAlt || node.attrs.title || 'Step screenshot';
+        img.className = 'w-full h-auto';
+        screenshotContainer.appendChild(img);
+        contentContainer.appendChild(screenshotContainer);
+      }
+
+      // Content hole for additional blocks
+      const contentDOM = document.createElement('div');
+      contentDOM.className = 'step-content mt-2';
+      contentContainer.appendChild(contentDOM);
+
+      dom.appendChild(contentContainer);
+
+      return { dom, contentDOM };
+    };
   },
 });
