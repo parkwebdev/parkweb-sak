@@ -10,9 +10,10 @@ interface VideoEmbedProps {
   title?: string;
   thumbnail?: string;
   compact?: boolean;
+  noBg?: boolean;
 }
 
-export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = false }: VideoEmbedProps) {
+export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = false, noBg = false }: VideoEmbedProps) {
   const [showPlayer, setShowPlayer] = useState(false);
   const [fallbackIndex, setFallbackIndex] = useState(0);
 
@@ -47,7 +48,7 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
     return (
       <div 
         onClick={() => setShowPlayer(true)}
-        className={`relative cursor-pointer group mt-2 rounded-lg overflow-hidden bg-muted ${compact ? 'aspect-video max-h-32' : 'aspect-video'}`}
+        className={`relative cursor-pointer group mt-2 rounded-lg overflow-hidden ${!noBg && 'bg-muted'} ${compact ? 'aspect-video max-h-32' : 'aspect-video'}`}
       >
         {displayThumbnail ? (
           <img 
@@ -57,7 +58,7 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
             onError={handleImageError}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted">
+          <div className={`w-full h-full flex items-center justify-center ${!noBg && 'bg-muted'}`}>
             <span className="text-xs text-muted-foreground capitalize">{videoType} Video</span>
           </div>
         )}

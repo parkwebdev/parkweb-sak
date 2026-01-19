@@ -83,6 +83,7 @@ export function VideoBlockHydrator({ containerRef, contentKey }: VideoBlockHydra
             videoType={video.videoType}
             title={video.title}
             thumbnail={video.thumbnail}
+            noBg
           />,
           video.element
         )
