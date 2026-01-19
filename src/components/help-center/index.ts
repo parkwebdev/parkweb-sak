@@ -16,3 +16,4 @@ export { HCTableOfContents } from './HCTableOfContents';
 export { HCPopularArticles } from './HCPopularArticles';
 export { HCArticleFeedback } from './HCArticleFeedback';
 export { HCTopBarSearch } from './HCTopBarSearch';
+export { HCDatabaseArticleRenderer, ALLOWED_TAGS, ALLOWED_ATTR } from './HCDatabaseArticleRenderer';

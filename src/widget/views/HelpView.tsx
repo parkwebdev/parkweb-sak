@@ -50,8 +50,38 @@ interface HelpViewProps {
   helpArticles: HelpArticle[];
 }
 
-const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'];
-const ALLOWED_ATTR = ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'];
+const ALLOWED_TAGS = [
+  // Standard text elements
+  'p', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'span',
+  // Headings
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  // Links and media
+  'a', 'img',
+  // Lists
+  'ul', 'ol', 'li',
+  // Code
+  'code', 'pre',
+  // Structural (needed for custom blocks)
+  'div', 'section', 'blockquote',
+];
+
+const ALLOWED_ATTR = [
+  // Standard attributes
+  'href', 'target', 'rel', 'class', 'id',
+  'src', 'alt', 'width', 'height', 'style',
+  // Callout attributes
+  'data-callout', 'data-callout-type',
+  // Step-by-step attributes
+  'data-stepbystep', 'data-step', 'data-step-number',
+  'data-step-title', 'data-step-description', 'data-step-screenshot',
+  // Feature grid/card attributes
+  'data-feature-grid', 'data-columns',
+  'data-feature-card', 'data-feature-icon', 'data-feature-title', 'data-feature-description',
+  // Related articles attributes
+  'data-related-articles', 'data-articles',
+  // Article link attributes
+  'data-article-link', 'data-category-id', 'data-article-slug',
+];
 
 export const HelpView = ({
   config,

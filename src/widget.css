@@ -400,6 +400,153 @@ input, textarea {
   border-radius: 0.75rem;
 }
 
+/* ========================================
+   Widget Custom Block Styles (Database Content)
+   Simplified styles for widget context
+   ======================================== */
+
+/* ---------------- Callouts ---------------- */
+.article-content [data-callout] {
+  @apply rounded-lg border p-3 my-3 text-sm;
+}
+
+.article-content [data-callout]::before {
+  @apply font-medium block mb-1 text-xs;
+}
+
+.article-content [data-callout-type="info"] {
+  @apply bg-blue-500/10 border-blue-500/30;
+}
+
+.article-content [data-callout-type="info"]::before {
+  content: "ℹ️ Info";
+  @apply text-blue-600 dark:text-blue-400;
+}
+
+.article-content [data-callout-type="tip"],
+.article-content [data-callout-type="success"] {
+  @apply bg-green-500/10 border-green-500/30;
+}
+
+.article-content [data-callout-type="tip"]::before,
+.article-content [data-callout-type="success"]::before {
+  content: "💡 Tip";
+  @apply text-green-600 dark:text-green-400;
+}
+
+.article-content [data-callout-type="warning"] {
+  @apply bg-yellow-500/10 border-yellow-500/30;
+}
+
+.article-content [data-callout-type="warning"]::before {
+  content: "⚠️ Warning";
+  @apply text-yellow-600 dark:text-yellow-400;
+}
+
+.article-content [data-callout-type="error"] {
+  @apply bg-red-500/10 border-red-500/30;
+}
+
+.article-content [data-callout-type="error"]::before {
+  content: "❌ Error";
+  @apply text-red-600 dark:text-red-400;
+}
+
+.article-content [data-callout-type="note"] {
+  @apply bg-muted border-border;
+}
+
+.article-content [data-callout-type="note"]::before {
+  content: "📝 Note";
+  @apply text-foreground;
+}
+
+/* ---------------- Step-by-Step (simplified for widget) ---------------- */
+.article-content [data-stepbystep] {
+  @apply my-4 space-y-4;
+}
+
+.article-content [data-step] {
+  @apply relative pl-10;
+}
+
+.article-content [data-step]::before {
+  content: attr(data-step-number);
+  @apply absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold;
+}
+
+.article-content [data-step]:not(:last-child)::after {
+  content: "";
+  @apply absolute w-0.5 bg-border;
+  left: 11px;
+  top: 24px;
+  height: calc(100% + 0.5rem);
+}
+
+.article-content [data-step] > h4:first-child {
+  @apply text-sm font-medium text-foreground mb-1 mt-0;
+}
+
+.article-content [data-step] > p {
+  @apply text-xs text-muted-foreground mb-2;
+}
+
+.article-content [data-step] img {
+  @apply rounded-lg border border-border w-full h-auto;
+}
+
+/* ---------------- Feature Grid/Cards (simplified) ---------------- */
+.article-content [data-feature-grid] {
+  @apply my-4 grid gap-3 grid-cols-1;
+}
+
+.article-content [data-feature-card] {
+  @apply rounded-lg border border-border bg-card p-3;
+}
+
+.article-content [data-feature-card] > h4:first-child {
+  @apply text-sm font-medium text-foreground mb-1 mt-0;
+}
+
+.article-content [data-feature-card] > p {
+  @apply text-xs text-muted-foreground mb-0;
+}
+
+/* ---------------- Related Articles ---------------- */
+.article-content [data-related-articles] {
+  @apply mt-4 pt-3 border-t border-border;
+}
+
+.article-content [data-related-articles]::before {
+  content: "Related Articles";
+  @apply text-xs font-medium text-muted-foreground block mb-2;
+}
+
+.article-content [data-related-articles] a {
+  @apply inline-flex items-center gap-1 px-2 py-1 mr-1 mb-1 rounded bg-muted text-xs text-foreground hover:bg-muted/80 transition-colors no-underline;
+}
+
+.article-content [data-related-articles] a::after {
+  content: "→";
+  @apply text-2xs;
+}
+
+/* ---------------- Article Links (inline) ---------------- */
+.article-content a[data-article-link] {
+  @apply inline-flex items-center gap-0.5 text-primary font-medium transition-colors no-underline text-sm;
+}
+
+.article-content a[data-article-link]:hover {
+  @apply text-primary/80;
+}
+
+.article-content a[data-article-link]::after {
+  content: "→";
+  @apply text-xs;
+}
+
+
+
 /* ============================================================================
    Voice Recording Animations (Phase 1 - Widget Bundle Reduction)
    ============================================================================ */
