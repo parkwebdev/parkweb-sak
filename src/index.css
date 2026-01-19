@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ================================================
+   GLOBAL FOCUS RING OVERRIDE
+   Removes all focus rings from the application
+   ================================================ */
+*:focus-visible,
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.focus-visible\:ring-2:focus-visible,
+.focus-visible\:ring:focus-visible,
+.focus\:ring-2:focus,
+.focus\:ring:focus,
+.focus\:ring-1:focus {
+  --tw-ring-offset-shadow: none !important;
+  --tw-ring-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.focus-visible\:ring-offset-2:focus-visible,
+.focus\:ring-offset-2:focus {
+  --tw-ring-offset-width: 0 !important;
+}
+
 @layer components {
   /* Premium primary button styling - Light mode */
   .btn-primary {
