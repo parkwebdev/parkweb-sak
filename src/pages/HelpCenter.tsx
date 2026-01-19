@@ -2,9 +2,10 @@
  * Help Center Page
  * 
  * User-facing documentation to help users understand and use the Pilot platform.
+ * Now uses database-driven content from platform_hc_categories and platform_hc_articles.
  */
 
-import { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { getNavigationIcon } from '@/lib/navigation-icons';
@@ -19,14 +20,10 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { 
-  HC_CATEGORIES, 
-  getHCCategoryById, 
-  getHCArticleBySlug,
-  getFirstHCArticle,
-  getAdjacentArticles,
-  type HCCategory,
-  type HCArticle,
-} from '@/config/help-center-config';
+  usePlatformHelpCenter, 
+  type PlatformHCCategory, 
+  type PlatformHCArticle 
+} from '@/hooks/usePlatformHelpCenter';
 
 function ArticleSkeleton() {
   return (
@@ -48,15 +45,25 @@ export default function HelpCenter() {
   const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Use DB-driven hook for categories and articles
+  const {
+    categories,
+    isLoading,
+    getCategoryById,
+    getArticleBySlug,
+    getAdjacentArticles,
+    getFirstArticle,
+  } = usePlatformHelpCenter();
+  
   const categoryId = searchParams.get('category');
   const articleSlug = searchParams.get('article');
   
-  const [currentCategory, setCurrentCategory] = useState<HCCategory | undefined>();
-  const [currentArticle, setCurrentArticle] = useState<HCArticle | undefined>();
+  const [currentCategory, setCurrentCategory] = useState<PlatformHCCategory | undefined>();
+  const [currentArticle, setCurrentArticle] = useState<PlatformHCArticle | undefined>();
   
   const isCategoryView = categoryId && !articleSlug;
   
-  const handleSearchSelect = useCallback((category: HCCategory, article: HCArticle) => {
+  const handleSearchSelect = useCallback((category: PlatformHCCategory, article: PlatformHCArticle) => {
     setSearchParams({ category: category.id, article: article.slug });
     setSearchQuery('');
   }, [setSearchParams]);
@@ -72,38 +79,41 @@ export default function HelpCenter() {
   useTopBar(topBarConfig);
   
   useEffect(() => {
+    // Wait for data to load
+    if (isLoading || categories.length === 0) return;
+    
     if (categoryId && articleSlug) {
-      const category = getHCCategoryById(categoryId);
-      const article = getHCArticleBySlug(categoryId, articleSlug);
+      const category = getCategoryById(categoryId);
+      const article = getArticleBySlug(categoryId, articleSlug);
       setCurrentCategory(category);
       setCurrentArticle(article);
     } else if (categoryId && !articleSlug) {
-      const category = getHCCategoryById(categoryId);
+      const category = getCategoryById(categoryId);
       setCurrentCategory(category);
       setCurrentArticle(undefined);
     } else {
-      const first = getFirstHCArticle();
+      const first = getFirstArticle();
       if (first) {
         setCurrentCategory(first.category);
         setCurrentArticle(undefined);
         setSearchParams({ category: first.category.id }, { replace: true });
       }
     }
-  }, [categoryId, articleSlug, setSearchParams]);
+  }, [categoryId, articleSlug, setSearchParams, isLoading, categories, getCategoryById, getArticleBySlug, getFirstArticle]);
   
   const adjacent = currentCategory && currentArticle 
-    ? getAdjacentArticles(currentCategory.id, currentArticle.id)
+    ? getAdjacentArticles(currentCategory.id, currentArticle.slug)
     : { prev: undefined, next: undefined };
   
-  const handleSelectCategory = (category: HCCategory) => {
+  const handleSelectCategory = (category: PlatformHCCategory) => {
     setSearchParams({ category: category.id });
   };
   
-  const handleSelectArticle = (category: HCCategory, article: HCArticle) => {
+  const handleSelectArticle = (category: PlatformHCCategory, article: PlatformHCArticle) => {
     setSearchParams({ category: category.id, article: article.slug });
   };
   
-  const handleSelectArticleFromCategory = (article: HCArticle) => {
+  const handleSelectArticleFromCategory = (article: PlatformHCArticle) => {
     if (currentCategory) {
       setSearchParams({ category: currentCategory.id, article: article.slug });
     }
@@ -121,12 +131,28 @@ export default function HelpCenter() {
     }
   };
 
+  // Show loading state while fetching from DB
+  if (isLoading) {
+    return (
+      <div className="flex h-full overflow-hidden bg-background">
+        <aside className="w-[260px] border-r border-border p-4 space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-8 w-full" />
+          ))}
+        </aside>
+        <main className="flex-1">
+          <ArticleSkeleton />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full overflow-hidden bg-background print:h-auto print:overflow-visible print:block">
       <HCSidebar
-        categories={HC_CATEGORIES as unknown as HCCategory[]}
+        categories={categories}
         selectedCategoryId={currentCategory?.id}
-        selectedArticleId={currentArticle?.id}
+        selectedArticleSlug={currentArticle?.slug}
         isCategoryView={!!isCategoryView}
         onSelectCategory={handleSelectCategory}
         onSelectArticle={handleSelectArticle}
@@ -150,23 +176,21 @@ export default function HelpCenter() {
             </motion.div>
           ) : currentCategory && currentArticle ? (
             <motion.div
-              key={`${currentCategory.id}-${currentArticle.id}`}
+              key={`${currentCategory.id}-${currentArticle.slug}`}
               initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
               transition={springs.smooth}
             >
-              <Suspense fallback={<ArticleSkeleton />}>
-                <HCArticleView
-                  category={currentCategory}
-                  article={currentArticle}
-                  onHeadingsChange={setHeadings}
-                  onPrevious={adjacent.prev ? handlePrevious : undefined}
-                  onNext={adjacent.next ? handleNext : undefined}
-                  prevArticle={adjacent.prev?.article}
-                  nextArticle={adjacent.next?.article}
-                />
-              </Suspense>
+              <HCArticleView
+                category={currentCategory}
+                article={currentArticle}
+                onHeadingsChange={setHeadings}
+                onPrevious={adjacent.prev ? handlePrevious : undefined}
+                onNext={adjacent.next ? handleNext : undefined}
+                prevArticle={adjacent.prev?.article}
+                nextArticle={adjacent.next?.article}
+              />
             </motion.div>
           ) : (
             <ArticleSkeleton />

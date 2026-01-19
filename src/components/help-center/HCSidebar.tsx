@@ -3,6 +3,7 @@
  * 
  * Left navigation sidebar with search and categorized article list.
  * Categories are collapsible accordion-style for better navigation.
+ * Now uses DB-driven types from usePlatformHelpCenter.
  * 
  * @module components/help-center/HCSidebar
  */
@@ -13,7 +14,18 @@ import { ChevronDown } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
-import type { HCCategory, HCArticle } from '@/config/help-center-config';
+import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
+
+/** Map category ID to color class */
+const CATEGORY_COLOR_MAP: Record<string, string> = {
+  'getting-started': 'bg-info',
+  'ari': 'bg-accent-purple',
+  'inbox': 'bg-success',
+  'leads': 'bg-warning',
+  'planner': 'bg-status-active',
+  'analytics': 'bg-destructive',
+  'settings': 'bg-muted-foreground',
+};
 
 /** Map category bg colors to ring/border colors for active states */
 const ACTIVE_RING_MAP: Record<string, string> = {
@@ -37,13 +49,13 @@ const HOVER_MAP: Record<string, string> = {
 };
 
 interface HCSidebarProps {
-  categories: HCCategory[];
+  categories: PlatformHCCategory[];
   selectedCategoryId?: string;
-  selectedArticleId?: string;
+  selectedArticleSlug?: string;
   /** True when viewing a category landing page (no article selected) */
   isCategoryView?: boolean;
-  onSelectCategory: (category: HCCategory) => void;
-  onSelectArticle: (category: HCCategory, article: HCArticle) => void;
+  onSelectCategory: (category: PlatformHCCategory) => void;
+  onSelectArticle: (category: PlatformHCCategory, article: PlatformHCArticle) => void;
   /** Search query from TopBar */
   searchQuery?: string;
 }
@@ -51,7 +63,7 @@ interface HCSidebarProps {
 export function HCSidebar({
   categories,
   selectedCategoryId,
-  selectedArticleId,
+  selectedArticleSlug,
   isCategoryView,
   onSelectCategory,
   onSelectArticle,
@@ -93,7 +105,7 @@ export function HCSidebar({
       .map(category => ({
         ...category,
         articles: category.articles.filter(
-          (article: HCArticle) =>
+          (article) =>
             article.title.toLowerCase().includes(query) ||
             article.description?.toLowerCase().includes(query)
         ),
@@ -116,6 +128,7 @@ export function HCSidebar({
         {filteredCategories.map((category, categoryIndex) => {
           const isExpanded = expandedCategories.has(category.id);
           const isCategoryActive = isCategoryView && category.id === selectedCategoryId;
+          const colorClass = category.color.startsWith('bg-') ? category.color : CATEGORY_COLOR_MAP[category.id] || 'bg-muted-foreground';
           
           return (
             <motion.div
@@ -153,12 +166,12 @@ export function HCSidebar({
                     'flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-left',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                     isCategoryActive
-                      ? cn('ring-1', ACTIVE_RING_MAP[category.color] || 'ring-border bg-accent/50')
-                      : cn(HOVER_MAP[category.color] || 'hover:bg-accent/30')
+                      ? cn('ring-1', ACTIVE_RING_MAP[colorClass] || 'ring-border bg-accent/50')
+                      : cn(HOVER_MAP[colorClass] || 'hover:bg-accent/30')
                   )}
                 >
                   <span 
-                    className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', category.color)} 
+                    className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', colorClass)} 
                     aria-hidden="true"
                   />
                   <span className={cn(
@@ -183,9 +196,9 @@ export function HCSidebar({
                     style={{ overflow: 'hidden' }}
                   >
                     <div className="space-y-0.5 mt-0.5 ml-5">
-                      {category.articles.map((article: HCArticle) => {
+                      {category.articles.map((article) => {
                         const isSelected = 
-                          category.id === selectedCategoryId && article.id === selectedArticleId;
+                          category.id === selectedCategoryId && article.slug === selectedArticleSlug;
                         
                         return (
                           <button
