@@ -155,7 +155,6 @@ export function VideoPlayer({
         <video
           ref={videoRef}
           src={src}
-          crossOrigin="anonymous"
           className="w-full h-full object-contain cursor-pointer"
           controls
           controlsList="nodownload"
