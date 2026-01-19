@@ -177,7 +177,8 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
     // Update editor content when prop changes (for edit mode)
     useEffect(() => {
       if (editor && content !== editor.getHTML()) {
-        editor.commands.setContent(content);
+        // Use emitUpdate: false to prevent triggering onUpdate during hydration
+        editor.commands.setContent(content, { emitUpdate: false });
       }
     }, [content, editor]);
 
