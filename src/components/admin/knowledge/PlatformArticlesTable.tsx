@@ -24,17 +24,9 @@ import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash01, Eye } from '@untitledui/icons';
+import { Trash01 } from '@untitledui/icons';
 import { IconButton } from '@/components/ui/icon-button';
 import { formatDistanceToNow } from 'date-fns';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
-import DOMPurify from 'isomorphic-dompurify';
 import type { PlatformHCArticle } from '@/types/platform-hc';
 
 interface PlatformArticlesTableProps {
@@ -59,7 +51,6 @@ export function PlatformArticlesTable({
 }: PlatformArticlesTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [previewArticle, setPreviewArticle] = useState<PlatformHCArticle | null>(null);
   
   // Single delete state
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -175,17 +166,9 @@ export function PlatformArticlesTable({
       }),
       columnHelper.display({
         id: 'actions',
-        header: '',
+        header: 'Actions',
         cell: ({ row }) => (
-          <div className="flex items-center gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
-            <IconButton
-              label="Preview article"
-              variant="ghost"
-              size="sm"
-              onClick={() => setPreviewArticle(row.original)}
-            >
-              <Eye size={14} />
-            </IconButton>
+          <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
             <IconButton
               label="Delete article"
               variant="ghost"
@@ -239,24 +222,6 @@ export function PlatformArticlesTable({
           Delete
         </Button>
       </DataTableFloatingBar>
-
-      {/* Article Preview Sheet */}
-      <Sheet open={!!previewArticle} onOpenChange={() => setPreviewArticle(null)}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{previewArticle?.title}</SheetTitle>
-            <SheetDescription>
-              {previewArticle?.category_label} • {previewArticle?.is_published ? 'Published' : 'Draft'}
-            </SheetDescription>
-          </SheetHeader>
-          <div 
-            className="mt-6 hc-article-content hc-database-content max-w-none"
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(previewArticle?.content || ''),
-            }}
-          />
-        </SheetContent>
-      </Sheet>
 
       {/* Single Delete Confirmation */}
       <DeleteConfirmationDialog
