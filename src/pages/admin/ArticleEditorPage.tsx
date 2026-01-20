@@ -96,7 +96,7 @@ const TopBarLeft = memo(function TopBarLeft({
       />
       <span className="text-muted-foreground">/</span>
       <Select value={categoryId} onValueChange={onCategoryChange}>
-        <SelectTrigger className="h-8 w-auto min-w-[140px] border-0 bg-transparent gap-2">
+        <SelectTrigger className="h-8 w-auto min-w-[140px] border border-input bg-background gap-2">
           <SelectValue placeholder="Select category" />
         </SelectTrigger>
         <SelectContent>
