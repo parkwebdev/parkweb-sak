@@ -419,7 +419,7 @@ input, textarea {
 }
 
 .article-content [data-callout-type="info"]::before {
-  content: "ℹ️ Info";
+  content: "Info";
   @apply text-blue-600 dark:text-blue-400;
 }
 
@@ -430,7 +430,7 @@ input, textarea {
 
 .article-content [data-callout-type="tip"]::before,
 .article-content [data-callout-type="success"]::before {
-  content: "💡 Tip";
+  content: "Tip";
   @apply text-green-600 dark:text-green-400;
 }
 
@@ -439,7 +439,7 @@ input, textarea {
 }
 
 .article-content [data-callout-type="warning"]::before {
-  content: "⚠️ Warning";
+  content: "Warning";
   @apply text-yellow-600 dark:text-yellow-400;
 }
 
@@ -448,7 +448,7 @@ input, textarea {
 }
 
 .article-content [data-callout-type="error"]::before {
-  content: "❌ Error";
+  content: "Error";
   @apply text-red-600 dark:text-red-400;
 }
 
@@ -457,7 +457,7 @@ input, textarea {
 }
 
 .article-content [data-callout-type="note"]::before {
-  content: "📝 Note";
+  content: "Note";
   @apply text-foreground;
 }
 
