@@ -727,34 +727,63 @@ html::view-transition {
 /* Rounded table styles for Help Center and Editor */
 .hc-article-content table,
 .ProseMirror table {
-  @apply w-full mb-4 text-sm overflow-hidden rounded-lg;
+  @apply w-full mb-4 text-sm rounded-lg border border-border;
   border-spacing: 0;
   border-collapse: separate;
 }
 
+/* Header cells - internal borders only */
 .hc-article-content th,
 .ProseMirror th {
-  @apply text-left font-medium text-foreground p-2 bg-muted/50 border-t border-b border-r border-border;
-  border-left: none !important;
+  @apply text-left font-medium text-foreground p-2 bg-muted/50 border-b border-r border-border;
 }
 
-/* Add left border to first column header */
-.hc-article-content th:first-child,
-.ProseMirror th:first-child {
-  @apply border-l;
+/* Last column header - no right border (table border handles it) */
+.hc-article-content th:last-child,
+.ProseMirror th:last-child {
+  @apply border-r-0;
 }
 
+/* Top-left corner radius */
+.hc-article-content tr:first-child th:first-child,
+.ProseMirror tr:first-child th:first-child {
+  @apply rounded-tl-lg;
+}
+
+/* Top-right corner radius */
+.hc-article-content tr:first-child th:last-child,
+.ProseMirror tr:first-child th:last-child {
+  @apply rounded-tr-lg;
+}
+
+/* Body cells - internal borders only */
 .hc-article-content td,
 .ProseMirror td {
   @apply p-2 border-b border-r border-border text-foreground/90;
-  border-left: none !important;
-  border-top: none !important;
 }
 
-/* Add left border to first column */
-.hc-article-content td:first-child,
-.ProseMirror td:first-child {
-  @apply border-l;
+/* Last column cells - no right border */
+.hc-article-content td:last-child,
+.ProseMirror td:last-child {
+  @apply border-r-0;
+}
+
+/* Last row cells - no bottom border */
+.hc-article-content tr:last-child td,
+.ProseMirror tr:last-child td {
+  @apply border-b-0;
+}
+
+/* Bottom-left corner radius */
+.hc-article-content tr:last-child td:first-child,
+.ProseMirror tr:last-child td:first-child {
+  @apply rounded-bl-lg;
+}
+
+/* Bottom-right corner radius */
+.hc-article-content tr:last-child td:last-child,
+.ProseMirror tr:last-child td:last-child {
+  @apply rounded-br-lg;
 }
 
 .hc-article-content kbd {
