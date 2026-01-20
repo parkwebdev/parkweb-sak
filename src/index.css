@@ -724,12 +724,13 @@ html::view-transition {
   @apply bg-transparent p-0;
 }
 
-/* Rounded table styles for Help Center and Editor */
+/* Rounded table styles for Help Center and Editor (override prose/tiptap borders) */
 .hc-article-content table,
 .hc-database-content table,
 .article-content table,
 .ProseMirror table {
-  @apply w-full mb-4 text-sm overflow-hidden rounded-lg border border-border;
+  @apply w-full mb-4 text-sm overflow-hidden rounded-lg;
+  border: 1px solid hsl(var(--border)) !important;
   border-spacing: 0;
   border-collapse: separate;
 }
@@ -738,14 +739,18 @@ html::view-transition {
 .hc-database-content th,
 .article-content th,
 .ProseMirror th {
-  @apply text-left font-medium text-foreground p-2 bg-muted/50 border-b border-border;
+  @apply text-left font-medium text-foreground p-2 bg-muted/50;
+  border: 0 !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
 }
 
 .hc-article-content td,
 .hc-database-content td,
 .article-content td,
 .ProseMirror td {
-  @apply p-2 border-b border-border text-foreground/90;
+  @apply p-2 text-foreground/90;
+  border: 0 !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
 }
 
 /* Remove border on last row */
@@ -753,7 +758,7 @@ html::view-transition {
 .hc-database-content tr:last-child td,
 .article-content tr:last-child td,
 .ProseMirror tr:last-child td {
-  @apply border-b-0;
+  border-bottom: 0 !important;
 }
 
 .hc-article-content kbd {
