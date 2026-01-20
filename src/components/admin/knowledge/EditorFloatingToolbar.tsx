@@ -19,7 +19,6 @@ import {
   Link01,
   Link03,
   FaceSmile,
-  Palette,
 } from '@untitledui/icons';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -37,19 +36,6 @@ import { useCallback, useState } from 'react';
 import { ArticleLinkPicker } from './ArticleLinkPicker';
 import { LinkInputDialog } from './LinkInputDialog';
 import { toast } from '@/lib/toast';
-
-// Common text colors for the color picker
-const TEXT_COLORS = [
-  { name: 'Default', color: null },
-  { name: 'Gray', color: 'hsl(var(--muted-foreground))' },
-  { name: 'Red', color: 'hsl(0 84% 60%)' },
-  { name: 'Orange', color: 'hsl(25 95% 53%)' },
-  { name: 'Yellow', color: 'hsl(48 96% 53%)' },
-  { name: 'Green', color: 'hsl(142 76% 36%)' },
-  { name: 'Blue', color: 'hsl(217 91% 60%)' },
-  { name: 'Purple', color: 'hsl(262 83% 58%)' },
-  { name: 'Pink', color: 'hsl(330 81% 60%)' },
-] as const;
 
 // Common emoji for quick insert
 const QUICK_EMOJIS = ['😊', '👍', '❤️', '🎉', '🚀', '💡', '⭐', '✅', '❌', '⚠️', '📌', '🔥'];
@@ -92,7 +78,6 @@ function ToolbarButton({ icon: Icon, isActive, onClick, label, disabled }: Toolb
  * Uses TipTap's BubbleMenu extension.
  */
 export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isArticleLinkPickerOpen, setIsArticleLinkPickerOpen] = useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
@@ -112,14 +97,6 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
     }
   }, [editor]);
 
-  const handleColorSelect = useCallback((color: string | null) => {
-    if (color === null) {
-      editor.chain().focus().unsetMark('textStyle').run();
-    } else {
-      editor.chain().focus().setMark('textStyle', { style: `color: ${color}` }).run();
-    }
-    setIsColorPickerOpen(false);
-  }, [editor]);
 
   const handleEmojiSelect = useCallback((emoji: string) => {
     editor.chain().focus().insertContent(emoji).run();
@@ -220,44 +197,6 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
         </TooltipTrigger>
         <TooltipContent side="bottom">Article Link</TooltipContent>
       </Tooltip>
-      
-      <Separator orientation="vertical" className="h-5 mx-1" />
-      
-      {/* Text Color Picker */}
-      <Popover open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
-        <PopoverTrigger asChild>
-          <button
-            aria-label="Text color"
-            className={cn(
-              'h-7 w-7 flex items-center justify-center rounded',
-              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-            )}
-          >
-            <Palette size={14} aria-hidden="true" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-2" align="start">
-          <div className="grid grid-cols-3 gap-1">
-            {TEXT_COLORS.map((item) => (
-              <button
-                key={item.name}
-                onClick={() => handleColorSelect(item.color)}
-                className={cn(
-                  'flex items-center gap-2 px-2 py-1.5 rounded text-xs',
-                  'hover:bg-accent transition-colors'
-                )}
-              >
-                <span
-                  className="h-3 w-3 rounded-full border border-border"
-                  style={{ backgroundColor: item.color || 'hsl(var(--foreground))' }}
-                />
-                {item.name}
-              </button>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
       
       <Separator orientation="vertical" className="h-5 mx-1" />
       

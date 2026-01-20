@@ -28,7 +28,6 @@ import {
   CheckSquare,
   Grid01,
   Link01,
-  BookOpen01,
   LayoutAlt02,
 } from '@untitledui/icons';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -80,7 +79,6 @@ const HC_BLOCKS: BlockType[] = [
   { id: 'featureGrid3', label: 'Feature Grid (3)', icon: Grid01, description: '3-column feature cards' },
   { id: 'featureCard', label: 'Feature Card', icon: LayoutAlt02, description: 'Single feature highlight' },
   { id: 'relatedArticles', label: 'Related Articles', icon: Link01, description: 'Links to other articles' },
-  { id: 'articleLink', label: 'Article Link', icon: BookOpen01, description: 'Inline link to article' },
 ];
 
 /**
