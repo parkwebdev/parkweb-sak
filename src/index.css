@@ -924,9 +924,29 @@ html::view-transition {
   height: 0;
 }
 
-/* Add step button visibility */
+/* Add step button styling and visibility */
 .ProseMirror .add-step-button {
-  @apply cursor-pointer;
+  margin-top: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: hsl(var(--muted-foreground));
+  background-color: hsl(var(--muted) / 0.5);
+  border-radius: 0.375rem;
+  border: 1px dashed hsl(var(--border));
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.ProseMirror .step:hover .add-step-button,
+.ProseMirror .step:focus-within .add-step-button,
+.ProseMirror .add-step-button:focus {
+  opacity: 1;
+}
+
+.ProseMirror .add-step-button:hover {
+  background-color: hsl(var(--muted));
 }
 
 /* Step screenshot */

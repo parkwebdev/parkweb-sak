@@ -9,6 +9,7 @@
  */
 
 import { Node, mergeAttributes } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { DOMOutputSpec } from '@tiptap/pm/model';
 
 export interface StepData {
@@ -110,28 +111,49 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
         },
       addStep:
         () =>
-        ({ state, chain }) => {
+        ({ state, tr, dispatch }) => {
           const { selection } = state;
-          const stepByStepNode = state.doc.resolve(selection.from).node(1);
+          const $pos = selection.$from;
           
-          if (stepByStepNode?.type.name === 'stepByStep') {
-            const stepCount = stepByStepNode.childCount;
-            const newStepNum = stepCount + 1;
-            return chain()
-              .insertContentAt(selection.from, {
-                type: 'step',
-                attrs: { stepNumber: newStepNum },
-                content: [
-                  { 
-                    type: 'heading', 
-                    attrs: { level: 4 }, 
-                    content: [] // Empty heading - user fills in their own title
-                  },
-                ],
-              })
-              .run();
+          // Find the stepByStep ancestor
+          let stepByStepPos: number | null = null;
+          let stepByStepNode = null;
+          
+          for (let depth = $pos.depth; depth >= 0; depth--) {
+            const node = $pos.node(depth);
+            if (node.type.name === 'stepByStep') {
+              stepByStepPos = $pos.before(depth);
+              stepByStepNode = node;
+              break;
+            }
           }
-          return false;
+          
+          if (stepByStepPos === null || !stepByStepNode) {
+            return false;
+          }
+          
+          // Calculate position at end of stepByStep (before closing tag)
+          const insertPos = stepByStepPos + stepByStepNode.nodeSize - 1;
+          const stepCount = stepByStepNode.childCount;
+          const newStepNum = stepCount + 1;
+          
+          // Create new step node
+          const newStep = state.schema.nodes.step.create(
+            { stepNumber: newStepNum },
+            [
+              state.schema.nodes.heading.create(
+                { level: 4 },
+                [] // Empty heading
+              ),
+            ]
+          );
+          
+          if (dispatch) {
+            tr.insert(insertPos, newStep);
+            dispatch(tr);
+          }
+          
+          return true;
         },
       unsetStepByStep:
         () =>
@@ -139,6 +161,54 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
           return commands.lift(this.name);
         },
     };
+  },
+
+  /**
+   * Plugin to auto-renumber steps when document changes
+   */
+  addProseMirrorPlugins() {
+    const stepByStepType = this.type;
+    
+    return [
+      new Plugin({
+        key: new PluginKey('stepRenumber'),
+        appendTransaction(transactions, oldState, newState) {
+          // Only run if document changed
+          const docChanged = transactions.some((tr) => tr.docChanged);
+          if (!docChanged) return null;
+          
+          const { tr } = newState;
+          let hasChanges = false;
+          
+          // Find all stepByStep nodes and renumber their children
+          newState.doc.descendants((node, pos) => {
+            if (node.type === stepByStepType) {
+              let childPos = pos + 1; // Position after opening tag
+              let stepIndex = 0;
+              
+              node.forEach((child, offset) => {
+                if (child.type.name === 'step') {
+                  const expectedNumber = stepIndex + 1;
+                  if (child.attrs.stepNumber !== expectedNumber) {
+                    tr.setNodeMarkup(childPos + offset, undefined, {
+                      ...child.attrs,
+                      stepNumber: expectedNumber,
+                    });
+                    hasChanges = true;
+                  }
+                  stepIndex++;
+                }
+              });
+              
+              return false; // Don't descend into stepByStep
+            }
+            return true;
+          });
+          
+          return hasChanges ? tr : null;
+        },
+      }),
+    ];
   },
 });
 
@@ -214,7 +284,7 @@ export const StepNode = Node.create({
       // Add Step button (appears on hover)
       const addButton = document.createElement('button');
       addButton.type = 'button';
-      addButton.className = 'add-step-button mt-3 px-3 py-1.5 text-xs text-muted-foreground bg-muted/50 hover:bg-muted rounded-md border border-dashed border-border opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity';
+      addButton.className = 'add-step-button';
       addButton.textContent = '+ Add step';
       addButton.contentEditable = 'false';
       addButton.onclick = (e) => {
@@ -224,7 +294,23 @@ export const StepNode = Node.create({
       };
       dom.appendChild(addButton);
 
-      return { dom, contentDOM };
+      return {
+        dom,
+        contentDOM,
+        update(updatedNode) {
+          // Only handle same node type
+          if (updatedNode.type.name !== 'step') {
+            return false;
+          }
+          
+          // Update step number if changed
+          const newNumber = updatedNode.attrs.stepNumber;
+          dom.setAttribute('data-step-number', String(newNumber));
+          numberCircle.textContent = String(newNumber);
+          
+          return true;
+        },
+      };
     };
   },
 });
