@@ -925,6 +925,37 @@ html::view-transition {
   z-index: 1;
 }
 
+/* ========================================
+   Feature Card Editor Styles
+   ======================================== */
+
+/* Feature card content in editor - match front-end styling */
+.ProseMirror [data-feature-card] .feature-card-content > h4:first-child {
+  @apply text-sm font-medium text-foreground mb-1 mt-0;
+}
+
+.ProseMirror [data-feature-card] .feature-card-content > p {
+  @apply text-sm text-muted-foreground mb-0;
+}
+
+/* Remove default prose margins in feature cards */
+.ProseMirror [data-feature-card] .feature-card-content h4,
+.ProseMirror [data-feature-card] .feature-card-content p {
+  margin: 0;
+}
+
+.ProseMirror [data-feature-card] .feature-card-content h4 {
+  margin-bottom: 0.25rem;
+}
+.ProseMirror [data-step]:not(:last-child)::after {
+  content: "";
+  @apply absolute w-0.5 bg-border;
+  left: 15px;
+  top: 32px;
+  height: calc(100% + 0.5rem);
+  z-index: 1;
+}
+
 /* Step title (h4) styling in editor - override prose styles */
 .ProseMirror [data-step] .step-content > h4,
 .ProseMirror [data-step] .step-content > h1,
