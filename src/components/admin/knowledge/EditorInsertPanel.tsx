@@ -157,7 +157,7 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
           Insert Block
         </h2>
       </div>
-      <ScrollArea className="flex-1 [&>div>div[style]]:!overflow-y-scroll [&_[data-radix-scroll-area-scrollbar]]:hidden">
+      <ScrollArea className="flex-1">
         {/* Basic Blocks */}
         <div className="p-2 space-y-0.5">
           <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
