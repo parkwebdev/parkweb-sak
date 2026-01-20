@@ -59,10 +59,6 @@ export function AdminKnowledge() {
     navigate(`/admin/knowledge/${article.id}`);
   }, [navigate]);
 
-  const handleEditArticle = (article: PlatformHCArticle) => {
-    // Also navigate to the new editor page for the Edit button
-    navigate(`/admin/knowledge/${article.id}`);
-  };
 
   const handleCreateArticle = useCallback(() => {
     // Navigate to new article page
@@ -131,7 +127,6 @@ export function AdminKnowledge() {
       <PlatformArticlesTable
         articles={filteredArticles}
         loading={articlesLoading}
-        onEdit={handleEditArticle}
         onDelete={deleteArticle}
         onBulkDelete={handleBulkDeleteArticles}
         onRowClick={handleRowClick}

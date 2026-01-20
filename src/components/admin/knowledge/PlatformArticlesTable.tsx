@@ -24,7 +24,7 @@ import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit02, Trash01, Eye } from '@untitledui/icons';
+import { Trash01, Eye } from '@untitledui/icons';
 import { IconButton } from '@/components/ui/icon-button';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -40,7 +40,6 @@ import type { PlatformHCArticle } from '@/types/platform-hc';
 interface PlatformArticlesTableProps {
   articles: PlatformHCArticle[];
   loading: boolean;
-  onEdit: (article: PlatformHCArticle) => void;
   onDelete: (articleId: string) => Promise<void>;
   onBulkDelete?: (ids: string[]) => Promise<void>;
   onRowClick?: (article: PlatformHCArticle) => void;
@@ -54,7 +53,6 @@ const columnHelper = createColumnHelper<PlatformHCArticle>();
 export function PlatformArticlesTable({
   articles,
   loading,
-  onEdit,
   onDelete,
   onBulkDelete,
   onRowClick,
@@ -189,14 +187,6 @@ export function PlatformArticlesTable({
               <Eye size={14} />
             </IconButton>
             <IconButton
-              label="Edit article"
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(row.original)}
-            >
-              <Edit02 size={14} />
-            </IconButton>
-            <IconButton
               label="Delete article"
               variant="ghost"
               size="sm"
@@ -208,7 +198,7 @@ export function PlatformArticlesTable({
         ),
       }),
     ],
-    [onEdit]
+    []
   );
 
   const table = useReactTable({
