@@ -734,15 +734,27 @@ html::view-transition {
 
 .hc-article-content th,
 .ProseMirror th {
-  @apply text-left font-medium text-foreground p-2 bg-muted/50 border-b border-border;
+  @apply text-left font-medium text-foreground p-2 bg-muted/50 border-b border-r border-border;
+}
+
+/* Remove right border on last column header */
+.hc-article-content th:last-child,
+.ProseMirror th:last-child {
+  @apply border-r-0;
 }
 
 .hc-article-content td,
 .ProseMirror td {
-  @apply p-2 border-b border-border text-foreground/90;
+  @apply p-2 border-b border-r border-border text-foreground/90;
 }
 
-/* Remove border on last row */
+/* Remove right border on last column */
+.hc-article-content td:last-child,
+.ProseMirror td:last-child {
+  @apply border-r-0;
+}
+
+/* Remove bottom border on last row */
 .hc-article-content tr:last-child td,
 .ProseMirror tr:last-child td {
   @apply border-b-0;
