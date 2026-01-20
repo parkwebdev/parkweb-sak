@@ -9,8 +9,11 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { BookOpen01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
 import { usePlatformHCCategories } from '@/hooks/admin/usePlatformHCCategories';
 import { PlatformArticlesTable } from '@/components/admin/knowledge/PlatformArticlesTable';
@@ -26,6 +29,7 @@ import type { PlatformHCArticle, PlatformHCArticleInput } from '@/types/platform
  */
 export function AdminKnowledge() {
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
   const { 
     articles, 
     loading: articlesLoading, 
@@ -123,7 +127,12 @@ export function AdminKnowledge() {
   };
 
   return (
-    <div className="p-6">
+    <motion.div
+      className="p-6"
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springs.smooth}
+    >
       <PlatformArticlesTable
         articles={filteredArticles}
         loading={articlesLoading}
@@ -149,6 +158,6 @@ export function AdminKnowledge() {
         onCreate={createCategory}
         categoriesCount={categories.length}
       />
-    </div>
+    </motion.div>
   );
 }
