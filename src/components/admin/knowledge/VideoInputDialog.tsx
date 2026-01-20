@@ -74,15 +74,6 @@ export function VideoInputDialog({
     onOpenChange(false);
   };
 
-  const handleRemoveVideo = async () => {
-    // Delete thumbnail from storage if it exists
-    if (thumbnailUrl) {
-      await deleteVideoThumbnail(thumbnailUrl);
-    }
-    onSubmit('');
-    onOpenChange(false);
-  };
-
   const handleUrlChange = (value: string) => {
     setUrl(value);
     if (error) setError(null);
@@ -250,16 +241,6 @@ export function VideoInputDialog({
             )}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
-            {initialUrl && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleRemoveVideo}
-                className="text-destructive hover:text-destructive"
-              >
-                Remove Video
-              </Button>
-            )}
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
