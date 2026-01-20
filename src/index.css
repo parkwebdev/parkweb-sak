@@ -727,63 +727,60 @@ html::view-transition {
 /* Rounded table styles for Help Center and Editor */
 .hc-article-content table,
 .ProseMirror table {
-  @apply w-full mb-4 text-sm rounded-lg border border-border;
+  @apply w-full mb-4 text-sm rounded-lg border border-border overflow-hidden;
   border-spacing: 0;
   border-collapse: separate;
 }
 
-/* Header cells - internal borders only */
+/* ===== HELP CENTER: Reset legacy borders from saved HTML, then re-apply clean 1px internal lines ===== */
 .hc-article-content th,
+.hc-article-content td {
+  border: 0 !important;
+}
+
+.hc-article-content th {
+  @apply text-left font-medium text-foreground p-2 bg-muted/50;
+  border-right: 1px solid hsl(var(--border)) !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+}
+
+.hc-article-content th:last-child {
+  border-right: 0 !important;
+}
+
+.hc-article-content td {
+  @apply p-2 text-foreground/90;
+  border-right: 1px solid hsl(var(--border)) !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+}
+
+.hc-article-content td:last-child {
+  border-right: 0 !important;
+}
+
+.hc-article-content tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+/* ===== EDITOR: Standard Tailwind approach (no legacy HTML to override) ===== */
 .ProseMirror th {
   @apply text-left font-medium text-foreground p-2 bg-muted/50 border-b border-r border-border;
 }
 
-/* Last column header - no right border (table border handles it) */
-.hc-article-content th:last-child,
 .ProseMirror th:last-child {
   @apply border-r-0;
 }
 
-/* Top-left corner radius */
-.hc-article-content tr:first-child th:first-child,
-.ProseMirror tr:first-child th:first-child {
-  @apply rounded-tl-lg;
-}
-
-/* Top-right corner radius */
-.hc-article-content tr:first-child th:last-child,
-.ProseMirror tr:first-child th:last-child {
-  @apply rounded-tr-lg;
-}
-
-/* Body cells - internal borders only */
-.hc-article-content td,
 .ProseMirror td {
   @apply p-2 border-b border-r border-border text-foreground/90;
 }
 
-/* Last column cells - no right border */
-.hc-article-content td:last-child,
 .ProseMirror td:last-child {
   @apply border-r-0;
 }
 
-/* Last row cells - no bottom border */
-.hc-article-content tr:last-child td,
 .ProseMirror tr:last-child td {
   @apply border-b-0;
-}
-
-/* Bottom-left corner radius */
-.hc-article-content tr:last-child td:first-child,
-.ProseMirror tr:last-child td:first-child {
-  @apply rounded-bl-lg;
-}
-
-/* Bottom-right corner radius */
-.hc-article-content tr:last-child td:last-child,
-.ProseMirror tr:last-child td:last-child {
-  @apply rounded-br-lg;
 }
 
 .hc-article-content kbd {
