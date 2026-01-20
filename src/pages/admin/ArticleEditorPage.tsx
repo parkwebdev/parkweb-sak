@@ -533,7 +533,7 @@ export function ArticleEditorPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Table of Contents */}
         <aside className="w-[200px] border-r border-border bg-background flex-shrink-0">
-          <ScrollArea className="h-full [&_[data-radix-scroll-area-scrollbar]]:hidden">
+          <ScrollArea className="h-full">
             <HCTableOfContents 
               headings={headings} 
               scrollContainerRef={editorScrollRef}
@@ -544,7 +544,7 @@ export function ArticleEditorPage() {
         
         {/* Center - Main Editor */}
         <main className="flex-1 overflow-hidden flex flex-col">
-          <ScrollArea className="flex-1 [&_[data-radix-scroll-area-scrollbar]]:hidden">
+          <ScrollArea className="flex-1">
             <div ref={editorScrollRef} className="max-w-4xl mx-auto py-6 px-8">
               <ArticleEditor
                 ref={editorRef}
