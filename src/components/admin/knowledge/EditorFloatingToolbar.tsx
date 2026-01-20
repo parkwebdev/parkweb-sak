@@ -299,6 +299,18 @@ export function EditorFloatingToolbar({ editor }: EditorFloatingToolbarProps) {
         >
           H3
         </button>
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+          className={cn(
+            'px-1.5 py-1 text-xs font-medium rounded transition-colors',
+            editor.isActive('heading', { level: 4 })
+              ? 'bg-accent text-accent-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+          )}
+          aria-label="Heading 4"
+        >
+          H4
+        </button>
       </div>
       
       
