@@ -8,6 +8,7 @@
  * @module components/admin/knowledge/EditorInsertPanel
  */
 
+import { motion } from 'motion/react';
 import {
   Type01,
   Heading01,
@@ -35,6 +36,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Badge } from '@/components/ui/badge';
 import { TableGridSelector } from './TableGridSelector';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 
 interface BlockType {
   id: string;
@@ -150,6 +153,8 @@ function BlockButton({ block, onClick, compact }: BlockButtonProps) {
  * Wired to TipTap editor via onInsert callback.
  */
 export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanelProps) {
+  const prefersReducedMotion = useReducedMotion();
+  
   return (
     <aside className="w-[200px] border-l border-border bg-background flex-shrink-0 flex flex-col">
       <div className="p-3 border-b border-border">
@@ -159,18 +164,34 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
       </div>
       <ScrollArea className="flex-1">
         {/* Basic Blocks */}
-        <div className="p-2 space-y-0.5">
+        <motion.div 
+          className="p-2 space-y-0.5"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.015 } }
+          }}
+        >
           <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
             Basic
           </h3>
           {BASIC_BLOCKS.map((block) => (
-            <BlockButton
+            <motion.div
               key={block.id}
-              block={block}
-              onClick={() => onInsert(block.id)}
-            />
+              variants={{
+                hidden: prefersReducedMotion ? { opacity: 1 } : { opacity: 0, x: 8 },
+                visible: { opacity: 1, x: 0 }
+              }}
+              transition={springs.smooth}
+            >
+              <BlockButton
+                block={block}
+                onClick={() => onInsert(block.id)}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
         
         {/* Media Blocks */}
         <div className="p-2 space-y-0.5 border-t border-border">

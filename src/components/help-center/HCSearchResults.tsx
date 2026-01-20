@@ -8,10 +8,13 @@
  */
 
 import { useMemo } from 'react';
+import { motion } from 'motion/react';
 import { BookOpen01 } from '@untitledui/icons';
 import { TopBarSearchResultItem, TopBarSearchEmptyState } from '@/components/layout/TopBarSearchResultItem';
 import { Badge } from '@/components/ui/badge';
 import { usePlatformHelpCenter, type PlatformHCCategory, type PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 
 interface SearchResult {
   category: PlatformHCCategory;
@@ -36,6 +39,7 @@ export function HCSearchResults({
   maxResults = 8,
 }: HCSearchResultsProps) {
   const { categories, isLoading } = usePlatformHelpCenter();
+  const prefersReducedMotion = useReducedMotion();
   
   // Search across all articles
   const results = useMemo(() => {
@@ -68,14 +72,20 @@ export function HCSearchResults({
 
   return (
     <>
-      {results.map(({ category, article }) => (
-        <TopBarSearchResultItem
+      {results.map(({ category, article }, index) => (
+        <motion.div
           key={`${category.id}-${article.id}`}
-          icon={<BookOpen01 size={16} />}
-          title={article.title}
-          subtitle={<Badge variant="secondary" size="sm">{category.label}</Badge>}
-          onClick={() => onSelect(category, article)}
-        />
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.03, ...springs.smooth }}
+        >
+          <TopBarSearchResultItem
+            icon={<BookOpen01 size={16} />}
+            title={article.title}
+            subtitle={<Badge variant="secondary" size="sm">{category.label}</Badge>}
+            onClick={() => onSelect(category, article)}
+          />
+        </motion.div>
       ))}
     </>
   );

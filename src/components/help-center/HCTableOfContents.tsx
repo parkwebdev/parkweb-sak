@@ -10,9 +10,12 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { motion } from 'motion/react';
 import { ChevronDown, ChevronRight } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 
 export interface Heading {
   id: string;
@@ -170,6 +173,7 @@ export function HCTableOfContents({
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const prefersReducedMotion = useReducedMotion();
   
   // Build hierarchical tree from flat headings
   const headingTree = useMemo(() => buildHeadingTree(headings), [headings]);
@@ -299,19 +303,35 @@ export function HCTableOfContents({
           No matching headings
         </p>
       ) : (
-        <ul className="space-y-0.5">
+        <motion.ul 
+          className="space-y-0.5"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.02 } }
+          }}
+        >
           {filteredTree.map((node) => (
-            <HeadingItem
+            <motion.li
               key={node.id}
-              node={node}
-              activeId={activeId}
-              collapsedIds={collapsedIds}
-              onToggle={handleToggle}
-              onScrollTo={scrollToHeading}
-              depth={0}
-            />
+              variants={{
+                hidden: prefersReducedMotion ? { opacity: 1 } : { opacity: 0, x: -4 },
+                visible: { opacity: 1, x: 0 }
+              }}
+              transition={springs.smooth}
+            >
+              <HeadingItem
+                node={node}
+                activeId={activeId}
+                collapsedIds={collapsedIds}
+                onToggle={handleToggle}
+                onScrollTo={scrollToHeading}
+                depth={0}
+              />
+            </motion.li>
           ))}
-        </ul>
+        </motion.ul>
       )}
     </nav>
   );

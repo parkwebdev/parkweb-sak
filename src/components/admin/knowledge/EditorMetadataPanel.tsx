@@ -7,6 +7,7 @@
  * @module components/admin/knowledge/EditorMetadataPanel
  */
 
+import { motion } from 'motion/react';
 import { ChevronDown } from '@untitledui/icons';
 import {
   Collapsible,
@@ -24,6 +25,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import type { PlatformHCCategory } from '@/types/platform-hc';
 
 interface EditorMetadataPanelProps {
@@ -60,6 +63,8 @@ export function EditorMetadataPanel({
   iconName,
   onIconNameChange,
 }: EditorMetadataPanelProps) {
+  const prefersReducedMotion = useReducedMotion();
+  
   return (
     <Collapsible
       open={isOpen}
@@ -78,7 +83,12 @@ export function EditorMetadataPanel({
       </CollapsibleTrigger>
       
       <CollapsibleContent className="px-6 pb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springs.smooth}
+        >
           {/* Slug */}
           <div className="space-y-2">
             <Label htmlFor="article-slug" className="text-xs text-muted-foreground">
@@ -161,7 +171,7 @@ export function EditorMetadataPanel({
               className="resize-none"
             />
           </div>
-        </div>
+        </motion.div>
       </CollapsibleContent>
     </Collapsible>
   );
