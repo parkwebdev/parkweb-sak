@@ -83,17 +83,6 @@ export function VideoPlayer({
     setIsPlaying(true);
   }, [isValidUrl]);
 
-  const handleVideoClick = useCallback(() => {
-    if (!videoRef.current) return;
-    
-    if (videoRef.current.paused) {
-      videoRef.current.play();
-      setIsPlaying(true);
-    } else {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    }
-  }, []);
 
   const handleVideoEnded = useCallback(() => {
     setIsPlaying(false);
@@ -186,7 +175,6 @@ export function VideoPlayer({
               controls
               controlsList="nodownload"
               playsInline
-              onClick={handleVideoClick}
               onEnded={handleVideoEnded}
               onError={handleVideoError}
               title={title}
