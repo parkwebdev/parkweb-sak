@@ -772,7 +772,7 @@ html::view-transition {
 .hc-article-content [data-callout-type="info"]::before,
 .hc-database-content [data-callout-type="info"]::before,
 .article-content [data-callout-type="info"]::before {
-  content: "ℹ️ Info";
+  content: "Info";
   @apply text-info;
 }
 
@@ -792,7 +792,7 @@ html::view-transition {
 .hc-database-content [data-callout-type="success"]::before,
 .article-content [data-callout-type="tip"]::before,
 .article-content [data-callout-type="success"]::before {
-  content: "💡 Tip";
+  content: "Tip";
   @apply text-success;
 }
 
@@ -806,7 +806,7 @@ html::view-transition {
 .hc-article-content [data-callout-type="warning"]::before,
 .hc-database-content [data-callout-type="warning"]::before,
 .article-content [data-callout-type="warning"]::before {
-  content: "⚠️ Warning";
+  content: "Warning";
   @apply text-warning;
 }
 
@@ -820,7 +820,7 @@ html::view-transition {
 .hc-article-content [data-callout-type="error"]::before,
 .hc-database-content [data-callout-type="error"]::before,
 .article-content [data-callout-type="error"]::before {
-  content: "❌ Error";
+  content: "Error";
   @apply text-destructive;
 }
 
@@ -834,7 +834,7 @@ html::view-transition {
 .hc-article-content [data-callout-type="note"]::before,
 .hc-database-content [data-callout-type="note"]::before,
 .article-content [data-callout-type="note"]::before {
-  content: "📝 Note";
+  content: "Note";
   @apply text-foreground;
 }
 
