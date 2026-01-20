@@ -907,11 +907,22 @@ html::view-transition {
 /* Editor step-number circle (rendered via NodeView, not ::before) */
 .ProseMirror [data-step] .step-number {
   @apply absolute left-0 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium;
+  z-index: 2;
 }
 
 /* Hide CSS-based step number in editor since NodeView renders it */
 .ProseMirror [data-step]::before {
   display: none;
+}
+
+/* Step connector line in editor - behind the number circle */
+.ProseMirror [data-step]:not(:last-child)::after {
+  content: "";
+  @apply absolute w-0.5 bg-border;
+  left: 15px;
+  top: 32px;
+  height: calc(100% + 0.5rem);
+  z-index: 1;
 }
 
 /* Step title (h4) styling in editor - override prose styles */
