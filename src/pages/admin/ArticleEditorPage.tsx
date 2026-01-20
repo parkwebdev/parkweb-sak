@@ -104,8 +104,8 @@ const TopBarLeft = memo(function TopBarLeft({
             <SelectItem key={cat.id} value={cat.id}>
               <span className="flex items-center gap-2">
                 <span 
-                  className="w-2 h-2 rounded-full shrink-0" 
-                  style={{ backgroundColor: cat.color }}
+                  className={`w-2 h-2 rounded-full shrink-0 ${cat.color}`}
+                  aria-hidden="true"
                 />
                 {cat.label}
               </span>
