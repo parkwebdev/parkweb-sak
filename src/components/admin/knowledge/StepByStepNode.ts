@@ -81,9 +81,9 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
       setStepByStep:
         (attrs) =>
         ({ commands }) => {
+          // Start with one empty step - user fills in their own title
           const steps = attrs?.steps || [
-            { title: 'Step 1', description: '' },
-            { title: 'Step 2', description: '' },
+            { title: '', description: '' },
           ];
           
           // Create step nodes with content as heading/paragraph nodes
@@ -125,7 +125,7 @@ export const StepByStepNode = Node.create<StepByStepOptions>({
                   { 
                     type: 'heading', 
                     attrs: { level: 4 }, 
-                    content: [{ type: 'text', text: `Step ${newStepNum}` }] 
+                    content: [] // Empty heading - user fills in their own title
                   },
                 ],
               })
@@ -193,9 +193,9 @@ export const StepNode = Node.create({
    * Content (h4/p) is editable directly by TipTap - no custom inputs.
    */
   addNodeView() {
-    return ({ node }) => {
+    return ({ node, editor }) => {
       const dom = document.createElement('div');
-      dom.className = 'step relative pl-12 py-2';
+      dom.className = 'step relative pl-12 py-2 group';
       dom.setAttribute('data-step', '');
       dom.setAttribute('data-step-number', String(node.attrs.stepNumber));
 
@@ -210,6 +210,19 @@ export const StepNode = Node.create({
       const contentDOM = document.createElement('div');
       contentDOM.className = 'step-content space-y-1';
       dom.appendChild(contentDOM);
+
+      // Add Step button (appears on hover)
+      const addButton = document.createElement('button');
+      addButton.type = 'button';
+      addButton.className = 'add-step-button mt-3 px-3 py-1.5 text-xs text-muted-foreground bg-muted/50 hover:bg-muted rounded-md border border-dashed border-border opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity';
+      addButton.textContent = '+ Add step';
+      addButton.contentEditable = 'false';
+      addButton.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editor.chain().focus().addStep().run();
+      };
+      dom.appendChild(addButton);
 
       return { dom, contentDOM };
     };

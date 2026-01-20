@@ -914,6 +914,21 @@ html::view-transition {
   display: none;
 }
 
+/* Placeholder for empty step headings in editor */
+.ProseMirror [data-step] .step-content h4.is-empty::before {
+  content: 'Enter step title...';
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Add step button visibility */
+.ProseMirror .add-step-button {
+  @apply cursor-pointer;
+}
+
 /* Step screenshot */
 .hc-article-content [data-step] img,
 .hc-database-content [data-step] img,
