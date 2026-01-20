@@ -7,9 +7,12 @@
  */
 
 import { useMemo } from 'react';
+import { motion } from 'motion/react';
 import { File06 } from '@untitledui/icons';
 import { TopBarSearchResultItem, TopBarSearchEmptyState } from '@/components/layout/TopBarSearchResultItem';
 import { Badge } from '@/components/ui/badge';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import type { PlatformHCArticle } from '@/types/platform-hc';
 
 interface KnowledgeSearchResultsProps {
@@ -29,6 +32,8 @@ export function KnowledgeSearchResults({
   articles,
   onSelect,
 }: KnowledgeSearchResultsProps) {
+  const prefersReducedMotion = useReducedMotion();
+  
   // Filter articles based on query
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -50,27 +55,33 @@ export function KnowledgeSearchResults({
 
   return (
     <div>
-      {results.map((article) => (
-        <TopBarSearchResultItem
+      {results.map((article, index) => (
+        <motion.div
           key={article.id}
-          icon={<File06 size={16} aria-hidden="true" />}
-          title={article.title}
-          subtitle={
-            <div className="flex items-center gap-2">
-              {article.category_label && (
-                <Badge size="sm" variant="secondary">
-                  {article.category_label}
-                </Badge>
-              )}
-              {!article.is_published && (
-                <Badge size="sm" variant="outline" className="text-muted-foreground">
-                  Draft
-                </Badge>
-              )}
-            </div>
-          }
-          onClick={() => onSelect(article)}
-        />
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.03, ...springs.smooth }}
+        >
+          <TopBarSearchResultItem
+            icon={<File06 size={16} aria-hidden="true" />}
+            title={article.title}
+            subtitle={
+              <div className="flex items-center gap-2">
+                {article.category_label && (
+                  <Badge size="sm" variant="secondary">
+                    {article.category_label}
+                  </Badge>
+                )}
+                {!article.is_published && (
+                  <Badge size="sm" variant="outline" className="text-muted-foreground">
+                    Draft
+                  </Badge>
+                )}
+              </div>
+            }
+            onClick={() => onSelect(article)}
+          />
+        </motion.div>
       ))}
     </div>
   );

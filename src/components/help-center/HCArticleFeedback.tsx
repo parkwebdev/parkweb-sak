@@ -8,11 +8,13 @@
  */
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Check, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useHCArticleFeedback } from '@/hooks/useHCArticleFeedback';
-import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 
 interface HCArticleFeedbackProps {
   categoryId: string;
@@ -27,6 +29,7 @@ export function HCArticleFeedback({ categoryId, articleSlug }: HCArticleFeedback
   const [showTextarea, setShowTextarea] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
   const [pendingHelpful, setPendingHelpful] = useState<boolean | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   const handleFeedback = async (helpful: boolean) => {
     if (helpful) {
@@ -61,7 +64,12 @@ export function HCArticleFeedback({ categoryId, articleSlug }: HCArticleFeedback
   if (hasFeedback) {
     return (
       <div className="border-t border-border pt-6 mt-8">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <motion.div 
+          className="flex items-center gap-2 text-sm text-muted-foreground"
+          initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={springs.smooth}
+        >
           <div className="flex items-center justify-center w-5 h-5 rounded-full bg-status-active/10">
             <Check size={12} className="text-status-active" aria-hidden="true" />
           </div>
@@ -73,72 +81,87 @@ export function HCArticleFeedback({ categoryId, articleSlug }: HCArticleFeedback
               </span>
             )}
           </span>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
     <div className="border-t border-border pt-6 mt-8">
-      {!showTextarea ? (
-        <>
-          <p className="text-sm font-medium text-foreground mb-3">
-            Was this article helpful?
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleFeedback(true)}
-              disabled={isSubmitting}
-              className="gap-1.5"
-            >
-              <ThumbsUp size={14} aria-hidden="true" />
-              Yes
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleFeedback(false)}
-              disabled={isSubmitting}
-              className="gap-1.5"
-            >
-              <ThumbsDown size={14} aria-hidden="true" />
-              No
-            </Button>
-          </div>
-        </>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-foreground">
-            What could we improve?
-          </p>
-          <Textarea
-            placeholder="Tell us how we can make this article better (optional)"
-            value={feedbackText}
-            onChange={(e) => setFeedbackText(e.target.value)}
-            rows={3}
-            className="resize-none"
-          />
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              onClick={handleSubmitWithText}
-              loading={isSubmitting}
-            >
-              Submit Feedback
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSkip}
-              disabled={isSubmitting}
-            >
-              Skip
-            </Button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        {!showTextarea ? (
+          <motion.div
+            key="buttons"
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={prefersReducedMotion ? {} : { opacity: 0 }}
+            transition={springs.smooth}
+          >
+            <p className="text-sm font-medium text-foreground mb-3">
+              Was this article helpful?
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleFeedback(true)}
+                disabled={isSubmitting}
+                className="gap-1.5"
+              >
+                <ThumbsUp size={14} aria-hidden="true" />
+                Yes
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleFeedback(false)}
+                disabled={isSubmitting}
+                className="gap-1.5"
+              >
+                <ThumbsDown size={14} aria-hidden="true" />
+                No
+              </Button>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="textarea"
+            className="space-y-3"
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={prefersReducedMotion ? {} : { opacity: 0 }}
+            transition={springs.smooth}
+          >
+            <p className="text-sm font-medium text-foreground">
+              What could we improve?
+            </p>
+            <Textarea
+              placeholder="Tell us how we can make this article better (optional)"
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              rows={3}
+              className="resize-none"
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={handleSubmitWithText}
+                loading={isSubmitting}
+              >
+                Submit Feedback
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSkip}
+                disabled={isSubmitting}
+              >
+                Skip
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
