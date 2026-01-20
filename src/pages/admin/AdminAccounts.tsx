@@ -8,6 +8,7 @@
  */
 
 import { useState, useMemo, useCallback, useRef } from 'react';
+import { motion } from 'motion/react';
 import { Users01 } from '@untitledui/icons';
 import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 import { AccountsTable, AccountDetailSheet, AccountsTopBarSearch, AdminAccountsFilters } from '@/components/admin/accounts';
@@ -17,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { exportToCSV } from '@/lib/admin/admin-utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import type { AdminAccountFilters } from '@/types/admin';
 
 /**
@@ -113,8 +116,15 @@ export function AdminAccounts() {
   }), [accounts, handleSearchSelect, handleExport, filters, handleFilterChange]);
   useTopBar(topBarConfig, 'admin-accounts');
 
+  const prefersReducedMotion = useReducedMotion();
+
   return (
-    <div className="p-6 space-y-6">
+    <motion.div 
+      className="p-6 space-y-6"
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springs.smooth}
+    >
       {/* Accounts Table - filters are now in TopBar */}
       <AccountsTable
         accounts={accounts}
@@ -133,6 +143,6 @@ export function AdminAccounts() {
         open={!!selectedAccountId}
         onOpenChange={(open) => !open && setSelectedAccountId(null)}
       />
-    </div>
+    </motion.div>
   );
 }

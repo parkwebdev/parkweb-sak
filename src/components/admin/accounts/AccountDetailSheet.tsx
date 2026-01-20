@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import {
   Sheet,
   SheetContent,
@@ -22,6 +23,8 @@ import { Separator } from '@/components/ui/separator';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
 import { getInitials, formatAdminDate } from '@/lib/admin/admin-utils';
 import { ImpersonateButton } from './ImpersonateButton';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import { Mail01, Building02, Phone01, Calendar, CreditCard01, MessageChatCircle, Users01, BookOpen01, MarkerPin01 } from '@untitledui/icons';
 
 interface AccountDetailSheetProps {
@@ -60,6 +63,7 @@ export function AccountDetailSheet({
   open,
   onOpenChange,
 }: AccountDetailSheetProps) {
+  const prefersReducedMotion = useReducedMotion();
   const { account, usage, loading } = useAccountDetail(accountId || undefined);
   const [contentReady, setContentReady] = useState(false);
 
@@ -79,7 +83,11 @@ export function AccountDetailSheet({
         {loading ? (
           <AccountDetailSkeleton />
         ) : account ? (
-          <div className={contentReady ? 'animate-in fade-in duration-200' : 'opacity-0'}>
+          <motion.div
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+            animate={contentReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+            transition={springs.smooth}
+          >
             {/* Header: Avatar + Name + Badges */}
             <SheetHeader className="mb-6">
               <div className="flex items-start gap-3">
@@ -173,8 +181,23 @@ export function AccountDetailSheet({
               {/* Usage Section */}
               <section className="space-y-3">
                 <h3 className="text-sm font-medium text-muted-foreground">Usage</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-3">
+                <motion.div 
+                  className="grid grid-cols-2 gap-4 text-sm"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: {},
+                    visible: { transition: { staggerChildren: 0.03 } }
+                  }}
+                >
+                  <motion.div 
+                    className="flex items-center gap-3"
+                    variants={{
+                      hidden: prefersReducedMotion ? {} : { opacity: 0, y: 4 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                    transition={springs.smooth}
+                  >
                     <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
                       <MessageChatCircle size={16} className="text-muted-foreground" aria-hidden="true" />
                     </div>
@@ -182,8 +205,15 @@ export function AccountDetailSheet({
                       <p className="font-medium">{usage?.conversations ?? 0}</p>
                       <p className="text-xs text-muted-foreground">Conversations</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
+                  </motion.div>
+                  <motion.div 
+                    className="flex items-center gap-3"
+                    variants={{
+                      hidden: prefersReducedMotion ? {} : { opacity: 0, y: 4 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                    transition={springs.smooth}
+                  >
                     <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
                       <Users01 size={16} className="text-muted-foreground" aria-hidden="true" />
                     </div>
@@ -191,8 +221,15 @@ export function AccountDetailSheet({
                       <p className="font-medium">{usage?.leads ?? 0}</p>
                       <p className="text-xs text-muted-foreground">Leads</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
+                  </motion.div>
+                  <motion.div 
+                    className="flex items-center gap-3"
+                    variants={{
+                      hidden: prefersReducedMotion ? {} : { opacity: 0, y: 4 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                    transition={springs.smooth}
+                  >
                     <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
                       <BookOpen01 size={16} className="text-muted-foreground" aria-hidden="true" />
                     </div>
@@ -200,8 +237,15 @@ export function AccountDetailSheet({
                       <p className="font-medium">{usage?.knowledgeSources ?? 0}</p>
                       <p className="text-xs text-muted-foreground">Knowledge Sources</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
+                  </motion.div>
+                  <motion.div 
+                    className="flex items-center gap-3"
+                    variants={{
+                      hidden: prefersReducedMotion ? {} : { opacity: 0, y: 4 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                    transition={springs.smooth}
+                  >
                     <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
                       <MarkerPin01 size={16} className="text-muted-foreground" aria-hidden="true" />
                     </div>
@@ -209,8 +253,8 @@ export function AccountDetailSheet({
                       <p className="font-medium">{usage?.locations ?? 0}</p>
                       <p className="text-xs text-muted-foreground">Locations</p>
                     </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               </section>
 
               {/* Permissions Section - Only show if has permissions */}
@@ -233,7 +277,7 @@ export function AccountDetailSheet({
               )}
 
             </div>
-          </div>
+          </motion.div>
         ) : (
           <div className="flex items-center justify-center h-32">
             <p className="text-muted-foreground">Account not found</p>

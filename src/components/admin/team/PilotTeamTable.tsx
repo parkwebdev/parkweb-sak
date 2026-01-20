@@ -7,6 +7,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { motion } from 'motion/react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -19,6 +20,8 @@ import { Trash01, Shield01 } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/lib/admin/admin-utils';
 import { DataTable } from '@/components/data-table/DataTable';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import type { PilotTeamMember } from '@/types/admin';
 import {
   AlertDialog,
@@ -47,6 +50,7 @@ export function PilotTeamTable({
   onRemove,
   isRemoving,
 }: PilotTeamTableProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
 
   const handleRemove = async () => {
@@ -157,12 +161,17 @@ export function PilotTeamTable({
 
   if (!loading && team.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
+      <motion.div 
+        className="rounded-lg border border-border bg-card p-8 text-center"
+        initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={springs.smooth}
+      >
         <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center mx-auto mb-4">
           <Shield01 size={24} className="text-muted-foreground" aria-hidden="true" />
         </div>
         <p className="text-sm text-muted-foreground">No team members found</p>
-      </div>
+      </motion.div>
     );
   }
 

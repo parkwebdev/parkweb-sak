@@ -7,6 +7,7 @@
  */
 
 import { useMemo } from 'react';
+import { motion } from 'motion/react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -21,6 +22,8 @@ import { AccountStatusBadge } from './AccountStatusBadge';
 import { AccountActions } from './AccountActions';
 import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/lib/admin/admin-utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import type { AdminAccount } from '@/types/admin';
 
 interface AccountsTableProps {
@@ -49,6 +52,7 @@ export function AccountsTable({
   onSelectAccount,
   onImpersonate,
 }: AccountsTableProps) {
+  const prefersReducedMotion = useReducedMotion();
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const columns = useMemo<ColumnDef<AdminAccount, unknown>[]>(
@@ -136,7 +140,12 @@ export function AccountsTable({
       />
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
+      <motion.div 
+        className="flex items-center justify-between"
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1, ...springs.smooth }}
+      >
         <p className="text-sm text-muted-foreground">
           Showing {accounts.length} of {totalCount} accounts
         </p>
@@ -163,7 +172,7 @@ export function AccountsTable({
             <ChevronRight size={16} aria-hidden="true" />
           </Button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
