@@ -734,7 +734,8 @@ html::view-transition {
 
 .hc-article-content th,
 .ProseMirror th {
-  @apply text-left font-medium text-foreground p-2 bg-muted/50 border-b border-r border-t border-border;
+  @apply text-left font-medium text-foreground p-2 bg-muted/50 border-t border-b border-r border-border;
+  border-left: none !important;
 }
 
 /* Add left border to first column header */
@@ -746,6 +747,8 @@ html::view-transition {
 .hc-article-content td,
 .ProseMirror td {
   @apply p-2 border-b border-r border-border text-foreground/90;
+  border-left: none !important;
+  border-top: none !important;
 }
 
 /* Add left border to first column */
