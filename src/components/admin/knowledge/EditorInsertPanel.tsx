@@ -239,7 +239,7 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
             <Table size={12} aria-hidden="true" />
             Insert Table
           </h3>
-          <TableGridSelector onSelect={onInsertTable} maxRows={6} maxCols={8} />
+          <TableGridSelector onSelect={onInsertTable} maxRows={6} maxCols={9} />
         </div>
       </ScrollArea>
     </aside>
