@@ -160,22 +160,22 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
         Table.configure({
           resizable: true,
           HTMLAttributes: {
-            class: 'border-collapse table-auto w-full my-4',
+            class: 'table-auto w-full my-4',
           },
         }),
         TableRow.configure({
           HTMLAttributes: {
-            class: 'border-b border-border',
+            class: '',
           },
         }),
         TableHeader.configure({
           HTMLAttributes: {
-            class: 'border border-border bg-muted/50 px-3 py-2 text-left font-medium',
+            class: 'bg-muted/50 px-3 py-2 text-left font-medium',
           },
         }),
         TableCell.configure({
           HTMLAttributes: {
-            class: 'border border-border px-3 py-2',
+            class: 'px-3 py-2',
           },
         }),
         // Callout extension
