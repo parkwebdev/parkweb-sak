@@ -8,12 +8,15 @@
  */
 
 import { useState, useMemo } from 'react';
+import { motion } from 'motion/react';
 import { Users02 } from '@untitledui/icons';
 import { PilotTeamTable } from '@/components/admin/team';
 import { useAdminTeam } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
 import { InviteTeamMemberDialog } from '@/components/admin/team';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import type { InvitePilotMemberData } from '@/types/admin';
 
 /**
@@ -46,8 +49,15 @@ export function AdminTeam() {
   }), []);
   useTopBar(topBarConfig);
 
+  const prefersReducedMotion = useReducedMotion();
+
   return (
-    <div className="p-6 space-y-6">
+    <motion.div 
+      className="p-6 space-y-6"
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springs.smooth}
+    >
       {/* Team Table - no header, TopBar handles page title */}
       <PilotTeamTable
         team={team}
@@ -63,6 +73,6 @@ export function AdminTeam() {
         onInvite={handleInvite}
         isInviting={isInviting}
       />
-    </div>
+    </motion.div>
   );
 }

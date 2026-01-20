@@ -7,6 +7,7 @@
  */
 
 import { useState } from 'react';
+import { motion } from 'motion/react';
 import { Mail01 as Mail } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { isValidEmail } from '@/utils/validation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import type { InvitePilotMemberData, PilotTeamRole } from '@/types/admin';
 
 interface InviteTeamMemberDialogProps {
@@ -62,6 +65,7 @@ export function InviteTeamMemberDialog({
   onInvite,
   isInviting,
 }: InviteTeamMemberDialogProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -110,7 +114,12 @@ export function InviteTeamMemberDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <motion.div 
+          className="space-y-4 py-4"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springs.smooth}
+        >
           {/* Name fields */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -185,7 +194,7 @@ export function InviteTeamMemberDialog({
           <p className="text-xs text-muted-foreground">
             The user will receive an email invitation. When they sign up or log in, they'll be added to the Pilot team with the selected role.
           </p>
-        </div>
+        </motion.div>
 
         <DialogFooter>
           <Button 
