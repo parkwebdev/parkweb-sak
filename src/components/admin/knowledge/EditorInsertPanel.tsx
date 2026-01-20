@@ -23,8 +23,6 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Paperclip,
-  FileX01,
   PlayCircle,
   // Icons for HC components
   CheckSquare,
@@ -70,15 +68,8 @@ const BASIC_BLOCKS: BlockType[] = [
 const MEDIA_BLOCKS: BlockType[] = [
   { id: 'image', label: 'Image', icon: Image01, description: 'Insert image from URL' },
   { id: 'video', label: 'Video', icon: PlayCircle, description: 'YouTube or self-hosted video' },
-  { id: 'file', label: 'File Attachment', icon: Paperclip, description: 'Upload and attach file', disabled: true, future: true },
 ];
 
-/**
- * Structural blocks
- */
-const STRUCTURE_BLOCKS: BlockType[] = [
-  { id: 'pageBreak', label: 'Page Break', icon: FileX01, description: 'Visual page break separator' },
-];
 
 /**
  * Help Center specific blocks for component parity
@@ -198,20 +189,6 @@ export function EditorInsertPanel({ onInsert, onInsertTable }: EditorInsertPanel
           ))}
         </div>
         
-        {/* Structure Blocks */}
-        <div className="p-2 space-y-0.5 border-t border-border">
-          <h3 className="text-2xs font-medium text-muted-foreground/50 px-2.5 py-1 uppercase tracking-wider">
-            Structure
-          </h3>
-          {STRUCTURE_BLOCKS.map((block) => (
-            <BlockButton
-              key={block.id}
-              block={block}
-              onClick={() => onInsert(block.id)}
-              compact
-            />
-          ))}
-        </div>
         
         {/* Help Center Blocks Section */}
         <div className="p-2 space-y-0.5 border-t border-border">

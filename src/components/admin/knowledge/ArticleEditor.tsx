@@ -293,10 +293,6 @@ export const ArticleEditor = forwardRef<ArticleEditorRef, ArticleEditorProps>(
           codeBlock: () => editor.chain().focus().toggleCodeBlock().run(),
           quote: () => editor.chain().focus().toggleBlockquote().run(),
           divider: () => editor.chain().focus().setHorizontalRule().run(),
-          pageBreak: () => {
-            // Insert a page break as a styled horizontal rule with extra spacing
-            editor.chain().focus().setHorizontalRule().run();
-          },
           image: () => setImageDialogOpen(true),
           video: () => setVideoDialogOpen(true),
           // Callouts
