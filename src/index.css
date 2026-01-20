@@ -667,7 +667,7 @@ html::view-transition {
 }
 
 .article-content img {
-  @apply max-w-full h-auto my-3;
+  @apply max-w-full h-auto;
   border-radius: 0.75rem;
 }
 
