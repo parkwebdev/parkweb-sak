@@ -914,8 +914,19 @@ html::view-transition {
   display: none;
 }
 
+/* Step title (h4) styling in editor - override prose styles */
+.ProseMirror [data-step] .step-content > h4,
+.ProseMirror [data-step] .step-content > h1,
+.ProseMirror [data-step] .step-content > h2,
+.ProseMirror [data-step] .step-content > h3 {
+  @apply text-sm font-medium text-foreground mb-1 mt-0 !important;
+}
+
 /* Placeholder for empty step headings in editor */
-.ProseMirror [data-step] .step-content h4.is-empty::before {
+.ProseMirror [data-step] .step-content h4:empty::before,
+.ProseMirror [data-step] .step-content h4.is-empty::before,
+.ProseMirror [data-step] .step-content h1:empty::before,
+.ProseMirror [data-step] .step-content h1.is-empty::before {
   content: 'Enter step title...';
   color: hsl(var(--muted-foreground));
   font-style: italic;
