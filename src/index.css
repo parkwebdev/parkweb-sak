@@ -727,7 +727,9 @@ html::view-transition {
 /* Rounded table styles for Help Center and Editor */
 .hc-article-content table,
 .ProseMirror table {
-  @apply w-full mb-4 text-sm border-collapse overflow-hidden rounded-lg border border-border;
+  @apply w-full mb-4 text-sm overflow-hidden rounded-lg border border-border;
+  border-spacing: 0;
+  border-collapse: separate;
 }
 
 .hc-article-content th,
@@ -738,28 +740,6 @@ html::view-transition {
 .hc-article-content td,
 .ProseMirror td {
   @apply p-2 border-b border-border text-foreground/90;
-}
-
-/* First row corners */
-.hc-article-content tr:first-child th:first-child,
-.ProseMirror tr:first-child th:first-child {
-  @apply rounded-tl-lg;
-}
-
-.hc-article-content tr:first-child th:last-child,
-.ProseMirror tr:first-child th:last-child {
-  @apply rounded-tr-lg;
-}
-
-/* Last row corners */
-.hc-article-content tr:last-child td:first-child,
-.ProseMirror tr:last-child td:first-child {
-  @apply rounded-bl-lg;
-}
-
-.hc-article-content tr:last-child td:last-child,
-.ProseMirror tr:last-child td:last-child {
-  @apply rounded-br-lg;
 }
 
 /* Remove border on last row */
