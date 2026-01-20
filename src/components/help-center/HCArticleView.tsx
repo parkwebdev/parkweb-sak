@@ -9,12 +9,15 @@
 
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Clock, Share07 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CopyButton } from '@/components/ui/copy-button';
 import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import { useTrackArticleView } from '@/hooks/useHCArticleViews';
 import { HCArticleFeedback } from './HCArticleFeedback';
 import { HCDatabaseArticleRenderer } from './HCDatabaseArticleRenderer';
@@ -43,6 +46,7 @@ export function HCArticleView({
 }: HCArticleViewProps) {
   const [, setSearchParams] = useSearchParams();
   const contentRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   
   // Track article view
   useTrackArticleView(category.id, article.slug);
@@ -207,13 +211,16 @@ export function HCArticleView({
       </header>
       
       {/* Article Content - rendered from database HTML */}
-      <div 
+      <motion.div 
         ref={contentRef}
         className="prose prose-sm dark:prose-invert max-w-none py-8"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springs.smooth}
       >
         <HCDatabaseArticleRenderer content={article.content} />
         <VideoBlockHydrator containerRef={contentRef} contentKey={article.slug} />
-      </div>
+      </motion.div>
       
       {/* Article Feedback */}
       <HCArticleFeedback categoryId={category.id} articleSlug={article.slug} />

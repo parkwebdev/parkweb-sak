@@ -15,6 +15,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useAuth } from '@/hooks/useAuth';
 import { BookOpen01, Trash01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
@@ -25,6 +26,8 @@ import { ArticleEditor, type ArticleEditorRef, type Heading } from '@/components
 import { HCTableOfContents } from '@/components/help-center/HCTableOfContents';
 import { EditorInsertPanel } from '@/components/admin/knowledge/EditorInsertPanel';
 import { EditorMetadataPanel } from '@/components/admin/knowledge/EditorMetadataPanel';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -174,6 +177,7 @@ export function ArticleEditorPage() {
   const { articleId } = useParams<{ articleId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const isNewArticle = articleId === 'new' || !articleId;
   const editorRef = useRef<ArticleEditorRef>(null);
   const editorScrollRef = useRef<HTMLDivElement>(null);
@@ -588,7 +592,12 @@ export function ArticleEditorPage() {
   }
   
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)]">
+    <motion.div 
+      className="flex flex-col h-[calc(100vh-56px)]"
+      initial={prefersReducedMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={springs.smooth}
+    >
       {/* Main three-panel layout */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Article Info + Table of Contents */}
@@ -685,6 +694,6 @@ export function ArticleEditorPage() {
         isDeleting={isDeleting}
         actionLabel="Delete Article"
       />
-    </div>
+    </motion.div>
   );
 }

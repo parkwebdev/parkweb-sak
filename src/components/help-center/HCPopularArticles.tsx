@@ -8,8 +8,11 @@
  * @module components/help-center/HCPopularArticles
  */
 
+import { motion } from 'motion/react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 import { usePopularArticles } from '@/hooks/useHCArticleViews';
 import type { PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
 
@@ -19,6 +22,7 @@ interface HCPopularArticlesProps {
 }
 
 export function HCPopularArticles({ categoryId, onSelectArticle }: HCPopularArticlesProps) {
+  const prefersReducedMotion = useReducedMotion();
   const { data: popularArticles, isLoading } = usePopularArticles(categoryId, 10);
   
   if (isLoading) {
@@ -49,41 +53,52 @@ export function HCPopularArticles({ categoryId, onSelectArticle }: HCPopularArti
   }
   
   return (
-    <div className="p-4">
+    <motion.div 
+      className="p-4"
+      initial={prefersReducedMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={springs.smooth}
+    >
       <h3 className="text-2xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
         Popular Articles
       </h3>
       
       <nav className="space-y-1" aria-label="Popular articles">
         {popularArticles.map((popularArticle, index: number) => (
-          <button
+          <motion.div
             key={popularArticle.id || popularArticle.slug}
-            onClick={() => onSelectArticle({ 
-              id: popularArticle.id, 
-              slug: popularArticle.slug, 
-              title: popularArticle.title, 
-              description: null,
-              content: '',
-              category_id: categoryId,
-              icon_name: null,
-              order_index: null,
-              is_published: true 
-            })}
-            className={cn(
-              'w-full text-left px-2 py-2 rounded-md',
-              'flex items-start gap-2',
-              'text-xs text-muted-foreground hover:text-foreground',
-              'hover:bg-accent transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-            )}
+            initial={prefersReducedMotion ? false : { opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.03, ...springs.smooth }}
           >
-            <span className="text-2xs text-muted-foreground/50 font-medium mt-0.5 w-3">
-              {index + 1}.
-            </span>
-            <span className="flex-1 line-clamp-2">{popularArticle.title}</span>
-          </button>
+            <button
+              onClick={() => onSelectArticle({ 
+                id: popularArticle.id, 
+                slug: popularArticle.slug, 
+                title: popularArticle.title, 
+                description: null,
+                content: '',
+                category_id: categoryId,
+                icon_name: null,
+                order_index: null,
+                is_published: true 
+              })}
+              className={cn(
+                'w-full text-left px-2 py-2 rounded-md',
+                'flex items-start gap-2',
+                'text-xs text-muted-foreground hover:text-foreground',
+                'hover:bg-accent transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+            >
+              <span className="text-2xs text-muted-foreground/50 font-medium mt-0.5 w-3">
+                {index + 1}.
+              </span>
+              <span className="flex-1 line-clamp-2">{popularArticle.title}</span>
+            </button>
+          </motion.div>
         ))}
       </nav>
-    </div>
+    </motion.div>
   );
 }
