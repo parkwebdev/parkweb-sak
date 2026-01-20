@@ -16,10 +16,11 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, BookOpen01 } from '@untitledui/icons';
+import { BookOpen01, Trash01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
 import { usePlatformHCCategories } from '@/hooks/admin/usePlatformHCCategories';
+import type { PlatformHCCategory } from '@/types/platform-hc';
 import { ArticleEditor, type ArticleEditorRef, type Heading } from '@/components/admin/knowledge/ArticleEditor';
 import { HCTableOfContents } from '@/components/help-center/HCTableOfContents';
 import { EditorInsertPanel } from '@/components/admin/knowledge/EditorInsertPanel';
@@ -30,6 +31,14 @@ import { Button } from '@/components/ui/button';
 import { IconButton } from '@/components/ui/icon-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
 import { formatDistanceToNow } from 'date-fns';
@@ -56,21 +65,28 @@ interface TopBarLeftProps {
   title: string;
   onTitleChange: (value: string) => void;
   onBack: () => void;
+  categoryId: string;
+  onCategoryChange: (id: string) => void;
+  categories: PlatformHCCategory[];
 }
 
-const TopBarLeft = memo(function TopBarLeft({ title, onTitleChange, onBack }: TopBarLeftProps) {
+const TopBarLeft = memo(function TopBarLeft({ 
+  title, 
+  onTitleChange, 
+  onBack,
+  categoryId,
+  onCategoryChange,
+  categories,
+}: TopBarLeftProps) {
   return (
     <div className="flex items-center gap-2">
-      <IconButton 
-        label="Back to Knowledge" 
-        variant="ghost" 
-        size="sm"
+      <button
         onClick={onBack}
+        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft size={16} />
-      </IconButton>
-      <span className="text-muted-foreground">/</span>
-      <TopBarPageContext icon={BookOpen01} title="Knowledge" />
+        <BookOpen01 size={16} aria-hidden="true" />
+        <span className="text-sm font-medium">Knowledge</span>
+      </button>
       <span className="text-muted-foreground">/</span>
       <Input
         value={title}
@@ -78,6 +94,25 @@ const TopBarLeft = memo(function TopBarLeft({ title, onTitleChange, onBack }: To
         placeholder="Untitled Article"
         className="border-0 bg-transparent font-medium text-sm h-8 w-auto min-w-[200px] max-w-[400px] focus-visible:ring-0 focus-visible:ring-offset-0"
       />
+      <span className="text-muted-foreground">/</span>
+      <Select value={categoryId} onValueChange={onCategoryChange}>
+        <SelectTrigger className="h-8 w-auto min-w-[140px] border-0 bg-transparent gap-2">
+          <SelectValue placeholder="Select category" />
+        </SelectTrigger>
+        <SelectContent>
+          {categories.map((cat) => (
+            <SelectItem key={cat.id} value={cat.id}>
+              <span className="flex items-center gap-2">
+                <span 
+                  className="w-2 h-2 rounded-full shrink-0" 
+                  style={{ backgroundColor: cat.color }}
+                />
+                {cat.label}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 });
@@ -90,9 +125,11 @@ interface TopBarRightProps {
   hasUnsavedChanges: boolean;
   lastSavedAt: Date | null;
   isPublished: boolean;
+  isNewArticle: boolean;
   canPublish: boolean;
   onPublish: () => void;
   onUnpublish: () => void;
+  onDelete: () => void;
 }
 
 const TopBarRight = memo(function TopBarRight({
@@ -100,12 +137,14 @@ const TopBarRight = memo(function TopBarRight({
   hasUnsavedChanges,
   lastSavedAt,
   isPublished,
+  isNewArticle,
   canPublish,
   onPublish,
   onUnpublish,
+  onDelete,
 }: TopBarRightProps) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       {/* Draft save status indicator */}
       {isSaving && (
         <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>
@@ -121,6 +160,18 @@ const TopBarRight = memo(function TopBarRight({
       
       {/* Status badge */}
       <StatusBadge status={isPublished ? 'Published' : 'Draft'} />
+      
+      {/* Delete button - only for existing articles */}
+      {!isNewArticle && (
+        <IconButton
+          label="Delete article"
+          variant="ghost"
+          size="sm"
+          onClick={onDelete}
+        >
+          <Trash01 size={16} />
+        </IconButton>
+      )}
       
       {/* Publish/Unpublish button */}
       {isPublished ? (
@@ -153,7 +204,7 @@ export function ArticleEditorPage() {
   const editorScrollRef = useRef<HTMLDivElement>(null);
   const draftSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  const { articles, loading: articlesLoading, createArticle, updateArticle } = usePlatformHCArticles();
+  const { articles, loading: articlesLoading, createArticle, updateArticle, deleteArticle } = usePlatformHCArticles();
   const { categories } = usePlatformHCCategories();
   
   // Find existing article if editing
@@ -172,6 +223,10 @@ export function ArticleEditorPage() {
   const [iconName, setIconName] = useState('');
   const [isPublished, setIsPublished] = useState(false); // Default to draft
   const [isMetadataOpen, setIsMetadataOpen] = useState(false);
+  
+  // Delete dialog state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Extracted headings for ToC
   const [headings, setHeadings] = useState<Heading[]>([]);
@@ -435,6 +490,28 @@ export function ArticleEditorPage() {
     navigate('/admin/knowledge');
   }, [navigate]);
   
+  // Handle delete article
+  const handleDelete = useCallback(async () => {
+    if (!articleId || isNewArticle) return;
+    setIsDeleting(true);
+    try {
+      await deleteArticle(articleId);
+      navigate('/admin/knowledge');
+      toast.success('Article deleted');
+    } catch (error: unknown) {
+      toast.error('Failed to delete', { description: getErrorMessage(error) });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  }, [articleId, isNewArticle, deleteArticle, navigate]);
+  
+  // Handle category change with stable callback  
+  const handleCategoryChange = useCallback((value: string) => {
+    setCategoryId(value);
+    setHasUnsavedChanges(true);
+  }, []);
+  
   // Derived value for publish button enablement
   const canPublish = Boolean(title && categoryId);
   
@@ -445,18 +522,24 @@ export function ArticleEditorPage() {
   const handleUnpublishRef = useRef(handleUnpublish);
   const handleTitleChangeRef = useRef(handleTitleChange);
   const handleBackRef = useRef(handleBack);
+  const handleCategoryChangeRef = useRef(handleCategoryChange);
+  const handleDeleteRef = useRef(() => setShowDeleteDialog(true));
   
   // Keep refs updated with latest callbacks
   handlePublishRef.current = handlePublish;
   handleUnpublishRef.current = handleUnpublish;
   handleTitleChangeRef.current = handleTitleChange;
   handleBackRef.current = handleBack;
+  handleCategoryChangeRef.current = handleCategoryChange;
+  handleDeleteRef.current = () => setShowDeleteDialog(true);
   
   // Stable wrappers that never change identity
   const onPublishStable = useCallback(() => handlePublishRef.current(), []);
   const onUnpublishStable = useCallback(() => handleUnpublishRef.current(), []);
   const onTitleChangeStable = useCallback((v: string) => handleTitleChangeRef.current(v), []);
   const onBackStable = useCallback(() => handleBackRef.current(), []);
+  const onCategoryChangeStable = useCallback((v: string) => handleCategoryChangeRef.current(v), []);
+  const onDeleteStable = useCallback(() => handleDeleteRef.current(), []);
   
   // Configure TopBar with memoized components and stable callbacks
   // Dependencies reduced to display state only - actions use stable wrappers
@@ -466,6 +549,9 @@ export function ArticleEditorPage() {
         title={title}
         onTitleChange={onTitleChangeStable}
         onBack={onBackStable}
+        categoryId={categoryId}
+        onCategoryChange={onCategoryChangeStable}
+        categories={categories}
       />
     ),
     right: (
@@ -474,12 +560,14 @@ export function ArticleEditorPage() {
         hasUnsavedChanges={hasUnsavedChanges}
         lastSavedAt={lastSavedAt}
         isPublished={isPublished}
+        isNewArticle={isNewArticle}
         canPublish={canPublish}
         onPublish={onPublishStable}
         onUnpublish={onUnpublishStable}
+        onDelete={onDeleteStable}
       />
     ),
-  }), [title, onTitleChangeStable, onBackStable, isSaving, hasUnsavedChanges, lastSavedAt, isPublished, canPublish, onPublishStable, onUnpublishStable]);
+  }), [title, onTitleChangeStable, onBackStable, categoryId, onCategoryChangeStable, categories, isSaving, hasUnsavedChanges, lastSavedAt, isPublished, isNewArticle, canPublish, onPublishStable, onUnpublishStable, onDeleteStable]);
   
   useTopBar(topBarConfig, 'admin-article-editor');
   
@@ -581,6 +669,18 @@ export function ArticleEditorPage() {
         onOrderIndexChange={(value) => { setOrderIndex(value); setHasUnsavedChanges(true); }}
         iconName={iconName}
         onIconNameChange={(value) => { setIconName(value); setHasUnsavedChanges(true); }}
+      />
+      
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Article"
+        description="This action cannot be undone. This will permanently delete this article."
+        confirmationText={title || 'delete'}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+        actionLabel="Delete Article"
       />
     </div>
   );
