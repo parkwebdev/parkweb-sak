@@ -53,6 +53,7 @@ export function usePlatformHelpCenter() {
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: 'always', // Always fetch fresh data when navigating to Help Center
   });
 
   // Fetch published articles
@@ -73,6 +74,7 @@ export function usePlatformHelpCenter() {
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: 'always', // Always fetch fresh data when navigating to Help Center
   });
 
   // Combine categories with their articles
