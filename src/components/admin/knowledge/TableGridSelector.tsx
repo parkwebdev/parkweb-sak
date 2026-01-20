@@ -24,7 +24,7 @@ interface TableGridSelectorProps {
 export function TableGridSelector({
   onSelect,
   maxRows = 6,
-  maxCols = 6,
+  maxCols = 8,
 }: TableGridSelectorProps) {
   const [hoveredRows, setHoveredRows] = useState(0);
   const [hoveredCols, setHoveredCols] = useState(0);
