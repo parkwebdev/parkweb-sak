@@ -65,18 +65,12 @@ interface TopBarLeftProps {
   title: string;
   onTitleChange: (value: string) => void;
   onBack: () => void;
-  categoryId: string;
-  onCategoryChange: (id: string) => void;
-  categories: PlatformHCCategory[];
 }
 
 const TopBarLeft = memo(function TopBarLeft({ 
   title, 
   onTitleChange, 
   onBack,
-  categoryId,
-  onCategoryChange,
-  categories,
 }: TopBarLeftProps) {
   return (
     <div className="flex items-center gap-2">
@@ -94,25 +88,6 @@ const TopBarLeft = memo(function TopBarLeft({
         placeholder="Untitled Article"
         className="border-0 bg-transparent font-medium text-sm h-8 w-auto min-w-[200px] max-w-[400px] focus-visible:ring-0 focus-visible:ring-offset-0"
       />
-      <span className="text-muted-foreground">/</span>
-      <Select value={categoryId} onValueChange={onCategoryChange}>
-        <SelectTrigger className="h-8 w-auto min-w-[140px] border border-input bg-background gap-2">
-          <SelectValue placeholder="Select category" />
-        </SelectTrigger>
-        <SelectContent>
-          {categories.map((cat) => (
-            <SelectItem key={cat.id} value={cat.id}>
-              <span className="flex items-center gap-2">
-                <span 
-                  className={`w-2 h-2 rounded-full shrink-0 ${cat.color}`}
-                  aria-hidden="true"
-                />
-                {cat.label}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 });
@@ -549,9 +524,6 @@ export function ArticleEditorPage() {
         title={title}
         onTitleChange={onTitleChangeStable}
         onBack={onBackStable}
-        categoryId={categoryId}
-        onCategoryChange={onCategoryChangeStable}
-        categories={categories}
       />
     ),
     right: (
@@ -567,7 +539,7 @@ export function ArticleEditorPage() {
         onDelete={onDeleteStable}
       />
     ),
-  }), [title, onTitleChangeStable, onBackStable, categoryId, onCategoryChangeStable, categories, isSaving, hasUnsavedChanges, lastSavedAt, isPublished, isNewArticle, canPublish, onPublishStable, onUnpublishStable, onDeleteStable]);
+  }), [title, onTitleChangeStable, onBackStable, isSaving, hasUnsavedChanges, lastSavedAt, isPublished, isNewArticle, canPublish, onPublishStable, onUnpublishStable, onDeleteStable]);
   
   useTopBar(topBarConfig, 'admin-article-editor');
   
@@ -619,9 +591,40 @@ export function ArticleEditorPage() {
     <div className="flex flex-col h-[calc(100vh-56px)]">
       {/* Main three-panel layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Table of Contents */}
-        <aside className="w-[200px] border-r border-border bg-background flex-shrink-0">
-          <ScrollArea className="h-full">
+        {/* Left Sidebar - Article Info + Table of Contents */}
+        <aside className="w-[200px] border-r border-border bg-background flex-shrink-0 flex flex-col">
+          {/* Article Info Section */}
+          <div className="p-4 border-b border-border space-y-3">
+            <h2 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+              Article Info
+            </h2>
+            
+            {/* Category Selector */}
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">Category</label>
+              <Select value={categoryId} onValueChange={onCategoryChangeStable}>
+                <SelectTrigger size="sm">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <span className="flex items-center gap-2">
+                        <span 
+                          className={`w-2 h-2 rounded-full shrink-0 ${cat.color}`}
+                          aria-hidden="true"
+                        />
+                        {cat.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Table of Contents */}
+          <ScrollArea className="flex-1">
             <HCTableOfContents 
               headings={headings} 
               scrollContainerRef={editorScrollRef}
