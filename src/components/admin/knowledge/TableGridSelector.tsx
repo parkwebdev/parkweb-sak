@@ -49,9 +49,9 @@ export function TableGridSelector({
   return (
     <div className="flex flex-col gap-2" onMouseLeave={handleMouseLeave}>
       <div
-        className="grid gap-px"
+        className="inline-grid gap-1"
         style={{
-          gridTemplateColumns: `repeat(${maxCols}, 1fr)`,
+          gridTemplateColumns: `repeat(${maxCols}, 1rem)`,
         }}
       >
         {Array.from({ length: maxRows }).map((_, rowIndex) =>
