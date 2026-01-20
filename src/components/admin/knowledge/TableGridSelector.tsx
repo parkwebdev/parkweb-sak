@@ -49,7 +49,7 @@ export function TableGridSelector({
   return (
     <div className="flex flex-col gap-2" onMouseLeave={handleMouseLeave}>
       <div
-        className="grid gap-0.5"
+        className="grid gap-px"
         style={{
           gridTemplateColumns: `repeat(${maxCols}, 1fr)`,
         }}
