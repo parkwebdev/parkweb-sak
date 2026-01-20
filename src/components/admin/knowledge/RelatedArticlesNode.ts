@@ -115,7 +115,18 @@ export const RelatedArticlesNode = Node.create<RelatedArticlesOptions>({
       class: 'related-articles mt-8 pt-6 border-t border-border',
     });
 
-    return ['div', containerAttrs];
+    // Create anchor elements for each article so they render on the frontend
+    const children: DOMOutputSpec[] = articles.map((article) => [
+      'a',
+      {
+        href: `/help-center?category=${article.categoryId}&article=${article.articleSlug}`,
+        'data-category-id': article.categoryId,
+        'data-article-slug': article.articleSlug,
+      },
+      article.title,
+    ]);
+
+    return ['div', containerAttrs, ...children];
   },
 
   // Use React NodeView for interactive editing
