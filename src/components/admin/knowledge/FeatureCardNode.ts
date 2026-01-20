@@ -24,7 +24,7 @@ declare module '@tiptap/core' {
       /**
        * Insert a single feature card
        */
-      setFeatureCard: (attrs?: { iconName?: string }) => ReturnType;
+      setFeatureCard: () => ReturnType;
     };
     featureGrid: {
       /**
@@ -109,7 +109,6 @@ export const FeatureGridNode = Node.create<FeatureGridOptions>({
           // Create feature cards with content nodes only (no attrs for title/description)
           const cards = Array.from({ length: cardCount }, (_, i) => ({
             type: 'featureCard',
-            attrs: { iconName: '' },
             content: [
               { 
                 type: 'heading', 
@@ -157,18 +156,6 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
 
   defining: true,
 
-  addAttributes() {
-    return {
-      iconName: {
-        default: '',
-        parseHTML: (element) => element.getAttribute('data-icon-name') || '',
-        renderHTML: (attributes) => ({
-          'data-icon-name': attributes.iconName,
-        }),
-      },
-    };
-  },
-
   parseHTML() {
     return [
       {
@@ -177,14 +164,11 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
     ];
   },
 
-  renderHTML({ HTMLAttributes, node }): DOMOutputSpec {
-    const iconName = node.attrs.iconName || '';
-
+  renderHTML({ HTMLAttributes }): DOMOutputSpec {
     return [
       'div',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
         'data-feature-card': '',
-        'data-icon-name': iconName,
         class: 'feature-card rounded-lg border border-border bg-card p-4 shadow-sm',
       }),
       0,
@@ -192,40 +176,10 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
   },
 
   addNodeView() {
-    return ({ node, editor, getPos }) => {
+    return () => {
       const dom = document.createElement('div');
       dom.setAttribute('data-feature-card', '');
       dom.className = 'feature-card rounded-lg border border-border bg-card p-4 shadow-sm';
-
-      // Icon placeholder with edit capability
-      const iconContainer = document.createElement('div');
-      iconContainer.className = 'feature-icon-slot mb-3 flex h-10 w-10 items-center justify-center rounded-lg cursor-pointer';
-      
-      if (node.attrs.iconName) {
-        iconContainer.className += ' bg-primary/10 text-primary';
-        iconContainer.innerHTML = `<span class="text-sm font-medium">${node.attrs.iconName.slice(0, 2).toUpperCase()}</span>`;
-      } else {
-        iconContainer.className += ' border-2 border-dashed border-muted-foreground/30 text-muted-foreground/50 hover:border-muted-foreground/50';
-        iconContainer.innerHTML = `<span class="text-xs">Icon</span>`;
-      }
-      
-      // Click handler for icon name input
-      iconContainer.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const pos = getPos();
-        if (typeof pos !== 'number') return;
-        
-        const newIconName = window.prompt('Enter icon name (e.g., "star", "check", "heart"):', node.attrs.iconName || '');
-        if (newIconName !== null) {
-          editor.chain().focus().command(({ tr }) => {
-            tr.setNodeMarkup(pos, undefined, { ...node.attrs, iconName: newIconName });
-            return true;
-          }).run();
-        }
-      });
-      
-      dom.appendChild(iconContainer);
 
       // Content hole for h4 + p (the actual editable content)
       const contentDOM = document.createElement('div');
@@ -239,13 +193,10 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
   addCommands() {
     return {
       setFeatureCard:
-        (attrs) =>
+        () =>
         ({ commands }) => {
           return commands.insertContent({
             type: this.name,
-            attrs: {
-              iconName: attrs?.iconName || '',
-            },
             content: [
               { 
                 type: 'heading', 
