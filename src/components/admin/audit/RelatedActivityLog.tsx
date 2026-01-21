@@ -42,7 +42,7 @@ export function RelatedActivityLog({
   }
 
   return (
-    <div className="space-y-3 pt-4 border-t border-border">
+    <div className="space-y-3 pt-4">
       <Label className="text-xs text-muted-foreground">Related Activity</Label>
 
       {loading ? (
