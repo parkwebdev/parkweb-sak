@@ -18,6 +18,7 @@ import { useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
+import { queryKeys } from '@/lib/query-keys';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
@@ -313,8 +314,19 @@ export function useImpersonation(): UseImpersonationResult {
         expiresAt: expiresAt.toISOString(),
       });
 
-      // NOW invalidate queries - localStorage already has the data
+      // CRITICAL: Seed the query cache with targetId IMMEDIATELY
+      // This makes useImpersonationTarget return the correct value without waiting
+      queryClient.setQueryData(adminQueryKeys.impersonation.targetId(), targetUserId);
+      
+      // CRITICAL: REMOVE (not just invalidate) scoping-critical queries
+      // This forces them to refetch with the new impersonation context
+      // removeQueries() deletes cached data so staleTime cannot hold stale values
+      queryClient.removeQueries({ queryKey: queryKeys.account.all });
+      queryClient.removeQueries({ queryKey: queryKeys.agent.all });
+      
+      // Now invalidate everything else for a full refresh
       queryClient.invalidateQueries();
+      
       toast.success('Impersonation started', {
         description: 'You are now viewing this user\'s data. Session expires in 30 minutes.',
       });
@@ -347,10 +359,19 @@ export function useImpersonation(): UseImpersonationResult {
       });
     },
     onSuccess: () => {
-      // Clear localStorage on session end
+      // Clear localStorage FIRST
       clearStoredSession();
-      // Invalidate ALL queries to refetch with admin's own context
+      
+      // Clear the cached targetId to null
+      queryClient.setQueryData(adminQueryKeys.impersonation.targetId(), null);
+      
+      // REMOVE scoping-critical queries to force fresh fetch with admin's own context
+      queryClient.removeQueries({ queryKey: queryKeys.account.all });
+      queryClient.removeQueries({ queryKey: queryKeys.agent.all });
+      
+      // Invalidate everything else
       queryClient.invalidateQueries();
+      
       toast.success('Impersonation ended', {
         description: 'You are now viewing your own data.',
       });
@@ -385,9 +406,19 @@ export function useImpersonation(): UseImpersonationResult {
       });
     },
     onSuccess: () => {
-      // Clear localStorage on bulk session end
+      // Clear localStorage
       clearStoredSession();
+      
+      // Clear cached targetId
+      queryClient.setQueryData(adminQueryKeys.impersonation.targetId(), null);
+      
+      // REMOVE scoping-critical queries
+      queryClient.removeQueries({ queryKey: queryKeys.account.all });
+      queryClient.removeQueries({ queryKey: queryKeys.agent.all });
+      
+      // Invalidate everything else
       queryClient.invalidateQueries();
+      
       toast.success('All sessions ended', {
         description: 'All active impersonation sessions have been terminated',
       });

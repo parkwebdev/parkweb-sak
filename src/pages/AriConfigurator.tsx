@@ -244,9 +244,29 @@ function AriConfiguratorContent() {
     };
   }, [agent, embedConfig, allAnnouncements, helpCategories, helpArticles]);
 
-  // Show skeleton while agent data loads (after MultiStepLoader completes)
-  if (!agent || agentLoading) {
+  // Show skeleton while loading
+  if (agentLoading) {
     return <SkeletonAriConfiguratorPage />;
+  }
+
+  // Handle missing agent with actionable error state (not infinite skeleton)
+  if (!agent) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-muted/30">
+        <div className="text-center space-y-4 max-w-md mx-auto p-8">
+          <div className="text-destructive text-lg font-medium">
+            Unable to load Ari configuration
+          </div>
+          <p className="text-muted-foreground text-sm">
+            The agent could not be found for this account. This may happen if you're 
+            viewing an account without an agent configured.
+          </p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const renderSectionContent = () => {
