@@ -127,11 +127,8 @@ export function AdminPrompts() {
         </AnimatePresence>
       </main>
 
-      {/* Right: Preview Panel */}
-      <AdminPromptPreviewPanel
-        sections={sections}
-        loading={loading}
-      />
+      {/* Right: Test Chat Panel */}
+      <AdminPromptPreviewPanel />
     </div>
   );
 }
