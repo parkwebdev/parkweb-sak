@@ -27,11 +27,112 @@ interface AuditLogDetailProps {
   onClose: () => void;
 }
 
+/** Human-readable labels for common detail keys */
+const DETAIL_KEY_LABELS: Record<string, string> = {
+  reason: 'Reason',
+  target_user_id: 'Target User',
+  bulk_end: 'Bulk Action',
+  old_status: 'Previous Status',
+  new_status: 'New Status',
+  old_value: 'Previous Value',
+  new_value: 'New Value',
+  plan_id: 'Plan',
+  plan_name: 'Plan Name',
+  amount: 'Amount',
+  currency: 'Currency',
+  subscription_id: 'Subscription',
+  changes: 'Changes Made',
+  field: 'Field',
+  from: 'From',
+  to: 'To',
+  email: 'Email',
+  role: 'Role',
+  permissions: 'Permissions',
+  duration_minutes: 'Duration (mins)',
+  error: 'Error',
+  message: 'Message',
+};
+
+/**
+ * Format a detail value for human-readable display
+ */
+function formatDetailValue(value: unknown): string {
+  if (value === null || value === undefined) return '—';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'number') return value.toLocaleString();
+  if (Array.isArray(value)) return value.join(', ') || '—';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+/**
+ * Convert a key to a readable label
+ */
+function getKeyLabel(key: string): string {
+  if (DETAIL_KEY_LABELS[key]) return DETAIL_KEY_LABELS[key];
+  // Convert snake_case or camelCase to Title Case
+  return key
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/**
+ * Render details as human-readable key-value pairs
+ */
+function DetailsList({ details }: { details: Record<string, unknown> }) {
+  const entries = Object.entries(details).filter(
+    ([, value]) => value !== null && value !== undefined && value !== ''
+  );
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      {entries.map(([key, value]) => {
+        // Handle nested objects specially
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          return (
+            <div key={key} className="space-y-1">
+              <p className="text-xs font-medium text-foreground">{getKeyLabel(key)}</p>
+              <div className="pl-3 border-l-2 border-muted space-y-1">
+                {Object.entries(value as Record<string, unknown>).map(([nestedKey, nestedValue]) => (
+                  <div key={nestedKey} className="flex items-start justify-between gap-4">
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {getKeyLabel(nestedKey)}
+                    </span>
+                    <span className="text-xs text-foreground text-right break-words">
+                      {formatDetailValue(nestedValue)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div key={key} className="flex items-start justify-between gap-4">
+            <span className="text-xs text-muted-foreground shrink-0">
+              {getKeyLabel(key)}
+            </span>
+            <span className="text-xs text-foreground text-right break-words max-w-[60%]">
+              {formatDetailValue(value)}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /**
  * Audit log detail view.
  */
 export function AuditLogDetail({ entry, onClose }: AuditLogDetailProps) {
   if (!entry) return null;
+
+  const hasDetails = entry.details && Object.keys(entry.details).length > 0;
 
   return (
     <Sheet open={!!entry} onOpenChange={() => onClose()}>
@@ -79,13 +180,13 @@ export function AuditLogDetail({ entry, onClose }: AuditLogDetailProps) {
             </div>
           )}
 
-          {/* Details */}
-          {Object.keys(entry.details).length > 0 && (
-            <div className="space-y-1">
+          {/* Details - Human Readable */}
+          {hasDetails && (
+            <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Details</Label>
-              <pre className="text-xs bg-muted p-3 rounded-lg overflow-x-auto">
-                {JSON.stringify(entry.details, null, 2)}
-              </pre>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <DetailsList details={entry.details as Record<string, unknown>} />
+              </div>
             </div>
           )}
 
