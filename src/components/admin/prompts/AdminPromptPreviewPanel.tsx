@@ -7,11 +7,8 @@
  * @module components/admin/prompts/AdminPromptPreviewPanel
  */
 
-import { useMemo, useState } from 'react';
-import { Copy01, Check } from '@untitledui/icons';
-import { Button } from '@/components/ui/button';
+import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -39,8 +36,6 @@ export function AdminPromptPreviewPanel({
   sections,
   loading,
 }: AdminPromptPreviewPanelProps) {
-  const [copied, setCopied] = useState(false);
-
   const previewSections: PreviewSection[] = useMemo(() => [
     { id: 'identity', title: 'Identity', content: sections.identity },
     { id: 'formatting', title: 'Formatting', content: sections.formatting },
@@ -54,12 +49,6 @@ export function AdminPromptPreviewPanel({
       .map(s => s.content)
       .join('\n\n');
   }, [previewSections]);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(fullPrompt);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   if (loading) {
     return (
@@ -75,10 +64,10 @@ export function AdminPromptPreviewPanel({
   }
 
   return (
-    <div className="w-[360px] flex-shrink-0 border-l border-border bg-card flex flex-col h-full">
-      <Tabs defaultValue="preview" className="flex flex-col h-full">
+    <div className="w-[360px] flex-shrink-0 border-l border-border bg-card flex flex-col h-full min-h-0">
+      <Tabs defaultValue="preview" className="flex flex-col h-full min-h-0">
         {/* Header with tabs */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <div className="flex items-center px-4 pt-4 pb-2">
           <TabsList className="h-8">
             <TabsTrigger value="preview" className="text-xs px-3">
               Preview
@@ -87,29 +76,11 @@ export function AdminPromptPreviewPanel({
               Test
             </TabsTrigger>
           </TabsList>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopy}
-            className="text-xs h-7 px-2"
-          >
-            {copied ? (
-              <>
-                <Check size={14} className="mr-1" aria-hidden="true" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy01 size={14} className="mr-1" aria-hidden="true" />
-                Copy
-              </>
-            )}
-          </Button>
         </div>
 
         {/* Preview Tab */}
-        <TabsContent value="preview" className="flex-1 flex flex-col mt-0 data-[state=inactive]:hidden">
-          <ScrollArea className="flex-1">
+        <TabsContent value="preview" className="flex-1 flex flex-col mt-0 min-h-0 data-[state=inactive]:hidden">
+          <div className="flex-1 overflow-y-auto">
             <div className="p-4 space-y-3">
               {previewSections.map((section) => (
                 <div
@@ -145,7 +116,7 @@ export function AdminPromptPreviewPanel({
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
 
           {/* Footer stats */}
           <div className="px-4 py-3 border-t border-border bg-muted/30">
@@ -157,7 +128,7 @@ export function AdminPromptPreviewPanel({
         </TabsContent>
 
         {/* Test Tab */}
-        <TabsContent value="test" className="flex-1 flex flex-col mt-0 data-[state=inactive]:hidden">
+        <TabsContent value="test" className="flex-1 flex flex-col mt-0 min-h-0 data-[state=inactive]:hidden">
           <PromptTestChat baselinePrompt={fullPrompt} />
         </TabsContent>
       </Tabs>

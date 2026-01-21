@@ -9,15 +9,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { RefreshCw01 } from '@untitledui/icons';
-import { LightbulbIcon } from '@/components/ui/lightbulb-icon';
+import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AdminSectionHeader } from '../AdminSectionHeader';
-import { DEFAULT_SECURITY_GUARDRAILS } from '@/lib/prompt-defaults';
 
 interface SecurityGuardrailsConfig {
   enabled: boolean;
@@ -67,6 +64,7 @@ export function SecuritySection({
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
   const [localConfig, setLocalConfig] = useState<SecurityGuardrailsConfig>(guardrailsConfig);
+  const [isHoveringTip, setIsHoveringTip] = useState(false);
 
   useEffect(() => {
     setLocalValue(value);
@@ -89,12 +87,6 @@ export function SecuritySection({
     setLocalValue(newValue);
     setHasChanges(newValue !== value);
     save(newValue);
-  }, [value, save]);
-
-  const handleReset = useCallback(() => {
-    setLocalValue(DEFAULT_SECURITY_GUARDRAILS);
-    setHasChanges(DEFAULT_SECURITY_GUARDRAILS !== value);
-    save(DEFAULT_SECURITY_GUARDRAILS);
   }, [value, save]);
 
   const handleToggle = useCallback(async (key: keyof SecurityGuardrailsConfig, checked: boolean) => {
@@ -125,13 +117,22 @@ export function SecuritySection({
         hasChanges={hasChanges}
         extra={
           <TooltipProvider>
-            <Tooltip>
+            <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-                  <LightbulbIcon className="w-4 h-4" />
+                <button
+                  type="button"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                  onMouseEnter={() => setIsHoveringTip(true)}
+                  onMouseLeave={() => setIsHoveringTip(false)}
+                >
+                  {isHoveringTip ? (
+                    <LightbulbIconFilled className="w-4 h-4 text-warning" />
+                  ) : (
+                    <LightbulbIcon className="w-4 h-4" />
+                  )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs">
+              <TooltipContent side="right" className="max-w-xs p-3">
                 <p className="font-medium text-xs mb-1">Security Tips</p>
                 <ul className="text-xs space-y-0.5 text-muted-foreground">
                   {SECURITY_TIPS.map((tip, i) => (
@@ -203,22 +204,6 @@ export function SecuritySection({
             />
           </div>
         )}
-
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            {lastUpdated && `Last updated: ${new Date(lastUpdated).toLocaleDateString()}`}
-          </p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            disabled={localValue === DEFAULT_SECURITY_GUARDRAILS || !localConfig.enabled}
-            className="text-xs"
-          >
-            <RefreshCw01 size={14} className="mr-1" aria-hidden="true" />
-            Reset to default
-          </Button>
-        </div>
       </div>
     </div>
   );

@@ -9,14 +9,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { RefreshCw01 } from '@untitledui/icons';
-import { LightbulbIcon } from '@/components/ui/lightbulb-icon';
+import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AdminSectionHeader } from '../AdminSectionHeader';
-import { DEFAULT_LANGUAGE_INSTRUCTION } from '@/lib/prompt-defaults';
 
 interface LanguageSectionProps {
   value: string;
@@ -42,6 +39,7 @@ export function LanguageSection({
 }: LanguageSectionProps) {
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isHoveringTip, setIsHoveringTip] = useState(false);
 
   useEffect(() => {
     setLocalValue(value);
@@ -60,12 +58,6 @@ export function LanguageSection({
     setLocalValue(newValue);
     setHasChanges(newValue !== value);
     save(newValue);
-  }, [value, save]);
-
-  const handleReset = useCallback(() => {
-    setLocalValue(DEFAULT_LANGUAGE_INSTRUCTION);
-    setHasChanges(DEFAULT_LANGUAGE_INSTRUCTION !== value);
-    save(DEFAULT_LANGUAGE_INSTRUCTION);
   }, [value, save]);
 
   if (loading) {
@@ -89,13 +81,22 @@ export function LanguageSection({
         hasChanges={hasChanges}
         extra={
           <TooltipProvider>
-            <Tooltip>
+            <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-                  <LightbulbIcon className="w-4 h-4" />
+                <button
+                  type="button"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                  onMouseEnter={() => setIsHoveringTip(true)}
+                  onMouseLeave={() => setIsHoveringTip(false)}
+                >
+                  {isHoveringTip ? (
+                    <LightbulbIconFilled className="w-4 h-4 text-warning" />
+                  ) : (
+                    <LightbulbIcon className="w-4 h-4" />
+                  )}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-xs">
+              <TooltipContent side="right" className="max-w-xs p-3">
                 <p className="font-medium text-xs mb-1">Language Tips</p>
                 <ul className="text-xs space-y-0.5 text-muted-foreground">
                   {LANGUAGE_TIPS.map((tip, i) => (
@@ -121,22 +122,6 @@ export function LanguageSection({
             rows={4}
             className="font-mono text-sm resize-y min-h-[80px]"
           />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            {lastUpdated && `Last updated: ${new Date(lastUpdated).toLocaleDateString()}`}
-          </p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            disabled={localValue === DEFAULT_LANGUAGE_INSTRUCTION}
-            className="text-xs"
-          >
-            <RefreshCw01 size={14} className="mr-1" aria-hidden="true" />
-            Reset to default
-          </Button>
         </div>
       </div>
     </div>

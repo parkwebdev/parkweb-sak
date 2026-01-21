@@ -9,9 +9,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send01, Trash01 } from '@untitledui/icons';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -76,9 +74,9 @@ export function PromptTestChat({ baselinePrompt }: PromptTestChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Chat messages */}
-      <ScrollArea className="flex-1 px-3" ref={scrollRef}>
+      <div className="flex-1 overflow-y-auto px-3" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-12 text-center">
             <p className="text-sm text-muted-foreground">
@@ -118,7 +116,7 @@ export function PromptTestChat({ baselinePrompt }: PromptTestChatProps) {
             )}
           </div>
         )}
-      </ScrollArea>
+      </div>
 
       {/* Input area */}
       <div className="p-3 border-t border-border">
