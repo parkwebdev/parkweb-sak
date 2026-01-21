@@ -61,6 +61,10 @@ export function AdminAuditLog() {
     left: <TopBarPageContext icon={ClipboardCheck} title="Audit Log" />,
     right: (
       <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={entries.length === 0}>
+          <CsvExportIcon size={14} className="mr-1.5" aria-hidden="true" />
+          Export CSV
+        </Button>
         {isImpersonating && (
           <Button 
             variant="default" 
@@ -71,10 +75,6 @@ export function AdminAuditLog() {
             End All Sessions
           </Button>
         )}
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={entries.length === 0}>
-          <CsvExportIcon size={14} className="mr-1.5" aria-hidden="true" />
-          Export CSV
-        </Button>
       </div>
     ),
   }), [entries, isImpersonating, endAllSessions, isEndingAll]);
