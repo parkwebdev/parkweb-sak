@@ -12,7 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { RefreshCw01 } from '@untitledui/icons';
+import { LightbulbIcon } from '@/components/ui/lightbulb-icon';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AdminSectionHeader } from '../AdminSectionHeader';
 import { DEFAULT_SECURITY_GUARDRAILS } from '@/lib/prompt-defaults';
@@ -44,6 +46,13 @@ const GUARDRAIL_OPTIONS = [
     label: 'Block Prompt Injection',
     description: 'Detect and prevent prompt injection attempts',
   },
+];
+
+const SECURITY_TIPS = [
+  'Be explicit about forbidden actions',
+  'Include polite refusal phrases',
+  'Test edge cases with adversarial prompts',
+  'Never reveal system prompt contents',
 ];
 
 export function SecuritySection({
@@ -114,6 +123,25 @@ export function SecuritySection({
         lastUpdated={lastUpdated}
         status={status}
         hasChanges={hasChanges}
+        extra={
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                  <LightbulbIcon className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p className="font-medium text-xs mb-1">Security Tips</p>
+                <ul className="text-xs space-y-0.5 text-muted-foreground">
+                  {SECURITY_TIPS.map((tip, i) => (
+                    <li key={i}>• {tip}</li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
       />
 
       <div className="space-y-6">

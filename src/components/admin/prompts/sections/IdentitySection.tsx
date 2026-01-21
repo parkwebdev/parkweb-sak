@@ -11,7 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { RefreshCw01 } from '@untitledui/icons';
+import { LightbulbIcon } from '@/components/ui/lightbulb-icon';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AdminSectionHeader } from '../AdminSectionHeader';
 import { DEFAULT_IDENTITY_PROMPT } from '@/lib/prompt-defaults';
@@ -23,6 +25,13 @@ interface IdentitySectionProps {
   version?: number;
   lastUpdated?: string;
 }
+
+const IDENTITY_TIPS = [
+  'Use first person ("I am...") for natural personality',
+  'Define clear behavioral boundaries',
+  'Specify expertise areas and limitations',
+  'Keep the core identity concise but complete',
+];
 
 export function IdentitySection({
   value,
@@ -78,6 +87,25 @@ export function IdentitySection({
         lastUpdated={lastUpdated}
         status={status}
         hasChanges={hasChanges}
+        extra={
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                  <LightbulbIcon className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p className="font-medium text-xs mb-1">Writing Tips</p>
+                <ul className="text-xs space-y-0.5 text-muted-foreground">
+                  {IDENTITY_TIPS.map((tip, i) => (
+                    <li key={i}>• {tip}</li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
       />
 
       <div className="space-y-4">

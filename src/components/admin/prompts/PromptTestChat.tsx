@@ -1,17 +1,18 @@
 /**
  * PromptTestChat Component
  * 
- * Test conversation simulation for baseline prompts.
+ * Interactive test chat for baseline prompts.
  * 
  * @module components/admin/prompts/PromptTestChat
  */
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send01, Trash01, RefreshCw01 } from '@untitledui/icons';
+import { Send01, Trash01 } from '@untitledui/icons';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -24,15 +25,23 @@ interface PromptTestChatProps {
 }
 
 /**
- * Chat interface for testing baseline prompts.
+ * Interactive chat interface for testing baseline prompts.
  */
 export function PromptTestChat({ baselinePrompt }: PromptTestChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -45,18 +54,18 @@ export function PromptTestChat({ baselinePrompt }: PromptTestChatProps) {
     setLoading(true);
 
     try {
-      // Simulate AI response (in production, this would call an edge function)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Simulate AI response (in production, this would call an edge function with the baselinePrompt)
+      await new Promise((resolve) => setTimeout(resolve, 1200));
       
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `[Test Response] Using baseline prompt: "${baselinePrompt.slice(0, 50)}..."\n\nThis is a simulated response to: "${input.trim()}"`,
+        content: `This is a simulated response using the baseline prompt.\n\nYour message: "${userMessage.content}"`,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch {
-      // Handle error
+      // Handle error silently
     } finally {
       setLoading(false);
     }
@@ -67,63 +76,52 @@ export function PromptTestChat({ baselinePrompt }: PromptTestChatProps) {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-sm">Test Chat</CardTitle>
-            <CardDescription>
-              Test how the baseline prompt affects responses
-            </CardDescription>
+    <div className="flex flex-col h-full">
+      {/* Chat messages */}
+      <ScrollArea className="flex-1 px-3" ref={scrollRef}>
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              Send a message to test the prompt
+            </p>
           </div>
-          {messages.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleClear}>
-              Clear
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <ScrollArea className="h-[300px] rounded-lg border border-border p-4">
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-              Send a message to test the baseline prompt
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((message) => (
+        ) : (
+          <div className="space-y-3 py-3">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={cn(
+                  'flex',
+                  message.role === 'user' ? 'justify-end' : 'justify-start'
+                )}
+              >
                 <div
-                  key={message.id}
-                  className={`flex ${
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
+                  className={cn(
+                    'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm',
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  )}
                 >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 text-sm ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                  </div>
+                  <p className="whitespace-pre-wrap">{message.content}</p>
                 </div>
-              ))}
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="bg-muted rounded-lg p-3">
-                    <RefreshCw01
-                      size={16}
-                      className="animate-spin text-muted-foreground"
-                      aria-hidden="true"
-                    />
-                  </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-2xl px-3.5 py-2 flex gap-1">
+                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
-              )}
-            </div>
-          )}
-        </ScrollArea>
+              </div>
+            )}
+          </div>
+        )}
+      </ScrollArea>
 
+      {/* Input area */}
+      <div className="p-3 border-t border-border">
         <div className="flex gap-2">
           <Input
             value={input}
@@ -136,12 +134,26 @@ export function PromptTestChat({ baselinePrompt }: PromptTestChatProps) {
               }
             }}
             disabled={loading}
+            size="sm"
           />
-          <Button onClick={handleSend} disabled={!input.trim() || loading}>
+          <Button 
+            onClick={handleSend} 
+            disabled={!input.trim() || loading}
+            size="sm"
+          >
             <Send01 size={16} aria-hidden="true" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+        {messages.length > 0 && (
+          <button
+            onClick={handleClear}
+            className="text-xs text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1"
+          >
+            <Trash01 size={12} aria-hidden="true" />
+            Clear chat
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
