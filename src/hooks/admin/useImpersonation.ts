@@ -265,3 +265,40 @@ export function useImpersonation(): UseImpersonationResult {
     isEnding: endMutation.isPending,
   };
 }
+
+/**
+ * Lightweight selector hook for impersonation target ID.
+ * Used by useAccountOwnerId to include in query key without circular dependencies.
+ * This hook only returns the targetUserId and doesn't depend on useAccountOwnerId.
+ */
+export function useImpersonationTarget(): string | null {
+  const { user } = useAuth();
+
+  const { data } = useQuery({
+    queryKey: adminQueryKeys.impersonation.current(),
+    queryFn: async (): Promise<string | null> => {
+      if (!user) return null;
+
+      const { data: session } = await supabase
+        .from('impersonation_sessions')
+        .select('target_user_id, started_at')
+        .eq('admin_user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!session) return null;
+
+      // Check if session has expired (30 minutes)
+      const startedAt = session.started_at || new Date().toISOString();
+      const expiresAt = new Date(new Date(startedAt).getTime() + 30 * 60 * 1000);
+      
+      if (new Date() > expiresAt) return null;
+
+      return session.target_user_id;
+    },
+    enabled: !!user,
+    staleTime: 30000,
+  });
+
+  return data ?? null;
+}

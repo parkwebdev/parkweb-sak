@@ -12,28 +12,33 @@
  * @module hooks/useAccountOwnerId
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { queryKeys } from '@/lib/query-keys';
 import { logger } from '@/utils/logger';
+import { useImpersonationTarget } from '@/hooks/admin/useImpersonation';
 
 /**
  * Hook that returns the account owner ID for data scoping.
  * Uses the database function `get_account_owner_id()` which returns:
+ * - The impersonated user's ID if admin is impersonating
  * - The current user's ID if they have a subscription (they're the owner)
  * - The team owner's ID if they're a team member
  * 
  * @returns {Object} Account owner state
  * @returns {string | null} accountOwnerId - The account owner's user ID for data queries
  * @returns {boolean} isTeamMember - Whether the current user is a team member (not the owner)
+ * @returns {boolean} isImpersonating - Whether admin is currently impersonating
  * @returns {boolean} loading - Loading state
  */
 export const useAccountOwnerId = () => {
   const { user } = useAuth();
+  const targetUserId = useImpersonationTarget();
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.account.ownerId(user?.id),
+    // Include targetUserId so key changes when impersonation starts/ends
+    queryKey: queryKeys.account.ownerId(user?.id, targetUserId),
     queryFn: async (): Promise<string | null> => {
       if (!user?.id) return null;
 
@@ -49,16 +54,18 @@ export const useAccountOwnerId = () => {
       return data || user.id;
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 10, // Cache for 10 minutes (owner doesn't change often)
+    staleTime: 1000 * 60 * 1, // Cache for 1 minute (needs faster refresh during impersonation)
     gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
   });
 
   const accountOwnerId = data ?? user?.id ?? null;
-  const isTeamMember = !!user?.id && !!accountOwnerId && user.id !== accountOwnerId;
+  const isImpersonating = !!targetUserId;
+  const isTeamMember = !!user?.id && !!accountOwnerId && user.id !== accountOwnerId && !isImpersonating;
 
   return {
     accountOwnerId,
     isTeamMember,
+    isImpersonating,
     loading: isLoading,
   };
 };

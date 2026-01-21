@@ -33,7 +33,8 @@ export const queryKeys = {
   // Account scoping
   account: {
     all: ['account'] as const,
-    ownerId: (userId?: string) => ['account', 'owner-id', userId] as const,
+    ownerId: (userId?: string, targetUserId?: string | null) => 
+      ['account', 'owner-id', userId, targetUserId] as const,
   },
 
   // Agent keys
