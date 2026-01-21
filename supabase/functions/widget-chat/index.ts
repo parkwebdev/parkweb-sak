@@ -292,6 +292,23 @@ serve(async (req) => {
 
     if (agentError) throw agentError;
 
+    // Fetch owner's profile for business context (company name, address, phone)
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('company_name, company_address, company_phone')
+      .eq('user_id', agent.user_id)
+      .single();
+
+    const businessContext = {
+      companyName: ownerProfile?.company_name || null,
+      companyAddress: ownerProfile?.company_address || null,
+      companyPhone: ownerProfile?.company_phone || null,
+    };
+    
+    if (businessContext.companyName) {
+      console.log(`Business context loaded: ${businessContext.companyName}`);
+    }
+
     const deploymentConfig = (agent.deployment_config || {}) as { embedded_chat?: Record<string, unknown> };
 
     // Fetch enabled custom tools for this agent
@@ -509,6 +526,7 @@ serve(async (req) => {
       conversationMetadata,
       activeConversationId,
       hasLocations,
+      businessContext,
     });
 
     // Check if we got a cached response (early return)

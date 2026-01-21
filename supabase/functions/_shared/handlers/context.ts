@@ -30,6 +30,13 @@ import { SECURITY_GUARDRAILS } from "../security/guardrails.ts";
 import { normalizeQuery, hashQuery } from "../utils/hashing.ts";
 import { corsHeaders } from "../cors.ts";
 
+/** Business context from account owner's profile */
+export interface BusinessContext {
+  companyName: string | null;
+  companyAddress: string | null;
+  companyPhone: string | null;
+}
+
 /** Result of RAG and context building */
 export interface ContextResult {
   systemPrompt: string;
@@ -204,6 +211,7 @@ export async function buildContext(
     conversationMetadata: ConversationMetadata | null;
     activeConversationId: string;
     hasLocations: boolean;
+    businessContext?: BusinessContext;
   }
 ): Promise<ContextResult> {
   const {
@@ -215,6 +223,7 @@ export async function buildContext(
     conversationMetadata,
     activeConversationId,
     hasLocations,
+    businessContext,
   } = options;
 
   // Fetch ALL platform configuration (baseline prompt, formatting, language, guardrails)
@@ -261,6 +270,7 @@ export async function buildContext(
       conversationMetadata,
       hasLocations,
       platformConfig,
+      businessContext,
     });
   }
 
@@ -278,6 +288,7 @@ export async function buildContext(
       conversationMetadata,
       hasLocations,
       platformConfig,
+      businessContext,
     });
   }
 
@@ -416,6 +427,7 @@ IMPORTANT GUIDELINES FOR RESPONSES:
     conversationMetadata,
     hasLocations,
     platformConfig,
+    businessContext,
   });
 }
 
@@ -433,6 +445,7 @@ function buildFinalPrompt(options: {
   conversationMetadata: ConversationMetadata | null;
   hasLocations: boolean;
   platformConfig: PlatformPromptConfig;
+  businessContext?: BusinessContext;
 }): ContextResult {
   let { systemPrompt } = options;
   const {
@@ -444,7 +457,11 @@ function buildFinalPrompt(options: {
     conversationMetadata,
     hasLocations,
     platformConfig,
+    businessContext,
   } = options;
+
+  // Add business identity context (company name from owner's profile)
+  systemPrompt = appendBusinessContext(systemPrompt, businessContext);
 
   // Add user context section
   systemPrompt = appendUserContext(systemPrompt, conversationMetadata);
@@ -502,6 +519,38 @@ Use this remembered information naturally when relevant. Don't explicitly say "I
     queryEmbeddingForMemory,
     cachedResponse: null,
   };
+}
+
+/**
+ * Appends business identity context from account owner's profile.
+ * This enables the AI to know which company it represents in conversations.
+ */
+function appendBusinessContext(
+  systemPrompt: string,
+  businessContext?: BusinessContext
+): string {
+  if (!businessContext?.companyName) return systemPrompt;
+
+  let contextSection = `
+
+BUSINESS IDENTITY:
+You represent ${businessContext.companyName}.`;
+
+  if (businessContext.companyAddress) {
+    contextSection += `
+- Business Address: ${businessContext.companyAddress}`;
+  }
+  if (businessContext.companyPhone) {
+    contextSection += `
+- Business Phone: ${businessContext.companyPhone}`;
+  }
+
+  contextSection += `
+
+When visitors ask about the company, business, or who you work for, reference this business identity naturally. You are the AI assistant for ${businessContext.companyName}. Never claim to be a generic AI or mention other companies - you work exclusively for ${businessContext.companyName}.`;
+
+  console.log(`Injected business identity context: ${businessContext.companyName}`);
+  return systemPrompt + contextSection;
 }
 
 /**
