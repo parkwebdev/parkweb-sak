@@ -23,13 +23,11 @@ import {
   BookOpen01,
   Mail01,
   ClipboardCheck,
-  Shield01,
-  SwitchHorizontal01
+  Shield01
 } from '@untitledui/icons';
 import { useAdminAccounts } from '@/hooks/admin/useAdminAccounts';
 import { useRevenueAnalytics } from '@/hooks/admin/useRevenueAnalytics';
 import { useAdminSubscriptions } from '@/hooks/admin/useAdminSubscriptions';
-import { useImpersonation } from '@/hooks/admin/useImpersonation';
 import { formatAdminCurrency, formatCompactNumber, formatPercentage } from '@/lib/admin/admin-utils';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
@@ -120,23 +118,10 @@ function QuickActionCard({ icon: Icon, label, description, href }: QuickActionCa
  * Super Admin Dashboard overview page.
  */
 export function AdminDashboard() {
-  const { isImpersonating, endAllSessions, isEndingAll } = useImpersonation();
-
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={Shield01} title="Platform Overview" />,
-    right: isImpersonating ? (
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => endAllSessions()}
-        loading={isEndingAll}
-      >
-        <SwitchHorizontal01 size={14} className="mr-1.5" aria-hidden="true" />
-        End All Sessions
-      </Button>
-    ) : null,
-  }), [isImpersonating, endAllSessions, isEndingAll]);
+  }), []);
   useTopBar(topBarConfig);
 
   // Fetch real data from hooks
