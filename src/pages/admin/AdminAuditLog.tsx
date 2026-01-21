@@ -8,7 +8,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { ClipboardCheck, SwitchHorizontal01 } from '@untitledui/icons';
+import { ClipboardCheck } from '@untitledui/icons';
 import { format } from 'date-fns';
 import { AuditLogTable } from '@/components/admin/audit';
 import { useAdminAuditLog, useImpersonation } from '@/hooks/admin';
@@ -68,7 +68,6 @@ export function AdminAuditLog() {
             onClick={() => endAllSessions()}
             loading={isEndingAll}
           >
-            <SwitchHorizontal01 size={14} className="mr-1.5" aria-hidden="true" />
             End All Sessions
           </Button>
         )}
