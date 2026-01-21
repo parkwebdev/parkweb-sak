@@ -45,10 +45,13 @@ export interface ContextResult {
 function extractStringValue(value: unknown): string {
   if (typeof value === 'string') return value;
   if (value && typeof value === 'object') {
-    // Handle { value: "..." } or nested JSON
+    // Handle all possible value shapes from frontend storage
     const obj = value as Record<string, unknown>;
     if ('value' in obj && typeof obj.value === 'string') return obj.value;
     if ('prompt' in obj && typeof obj.prompt === 'string') return obj.prompt;
+    if ('rules' in obj && typeof obj.rules === 'string') return obj.rules;
+    if ('text' in obj && typeof obj.text === 'string') return obj.text;
+    if ('instruction' in obj && typeof obj.instruction === 'string') return obj.instruction;
     return JSON.stringify(value);
   }
   return '';
@@ -67,6 +70,7 @@ interface PlatformPromptConfig {
   baselinePrompt: string;
   responseFormatting: string;
   languageInstruction: string;
+  securityText: string;  // Editable security rules text
   guardrails: SecurityGuardrailsConfig;
 }
 
@@ -127,11 +131,17 @@ LANGUAGE: Always respond in the same language the user is writing in. If they wr
 async function fetchPlatformConfig(
   supabase: ReturnType<typeof createClient>
 ): Promise<PlatformPromptConfig> {
-  // Fetch all config keys in one query
+  // Fetch all config keys in one query (including security_guardrails_text for editable rules)
   const { data: configs } = await supabase
     .from('platform_config')
     .select('key, value')
-    .in('key', ['baseline_prompt', 'response_formatting', 'security_guardrails', 'language_instruction']);
+    .in('key', [
+      'baseline_prompt', 
+      'response_formatting', 
+      'security_guardrails',       // Toggles (enabled, block_pii, block_prompt_injection)
+      'security_guardrails_text',  // Editable security rules text
+      'language_instruction'
+    ]);
 
   const configMap = new Map<string, unknown>();
   if (configs) {
@@ -155,7 +165,12 @@ async function fetchPlatformConfig(
     ? extractStringValue(configMap.get('language_instruction'))
     : DEFAULT_LANGUAGE_INSTRUCTION;
 
-  // Parse security guardrails
+  // Parse editable security text
+  const securityText = configMap.has('security_guardrails_text')
+    ? extractStringValue(configMap.get('security_guardrails_text'))
+    : '';
+
+  // Parse security guardrails toggles
   const defaultGuardrails: SecurityGuardrailsConfig = { 
     enabled: true, 
     block_pii: true, 
@@ -171,7 +186,7 @@ async function fetchPlatformConfig(
     guardrails = { ...defaultGuardrails, ...parsed };
   }
 
-  return { baselinePrompt, responseFormatting, languageInstruction, guardrails };
+  return { baselinePrompt, responseFormatting, languageInstruction, securityText, guardrails };
 }
 
 /**
@@ -207,6 +222,7 @@ export async function buildContext(
     baselinePrompt: '',
     responseFormatting: DEFAULT_RESPONSE_FORMATTING,
     languageInstruction: DEFAULT_LANGUAGE_INSTRUCTION,
+    securityText: '',
     guardrails: { enabled: true, block_pii: true, block_prompt_injection: true },
   };
   
@@ -450,16 +466,23 @@ Use this remembered information naturally when relevant. Don't explicitly say "I
   // Add formatting rules from database config
   systemPrompt += platformConfig.responseFormatting;
 
-  // Add security guardrails - use dynamic platform guardrails if enabled, otherwise use static defaults
+  // Add security guardrails - prioritize editable text, fall back to toggle-based generation
   if (platformConfig.guardrails.enabled) {
-    const dynamicGuardrails = buildGuardrailInstructions(platformConfig.guardrails);
-    if (dynamicGuardrails) {
-      systemPrompt += dynamicGuardrails;
-      console.log('Applied platform security guardrails');
+    // If there's custom security text, use it directly
+    if (platformConfig.securityText?.trim()) {
+      systemPrompt += `\n\nSECURITY GUARDRAILS:\n${platformConfig.securityText}`;
+      console.log('Applied custom security guardrails text');
+    } else {
+      // Otherwise, build from toggles (PII, prompt injection)
+      const dynamicGuardrails = buildGuardrailInstructions(platformConfig.guardrails);
+      if (dynamicGuardrails) {
+        systemPrompt += dynamicGuardrails;
+        console.log('Applied platform security guardrails from toggles');
+      }
     }
   } else {
-    // Fallback to static security guardrails
-    systemPrompt += SECURITY_GUARDRAILS;
+    // Guardrails disabled - skip entirely
+    console.log('Security guardrails disabled');
   }
 
   // Add language matching instruction from database config
