@@ -8,10 +8,10 @@
  */
 
 import { useState, useMemo } from 'react';
-import { ClipboardCheck } from '@untitledui/icons';
+import { ClipboardCheck, SwitchHorizontal01 } from '@untitledui/icons';
 import { format } from 'date-fns';
 import { AuditLogTable } from '@/components/admin/audit';
-import { useAdminAuditLog } from '@/hooks/admin';
+import { useAdminAuditLog, useImpersonation } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
 import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
@@ -22,6 +22,7 @@ import type { AuditLogFilters as AuditLogFiltersType } from '@/types/admin';
  * Audit log viewer page for Super Admin.
  */
 export function AdminAuditLog() {
+  const { isImpersonating, endAllSessions, isEndingAll } = useImpersonation();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Partial<AuditLogFiltersType>>({});
   const pageSize = 50;
@@ -59,12 +60,25 @@ export function AdminAuditLog() {
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={ClipboardCheck} title="Audit Log" />,
     right: (
-      <Button variant="outline" size="sm" onClick={handleExport} disabled={entries.length === 0}>
-        <CsvExportIcon size={14} className="mr-1.5" aria-hidden="true" />
-        Export CSV
-      </Button>
+      <div className="flex items-center gap-2">
+        {isImpersonating && (
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={() => endAllSessions()}
+            loading={isEndingAll}
+          >
+            <SwitchHorizontal01 size={14} className="mr-1.5" aria-hidden="true" />
+            End All Sessions
+          </Button>
+        )}
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={entries.length === 0}>
+          <CsvExportIcon size={14} className="mr-1.5" aria-hidden="true" />
+          Export CSV
+        </Button>
+      </div>
     ),
-  }), [entries]);
+  }), [entries, isImpersonating, endAllSessions, isEndingAll]);
   useTopBar(topBarConfig);
 
   const handleFiltersChange = (newFilters: Partial<AuditLogFiltersType>) => {
