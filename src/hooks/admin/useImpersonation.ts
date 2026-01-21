@@ -277,6 +277,16 @@ export function useImpersonation(): UseImpersonationResult {
 
       if (error) throw error;
 
+      // Fetch the created session to get its ID and started_at
+      const { data: session } = await supabase
+        .from('impersonation_sessions')
+        .select('id, started_at')
+        .eq('admin_user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (!session) throw new Error('Session not created');
+
       // Log the action
       await supabase.from('admin_audit_log').insert({
         admin_user_id: user.id,
@@ -285,10 +295,25 @@ export function useImpersonation(): UseImpersonationResult {
         target_id: targetUserId,
         details: { reason: reason.trim() },
       });
+
+      // Return session data for use in onSuccess
+      return { session, targetUserId };
     },
-    onSuccess: () => {
-      // Invalidate ALL queries to refetch with new impersonated context
-      // This ensures all data-scoped queries use the target user's ID
+    onSuccess: ({ session, targetUserId }) => {
+      // Store in localStorage FIRST - before invalidating queries
+      // This ensures useImpersonationTarget has data immediately on navigation
+      const startedAt = session.started_at || new Date().toISOString();
+      const expiresAt = new Date(new Date(startedAt).getTime() + SESSION_DURATION_MS);
+      storeSession({
+        sessionId: session.id,
+        targetUserId,
+        targetUserEmail: null, // Will be populated on next query
+        targetUserName: null,
+        startedAt,
+        expiresAt: expiresAt.toISOString(),
+      });
+
+      // NOW invalidate queries - localStorage already has the data
       queryClient.invalidateQueries();
       toast.success('Impersonation started', {
         description: 'You are now viewing this user\'s data. Session expires in 30 minutes.',
@@ -384,8 +409,9 @@ export function useImpersonation(): UseImpersonationResult {
     expiresAt: data?.expiresAt || null,
     remainingMinutes: getRemainingMinutes(),
     loading: isLoading,
-    startImpersonation: (targetUserId, reason) =>
-      startMutation.mutateAsync({ targetUserId, reason }),
+    startImpersonation: async (targetUserId, reason) => {
+      await startMutation.mutateAsync({ targetUserId, reason });
+    },
     endImpersonation: endMutation.mutateAsync,
     endAllSessions: endAllSessionsMutation.mutateAsync,
     isStarting: startMutation.isPending,
@@ -403,11 +429,13 @@ export function useImpersonation(): UseImpersonationResult {
 export function useImpersonationTarget(): string | null {
   const { user } = useAuth();
 
-  // Get stored session for immediate availability on reload
+  // Get stored session - this is the SOURCE OF TRUTH for immediate availability
+  // This allows navigation to work correctly before queries refetch
   const storedSession = getStoredSession();
 
   const { data } = useQuery({
-    queryKey: adminQueryKeys.impersonation.current(),
+    // Use DEDICATED query key to avoid conflicts with full useImpersonation hook
+    queryKey: adminQueryKeys.impersonation.targetId(),
     queryFn: async (): Promise<string | null> => {
       if (!user) return null;
 
@@ -425,7 +453,7 @@ export function useImpersonationTarget(): string | null {
 
       // Check if session has expired (30 minutes)
       const startedAt = session.started_at || new Date().toISOString();
-      const expiresAt = new Date(new Date(startedAt).getTime() + 30 * 60 * 1000);
+      const expiresAt = new Date(new Date(startedAt).getTime() + SESSION_DURATION_MS);
       
       if (new Date() > expiresAt) {
         clearStoredSession();
@@ -440,5 +468,7 @@ export function useImpersonationTarget(): string | null {
     staleTime: 30000,
   });
 
-  return data ?? null;
+  // Return localStorage value first if available (immediate), fallback to query data
+  // This ensures navigation works correctly during the query invalidation/refetch cycle
+  return storedSession?.targetUserId ?? data ?? null;
 }
