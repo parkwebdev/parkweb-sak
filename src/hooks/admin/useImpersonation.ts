@@ -9,6 +9,7 @@
  * - One-click exit
  * - Admin protection (cannot impersonate super_admins)
  * - Rate limiting (max 5 per hour, enforced server-side)
+ * - localStorage persistence for surviving hot-reloads
  * 
  * @module hooks/admin/useImpersonation
  */
@@ -27,6 +28,60 @@ const SESSION_DURATION_MS = 30 * 60 * 1000;
 
 /** Check interval for session expiry (every minute) */
 const EXPIRY_CHECK_INTERVAL_MS = 60 * 1000;
+
+/** localStorage key for persisting impersonation state across reloads */
+const IMPERSONATION_STORAGE_KEY = 'pilot_impersonation_session';
+
+/** Shape of stored session data */
+interface StoredSession {
+  sessionId: string;
+  targetUserId: string;
+  targetUserEmail: string | null;
+  targetUserName: string | null;
+  startedAt: string;
+  expiresAt: string;
+}
+
+/**
+ * Retrieve stored session from localStorage, returning null if expired or invalid
+ */
+function getStoredSession(): StoredSession | null {
+  try {
+    const stored = localStorage.getItem(IMPERSONATION_STORAGE_KEY);
+    if (!stored) return null;
+    const parsed = JSON.parse(stored) as StoredSession;
+    // Check if expired
+    if (new Date() > new Date(parsed.expiresAt)) {
+      localStorage.removeItem(IMPERSONATION_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Store session in localStorage for persistence across reloads
+ */
+function storeSession(session: StoredSession): void {
+  try {
+    localStorage.setItem(IMPERSONATION_STORAGE_KEY, JSON.stringify(session));
+  } catch {
+    // Silently fail if storage is unavailable
+  }
+}
+
+/**
+ * Clear stored session from localStorage
+ */
+function clearStoredSession(): void {
+  try {
+    localStorage.removeItem(IMPERSONATION_STORAGE_KEY);
+  } catch {
+    // Silently fail
+  }
+}
 
 interface UseImpersonationResult {
   isImpersonating: boolean;
@@ -49,6 +104,9 @@ interface UseImpersonationResult {
 export function useImpersonation(): UseImpersonationResult {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Get stored session for initialData (survives hot-reloads)
+  const storedSession = getStoredSession();
 
   const { data, isLoading } = useQuery({
     queryKey: adminQueryKeys.impersonation.current(),
@@ -74,6 +132,8 @@ export function useImpersonation(): UseImpersonationResult {
         .maybeSingle();
 
       if (!session) {
+        // No active session in DB - clear any stale localStorage
+        clearStoredSession();
         return {
           isImpersonating: false,
           targetUserId: null,
@@ -91,6 +151,9 @@ export function useImpersonation(): UseImpersonationResult {
 
       // Check if session has expired
       if (new Date() > new Date(expiresAt)) {
+        // Clear localStorage for expired session
+        clearStoredSession();
+
         // Auto-end expired session
         await supabase
           .from('impersonation_sessions')
@@ -134,6 +197,16 @@ export function useImpersonation(): UseImpersonationResult {
         .eq('user_id', session.target_user_id)
         .maybeSingle();
 
+      // Store valid session in localStorage for persistence across reloads
+      storeSession({
+        sessionId: session.id,
+        targetUserId: session.target_user_id,
+        targetUserEmail: profile?.email || null,
+        targetUserName: profile?.display_name || null,
+        startedAt,
+        expiresAt,
+      });
+
       return {
         isImpersonating: true,
         targetUserId: session.target_user_id,
@@ -144,6 +217,16 @@ export function useImpersonation(): UseImpersonationResult {
         expiresAt,
       };
     },
+    // Use stored session as initialData so banner renders immediately on reload
+    initialData: storedSession ? {
+      isImpersonating: true,
+      sessionId: storedSession.sessionId,
+      targetUserId: storedSession.targetUserId,
+      targetUserEmail: storedSession.targetUserEmail,
+      targetUserName: storedSession.targetUserName,
+      startedAt: storedSession.startedAt,
+      expiresAt: storedSession.expiresAt,
+    } : undefined,
     enabled: !!user,
     staleTime: 30000,
     refetchInterval: EXPIRY_CHECK_INTERVAL_MS, // Check for expiry every minute
@@ -239,6 +322,8 @@ export function useImpersonation(): UseImpersonationResult {
       });
     },
     onSuccess: () => {
+      // Clear localStorage on session end
+      clearStoredSession();
       // Invalidate ALL queries to refetch with admin's own context
       queryClient.invalidateQueries();
       toast.success('Impersonation ended', {
@@ -275,6 +360,8 @@ export function useImpersonation(): UseImpersonationResult {
       });
     },
     onSuccess: () => {
+      // Clear localStorage on bulk session end
+      clearStoredSession();
       queryClient.invalidateQueries();
       toast.success('All sessions ended', {
         description: 'All active impersonation sessions have been terminated',
@@ -311,9 +398,13 @@ export function useImpersonation(): UseImpersonationResult {
  * Lightweight selector hook for impersonation target ID.
  * Used by useAccountOwnerId to include in query key without circular dependencies.
  * This hook only returns the targetUserId and doesn't depend on useAccountOwnerId.
+ * Uses localStorage for immediate availability on page reload.
  */
 export function useImpersonationTarget(): string | null {
   const { user } = useAuth();
+
+  // Get stored session for immediate availability on reload
+  const storedSession = getStoredSession();
 
   const { data } = useQuery({
     queryKey: adminQueryKeys.impersonation.current(),
@@ -327,16 +418,24 @@ export function useImpersonationTarget(): string | null {
         .eq('is_active', true)
         .maybeSingle();
 
-      if (!session) return null;
+      if (!session) {
+        clearStoredSession();
+        return null;
+      }
 
       // Check if session has expired (30 minutes)
       const startedAt = session.started_at || new Date().toISOString();
       const expiresAt = new Date(new Date(startedAt).getTime() + 30 * 60 * 1000);
       
-      if (new Date() > expiresAt) return null;
+      if (new Date() > expiresAt) {
+        clearStoredSession();
+        return null;
+      }
 
       return session.target_user_id;
     },
+    // Use stored targetUserId as initialData for immediate availability
+    initialData: storedSession?.targetUserId ?? undefined,
     enabled: !!user,
     staleTime: 30000,
   });
