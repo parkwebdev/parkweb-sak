@@ -18,6 +18,7 @@ import {
 import { format } from 'date-fns';
 import { getAuditActionLabel, getTargetTypeLabel } from '@/lib/admin/audit-actions';
 import { parseUserAgent } from '@/lib/admin/admin-utils';
+import { RelatedActivityLog } from './RelatedActivityLog';
 import type { AuditLogEntry } from '@/types/admin';
 
 interface AuditLogDetailProps {
@@ -205,6 +206,15 @@ export function AuditLogDetail({ entry, onClose }: AuditLogDetailProps) {
               </div>
             )}
           </div>
+
+          {/* Related Activity */}
+          {entry.target_id && (
+            <RelatedActivityLog
+              targetId={entry.target_id}
+              targetType={entry.target_type}
+              excludeEntryId={entry.id}
+            />
+          )}
         </div>
       </SheetContent>
     </Sheet>
