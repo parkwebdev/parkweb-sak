@@ -4,11 +4,19 @@
  * @module components/admin/prompts
  */
 
-export { PromptSectionEditor } from './PromptSectionEditor';
-export { FullPromptPreview } from './FullPromptPreview';
-export { SecurityGuardrailsCard } from './SecurityGuardrailsCard';
-export { PromptTestChat } from './PromptTestChat';
+// New 3-column layout components
+export { AdminPromptSectionMenu, type PromptSection } from './AdminPromptSectionMenu';
+export { AdminPromptPreviewPanel } from './AdminPromptPreviewPanel';
+export { AdminSectionHeader } from './AdminSectionHeader';
 
-// Legacy exports (can be removed after migration)
+// Section components
+export { IdentitySection } from './sections/IdentitySection';
+export { FormattingSection } from './sections/FormattingSection';
+export { SecuritySection } from './sections/SecuritySection';
+export { LanguageSection } from './sections/LanguageSection';
+
+// Legacy exports (kept for backward compatibility)
+export { FullPromptPreview } from './FullPromptPreview';
+export { PromptTestChat } from './PromptTestChat';
 export { PromptPreview } from './PromptPreview';
 export { PromptVersionHistory } from './PromptVersionHistory';
