@@ -11,7 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { RefreshCw01 } from '@untitledui/icons';
+import { LightbulbIcon } from '@/components/ui/lightbulb-icon';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AdminSectionHeader } from '../AdminSectionHeader';
 import { DEFAULT_FORMATTING_RULES } from '@/lib/prompt-defaults';
@@ -23,6 +25,13 @@ interface FormattingSectionProps {
   version?: number;
   lastUpdated?: string;
 }
+
+const FORMATTING_TIPS = [
+  'Keep messages short for chat interfaces',
+  'Use "|||" for message chunking/pauses',
+  'Avoid excessive markdown in responses',
+  'Match the brand voice and tone',
+];
 
 export function FormattingSection({
   value,
@@ -78,6 +87,25 @@ export function FormattingSection({
         lastUpdated={lastUpdated}
         status={status}
         hasChanges={hasChanges}
+        extra={
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                  <LightbulbIcon className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p className="font-medium text-xs mb-1">Formatting Tips</p>
+                <ul className="text-xs space-y-0.5 text-muted-foreground">
+                  {FORMATTING_TIPS.map((tip, i) => (
+                    <li key={i}>• {tip}</li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        }
       />
 
       <div className="space-y-4">

@@ -2,7 +2,7 @@
  * AdminPromptSectionMenu Component
  * 
  * Vertical section menu for the Admin Prompts page.
- * Matches the AriSectionMenu design pattern.
+ * Matches the AriSectionMenu design pattern with active icon states.
  * 
  * @module components/admin/prompts/AdminPromptSectionMenu
  */
@@ -17,6 +17,12 @@ import {
   ShieldTick,
   Globe01,
 } from '@untitledui/icons';
+import {
+  UserFilled,
+  MessageFilled,
+  ShieldFilled,
+  GlobeFilled,
+} from '@/components/icons/AdminPromptIcons';
 
 export type PromptSection = 'identity' | 'formatting' | 'security' | 'language';
 
@@ -24,6 +30,7 @@ interface PromptSectionConfig {
   id: PromptSection;
   label: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
+  activeIcon: React.ComponentType<{ size?: number; className?: string }>;
   group: string;
 }
 
@@ -32,24 +39,28 @@ const PROMPT_SECTIONS: PromptSectionConfig[] = [
     id: 'identity',
     label: 'Identity & Role',
     icon: User01,
+    activeIcon: UserFilled,
     group: 'Core Prompts',
   },
   {
     id: 'formatting',
     label: 'Response Formatting',
     icon: MessageTextSquare01,
+    activeIcon: MessageFilled,
     group: 'Core Prompts',
   },
   {
     id: 'security',
     label: 'Security Guardrails',
     icon: ShieldTick,
+    activeIcon: ShieldFilled,
     group: 'Security',
   },
   {
     id: 'language',
     label: 'Language Instruction',
     icon: Globe01,
+    activeIcon: GlobeFilled,
     group: 'Behavior',
   },
 ];
@@ -83,7 +94,7 @@ export function AdminPromptSectionMenu({
           <div className="space-y-0.5">
             {items.map((item, index) => {
               const isActive = activeSection === item.id;
-              const Icon = item.icon;
+              const Icon = isActive ? item.activeIcon : item.icon;
 
               return (
                 <motion.button
