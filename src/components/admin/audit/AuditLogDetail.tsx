@@ -191,8 +191,8 @@ export function AuditLogDetail({ entry, onClose }: AuditLogDetailProps) {
             </div>
           )}
 
-          {/* Metadata */}
-          <div className="space-y-3 pt-4 border-t border-border">
+          {/* Metadata & Related Activity */}
+          <div className="space-y-4 pt-4 border-t border-border">
             {entry.ip_address && (
               <div className="flex items-center justify-between">
                 <Label className="text-xs text-muted-foreground">IP Address</Label>
@@ -205,16 +205,16 @@ export function AuditLogDetail({ entry, onClose }: AuditLogDetailProps) {
                 <span className="text-sm">{parseUserAgent(entry.user_agent)}</span>
               </div>
             )}
-          </div>
 
-          {/* Related Activity */}
-          {entry.target_id && (
-            <RelatedActivityLog
-              targetId={entry.target_id}
-              targetType={entry.target_type}
-              excludeEntryId={entry.id}
-            />
-          )}
+            {/* Related Activity */}
+            {entry.target_id && (
+              <RelatedActivityLog
+                targetId={entry.target_id}
+                targetType={entry.target_type}
+                excludeEntryId={entry.id}
+              />
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
