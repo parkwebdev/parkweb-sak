@@ -86,6 +86,8 @@ export const adminQueryKeys = {
     list: (filters: Partial<AuditLogFilters>, page: number, pageSize: number) =>
       [...adminQueryKeys.audit.all(), 'list', JSON.stringify(filters), page, pageSize] as const,
     entry: (entryId: string) => [...adminQueryKeys.audit.all(), 'entry', entryId] as const,
+    relatedActivity: (targetId: string, targetType: string | null) =>
+      [...adminQueryKeys.audit.all(), 'related', targetId, targetType] as const,
   },
 
   // Impersonation

@@ -7,6 +7,12 @@
 import type { AuditAction, AuditTargetType } from '@/types/admin';
 
 /**
+ * Actions that are view-only and should be excluded from activity logs.
+ * These don't represent meaningful changes to the target.
+ */
+export const VIEW_ONLY_ACTIONS: AuditAction[] = ['account_view'];
+
+/**
  * All available audit action types with display labels
  */
 export const AUDIT_ACTIONS: Record<AuditAction, { label: string; description: string }> = {
