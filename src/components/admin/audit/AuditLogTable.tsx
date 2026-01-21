@@ -31,7 +31,6 @@ import {
 import { IconButton } from '@/components/ui/icon-button';
 import { format } from 'date-fns';
 import { getAuditActionLabel, getTargetTypeLabel } from '@/lib/admin/audit-actions';
-import { exportToCSV } from '@/lib/admin/admin-utils';
 import type { AuditLogEntry, AuditAction, AuditLogFilters as AuditLogFiltersType } from '@/types/admin';
 import {
   Popover,
@@ -40,7 +39,6 @@ import {
 } from '@/components/ui/popover';
 import { AuditLogFilters } from './AuditLogFilters';
 import { AuditLogDetail } from './AuditLogDetail';
-import { AuditLogExport } from './AuditLogExport';
 
 interface AuditLogTableProps {
   entries: AuditLogEntry[];
@@ -174,52 +172,26 @@ export function AuditLogTable({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const handleExport = () => {
-    const exportData = entries.map(e => ({
-      created_at: e.created_at,
-      action: e.action,
-      admin_email: e.admin_email,
-      target_type: e.target_type || '',
-      target_email: e.target_email || '',
-      ip_address: e.ip_address || '',
-    }));
-    exportToCSV(
-      exportData,
-      `audit-log-${format(new Date(), 'yyyy-MM-dd')}`,
-      [
-        { key: 'created_at', label: 'Timestamp' },
-        { key: 'action', label: 'Action' },
-        { key: 'admin_email', label: 'Admin Email' },
-        { key: 'target_type', label: 'Target Type' },
-        { key: 'target_email', label: 'Target Email' },
-        { key: 'ip_address', label: 'IP Address' },
-      ]
-    );
-  };
-
   return (
     <div className="space-y-4">
-      {/* Header with filters and export */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                Filters
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80" align="start">
-              <AuditLogFilters onApply={(filters) => {
-                onFiltersChange?.(filters);
-                setFiltersOpen(false);
-              }} />
-            </PopoverContent>
-          </Popover>
-          <p className="text-sm text-muted-foreground">
-            {totalCount} log{totalCount !== 1 ? 's' : ''} found
-          </p>
-        </div>
-        <AuditLogExport onExport={handleExport} />
+      {/* Header with filters */}
+      <div className="flex items-center gap-2">
+        <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm">
+              Filters
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <AuditLogFilters onApply={(filters) => {
+              onFiltersChange?.(filters);
+              setFiltersOpen(false);
+            }} />
+          </PopoverContent>
+        </Popover>
+        <p className="text-sm text-muted-foreground">
+          {totalCount} log{totalCount !== 1 ? 's' : ''} found
+        </p>
       </div>
 
       {/* Table */}

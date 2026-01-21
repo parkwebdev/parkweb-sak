@@ -40,8 +40,10 @@ interface UseImpersonationResult {
   loading: boolean;
   startImpersonation: (targetUserId: string, reason: string) => Promise<void>;
   endImpersonation: () => Promise<void>;
+  endAllSessions: () => Promise<void>;
   isStarting: boolean;
   isEnding: boolean;
+  isEndingAll: boolean;
 }
 
 export function useImpersonation(): UseImpersonationResult {
@@ -248,6 +250,43 @@ export function useImpersonation(): UseImpersonationResult {
     },
   });
 
+  // End ALL active sessions for this admin (emergency/cleanup)
+  const endAllSessionsMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('impersonation_sessions')
+        .update({
+          is_active: false,
+          ended_at: new Date().toISOString(),
+        })
+        .eq('admin_user_id', user.id)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      // Log audit entry for bulk action
+      await supabase.from('admin_audit_log').insert({
+        admin_user_id: user.id,
+        action: 'impersonation_end',
+        target_type: 'system',
+        details: { bulk_end: true },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success('All sessions ended', {
+        description: 'All active impersonation sessions have been terminated',
+      });
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to end sessions', {
+        description: getErrorMessage(error),
+      });
+    },
+  });
+
   return {
     isImpersonating: data?.isImpersonating || false,
     targetUserId: data?.targetUserId || null,
@@ -261,8 +300,10 @@ export function useImpersonation(): UseImpersonationResult {
     startImpersonation: (targetUserId, reason) =>
       startMutation.mutateAsync({ targetUserId, reason }),
     endImpersonation: endMutation.mutateAsync,
+    endAllSessions: endAllSessionsMutation.mutateAsync,
     isStarting: startMutation.isPending,
     isEnding: endMutation.isPending,
+    isEndingAll: endAllSessionsMutation.isPending,
   };
 }
 
