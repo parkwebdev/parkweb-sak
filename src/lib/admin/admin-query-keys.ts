@@ -94,6 +94,7 @@ export const adminQueryKeys = {
   impersonation: {
     all: () => [...adminQueryKeys.all, 'impersonation'] as const,
     current: () => [...adminQueryKeys.impersonation.all(), 'current'] as const,
+    targetId: () => [...adminQueryKeys.impersonation.all(), 'targetId'] as const,
     sessions: () => [...adminQueryKeys.impersonation.all(), 'sessions'] as const,
   },
 
