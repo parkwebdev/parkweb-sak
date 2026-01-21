@@ -202,9 +202,11 @@ export function useImpersonation(): UseImpersonationResult {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.impersonation.all() });
+      // Invalidate ALL queries to refetch with new impersonated context
+      // This ensures all data-scoped queries use the target user's ID
+      queryClient.invalidateQueries();
       toast.success('Impersonation started', {
-        description: 'Session will automatically expire in 30 minutes.',
+        description: 'You are now viewing this user\'s data. Session expires in 30 minutes.',
       });
     },
     onError: (error: unknown) => {
@@ -235,8 +237,11 @@ export function useImpersonation(): UseImpersonationResult {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.impersonation.all() });
-      toast.success('Impersonation ended');
+      // Invalidate ALL queries to refetch with admin's own context
+      queryClient.invalidateQueries();
+      toast.success('Impersonation ended', {
+        description: 'You are now viewing your own data.',
+      });
     },
     onError: (error: unknown) => {
       toast.error('Failed to end impersonation', { description: getErrorMessage(error) });

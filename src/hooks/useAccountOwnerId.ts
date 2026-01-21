@@ -2,15 +2,17 @@
  * Account Owner ID Hook
  * 
  * Resolves the account owner ID for team-based data scoping.
+ * - If admin is impersonating, returns the impersonated user's ID
  * - If user is an account owner (has subscription), returns their own ID
  * - If user is a team member, returns their team owner's ID
  * 
- * This enables team members to see the same data as the account owner.
+ * This enables team members to see the same data as the account owner,
+ * and admins to view user data when impersonating.
  * 
  * @module hooks/useAccountOwnerId
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { queryKeys } from '@/lib/query-keys';
