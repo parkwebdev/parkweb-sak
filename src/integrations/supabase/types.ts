@@ -1873,6 +1873,7 @@ export type Database = {
           last_login_at: string | null
           setup_feedback_text: string | null
           setup_rating: number | null
+          signup_completed_at: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1890,6 +1891,7 @@ export type Database = {
           last_login_at?: string | null
           setup_feedback_text?: string | null
           setup_rating?: number | null
+          signup_completed_at?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1907,6 +1909,7 @@ export type Database = {
           last_login_at?: string | null
           setup_feedback_text?: string | null
           setup_rating?: number | null
+          signup_completed_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string

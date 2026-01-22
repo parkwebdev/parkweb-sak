@@ -111,8 +111,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
             await createOrUpdateProfile(session.user);
             // Update last_login_at timestamp
             await updateLastLogin(session.user.id);
-            // Process signup completion (handles invitations, welcome notification, agent creation)
-            await processSignupCompletion(session);
+            // Only process signup for FRESH logins, not session restoration/token refresh
+            if (initialCheckCompleteRef.current && !previousUserRef.current) {
+              await processSignupCompletion(session);
+            }
           }, 0);
         }
       }
@@ -215,7 +217,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   const processSignupCompletion = async (session: Session) => {
     try {
-      // Check if this user was already processed (has an agent or is a team member)
+      // Check if signup was already completed (primary guard)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('signup_completed_at')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      // If signup was already processed, skip entirely
+      if (profile?.signup_completed_at) {
+        return;
+      }
+
+      // Secondary check: user already has an agent or is a team member
       const { data: existingAgent } = await supabase
         .from('agents')
         .select('id')
