@@ -35,6 +35,7 @@ import {
   Phone01, 
   Calendar, 
   CreditCard01, 
+  CurrencyDollar,
   MessageChatCircle, 
   Users01, 
   BookOpen01, 
@@ -242,7 +243,7 @@ export function AccountDetailSheet({
                   value={account.plan_name || 'Free'} 
                 />
                 <DetailRow 
-                  icon={CreditCard01} 
+                  icon={CurrencyDollar} 
                   label="MRR" 
                   value={formatMRR(account.mrr)} 
                 />
