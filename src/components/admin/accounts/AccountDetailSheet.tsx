@@ -26,6 +26,7 @@ import {
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
 import { getInitials, formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
+import { generateGradientPalette, hexToRgb } from '@/lib/color-utils';
 import { ImpersonateButton } from './ImpersonateButton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
@@ -64,19 +65,15 @@ interface DetailRowProps {
   href?: string;
 }
 
-// Soft pastel palette for the animated banner
-const BANNER_COLORS = {
-  first: '236,182,216',   // Soft pink
-  second: '195,168,234',  // Soft lavender
-  third: '255,223,186',   // Soft peach
-  fourth: '186,215,247',  // Soft blue
-  fifth: '255,200,200',   // Soft coral
-  sixth: '220,190,255',   // Soft violet
-};
+// Brand colors for the animated banner
+const BRAND_PRIMARY = '#000000';      // Black
+const BRAND_SECONDARY = '#1e40af';    // Deep blue
+
+const BANNER_COLORS = generateGradientPalette(BRAND_PRIMARY, BRAND_SECONDARY);
 
 const BANNER_GRADIENT = {
-  from: '236,182,216',
-  to: '255,223,186'
+  from: hexToRgb(BRAND_PRIMARY),
+  to: hexToRgb(BRAND_SECONDARY)
 };
 
 /**
