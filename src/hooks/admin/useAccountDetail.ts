@@ -91,7 +91,6 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         plan_name: null,
         subscription_status: null,
         mrr: 0,
-        conversation_count: conversationResult.count || 0,
         lead_count: leadResult.count || 0,
         knowledge_source_count: knowledgeResult.count || 0,
         location_count: locationResult.count || 0,

@@ -139,7 +139,6 @@ export function useAdminAccounts(options: UseAdminAccountsOptions = {}): UseAdmi
           plan_name: null,
           subscription_status: null,
           mrr: 0,
-          conversation_count: 0,
           lead_count: 0,
         };
       });
