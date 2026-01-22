@@ -42,6 +42,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
         theme={theme as ToasterProps["theme"]}
         className="toaster group"
         position="bottom-center"
+        style={{
+          '--width': 'fit-content',
+        } as React.CSSProperties}
         gap={8}
         visibleToasts={3}
         mobileOffset={{ bottom: 80 }}
