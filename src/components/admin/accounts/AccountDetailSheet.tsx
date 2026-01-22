@@ -44,8 +44,6 @@ import {
   User01,
   Shield01,
   X,
-  Trash01,
-  Edit03,
   CheckVerified01,
 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
@@ -173,22 +171,6 @@ export function AccountDetailSheet({
               >
                 <X size={16} aria-hidden="true" />
               </button>
-              
-              {/* Action buttons */}
-              <div className="absolute bottom-3 right-3 flex gap-2">
-                <button 
-                  className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white/80 transition-colors"
-                  aria-label="Delete account"
-                >
-                  <Trash01 size={16} aria-hidden="true" />
-                </button>
-                <button 
-                  className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white/80 transition-colors"
-                  aria-label="Edit account"
-                >
-                  <Edit03 size={16} aria-hidden="true" />
-                </button>
-              </div>
             </div>
 
             {/* Avatar - overlapping the banner */}
@@ -254,21 +236,21 @@ export function AccountDetailSheet({
                   label="Last interaction" 
                   value={account.last_login_at ? formatRelativeTime(account.last_login_at) : 'Never'} 
                 />
+                <DetailRow 
+                  icon={CreditCard01} 
+                  label="Plan" 
+                  value={account.plan_name || 'Free'} 
+                />
+                <DetailRow 
+                  icon={CreditCard01} 
+                  label="MRR" 
+                  value={formatMRR(account.mrr)} 
+                />
               </div>
 
               {/* Collapsible additional details */}
               <Collapsible open={showMore} onOpenChange={setShowMore}>
                 <CollapsibleContent className="space-y-0">
-                  <DetailRow 
-                    icon={CreditCard01} 
-                    label="Plan" 
-                    value={account.plan_name || 'Free'} 
-                  />
-                  <DetailRow 
-                    icon={CreditCard01} 
-                    label="MRR" 
-                    value={formatMRR(account.mrr)} 
-                  />
                   
                   <Separator className="my-3" />
                   
