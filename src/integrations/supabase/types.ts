@@ -1664,6 +1664,7 @@ export type Database = {
           invited_first_name: string | null
           invited_last_name: string | null
           is_pilot_invite: boolean | null
+          pilot_admin_permissions: string[] | null
           pilot_role: string | null
           status: string
           updated_at: string | null
@@ -1679,6 +1680,7 @@ export type Database = {
           invited_first_name?: string | null
           invited_last_name?: string | null
           is_pilot_invite?: boolean | null
+          pilot_admin_permissions?: string[] | null
           pilot_role?: string | null
           status?: string
           updated_at?: string | null
@@ -1694,6 +1696,7 @@ export type Database = {
           invited_first_name?: string | null
           invited_last_name?: string | null
           is_pilot_invite?: boolean | null
+          pilot_admin_permissions?: string[] | null
           pilot_role?: string | null
           status?: string
           updated_at?: string | null

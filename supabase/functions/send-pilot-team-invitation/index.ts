@@ -27,6 +27,7 @@ interface PilotTeamInvitationRequest {
   email: string;
   role: 'super_admin' | 'pilot_support';
   invitedBy: string;
+  adminPermissions?: string[];
 }
 
 // Role display names for the email
@@ -140,9 +141,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { firstName, lastName, email, role, invitedBy }: PilotTeamInvitationRequest = await req.json();
+    const { firstName, lastName, email, role, invitedBy, adminPermissions }: PilotTeamInvitationRequest = await req.json();
 
     console.log(`Sending Pilot team invitation to: ${email} (${firstName} ${lastName || ''}), role: ${role}, invited by: ${invitedBy}`);
+    if (adminPermissions && adminPermissions.length > 0) {
+      console.log(`With permissions: ${adminPermissions.join(', ')}`);
+    }
 
     // Build the invitee's full name for display
     const inviteeName = firstName + (lastName ? ` ${lastName}` : '');
@@ -187,7 +191,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Pilot team invitation email sent successfully:", emailResponse);
 
-    // Store the pending invitation in the database
+    // Store the pending invitation in the database with permissions
     const { error: pendingError } = await supabase
       .from('pending_invitations')
       .insert({
@@ -199,6 +203,7 @@ const handler = async (req: Request): Promise<Response> => {
         invited_last_name: lastName || null,
         is_pilot_invite: true,
         pilot_role: role,
+        pilot_admin_permissions: adminPermissions || [],
         status: 'pending'
       });
 
@@ -231,6 +236,7 @@ const handler = async (req: Request): Promise<Response> => {
       details: {
         invited_name: inviteeName,
         invited_role: role,
+        admin_permissions: adminPermissions || [],
         is_pilot_invite: true
       }
     });

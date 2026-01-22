@@ -10,7 +10,7 @@ import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
-import type { PilotTeamMember, InvitePilotMemberData, AdminPermission } from '@/types/admin';
+import type { PilotTeamMember, InvitePilotMemberData, AdminPermission, PilotTeamRole } from '@/types/admin';
 
 interface UseAdminTeamResult {
   team: PilotTeamMember[];
@@ -18,8 +18,10 @@ interface UseAdminTeamResult {
   error: Error | null;
   inviteMember: (data: InvitePilotMemberData) => Promise<boolean>;
   removeMember: (userId: string) => Promise<void>;
+  updateMemberPermissions: (userId: string, role: PilotTeamRole, permissions: AdminPermission[]) => Promise<void>;
   isInviting: boolean;
   isRemoving: boolean;
+  isUpdating: boolean;
 }
 
 export function useAdminTeam(): UseAdminTeamResult {
@@ -106,6 +108,7 @@ export function useAdminTeam(): UseAdminTeamResult {
           email: data.email,
           role: data.role,
           invitedBy: profile?.display_name || 'Pilot Admin',
+          adminPermissions: data.adminPermissions,
         }
       });
 
@@ -140,6 +143,36 @@ export function useAdminTeam(): UseAdminTeamResult {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ 
+      userId, 
+      role, 
+      permissions 
+    }: { 
+      userId: string; 
+      role: PilotTeamRole; 
+      permissions: AdminPermission[] 
+    }) => {
+      const { error } = await supabase
+        .from('user_roles')
+        .update({ 
+          role, 
+          admin_permissions: role === 'super_admin' ? [] : permissions,
+        })
+        .eq('user_id', userId)
+        .in('role', ['super_admin', 'pilot_support']);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminQueryKeys.team.all() });
+      toast.success('Permissions updated');
+    },
+    onError: (error: unknown) => {
+      toast.error('Failed to update permissions', { description: getErrorMessage(error) });
+    },
+  });
+
   const inviteMember = async (data: InvitePilotMemberData): Promise<boolean> => {
     try {
       await inviteMutation.mutateAsync(data);
@@ -149,13 +182,23 @@ export function useAdminTeam(): UseAdminTeamResult {
     }
   };
 
+  const updateMemberPermissions = async (
+    userId: string, 
+    role: PilotTeamRole, 
+    permissions: AdminPermission[]
+  ): Promise<void> => {
+    await updateMutation.mutateAsync({ userId, role, permissions });
+  };
+
   return {
     team: data || [],
     loading: isLoading,
     error: error as Error | null,
     inviteMember,
     removeMember: removeMutation.mutateAsync,
+    updateMemberPermissions,
     isInviting: inviteMutation.isPending,
     isRemoving: removeMutation.isPending,
+    isUpdating: updateMutation.isPending,
   };
 }

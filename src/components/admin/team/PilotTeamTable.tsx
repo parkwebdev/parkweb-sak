@@ -16,13 +16,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RoleBadge } from '@/components/admin/shared/RoleBadge';
 import { IconButton } from '@/components/ui/icon-button';
-import { Trash01, Shield01 } from '@untitledui/icons';
+import { Trash01, Shield01, Settings01 } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/lib/admin/admin-utils';
 import { DataTable } from '@/components/data-table/DataTable';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
-import type { PilotTeamMember } from '@/types/admin';
+import { PilotRoleManagementDialog } from './PilotRoleManagementDialog';
+import type { PilotTeamMember, PilotTeamRole, AdminPermission } from '@/types/admin';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +39,9 @@ interface PilotTeamTableProps {
   team: PilotTeamMember[];
   loading: boolean;
   onRemove: (userId: string) => Promise<void>;
+  onUpdatePermissions: (userId: string, role: PilotTeamRole, permissions: AdminPermission[]) => Promise<void>;
   isRemoving?: boolean;
+  isUpdating?: boolean;
 }
 
 /**
@@ -48,16 +51,22 @@ export function PilotTeamTable({
   team,
   loading,
   onRemove,
+  onUpdatePermissions,
   isRemoving,
 }: PilotTeamTableProps) {
   const prefersReducedMotion = useReducedMotion();
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
+  const [editMember, setEditMember] = useState<PilotTeamMember | null>(null);
 
   const handleRemove = async () => {
     if (removeConfirmId) {
       await onRemove(removeConfirmId);
       setRemoveConfirmId(null);
     }
+  };
+
+  const handleUpdateMember = async (userId: string, role: PilotTeamRole, permissions: AdminPermission[]) => {
+    await onUpdatePermissions(userId, role, permissions);
   };
 
   const columns: ColumnDef<PilotTeamMember>[] = useMemo(
@@ -132,21 +141,34 @@ export function PilotTeamTable({
         ),
       },
       {
-        id: 'remove',
+        id: 'actions',
         header: '',
-        size: 48,
+        size: 80,
         cell: ({ row }) => (
-          <IconButton
-            label="Remove team member"
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setRemoveConfirmId(row.original.user_id);
-            }}
-          >
-            <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-          </IconButton>
+          <div className="flex items-center justify-end gap-1">
+            <IconButton
+              label="Manage permissions"
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditMember(row.original);
+              }}
+            >
+              <Settings01 size={14} aria-hidden="true" />
+            </IconButton>
+            <IconButton
+              label="Remove team member"
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setRemoveConfirmId(row.original.user_id);
+              }}
+            >
+              <Trash01 size={14} className="text-destructive" aria-hidden="true" />
+            </IconButton>
+          </div>
         ),
       },
     ],
@@ -182,6 +204,14 @@ export function PilotTeamTable({
         columns={columns}
         isLoading={loading}
         emptyMessage="No team members found"
+      />
+
+      {/* Permissions Management Dialog */}
+      <PilotRoleManagementDialog
+        member={editMember}
+        isOpen={!!editMember}
+        onClose={() => setEditMember(null)}
+        onUpdate={handleUpdateMember}
       />
 
       {/* Remove Confirmation */}
