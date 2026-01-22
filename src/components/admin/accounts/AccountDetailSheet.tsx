@@ -60,6 +60,7 @@ interface DetailRowProps {
   label: string;
   value: string | number | null | undefined;
   placeholder?: string;
+  href?: string;
 }
 
 // Soft pastel palette for the animated banner
@@ -78,9 +79,24 @@ const BANNER_GRADIENT = {
 };
 
 /**
+ * Format phone number to (XXX) XXX-XXXX
+ */
+function formatPhoneNumber(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  // Remove all non-digit characters
+  const digits = phone.replace(/\D/g, '');
+  // Handle 10 or 11 digit numbers (with or without leading 1)
+  const normalized = digits.length === 11 && digits.startsWith('1') 
+    ? digits.slice(1) 
+    : digits;
+  if (normalized.length !== 10) return phone; // Return original if not valid
+  return `(${normalized.slice(0, 3)}) ${normalized.slice(3, 6)}-${normalized.slice(6)}`;
+}
+
+/**
  * Single row displaying label and value in two-column layout
  */
-function DetailRow({ icon: Icon, label, value, placeholder }: DetailRowProps) {
+function DetailRow({ icon: Icon, label, value, placeholder, href }: DetailRowProps) {
   const displayValue = value ?? placeholder ?? `Set ${label.toLowerCase()}`;
   const isEmpty = !value;
   
@@ -90,12 +106,21 @@ function DetailRow({ icon: Icon, label, value, placeholder }: DetailRowProps) {
         <Icon size={16} className="shrink-0" aria-hidden="true" />
         <span>{label}</span>
       </div>
-      <span className={cn(
-        "text-sm text-right max-w-[200px] truncate",
-        isEmpty ? "text-muted-foreground" : "text-foreground"
-      )}>
-        {displayValue}
-      </span>
+      {href && !isEmpty ? (
+        <a 
+          href={href}
+          className="text-sm text-right max-w-[200px] truncate text-primary hover:underline"
+        >
+          {displayValue}
+        </a>
+      ) : (
+        <span className={cn(
+          "text-sm text-right max-w-[200px] truncate",
+          isEmpty ? "text-muted-foreground" : "text-foreground"
+        )}>
+          {displayValue}
+        </span>
+      )}
     </div>
   );
 }
@@ -207,13 +232,15 @@ export function AccountDetailSheet({
                 <DetailRow 
                   icon={Mail01} 
                   label="Email" 
-                  value={account.email} 
+                  value={account.email}
+                  href={account.email ? `mailto:${account.email}` : undefined}
                 />
                 <DetailRow 
                   icon={Phone01} 
                   label="Phone" 
-                  value={account.company_phone} 
+                  value={formatPhoneNumber(account.company_phone)} 
                   placeholder="Not set"
+                  href={account.company_phone ? `tel:${account.company_phone.replace(/\D/g, '')}` : undefined}
                 />
                 <DetailRow 
                   icon={Building02} 
