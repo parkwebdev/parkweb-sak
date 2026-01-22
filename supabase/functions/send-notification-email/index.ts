@@ -304,6 +304,10 @@ const handler = async (req: Request): Promise<Response> => {
     const baseUrl = Deno.env.get('APP_URL') || 'https://getpilot.io';
     const unsubscribeUrl = `${baseUrl}/settings?tab=notifications`;
 
+    // Generate idempotency key using content hash for uniqueness
+    const titleHash = sanitizedTitle.slice(0, 20).replace(/\s+/g, '-').toLowerCase();
+    const idempotencyKey = `notification-${sanitizedTo}-${type}-${titleHash}-${Date.now().toString().slice(0, -4)}`;
+
     const emailResponse = await resend.emails.send({
       from: "Pilot <team@getpilot.io>",
       to: [sanitizedTo],
@@ -315,6 +319,7 @@ const handler = async (req: Request): Promise<Response> => {
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         'Precedence': 'bulk',
         'X-Auto-Response-Suppress': 'All',
+        'Idempotency-Key': idempotencyKey,
       },
     });
 
