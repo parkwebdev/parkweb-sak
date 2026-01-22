@@ -24,6 +24,7 @@
  * ```
  */
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useTheme } from "@/components/ThemeProvider";
 import { Toaster as Sonner, toast } from "sonner";
 import { CheckCircle, XCircle, AlertCircle, InfoCircle, Loading02 } from "@untitledui/icons";
@@ -33,7 +34,9 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
-  return (
+  // Use portal to render at document.body level
+  // This ensures position: fixed works relative to viewport, not any transformed ancestor
+  return createPortal(
     <div role="region" aria-label="Notifications" aria-live="polite" aria-atomic="false">
       <Sonner
         theme={theme as ToasterProps["theme"]}
@@ -65,8 +68,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
         }}
         {...props}
       />
-    </div>
-  )
+    </div>,
+    document.body
+  );
 }
 
 export { Toaster, toast }
