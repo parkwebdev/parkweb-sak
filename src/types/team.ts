@@ -53,10 +53,10 @@ export interface InviteMemberData {
 export type UserRole = 'admin' | 'manager' | 'member';
 
 /**
- * All possible roles including internal platform role.
- * Used for database compatibility where super_admin may exist.
+ * All possible roles including internal platform roles.
+ * Used for database compatibility where platform roles may exist.
  */
-export type DatabaseRole = UserRole | 'super_admin';
+export type DatabaseRole = UserRole | 'super_admin' | 'pilot_support';
 
 /**
  * Granular app permissions matching the database enum.
