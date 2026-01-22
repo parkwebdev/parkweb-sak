@@ -255,6 +255,12 @@ const handler = async (req: Request): Promise<Response> => {
       // Don't fail signup if email fails
     }
 
+    // Mark signup as completed to prevent duplicate processing
+    await supabase
+      .from('profiles')
+      .update({ signup_completed_at: new Date().toISOString() })
+      .eq('user_id', user_id);
+
     return new Response(JSON.stringify({
       success: true,
       message: "Signup processed successfully",
