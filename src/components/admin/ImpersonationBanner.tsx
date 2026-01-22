@@ -70,7 +70,10 @@ export function ImpersonationBanner() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => endImpersonation()}
+            onClick={async () => {
+              await endImpersonation();
+              navigate('/admin/accounts');
+            }}
             disabled={isEnding}
             className="text-amber-700 hover:text-amber-900 hover:bg-amber-500/20"
           >
