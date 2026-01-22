@@ -119,6 +119,10 @@ const handler = async (req: Request): Promise<Response> => {
       unsubscribeUrl,
     });
 
+    // Generate idempotency key to prevent duplicate emails on retry
+    // Uses ~10 second window to allow retries while preventing duplicates
+    const idempotencyKey = `team-invite-${email}-${Date.now().toString().slice(0, -4)}`;
+
     const emailResponse = await resend.emails.send({
       from: "Pilot <team@getpilot.io>",
       to: [email],
@@ -131,6 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
         'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
         'Precedence': 'bulk',
         'X-Auto-Response-Suppress': 'All',
+        'Idempotency-Key': idempotencyKey,
       },
     });
 

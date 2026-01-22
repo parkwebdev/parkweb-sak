@@ -190,11 +190,17 @@ serve(async (req) => {
     const icsContent = generateCalendarInvite(data);
     const icsBase64 = btoa(icsContent);
 
+    // Use confirmation_id as natural idempotency key
+    const idempotencyKey = `booking-${data.confirmation_id}`;
+
     const emailResponse = await resend.emails.send({
       from: `${data.location_name} <bookings@getpilot.io>`,
       to: [data.to],
       subject: `Your tour at ${data.location_name} is confirmed`,
       html: generateEmailHtml(data),
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
       attachments: [
         {
           filename: 'invite.ics',

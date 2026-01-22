@@ -109,11 +109,17 @@ const handler = async (req: Request): Promise<Response> => {
         );
     }
 
+    // Generate idempotency key to prevent duplicate emails on retry
+    const idempotencyKey = `auth-${type}-${to}-${Date.now().toString().slice(0, -4)}`;
+
     const emailResponse = await resend.emails.send({
       from: "Pilot <team@getpilot.io>",
       to: [to],
       subject,
       html,
+      headers: {
+        'Idempotency-Key': idempotencyKey,
+      },
     });
 
     console.log(`[send-auth-email] Email sent successfully:`, emailResponse);
