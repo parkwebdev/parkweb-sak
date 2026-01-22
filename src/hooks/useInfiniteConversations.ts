@@ -505,6 +505,7 @@ export function useInfiniteConversations(options: UseInfiniteConversationsOption
     hasNextPage: hasNextPage ?? false,
     fetchNextPage,
     refetch,
+    accountOwnerId, // Expose for error state detection during impersonation
     // Message & conversation operations
     fetchMessages,
     updateConversationStatus,

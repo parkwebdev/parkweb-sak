@@ -48,7 +48,8 @@ function Planner() {
     cancelEvent, 
     completeEvent, 
     rescheduleEvent,
-    refetch 
+    refetch,
+    accountOwnerId,
   } = useCalendarEvents();
   
   // Dialog states
@@ -240,6 +241,23 @@ function Planner() {
 
   if (isLoading) {
     return <SkeletonCalendarPage />;
+  }
+
+  // Error state when data couldn't be loaded (e.g., during impersonation timing)
+  if (!accountOwnerId && dbEvents.length === 0) {
+    return (
+      <main className="flex-1 bg-muted/30 h-full flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto p-8">
+          <p className="text-destructive text-lg font-medium">Unable to load calendar</p>
+          <p className="text-muted-foreground text-sm">
+            There was an issue loading your calendar data. This may be a temporary issue.
+          </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </main>
+    );
   }
 
   return (

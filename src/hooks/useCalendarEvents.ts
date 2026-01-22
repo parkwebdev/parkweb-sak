@@ -191,10 +191,11 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
 
   return {
     events,
-    isLoading,
+    isLoading: isLoading || ownerLoading,
     refetch,
     cancelEvent,
     completeEvent,
     rescheduleEvent,
+    accountOwnerId, // Expose for error state detection during impersonation
   };
 };
