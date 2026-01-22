@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sonner toast width override for content-sized, centered toasts */
-[data-sonner-toaster][data-x-position='center'] [data-sonner-toast] {
-  width: fit-content !important;
-  min-width: 120px;
-  max-width: min(400px, calc(100vw - 32px));
-}
 
 /* ================================================
    GLOBAL FOCUS RING OVERRIDE
