@@ -61,6 +61,35 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Atomically mark signup as processing to prevent race conditions
+    // This UPDATE only succeeds if signup_completed_at IS NULL
+    const { data: lockResult, error: lockError } = await supabase
+      .from('profiles')
+      .update({ signup_completed_at: new Date().toISOString() })
+      .eq('user_id', user_id)
+      .is('signup_completed_at', null)
+      .select('user_id')
+      .maybeSingle();
+
+    if (lockError) {
+      console.error('Error acquiring signup lock:', lockError);
+    }
+
+    // If lockResult is null, another request already claimed this signup
+    if (!lockResult) {
+      console.log(`Signup already processed for user ${user_id}, skipping duplicate`);
+      return new Response(JSON.stringify({
+        success: true,
+        message: "Signup already processed",
+        skipped: true
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    console.log(`Acquired signup lock for user ${user_id}, proceeding with signup flow`);
+
     // Check if this email has a pending invitation (including Pilot team invites)
     const { data: invitation, error: invitationError } = await supabase
       .from('pending_invitations')
@@ -255,11 +284,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Don't fail signup if email fails
     }
 
-    // Mark signup as completed to prevent duplicate processing
-    await supabase
-      .from('profiles')
-      .update({ signup_completed_at: new Date().toISOString() })
-      .eq('user_id', user_id);
+    // signup_completed_at was already set at the start (atomic lock)
 
     return new Response(JSON.stringify({
       success: true,
