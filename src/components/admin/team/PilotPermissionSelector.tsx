@@ -15,6 +15,7 @@ import type { AdminPermission } from '@/types/admin';
 import { 
   ADMIN_PERMISSION_GROUPS, 
   ADMIN_PERMISSION_LABELS,
+  ADMIN_FEATURE_LABELS,
 } from '@/types/admin';
 
 interface PilotPermissionSelectorProps {
@@ -36,7 +37,7 @@ export function PilotPermissionSelector({
       const managePerm = groupPermissions.find(p => !p.startsWith('view_'));
       return {
         feature: group,
-        label: group.charAt(0).toUpperCase() + group.slice(1).replace('_', ' '),
+        label: ADMIN_FEATURE_LABELS[group] || group,
         viewPermission: viewPerm,
         managePermission: managePerm,
       };

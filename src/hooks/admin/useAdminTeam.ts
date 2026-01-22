@@ -126,6 +126,24 @@ export function useAdminTeam(): UseAdminTeamResult {
 
   const removeMutation = useMutation({
     mutationFn: async (userId: string) => {
+      // Check if we're removing a super admin
+      const { data: targetRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (targetRole?.role === 'super_admin') {
+        const { count } = await supabase
+          .from('user_roles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'super_admin');
+
+        if (count !== null && count <= 1) {
+          throw new Error('Cannot remove the last super admin. Promote another member first.');
+        }
+      }
+
       const { error } = await supabase
         .from('user_roles')
         .update({ role: 'admin' }) // Downgrade to admin instead of deleting

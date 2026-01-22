@@ -143,12 +143,12 @@ export const ADMIN_PERMISSION_LABELS: Record<AdminPermission, string> = {
 
 /** Human-readable labels for permission groups in the matrix UI */
 export const ADMIN_FEATURE_LABELS: Record<string, string> = {
-  'accounts': 'Customer Accounts',
-  'team': 'Internal Team',
-  'content': 'Help Center & Content',
-  'revenue': 'Revenue Analytics',
-  'settings': 'Platform Settings',
-  'impersonation': 'Account Impersonation',
+  'Accounts': 'Customer Accounts',
+  'Pilot Team': 'Internal Team',
+  'Content': 'Help Center & Content',
+  'Revenue': 'Revenue Analytics',
+  'Settings': 'Platform Settings',
+  'Impersonation': 'Account Impersonation',
 };
 
 // Pilot invite data
