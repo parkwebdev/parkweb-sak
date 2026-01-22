@@ -27,7 +27,6 @@ export interface AdminAccount {
   plan_name: string | null;
   subscription_status: string | null;
   mrr: number;
-  conversation_count: number;
   lead_count: number;
 }
 
