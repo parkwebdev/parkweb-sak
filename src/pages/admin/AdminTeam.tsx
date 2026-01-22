@@ -30,8 +30,10 @@ export function AdminTeam() {
     loading, 
     inviteMember, 
     removeMember, 
+    updateMemberPermissions,
     isInviting, 
-    isRemoving 
+    isRemoving,
+    isUpdating,
   } = useAdminTeam();
 
   const handleInvite = async (data: InvitePilotMemberData): Promise<boolean> => {
@@ -63,7 +65,9 @@ export function AdminTeam() {
         team={team}
         loading={loading}
         onRemove={removeMember}
+        onUpdatePermissions={updateMemberPermissions}
         isRemoving={isRemoving}
+        isUpdating={isUpdating}
       />
 
       {/* Invite Dialog */}

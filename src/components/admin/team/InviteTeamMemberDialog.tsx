@@ -1,13 +1,13 @@
 /**
  * InviteTeamMemberDialog Component
  * 
- * Dialog for inviting new Pilot team members with role selection.
+ * Dialog for inviting new Pilot team members with role and permission selection.
  * 
  * @module components/admin/team/InviteTeamMemberDialog
  */
 
-import { useState } from 'react';
-import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Mail01 as Mail } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,9 @@ import {
 import { isValidEmail } from '@/utils/validation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
-import type { InvitePilotMemberData, PilotTeamRole } from '@/types/admin';
+import { PilotPermissionSelector } from './PilotPermissionSelector';
+import type { InvitePilotMemberData, PilotTeamRole, AdminPermission } from '@/types/admin';
+import { DEFAULT_PILOT_ROLE_PERMISSIONS } from '@/types/admin';
 
 interface InviteTeamMemberDialogProps {
   /** Whether the dialog is open */
@@ -52,12 +54,12 @@ const ROLE_OPTIONS: { value: PilotTeamRole; label: string; description: string }
   { 
     value: 'pilot_support', 
     label: 'Pilot Support', 
-    description: 'View-only access with limited permissions' 
+    description: 'Customizable access with granular permissions' 
   },
 ];
 
 /**
- * Invite Pilot team member dialog with name, email, and role selection.
+ * Invite Pilot team member dialog with name, email, role, and permission selection.
  */
 export function InviteTeamMemberDialog({
   open,
@@ -70,6 +72,20 @@ export function InviteTeamMemberDialog({
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<PilotTeamRole>('pilot_support');
+  const [adminPermissions, setAdminPermissions] = useState<AdminPermission[]>(
+    DEFAULT_PILOT_ROLE_PERMISSIONS.pilot_support
+  );
+
+  // Update permissions when role changes
+  useEffect(() => {
+    if (role === 'super_admin') {
+      // Super admins have full access, no need for permissions
+      setAdminPermissions([]);
+    } else {
+      // Set default permissions for pilot_support
+      setAdminPermissions(DEFAULT_PILOT_ROLE_PERMISSIONS.pilot_support);
+    }
+  }, [role]);
 
   const isValid = firstName.trim() && email && isValidEmail(email);
 
@@ -81,32 +97,34 @@ export function InviteTeamMemberDialog({
       lastName: lastName.trim(),
       email: email.trim().toLowerCase(),
       role,
+      adminPermissions: role === 'pilot_support' ? adminPermissions : undefined,
     });
 
     if (success) {
       // Reset form on success
-      setFirstName('');
-      setLastName('');
-      setEmail('');
-      setRole('pilot_support');
+      resetForm();
       onOpenChange(false);
     }
   };
 
+  const resetForm = () => {
+    setFirstName('');
+    setLastName('');
+    setEmail('');
+    setRole('pilot_support');
+    setAdminPermissions(DEFAULT_PILOT_ROLE_PERMISSIONS.pilot_support);
+  };
+
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      // Reset form when closing
-      setFirstName('');
-      setLastName('');
-      setEmail('');
-      setRole('pilot_support');
+      resetForm();
     }
     onOpenChange(newOpen);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Invite Pilot Team Member</DialogTitle>
           <DialogDescription>
@@ -115,7 +133,7 @@ export function InviteTeamMemberDialog({
         </DialogHeader>
 
         <motion.div 
-          className="space-y-4 py-4"
+          className="flex-1 overflow-y-auto space-y-4 py-4 pr-1"
           initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={springs.smooth}
@@ -191,12 +209,43 @@ export function InviteTeamMemberDialog({
             </Select>
           </div>
 
+          {/* Permission selector for pilot_support */}
+          <AnimatePresence mode="wait">
+            {role === 'pilot_support' && (
+              <motion.div
+                initial={prefersReducedMotion ? false : { opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0 }}
+                transition={springs.smooth}
+              >
+                <PilotPermissionSelector
+                  permissions={adminPermissions}
+                  onChange={setAdminPermissions}
+                />
+              </motion.div>
+            )}
+            {role === 'super_admin' && (
+              <motion.div
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                transition={springs.smooth}
+                className="p-4 border border-border rounded-lg bg-muted/50 text-center"
+              >
+                <p className="text-sm font-medium text-foreground">Full Access</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Super Admins have unrestricted access to all platform features.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <p className="text-xs text-muted-foreground">
-            The user will receive an email invitation. When they sign up or log in, they'll be added to the Pilot team with the selected role.
+            The user will receive an email invitation. When they sign up or log in, they'll be added to the Pilot team with the selected role and permissions.
           </p>
         </motion.div>
 
-        <DialogFooter>
+        <DialogFooter className="pt-4 border-t border-border">
           <Button 
             variant="outline" 
             onClick={() => handleOpenChange(false)}

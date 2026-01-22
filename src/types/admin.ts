@@ -127,12 +127,27 @@ export const DEFAULT_PILOT_ROLE_PERMISSIONS: Record<PilotTeamRole, AdminPermissi
   ],
 };
 
+// Human-readable labels for admin permissions
+export const ADMIN_PERMISSION_LABELS: Record<AdminPermission, string> = {
+  'view_accounts': 'View customer accounts',
+  'manage_accounts': 'Manage accounts (suspend, delete)',
+  'view_team': 'View Pilot team members',
+  'manage_team': 'Manage Pilot team (invite, remove)',
+  'view_content': 'View platform content',
+  'manage_content': 'Manage content (articles, templates)',
+  'view_revenue': 'View revenue analytics',
+  'view_settings': 'View platform settings',
+  'manage_settings': 'Manage platform settings',
+  'impersonate_users': 'Impersonate customer accounts',
+};
+
 // Pilot invite data
 export interface InvitePilotMemberData {
   firstName: string;
   lastName: string;
   email: string;
   role: PilotTeamRole;
+  adminPermissions?: AdminPermission[];
 }
 
 // Team types

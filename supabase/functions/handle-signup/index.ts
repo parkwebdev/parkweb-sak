@@ -7,6 +7,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Default permissions for pilot_support if none specified in invitation
+const DEFAULT_PILOT_SUPPORT_PERMISSIONS = [
+  'view_accounts',
+  'view_team',
+  'view_content',
+  'view_revenue',
+  'view_settings',
+];
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -120,15 +129,22 @@ const handler = async (req: Request): Promise<Response> => {
       if (invitation.is_pilot_invite && invitation.pilot_role) {
         console.log(`Processing Pilot team invitation for: ${email} as ${invitation.pilot_role}`);
         
+        // Use permissions from invitation if available, otherwise use defaults
+        const adminPermissions = invitation.pilot_role === 'super_admin'
+          ? []
+          : (invitation.pilot_admin_permissions && invitation.pilot_admin_permissions.length > 0)
+            ? invitation.pilot_admin_permissions
+            : DEFAULT_PILOT_SUPPORT_PERMISSIONS;
+
+        console.log(`Assigning permissions: ${JSON.stringify(adminPermissions)}`);
+        
         // Assign the Pilot team role to the user
         const { error: roleError } = await supabase
           .from('user_roles')
           .upsert({
             user_id: user_id,
             role: invitation.pilot_role,
-            admin_permissions: invitation.pilot_role === 'super_admin' 
-              ? [] 
-              : ['view_accounts', 'view_team', 'view_content', 'view_revenue', 'view_settings'],
+            admin_permissions: adminPermissions,
           }, { onConflict: 'user_id' });
 
         if (roleError) {
@@ -158,6 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
           details: {
             action: 'pilot_invite_accepted',
             role: invitation.pilot_role,
+            admin_permissions: adminPermissions,
             invited_by: invitation.invited_by_name
           }
         });
