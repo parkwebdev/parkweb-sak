@@ -2,7 +2,7 @@
  * Account Detail Sheet Component
  * 
  * Displays detailed account information in a slide-over sheet.
- * Uses a clean two-column row-based layout with collapsible sections.
+ * Features an animated gradient banner header with overlapping avatar.
  * 
  * @module components/admin/accounts/AccountDetailSheet
  */
@@ -12,8 +12,6 @@ import { motion } from 'motion/react';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
@@ -25,6 +23,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
 import { getInitials, formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
 import { ImpersonateButton } from './ImpersonateButton';
@@ -43,7 +42,11 @@ import {
   ChevronUp,
   Clock,
   User01,
-  Shield01
+  Shield01,
+  X,
+  Trash01,
+  Edit03,
+  CheckVerified01,
 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
@@ -59,6 +62,21 @@ interface DetailRowProps {
   value: string | number | null | undefined;
   placeholder?: string;
 }
+
+// Soft pastel palette for the animated banner
+const BANNER_COLORS = {
+  first: '236,182,216',   // Soft pink
+  second: '195,168,234',  // Soft lavender
+  third: '255,223,186',   // Soft peach
+  fourth: '186,215,247',  // Soft blue
+  fifth: '255,200,200',   // Soft coral
+  sixth: '220,190,255',   // Soft violet
+};
+
+const BANNER_GRADIENT = {
+  from: '236,182,216',
+  to: '255,223,186'
+};
 
 /**
  * Single row displaying label and value in two-column layout
@@ -130,37 +148,77 @@ export function AccountDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
+      <SheetContent side="right" className="sm:max-w-md overflow-y-auto p-0">
         {loading ? (
           <AccountDetailSkeleton />
         ) : account ? (
           <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-            animate={contentReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
+            animate={contentReady ? { opacity: 1 } : { opacity: 0 }}
             transition={springs.smooth}
           >
-            {/* Header: Avatar + Name + Badges */}
-            <SheetHeader className="mb-6">
-              <div className="flex items-start gap-3">
-                <Avatar className="h-12 w-12 shrink-0">
-                  <AvatarImage src={account.avatar_url || undefined} alt={account.display_name || 'User'} />
-                  <AvatarFallback className="text-base">
-                    {getInitials(account.display_name || account.email)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <SheetTitle className="truncate text-lg">
-                    {account.display_name || 'Unnamed Account'}
-                  </SheetTitle>
-                  <div className="flex items-center gap-2 mt-2 flex-wrap">
-                    <StatusBadge status={account.status} type="account" />
-                    <RoleBadge role={account.role} />
-                  </div>
-                </div>
+            {/* Animated Banner Header */}
+            <div className="relative h-36 overflow-hidden">
+              <CSSBubbleBackground
+                colors={BANNER_COLORS}
+                baseGradient={BANNER_GRADIENT}
+                className="absolute inset-0"
+              />
+              
+              {/* Close button */}
+              <button 
+                onClick={() => onOpenChange(false)}
+                className="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+                aria-label="Close"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+              
+              {/* Action buttons */}
+              <div className="absolute bottom-3 right-3 flex gap-2">
+                <button 
+                  className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white/80 transition-colors"
+                  aria-label="Delete account"
+                >
+                  <Trash01 size={16} aria-hidden="true" />
+                </button>
+                <button 
+                  className="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white/80 transition-colors"
+                  aria-label="Edit account"
+                >
+                  <Edit03 size={16} aria-hidden="true" />
+                </button>
               </div>
-            </SheetHeader>
+            </div>
 
-            <div className="space-y-1">
+            {/* Avatar - overlapping the banner */}
+            <div className="relative px-5 -mt-10">
+              <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
+                <AvatarImage src={account.avatar_url || undefined} alt={account.display_name || 'User'} />
+                <AvatarFallback className="text-xl bg-muted">
+                  {getInitials(account.display_name || account.email)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+
+            {/* Name and Badges */}
+            <div className="px-5 pt-3 pb-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold truncate">
+                  {account.display_name || 'Unnamed Account'}
+                </h2>
+                {account.status === 'active' && (
+                  <CheckVerified01 size={18} className="text-primary shrink-0" aria-hidden="true" />
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                <StatusBadge status={account.status} type="account" />
+                <RoleBadge role={account.role} />
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-5 pb-5 space-y-1">
               {/* Account Details Section */}
               <div className="space-y-0">
                 <DetailRow 
@@ -296,25 +354,30 @@ export function AccountDetailSheet({
 }
 
 /**
- * Loading skeleton for account details - matches new row layout
+ * Loading skeleton for account details - matches banner layout
  */
 function AccountDetailSkeleton() {
   return (
-    <div className="space-y-6">
-      {/* Header skeleton */}
-      <div className="flex items-start gap-3">
-        <Skeleton className="h-12 w-12 rounded-full" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-40" />
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-16" />
-            <Skeleton className="h-5 w-16" />
-          </div>
+    <div>
+      {/* Banner skeleton */}
+      <Skeleton className="h-36 w-full rounded-none" />
+      
+      {/* Overlapping avatar skeleton */}
+      <div className="px-5 -mt-10">
+        <Skeleton className="h-20 w-20 rounded-full border-4 border-background" />
+      </div>
+      
+      {/* Name skeleton */}
+      <div className="px-5 pt-3 pb-4 space-y-2">
+        <Skeleton className="h-6 w-40" />
+        <div className="flex gap-2">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-16" />
         </div>
       </div>
-
+      
       {/* Row skeletons */}
-      <div className="space-y-3">
+      <div className="px-5 space-y-3">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="flex items-center justify-between py-2">
             <div className="flex items-center gap-3">
@@ -325,9 +388,11 @@ function AccountDetailSkeleton() {
           </div>
         ))}
       </div>
-
+      
       {/* See more skeleton */}
-      <Skeleton className="h-4 w-20" />
+      <div className="px-5 pt-2">
+        <Skeleton className="h-4 w-20" />
+      </div>
     </div>
   );
 }
