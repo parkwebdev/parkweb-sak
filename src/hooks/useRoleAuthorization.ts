@@ -3,15 +3,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/utils/logger';
 import type { DatabaseRole, AppPermission } from '@/types/team';
+import type { AdminPermission } from '@/types/admin';
 
 interface RoleAuthData {
   role: DatabaseRole | null;
   permissions: AppPermission[];
+  adminPermissions: AdminPermission[];
   loading: boolean;
   
   // Role-based checks
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isPilotTeamMember: boolean;
   
   // Permission checks - Core
   canViewDashboard: boolean;
@@ -61,8 +64,9 @@ interface RoleAuthData {
   canViewApiKeys: boolean;
   canManageApiKeys: boolean;
   
-  // Generic permission checker
+  // Generic permission checkers
   hasPermission: (permission: AppPermission) => boolean;
+  hasAdminPermission: (permission: AdminPermission) => boolean;
 }
 
 /**
@@ -75,12 +79,14 @@ export const useRoleAuthorization = (): RoleAuthData => {
   const { user } = useAuth();
   const [role, setRole] = useState<DatabaseRole | null>(null);
   const [permissions, setPermissions] = useState<AppPermission[]>([]);
+  const [adminPermissions, setAdminPermissions] = useState<AdminPermission[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
       setRole(null);
       setPermissions([]);
+      setAdminPermissions([]);
       setLoading(false);
       return;
     }
@@ -89,7 +95,7 @@ export const useRoleAuthorization = (): RoleAuthData => {
       try {
         const { data, error } = await supabase
           .from('user_roles')
-          .select('role, permissions')
+          .select('role, permissions, admin_permissions')
           .eq('user_id', user.id)
           .single();
 
@@ -97,14 +103,17 @@ export const useRoleAuthorization = (): RoleAuthData => {
           logger.error('Error fetching user role', error);
           setRole('member');
           setPermissions([]);
+          setAdminPermissions([]);
         } else {
           setRole(data.role as DatabaseRole);
           setPermissions((data.permissions as AppPermission[]) || []);
+          setAdminPermissions((data.admin_permissions as AdminPermission[]) || []);
         }
       } catch (error: unknown) {
         logger.error('Error in fetchUserRole', error);
         setRole('member');
         setPermissions([]);
+        setAdminPermissions([]);
       } finally {
         setLoading(false);
       }
@@ -116,12 +125,19 @@ export const useRoleAuthorization = (): RoleAuthData => {
   // Role-based checks
   const isSuperAdmin = role === 'super_admin';
   const isAdmin = role === 'super_admin' || role === 'admin';
+  const isPilotTeamMember = role === 'super_admin' || role === 'pilot_support';
 
-  // Generic permission checker
+  // Generic permission checker for customer app permissions
   const hasPermission = useCallback((permission: AppPermission): boolean => {
     if (isAdmin) return true; // Admins have all permissions
     return permissions.includes(permission);
   }, [isAdmin, permissions]);
+
+  // Permission checker for admin dashboard permissions
+  const hasAdminPermission = useCallback((permission: AdminPermission): boolean => {
+    if (isSuperAdmin) return true; // Super admins have all admin permissions
+    return adminPermissions.includes(permission);
+  }, [isSuperAdmin, adminPermissions]);
 
   // Core permissions
   const canViewDashboard = hasPermission('view_dashboard');
@@ -174,11 +190,13 @@ export const useRoleAuthorization = (): RoleAuthData => {
   return {
     role,
     permissions,
+    adminPermissions,
     loading,
     
     // Role checks
     isAdmin,
     isSuperAdmin,
+    isPilotTeamMember,
     
     // Permission checks
     canViewDashboard,
@@ -206,7 +224,8 @@ export const useRoleAuthorization = (): RoleAuthData => {
     canViewApiKeys,
     canManageApiKeys,
     
-    // Generic checker
+    // Generic checkers
     hasPermission,
+    hasAdminPermission,
   };
 };

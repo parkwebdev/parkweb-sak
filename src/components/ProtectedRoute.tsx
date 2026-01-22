@@ -7,12 +7,12 @@
  * @module components/ProtectedRoute
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { motion } from 'motion/react';
-import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Props for the ProtectedRoute component
@@ -33,35 +33,14 @@ interface ProtectedRouteProps {
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
+  const { isPilotTeamMember, loading: roleLoading } = useRoleAuthorization();
   const location = useLocation();
   const navigate = useNavigate();
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [hasShownToast, setHasShownToast] = useState(false);
-  const [isPilotTeamMember, setIsPilotTeamMember] = useState<boolean | null>(null);
-
-  // Check if user is a Pilot team member (super_admin or pilot_support)
-  useEffect(() => {
-    async function checkPilotTeamRole() {
-      if (!user) {
-        setIsPilotTeamMember(false);
-        return;
-      }
-
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .in('role', ['super_admin', 'pilot_support'])
-        .maybeSingle();
-
-      setIsPilotTeamMember(!!data);
-    }
-
-    checkPilotTeamRole();
-  }, [user]);
 
   // Redirect Pilot team members to /admin if they're on a customer route
-  useEffect(() => {
+  React.useEffect(() => {
     if (isPilotTeamMember && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/settings')) {
       navigate('/admin', { replace: true });
     }
@@ -76,8 +55,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     clearJustSignedIn();
   };
 
-  // Normal loading state (session check) - show nothing
-  if (loading || isPilotTeamMember === null) {
+  // Normal loading state (session check or role check) - show nothing
+  if (loading || roleLoading) {
     return null;
   }
 

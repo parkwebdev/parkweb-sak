@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
  * The actual sidebar and topbar are handled by the regular AppLayout.
  */
 export function AdminLayout() {
-  const { isSuperAdmin, loading } = useRoleAuthorization();
+  const { isPilotTeamMember, loading } = useRoleAuthorization();
 
   // Show loading state while checking permissions
   if (loading) {
@@ -27,8 +27,8 @@ export function AdminLayout() {
     );
   }
 
-  // Redirect non-super-admins to dashboard
-  if (!isSuperAdmin) {
+  // Redirect non-pilot-team members to dashboard
+  if (!isPilotTeamMember) {
     return <Navigate to="/dashboard" replace />;
   }
 
