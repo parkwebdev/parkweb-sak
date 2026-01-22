@@ -210,7 +210,7 @@ export function AccountDetailSheet({
               </Avatar>
             </div>
 
-            {/* Name and Badges */}
+            {/* Name and Role */}
             <div className="px-5 pt-3 pb-4">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold truncate">
@@ -221,7 +221,6 @@ export function AccountDetailSheet({
                 )}
               </div>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <StatusBadge status={account.status} type="account" />
                 <RoleBadge role={account.role} />
               </div>
             </div>
@@ -270,6 +269,13 @@ export function AccountDetailSheet({
                   label="Plan" 
                   value={account.plan_name || 'Free'} 
                 />
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <User01 size={16} className="shrink-0" aria-hidden="true" />
+                    <span>Profile status</span>
+                  </div>
+                  <StatusBadge status={account.status} type="account" />
+                </div>
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <RefreshCcw01 size={16} className="shrink-0" aria-hidden="true" />
