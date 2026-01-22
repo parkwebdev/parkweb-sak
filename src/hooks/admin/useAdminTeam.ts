@@ -147,12 +147,30 @@ export function useAdminTeam(): UseAdminTeamResult {
     mutationFn: async ({ 
       userId, 
       role, 
-      permissions 
+      permissions,
+      previousRole,
+      previousPermissions,
     }: { 
       userId: string; 
       role: PilotTeamRole; 
-      permissions: AdminPermission[] 
+      permissions: AdminPermission[];
+      previousRole: PilotTeamRole;
+      previousPermissions: AdminPermission[];
     }) => {
+      if (!user) throw new Error('Not authenticated');
+
+      // Last super admin protection
+      if (previousRole === 'super_admin' && role !== 'super_admin') {
+        const { count } = await supabase
+          .from('user_roles')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'super_admin');
+        
+        if (count !== null && count <= 1) {
+          throw new Error('Cannot demote the last super admin. Promote another member first.');
+        }
+      }
+
       const { error } = await supabase
         .from('user_roles')
         .update({ 
@@ -163,6 +181,21 @@ export function useAdminTeam(): UseAdminTeamResult {
         .in('role', ['super_admin', 'pilot_support']);
 
       if (error) throw error;
+
+      // Log to admin audit log
+      await supabase.from('admin_audit_log').insert({
+        admin_user_id: user.id,
+        action: 'team_role_change',
+        target_type: 'team',
+        target_id: userId,
+        details: {
+          old_role: previousRole,
+          new_role: role,
+          old_permissions: previousPermissions,
+          new_permissions: role === 'super_admin' ? [] : permissions,
+          is_pilot_team: true,
+        }
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminQueryKeys.team.all() });
@@ -185,9 +218,17 @@ export function useAdminTeam(): UseAdminTeamResult {
   const updateMemberPermissions = async (
     userId: string, 
     role: PilotTeamRole, 
-    permissions: AdminPermission[]
+    permissions: AdminPermission[],
+    previousRole?: PilotTeamRole,
+    previousPermissions?: AdminPermission[]
   ): Promise<void> => {
-    await updateMutation.mutateAsync({ userId, role, permissions });
+    await updateMutation.mutateAsync({ 
+      userId, 
+      role, 
+      permissions,
+      previousRole: previousRole || role,
+      previousPermissions: previousPermissions || permissions,
+    });
   };
 
   return {
