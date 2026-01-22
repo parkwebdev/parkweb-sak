@@ -110,12 +110,14 @@ export function useAdminAccounts(options: UseAdminAccountsOptions = {}): UseAdmi
       const teamMemberMap = new Map(teamMembersResult.data?.map(tm => [tm.member_id, tm.owner_id]) || []);
       const ownerProfileMap = new Map(ownerProfilesResult.data?.map(p => [p.user_id, p.company_name]) || []);
 
-      // Filter out super_admin users - they belong on the Pilot Team page
-      const superAdminUserIds = new Set(
-        rolesResult.data?.filter(r => r.role === 'super_admin').map(r => r.user_id) || []
+      // Filter out Pilot team users - they belong on the Pilot Team page, not Accounts
+      const pilotTeamUserIds = new Set(
+        rolesResult.data
+          ?.filter(r => r.role === 'super_admin' || r.role === 'pilot_support')
+          .map(r => r.user_id) || []
       );
       const filteredProfiles = (profiles || []).filter(
-        profile => !superAdminUserIds.has(profile.user_id)
+        profile => !pilotTeamUserIds.has(profile.user_id)
       );
 
       // Map profiles to accounts synchronously (no more N+1)
@@ -149,12 +151,15 @@ export function useAdminAccounts(options: UseAdminAccountsOptions = {}): UseAdmi
         filteredAccounts = accounts.filter((a) => a.status === status);
       }
 
+      // Adjust total count to exclude Pilot team members
+      const adjustedTotalCount = Math.max(0, (count || 0) - pilotTeamUserIds.size);
+
       return {
         data: filteredAccounts,
-        totalCount: count || 0,
+        totalCount: adjustedTotalCount,
         page,
         pageSize,
-        totalPages: Math.ceil((count || 0) / pageSize),
+        totalPages: Math.ceil(adjustedTotalCount / pageSize),
       };
     },
     staleTime: 30000, // 30 seconds
