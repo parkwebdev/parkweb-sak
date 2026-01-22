@@ -39,6 +39,7 @@ import {
 import { ConversationsSearchWrapper } from '@/components/conversations/ConversationsSearchWrapper';
 import { InboxFilterDropdown } from '@/components/conversations/InboxFilterDropdown';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
+import { Button } from '@/components/ui/button';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
 import type { Tables } from '@/integrations/supabase/types';
@@ -76,6 +77,7 @@ function Conversations() {
     returnToAI,
     sendHumanMessage,
     reopenConversation,
+    accountOwnerId,
   } = useInfiniteConversations();
 
   const { agent } = useAgent();
@@ -557,6 +559,24 @@ function Conversations() {
   }, [pendingFiles]);
 
   // === RENDER ===
+  
+  // Error state when data couldn't be loaded (e.g., during impersonation timing)
+  if (!loading && !accountOwnerId && conversations.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-background">
+        <div className="text-center space-y-4 max-w-md mx-auto p-8">
+          <p className="text-destructive text-lg font-medium">Unable to load conversations</p>
+          <p className="text-muted-foreground text-sm">
+            There was an issue loading your conversations data. This may be a temporary issue.
+          </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="h-full flex min-h-0 overflow-x-hidden">
       {/* Conversations List Sidebar - Virtualized for performance */}

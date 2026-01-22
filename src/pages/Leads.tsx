@@ -83,7 +83,8 @@ function Leads() {
     updateLeadOrders, 
     deleteLead, 
     deleteLeads, 
-    getLeadsWithConversations 
+    getLeadsWithConversations,
+    accountOwnerId,
   } = useInfiniteLeads();
   
   // Infinite scroll intersection observer
@@ -402,6 +403,17 @@ function Leads() {
         {/* Content */}
         {loading ? (
           <SkeletonLeadsPage />
+        ) : !accountOwnerId && leads.length === 0 ? (
+          // Error state when data couldn't be loaded (e.g., during impersonation timing)
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <p className="text-destructive text-lg font-medium mb-2">Unable to load leads</p>
+            <p className="text-muted-foreground text-sm mb-4">
+              There was an issue loading your leads data. This may be a temporary issue.
+            </p>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
         ) : (
           <AnimatePresence mode="wait">
             {viewMode === 'kanban' ? (

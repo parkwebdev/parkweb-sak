@@ -349,6 +349,7 @@ export function useInfiniteLeads(options: UseInfiniteLeadsOptions = {}) {
     hasNextPage: hasNextPage ?? false,
     fetchNextPage,
     refetch,
+    accountOwnerId, // Expose for error state detection during impersonation
     // CRUD operations
     createLead,
     updateLead,
