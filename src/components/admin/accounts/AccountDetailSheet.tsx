@@ -212,14 +212,9 @@ export function AccountDetailSheet({
 
             {/* Name and Role */}
             <div className="px-5 pt-3 pb-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold truncate">
-                  {account.display_name || 'Unnamed Account'}
-                </h2>
-                {account.status === 'active' && (
-                  <CheckVerified01 size={18} className="text-primary shrink-0" aria-hidden="true" />
-                )}
-              </div>
+              <h2 className="text-lg font-semibold truncate">
+                {account.display_name || 'Unnamed Account'}
+              </h2>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <RoleBadge role={account.role} />
               </div>
