@@ -141,6 +141,16 @@ export const ADMIN_PERMISSION_LABELS: Record<AdminPermission, string> = {
   'impersonate_users': 'Impersonate customer accounts',
 };
 
+/** Human-readable labels for permission groups in the matrix UI */
+export const ADMIN_FEATURE_LABELS: Record<string, string> = {
+  'accounts': 'Customer Accounts',
+  'team': 'Internal Team',
+  'content': 'Help Center & Content',
+  'revenue': 'Revenue Analytics',
+  'settings': 'Platform Settings',
+  'impersonation': 'Account Impersonation',
+};
+
 // Pilot invite data
 export interface InvitePilotMemberData {
   firstName: string;

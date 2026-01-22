@@ -39,7 +39,7 @@ interface PilotTeamTableProps {
   team: PilotTeamMember[];
   loading: boolean;
   onRemove: (userId: string) => Promise<void>;
-  onUpdatePermissions: (userId: string, role: PilotTeamRole, permissions: AdminPermission[]) => Promise<void>;
+  onUpdatePermissions: (userId: string, role: PilotTeamRole, permissions: AdminPermission[], previousRole: PilotTeamRole, previousPermissions: AdminPermission[]) => Promise<void>;
   isRemoving?: boolean;
   isUpdating?: boolean;
 }
@@ -65,8 +65,8 @@ export function PilotTeamTable({
     }
   };
 
-  const handleUpdateMember = async (userId: string, role: PilotTeamRole, permissions: AdminPermission[]) => {
-    await onUpdatePermissions(userId, role, permissions);
+  const handleUpdateMember = async (userId: string, role: PilotTeamRole, permissions: AdminPermission[], previousRole: PilotTeamRole, previousPermissions: AdminPermission[]) => {
+    await onUpdatePermissions(userId, role, permissions, previousRole, previousPermissions);
   };
 
   const columns: ColumnDef<PilotTeamMember>[] = useMemo(

@@ -16,6 +16,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
+import { useAuth } from '@/hooks/useAuth';
+import { useSecurityLog } from '@/hooks/useSecurityLog';
 import type { 
   PilotTeamMember, 
   PilotTeamRole, 
@@ -25,13 +27,14 @@ import {
   ADMIN_PERMISSION_GROUPS, 
   DEFAULT_PILOT_ROLE_PERMISSIONS,
   ADMIN_PERMISSION_LABELS,
+  ADMIN_FEATURE_LABELS,
 } from '@/types/admin';
 
 interface PilotRoleManagementDialogProps {
   member: PilotTeamMember | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (userId: string, role: PilotTeamRole, permissions: AdminPermission[]) => Promise<void>;
+  onUpdate: (userId: string, role: PilotTeamRole, permissions: AdminPermission[], previousRole: PilotTeamRole, previousPermissions: AdminPermission[]) => Promise<void>;
 }
 
 /**
@@ -43,9 +46,15 @@ export function PilotRoleManagementDialog({
   onClose,
   onUpdate,
 }: PilotRoleManagementDialogProps) {
+  const { user } = useAuth();
+  const { logRoleChange } = useSecurityLog();
+  
   const [role, setRole] = useState<PilotTeamRole>('pilot_support');
   const [permissions, setPermissions] = useState<AdminPermission[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Prevent self-editing
+  const isEditingSelf = member?.user_id === user?.id;
 
   // Build matrix data: rows are features, columns are View/Manage
   const matrixData = useMemo(() => {
@@ -54,7 +63,7 @@ export function PilotRoleManagementDialog({
       const managePerm = groupPermissions.find(p => !p.startsWith('view_'));
       return {
         feature: group,
-        label: group.charAt(0).toUpperCase() + group.slice(1).replace('_', ' '),
+        label: ADMIN_FEATURE_LABELS[group] || group.charAt(0).toUpperCase() + group.slice(1).replace('_', ' '),
         viewPermission: viewPerm,
         managePermission: managePerm,
       };
@@ -106,12 +115,17 @@ export function PilotRoleManagementDialog({
   };
 
   const handleSave = async () => {
-    if (!member) return;
+    if (!member || isEditingSelf) return;
 
     setLoading(true);
     try {
-      await onUpdate(member.user_id, role, permissions);
-      toast.success('Permissions updated');
+      // Log role change if role changed
+      // Log role change if role changed
+      if (member.role !== role) {
+        logRoleChange(member.user_id, member.role, role, true);
+      }
+      
+      await onUpdate(member.user_id, role, permissions, member.role, member.admin_permissions || []);
       onClose();
     } catch (error: unknown) {
       toast.error('Failed to update permissions', { description: getErrorMessage(error) });
@@ -133,22 +147,31 @@ export function PilotRoleManagementDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-          {/* Role Selection */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Role</Label>
-            <Select value={role} onValueChange={(v) => handleRoleChange(v as PilotTeamRole)}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
-                <SelectItem value="pilot_support">Pilot Support</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Changing role will reset permissions to defaults. You can customize below.
-            </p>
-          </div>
+          {isEditingSelf ? (
+            <div className="p-6 border border-border rounded-lg bg-muted/50 text-center">
+              <p className="text-sm font-medium text-foreground">Cannot Edit Own Permissions</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                You cannot modify your own role or permissions. Ask another super admin to make changes.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Role Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Role</Label>
+                <Select value={role} onValueChange={(v) => handleRoleChange(v as PilotTeamRole)}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectItem value="pilot_support">Pilot Support</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Changing role will reset permissions to defaults. You can customize below.
+                </p>
+              </div>
 
           {/* Permissions Section */}
           {role === 'super_admin' ? (
@@ -239,6 +262,8 @@ export function PilotRoleManagementDialog({
               </div>
             </div>
           )}
+            </>
+          )}
         </div>
 
         {/* Footer */}
@@ -246,7 +271,7 @@ export function PilotRoleManagementDialog({
           <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSave} loading={loading}>
+          <Button onClick={handleSave} loading={loading} disabled={isEditingSelf}>
             Save Changes
           </Button>
         </div>
