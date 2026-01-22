@@ -43,7 +43,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         className="toaster group"
         position="bottom-center"
         style={{
-          '--width': 'fit-content',
+          '--width': 'auto',
         } as React.CSSProperties}
         gap={8}
         visibleToasts={3}
@@ -59,7 +59,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         toastOptions={{
           classNames: {
             toast:
-              "group toast !py-2 !px-3 group-[.toaster]:bg-foreground group-[.toaster]:text-background group-[.toaster]:border-foreground/10 group-[.toaster]:shadow-lg group-[.toaster]:rounded-lg",
+              "group toast !py-2 !px-3 max-w-sm whitespace-normal group-[.toaster]:bg-foreground group-[.toaster]:text-background group-[.toaster]:border-foreground/10 group-[.toaster]:shadow-lg group-[.toaster]:rounded-lg",
             description: "group-[.toast]:text-background/70",
             icon: "group-[.toast]:text-background",
             actionButton:
