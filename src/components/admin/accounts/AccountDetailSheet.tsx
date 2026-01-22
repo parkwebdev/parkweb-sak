@@ -26,7 +26,7 @@ import {
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
 import { getInitials, formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
-import { generateGradientPalette, hexToRgb } from '@/lib/color-utils';
+
 import { ImpersonateButton } from './ImpersonateButton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
@@ -65,15 +65,19 @@ interface DetailRowProps {
   href?: string;
 }
 
-// Brand colors for the animated banner
-const BRAND_PRIMARY = '#000000';      // Black
-const BRAND_SECONDARY = '#1e40af';    // Deep blue
-
-const BANNER_COLORS = generateGradientPalette(BRAND_PRIMARY, BRAND_SECONDARY);
+// Custom banner palette - black base with blue variations (no grays)
+const BANNER_COLORS = {
+  first: '0,0,0',         // Black (base)
+  second: '30,64,175',    // Deep blue (#1e40af)
+  third: '37,99,235',     // Bright blue (#2563eb)
+  fourth: '59,130,246',   // Sky blue (#3b82f6)
+  fifth: '96,165,250',    // Light blue (#60a5fa)
+  sixth: '14,45,120',     // Navy blue (darker variation)
+};
 
 const BANNER_GRADIENT = {
-  from: hexToRgb(BRAND_PRIMARY),
-  to: hexToRgb(BRAND_SECONDARY)
+  from: '0,0,0',          // Black
+  to: '30,64,175'         // Deep blue
 };
 
 /**
