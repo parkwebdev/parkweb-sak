@@ -46,6 +46,7 @@ import {
   Shield01,
   X,
   CheckVerified01,
+  RefreshCcw01,
 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
@@ -269,6 +270,17 @@ export function AccountDetailSheet({
                   label="Plan" 
                   value={account.plan_name || 'Free'} 
                 />
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <RefreshCcw01 size={16} className="shrink-0" aria-hidden="true" />
+                    <span>Subscription</span>
+                  </div>
+                  {account.subscription_status ? (
+                    <StatusBadge status={account.subscription_status} type="subscription" />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No subscription</span>
+                  )}
+                </div>
                 <DetailRow 
                   icon={CurrencyDollar} 
                   label="MRR" 
