@@ -2654,6 +2654,10 @@ export type Database = {
         Args: { account_owner_id: string }
         Returns: boolean
       }
+      has_admin_permission: {
+        Args: { permission: string; target_user_id: string }
+        Returns: boolean
+      }
       has_permission: {
         Args: {
           permission_name: Database["public"]["Enums"]["app_permission"]
@@ -2664,6 +2668,10 @@ export type Database = {
       invoke_send_scheduled_report: { Args: never; Returns: undefined }
       is_account_admin: { Args: { account_owner_id: string }; Returns: boolean }
       is_admin: { Args: { target_user_id: string }; Returns: boolean }
+      is_pilot_team_member: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { user_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
