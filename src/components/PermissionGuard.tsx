@@ -14,18 +14,20 @@ import type { AppPermission } from '@/types/team';
 import { Lock01 } from '@untitledui/icons';
 
 interface PermissionGuardProps {
-  /** Required permission(s) to access this route (ignored if adminOnly or superAdminOnly is true) */
-  permission?: AppPermission | AppPermission[];
   /** Child components to render when authorized */
   children: React.ReactNode;
-  /** Redirect path when unauthorized (default: show message) */
+  /** Required permission to access (checks via hasPermission) */
+  permission?: AppPermission;
+  /** Where to redirect unauthorized users. If not provided, shows access denied UI */
   redirectTo?: string;
-  /** Whether to show access denied UI instead of redirecting */
-  showAccessDenied?: boolean;
-  /** If true, only admins can access this route */
+  /** If true, only admin or super admin can access */
   adminOnly?: boolean;
-  /** If true, only super_admins can access this route */
+  /** If true, only super admin can access */
   superAdminOnly?: boolean;
+  /** If true, only pilot team members (super_admin OR pilot_support) can access */
+  pilotTeamOnly?: boolean;
+  /** If true, shows access denied UI when unauthorized. Default: true */
+  showAccessDenied?: boolean;
 }
 
 /**
@@ -37,14 +39,8 @@ interface PermissionGuardProps {
  * </PermissionGuard>
  * 
  * @example
- * // Multiple permissions (any of them grants access)
- * <PermissionGuard permission={['view_leads', 'manage_leads']}>
- *   <LeadsPage />
- * </PermissionGuard>
- * 
- * @example
- * // Super admin only route
- * <PermissionGuard superAdminOnly redirectTo="/dashboard">
+ * // Pilot team access (super_admin OR pilot_support)
+ * <PermissionGuard pilotTeamOnly redirectTo="/dashboard">
  *   <AdminDashboard />
  * </PermissionGuard>
  */
@@ -55,11 +51,38 @@ export function PermissionGuard({
   showAccessDenied = true,
   adminOnly = false,
   superAdminOnly = false,
+  pilotTeamOnly = false,
 }: PermissionGuardProps) {
-  const { hasPermission, loading, isAdmin, isSuperAdmin } = useRoleAuthorization();
+  const { hasPermission, loading, isAdmin, isSuperAdmin, isPilotTeamMember } = useRoleAuthorization();
 
   // Still loading permissions
   if (loading) {
+    return null;
+  }
+
+  // Pilot team access (super_admin OR pilot_support)
+  if (pilotTeamOnly) {
+    if (isPilotTeamMember) {
+      return <>{children}</>;
+    }
+    if (redirectTo) {
+      return <Navigate to={redirectTo} replace />;
+    }
+    if (showAccessDenied) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+            <Lock01 size={24} className="text-destructive" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Access Restricted
+          </h2>
+          <p className="text-muted-foreground max-w-md">
+            This area is only accessible to Pilot team members.
+          </p>
+        </div>
+      );
+    }
     return null;
   }
 
