@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { InviteTeamMemberDialog } from '@/components/admin/team';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useAuth } from '@/hooks/useAuth';
 import type { InvitePilotMemberData } from '@/types/admin';
 
 /**
@@ -25,6 +27,8 @@ import type { InvitePilotMemberData } from '@/types/admin';
  */
 export function AdminTeam() {
   const [inviteOpen, setInviteOpen] = useState(false);
+  const { isSuperAdmin } = useRoleAuthorization();
+  const { user } = useAuth();
 
   const { 
     team, 
@@ -41,15 +45,15 @@ export function AdminTeam() {
     return inviteMember(data);
   };
 
-  // Configure top bar for this page
+  // Configure top bar for this page - only super admins can invite
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={Users02} title="Pilot Team" />,
-    right: (
+    right: isSuperAdmin ? (
       <Button size="sm" onClick={() => setInviteOpen(true)}>
         Invite Member
       </Button>
-    ),
-  }), []);
+    ) : null,
+  }), [isSuperAdmin]);
   useTopBar(topBarConfig);
 
   const prefersReducedMotion = useReducedMotion();
@@ -70,6 +74,8 @@ export function AdminTeam() {
           onUpdatePermissions={updateMemberPermissions}
           isRemoving={isRemoving}
           isUpdating={isUpdating}
+          currentUserIsSuperAdmin={isSuperAdmin}
+          currentUserId={user?.id || ''}
         />
 
         {/* Invite Dialog */}

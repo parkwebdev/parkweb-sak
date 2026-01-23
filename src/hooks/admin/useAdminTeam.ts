@@ -126,12 +126,26 @@ export function useAdminTeam(): UseAdminTeamResult {
 
   const removeMutation = useMutation({
     mutationFn: async (userId: string) => {
+      if (!user) throw new Error('Not authenticated');
+
+      // Get current user's role
+      const { data: myRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
       // Check if we're removing a super admin
       const { data: targetRole } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .single();
+
+      // Only super admins can remove other super admins
+      if (targetRole?.role === 'super_admin' && myRole?.role !== 'super_admin') {
+        throw new Error('Only Super Admins can remove other Super Admins.');
+      }
 
       if (targetRole?.role === 'super_admin') {
         const { count } = await supabase
@@ -176,6 +190,18 @@ export function useAdminTeam(): UseAdminTeamResult {
       previousPermissions: AdminPermission[];
     }) => {
       if (!user) throw new Error('Not authenticated');
+
+      // Get current user's role
+      const { data: myRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      // Only super admins can modify other super admins
+      if (previousRole === 'super_admin' && myRole?.role !== 'super_admin') {
+        throw new Error('Only Super Admins can modify other Super Admins.');
+      }
 
       // Last super admin protection
       if (previousRole === 'super_admin' && role !== 'super_admin') {

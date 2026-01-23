@@ -18,6 +18,7 @@ import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import type { 
   PilotTeamMember, 
   PilotTeamRole, 
@@ -48,6 +49,7 @@ export function PilotRoleManagementDialog({
 }: PilotRoleManagementDialogProps) {
   const { user } = useAuth();
   const { logRoleChange } = useSecurityLog();
+  const { isSuperAdmin: currentUserIsSuperAdmin } = useRoleAuthorization();
   
   const [role, setRole] = useState<PilotTeamRole>('pilot_support');
   const [permissions, setPermissions] = useState<AdminPermission[]>([]);
@@ -55,6 +57,10 @@ export function PilotRoleManagementDialog({
 
   // Prevent self-editing
   const isEditingSelf = member?.user_id === user?.id;
+  
+  // Prevent non-super-admins from editing super admins
+  const isEditingSuperAdmin = member?.role === 'super_admin';
+  const canEdit = !isEditingSelf && (currentUserIsSuperAdmin || !isEditingSuperAdmin);
 
   // Build matrix data: rows are features, columns are View/Manage
   const matrixData = useMemo(() => {
@@ -115,7 +121,7 @@ export function PilotRoleManagementDialog({
   };
 
   const handleSave = async () => {
-    if (!member || isEditingSelf) return;
+    if (!member || !canEdit) return;
 
     setLoading(true);
     try {
@@ -147,11 +153,15 @@ export function PilotRoleManagementDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-          {isEditingSelf ? (
+          {!canEdit ? (
             <div className="p-6 border border-border rounded-lg bg-muted/50 text-center">
-              <p className="text-sm font-medium text-foreground">Cannot Edit Own Permissions</p>
+              <p className="text-sm font-medium text-foreground">
+                {isEditingSelf ? 'Cannot Edit Own Permissions' : 'Cannot Edit Super Admin'}
+              </p>
               <p className="text-xs text-muted-foreground mt-1">
-                You cannot modify your own role or permissions. Ask another super admin to make changes.
+                {isEditingSelf 
+                  ? 'You cannot modify your own role or permissions. Ask another super admin to make changes.'
+                  : 'Only Super Admins can modify other Super Admin accounts.'}
               </p>
             </div>
           ) : (
@@ -271,7 +281,7 @@ export function PilotRoleManagementDialog({
           <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSave} loading={loading} disabled={isEditingSelf}>
+          <Button onClick={handleSave} loading={loading} disabled={!canEdit}>
             Save Changes
           </Button>
         </div>
