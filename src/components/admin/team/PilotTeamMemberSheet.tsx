@@ -41,6 +41,7 @@ import {
   Mail01, 
   Calendar,
   Clock,
+  Shield01,
   X,
 } from '@untitledui/icons';
 
@@ -326,9 +327,12 @@ export function PilotTeamMemberSheet({
                 </div>
               )}
 
-              {/* Role Selection - inline */}
-              <div className="flex items-center justify-between py-2 mt-2">
-                <span className="text-sm text-muted-foreground">Role</span>
+              {/* Role Selection - inline like DetailRow */}
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <Shield01 size={16} className="shrink-0" aria-hidden="true" />
+                  <span>Role</span>
+                </div>
                 <Select
                   value={role}
                   onValueChange={(value) => handleRoleChange(value as PilotTeamRole)}
