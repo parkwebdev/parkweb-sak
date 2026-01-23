@@ -50,7 +50,7 @@ function formatRole(role: string): string {
  * Role-based styling configuration
  */
 const ROLE_STYLES: Record<string, string> = {
-  super_admin: 'bg-primary/10 text-primary border-primary/20',
+  super_admin: 'bg-info/10 text-info border-info/20',
   pilot_support: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
   admin: 'bg-status-active/10 text-status-active-foreground border-status-active/20',
   manager: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
