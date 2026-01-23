@@ -247,13 +247,15 @@ export function InviteTeamMemberDialog({
 
         <DialogFooter className="pt-4 border-t border-border">
           <Button 
-            variant="outline" 
+            variant="outline"
+            size="sm"
             onClick={() => handleOpenChange(false)}
             disabled={isInviting}
           >
             Cancel
           </Button>
           <Button 
+            size="sm"
             onClick={handleInvite} 
             disabled={!isValid || isInviting}
             loading={isInviting}
