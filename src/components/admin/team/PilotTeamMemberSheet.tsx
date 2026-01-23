@@ -156,12 +156,20 @@ export function PilotTeamMemberSheet({
 
   // Build the permissions matrix data
   const matrixData = useMemo(() => {
-    return Object.entries(ADMIN_PERMISSION_GROUPS).map(([feature, perms]) => ({
-      feature,
-      label: ADMIN_FEATURE_LABELS[feature] || feature,
-      viewPermission: perms.find((p) => p.startsWith('view_')) as AdminPermission | undefined,
-      managePermission: perms.find((p) => p.startsWith('manage_')) as AdminPermission | undefined,
-    }));
+    return Object.entries(ADMIN_PERMISSION_GROUPS).map(([feature, perms]) => {
+      const viewPerm = perms.find((p) => p.startsWith('view_')) as AdminPermission | undefined;
+      const managePerm = perms.find((p) => p.startsWith('manage_')) as AdminPermission | undefined;
+      // Handle permissions that don't follow view_/manage_ pattern (e.g., impersonate_users)
+      const actionPerm = perms.find((p) => !p.startsWith('view_') && !p.startsWith('manage_')) as AdminPermission | undefined;
+      
+      return {
+        feature,
+        label: ADMIN_FEATURE_LABELS[feature] || feature,
+        viewPermission: viewPerm,
+        // Action permissions go in the manage column since they're elevated actions
+        managePermission: managePerm || actionPerm,
+      };
+    });
   }, []);
 
   // Calculate column selection states
