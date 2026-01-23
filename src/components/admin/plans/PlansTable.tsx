@@ -197,18 +197,6 @@ export function PlansTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium">Subscription Plans</h3>
-          <p className="text-xs text-muted-foreground">
-            {plans.length} plan{plans.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <Button size="sm" onClick={() => { resetForm(); setCreateOpen(true); }}>
-          New Plan
-        </Button>
-      </div>
-
       <DataTable
         table={table}
         columns={columns}
