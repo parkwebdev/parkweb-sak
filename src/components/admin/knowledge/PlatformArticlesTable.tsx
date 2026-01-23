@@ -25,7 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Trash01 } from '@untitledui/icons';
-import { IconButton } from '@/components/ui/icon-button';
+import { PlatformArticleActions } from './PlatformArticleActions';
 import { formatDistanceToNow } from 'date-fns';
 import type { PlatformHCArticle } from '@/types/platform-hc';
 
@@ -166,17 +166,13 @@ export function PlatformArticlesTable({
       }),
       columnHelper.display({
         id: 'actions',
-        header: 'Actions',
+        header: '',
+        size: 60,
         cell: ({ row }) => (
           <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
-            <IconButton
-              label="Delete article"
-              variant="ghost"
-              size="sm"
-              onClick={() => setDeleteConfirmId(row.original.id)}
-            >
-              <Trash01 size={14} className="text-destructive" />
-            </IconButton>
+            <PlatformArticleActions
+              onDelete={() => setDeleteConfirmId(row.original.id)}
+            />
           </div>
         ),
       }),

@@ -12,3 +12,4 @@ export { EditorFloatingToolbar } from './EditorFloatingToolbar';
 export { EditorInsertPanel } from './EditorInsertPanel';
 export { EditorMetadataPanel } from './EditorMetadataPanel';
 export { PlatformArticlesTable } from './PlatformArticlesTable';
+export { PlatformArticleActions } from './PlatformArticleActions';
