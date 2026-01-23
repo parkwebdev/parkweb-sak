@@ -34,12 +34,16 @@ export function PilotPermissionSelector({
   const matrixData = useMemo(() => {
     return Object.entries(ADMIN_PERMISSION_GROUPS).map(([group, groupPermissions]) => {
       const viewPerm = groupPermissions.find(p => p.startsWith('view_'));
-      const managePerm = groupPermissions.find(p => !p.startsWith('view_'));
+      const managePerm = groupPermissions.find(p => p.startsWith('manage_'));
+      // Handle permissions that don't follow view_/manage_ pattern (e.g., impersonate_users)
+      const actionPerm = groupPermissions.find(p => !p.startsWith('view_') && !p.startsWith('manage_'));
+      
       return {
         feature: group,
         label: ADMIN_FEATURE_LABELS[group] || group,
         viewPermission: viewPerm,
-        managePermission: managePerm,
+        // Action permissions go in the manage column since they're elevated actions
+        managePermission: managePerm || actionPerm,
       };
     });
   }, []);
