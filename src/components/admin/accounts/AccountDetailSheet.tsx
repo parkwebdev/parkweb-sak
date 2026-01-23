@@ -218,10 +218,10 @@ export function AccountDetailSheet({
 
             {/* Name and Role */}
             <div className="px-5 pt-3 pb-4">
-              <h2 className="text-lg font-semibold truncate">
-                {account.display_name || 'Unnamed Account'}
-              </h2>
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold truncate">
+                  {account.display_name || 'Unnamed Account'}
+                </h2>
                 <RoleBadge role={account.role} />
               </div>
             </div>
