@@ -97,8 +97,10 @@ export function AdminSidebar() {
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {visibleSections.map((section) => {
           const Icon = iconMap[section.iconName];
-          const isActive = section.path === '/admin' 
-            ? location.pathname === '/admin' 
+          // Overview (/admin) should only be active on exact match
+          // Other sections should match if path starts with their path
+          const isActive = section.id === 'overview'
+            ? location.pathname === '/admin'
             : location.pathname.startsWith(section.path);
           
           return (
