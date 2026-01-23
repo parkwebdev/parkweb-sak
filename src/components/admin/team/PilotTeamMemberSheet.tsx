@@ -41,7 +41,6 @@ import {
   Mail01, 
   Calendar,
   Clock,
-  Shield01,
   X,
 } from '@untitledui/icons';
 
@@ -316,11 +315,9 @@ export function PilotTeamMemberSheet({
                 />
               </div>
 
-              <Separator className="my-3" />
-
               {/* Self-edit or Super Admin warning */}
               {!canEdit && (
-                <div className="rounded-lg bg-muted/50 p-3 mb-3">
+                <div className="rounded-lg bg-muted/50 p-3 mt-3">
                   <p className="text-sm text-muted-foreground">
                     {isSelf
                       ? "You cannot edit your own role or permissions."
@@ -329,18 +326,15 @@ export function PilotTeamMemberSheet({
                 </div>
               )}
 
-              {/* Role Selection */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground py-2">
-                  <Shield01 size={16} className="shrink-0" aria-hidden="true" />
-                  <span>Role</span>
-                </div>
+              {/* Role Selection - inline */}
+              <div className="flex items-center justify-between py-2 mt-2">
+                <span className="text-sm text-muted-foreground">Role</span>
                 <Select
                   value={role}
                   onValueChange={(value) => handleRoleChange(value as PilotTeamRole)}
                   disabled={!canEdit}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-[160px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -348,23 +342,11 @@ export function PilotTeamMemberSheet({
                     <SelectItem value="pilot_support">Pilot Support</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  {role === 'super_admin'
-                    ? 'Full access to all admin features'
-                    : 'Access based on assigned permissions'}
-                </p>
               </div>
 
               {/* Permissions Matrix - only show for pilot_support */}
               {role === 'pilot_support' && (
-                <>
-                  <Separator className="my-3" />
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground py-2">
-                      <Shield01 size={16} className="shrink-0" aria-hidden="true" />
-                      <span>Permissions</span>
-                    </div>
+                <div className="space-y-3 pt-3">
                     
                     <div className="border rounded-lg overflow-hidden">
                       <table className="w-full text-sm">
@@ -449,11 +431,8 @@ export function PilotTeamMemberSheet({
                         </tbody>
                       </table>
                     </div>
-                  </div>
-                </>
+                </div>
               )}
-
-              <Separator className="my-3" />
 
               {/* Actions */}
               <div className="flex justify-end gap-2 pt-2">
