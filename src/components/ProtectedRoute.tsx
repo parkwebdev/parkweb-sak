@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
@@ -35,16 +35,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
   const { isPilotTeamMember, loading: roleLoading } = useRoleAuthorization();
   const location = useLocation();
-  const navigate = useNavigate();
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [hasShownToast, setHasShownToast] = useState(false);
-
-  // Redirect Pilot team members to /admin if they're on a customer route
-  React.useEffect(() => {
-    if (isPilotTeamMember && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/settings')) {
-      navigate('/admin', { replace: true });
-    }
-  }, [isPilotTeamMember, location.pathname, navigate]);
 
   /**
    * Handle loading screen completion
@@ -63,6 +55,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Redirect to login if not authenticated
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Redirect Pilot team members to /admin if they're on a customer route
+  // This must be AFTER loading checks to ensure role is loaded
+  if (isPilotTeamMember && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/settings')) {
+    return <Navigate to="/admin" replace />;
   }
 
   // Determine if we're in the loading/blur phase

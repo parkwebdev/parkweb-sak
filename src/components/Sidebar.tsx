@@ -24,6 +24,8 @@ import { getMainNavRoutes, getBottomNavRoutes, getRouteById, ADMIN_SECTIONS, typ
 import { NAVIGATION_ICON_MAP, ACTIVE_ICON_MAP, ADMIN_ICON_MAP } from '@/lib/navigation-icons';
 import type { ConversationMetadata } from '@/types/metadata';
 import type { AppPermission } from '@/types/team';
+import type { AdminPermission } from '@/types/admin';
+import { ADMIN_SECTION_PERMISSIONS } from '@/config/admin-permissions';
 
 /**
  * Navigation item configuration
@@ -107,7 +109,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
   const { setOpen: setSearchOpen } = useGlobalSearch();
-  const { hasPermission, isAdmin, isSuperAdmin, loading: permissionsLoading } = useRoleAuthorization();
+  const { hasPermission, hasAdminPermission, isAdmin, isSuperAdmin, isPilotTeamMember, loading: permissionsLoading } = useRoleAuthorization();
   
   // Check if we're on an admin route
   const isOnAdminRoute = location.pathname.startsWith('/admin');
@@ -116,9 +118,14 @@ function SidebarComponent({ onClose }: SidebarProps) {
   const filteredNavigationItems = useMemo(() => {
     if (permissionsLoading) return navigationItems; // Show all while loading
     
-    // If super admin is on /admin/* routes, show admin navigation instead
-    if (isSuperAdmin && isOnAdminRoute) {
-      return adminNavigationItems;
+    // If pilot team member is on /admin/* routes, show admin navigation filtered by permissions
+    if (isPilotTeamMember && isOnAdminRoute) {
+      return adminNavigationItems.filter(item => {
+        const required = ADMIN_SECTION_PERMISSIONS[item.id];
+        if (!required) return true; // No permission required (overview, audit)
+        if (isSuperAdmin) return true; // Super admins see everything
+        return hasAdminPermission(required);
+      });
     }
     
     // Start with filtered main nav items
@@ -138,14 +145,14 @@ function SidebarComponent({ onClose }: SidebarProps) {
     }
     
     return baseItems;
-  }, [hasPermission, isAdmin, isSuperAdmin, isOnAdminRoute, permissionsLoading, allComplete]);
+  }, [hasPermission, hasAdminPermission, isAdmin, isSuperAdmin, isPilotTeamMember, isOnAdminRoute, permissionsLoading, allComplete]);
 
   // Filter bottom items - hide "Get set up" when onboarding is complete
   const filteredBottomItems = useMemo(() => {
     if (permissionsLoading) return bottomItems;
     
-    // On admin routes, don't show regular bottom items except settings
-    if (isSuperAdmin && isOnAdminRoute) {
+    // On admin routes, don't show regular bottom items for pilot team
+    if (isPilotTeamMember && isOnAdminRoute) {
       return [];
     }
     
@@ -160,7 +167,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
       if (isAdmin) return true;
       return hasPermission(item.requiredPermission);
     });
-  }, [hasPermission, isAdmin, isSuperAdmin, isOnAdminRoute, permissionsLoading, allComplete]);
+  }, [hasPermission, isAdmin, isSuperAdmin, isPilotTeamMember, isOnAdminRoute, permissionsLoading, allComplete]);
 
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -184,13 +191,13 @@ function SidebarComponent({ onClose }: SidebarProps) {
         {/* Header with logo */}
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
-            {isSuperAdmin && isOnAdminRoute ? (
+            {isPilotTeamMember && isOnAdminRoute ? (
               // Admin mode header
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-destructive/10 flex items-center justify-center">
                   <Shield01 size={14} className="text-destructive" />
                 </div>
-                <span className="text-sm font-semibold text-foreground">Super Admin</span>
+                <span className="text-sm font-semibold text-foreground">{isSuperAdmin ? 'Super Admin' : 'Admin'}</span>
               </div>
             ) : (
               <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
