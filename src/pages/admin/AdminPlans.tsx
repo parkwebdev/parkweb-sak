@@ -8,7 +8,7 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { CreditCard01, Plus } from '@untitledui/icons';
+import { CreditCard01 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { 
@@ -40,7 +40,6 @@ export function AdminPlans() {
     left: <TopBarPageContext icon={CreditCard01} title="Plans & Billing" />,
     right: (
       <Button size="sm" onClick={handleCreatePlan}>
-        <Plus size={16} className="mr-1.5" aria-hidden="true" />
         New Plan
       </Button>
     ),
