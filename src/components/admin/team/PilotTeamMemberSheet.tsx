@@ -1,25 +1,26 @@
 /**
- * PilotTeamMemberSheet Component
+ * Pilot Team Member Detail Sheet
  * 
- * Sheet panel for viewing and editing Pilot team member details and permissions.
- * Replaces the modal dialog with a slide-in sheet pattern.
+ * Displays member details and permissions management in a slide-over sheet.
+ * Styled to match AccountDetailSheet exactly.
  * 
  * @module components/admin/team/PilotTeamMemberSheet
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
   SheetTitle,
-  SheetDescription,
-  SheetFooter,
 } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { RoleBadge } from '@/components/admin/shared/RoleBadge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -27,26 +28,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { Mail01, Calendar, Clock } from '@untitledui/icons';
-import { formatDistanceToNow } from 'date-fns';
-import { getInitials } from '@/lib/admin/admin-utils';
+import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
+import { RoleBadge } from '@/components/admin/shared/RoleBadge';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { springs } from '@/lib/motion-variants';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
+import { springs } from '@/lib/motion-variants';
+import { getInitials, formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
+import { cn } from '@/lib/utils';
+import { 
+  Mail01, 
+  Calendar,
+  Clock,
+  Shield01,
+  X,
+} from '@untitledui/icons';
+
 import type { PilotTeamMember, PilotTeamRole, AdminPermission } from '@/types/admin';
 import {
   ADMIN_PERMISSION_GROUPS,
@@ -54,6 +52,21 @@ import {
   ADMIN_PERMISSION_LABELS,
   DEFAULT_PILOT_ROLE_PERMISSIONS,
 } from '@/types/admin';
+
+// Banner colors - matching AccountDetailSheet exactly
+const BANNER_COLORS = {
+  first: '0,0,0',
+  second: '30,64,175',
+  third: '37,99,235',
+  fourth: '59,130,246',
+  fifth: '96,165,250',
+  sixth: '14,45,120',
+};
+
+const BANNER_GRADIENT = {
+  from: '0,0,0',
+  to: '30,64,175'
+};
 
 interface PilotTeamMemberSheetProps {
   member: PilotTeamMember | null;
@@ -66,6 +79,37 @@ interface PilotTeamMemberSheetProps {
     previousRole: PilotTeamRole,
     previousPermissions: AdminPermission[]
   ) => Promise<void>;
+}
+
+interface DetailRowProps {
+  icon: typeof Mail01;
+  label: string;
+  value: string | number | null | undefined;
+  placeholder?: string;
+}
+
+/**
+ * Single row displaying label and value in two-column layout
+ * Matches AccountDetailSheet DetailRow exactly
+ */
+function DetailRow({ icon: Icon, label, value, placeholder }: DetailRowProps) {
+  const displayValue = value ?? placeholder ?? `Set ${label.toLowerCase()}`;
+  const isEmpty = !value;
+  
+  return (
+    <div className="flex items-center justify-between py-2">
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <Icon size={16} className="shrink-0" aria-hidden="true" />
+        <span>{label}</span>
+      </div>
+      <span className={cn(
+        "text-sm text-right max-w-[200px] truncate",
+        isEmpty ? "text-muted-foreground" : "text-foreground"
+      )}>
+        {displayValue}
+      </span>
+    </div>
+  );
 }
 
 /**
@@ -81,7 +125,8 @@ export function PilotTeamMemberSheet({
   const { user } = useAuth();
   const { isSuperAdmin } = useRoleAuthorization();
   const { logSecurityEvent } = useSecurityLog();
-
+  
+  const [contentReady, setContentReady] = useState(false);
   const [role, setRole] = useState<PilotTeamRole>('pilot_support');
   const [permissions, setPermissions] = useState<AdminPermission[]>([]);
   const [loading, setLoading] = useState(false);
@@ -90,6 +135,16 @@ export function PilotTeamMemberSheet({
   const isSelf = member?.user_id === user?.id;
   const isTargetSuperAdmin = member?.role === 'super_admin';
   const canEdit = !isSelf && (isSuperAdmin || !isTargetSuperAdmin);
+
+  // Defer content mounting for smooth animation
+  useEffect(() => {
+    if (open && member) {
+      const timer = setTimeout(() => setContentReady(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setContentReady(false);
+    }
+  }, [open, member]);
 
   // Initialize state when member changes
   useEffect(() => {
@@ -187,201 +242,297 @@ export function PilotTeamMemberSheet({
     }
   };
 
-  if (!member) return null;
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
-        {/* Banner Header */}
-        <div className="relative">
-          <div className="h-20 bg-gradient-to-br from-foreground/90 to-foreground/70" />
-          
-          {/* Avatar - overlapping banner */}
+      <SheetContent side="right" className="sm:max-w-md overflow-y-auto p-0">
+        <VisuallyHidden.Root>
+          <SheetTitle>Team Member Details</SheetTitle>
+        </VisuallyHidden.Root>
+        
+        {!member ? (
+          <PilotTeamMemberSheetSkeleton />
+        ) : (
           <motion.div
-            className="absolute -bottom-8 left-6"
-            initial={prefersReducedMotion ? false : { scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={springs.snappy}
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
+            animate={contentReady ? { opacity: 1 } : { opacity: 0 }}
+            transition={springs.smooth}
           >
-            <Avatar className="h-16 w-16 border-4 border-background shadow-lg">
-              <AvatarImage src={member.avatar_url || undefined} />
-              <AvatarFallback className="text-lg bg-muted">
-                {getInitials(member.display_name || member.email)}
-              </AvatarFallback>
-            </Avatar>
-          </motion.div>
-        </div>
+            {/* Animated Banner Header */}
+            <div className="relative h-36 overflow-hidden">
+              <CSSBubbleBackground
+                colors={BANNER_COLORS}
+                baseGradient={BANNER_GRADIENT}
+                className="absolute inset-0"
+              />
+              
+              {/* Close button */}
+              <button 
+                onClick={() => onOpenChange(false)}
+                className="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+                aria-label="Close"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 pt-12 pb-6">
-          <SheetHeader className="text-left mb-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <SheetTitle className="text-lg truncate">
+            {/* Avatar - overlapping the banner */}
+            <div className="relative px-5 -mt-10">
+              <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
+                <AvatarImage src={member.avatar_url || undefined} alt={member.display_name || 'Team member'} />
+                <AvatarFallback className="text-xl bg-muted">
+                  {getInitials(member.display_name || member.email)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+
+            {/* Name and Role */}
+            <div className="px-5 pt-3 pb-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold truncate">
                   {member.display_name || 'Unnamed Member'}
-                </SheetTitle>
-                <SheetDescription className="flex items-center gap-1.5 mt-1">
-                  <Mail01 size={14} aria-hidden="true" />
-                  <span className="truncate">{member.email}</span>
-                </SheetDescription>
-              </div>
-              <RoleBadge role={member.role} />
-            </div>
-          </SheetHeader>
-
-          {/* Member Details */}
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar size={14} aria-hidden="true" />
-              <span>Added {member.created_at ? formatDistanceToNow(new Date(member.created_at), { addSuffix: true }) : 'Unknown'}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock size={14} aria-hidden="true" />
-              <span>Last login {member.last_login_at ? formatDistanceToNow(new Date(member.last_login_at), { addSuffix: true }) : 'Never'}</span>
-            </div>
-          </div>
-
-          <Separator className="my-6" />
-
-          {/* Self-edit or Super Admin warning */}
-          {!canEdit && (
-            <div className="rounded-lg bg-muted/50 p-4 mb-6">
-              <p className="text-sm text-muted-foreground">
-                {isSelf
-                  ? "You cannot edit your own role or permissions."
-                  : "Only Super Admins can edit other Super Admin accounts."}
-              </p>
-            </div>
-          )}
-
-          {/* Role Selection */}
-          <div className="space-y-2 mb-6">
-            <Label>Role</Label>
-            <Select
-              value={role}
-              onValueChange={(value) => handleRoleChange(value as PilotTeamRole)}
-              disabled={!canEdit}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
-                <SelectItem value="pilot_support">Pilot Support</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {role === 'super_admin'
-                ? 'Full access to all admin features'
-                : 'Access based on assigned permissions'}
-            </p>
-          </div>
-
-          {/* Permissions Matrix (only for pilot_support) */}
-          {role === 'pilot_support' && (
-            <div className="space-y-3">
-              <Label>Permissions</Label>
-              <div className="rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[140px]">Feature</TableHead>
-                      <TableHead className="w-[80px] text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <Checkbox
-                            checked={allViewSelected}
-                            onCheckedChange={() => toggleColumnPermissions('view')}
-                            disabled={!canEdit}
-                            aria-label="Select all view permissions"
-                            {...(someViewSelected && !allViewSelected ? { 'data-state': 'indeterminate' } : {})}
-                          />
-                          <span className="text-xs">View</span>
-                        </div>
-                      </TableHead>
-                      <TableHead className="w-[80px] text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <Checkbox
-                            checked={allManageSelected}
-                            onCheckedChange={() => toggleColumnPermissions('manage')}
-                            disabled={!canEdit}
-                            aria-label="Select all manage permissions"
-                            {...(someManageSelected && !allManageSelected ? { 'data-state': 'indeterminate' } : {})}
-                          />
-                          <span className="text-xs">Manage</span>
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {matrixData.map((row) => (
-                      <TableRow key={row.feature}>
-                        <TableCell className="font-medium text-sm">
-                          {row.label}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {row.viewPermission && (
-                            <Checkbox
-                              checked={permissions.includes(row.viewPermission)}
-                              onCheckedChange={(checked) =>
-                                handlePermissionChange(row.viewPermission!, !!checked)
-                              }
-                              disabled={!canEdit}
-                              aria-label={ADMIN_PERMISSION_LABELS[row.viewPermission]}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {row.managePermission && (
-                            <Checkbox
-                              checked={permissions.includes(row.managePermission)}
-                              onCheckedChange={(checked) =>
-                                handlePermissionChange(row.managePermission!, !!checked)
-                              }
-                              disabled={!canEdit}
-                              aria-label={ADMIN_PERMISSION_LABELS[row.managePermission]}
-                            />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                </h2>
+                <RoleBadge role={member.role} />
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <SheetFooter className="px-6 py-4 border-t bg-background">
-          <div className="flex gap-2 w-full justify-end">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={!canEdit || loading}>
-              {loading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </SheetFooter>
+            {/* Content */}
+            <div className="px-5 pb-5 space-y-1">
+              {/* Member Details Section */}
+              <div className="space-y-0">
+                <DetailRow 
+                  icon={Mail01} 
+                  label="Email" 
+                  value={member.email}
+                />
+                <DetailRow 
+                  icon={Calendar} 
+                  label="Date added" 
+                  value={member.created_at ? formatAdminDate(member.created_at) : undefined} 
+                />
+                <DetailRow 
+                  icon={Clock} 
+                  label="Last active" 
+                  value={member.last_login_at ? formatRelativeTime(member.last_login_at) : 'Never'} 
+                />
+              </div>
+
+              <Separator className="my-3" />
+
+              {/* Self-edit or Super Admin warning */}
+              {!canEdit && (
+                <div className="rounded-lg bg-muted/50 p-3 mb-3">
+                  <p className="text-sm text-muted-foreground">
+                    {isSelf
+                      ? "You cannot edit your own role or permissions."
+                      : "Only Super Admins can edit other Super Admin accounts."}
+                  </p>
+                </div>
+              )}
+
+              {/* Role Selection */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground py-2">
+                  <Shield01 size={16} className="shrink-0" aria-hidden="true" />
+                  <span>Role</span>
+                </div>
+                <Select
+                  value={role}
+                  onValueChange={(value) => handleRoleChange(value as PilotTeamRole)}
+                  disabled={!canEdit}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectItem value="pilot_support">Pilot Support</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {role === 'super_admin'
+                    ? 'Full access to all admin features'
+                    : 'Access based on assigned permissions'}
+                </p>
+              </div>
+
+              {/* Permissions Matrix - only show for pilot_support */}
+              {role === 'pilot_support' && (
+                <>
+                  <Separator className="my-3" />
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground py-2">
+                      <Shield01 size={16} className="shrink-0" aria-hidden="true" />
+                      <span>Permissions</span>
+                    </div>
+                    
+                    <div className="border rounded-lg overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-muted/50 border-b">
+                            <th className="text-left py-2 px-3 font-medium">Feature</th>
+                            <th className="text-center py-2 px-3 font-medium w-16">
+                              <div className="flex flex-col items-center gap-1">
+                                <span>View</span>
+                                <Checkbox
+                                  checked={allViewSelected}
+                                  onCheckedChange={() => toggleColumnPermissions('view')}
+                                  disabled={!canEdit}
+                                  aria-label="Toggle all view permissions"
+                                  ref={(el) => {
+                                    if (el) {
+                                      (el as HTMLButtonElement & { indeterminate?: boolean }).indeterminate = 
+                                        someViewSelected && !allViewSelected;
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </th>
+                            <th className="text-center py-2 px-3 font-medium w-16">
+                              <div className="flex flex-col items-center gap-1">
+                                <span>Manage</span>
+                                <Checkbox
+                                  checked={allManageSelected}
+                                  onCheckedChange={() => toggleColumnPermissions('manage')}
+                                  disabled={!canEdit}
+                                  aria-label="Toggle all manage permissions"
+                                  ref={(el) => {
+                                    if (el) {
+                                      (el as HTMLButtonElement & { indeterminate?: boolean }).indeterminate = 
+                                        someManageSelected && !allManageSelected;
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {matrixData.map((row, index) => (
+                            <tr 
+                              key={row.feature}
+                              className={cn(
+                                index !== matrixData.length - 1 && "border-b"
+                              )}
+                            >
+                              <td className="py-2 px-3">
+                                <Label className="font-normal cursor-pointer">
+                                  {row.label}
+                                </Label>
+                              </td>
+                              <td className="text-center py-2 px-3">
+                                {row.viewPermission && (
+                                  <Checkbox
+                                    checked={permissions.includes(row.viewPermission)}
+                                    onCheckedChange={(checked) =>
+                                      handlePermissionChange(row.viewPermission!, !!checked)
+                                    }
+                                    disabled={!canEdit}
+                                    aria-label={ADMIN_PERMISSION_LABELS[row.viewPermission]}
+                                  />
+                                )}
+                              </td>
+                              <td className="text-center py-2 px-3">
+                                {row.managePermission && (
+                                  <Checkbox
+                                    checked={permissions.includes(row.managePermission)}
+                                    onCheckedChange={(checked) =>
+                                      handlePermissionChange(row.managePermission!, !!checked)
+                                    }
+                                    disabled={!canEdit}
+                                    aria-label={ADMIN_PERMISSION_LABELS[row.managePermission]}
+                                  />
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <Separator className="my-3" />
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={loading || !canEdit}
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </SheetContent>
     </Sheet>
   );
 }
 
 /**
- * Skeleton loader for the sheet content.
+ * Loading skeleton for member details - matches AccountDetailSheet layout exactly
  */
 export function PilotTeamMemberSheetSkeleton() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Skeleton className="h-16 w-16 rounded-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-4 w-48" />
-        </div>
+    <div>
+      {/* Banner skeleton */}
+      <Skeleton className="h-36 w-full rounded-none" />
+      
+      {/* Overlapping avatar skeleton */}
+      <div className="px-5 -mt-10">
+        <Skeleton className="h-20 w-20 rounded-full border-4 border-background" />
       </div>
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-48 w-full" />
+      
+      {/* Name and role skeleton */}
+      <div className="px-5 pt-3 pb-4 space-y-2">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-5 w-24" />
+      </div>
+      
+      {/* Detail row skeletons */}
+      <div className="px-5 space-y-0">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex items-center justify-between py-2">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-4 w-4" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <Skeleton className="h-4 w-32" />
+          </div>
+        ))}
+      </div>
+      
+      {/* Separator */}
+      <div className="px-5 my-3">
+        <Skeleton className="h-px w-full" />
+      </div>
+      
+      {/* Role selector skeleton */}
+      <div className="px-5 space-y-2">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      
+      {/* Separator */}
+      <div className="px-5 my-3">
+        <Skeleton className="h-px w-full" />
+      </div>
+      
+      {/* Action buttons skeleton */}
+      <div className="px-5 pt-2 pb-5 flex justify-end gap-2">
+        <Skeleton className="h-9 w-20" />
+        <Skeleton className="h-9 w-28" />
+      </div>
     </div>
   );
 }
