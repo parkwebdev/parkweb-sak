@@ -16,6 +16,7 @@ import {
   EmailDeliveryLogs, 
   EmailDeliveryStats 
 } from '@/components/admin/emails';
+import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { useEmailDeliveryLogs } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
@@ -32,35 +33,37 @@ export function AdminEmails() {
   const { logs, stats, loading } = useEmailDeliveryLogs();
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Delivery Stats - no header, TopBar handles page title */}
-      <EmailDeliveryStats stats={stats} loading={loading} />
+    <AdminPermissionGuard permission="view_content">
+      <div className="p-6 space-y-6">
+        {/* Delivery Stats - no header, TopBar handles page title */}
+        <EmailDeliveryStats stats={stats} loading={loading} />
 
-      {/* Tabs */}
-      <Tabs defaultValue="templates" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="announcements">Announcements</TabsTrigger>
-          <TabsTrigger value="logs">Delivery Logs</TabsTrigger>
-        </TabsList>
+        {/* Tabs */}
+        <Tabs defaultValue="templates" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="announcements">Announcements</TabsTrigger>
+            <TabsTrigger value="logs">Delivery Logs</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="templates">
-          <EmailTemplateList 
-            templates={[]} 
-            loading={loading} 
-            onPreview={() => {}} 
-            onEdit={() => {}} 
-          />
-        </TabsContent>
+          <TabsContent value="templates">
+            <EmailTemplateList 
+              templates={[]} 
+              loading={loading} 
+              onPreview={() => {}} 
+              onEdit={() => {}} 
+            />
+          </TabsContent>
 
-        <TabsContent value="announcements">
-          <AnnouncementBuilder onSend={async () => {}} />
-        </TabsContent>
+          <TabsContent value="announcements">
+            <AnnouncementBuilder onSend={async () => {}} />
+          </TabsContent>
 
-        <TabsContent value="logs">
-          <EmailDeliveryLogs logs={logs || []} loading={loading} />
-        </TabsContent>
-      </Tabs>
-    </div>
+          <TabsContent value="logs">
+            <EmailDeliveryLogs logs={logs || []} loading={loading} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </AdminPermissionGuard>
   );
 }

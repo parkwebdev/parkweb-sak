@@ -17,6 +17,7 @@ import {
   SubscriptionsTable,
   StripeSync 
 } from '@/components/admin/plans';
+import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { useAdminPlans, useAdminSubscriptions, useRevenueAnalytics } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AdminPlan } from '@/types/admin';
@@ -67,56 +68,58 @@ export function AdminPlans() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Revenue Metrics - no header, TopBar handles page title */}
-      <RevenueMetricsCards
-        mrr={mrr}
-        arr={revenueData?.arr || 0}
-        churnRate={revenueData?.churnRate || 0}
-        activeSubscriptions={activeSubscriptions}
-        loading={revenueLoading}
-      />
+    <AdminPermissionGuard permission="view_revenue">
+      <div className="p-6 space-y-6">
+        {/* Revenue Metrics - no header, TopBar handles page title */}
+        <RevenueMetricsCards
+          mrr={mrr}
+          arr={revenueData?.arr || 0}
+          churnRate={revenueData?.churnRate || 0}
+          activeSubscriptions={activeSubscriptions}
+          loading={revenueLoading}
+        />
 
-      {/* Tabs */}
-      <Tabs defaultValue="plans" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="plans">Plans</TabsTrigger>
-          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-          <TabsTrigger value="stripe">Stripe</TabsTrigger>
-        </TabsList>
+        {/* Tabs */}
+        <Tabs defaultValue="plans" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="plans">Plans</TabsTrigger>
+            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+            <TabsTrigger value="stripe">Stripe</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="plans" className="space-y-4">
-          <PlansTable
-            plans={plans}
-            loading={plansLoading}
-            onUpdate={async (id, updates) => { await updatePlan(id, updates); }}
-            onCreate={async (plan) => { await createPlan(plan); }}
-            onDelete={deletePlan}
-            isUpdating={isUpdating}
-            isCreating={isCreating}
-          />
-        </TabsContent>
+          <TabsContent value="plans" className="space-y-4">
+            <PlansTable
+              plans={plans}
+              loading={plansLoading}
+              onUpdate={async (id, updates) => { await updatePlan(id, updates); }}
+              onCreate={async (plan) => { await createPlan(plan); }}
+              onDelete={deletePlan}
+              isUpdating={isUpdating}
+              isCreating={isCreating}
+            />
+          </TabsContent>
 
-        <TabsContent value="subscriptions">
-          <SubscriptionsTable
-            subscriptions={subscriptions}
-            loading={subscriptionsLoading}
-          />
-        </TabsContent>
+          <TabsContent value="subscriptions">
+            <SubscriptionsTable
+              subscriptions={subscriptions}
+              loading={subscriptionsLoading}
+            />
+          </TabsContent>
 
-        <TabsContent value="stripe">
-          <StripeSync />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="stripe">
+            <StripeSync />
+          </TabsContent>
+        </Tabs>
 
-      {/* Plan Editor Sheet */}
-      <PlanEditorSheet
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        plan={editingPlan}
-        onSave={handleSavePlan}
-        saving={isCreating || isUpdating}
-      />
-    </div>
+        {/* Plan Editor Sheet */}
+        <PlanEditorSheet
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+          plan={editingPlan}
+          onSave={handleSavePlan}
+          saving={isCreating || isUpdating}
+        />
+      </div>
+    </AdminPermissionGuard>
   );
 }

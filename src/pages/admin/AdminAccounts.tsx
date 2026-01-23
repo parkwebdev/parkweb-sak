@@ -12,6 +12,7 @@ import { motion } from 'motion/react';
 import { Users01 } from '@untitledui/icons';
 import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 import { AccountsTable, AccountDetailSheet, AccountsTopBarSearch, AdminAccountsFilters } from '@/components/admin/accounts';
+import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { useAdminAccounts } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
@@ -119,30 +120,32 @@ export function AdminAccounts() {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <motion.div 
-      className="p-6 space-y-6"
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={springs.smooth}
-    >
-      {/* Accounts Table - filters are now in TopBar */}
-      <AccountsTable
-        accounts={accounts}
-        loading={loading}
-        totalCount={totalCount}
-        page={page}
-        pageSize={25}
-        onPageChange={setPage}
-        onSelectAccount={handleSelectAccount}
-        onImpersonate={handleImpersonate}
-      />
+    <AdminPermissionGuard permission="view_accounts">
+      <motion.div 
+        className="p-6 space-y-6"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springs.smooth}
+      >
+        {/* Accounts Table - filters are now in TopBar */}
+        <AccountsTable
+          accounts={accounts}
+          loading={loading}
+          totalCount={totalCount}
+          page={page}
+          pageSize={25}
+          onPageChange={setPage}
+          onSelectAccount={handleSelectAccount}
+          onImpersonate={handleImpersonate}
+        />
 
-      {/* Detail Sheet (optional - can navigate to detail page instead) */}
-      <AccountDetailSheet
-        accountId={selectedAccountId}
-        open={!!selectedAccountId}
-        onOpenChange={(open) => !open && setSelectedAccountId(null)}
-      />
-    </motion.div>
+        {/* Detail Sheet (optional - can navigate to detail page instead) */}
+        <AccountDetailSheet
+          accountId={selectedAccountId}
+          open={!!selectedAccountId}
+          onOpenChange={(open) => !open && setSelectedAccountId(null)}
+        />
+      </motion.div>
+    </AdminPermissionGuard>
   );
 }

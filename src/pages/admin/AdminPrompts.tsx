@@ -16,6 +16,7 @@ import { IdentitySection } from '@/components/admin/prompts/sections/IdentitySec
 import { FormattingSection } from '@/components/admin/prompts/sections/FormattingSection';
 import { SecuritySection } from '@/components/admin/prompts/sections/SecuritySection';
 import { LanguageSection } from '@/components/admin/prompts/sections/LanguageSection';
+import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { usePromptSections } from '@/hooks/admin/usePromptSections';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { springs } from '@/lib/motion-variants';
@@ -105,30 +106,32 @@ export function AdminPrompts() {
   };
 
   return (
-    <div className="flex-1 h-full bg-muted/30 flex min-h-0">
-      {/* Left: Section Menu */}
-      <AdminPromptSectionMenu
-        activeSection={activeSection}
-        onSectionChange={setActiveSection}
-      />
+    <AdminPermissionGuard permission="manage_settings">
+      <div className="flex-1 h-full bg-muted/30 flex min-h-0">
+        {/* Left: Section Menu */}
+        <AdminPromptSectionMenu
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+        />
 
-      {/* Center: Content Area */}
-      <main className="flex-1 min-w-0 overflow-y-auto p-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeSection}
-            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
-            transition={springs.smooth}
-          >
-            {renderSectionContent()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+        {/* Center: Content Area */}
+        <main className="flex-1 min-w-0 overflow-y-auto p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSection}
+              initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
+              transition={springs.smooth}
+            >
+              {renderSectionContent()}
+            </motion.div>
+          </AnimatePresence>
+        </main>
 
-      {/* Right: Test Chat Panel */}
-      <AdminPromptPreviewPanel />
-    </div>
+        {/* Right: Test Chat Panel */}
+        <AdminPromptPreviewPanel />
+      </div>
+    </AdminPermissionGuard>
   );
 }

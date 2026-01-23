@@ -21,6 +21,7 @@ import { BookOpen01, Trash01 } from '@untitledui/icons';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { usePlatformHCArticles } from '@/hooks/admin/usePlatformHCArticles';
 import { usePlatformHCCategories } from '@/hooks/admin/usePlatformHCCategories';
+import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import type { PlatformHCCategory } from '@/types/platform-hc';
 import { ArticleEditor, type ArticleEditorRef, type Heading } from '@/components/admin/knowledge/ArticleEditor';
 import { HCTableOfContents } from '@/components/help-center/HCTableOfContents';
@@ -552,148 +553,154 @@ export function ArticleEditorPage() {
   
   if (isLoading) {
     return (
-      <div className="flex h-[calc(100vh-56px)]">
-        <div className="w-[200px] border-r border-border p-4">
-          <Skeleton className="h-4 w-24 mb-4" />
-          <div className="space-y-2">
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-3/4" />
-            <Skeleton className="h-3 w-5/6" />
+      <AdminPermissionGuard permission="view_content">
+        <div className="flex h-[calc(100vh-56px)]">
+          <div className="w-[200px] border-r border-border p-4">
+            <Skeleton className="h-4 w-24 mb-4" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+              <Skeleton className="h-3 w-5/6" />
+            </div>
+          </div>
+          <div className="flex-1 p-6">
+            <Skeleton className="h-8 w-48 mb-4" />
+            <Skeleton className="h-[400px] w-full" />
+          </div>
+          <div className="w-[200px] border-l border-border p-4">
+            <Skeleton className="h-4 w-20 mb-4" />
+            <div className="space-y-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+              ))}
+            </div>
           </div>
         </div>
-        <div className="flex-1 p-6">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-[400px] w-full" />
-        </div>
-        <div className="w-[200px] border-l border-border p-4">
-          <Skeleton className="h-4 w-20 mb-4" />
-          <div className="space-y-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full" />
-            ))}
-          </div>
-        </div>
-      </div>
+      </AdminPermissionGuard>
     );
   }
   
   // Show article not found if we're done loading but article doesn't exist
   if (!isNewArticle && !existingArticle) {
     return (
-      <div className="flex h-[calc(100vh-56px)] items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="text-muted-foreground">Article not found</p>
-          <Button variant="outline" onClick={handleBack}>
-            Back to Knowledge
-          </Button>
+      <AdminPermissionGuard permission="view_content">
+        <div className="flex h-[calc(100vh-56px)] items-center justify-center">
+          <div className="text-center space-y-4">
+            <p className="text-muted-foreground">Article not found</p>
+            <Button variant="outline" onClick={handleBack}>
+              Back to Knowledge
+            </Button>
+          </div>
         </div>
-      </div>
+      </AdminPermissionGuard>
     );
   }
   
   return (
-    <motion.div 
-      className="flex flex-col h-[calc(100vh-56px)]"
-      initial={prefersReducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={springs.smooth}
-    >
-      {/* Main three-panel layout */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Article Info + Table of Contents */}
-        <aside className="w-[200px] border-r border-border bg-background flex-shrink-0 flex flex-col">
-          {/* Article Info Section */}
-          <div className="p-4 border-b border-border space-y-3">
-            <h2 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60">
-              Article Info
-            </h2>
+    <AdminPermissionGuard permission="view_content">
+      <motion.div 
+        className="flex flex-col h-[calc(100vh-56px)]"
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={springs.smooth}
+      >
+        {/* Main three-panel layout */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Sidebar - Article Info + Table of Contents */}
+          <aside className="w-[200px] border-r border-border bg-background flex-shrink-0 flex flex-col">
+            {/* Article Info Section */}
+            <div className="p-4 border-b border-border space-y-3">
+              <h2 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                Article Info
+              </h2>
+              
+              {/* Category Selector */}
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Category</label>
+                <Select value={categoryId} onValueChange={onCategoryChangeStable}>
+                  <SelectTrigger size="sm">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        <span className="flex items-center gap-2">
+                          <span 
+                            className={`w-2 h-2 rounded-full shrink-0 ${cat.color}`}
+                            aria-hidden="true"
+                          />
+                          {cat.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             
-            {/* Category Selector */}
-            <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Category</label>
-              <Select value={categoryId} onValueChange={onCategoryChangeStable}>
-                <SelectTrigger size="sm">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      <span className="flex items-center gap-2">
-                        <span 
-                          className={`w-2 h-2 rounded-full shrink-0 ${cat.color}`}
-                          aria-hidden="true"
-                        />
-                        {cat.label}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Table of Contents */}
-          <ScrollArea className="flex-1">
-            <HCTableOfContents 
-              headings={headings} 
-              scrollContainerRef={editorScrollRef}
-              showSearch={headings.length > 5}
-            />
-          </ScrollArea>
-        </aside>
-        
-        {/* Center - Main Editor */}
-        <main className="flex-1 overflow-hidden flex flex-col">
-          <ScrollArea className="flex-1">
-            <div ref={editorScrollRef} className="max-w-4xl mx-auto py-6 px-8">
-              <ArticleEditor
-                ref={editorRef}
-                content={content}
-                onChange={handleContentChange}
-                onHeadingsChange={handleHeadingsChange}
-                placeholder="Start writing your article..."
-                className="border-0 shadow-none"
-                userId={user?.id || ''}
+            {/* Table of Contents */}
+            <ScrollArea className="flex-1">
+              <HCTableOfContents 
+                headings={headings} 
+                scrollContainerRef={editorScrollRef}
+                showSearch={headings.length > 5}
               />
-            </div>
-          </ScrollArea>
-        </main>
+            </ScrollArea>
+          </aside>
+          
+          {/* Center - Main Editor */}
+          <main className="flex-1 overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1">
+              <div ref={editorScrollRef} className="max-w-4xl mx-auto py-6 px-8">
+                <ArticleEditor
+                  ref={editorRef}
+                  content={content}
+                  onChange={handleContentChange}
+                  onHeadingsChange={handleHeadingsChange}
+                  placeholder="Start writing your article..."
+                  className="border-0 shadow-none"
+                  userId={user?.id || ''}
+                />
+              </div>
+            </ScrollArea>
+          </main>
+          
+          {/* Right Sidebar - Insert Panel */}
+          <EditorInsertPanel 
+            onInsert={(blockType) => editorRef.current?.insertBlock(blockType)}
+            onInsertTable={(rows, cols) => editorRef.current?.insertTable(rows, cols)}
+          />
+        </div>
         
-        {/* Right Sidebar - Insert Panel */}
-        <EditorInsertPanel 
-          onInsert={(blockType) => editorRef.current?.insertBlock(blockType)}
-          onInsertTable={(rows, cols) => editorRef.current?.insertTable(rows, cols)}
+        {/* Bottom - Metadata Panel */}
+        <EditorMetadataPanel
+          isOpen={isMetadataOpen}
+          onOpenChange={setIsMetadataOpen}
+          slug={slug}
+          onSlugChange={(value) => { setSlug(value); setHasUnsavedChanges(true); }}
+          categoryId={categoryId}
+          onCategoryChange={(value) => { setCategoryId(value); setHasUnsavedChanges(true); }}
+          categories={categories}
+          description={description}
+          onDescriptionChange={(value) => { setDescription(value); setHasUnsavedChanges(true); }}
+          orderIndex={orderIndex}
+          onOrderIndexChange={(value) => { setOrderIndex(value); setHasUnsavedChanges(true); }}
+          iconName={iconName}
+          onIconNameChange={(value) => { setIconName(value); setHasUnsavedChanges(true); }}
         />
-      </div>
-      
-      {/* Bottom - Metadata Panel */}
-      <EditorMetadataPanel
-        isOpen={isMetadataOpen}
-        onOpenChange={setIsMetadataOpen}
-        slug={slug}
-        onSlugChange={(value) => { setSlug(value); setHasUnsavedChanges(true); }}
-        categoryId={categoryId}
-        onCategoryChange={(value) => { setCategoryId(value); setHasUnsavedChanges(true); }}
-        categories={categories}
-        description={description}
-        onDescriptionChange={(value) => { setDescription(value); setHasUnsavedChanges(true); }}
-        orderIndex={orderIndex}
-        onOrderIndexChange={(value) => { setOrderIndex(value); setHasUnsavedChanges(true); }}
-        iconName={iconName}
-        onIconNameChange={(value) => { setIconName(value); setHasUnsavedChanges(true); }}
-      />
-      
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmationDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        title="Delete Article"
-        description="This action cannot be undone. This will permanently delete this article."
-        confirmationText={title || 'delete'}
-        onConfirm={handleDelete}
-        isDeleting={isDeleting}
-        actionLabel="Delete Article"
-      />
-    </motion.div>
+        
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Delete Article"
+          description="This action cannot be undone. This will permanently delete this article."
+          confirmationText={title || 'delete'}
+          onConfirm={handleDelete}
+          isDeleting={isDeleting}
+          actionLabel="Delete Article"
+        />
+      </motion.div>
+    </AdminPermissionGuard>
   );
 }

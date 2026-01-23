@@ -11,6 +11,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Users02 } from '@untitledui/icons';
 import { PilotTeamTable } from '@/components/admin/team';
+import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { useAdminTeam } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { Button } from '@/components/ui/button';
@@ -54,29 +55,31 @@ export function AdminTeam() {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <motion.div 
-      className="p-6 space-y-6"
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={springs.smooth}
-    >
-      {/* Team Table - no header, TopBar handles page title */}
-      <PilotTeamTable
-        team={team}
-        loading={loading}
-        onRemove={removeMember}
-        onUpdatePermissions={updateMemberPermissions}
-        isRemoving={isRemoving}
-        isUpdating={isUpdating}
-      />
+    <AdminPermissionGuard permission="view_team">
+      <motion.div 
+        className="p-6 space-y-6"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springs.smooth}
+      >
+        {/* Team Table - no header, TopBar handles page title */}
+        <PilotTeamTable
+          team={team}
+          loading={loading}
+          onRemove={removeMember}
+          onUpdatePermissions={updateMemberPermissions}
+          isRemoving={isRemoving}
+          isUpdating={isUpdating}
+        />
 
-      {/* Invite Dialog */}
-      <InviteTeamMemberDialog
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
-        onInvite={handleInvite}
-        isInviting={isInviting}
-      />
-    </motion.div>
+        {/* Invite Dialog */}
+        <InviteTeamMemberDialog
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          onInvite={handleInvite}
+          isInviting={isInviting}
+        />
+      </motion.div>
+    </AdminPermissionGuard>
   );
 }
