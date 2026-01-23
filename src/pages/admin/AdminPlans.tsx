@@ -7,9 +7,10 @@
  * @module pages/admin/AdminPlans
  */
 
-import { useState, useMemo } from 'react';
-import { CreditCard01 } from '@untitledui/icons';
+import { useState, useMemo, useCallback } from 'react';
+import { CreditCard01, Plus } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { 
   PlansTable, 
   RevenueMetricsCards, 
@@ -26,14 +27,25 @@ import type { AdminPlan } from '@/types/admin';
  * Plans and billing management page for Super Admin.
  */
 export function AdminPlans() {
+  const [editingPlan, setEditingPlan] = useState<AdminPlan | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+
+  const handleCreatePlan = useCallback(() => {
+    setEditingPlan(null);
+    setEditorOpen(true);
+  }, []);
+
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={CreditCard01} title="Plans & Billing" />,
-  }), []);
+    right: (
+      <Button size="sm" onClick={handleCreatePlan}>
+        <Plus size={16} className="mr-1.5" aria-hidden="true" />
+        New Plan
+      </Button>
+    ),
+  }), [handleCreatePlan]);
   useTopBar(topBarConfig);
-
-  const [editingPlan, setEditingPlan] = useState<AdminPlan | null>(null);
-  const [editorOpen, setEditorOpen] = useState(false);
 
   const { 
     plans, 
@@ -48,15 +60,10 @@ export function AdminPlans() {
   const { subscriptions, activeSubscriptions, loading: subscriptionsLoading } = useAdminSubscriptions();
   const { mrr, data: revenueData, loading: revenueLoading } = useRevenueAnalytics();
 
-  const handleCreatePlan = () => {
-    setEditingPlan(null);
-    setEditorOpen(true);
-  };
-
-  const handleEditPlan = (plan: AdminPlan) => {
+  const handleEditPlan = useCallback((plan: AdminPlan) => {
     setEditingPlan(plan);
     setEditorOpen(true);
-  };
+  }, []);
 
   const handleSavePlan = async (planData: Partial<AdminPlan>) => {
     if (editingPlan) {
