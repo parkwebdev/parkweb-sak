@@ -42,6 +42,10 @@ interface PilotTeamTableProps {
   onUpdatePermissions: (userId: string, role: PilotTeamRole, permissions: AdminPermission[], previousRole: PilotTeamRole, previousPermissions: AdminPermission[]) => Promise<void>;
   isRemoving?: boolean;
   isUpdating?: boolean;
+  /** Whether the current user is a super admin */
+  currentUserIsSuperAdmin: boolean;
+  /** Current user's ID for self-check */
+  currentUserId: string;
 }
 
 /**
@@ -53,6 +57,8 @@ export function PilotTeamTable({
   onRemove,
   onUpdatePermissions,
   isRemoving,
+  currentUserIsSuperAdmin,
+  currentUserId,
 }: PilotTeamTableProps) {
   const prefersReducedMotion = useReducedMotion();
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
@@ -70,6 +76,7 @@ export function PilotTeamTable({
   };
 
   const columns: ColumnDef<PilotTeamMember>[] = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     () => [
       {
         accessorKey: 'display_name',
@@ -144,35 +151,53 @@ export function PilotTeamTable({
         id: 'actions',
         header: '',
         size: 80,
-        cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1">
-            <IconButton
-              label="Manage permissions"
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditMember(row.original);
-              }}
-            >
-              <Settings01 size={14} aria-hidden="true" />
-            </IconButton>
-            <IconButton
-              label="Remove team member"
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setRemoveConfirmId(row.original.user_id);
-              }}
-            >
-              <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-            </IconButton>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const isTargetSuperAdmin = row.original.role === 'super_admin';
+          const isSelf = row.original.user_id === currentUserId;
+          
+          // Only super admins can edit/delete other super admins
+          // No one can edit/delete themselves from this table
+          const canEdit = !isSelf && (currentUserIsSuperAdmin || !isTargetSuperAdmin);
+          const canDelete = !isSelf && (currentUserIsSuperAdmin || !isTargetSuperAdmin);
+
+          if (!canEdit && !canDelete) {
+            return null;
+          }
+
+          return (
+            <div className="flex items-center justify-end gap-1">
+              {canEdit && (
+                <IconButton
+                  label="Manage permissions"
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditMember(row.original);
+                  }}
+                >
+                  <Settings01 size={14} aria-hidden="true" />
+                </IconButton>
+              )}
+              {canDelete && (
+                <IconButton
+                  label="Remove team member"
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRemoveConfirmId(row.original.user_id);
+                  }}
+                >
+                  <Trash01 size={14} className="text-destructive" aria-hidden="true" />
+                </IconButton>
+              )}
+            </div>
+          );
+        },
       },
     ],
-    []
+    [currentUserIsSuperAdmin, currentUserId]
   );
 
   const table = useReactTable({
