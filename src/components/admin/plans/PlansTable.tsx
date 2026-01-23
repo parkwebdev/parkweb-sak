@@ -22,8 +22,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit02, Trash01, Plus, Check, X } from '@untitledui/icons';
+import { Plus, Check, X, Trash01 } from '@untitledui/icons';
 import { IconButton } from '@/components/ui/icon-button';
+import { PlanActions } from './PlanActions';
 import { formatAdminCurrency } from '@/lib/admin/admin-utils';
 import type { AdminPlan, PlanLimits, PlanFeatures } from '@/types/admin';
 import {
@@ -174,30 +175,13 @@ export function PlansTable({
       columnHelper.display({
         id: 'actions',
         header: '',
+        size: 50,
         cell: ({ row }) => (
-          <div className="flex items-center gap-1 justify-end">
-            <IconButton
-              label="Edit plan"
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(row.original);
-              }}
-            >
-              <Edit02 size={14} />
-            </IconButton>
-            <IconButton
-              label="Delete plan"
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setDeleteConfirmId(row.original.id);
-              }}
-            >
-              <Trash01 size={14} className="text-destructive" />
-            </IconButton>
+          <div className="flex justify-end">
+            <PlanActions
+              onEdit={() => handleEdit(row.original)}
+              onDelete={() => setDeleteConfirmId(row.original.id)}
+            />
           </div>
         ),
       }),
