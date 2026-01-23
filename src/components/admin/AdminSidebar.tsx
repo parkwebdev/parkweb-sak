@@ -99,9 +99,11 @@ export function AdminSidebar() {
           const Icon = iconMap[section.iconName];
           // Overview (/admin) should only be active on exact match
           // Other sections should match if path starts with their path
+          // Normalize pathname by removing trailing slash for comparison
+          const normalizedPath = location.pathname.replace(/\/$/, '') || '/';
           const isActive = section.id === 'overview'
-            ? location.pathname === '/admin'
-            : location.pathname.startsWith(section.path);
+            ? normalizedPath === '/admin'
+            : normalizedPath.startsWith(section.path) && section.path !== '/admin';
           
           return (
             <Link
