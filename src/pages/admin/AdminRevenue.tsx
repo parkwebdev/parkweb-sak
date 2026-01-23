@@ -16,6 +16,7 @@ import {
   ChurnSection,
   AccountsSection,
 } from '@/components/admin/revenue/sections';
+import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { useRevenueAnalytics } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { type RevenueSection, REVENUE_SECTION_INFO } from '@/lib/admin/revenue-constants';
@@ -34,32 +35,34 @@ export function AdminRevenue() {
   useTopBar(topBarConfig);
 
   return (
-    <div className="flex-1 h-full bg-muted/30 flex min-h-0">
-      <RevenueSectionMenu 
-        activeSection={activeSection} 
-        onSectionChange={setActiveSection} 
-      />
-      
-      <main className="flex-1 min-w-0 overflow-y-auto">
-        <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
-          {/* Section header */}
-          <div>
-            <h1 className="text-base font-semibold text-foreground">
-              {REVENUE_SECTION_INFO[activeSection].title}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {REVENUE_SECTION_INFO[activeSection].description}
-            </p>
-          </div>
+    <AdminPermissionGuard permission="view_revenue">
+      <div className="flex-1 h-full bg-muted/30 flex min-h-0">
+        <RevenueSectionMenu 
+          activeSection={activeSection} 
+          onSectionChange={setActiveSection} 
+        />
+        
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
+            {/* Section header */}
+            <div>
+              <h1 className="text-base font-semibold text-foreground">
+                {REVENUE_SECTION_INFO[activeSection].title}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {REVENUE_SECTION_INFO[activeSection].description}
+              </p>
+            </div>
 
-          {/* Render active section */}
-          {activeSection === 'overview' && <OverviewSection data={data} loading={loading} />}
-          {activeSection === 'mrr-breakdown' && <MRRBreakdownSection data={data} loading={loading} />}
-          {activeSection === 'subscriptions' && <SubscriptionsSection data={data} loading={loading} />}
-          {activeSection === 'churn' && <ChurnSection data={data} loading={loading} />}
-          {activeSection === 'accounts' && <AccountsSection data={data} loading={loading} />}
-        </div>
-      </main>
-    </div>
+            {/* Render active section */}
+            {activeSection === 'overview' && <OverviewSection data={data} loading={loading} />}
+            {activeSection === 'mrr-breakdown' && <MRRBreakdownSection data={data} loading={loading} />}
+            {activeSection === 'subscriptions' && <SubscriptionsSection data={data} loading={loading} />}
+            {activeSection === 'churn' && <ChurnSection data={data} loading={loading} />}
+            {activeSection === 'accounts' && <AccountsSection data={data} loading={loading} />}
+          </div>
+        </main>
+      </div>
+    </AdminPermissionGuard>
   );
 }

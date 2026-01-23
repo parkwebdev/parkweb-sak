@@ -21,6 +21,7 @@ import { CategoryFilterDropdown } from '@/components/admin/knowledge/CategoryFil
 import { CreateCategoryDialog } from '@/components/admin/knowledge/CreateCategoryDialog';
 import { ArticleEditorSheet } from '@/components/admin/knowledge/ArticleEditorSheet';
 import { KnowledgeTopBarSearch } from '@/components/admin/knowledge/KnowledgeTopBarSearch';
+import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { Button } from '@/components/ui/button';
 import type { PlatformHCArticle, PlatformHCArticleInput } from '@/types/platform-hc';
 
@@ -127,37 +128,39 @@ export function AdminKnowledge() {
   };
 
   return (
-    <motion.div
-      className="p-6"
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={springs.smooth}
-    >
-      <PlatformArticlesTable
-        articles={filteredArticles}
-        loading={articlesLoading}
-        onDelete={deleteArticle}
-        onBulkDelete={handleBulkDeleteArticles}
-        onRowClick={handleRowClick}
-      />
+    <AdminPermissionGuard permission="view_content">
+      <motion.div
+        className="p-6"
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springs.smooth}
+      >
+        <PlatformArticlesTable
+          articles={filteredArticles}
+          loading={articlesLoading}
+          onDelete={deleteArticle}
+          onBulkDelete={handleBulkDeleteArticles}
+          onRowClick={handleRowClick}
+        />
 
-      {/* Article Editor Sheet */}
-      <ArticleEditorSheet
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        article={editingArticle}
-        categories={categories}
-        onSave={handleSaveArticle}
-        isSaving={isSaving}
-      />
+        {/* Article Editor Sheet */}
+        <ArticleEditorSheet
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+          article={editingArticle}
+          categories={categories}
+          onSave={handleSaveArticle}
+          isSaving={isSaving}
+        />
 
-      {/* Create Category Dialog */}
-      <CreateCategoryDialog
-        open={categoryDialogOpen}
-        onOpenChange={setCategoryDialogOpen}
-        onCreate={createCategory}
-        categoriesCount={categories.length}
-      />
-    </motion.div>
+        {/* Create Category Dialog */}
+        <CreateCategoryDialog
+          open={categoryDialogOpen}
+          onOpenChange={setCategoryDialogOpen}
+          onCreate={createCategory}
+          categoriesCount={categories.length}
+        />
+      </motion.div>
+    </AdminPermissionGuard>
   );
 }
