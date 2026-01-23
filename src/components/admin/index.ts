@@ -5,8 +5,6 @@
  */
 
 // Core components
-export { AdminPageContainer } from './AdminPageContainer';
-export { AdminHeader } from './AdminHeader';
 export { AdminSidebar } from './AdminSidebar';
 export { ImpersonationBanner } from './ImpersonationBanner';
 export { AdminPermissionGuard } from './AdminPermissionGuard';

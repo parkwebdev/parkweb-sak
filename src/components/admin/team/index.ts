@@ -6,7 +6,5 @@
 
 export { PilotTeamTable } from './PilotTeamTable';
 export { InviteTeamMemberDialog } from './InviteTeamMemberDialog';
-export { TeamMemberCard } from './TeamMemberCard';
-export { TeamMemberActions } from './TeamMemberActions';
 export { PilotRoleManagementDialog } from './PilotRoleManagementDialog';
 export { PilotPermissionSelector } from './PilotPermissionSelector';
