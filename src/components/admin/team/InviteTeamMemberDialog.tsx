@@ -168,45 +168,45 @@ export function InviteTeamMemberDialog({
             </div>
           </div>
 
-          {/* Email field */}
-          <div className="space-y-2">
-            <Label htmlFor="pilot-email">
-              Email address <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="pilot-email"
-              type="email"
-              placeholder="team@getpilot.io"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isInviting}
-            />
-          </div>
-
-          {/* Role selection */}
-          <div className="space-y-2">
-            <Label htmlFor="pilot-role">Role</Label>
-            <Select 
-              value={role} 
-              onValueChange={(value) => setRole(value as PilotTeamRole)}
-              disabled={isInviting}
-            >
-              <SelectTrigger id="pilot-role">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                {ROLE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex flex-col">
-                      <span>{option.label}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {option.description}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Email and Role fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="pilot-email">
+                Email address <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="pilot-email"
+                type="email"
+                placeholder="team@getpilot.io"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isInviting}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pilot-role">Role</Label>
+              <Select 
+                value={role} 
+                onValueChange={(value) => setRole(value as PilotTeamRole)}
+                disabled={isInviting}
+              >
+                <SelectTrigger id="pilot-role">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex flex-col items-start">
+                        <span>{option.label}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {option.description}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Permission selector for pilot_support */}
