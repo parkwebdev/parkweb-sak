@@ -7,7 +7,7 @@
  * @module components/admin/team/PilotTeamMemberSheet
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import {
@@ -17,11 +17,9 @@ import {
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Select,
   SelectContent,
@@ -31,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
 import { RoleBadge } from '@/components/admin/shared/RoleBadge';
+import { PermissionsMatrix } from './PermissionsMatrix';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
@@ -47,10 +46,7 @@ import {
 } from '@untitledui/icons';
 
 import type { PilotTeamMember, PilotTeamRole, AdminPermission } from '@/types/admin';
-import {
-  ADMIN_PERMISSION_GROUPS,
-  ADMIN_FEATURE_LABELS,
-  ADMIN_PERMISSION_LABELS,
+import { 
   DEFAULT_PILOT_ROLE_PERMISSIONS,
 } from '@/types/admin';
 
@@ -155,66 +151,11 @@ export function PilotTeamMemberSheet({
     }
   }, [member]);
 
-  // Build the permissions matrix data
-  const matrixData = useMemo(() => {
-    return Object.entries(ADMIN_PERMISSION_GROUPS).map(([feature, perms]) => {
-      const viewPerm = perms.find((p) => p.startsWith('view_')) as AdminPermission | undefined;
-      const managePerm = perms.find((p) => p.startsWith('manage_')) as AdminPermission | undefined;
-      // Handle permissions that don't follow view_/manage_ pattern (e.g., impersonate_users)
-      const actionPerm = perms.find((p) => !p.startsWith('view_') && !p.startsWith('manage_')) as AdminPermission | undefined;
-      
-      return {
-        feature,
-        label: ADMIN_FEATURE_LABELS[feature] || feature,
-        viewPermission: viewPerm,
-        // Action permissions go in the manage column since they're elevated actions
-        managePermission: managePerm || actionPerm,
-      };
-    });
-  }, []);
-
-  // Calculate column selection states
-  const allViewSelected = matrixData.every(
-    (row) => !row.viewPermission || permissions.includes(row.viewPermission)
-  );
-  const someViewSelected = matrixData.some(
-    (row) => row.viewPermission && permissions.includes(row.viewPermission)
-  );
-  const allManageSelected = matrixData.every(
-    (row) => !row.managePermission || permissions.includes(row.managePermission)
-  );
-  const someManageSelected = matrixData.some(
-    (row) => row.managePermission && permissions.includes(row.managePermission)
-  );
 
   const handleRoleChange = (newRole: PilotTeamRole) => {
     setRole(newRole);
     // Reset permissions to defaults for the new role
     setPermissions(DEFAULT_PILOT_ROLE_PERMISSIONS[newRole] || []);
-  };
-
-  const handlePermissionChange = (permission: AdminPermission, checked: boolean) => {
-    if (checked) {
-      setPermissions((prev) => [...prev, permission]);
-    } else {
-      setPermissions((prev) => prev.filter((p) => p !== permission));
-    }
-  };
-
-  const toggleColumnPermissions = (column: 'view' | 'manage') => {
-    const columnPermissions = matrixData
-      .map((row) => (column === 'view' ? row.viewPermission : row.managePermission))
-      .filter((p): p is AdminPermission => !!p);
-
-    const allSelected = column === 'view' ? allViewSelected : allManageSelected;
-
-    if (allSelected) {
-      // Deselect all in this column
-      setPermissions((prev) => prev.filter((p) => !columnPermissions.includes(p)));
-    } else {
-      // Select all in this column
-      setPermissions((prev) => [...new Set([...prev, ...columnPermissions])]);
-    }
   };
 
   const handleSave = async () => {
@@ -359,91 +300,12 @@ export function PilotTeamMemberSheet({
 
               {/* Permissions Matrix - only show for pilot_support */}
               {role === 'pilot_support' && (
-                <div className="space-y-3 pt-3">
-                    
-                    <div className="border border-border rounded-lg overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-muted/50 hover:bg-muted/50">
-                            <TableHead className="w-[45%] font-medium text-xs">Feature</TableHead>
-                            <TableHead className="w-[27.5%] text-center font-medium text-xs">
-                              <div className="flex items-center justify-center gap-2">
-                                <Checkbox
-                                  checked={allViewSelected}
-                                  onCheckedChange={() => toggleColumnPermissions('view')}
-                                  disabled={!canEdit}
-                                  aria-label="Toggle all view permissions"
-                                  ref={(el) => {
-                                    if (el) {
-                                      (el as HTMLButtonElement & { indeterminate?: boolean }).indeterminate = 
-                                        someViewSelected && !allViewSelected;
-                                    }
-                                  }}
-                                  className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
-                                />
-                                <span>View</span>
-                              </div>
-                            </TableHead>
-                            <TableHead className="w-[27.5%] text-center font-medium text-xs">
-                              <div className="flex items-center justify-center gap-2">
-                                <Checkbox
-                                  checked={allManageSelected}
-                                  onCheckedChange={() => toggleColumnPermissions('manage')}
-                                  disabled={!canEdit}
-                                  aria-label="Toggle all manage permissions"
-                                  ref={(el) => {
-                                    if (el) {
-                                      (el as HTMLButtonElement & { indeterminate?: boolean }).indeterminate = 
-                                        someManageSelected && !allManageSelected;
-                                    }
-                                  }}
-                                  className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
-                                />
-                                <span>Manage</span>
-                              </div>
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {matrixData.map((row) => (
-                            <TableRow 
-                              key={row.feature}
-                              className="transition-colors hover:bg-muted/30"
-                            >
-                              <TableCell className="text-sm font-medium text-foreground py-2">
-                                {row.label}
-                              </TableCell>
-                              <TableCell className="text-center py-2">
-                                {row.viewPermission && (
-                                  <div className="flex justify-center" title={ADMIN_PERMISSION_LABELS[row.viewPermission]}>
-                                    <Checkbox
-                                      checked={permissions.includes(row.viewPermission)}
-                                      onCheckedChange={(checked) =>
-                                        handlePermissionChange(row.viewPermission!, !!checked)
-                                      }
-                                      disabled={!canEdit}
-                                    />
-                                  </div>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-center py-2">
-                                {row.managePermission && (
-                                  <div className="flex justify-center" title={ADMIN_PERMISSION_LABELS[row.managePermission]}>
-                                    <Checkbox
-                                      checked={permissions.includes(row.managePermission)}
-                                      onCheckedChange={(checked) =>
-                                        handlePermissionChange(row.managePermission!, !!checked)
-                                      }
-                                      disabled={!canEdit}
-                                    />
-                                  </div>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                <div className="pt-3">
+                  <PermissionsMatrix
+                    permissions={permissions}
+                    onChange={setPermissions}
+                    disabled={!canEdit}
+                  />
                 </div>
               )}
 
