@@ -138,16 +138,6 @@ export function PilotTeamTable({
         },
       },
       {
-        accessorKey: 'audit_action_count',
-        header: 'Actions',
-        size: 80,
-        cell: ({ row }) => (
-          <span className="text-sm font-mono text-muted-foreground">
-            {row.original.audit_action_count}
-          </span>
-        ),
-      },
-      {
         id: 'actions',
         header: '',
         size: 60,
