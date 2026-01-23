@@ -49,12 +49,12 @@ const ROLE_OPTIONS: { value: PilotTeamRole; label: string; description: string }
   { 
     value: 'super_admin', 
     label: 'Super Admin', 
-    description: 'Full access to all admin features' 
+    description: 'Full access' 
   },
   { 
     value: 'pilot_support', 
     label: 'Pilot Support', 
-    description: 'Customizable access with granular permissions' 
+    description: 'Custom permissions' 
   },
 ];
 
