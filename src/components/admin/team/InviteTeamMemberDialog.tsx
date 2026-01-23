@@ -195,7 +195,11 @@ export function InviteTeamMemberDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {ROLE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value}
+                      textValue={option.label}
+                    >
                       <div className="flex flex-col items-start">
                         <span>{option.label}</span>
                         <span className="text-xs text-muted-foreground">
