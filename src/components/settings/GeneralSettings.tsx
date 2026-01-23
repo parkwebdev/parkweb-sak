@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/lib/toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -18,9 +19,12 @@ import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { PhoneInputField } from '@/components/ui/phone-input';
 import { getErrorMessage } from '@/types/errors';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from '@untitledui/icons';
 
 export function GeneralSettings() {
   const { user } = useAuth();
+  const { accountOwnerId, isImpersonating, loading: accountOwnerLoading } = useAccountOwnerId();
   const [loading, setLoading] = useState(true);
   const [preferences, setPreferences] = useState({
     default_project_view: 'dashboard',
@@ -33,21 +37,22 @@ export function GeneralSettings() {
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
+  // Fetch data using accountOwnerId for proper impersonation support
   useEffect(() => {
-    if (user) {
+    if (accountOwnerId && !accountOwnerLoading) {
       fetchPreferences();
     }
-  }, [user]);
+  }, [accountOwnerId, accountOwnerLoading]);
 
   const fetchPreferences = async () => {
-    if (!user) return;
+    if (!accountOwnerId) return;
 
     try {
-      // Fetch user preferences
+      // Fetch user preferences for the account owner
       const { data, error } = await supabase
         .from('user_preferences')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -60,11 +65,11 @@ export function GeneralSettings() {
         });
       }
 
-      // Fetch company info from profile
+      // Fetch company info from profile for the account owner
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('company_name, company_address, company_phone')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .single();
 
       if (profileError && profileError.code !== 'PGRST116') {
@@ -86,7 +91,7 @@ export function GeneralSettings() {
   };
 
   const updatePreference = async (key: keyof typeof preferences, value: string) => {
-    if (!user) return;
+    if (!accountOwnerId || isImpersonating) return; // Block writes when impersonating
 
     // Update local state immediately for responsive UI
     const prevValue = preferences[key];
@@ -102,11 +107,11 @@ export function GeneralSettings() {
     saveTimers.current[key] = setTimeout(async () => {
       const toastId = toast.saving();
       try {
-        // Use UPDATE instead of UPSERT to avoid duplicate key issues
+        // Use user.id for write operations (should be blocked when impersonating anyway)
         const { data: existingData } = await supabase
           .from('user_preferences')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('user_id', user!.id)
           .single();
 
         let error;
@@ -115,12 +120,12 @@ export function GeneralSettings() {
           const result = await supabase
             .from('user_preferences')
             .update({ [key]: value })
-            .eq('user_id', user.id);
+            .eq('user_id', user!.id);
           error = result.error;
         } else {
           // Insert new record
           const insertPayload: { user_id: string; default_project_view?: string } = {
-            user_id: user.id,
+            user_id: user!.id,
           };
           if (key === 'default_project_view') insertPayload.default_project_view = value;
           
@@ -159,7 +164,7 @@ export function GeneralSettings() {
   }, []);
 
   const updateCompanyField = async (key: keyof typeof company, value: string) => {
-    if (!user) return;
+    if (!accountOwnerId || isImpersonating) return; // Block writes when impersonating
 
     // Update local state immediately
     const prevValue = company[key];
@@ -177,7 +182,7 @@ export function GeneralSettings() {
         const { error } = await supabase
           .from('profiles')
           .update({ [key]: value || null })
-          .eq('user_id', user.id);
+          .eq('user_id', user!.id);
 
         if (error) {
           logger.error('Error updating company field:', error);
@@ -198,7 +203,7 @@ export function GeneralSettings() {
     }, 500);
   };
 
-  if (loading) {
+  if (loading || accountOwnerLoading) {
     return (
       <div className="space-y-4">
         <SkeletonSettingsCard />
@@ -207,8 +212,21 @@ export function GeneralSettings() {
     );
   }
 
+  // Read-only mode when impersonating
+  const isReadOnly = isImpersonating;
+
   return (
     <AnimatedList className="space-y-4" staggerDelay={0.1}>
+      {isReadOnly && (
+        <AnimatedItem>
+          <Alert variant="default" className="border-warning/50 bg-warning/10">
+            <AlertTriangle className="h-4 w-4 text-warning" />
+            <AlertDescription className="text-warning-foreground">
+              You are viewing this account's settings. Editing is disabled during impersonation.
+            </AlertDescription>
+          </Alert>
+        </AnimatedItem>
+      )}
       <AnimatedItem>
         <Card>
         <CardHeader>
@@ -223,6 +241,7 @@ export function GeneralSettings() {
                 value={company.company_name}
                 onChange={(e) => updateCompanyField('company_name', e.target.value)}
                 placeholder="Acme Corporation"
+                disabled={isReadOnly}
               />
             </div>
 
@@ -233,17 +252,20 @@ export function GeneralSettings() {
                 value={company.company_address}
                 onChange={(e) => updateCompanyField('company_address', e.target.value)}
                 placeholder="123 Main Street, Suite 100, City, State 12345"
+                disabled={isReadOnly}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="company_phone" className="text-sm font-medium">Company Phone</Label>
-              <PhoneInputField
-                name="company_phone"
-                value={company.company_phone}
-                onChange={(value) => updateCompanyField('company_phone', value)}
-                placeholder="(555) 123-4567"
-              />
+              <div className={isReadOnly ? 'pointer-events-none opacity-50' : ''}>
+                <PhoneInputField
+                  name="company_phone"
+                  value={company.company_phone}
+                  onChange={(value) => updateCompanyField('company_phone', value)}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -283,6 +305,7 @@ export function GeneralSettings() {
             <Select 
               value={preferences.default_project_view} 
               onValueChange={(value) => updatePreference('default_project_view', value)}
+              disabled={isReadOnly}
             >
               <SelectTrigger className="w-48">
                 <SelectValue />

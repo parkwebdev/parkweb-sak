@@ -5,7 +5,7 @@
  * Displays in the TopBar on every page.
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Keyboard01, ArrowLeft } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,19 +14,11 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCanManageChecker } from '@/hooks/useCanManage';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useImpersonatedProfile } from '@/hooks/useImpersonatedProfile';
 import { toast } from '@/lib/toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { logger } from '@/utils/logger';
 import { Badge } from '@/components/ui/badge';
 import { ThemeSwitcher } from '@/components/ui/theme-switcher';
-
-/** User profile data from database */
-interface UserProfile {
-  display_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-}
 
 /** Keyboard shortcut definition */
 interface KeyboardShortcut {
@@ -81,8 +73,7 @@ export function TopBarUserMenu() {
   const { user, signOut } = useAuth();
   const canView = useCanManageChecker();
   const { hasAdminPermission } = useRoleAuthorization();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { profile, loading, isImpersonating } = useImpersonatedProfile();
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -111,34 +102,6 @@ export function TopBarUserMenu() {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('display_name, email, avatar_url')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) {
-        logger.error('Error fetching profile:', error);
-      } else {
-        setProfile(data);
-      }
-    } catch (error: unknown) {
-      logger.error('Error in fetchProfile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -157,6 +120,7 @@ export function TopBarUserMenu() {
     return <Skeleton className="h-7 w-7 rounded-full" />;
   }
 
+  // Use impersonated profile data when available
   const displayName = profile?.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
   const avatarUrl = profile?.avatar_url || '';
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);

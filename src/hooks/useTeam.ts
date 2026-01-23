@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember, InviteMemberData, UserRole } from '@/types/team';
@@ -27,6 +28,7 @@ import type { Database } from '@/integrations/supabase/types';
  */
 export const useTeam = () => {
   const { user } = useAuth();
+  const { accountOwnerId, isImpersonating, loading: accountOwnerLoading } = useAccountOwnerId();
   const queryClient = useQueryClient();
 
   // Fetch current user's role
@@ -56,17 +58,21 @@ export const useTeam = () => {
   });
 
   // Fetch team members with profiles and roles
-  const { data: teamMembers = [], isLoading: loading, refetch } = useSupabaseQuery<TeamMember[]>({
-    queryKey: queryKeys.team.list(user?.id),
+  // Uses accountOwnerId to support impersonation - shows target user's team when impersonating
+  const { data: teamMembers = [], isLoading: teamLoading, refetch } = useSupabaseQuery<TeamMember[]>({
+    queryKey: queryKeys.team.list(accountOwnerId ?? undefined),
     queryFn: async () => {
-      if (!user) return [];
+      if (!accountOwnerId) return [];
 
       // Use secure function that doesn't expose emails to non-owners
+      // Pass accountOwnerId to show the correct team during impersonation
       const { data: profilesData, error: profilesError } = await supabase
-        .rpc('get_team_profiles', { p_owner_id: user.id });
+        .rpc('get_team_profiles', { p_owner_id: accountOwnerId });
 
       if (profilesError) {
         // Fallback to direct query if user is viewing their own profile only
+        if (!user) return [];
+        
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('profiles')
           .select(PROFILE_LIST_COLUMNS)
@@ -107,7 +113,8 @@ export const useTeam = () => {
         const roleData = rolesData?.find(r => r.user_id === profile.user_id);
         return {
           ...profile,
-          email: profile.user_id === user.id ? (user.email ?? null) : null, // Only show own email
+          // Only show own email (even when impersonating, for security)
+          email: profile.user_id === user?.id ? (user?.email ?? null) : null,
           role: roleData?.role || 'member',
           permissions: roleData?.permissions || [],
         };
@@ -115,9 +122,11 @@ export const useTeam = () => {
     },
     // NOTE: Realtime removed - profiles table has no filter for team membership
     // so it was subscribing to ALL profile changes globally. React Query cache is sufficient.
-    enabled: !!user,
+    enabled: !!accountOwnerId && !accountOwnerLoading,
     staleTime: 30000, // 30 seconds
   });
+
+  const loading = teamLoading || accountOwnerLoading;
 
   const canManageRoles = useMemo(() => 
     currentUserRole === 'admin', 
