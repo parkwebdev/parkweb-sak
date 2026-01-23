@@ -21,7 +21,7 @@ import { ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { AccountStatusBadge } from './AccountStatusBadge';
 import { AccountActions } from './AccountActions';
 import { formatDistanceToNow } from 'date-fns';
-import { getInitials } from '@/lib/admin/admin-utils';
+import { getInitials } from '@/lib/formatting-utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import type { AdminAccount } from '@/types/admin';

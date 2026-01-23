@@ -37,13 +37,6 @@ export const formatSenderName = (fullName: string | undefined): string => {
   return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
 };
 
-/**
- * Truncate a message for preview display
- * @param text - The text to truncate
- * @param maxLength - Maximum length before truncation (default: 60)
- * @returns Truncated string with ellipsis if necessary
- */
-export const truncateMessage = (text: string, maxLength: number = 60): string => {
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength).trim() + '...';
-};
+// Re-export truncateText as truncateMessage for backward compatibility
+// Canonical source is in formatting-utils.ts
+export { truncateText as truncateMessage } from './formatting-utils';

@@ -6,6 +6,9 @@
 
 import { format, formatDistanceToNow } from 'date-fns';
 
+// Re-export consolidated utilities from formatting-utils
+export { getInitials, truncateText, formatDateUS as formatAdminDate } from '../formatting-utils';
+
 /**
  * Format currency value for display
  */
@@ -47,14 +50,6 @@ export function formatPercentage(value: number, decimals = 1): string {
 }
 
 /**
- * Format date for admin displays
- */
-export function formatAdminDate(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return format(d, 'MMM d, yyyy');
-}
-
-/**
  * Format datetime for admin displays
  */
 export function formatAdminDateTime(date: string | Date): string {
@@ -71,25 +66,22 @@ export function formatRelativeTime(date: string | Date): string {
 }
 
 /**
- * Get initials from a name
+ * Get status color class
  */
-export function getInitials(name: string | null | undefined): string {
-  if (!name) return '?';
-  
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return parts[0].charAt(0).toUpperCase();
+export function getStatusColor(status: string): string {
+  switch (status.toLowerCase()) {
+    case 'active':
+      return 'bg-status-active/10 text-status-active-foreground';
+    case 'suspended':
+    case 'canceled':
+    case 'failed':
+      return 'bg-destructive/10 text-destructive';
+    case 'pending':
+    case 'trialing':
+      return 'bg-status-draft/10 text-status-draft-foreground';
+    default:
+      return 'bg-muted text-muted-foreground';
   }
-  
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-}
-
-/**
- * Truncate text with ellipsis
- */
-export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength - 3) + '...';
 }
 
 /**
@@ -120,25 +112,6 @@ export function calculateMRR(priceMonthly: number, priceYearly: number, isYearly
 export function calculateGrowth(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
   return ((current - previous) / previous) * 100;
-}
-
-/**
- * Get status color class
- */
-export function getStatusColor(status: string): string {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'bg-status-active/10 text-status-active-foreground';
-    case 'suspended':
-    case 'canceled':
-    case 'failed':
-      return 'bg-destructive/10 text-destructive';
-    case 'pending':
-    case 'trialing':
-      return 'bg-status-draft/10 text-status-draft-foreground';
-    default:
-      return 'bg-muted text-muted-foreground';
-  }
 }
 
 /**

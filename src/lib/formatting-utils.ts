@@ -6,6 +6,9 @@
 
 import { format, parseISO } from 'date-fns';
 
+// Re-export formatFileSize from file-validation (canonical source)
+export { formatFileSize } from './file-validation';
+
 // =============================================================================
 // TRIGGER LABELS
 // =============================================================================
@@ -33,16 +36,20 @@ export const getTriggerLabel = (triggerType: string): string => {
 // =============================================================================
 
 /**
- * Format a date string (ISO or YYYY-MM-DD) to US format (Dec 1, 2025)
+ * Format a date string or Date object to US format (Dec 1, 2025)
+ * Accepts both ISO strings, YYYY-MM-DD format, and Date objects.
  */
-export const formatDateUS = (dateStr: string): string => {
-  if (!dateStr) return '';
+export const formatDateUS = (date: string | Date): string => {
+  if (!date) return '';
   try {
+    if (date instanceof Date) {
+      return format(date, 'MMM d, yyyy');
+    }
     // Handle both ISO strings and YYYY-MM-DD format
-    const date = dateStr.includes('T') ? parseISO(dateStr) : parseISO(dateStr + 'T00:00:00');
-    return format(date, 'MMM d, yyyy');
+    const parsedDate = date.includes('T') ? parseISO(date) : parseISO(date + 'T00:00:00');
+    return format(parsedDate, 'MMM d, yyyy');
   } catch {
-    return dateStr; // Return original if parsing fails
+    return typeof date === 'string' ? date : ''; // Return original if parsing fails
   }
 };
 
@@ -108,21 +115,23 @@ export const formatDateRangeFromStrings = (startStr: string, endStr: string): st
 };
 
 // =============================================================================
-// FILE SIZE FORMATTING
+// TEXT TRUNCATION
 // =============================================================================
 
 /**
- * Format file size in human-readable format (e.g., "1.5 MB")
+ * Truncate text with ellipsis
  * 
- * @param bytes - File size in bytes
- * @returns Formatted file size string
+ * @param text - The text to truncate
+ * @param maxLength - Maximum length before truncation
+ * @returns Truncated string with ellipsis if necessary
+ * 
+ * @example
+ * truncateText('Hello World', 5) // 'He...'
  */
-export const formatFileSize = (bytes: number | null): string => {
-  if (!bytes) return '-';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-};
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength - 3) + '...';
+}
 
 // =============================================================================
 // INITIALS EXTRACTION
@@ -130,6 +139,7 @@ export const formatFileSize = (bytes: number | null): string => {
 
 /**
  * Extract initials from a display name or email address.
+ * Uses first initial + last initial algorithm for multi-word names.
  * Returns up to 2 uppercase characters.
  * 
  * @param name - Display name (preferred) or email address
@@ -138,7 +148,8 @@ export const formatFileSize = (bytes: number | null): string => {
  * 
  * @example
  * getInitials('John Smith') // 'JS'
- * getInitials('john@example.com') // 'JO'
+ * getInitials('John Michael Smith') // 'JS' (first + last)
+ * getInitials('John') // 'J'
  * getInitials(null, 'jane@test.com') // 'JA'
  * getInitials(null, null) // '?'
  */
@@ -147,12 +158,12 @@ export function getInitials(
   fallbackEmail?: string | null
 ): string {
   if (name) {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) {
+      return parts[0].charAt(0).toUpperCase();
+    }
+    // First initial + last initial
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
   if (fallbackEmail) {
     return fallbackEmail.slice(0, 2).toUpperCase();

@@ -1,22 +1,17 @@
 /**
  * Widget-specific LinkPreviews Component
  * 
- * Identical to main app LinkPreviews but uses widgetSupabase
+ * Uses shared useLinkPreviews hook but with widget Supabase client
  * to avoid importing the heavy main app Database types.
  * 
  * @module widget/components/LinkPreviewsWidget
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { LinkPreviewCard, LinkPreviewData } from '@/components/chat/LinkPreviewCard';
+import { useCallback } from 'react';
+import { LinkPreviewCard, type LinkPreviewData } from '@/components/chat/LinkPreviewCard';
 import { getWidgetSupabase } from '../api';
 import { WidgetSkeletonLinkPreview } from '../ui/WidgetSkeleton';
-
-// URL regex that matches http/https URLs
-const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
-
-// Simple in-memory cache for link previews
-const previewCache = new Map<string, LinkPreviewData | null>();
+import { useLinkPreviews } from '@/hooks/useLinkPreviews';
 
 interface LinkPreviewsWidgetProps {
   content: string;
@@ -25,82 +20,39 @@ interface LinkPreviewsWidgetProps {
 }
 
 export function LinkPreviewsWidget({ content, compact = false, cachedPreviews }: LinkPreviewsWidgetProps) {
-  const [previews, setPreviews] = useState<(LinkPreviewData | null)[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const fetchedRef = useRef(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
+  // Fetch function using widget Supabase client
+  const fetchPreview = useCallback(async (url: string): Promise<LinkPreviewData | null> => {
+    try {
+      const { data, error } = await getWidgetSupabase().functions.invoke('fetch-link-preview', {
+        body: { url }
+      });
 
-  const urls = Array.from(new Set(content.match(URL_REGEX) || [])).slice(0, 5);
+      if (error || !data || data.error) {
+        return null;
+      }
 
-  const getValidPreviews = useCallback((previewList: (LinkPreviewData | null)[]): LinkPreviewData[] => {
-    return previewList.filter((p): p is LinkPreviewData => p !== null && (!!p.title || !!p.videoType));
+      return data as LinkPreviewData;
+    } catch {
+      return null;
+    }
   }, []);
 
-  const handleScroll = useCallback(() => {
-    if (!carouselRef.current) return;
-    const scrollLeft = carouselRef.current.scrollLeft;
-    const cardWidth = carouselRef.current.offsetWidth;
-    const newIndex = Math.round(scrollLeft / cardWidth);
-    setCurrentIndex(newIndex);
-  }, []);
-
-  const scrollToIndex = useCallback((index: number) => {
-    if (!carouselRef.current) return;
-    const cardWidth = carouselRef.current.offsetWidth;
-    carouselRef.current.scrollTo({
-      left: cardWidth * index,
-      behavior: 'smooth'
-    });
-    setCurrentIndex(index);
-  }, []);
-
-  const validCached = cachedPreviews ? getValidPreviews(cachedPreviews) : [];
-  
-  useEffect(() => {
-    if (cachedPreviews && cachedPreviews.length > 0) return;
-    if (urls.length === 0 || fetchedRef.current) return;
-    fetchedRef.current = true;
-
-    const fetchPreviews = async () => {
-      setLoading(true);
-      
-      const results = await Promise.all(
-        urls.map(async (url) => {
-          if (previewCache.has(url)) {
-            return previewCache.get(url) || null;
-          }
-
-          try {
-            const { data, error } = await getWidgetSupabase().functions.invoke('fetch-link-preview', {
-              body: { url }
-            });
-
-            if (error || !data || data.error) {
-              previewCache.set(url, null);
-              return null;
-            }
-
-            previewCache.set(url, data);
-            return data as LinkPreviewData;
-          } catch {
-            previewCache.set(url, null);
-            return null;
-          }
-        })
-      );
-
-      setPreviews(results);
-      setLoading(false);
-    };
-
-    fetchPreviews();
-  }, [content, cachedPreviews]);
+  const {
+    urls,
+    displayPreviews,
+    loading,
+    currentIndex,
+    carouselRef,
+    handleScroll,
+    scrollToIndex,
+  } = useLinkPreviews({
+    content,
+    cachedPreviews,
+    fetchPreview,
+  });
 
   if (urls.length === 0) return null;
 
-  const displayPreviews = validCached.length > 0 ? validCached : getValidPreviews(previews);
-  
   if (loading) {
     return (
       <div className="space-y-2">

@@ -27,7 +27,8 @@ import {
 } from '@/components/ui/collapsible';
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
 import { useAccountDetail } from '@/hooks/admin/useAccountDetail';
-import { getInitials, formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
+import { getInitials } from '@/lib/formatting-utils';
+import { formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
 
 import { ImpersonateButton } from './ImpersonateButton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
