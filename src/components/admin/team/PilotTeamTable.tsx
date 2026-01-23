@@ -2,6 +2,7 @@
  * PilotTeamTable Component
  * 
  * Displays and manages the Pilot internal team using DataTable.
+ * Rows are clickable to open the member detail sheet.
  * 
  * @module components/admin/team/PilotTeamTable
  */
@@ -21,7 +22,7 @@ import { getInitials } from '@/lib/admin/admin-utils';
 import { DataTable } from '@/components/data-table/DataTable';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
-import { PilotRoleManagementDialog } from './PilotRoleManagementDialog';
+import { PilotTeamMemberSheet } from './PilotTeamMemberSheet';
 import { PilotTeamActions } from './PilotTeamActions';
 import type { PilotTeamMember, PilotTeamRole, AdminPermission } from '@/types/admin';
 import {
@@ -50,6 +51,7 @@ interface PilotTeamTableProps {
 
 /**
  * Pilot team management component using DataTable.
+ * Rows are clickable to open the member detail sheet.
  */
 export function PilotTeamTable({
   team,
@@ -62,7 +64,7 @@ export function PilotTeamTable({
 }: PilotTeamTableProps) {
   const prefersReducedMotion = useReducedMotion();
   const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
-  const [editMember, setEditMember] = useState<PilotTeamMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<PilotTeamMember | null>(null);
 
   const handleRemove = async () => {
     if (removeConfirmId) {
@@ -75,8 +77,11 @@ export function PilotTeamTable({
     await onUpdatePermissions(userId, role, permissions, previousRole, previousPermissions);
   };
 
+  const handleRowClick = (member: PilotTeamMember) => {
+    setSelectedMember(member);
+  };
+
   const columns: ColumnDef<PilotTeamMember>[] = useMemo(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     () => [
       {
         accessorKey: 'display_name',
@@ -156,7 +161,7 @@ export function PilotTeamTable({
                 member={row.original}
                 canEdit={canEdit}
                 canDelete={canDelete}
-                onEdit={() => setEditMember(row.original)}
+                onEdit={() => setSelectedMember(row.original)}
                 onRemove={() => setRemoveConfirmId(row.original.user_id)}
               />
             </div>
@@ -196,13 +201,14 @@ export function PilotTeamTable({
         columns={columns}
         isLoading={loading}
         emptyMessage="No team members found"
+        onRowClick={(member) => handleRowClick(member)}
       />
 
-      {/* Permissions Management Dialog */}
-      <PilotRoleManagementDialog
-        member={editMember}
-        isOpen={!!editMember}
-        onClose={() => setEditMember(null)}
+      {/* Member Detail Sheet */}
+      <PilotTeamMemberSheet
+        member={selectedMember}
+        open={!!selectedMember}
+        onOpenChange={(open) => !open && setSelectedMember(null)}
         onUpdate={handleUpdateMember}
       />
 
