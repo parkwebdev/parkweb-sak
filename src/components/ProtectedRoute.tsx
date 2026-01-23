@@ -11,6 +11,7 @@ import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useImpersonationTarget } from '@/hooks/admin/useImpersonation';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { motion } from 'motion/react';
 
@@ -34,6 +35,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
   const { isPilotTeamMember, loading: roleLoading } = useRoleAuthorization();
+  const impersonatingUserId = useImpersonationTarget();
   const location = useLocation();
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [hasShownToast, setHasShownToast] = useState(false);
@@ -58,8 +60,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Redirect Pilot team members to /admin if they're on a customer route
-  // This must be AFTER loading checks to ensure role is loaded
-  if (isPilotTeamMember && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/settings')) {
+  // UNLESS they are actively impersonating a user account
+  const isImpersonating = !!impersonatingUserId;
+  
+  if (isPilotTeamMember && !isImpersonating && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/settings')) {
     return <Navigate to="/admin" replace />;
   }
 
