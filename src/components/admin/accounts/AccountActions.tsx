@@ -71,7 +71,7 @@ export function AccountActions({ account, onView, onImpersonate }: AccountAction
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <IconButton
             variant="ghost"

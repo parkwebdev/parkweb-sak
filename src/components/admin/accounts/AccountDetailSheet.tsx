@@ -9,9 +9,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
@@ -175,6 +177,9 @@ export function AccountDetailSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="sm:max-w-md overflow-y-auto p-0">
+        <VisuallyHidden.Root>
+          <SheetTitle>Account Details</SheetTitle>
+        </VisuallyHidden.Root>
         {loading ? (
           <AccountDetailSkeleton />
         ) : account ? (
