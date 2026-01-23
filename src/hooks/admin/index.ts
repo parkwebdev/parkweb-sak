@@ -17,3 +17,4 @@ export { useImpersonation } from './useImpersonation';
 export { useAuditAction } from './useAuditAction';
 export { usePlatformHCArticles } from './usePlatformHCArticles';
 export { usePlatformHCCategories } from './usePlatformHCCategories';
+export { useRelatedAuditActivity } from './useRelatedAuditActivity';
