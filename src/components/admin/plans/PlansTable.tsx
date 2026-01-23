@@ -214,6 +214,7 @@ export function PlansTable({
         columns={columns}
         isLoading={loading}
         emptyMessage="No plans found"
+        onRowClick={(row) => handleEdit(row)}
       />
 
       {/* Edit/Create Plan Sheet */}
