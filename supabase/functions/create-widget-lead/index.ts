@@ -230,6 +230,21 @@ serve(async (req) => {
       );
     }
 
+    // Check if account owner is suspended - block lead creation
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('status')
+      .eq('user_id', agent.user_id)
+      .single();
+
+    if (ownerProfile?.status === 'suspended') {
+      console.log(`Lead creation blocked: Account ${agent.user_id} is suspended`);
+      return new Response(
+        JSON.stringify({ error: 'Service temporarily unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Process custom fields: extract name, email, phone from type-tagged fields and flatten for storage
     const rawCustomFields = customFields || {};
     
