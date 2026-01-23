@@ -576,11 +576,24 @@ export const ChatWidget = ({
   }, [previewMode]);
 
   // Config management via extracted hook
-  const { config, loading, isContentLoading, parentHandlesConfig } = useWidgetConfig(
+  const { config, loading, isContentLoading, parentHandlesConfig, isSuspended } = useWidgetConfig(
     configProp,
     isLoadingProp,
     previewMode
   );
+
+  // Show unavailable message if account is suspended
+  if (isSuspended) {
+    return (
+      <WidgetCard className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
+        <div className="text-4xl mb-4">🔒</div>
+        <h2 className="text-base font-semibold text-foreground mb-2">Service Unavailable</h2>
+        <p className="text-sm text-muted-foreground">
+          This chat service is currently unavailable. Please try again later.
+        </p>
+      </WidgetCard>
+    );
+  }
 
   // Show loading state while config is being fetched
   if (loading || !config) {
