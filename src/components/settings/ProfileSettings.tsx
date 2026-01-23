@@ -317,16 +317,6 @@ export function ProfileSettings() {
 
   return (
     <AnimatedList className="space-y-4" staggerDelay={0.1}>
-      {isReadOnly && (
-        <AnimatedItem>
-          <Alert variant="default" className="border-warning/50 bg-warning/10">
-            <AlertTriangle className="h-4 w-4 text-warning" />
-            <AlertDescription className="text-warning-foreground">
-              You are viewing this user's profile. Editing is disabled during impersonation.
-            </AlertDescription>
-          </Alert>
-        </AnimatedItem>
-      )}
       <AnimatedItem>
       <Card>
         <CardHeader>
