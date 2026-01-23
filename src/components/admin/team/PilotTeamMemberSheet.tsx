@@ -338,7 +338,7 @@ export function PilotTeamMemberSheet({
                   onValueChange={(value) => handleRoleChange(value as PilotTeamRole)}
                   disabled={!canEdit}
                 >
-                  <SelectTrigger className="w-[160px]">
+                  <SelectTrigger className="w-auto h-auto py-1 px-2 border-0 bg-transparent hover:bg-muted/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
