@@ -235,6 +235,19 @@ export const queryKeys = {
     popularity: (categoryId: string) => [...queryKeys.hc.all, 'popularity', categoryId] as const,
   },
 
+  // Platform Help Center (public-facing)
+  platformHc: {
+    all: ['platform-hc'] as const,
+    categories: () => [...queryKeys.platformHc.all, 'categories'] as const,
+    articles: (published?: boolean) => [...queryKeys.platformHc.all, 'articles', published] as const,
+  },
+
+  // User sessions
+  sessions: {
+    all: ['sessions'] as const,
+    list: (userId: string) => [...queryKeys.sessions.all, userId] as const,
+  },
+
 } as const;
 
 /** Type helper for query keys */

@@ -650,7 +650,7 @@ export async function fetchConversationMessages(conversationId: string): Promise
   try {
     const { data, error } = await widgetSupabase
       .from('messages')
-      .select('*')
+      .select('id, conversation_id, role, content, metadata, created_at')
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true });
 

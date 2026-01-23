@@ -501,3 +501,73 @@ export const HELP_CATEGORY_SEARCH_COLUMNS = `
   description
 `;
 
+/**
+ * Columns for platform help center categories.
+ */
+export const PLATFORM_HC_CATEGORY_COLUMNS = `
+  id,
+  label,
+  color,
+  icon_name,
+  order_index
+`;
+
+/**
+ * Columns for platform help center articles.
+ */
+export const PLATFORM_HC_ARTICLE_COLUMNS = `
+  id,
+  category_id,
+  slug,
+  title,
+  description,
+  content,
+  icon_name,
+  order_index,
+  is_published
+`;
+
+/**
+ * Columns for subscription plans.
+ */
+export const PLAN_COLUMNS = `
+  id,
+  name,
+  price_monthly,
+  price_yearly,
+  active,
+  features,
+  limits,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for impersonation sessions.
+ */
+export const IMPERSONATION_SESSION_COLUMNS = `
+  id,
+  admin_user_id,
+  target_user_id,
+  reason,
+  started_at,
+  ended_at,
+  is_active
+`;
+
+/**
+ * Columns for agent tools.
+ */
+export const AGENT_TOOL_COLUMNS = `
+  id,
+  agent_id,
+  name,
+  description,
+  endpoint_url,
+  parameters,
+  headers,
+  timeout_ms,
+  enabled,
+  created_at
+`;
+
