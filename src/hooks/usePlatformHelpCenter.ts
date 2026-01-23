@@ -9,6 +9,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/query-keys';
+import { PLATFORM_HC_CATEGORY_COLUMNS, PLATFORM_HC_ARTICLE_COLUMNS } from '@/lib/db-selects';
 import { useMemo } from 'react';
 
 export interface PlatformHCArticle {
@@ -42,11 +44,11 @@ export function usePlatformHelpCenter() {
     isLoading: categoriesLoading,
     error: categoriesError,
   } = useQuery({
-    queryKey: ['platform-hc-categories'],
+    queryKey: queryKeys.platformHc.categories(),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('platform_hc_categories')
-        .select('*')
+        .select(PLATFORM_HC_CATEGORY_COLUMNS)
         .order('order_index', { ascending: true });
       
       if (error) throw error;
@@ -62,11 +64,11 @@ export function usePlatformHelpCenter() {
     isLoading: articlesLoading,
     error: articlesError,
   } = useQuery({
-    queryKey: ['platform-hc-articles', 'published'],
+    queryKey: queryKeys.platformHc.articles(true),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('platform_hc_articles')
-        .select('*')
+        .select(PLATFORM_HC_ARTICLE_COLUMNS)
         .eq('is_published', true)
         .order('order_index', { ascending: true });
       

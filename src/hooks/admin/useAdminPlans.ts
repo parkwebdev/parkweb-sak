@@ -10,6 +10,7 @@ import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
+import { PLAN_COLUMNS } from '@/lib/db-selects';
 import type { AdminPlan, PlanFeatures, PlanLimits } from '@/types/admin';
 
 interface UseAdminPlansResult {
@@ -32,7 +33,7 @@ export function useAdminPlans(): UseAdminPlansResult {
     queryFn: async (): Promise<AdminPlan[]> => {
       const { data, error } = await supabase
         .from('plans')
-        .select('*')
+        .select(PLAN_COLUMNS)
         .order('price_monthly', { ascending: true });
 
       if (error) throw error;

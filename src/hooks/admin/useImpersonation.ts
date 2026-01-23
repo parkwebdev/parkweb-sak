@@ -127,7 +127,7 @@ export function useImpersonation(): UseImpersonationResult {
       // Check for active impersonation session
       const { data: session } = await supabase
         .from('impersonation_sessions')
-        .select('*')
+        .select('id, admin_user_id, target_user_id, reason, started_at, ended_at, is_active')
         .eq('admin_user_id', user.id)
         .eq('is_active', true)
         .maybeSingle();

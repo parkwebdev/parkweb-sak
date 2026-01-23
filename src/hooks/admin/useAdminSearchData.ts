@@ -187,7 +187,7 @@ export function useAdminSearchData() {
       }
 
       setSearchResults(results);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching admin search data:', error);
     } finally {
       setLoading(false);

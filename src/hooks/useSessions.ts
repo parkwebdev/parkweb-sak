@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
+import { queryKeys } from '@/lib/query-keys';
 import type { SessionData } from '@/components/data-table/columns/sessions-columns';
 
 /** Error returned when edge function fails */
@@ -90,7 +91,7 @@ export function useSessions() {
   const queryClient = useQueryClient();
 
   const { data: sessions = [], isLoading, error, refetch } = useQuery<SessionData[], SessionsError>({
-    queryKey: ['user-sessions', user?.id],
+    queryKey: queryKeys.sessions.list(user?.id || ''),
     queryFn: async (): Promise<SessionData[]> => {
       // Explicitly pass the JWT token to handle iframe/preview environments
       const accessToken = session?.access_token;
@@ -125,7 +126,7 @@ export function useSessions() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-sessions'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
       toast.success('Signed out of other devices', {
         description: 'All other sessions have been terminated.',
       });

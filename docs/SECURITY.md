@@ -549,6 +549,29 @@ FOR SELECT
 USING (is_admin(auth.uid()));
 ```
 
+### Intentional "Always True" RLS Policies
+
+The following policies use `true` conditions intentionally for specific use cases. These are **not security vulnerabilities**:
+
+| Table | Policy | Command | Justification |
+|-------|--------|---------|---------------|
+| `article_feedback` | Anyone can submit feedback | INSERT | Widget anonymous feedback (no auth required) |
+| `kb_article_feedback` | Anyone can insert feedback | INSERT | Help center anonymous feedback |
+| `kb_article_views` | Anyone can record article views | INSERT | Anonymous view tracking for analytics |
+| `knowledge_chunks` | Service can insert chunks | INSERT | Service-role only (edge function with service key) |
+| `lead_activities` | Service can insert activities | INSERT | Service-role triggers from edge functions |
+| `messages` | Public can create messages | INSERT | Widget message creation (validated in edge function) |
+| `pending_invitations` | System create invitations | INSERT | System-generated invites from edge functions |
+| `query_embedding_cache` | Cache operations | ALL | Service-role caching (internal system table) |
+| `usage_metrics` | System can insert metrics | INSERT | System metrics tracking |
+
+**Why these are safe:**
+1. **INSERT-only**: Most policies only allow INSERT, preventing data leakage
+2. **Service-role context**: Edge functions use service-role key with additional validation
+3. **Widget validation**: Widget operations are validated server-side before database writes
+4. **Immutable logs**: Audit/feedback tables have no UPDATE/DELETE policies
+5. **Foreign key constraints**: Records require valid references (e.g., valid conversation_id)
+
 ### Public Access Pattern (Widget)
 
 ```sql
