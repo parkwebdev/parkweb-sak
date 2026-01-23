@@ -15,14 +15,14 @@ import {
 } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RoleBadge } from '@/components/admin/shared/RoleBadge';
-import { IconButton } from '@/components/ui/icon-button';
-import { Trash01, Shield01, Settings01 } from '@untitledui/icons';
+import { Shield01 } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import { getInitials } from '@/lib/admin/admin-utils';
 import { DataTable } from '@/components/data-table/DataTable';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { PilotRoleManagementDialog } from './PilotRoleManagementDialog';
+import { PilotTeamActions } from './PilotTeamActions';
 import type { PilotTeamMember, PilotTeamRole, AdminPermission } from '@/types/admin';
 import {
   AlertDialog,
@@ -150,7 +150,7 @@ export function PilotTeamTable({
       {
         id: 'actions',
         header: '',
-        size: 80,
+        size: 60,
         cell: ({ row }) => {
           const isTargetSuperAdmin = row.original.role === 'super_admin';
           const isSelf = row.original.user_id === currentUserId;
@@ -160,38 +160,15 @@ export function PilotTeamTable({
           const canEdit = !isSelf && (currentUserIsSuperAdmin || !isTargetSuperAdmin);
           const canDelete = !isSelf && (currentUserIsSuperAdmin || !isTargetSuperAdmin);
 
-          if (!canEdit && !canDelete) {
-            return null;
-          }
-
           return (
-            <div className="flex items-center justify-end gap-1">
-              {canEdit && (
-                <IconButton
-                  label="Manage permissions"
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditMember(row.original);
-                  }}
-                >
-                  <Settings01 size={14} aria-hidden="true" />
-                </IconButton>
-              )}
-              {canDelete && (
-                <IconButton
-                  label="Remove team member"
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setRemoveConfirmId(row.original.user_id);
-                  }}
-                >
-                  <Trash01 size={14} className="text-destructive" aria-hidden="true" />
-                </IconButton>
-              )}
+            <div className="flex items-center justify-end">
+              <PilotTeamActions
+                member={row.original}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                onEdit={() => setEditMember(row.original)}
+                onRemove={() => setRemoveConfirmId(row.original.user_id)}
+              />
             </div>
           );
         },
