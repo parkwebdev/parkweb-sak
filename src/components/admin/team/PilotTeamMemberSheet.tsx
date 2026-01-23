@@ -21,6 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Select,
   SelectContent,
@@ -360,14 +361,13 @@ export function PilotTeamMemberSheet({
               {role === 'pilot_support' && (
                 <div className="space-y-3 pt-3">
                     
-                    <div className="border rounded-lg overflow-hidden">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="bg-muted/50 border-b">
-                            <th className="text-left py-2 px-3 font-medium">Feature</th>
-                            <th className="text-center py-2 px-3 font-medium w-16">
-                              <div className="flex flex-col items-center gap-1">
-                                <span>View</span>
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50 hover:bg-muted/50">
+                            <TableHead className="w-[45%] font-medium text-xs">Feature</TableHead>
+                            <TableHead className="w-[27.5%] text-center font-medium text-xs">
+                              <div className="flex items-center justify-center gap-2">
                                 <Checkbox
                                   checked={allViewSelected}
                                   onCheckedChange={() => toggleColumnPermissions('view')}
@@ -379,12 +379,13 @@ export function PilotTeamMemberSheet({
                                         someViewSelected && !allViewSelected;
                                     }
                                   }}
+                                  className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
                                 />
+                                <span>View</span>
                               </div>
-                            </th>
-                            <th className="text-center py-2 px-3 font-medium w-16">
-                              <div className="flex flex-col items-center gap-1">
-                                <span>Manage</span>
+                            </TableHead>
+                            <TableHead className="w-[27.5%] text-center font-medium text-xs">
+                              <div className="flex items-center justify-center gap-2">
                                 <Checkbox
                                   checked={allManageSelected}
                                   onCheckedChange={() => toggleColumnPermissions('manage')}
@@ -396,52 +397,52 @@ export function PilotTeamMemberSheet({
                                         someManageSelected && !allManageSelected;
                                     }
                                   }}
+                                  className="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
                                 />
+                                <span>Manage</span>
                               </div>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {matrixData.map((row, index) => (
-                            <tr 
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {matrixData.map((row) => (
+                            <TableRow 
                               key={row.feature}
-                              className={cn(
-                                index !== matrixData.length - 1 && "border-b"
-                              )}
+                              className="transition-colors hover:bg-muted/30"
                             >
-                              <td className="py-2 px-3">
-                                <Label className="font-normal cursor-pointer">
-                                  {row.label}
-                                </Label>
-                              </td>
-                              <td className="text-center py-2 px-3">
+                              <TableCell className="text-sm font-medium text-foreground py-2">
+                                {row.label}
+                              </TableCell>
+                              <TableCell className="text-center py-2">
                                 {row.viewPermission && (
-                                  <Checkbox
-                                    checked={permissions.includes(row.viewPermission)}
-                                    onCheckedChange={(checked) =>
-                                      handlePermissionChange(row.viewPermission!, !!checked)
-                                    }
-                                    disabled={!canEdit}
-                                    aria-label={ADMIN_PERMISSION_LABELS[row.viewPermission]}
-                                  />
+                                  <div className="flex justify-center" title={ADMIN_PERMISSION_LABELS[row.viewPermission]}>
+                                    <Checkbox
+                                      checked={permissions.includes(row.viewPermission)}
+                                      onCheckedChange={(checked) =>
+                                        handlePermissionChange(row.viewPermission!, !!checked)
+                                      }
+                                      disabled={!canEdit}
+                                    />
+                                  </div>
                                 )}
-                              </td>
-                              <td className="text-center py-2 px-3">
+                              </TableCell>
+                              <TableCell className="text-center py-2">
                                 {row.managePermission && (
-                                  <Checkbox
-                                    checked={permissions.includes(row.managePermission)}
-                                    onCheckedChange={(checked) =>
-                                      handlePermissionChange(row.managePermission!, !!checked)
-                                    }
-                                    disabled={!canEdit}
-                                    aria-label={ADMIN_PERMISSION_LABELS[row.managePermission]}
-                                  />
+                                  <div className="flex justify-center" title={ADMIN_PERMISSION_LABELS[row.managePermission]}>
+                                    <Checkbox
+                                      checked={permissions.includes(row.managePermission)}
+                                      onCheckedChange={(checked) =>
+                                        handlePermissionChange(row.managePermission!, !!checked)
+                                      }
+                                      disabled={!canEdit}
+                                    />
+                                  </div>
                                 )}
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     </div>
                 </div>
               )}
