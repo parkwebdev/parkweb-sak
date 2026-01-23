@@ -1,17 +1,19 @@
 /**
  * @fileoverview TopBar User Menu Component
  * Compact avatar trigger with full dropdown menu functionality.
+ * Context-aware: shows different menu items and shortcuts for admin vs regular app.
  * Displays in the TopBar on every page.
  */
 
 import { useState, useEffect } from 'react';
-import { Keyboard01 } from '@untitledui/icons';
+import { Keyboard01, ArrowLeft } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCanManageChecker } from '@/hooks/useCanManage';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,7 +37,8 @@ interface KeyboardShortcut {
   description: string;
 }
 
-const shortcuts: KeyboardShortcut[] = [
+/** Regular app shortcuts */
+const appShortcuts: KeyboardShortcut[] = [
   { key: 'k', ctrlKey: true, description: 'Global Search' },
   { key: 't', altKey: true, description: 'Theme' },
   { key: 'a', altKey: true, description: 'Ari' },
@@ -45,6 +48,21 @@ const shortcuts: KeyboardShortcut[] = [
   { key: 'p', altKey: true, description: 'Planner' },
   { key: 's', altKey: true, description: 'Settings' },
   { key: 'h', altKey: true, description: 'Help Center' },
+];
+
+/** Admin area shortcuts */
+const adminShortcuts: KeyboardShortcut[] = [
+  { key: 'k', ctrlKey: true, description: 'Admin Search' },
+  { key: 't', altKey: true, description: 'Theme' },
+  { key: 'o', altKey: true, description: 'Overview' },
+  { key: 'a', altKey: true, description: 'Accounts' },
+  { key: 'p', altKey: true, description: 'Prompts' },
+  { key: 'b', altKey: true, description: 'Plans & Billing' },
+  { key: 'm', altKey: true, description: 'Pilot Team' },
+  { key: 'h', altKey: true, description: 'Help Articles' },
+  { key: 'e', altKey: true, description: 'Emails' },
+  { key: 'r', altKey: true, description: 'Revenue' },
+  { key: 'l', altKey: true, description: 'Audit Log' },
 ];
 
 const formatShortcut = (shortcut: KeyboardShortcut): string[] => {
@@ -62,12 +80,17 @@ const formatShortcut = (shortcut: KeyboardShortcut): string[] => {
 export function TopBarUserMenu() {
   const { user, signOut } = useAuth();
   const canView = useCanManageChecker();
+  const { hasAdminPermission } = useRoleAuthorization();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Detect if we're in the admin area
+  const isAdminArea = location.pathname.startsWith('/admin');
+  const shortcuts = isAdminArea ? adminShortcuts : appShortcuts;
 
   const isActiveRoute = (path: string) => {
     if (path.includes('?tab=')) {
@@ -162,47 +185,77 @@ export function TopBarUserMenu() {
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
         <div className="flex">
-          {/* Left column - Account */}
+          {/* Left column - Account (context-aware) */}
           <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0 p-1`}>
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Account</div>
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              {isAdminArea ? 'Admin' : 'Account'}
+            </div>
             <DropdownMenuSeparator className="mx-0" />
             <div className="space-y-0.5">
-              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
-                <Link to="/settings?tab=profile" className="w-full cursor-pointer">
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              {canView('view_team') && (
-                <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=team') && 'bg-accent')}>
-                  <Link to="/settings?tab=team" className="w-full cursor-pointer">
-                    Team
-                  </Link>
-                </DropdownMenuItem>
+              {isAdminArea ? (
+                // Admin area menu items
+                <>
+                  <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
+                    <Link to="/settings?tab=profile" className="w-full cursor-pointer">
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  {hasAdminPermission('view_team') && (
+                    <DropdownMenuItem asChild className={cn(isActiveRoute('/admin/team') && 'bg-accent')}>
+                      <Link to="/admin/team" className="w-full cursor-pointer">
+                        Pilot Team
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator className="mx-0" />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="w-full cursor-pointer gap-2">
+                      <ArrowLeft size={15} />
+                      Back to App
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                // Regular app menu items
+                <>
+                  <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=profile') && 'bg-accent')}>
+                    <Link to="/settings?tab=profile" className="w-full cursor-pointer">
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  {canView('view_team') && (
+                    <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=team') && 'bg-accent')}>
+                      <Link to="/settings?tab=team" className="w-full cursor-pointer">
+                        Team
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {canView('view_billing') && (
+                    <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=usage') && 'bg-accent')}>
+                      <Link to="/settings?tab=usage" className="w-full cursor-pointer">
+                        Usage
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {canView('view_billing') && (
+                    <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=billing') && 'bg-accent')}>
+                      <Link to="/settings?tab=billing" className="w-full cursor-pointer">
+                        Billing
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild className={cn(isActiveRoute('/settings') && 'bg-accent')}>
+                    <Link to="/settings" className="w-full cursor-pointer">
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className={cn(isActiveRoute('/help-center') && 'bg-accent')}>
+                    <Link to="/help-center" className="w-full cursor-pointer">
+                      Help Center
+                    </Link>
+                  </DropdownMenuItem>
+                </>
               )}
-              {canView('view_billing') && (
-                <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=usage') && 'bg-accent')}>
-                  <Link to="/settings?tab=usage" className="w-full cursor-pointer">
-                    Usage
-                  </Link>
-                </DropdownMenuItem>
-              )}
-              {canView('view_billing') && (
-                <DropdownMenuItem asChild className={cn(isActiveRoute('/settings?tab=billing') && 'bg-accent')}>
-                  <Link to="/settings?tab=billing" className="w-full cursor-pointer">
-                    Billing
-                  </Link>
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem asChild className={cn(isActiveRoute('/settings') && 'bg-accent')}>
-                <Link to="/settings" className="w-full cursor-pointer">
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className={cn(isActiveRoute('/help-center') && 'bg-accent')}>
-                <Link to="/help-center" className="w-full cursor-pointer">
-                  Help Center
-                </Link>
-              </DropdownMenuItem>
               <DropdownMenuItem 
                 onMouseEnter={() => setShowShortcuts(true)}
                 className="gap-2 cursor-default"

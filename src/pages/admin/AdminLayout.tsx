@@ -3,6 +3,7 @@
  * 
  * Security wrapper for all Super Admin Dashboard pages.
  * Validates super admin access before rendering content.
+ * Provides admin-specific global search and keyboard shortcuts.
  * 
  * @module pages/admin/AdminLayout
  */
@@ -10,6 +11,23 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AdminGlobalSearchProvider } from '@/contexts/AdminGlobalSearchContext';
+import { AdminGlobalSearch } from '@/components/admin/AdminGlobalSearch';
+import { useAdminKeyboardShortcuts } from '@/hooks/admin/useAdminKeyboardShortcuts';
+
+/**
+ * Inner layout component that uses admin keyboard shortcuts.
+ */
+function AdminLayoutInner() {
+  // Register admin keyboard shortcuts
+  useAdminKeyboardShortcuts();
+
+  return (
+    <div className="flex-1 min-h-0 h-full overflow-y-auto">
+      <Outlet />
+    </div>
+  );
+}
 
 /**
  * Admin layout with security guards for Super Admin Dashboard.
@@ -33,8 +51,9 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="flex-1 min-h-0 h-full overflow-y-auto">
-      <Outlet />
-    </div>
+    <AdminGlobalSearchProvider>
+      <AdminGlobalSearch />
+      <AdminLayoutInner />
+    </AdminGlobalSearchProvider>
   );
 }

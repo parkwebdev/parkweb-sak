@@ -18,3 +18,6 @@ export { useAuditAction } from './useAuditAction';
 export { usePlatformHCArticles } from './usePlatformHCArticles';
 export { usePlatformHCCategories } from './usePlatformHCCategories';
 export { useRelatedAuditActivity } from './useRelatedAuditActivity';
+export { useAdminGlobalSearch } from './useAdminGlobalSearch';
+export { useAdminSearchData, type AdminSearchResult } from './useAdminSearchData';
+export { useAdminKeyboardShortcuts } from './useAdminKeyboardShortcuts';

@@ -19,9 +19,12 @@ const GlobalSearchContext = createContext<GlobalSearchContextType | undefined>(u
 export function GlobalSearchProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
-  // Handle Cmd/Ctrl+K keyboard shortcut
+  // Handle Cmd/Ctrl+K keyboard shortcut (skip in admin area)
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      // Don't handle in admin area - let AdminGlobalSearch handle it
+      if (window.location.pathname.startsWith('/admin')) return;
+      
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((prev) => !prev);
