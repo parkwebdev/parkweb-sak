@@ -54,7 +54,7 @@ const ROLE_STYLES: Record<string, string> = {
   pilot_support: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
   admin: 'bg-status-active/10 text-status-active-foreground border-status-active/20',
   manager: 'bg-status-pending/10 text-status-pending-foreground border-status-pending/20',
-  member: 'bg-muted text-muted-foreground border-border',
+  member: 'bg-primary/10 text-primary border-primary/20',
   client: 'bg-muted text-muted-foreground border-border',
 };
 
