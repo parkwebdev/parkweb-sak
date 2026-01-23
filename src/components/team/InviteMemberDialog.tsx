@@ -3,7 +3,7 @@ import { Mail01 as Mail, AlertCircle } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { isValidEmail } from '@/utils/validation';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -68,7 +68,7 @@ export function InviteMemberDialog({
       <DialogTrigger asChild>
         {trigger || defaultTrigger}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Invite Team Member</DialogTitle>
           <DialogDescription>
@@ -76,27 +76,27 @@ export function InviteMemberDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {limitCheck.isAtLimit && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              You've reached your plan limit of {limitCheck.limit} team members. Upgrade to invite more.
-            </AlertDescription>
-          </Alert>
-        )}
+        <div className="flex-1 overflow-y-auto space-y-4 py-4">
+          {limitCheck.isAtLimit && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" aria-hidden="true" />
+              <AlertDescription>
+                You've reached your plan limit of {limitCheck.limit} team members. Upgrade to invite more.
+              </AlertDescription>
+            </Alert>
+          )}
 
-        {limitCheck.isNearLimit && !limitCheck.isAtLimit && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              You have {limitCheck.limit - limitCheck.current + 1} team member slots remaining.
-            </AlertDescription>
-          </Alert>
-        )}
+          {limitCheck.isNearLimit && !limitCheck.isAtLimit && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" aria-hidden="true" />
+              <AlertDescription>
+                You have {limitCheck.limit - limitCheck.current + 1} team member slots remaining.
+              </AlertDescription>
+            </Alert>
+          )}
 
-        <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="firstName">First name <span className="text-destructive">*</span></Label>
               <Input
                 id="firstName"
@@ -108,7 +108,7 @@ export function InviteMemberDialog({
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="lastName">Last name</Label>
               <Input
                 id="lastName"
@@ -121,7 +121,8 @@ export function InviteMemberDialog({
               />
             </div>
           </div>
-          <div className="space-y-1.5">
+
+          <div className="space-y-2">
             <Label htmlFor="email">Email address <span className="text-destructive">*</span></Label>
             <Input
               id="email"
@@ -132,24 +133,25 @@ export function InviteMemberDialog({
               disabled={loading}
             />
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsOpen(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleInvite}
-              loading={loading}
-              disabled={!isValid}
-            >
-              <Mail size={16} className="mr-2" />
-              Send Invitation
-            </Button>
-          </div>
         </div>
+
+        <DialogFooter className="pt-4 border-t border-border">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsOpen(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleInvite}
+            loading={loading}
+            disabled={!isValid}
+          >
+            <Mail size={16} className="mr-2" aria-hidden="true" />
+            Send Invitation
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
