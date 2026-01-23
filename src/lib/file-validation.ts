@@ -141,7 +141,7 @@ export const isImageFile = (fileType: string): boolean => {
 /**
  * Formats a byte size into a human-readable string.
  * 
- * @param bytes - Size in bytes
+ * @param bytes - Size in bytes (null returns '-')
  * @returns Formatted string with appropriate unit (Bytes, KB, or MB)
  * 
  * @example
@@ -151,8 +151,13 @@ export const isImageFile = (fileType: string): boolean => {
  * @example
  * formatFileSize(1536000)
  * // => '1.46 MB'
+ * 
+ * @example
+ * formatFileSize(null)
+ * // => '-'
  */
-export const formatFileSize = (bytes: number): string => {
+export const formatFileSize = (bytes: number | null): string => {
+  if (bytes === null || bytes === undefined) return '-';
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB'];

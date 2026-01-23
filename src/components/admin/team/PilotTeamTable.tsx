@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RoleBadge } from '@/components/admin/shared/RoleBadge';
 import { Shield01 } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
-import { getInitials } from '@/lib/admin/admin-utils';
+import { getInitials } from '@/lib/formatting-utils';
 import { DataTable } from '@/components/data-table/DataTable';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';

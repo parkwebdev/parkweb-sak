@@ -35,7 +35,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
 import { springs } from '@/lib/motion-variants';
-import { getInitials, formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
+import { getInitials } from '@/lib/formatting-utils';
+import { formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
 import { cn } from '@/lib/utils';
 import { 
   Mail01, 

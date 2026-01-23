@@ -1,106 +1,59 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { LinkPreviewCard, LinkPreviewData } from './LinkPreviewCard';
+/**
+ * Link Previews Component
+ * 
+ * Extracts URLs from content and displays rich link preview cards.
+ * Uses shared useLinkPreviews hook for logic.
+ * 
+ * @module components/chat/LinkPreviews
+ */
+
+import { useCallback } from 'react';
+import { LinkPreviewCard, type LinkPreviewData } from './LinkPreviewCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// URL regex that matches http/https URLs
-const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
-
-// Simple in-memory cache for link previews
-const previewCache = new Map<string, LinkPreviewData | null>();
+import { useLinkPreviews } from '@/hooks/useLinkPreviews';
 
 interface LinkPreviewsProps {
   content: string;
   compact?: boolean;
-  cachedPreviews?: LinkPreviewData[]; // Server-side cached previews from message metadata
+  cachedPreviews?: LinkPreviewData[];
 }
 
 export function LinkPreviews({ content, compact = false, cachedPreviews }: LinkPreviewsProps) {
-  const [previews, setPreviews] = useState<(LinkPreviewData | null)[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const fetchedRef = useRef(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
+  // Fetch function using main app Supabase client
+  const fetchPreview = useCallback(async (url: string): Promise<LinkPreviewData | null> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-link-preview', {
+        body: { url }
+      });
 
-  // Extract unique URLs from content
-  const urls = Array.from(new Set(content.match(URL_REGEX) || [])).slice(0, 5); // Max 5 previews
+      if (error || !data || data.error) {
+        return null;
+      }
 
-  // Get valid previews from cached or fetched data
-  const getValidPreviews = useCallback((previewList: (LinkPreviewData | null)[]): LinkPreviewData[] => {
-    return previewList.filter((p): p is LinkPreviewData => p !== null && (!!p.title || !!p.videoType));
+      return data as LinkPreviewData;
+    } catch {
+      return null;
+    }
   }, []);
 
-  // Handle scroll to update current index
-  const handleScroll = useCallback(() => {
-    if (!carouselRef.current) return;
-    const scrollLeft = carouselRef.current.scrollLeft;
-    const cardWidth = carouselRef.current.offsetWidth;
-    const newIndex = Math.round(scrollLeft / cardWidth);
-    setCurrentIndex(newIndex);
-  }, []);
+  const {
+    urls,
+    displayPreviews,
+    loading,
+    currentIndex,
+    carouselRef,
+    handleScroll,
+    scrollToIndex,
+  } = useLinkPreviews({
+    content,
+    cachedPreviews,
+    fetchPreview,
+  });
 
-  // Scroll to specific index
-  const scrollToIndex = useCallback((index: number) => {
-    if (!carouselRef.current) return;
-    const cardWidth = carouselRef.current.offsetWidth;
-    carouselRef.current.scrollTo({
-      left: cardWidth * index,
-      behavior: 'smooth'
-    });
-    setCurrentIndex(index);
-  }, []);
-
-  // If we have cached previews from server, use them directly
-  const validCached = cachedPreviews ? getValidPreviews(cachedPreviews) : [];
-  
-  useEffect(() => {
-    // Skip client-side fetching if we have cached previews
-    if (cachedPreviews && cachedPreviews.length > 0) return;
-    if (urls.length === 0 || fetchedRef.current) return;
-    fetchedRef.current = true;
-
-    const fetchPreviews = async () => {
-      setLoading(true);
-      
-      const results = await Promise.all(
-        urls.map(async (url) => {
-          // Check cache first
-          if (previewCache.has(url)) {
-            return previewCache.get(url) || null;
-          }
-
-          try {
-            const { data, error } = await supabase.functions.invoke('fetch-link-preview', {
-              body: { url }
-            });
-
-            if (error || !data || data.error) {
-              previewCache.set(url, null);
-              return null;
-            }
-
-            previewCache.set(url, data);
-            return data as LinkPreviewData;
-          } catch {
-            previewCache.set(url, null);
-            return null;
-          }
-        })
-      );
-
-      setPreviews(results);
-      setLoading(false);
-    };
-
-    fetchPreviews();
-  }, [content, cachedPreviews]);
-
-  // Don't render anything if no URLs or all failed
+  // Don't render anything if no URLs
   if (urls.length === 0) return null;
 
-  // Use cached previews if available, otherwise use fetched previews
-  const displayPreviews = validCached.length > 0 ? validCached : getValidPreviews(previews);
-  
   if (loading) {
     return (
       <div className="space-y-2">
