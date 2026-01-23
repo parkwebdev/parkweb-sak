@@ -244,7 +244,7 @@ const App = () => (
                     <Route 
                       path="/admin/*" 
                       element={
-                        <PermissionGuard superAdminOnly redirectTo="/dashboard">
+                        <PermissionGuard pilotTeamOnly redirectTo="/dashboard">
                           <AdminLayout />
                         </PermissionGuard>
                       }
