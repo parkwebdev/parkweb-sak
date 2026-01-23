@@ -64,6 +64,9 @@ export const NAVIGATION_ICON_MAP: Record<string, IconComponent> = {
   Settings01: Settings,
   BookOpen01: BookOpen01,
   
+  // Team/Group icons
+  UserGroup: Users02,
+  
   // Ari section icons - AI Configuration
   File02: File02,
   
