@@ -11,6 +11,7 @@ import React, { createContext, useContext, useEffect, useState, useRef, useMemo,
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
+import { toast } from 'sonner';
 
 /**
  * Shape of the authentication context value
@@ -108,6 +109,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Handle profile creation/updates and signup completion after successful authentication
         if (session?.user && event === 'SIGNED_IN') {
           setTimeout(async () => {
+            // Check if user is suspended before allowing access
+            const isSuspended = await checkSuspendedStatus(session.user.id);
+            if (isSuspended) {
+              return; // User was signed out, don't proceed with profile setup
+            }
+            
             await createOrUpdateProfile(session.user);
             // Update last_login_at timestamp
             await updateLastLogin(session.user.id);
@@ -153,6 +160,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  /**
+   * Check if user account is suspended and sign them out if so.
+   * @returns true if user was suspended and signed out
+   * @internal
+   */
+  const checkSuspendedStatus = async (userId: string): Promise<boolean> => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('user_id', userId)
+        .single();
+
+      if (profile?.status === 'suspended') {
+        // Sign out the suspended user immediately
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        
+        toast.error('Account Suspended', {
+          description: 'Your account has been suspended. Please contact support for assistance.',
+          duration: 10000,
+        });
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error: unknown) {
+      logger.error('Error checking suspended status:', error);
+      return false;
+    }
+  };
 
   /**
    * Create or update user profile after authentication.

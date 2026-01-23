@@ -13,3 +13,5 @@ export { AccountActions } from './AccountActions';
 export { AdminAccountsFilters } from './AdminAccountsFilters';
 export { AccountsTopBarSearch } from './AccountsTopBarSearch';
 export { AccountsSearchResults } from './AccountsSearchResults';
+export { SuspendAccountDialog } from './SuspendAccountDialog';
+export { ActivateAccountDialog } from './ActivateAccountDialog';
