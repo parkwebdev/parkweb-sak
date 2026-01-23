@@ -270,6 +270,15 @@ export const fetchWidgetConfig = async (agentId: string): Promise<WidgetConfig> 
   );
 
   if (!response.ok) {
+    // Check for suspended account (503 with suspended flag)
+    if (response.status === 503) {
+      const errorData = await response.json().catch(() => ({}));
+      if (errorData.suspended) {
+        const error = new Error('Service temporarily unavailable') as Error & { suspended?: boolean };
+        error.suspended = true;
+        throw error;
+      }
+    }
     throw new Error('Failed to fetch widget config');
   }
 

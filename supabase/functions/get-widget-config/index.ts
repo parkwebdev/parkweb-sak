@@ -81,10 +81,10 @@ Deno.serve(async (req) => {
 
     // OPTIMIZED: Run all queries in parallel for faster response
     const [agentResult, announcementsResult, categoriesResult, articlesResult, newsResult, locationsResult] = await Promise.all([
-      // Fetch agent details and deployment config
+      // Fetch agent details, deployment config, and owner profile status
       supabase
         .from('agents')
-        .select('name, deployment_config, enable_news_tab')
+        .select('name, deployment_config, enable_news_tab, user_id')
         .eq('id', agentId)
         .single(),
       
@@ -139,6 +139,24 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Agent not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if account owner is suspended - block widget access
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('status')
+      .eq('user_id', agent.user_id)
+      .single();
+
+    if (ownerProfile?.status === 'suspended') {
+      console.log(`Widget blocked: Account ${agent.user_id} is suspended`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Service temporarily unavailable',
+          suspended: true 
+        }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

@@ -36,6 +36,8 @@ interface UseWidgetConfigResult {
   parentHandlesConfig: boolean;
   /** Agent ID extracted from config */
   agentId: string;
+  /** Whether the account is suspended (widget unavailable) */
+  isSuspended: boolean;
 }
 
 /**
@@ -63,6 +65,7 @@ export function useWidgetConfig(
     isSimpleConfig ? null : (configProp as WidgetConfig)
   );
   const [loading, setLoading] = useState(isSimpleConfig);
+  const [isSuspended, setIsSuspended] = useState(false);
   
   // Use the loading state from parent if provided (Intercom-style instant loading)
   const isContentLoading = parentHandlesConfig ? isLoadingProp : loading;
@@ -89,8 +92,11 @@ export function useWidgetConfig(
           setConfig(cfg);
           setLoading(false);
         })
-        .catch(err => {
+        .catch((err: Error & { suspended?: boolean }) => {
           widgetLogger.error('Failed to load config:', err);
+          if (err.suspended) {
+            setIsSuspended(true);
+          }
           setLoading(false);
         });
     }
@@ -110,5 +116,6 @@ export function useWidgetConfig(
     isSimpleConfig,
     parentHandlesConfig,
     agentId,
+    isSuspended,
   };
 }

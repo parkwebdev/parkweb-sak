@@ -292,12 +292,24 @@ serve(async (req) => {
 
     if (agentError) throw agentError;
 
-    // Fetch owner's profile for business context (company name, address, phone)
+    // Fetch owner's profile for business context AND suspension check
     const { data: ownerProfile } = await supabase
       .from('profiles')
-      .select('company_name, company_address, company_phone')
+      .select('company_name, company_address, company_phone, status')
       .eq('user_id', agent.user_id)
       .single();
+
+    // Check if account owner is suspended - block chat access
+    if (ownerProfile?.status === 'suspended') {
+      log.warn('Chat blocked: Account is suspended', { userId: agent.user_id });
+      return createErrorResponse(
+        requestId,
+        ErrorCodes.UNAUTHORIZED,
+        'Service temporarily unavailable',
+        503,
+        performance.now() - startTime
+      );
+    }
 
     const businessContext = {
       companyName: ownerProfile?.company_name || null,
