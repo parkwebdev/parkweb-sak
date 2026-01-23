@@ -198,14 +198,9 @@ export function InviteTeamMemberDialog({
                     <SelectItem 
                       key={option.value} 
                       value={option.value}
-                      textValue={option.label}
+                      description={option.description}
                     >
-                      <div className="flex flex-col items-start">
-                        <span>{option.label}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {option.description}
-                        </span>
-                      </div>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
