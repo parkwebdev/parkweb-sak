@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { supabase } from '@/integrations/supabase/client';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,8 @@ import { SkeletonProfileCard, SkeletonSettingsCard } from '@/components/ui/skele
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from '@untitledui/icons';
 
 export function ProfileSettings() {
   const [profile, setProfile] = useState({
@@ -40,21 +43,24 @@ export function ProfileSettings() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
   const { user } = useAuth();
+  const { accountOwnerId, isImpersonating, loading: accountOwnerLoading } = useAccountOwnerId();
 
+  // Fetch profile using accountOwnerId for impersonation support
   useEffect(() => {
-    if (user) {
+    if (accountOwnerId && !accountOwnerLoading) {
       fetchProfile();
     }
-  }, [user]);
+  }, [accountOwnerId, accountOwnerLoading]);
 
   const fetchProfile = async () => {
-    if (!user) return;
+    if (!accountOwnerId) return;
 
     try {
+      // Fetch profile for the account owner (supports impersonation)
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', accountOwnerId)
         .maybeSingle();
 
       if (error) {
@@ -65,14 +71,14 @@ export function ProfileSettings() {
       if (data) {
         setProfile({
           display_name: data.display_name || '',
-          email: data.email || user.email || '',
+          email: data.email || user?.email || '',
           avatar_url: data.avatar_url || '',
         });
       } else {
         // Create profile if it doesn't exist
         setProfile({
           display_name: '',
-          email: user.email || '',
+          email: user?.email || '',
           avatar_url: '',
         });
       }
@@ -89,9 +95,9 @@ export function ProfileSettings() {
     }
   }, [loading, profile.display_name]);
 
-  // Auto-save display_name changes with 500ms debounce
+  // Auto-save display_name changes with 500ms debounce (only when not impersonating)
   useEffect(() => {
-    if (loading || !user || !initialProfile || !profile.display_name) return;
+    if (loading || !user || !initialProfile || !profile.display_name || isImpersonating) return;
     if (profile.display_name === initialProfile.display_name) return;
     
     // Clear existing timer
@@ -122,11 +128,11 @@ export function ProfileSettings() {
         clearTimeout(saveTimers.current.display_name);
       }
     };
-  }, [profile.display_name, loading, user, initialProfile]);
+  }, [profile.display_name, loading, user, initialProfile, isImpersonating]);
 
-  // Auto-save email changes with 500ms debounce
+  // Auto-save email changes with 500ms debounce (only when not impersonating)
   useEffect(() => {
-    if (loading || !user || !initialProfile || !profile.email) return;
+    if (loading || !user || !initialProfile || !profile.email || isImpersonating) return;
     if (profile.email === initialProfile.email) return;
     
     // Clear existing timer
@@ -157,10 +163,10 @@ export function ProfileSettings() {
         clearTimeout(saveTimers.current.email);
       }
     };
-  }, [profile.email, loading, user, initialProfile]);
+  }, [profile.email, loading, user, initialProfile, isImpersonating]);
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || isImpersonating) return;
     
     setUpdating(true);
     try {
@@ -206,6 +212,8 @@ export function ProfileSettings() {
   };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isImpersonating) return; // Block uploads when impersonating
+    
     const file = event.target.files?.[0];
     if (!file || !user) return;
     
@@ -295,7 +303,7 @@ export function ProfileSettings() {
     }
   };
 
-  if (loading) {
+  if (loading || accountOwnerLoading) {
     return (
       <div className="space-y-4">
         <SkeletonProfileCard />
@@ -304,8 +312,21 @@ export function ProfileSettings() {
     );
   }
 
+  // Read-only mode when impersonating
+  const isReadOnly = isImpersonating;
+
   return (
     <AnimatedList className="space-y-4" staggerDelay={0.1}>
+      {isReadOnly && (
+        <AnimatedItem>
+          <Alert variant="default" className="border-warning/50 bg-warning/10">
+            <AlertTriangle className="h-4 w-4 text-warning" />
+            <AlertDescription className="text-warning-foreground">
+              You are viewing this user's profile. Editing is disabled during impersonation.
+            </AlertDescription>
+          </Alert>
+        </AnimatedItem>
+      )}
       <AnimatedItem>
       <Card>
         <CardHeader>
@@ -317,8 +338,8 @@ export function ProfileSettings() {
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
             <div 
-              className="relative group cursor-pointer mx-auto sm:mx-0" 
-              onClick={() => !avatarUploading && avatarInputRef.current?.click()}
+              className={`relative group ${isReadOnly ? 'cursor-not-allowed' : 'cursor-pointer'} mx-auto sm:mx-0`}
+              onClick={() => !avatarUploading && !isReadOnly && avatarInputRef.current?.click()}
             >
               <Avatar className="h-16 w-16">
                 <AvatarImage src={profile.avatar_url} />
@@ -333,25 +354,27 @@ export function ProfileSettings() {
                 <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
                   <Spinner size="sm" className="text-white" />
                 </div>
-              ) : (
+              ) : !isReadOnly ? (
                 <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <Camera size={20} className="text-white" />
                 </div>
-              )}
+              ) : null}
               <input
                 ref={avatarInputRef}
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 onChange={handleAvatarUpload}
                 className="hidden"
+                disabled={isReadOnly}
               />
             </div>
             <div className="text-center sm:text-left">
-              <p className="text-sm text-muted-foreground">Click to upload new avatar</p>
-              <p className="text-xs text-muted-foreground/60">JPG, PNG, GIF up to 5MB</p>
+              <p className="text-sm text-muted-foreground">
+                {isReadOnly ? 'Avatar editing disabled during impersonation' : 'Click to upload new avatar'}
+              </p>
+              {!isReadOnly && <p className="text-xs text-muted-foreground/60">JPG, PNG, GIF up to 5MB</p>}
             </div>
           </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
               <Label htmlFor="display_name" className="text-xs">Display Name</Label>
@@ -359,7 +382,7 @@ export function ProfileSettings() {
                 id="display_name"
                 value={profile.display_name}
                 onChange={(e) => handleInputChange('display_name', e.target.value)}
-                disabled={updating}
+                disabled={updating || isReadOnly}
                 className="text-sm"
                 autoComplete="name"
               />
@@ -371,7 +394,7 @@ export function ProfileSettings() {
                 type="email"
                 value={profile.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={updating}
+                disabled={updating || isReadOnly}
                 className="text-sm"
                 autoComplete="email"
               />
