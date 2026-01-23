@@ -81,12 +81,52 @@ export function useAdminSearchData() {
         });
       });
 
-      // Fetch accounts if permitted
-      if (hasDataPermission('Accounts')) {
-        const { data: accounts } = await supabase
+      // Fetch pilot team members FIRST to exclude them from Accounts
+      let pilotUserIds: string[] = [];
+      
+      const { data: pilotTeamRoles } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('role', ['super_admin', 'pilot_support']);
+
+      if (pilotTeamRoles) {
+        pilotUserIds = pilotTeamRoles.map(m => m.user_id);
+      }
+
+      // Add Pilot Team results if permitted
+      if (hasDataPermission('Pilot Team') && pilotTeamRoles && pilotTeamRoles.length > 0) {
+        const { data: teamProfiles } = await supabase
           .from('profiles')
-          .select('user_id, display_name, email, company_name')
-          .limit(50);
+          .select('user_id, display_name, email')
+          .in('user_id', pilotUserIds);
+
+        if (teamProfiles) {
+          teamProfiles.forEach((profile) => {
+            const member = pilotTeamRoles.find(m => m.user_id === profile.user_id);
+            results.push({
+              id: `team-${profile.user_id}`,
+              title: profile.display_name || profile.email || 'Unknown',
+              description: member?.role === 'super_admin' ? 'Super Admin' : 'Pilot Support',
+              category: 'Pilot Team',
+              url: `/admin/team`,
+              iconName: 'UserGroup',
+            });
+          });
+        }
+      }
+
+      // Fetch accounts if permitted, EXCLUDING pilot team members
+      if (hasDataPermission('Accounts')) {
+        let query = supabase
+          .from('profiles')
+          .select('user_id, display_name, email, company_name');
+
+        // Exclude pilot team members from accounts
+        if (pilotUserIds.length > 0) {
+          query = query.not('user_id', 'in', `(${pilotUserIds.join(',')})`);
+        }
+
+        const { data: accounts } = await query.limit(50);
 
         if (accounts) {
           accounts.forEach((account) => {
@@ -99,36 +139,6 @@ export function useAdminSearchData() {
               iconName: 'User01',
             });
           });
-        }
-      }
-
-      // Fetch pilot team members if permitted
-      if (hasDataPermission('Pilot Team')) {
-        const { data: teamMembers } = await supabase
-          .from('user_roles')
-          .select('user_id, role')
-          .in('role', ['super_admin', 'pilot_support']);
-
-        if (teamMembers) {
-          const userIds = teamMembers.map(m => m.user_id);
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('user_id, display_name, email')
-            .in('user_id', userIds);
-
-          if (profiles) {
-            profiles.forEach((profile) => {
-              const member = teamMembers.find(m => m.user_id === profile.user_id);
-              results.push({
-                id: `team-${profile.user_id}`,
-                title: profile.display_name || profile.email || 'Unknown',
-                description: member?.role === 'super_admin' ? 'Super Admin' : 'Pilot Support',
-                category: 'Pilot Team',
-                url: `/admin/team`,
-                iconName: 'UserGroup',
-              });
-            });
-          }
         }
       }
 
