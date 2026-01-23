@@ -7,7 +7,7 @@
 export { useAdminAccounts } from './useAdminAccounts';
 export { useAccountDetail } from './useAccountDetail';
 export { useAccountActions } from './useAccountActions';
-export { usePlatformConfig } from './usePlatformConfig';
+
 export { useAdminPlans } from './useAdminPlans';
 export { useAdminSubscriptions } from './useAdminSubscriptions';
 export { useAdminTeam } from './useAdminTeam';
