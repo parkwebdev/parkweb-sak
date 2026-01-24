@@ -25,8 +25,7 @@ import { logger } from '@/utils/logger';
 import { PlanCard, type PlanData, FeatureComparisonTable } from '@/components/pricing';
 import { BillingToggle } from '@/components/pricing/BillingToggle';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from '@untitledui/icons';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 type Invoice = {
   id: string;
@@ -218,23 +217,18 @@ export const SubscriptionSettings = () => {
             ))}
           </div>
 
-          {/* Feature Comparison Table - Collapsible */}
+          {/* Feature Comparison Table - Accordion */}
           {plans && plans.length > 0 && (
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground">
-                  <span className="text-sm">Compare all features</span>
-                  <ChevronDown size={16} className="transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="pt-2">
-                <Card className="overflow-hidden">
-                  <CardContent className="p-0">
-                    <FeatureComparisonTable plans={plans} />
-                  </CardContent>
-                </Card>
-              </CollapsibleContent>
-            </Collapsible>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="compare-features" className="border-b-0">
+                <AccordionTrigger className="text-sm text-muted-foreground hover:text-foreground py-3">
+                  Compare all features
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <FeatureComparisonTable plans={plans} />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           )}
         </div>
       </TooltipProvider>
