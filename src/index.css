@@ -105,14 +105,21 @@
       rgba(255, 255, 255, 0.4) 50%,
       transparent 70%
     );
-    animation: badge-shine 3s ease-in-out infinite;
+    transform: translateX(-100%);
+    animation: badge-shine-sweep 3s ease-in-out infinite;
     animation-delay: 1s;
     pointer-events: none;
+  }
+
+  @keyframes badge-shine-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .badge-shine::after {
       animation: none;
+      transform: translateX(-100%);
     }
   }
 }
