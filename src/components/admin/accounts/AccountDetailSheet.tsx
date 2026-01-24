@@ -176,9 +176,7 @@ export function AccountDetailSheet({
 
   const handlePlanChange = (planId: string) => {
     if (!account) return;
-    // 'free' is a special value meaning no subscription
-    const newPlanId = planId === 'free' ? null : planId;
-    updatePlan.mutate({ userId: account.user_id, planId: newPlanId });
+    updatePlan.mutate({ userId: account.user_id, planId });
   };
 
   // Defer content mounting for smooth animation
@@ -289,15 +287,14 @@ export function AccountDetailSheet({
                     <span>Plan</span>
                   </div>
                   <Select 
-                    value={account.plan_id || 'free'} 
+                    value={account.plan_id || ''} 
                     onValueChange={handlePlanChange}
                     disabled={updatePlan.isPending}
                   >
                     <SelectTrigger className="w-[130px]" size="sm">
-                      <SelectValue />
+                      <SelectValue placeholder="No Plan" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="free">Free</SelectItem>
                       {plans.map(plan => (
                         <SelectItem key={plan.id} value={plan.id}>
                           {plan.name}

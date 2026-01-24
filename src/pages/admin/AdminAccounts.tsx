@@ -68,7 +68,7 @@ export function AdminAccounts() {
         email: a.email,
         company: a.company_name || '',
         status: a.status,
-        plan: a.plan_name || 'Free',
+        plan: a.plan_name || 'No Plan',
         role: a.role,
         created: format(new Date(a.created_at), 'yyyy-MM-dd'),
       })),
