@@ -91,7 +91,9 @@ export function AccountsTable({
       columnHelper.accessor('plan_name', {
         header: 'Plan',
         cell: ({ getValue }) => (
-          <span className="text-sm">{getValue() || 'Free'}</span>
+          <span className={getValue() ? "text-sm" : "text-sm text-muted-foreground"}>
+            {getValue() || 'No Plan'}
+          </span>
         ),
       }),
       columnHelper.accessor('created_at', {
