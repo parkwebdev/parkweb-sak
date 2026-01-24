@@ -155,7 +155,7 @@ export function PlanCard({
       )}
       {plan.name === 'Enterprise' && (
         <Badge 
-          className="absolute top-3 right-3 bg-warning text-white border-0 text-xs font-medium"
+          className="absolute top-3 right-3 bg-accent-orange text-white border-0 text-xs font-medium"
         >
           Complete Solution
         </Badge>
