@@ -32,6 +32,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSessions } from '@/hooks/useSessions';
 import { createSessionColumns } from '@/components/data-table/columns/sessions-columns';
 import { toast } from '@/lib/toast';
+import { useRegisterSettingsActions, SettingsSectionAction } from '@/contexts/SettingsSectionActionsContext';
 
 export function SessionsSection() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -54,6 +55,20 @@ export function SessionsSection() {
     revokeOthers, 
     isRevokingOthers 
   } = useSessions();
+
+  const hasOtherSessions = sessions.filter(s => !s.is_current).length > 0;
+
+  // Register TopBar action
+  const sectionActions = useMemo((): SettingsSectionAction[] => 
+    hasOtherSessions ? [{
+      id: 'remove-sessions',
+      label: 'Remove All Sessions',
+      onClick: () => setShowConfirmDialog(true),
+      disabled: isRevokingOthers,
+    }] : []
+  , [hasOtherSessions, isRevokingOthers]);
+
+  useRegisterSettingsActions('sessions', sectionActions);
 
   // Individual session revocation - show toast since not fully implemented
   const handleRevokeSession = (sessionId: string) => {
@@ -78,18 +93,13 @@ export function SessionsSection() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const hasOtherSessions = sessions.filter(s => !s.is_current).length > 0;
-
   if (isLoading) {
     return (
       <div className="space-y-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div className="space-y-1">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-4 w-64" />
-            </div>
-            <Skeleton className="h-9 w-40" />
+          <CardHeader>
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-64" />
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -144,24 +154,13 @@ export function SessionsSection() {
     <AnimatedList className="space-y-4" staggerDelay={0.1}>
       <AnimatedItem>
         <Card>
-          <CardHeader className="flex flex-row items-end justify-between space-y-0">
-            <div className="space-y-1">
+          <CardHeader>
             <CardTitle className="text-base font-semibold">
-                Active Sessions
-              </CardTitle>
-              <CardDescription className="text-sm">
-                Manage your active login sessions across devices
-              </CardDescription>
-            </div>
-            {hasOtherSessions && (
-              <Button
-                size="sm"
-                onClick={() => setShowConfirmDialog(true)}
-                disabled={isRevokingOthers}
-              >
-                Remove All Sessions
-              </Button>
-            )}
+              Active Sessions
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Manage your active login sessions across devices
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <DataTable
