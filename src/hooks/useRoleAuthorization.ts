@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 import type { DatabaseRole, AppPermission } from '@/types/team';
 import type { AdminPermission } from '@/types/admin';
@@ -75,6 +75,7 @@ interface RoleAuthData {
  */
 export const useRoleAuthorization = (): RoleAuthData => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['user-role', user?.id],
@@ -102,9 +103,30 @@ export const useRoleAuthorization = (): RoleAuthData => {
       }
     },
     enabled: !!user,
-    staleTime: 5 * 60 * 1000,  // 5 min - role rarely changes mid-session
-    gcTime: 10 * 60 * 1000,    // 10 min cache retention
+    staleTime: 30_000,        // 30 sec - allow quick invalidation from realtime
+    gcTime: 10 * 60 * 1000,   // 10 min cache retention
   });
+
+  // Real-time subscription for permission changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`user-role-changes-${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'user_roles',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['user-role', user.id] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   // Extract values from cached data
   const role = data?.role ?? null;
