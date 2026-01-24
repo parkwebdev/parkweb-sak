@@ -38,6 +38,14 @@ const FEATURE_HELP_PATHS: Record<string, string> = {
   scheduled_reports: '/help-center?category=analytics&article=report-builder',
 };
 
+// Category color mapping using semantic design tokens
+const CATEGORY_COLORS: Record<string, string> = {
+  Core: 'bg-info/10 text-info border-info/20',
+  Tools: 'bg-accent-purple/10 text-accent-purple border-accent-purple/20',
+  Knowledge: 'bg-warning/10 text-warning border-warning/20',
+  Analytics: 'bg-status-active/10 text-status-active border-status-active/20',
+};
+
 // Flatten PLAN_FEATURES into a single list with help paths
 const ALL_FEATURES: FeatureItem[] = PLAN_FEATURES.map(feature => ({
   key: feature.key,
@@ -70,7 +78,13 @@ function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boole
           )}>
             {feature.label}
           </span>
-          <Badge variant="outline" className="text-2xs shrink-0">
+          <Badge 
+            variant="outline" 
+            className={cn(
+              "text-2xs shrink-0 border",
+              CATEGORY_COLORS[feature.category] || 'bg-muted/10 text-muted-foreground'
+            )}
+          >
             {feature.category}
           </Badge>
         </div>
