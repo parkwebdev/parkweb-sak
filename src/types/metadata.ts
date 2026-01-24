@@ -365,8 +365,6 @@ export interface LeadData {
 export interface PlanLimits {
   /** Maximum conversations per billing period */
   max_conversations_per_month?: number;
-  /** Maximum API calls per billing period */
-  max_api_calls_per_month?: number;
   /** Maximum knowledge sources per account */
   max_knowledge_sources?: number;
   /** Maximum team members */

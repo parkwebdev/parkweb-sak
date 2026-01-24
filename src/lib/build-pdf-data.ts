@@ -174,7 +174,6 @@ export function buildPDFData(
       date: u.date,
       conversations: u.conversations,
       messages: u.messages,
-      api_calls: u.api_calls,
     })),
     agentPerformance: data.agentPerformance?.map(a => ({
       agent_name: a.agent_name,

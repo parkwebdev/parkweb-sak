@@ -109,7 +109,6 @@ export interface PlanLimits {
   max_conversations_per_month?: number;
   max_knowledge_sources?: number;
   max_team_members?: number;
-  max_api_calls_per_month?: number;
   max_webhooks?: number;
   [key: string]: number | undefined;
 }

@@ -43,7 +43,6 @@ import { AriNewsSection } from '@/components/agents/sections/AriNewsSection';
 import { AriCustomToolsSection } from '@/components/agents/sections/AriCustomToolsSection';
 import { AriWebhooksSection } from '@/components/agents/sections/AriWebhooksSection';
 import { AriIntegrationsSection } from '@/components/agents/sections/AriIntegrationsSection';
-import { AriApiAccessSection } from '@/components/agents/sections/AriApiAccessSection';
 import { AriInstallationSection } from '@/components/agents/sections/AriInstallationSection';
 import { SectionErrorBoundary } from '@/components/agents/sections/SectionErrorBoundary';
 type Agent = Tables<'agents'>;
@@ -298,8 +297,6 @@ function AriConfiguratorContent() {
           return <AriWebhooksSection agentId={agent.id} />;
         case 'integrations':
           return <AriIntegrationsSection agentId={agent.id} />;
-        case 'api-access':
-          return <AriApiAccessSection agentId={agent.id} />;
         case 'installation':
           return <AriInstallationSection agentId={agent.id} />;
         default:

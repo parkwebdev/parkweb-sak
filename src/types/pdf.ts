@@ -239,7 +239,6 @@ export interface PDFData {
     date: string;
     conversations: number;
     messages: number;
-    api_calls: number;
   }>;
   /** Agent performance breakdown */
   agentPerformance?: Array<{

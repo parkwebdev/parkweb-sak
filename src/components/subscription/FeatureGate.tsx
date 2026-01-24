@@ -8,7 +8,7 @@ import { UpgradePrompt } from './UpgradePrompt';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type FeatureType = 
-  | 'widget' | 'api' | 'webhooks'
+  | 'widget' | 'webhooks'
   | 'custom_tools' | 'integrations'
   | 'knowledge_sources' | 'locations' | 'calendar_booking'
   | 'advanced_analytics' | 'report_builder' | 'scheduled_reports';
