@@ -5,6 +5,7 @@
 
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAnimatedCounter } from '@/hooks/useAnimatedCounter';
 import type { PlanLimits, CurrentUsage } from '@/hooks/usePlanLimits';
 
 interface UsageMetricsGridProps {
@@ -17,11 +18,15 @@ interface MetricBlockProps {
   label: string;
   current: number;
   limit: number | null | undefined;
+  delay?: number;
 }
 
-function MetricBlock({ label, current, limit }: MetricBlockProps) {
+function MetricBlock({ label, current, limit, delay = 0 }: MetricBlockProps) {
+  const animatedValue = useAnimatedCounter(current, { duration: 800, delay });
+  
   const isUnlimited = limit === undefined || limit === null;
   const percentage = isUnlimited ? 0 : (current / limit) * 100;
+  const animatedPercentage = isUnlimited ? 0 : (animatedValue / limit) * 100;
   const isNearLimit = !isUnlimited && percentage >= 80;
   const isAtLimit = !isUnlimited && percentage >= 100;
 
@@ -32,20 +37,20 @@ function MetricBlock({ label, current, limit }: MetricBlockProps) {
         <span className={`text-2xl font-semibold tabular-nums ${
           isAtLimit ? 'text-destructive' : isNearLimit ? 'text-warning' : 'text-foreground'
         }`}>
-          {current.toLocaleString()}
+          {animatedValue.toLocaleString()}
         </span>
         <span className="text-muted-foreground text-sm">
           / {isUnlimited ? '∞' : limit.toLocaleString()}
         </span>
       </div>
       <Progress 
-        value={isUnlimited ? 0 : Math.min(percentage, 100)} 
+        value={isUnlimited ? 0 : Math.min(animatedPercentage, 100)} 
         variant={isAtLimit ? 'destructive' : isNearLimit ? 'warning' : 'success'}
         className="h-1.5"
       />
       {!isUnlimited && (
         <p className="text-xs text-muted-foreground tabular-nums">
-          {percentage.toFixed(0)}% used
+          {animatedPercentage.toFixed(0)}% used
         </p>
       )}
     </div>
@@ -96,8 +101,8 @@ export function UsageMetricsGrid({ usage, limits, loading }: UsageMetricsGridPro
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-      {metrics.map((metric) => (
-        <MetricBlock key={metric.label} {...metric} />
+      {metrics.map((metric, index) => (
+        <MetricBlock key={metric.label} {...metric} delay={index * 100} />
       ))}
     </div>
   );
