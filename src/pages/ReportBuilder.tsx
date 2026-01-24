@@ -24,6 +24,8 @@ import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { isValidEmail } from '@/utils/validation';
 import { downloadFile } from '@/lib/file-download';
 import { toast } from '@/lib/toast';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { UpgradePrompt } from '@/components/subscription';
 import { logger } from '@/utils/logger';
 import type { PDFConfig, ReportType } from '@/types/pdf';
 import { 
@@ -71,6 +73,16 @@ export default function ReportBuilder() {
   const prefersReducedMotion = useReducedMotion();
   const { createExport } = useReportExports();
   const { createReport } = useScheduledReports();
+  const { canUseReportBuilder, loading: planLoading } = usePlanLimits();
+
+  // Check feature access
+  if (!planLoading && !canUseReportBuilder()) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <UpgradePrompt feature="report_builder" className="max-w-md" />
+      </div>
+    );
+  }
 
   // === Step Management ===
   const [step, setStep] = useState<Step>('configure');

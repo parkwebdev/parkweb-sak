@@ -80,12 +80,24 @@ export interface AdminPlan {
 
 /**
  * Plan features - matches actual database keys.
- * Only includes features that are actually implemented and enforced.
+ * All 11 gated features for subscription plans.
  */
 export interface PlanFeatures {
+  // Core
   widget?: boolean;
   api?: boolean;
   webhooks?: boolean;
+  // Tools
+  custom_tools?: boolean;
+  integrations?: boolean;
+  // Knowledge & Locations
+  knowledge_sources?: boolean;
+  locations?: boolean;
+  calendar_booking?: boolean;
+  // Analytics & Reporting
+  advanced_analytics?: boolean;
+  report_builder?: boolean;
+  scheduled_reports?: boolean;
   [key: string]: boolean | undefined;
 }
 

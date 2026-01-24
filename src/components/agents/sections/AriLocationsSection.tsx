@@ -11,6 +11,8 @@ import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel,
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { FeatureGate } from '@/components/subscription';
 import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { Trash01, XClose, X, FilterLines, AlertTriangle, Home01 } from '@untitledui/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -57,6 +59,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const { agent, refetch: refetchAgent } = useAgent();
   const { accounts } = useConnectedAccounts(undefined, agentId);
   const canManageLocations = useCanManage('manage_ari');
+  const { canUseLocations } = usePlanLimits();
 
   // View mode toggle
   const [viewMode, setViewMode] = useState<ViewMode>('communities');
@@ -408,10 +411,11 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const table = viewMode === 'communities' ? locationsTable : propertiesTable;
   const selectedCount = Object.keys(rowSelection).length;
 
-  // Register actions for TopBar
+  // Register actions for TopBar - only if feature is enabled
   const sectionActions: SectionAction[] = useMemo(() => {
-    const actions: SectionAction[] = [];
+    if (!canUseLocations()) return [];
     
+    const actions: SectionAction[] = [];
     // WordPress integration button
     actions.push({
       id: 'wordpress-integration',
@@ -431,7 +435,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
     }
     
     return actions;
-  }, [viewMode, canManageLocations, isWordPressConnected]);
+  }, [viewMode, canManageLocations, canUseLocations, isWordPressConnected]);
   
   useRegisterSectionActions('locations', sectionActions);
 
@@ -638,11 +642,12 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   );
 
   return (
-    <div>
-      <AriSectionHeader
-        title="Locations"
-        description="Manage communities, properties, and business configuration"
-      />
+    <FeatureGate feature="locations" loadingSkeleton={<SkeletonTableSection rows={5} />}>
+      <div>
+        <AriSectionHeader
+          title="Locations"
+          description="Manage communities, properties, and business configuration"
+        />
 
       <div className="space-y-4">
         {/* Validation Warning Banner - Properties View */}
@@ -859,6 +864,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
           onOpenChange={setWordPressSheetOpen}
         />
       </div>
-    </div>
+      </div>
+    </FeatureGate>
   );
-};
+}

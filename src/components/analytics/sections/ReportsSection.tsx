@@ -12,6 +12,7 @@ import { ExportHistoryTable } from '@/components/analytics/ExportHistoryTable';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import { FeatureGate } from '@/components/subscription';
 
 interface ReportsSectionProps {
   /** Loading state for consistency with other section components */
@@ -26,7 +27,9 @@ export function ReportsSection({ loading }: ReportsSectionProps) {
           <ExportHistoryTable loading={loading} />
         </AnimatedItem>
         <AnimatedItem>
-          <ScheduledReportsManager loading={loading} />
+          <FeatureGate feature="scheduled_reports">
+            <ScheduledReportsManager loading={loading} />
+          </FeatureGate>
         </AnimatedItem>
       </AnimatedList>
     </div>

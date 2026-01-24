@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { FeatureGate } from '@/components/subscription';
 import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trash01, Link03, Edit03, PlayCircle, ChevronDown, Lightbulb02, Code01 } from '@untitledui/icons';
@@ -52,6 +54,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
   const [tools, setTools] = useState<AgentTool[]>([]);
   const [loading, setLoading] = useState(true);
   const canManageTools = useCanManage('manage_ari');
+  const { canUseCustomTools } = usePlanLimits();
   
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -267,10 +270,11 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
     });
   };
 
-  // Register actions for TopBar
+  // Register actions for TopBar - only if feature is enabled
   const sectionActions: SectionAction[] = useMemo(() => {
-    const actions: SectionAction[] = [];
+    if (!canUseCustomTools()) return [];
     
+    const actions: SectionAction[] = [];
     if (canManageTools) {
       actions.push({
         id: 'add-tool',
@@ -297,7 +301,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
     });
     
     return actions;
-  }, [canManageTools]);
+  }, [canManageTools, canUseCustomTools]);
   
   useRegisterSectionActions('custom-tools', sectionActions);
 
@@ -306,11 +310,12 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
   }
 
   return (
-    <div>
-      <AriSectionHeader
-        title="Custom Tools"
-        description="Add custom tools that extend Ari's capabilities with external APIs"
-      />
+    <FeatureGate feature="custom_tools" loadingSkeleton={<SkeletonListSection items={3} />}>
+      <div>
+        <AriSectionHeader
+          title="Custom Tools"
+          description="Add custom tools that extend Ari's capabilities with external APIs"
+        />
 
       <div className="space-y-4">
         {/* Tools List */}
@@ -466,6 +471,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
         open={showUseCasesModal}
         onOpenChange={setShowUseCasesModal}
       />
-    </div>
+      </div>
+    </FeatureGate>
   );
-};
+}
