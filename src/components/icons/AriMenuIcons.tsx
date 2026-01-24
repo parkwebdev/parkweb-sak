@@ -420,7 +420,7 @@ export function DataFlowFilled({ size = 24, className }: IconProps) {
 }
 
 /**
- * Key filled icon (active state for API Access)
+ * Key filled icon
  */
 export function KeyFilled({ size = 24, className }: IconProps) {
   return (
