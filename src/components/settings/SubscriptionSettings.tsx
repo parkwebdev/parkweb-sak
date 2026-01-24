@@ -219,12 +219,12 @@ export const SubscriptionSettings = () => {
 
           {/* Feature Comparison Table - Accordion */}
           {plans && plans.length > 0 && (
-            <Accordion type="single" collapsible>
-              <AccordionItem value="compare-features" className="border-b-0">
+            <Accordion type="single" collapsible className="bg-transparent border-0 px-0">
+              <AccordionItem value="compare-features" className="border-0">
                 <AccordionTrigger className="text-sm text-muted-foreground hover:text-foreground py-3">
                   Compare all features
                 </AccordionTrigger>
-                <AccordionContent className="pb-4">
+                <AccordionContent className="pb-0">
                   <div className="rounded-lg border bg-card overflow-hidden">
                     <FeatureComparisonTable plans={plans} />
                   </div>
