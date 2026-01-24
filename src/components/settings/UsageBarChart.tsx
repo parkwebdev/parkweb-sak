@@ -62,7 +62,7 @@ export function UsageBarChart({ usage, limits, loading }: UsageBarChartProps) {
       current: usage.conversations_this_month,
       limit: limits.max_conversations_per_month,
       description: 'Total chat conversations initiated with your AI agent this billing period. Resets monthly.',
-      helpCenterPath: '/help-center/getting-started/conversations',
+      helpCenterPath: '/help-center?category=settings&article=usage',
     },
     {
       key: 'knowledge_sources',
@@ -70,7 +70,7 @@ export function UsageBarChart({ usage, limits, loading }: UsageBarChartProps) {
       current: usage.knowledge_sources,
       limit: limits.max_knowledge_sources,
       description: 'Documents, URLs, and files your agent uses to answer questions accurately.',
-      helpCenterPath: '/help-center/getting-started/knowledge-sources',
+      helpCenterPath: '/help-center?category=ari&article=knowledge-sources',
     },
     {
       key: 'team_members',
@@ -78,7 +78,7 @@ export function UsageBarChart({ usage, limits, loading }: UsageBarChartProps) {
       current: usage.team_members,
       limit: limits.max_team_members,
       description: 'Users with access to your account. Includes admins and team members.',
-      helpCenterPath: '/help-center/getting-started/team-management',
+      helpCenterPath: '/help-center?category=settings&article=team',
     },
   ];
 
