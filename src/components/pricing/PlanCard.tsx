@@ -135,16 +135,18 @@ export function PlanCard({
         )}
       </Button>
 
-      {/* Previous Plan Reference */}
-      {previousPlan && (
-        <p className="text-sm text-muted-foreground mb-3">
-          Everything in "{previousPlan.name}" +
-        </p>
-      )}
+      {/* Previous Plan Reference - fixed height for alignment */}
+      <div className="h-6 mb-4">
+        {previousPlan && (
+          <p className="text-sm text-muted-foreground">
+            Everything in "{previousPlan.name}" +
+          </p>
+        )}
+      </div>
 
       {/* Limits */}
       {limits.length > 0 && (
-        <div className="space-y-2 mb-4">
+        <div className="space-y-3 mb-4">
           {limits.map(({ key, label, value }) => (
             <div key={key} className="flex items-center gap-2 text-sm">
               <Check size={14} className="text-success shrink-0" aria-hidden="true" />
@@ -158,7 +160,7 @@ export function PlanCard({
 
       {/* Features - Only show enabled features new in this tier */}
       {enabledFeatures.length > 0 && (
-        <div className="space-y-2 flex-1">
+        <div className="space-y-3 flex-1">
           {enabledFeatures.map(({ key, label }) => (
             <div key={key} className="flex items-center gap-2 text-sm">
               <Check size={14} className="text-success shrink-0" aria-hidden="true" />
