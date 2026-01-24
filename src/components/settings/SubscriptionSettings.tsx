@@ -50,6 +50,7 @@ async function fetchPlans(): Promise<PlanData[]> {
     .select(`
       id,
       name,
+      description,
       price_monthly,
       price_yearly,
       stripe_price_id_monthly,
@@ -68,6 +69,7 @@ async function fetchPlans(): Promise<PlanData[]> {
   return (data || []).map(plan => ({
     id: plan.id,
     name: plan.name,
+    description: plan.description || undefined,
     price_monthly: plan.price_monthly,
     price_yearly: plan.price_yearly,
     stripe_price_id_monthly: plan.stripe_price_id_monthly,
