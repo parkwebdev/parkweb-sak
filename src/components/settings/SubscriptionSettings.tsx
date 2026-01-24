@@ -194,8 +194,8 @@ export const SubscriptionSettings = () => {
         </div>
       </div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border border rounded-lg bg-card">
+      {/* Plans Grid - adapts to number of plans */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${plans && plans.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} divide-y md:divide-y-0 md:divide-x divide-border border rounded-lg bg-card`}>
         {plans?.map((plan) => (
           <PlanCard
             key={plan.id}
