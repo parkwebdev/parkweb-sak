@@ -1,11 +1,19 @@
 /**
  * @fileoverview Features grid displaying plan features in a row-based list.
  * Shows enabled/disabled features with check/x icons, inline descriptions, and category badges.
+ * Includes a category filter dropdown with colored dots.
  */
 
-import { X } from '@untitledui/icons';
+import { X, ChevronDown } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { PLAN_FEATURES } from '@/lib/plan-config';
@@ -14,6 +22,8 @@ import type { PlanFeatures } from '@/hooks/usePlanLimits';
 interface FeaturesGridProps {
   features: PlanFeatures | null;
   loading?: boolean;
+  activeCategory: string | null;
+  onCategoryChange: (category: string | null) => void;
 }
 
 interface FeatureItem {
@@ -38,13 +48,23 @@ const FEATURE_HELP_PATHS: Record<string, string> = {
   scheduled_reports: '/help-center?category=analytics&article=report-builder',
 };
 
-// Category color mapping using semantic design tokens
+// Category color mapping using semantic design tokens (for badges)
 const CATEGORY_COLORS: Record<string, string> = {
   Core: 'bg-info/10 text-info border-info/20',
   Tools: 'bg-accent-purple/10 text-accent-purple border-accent-purple/20',
   Knowledge: 'bg-warning/10 text-warning border-warning/20',
   Analytics: 'bg-status-active/10 text-status-active border-status-active/20',
 };
+
+// Category dot colors for dropdown
+const CATEGORY_DOT_COLORS: Record<string, string> = {
+  Core: 'bg-info',
+  Tools: 'bg-accent-purple',
+  Knowledge: 'bg-warning',
+  Analytics: 'bg-status-active',
+};
+
+const FEATURE_CATEGORIES = ['Core', 'Tools', 'Knowledge', 'Analytics'];
 
 // Flatten PLAN_FEATURES into a single list with help paths
 const ALL_FEATURES: FeatureItem[] = PLAN_FEATURES.map(feature => ({
@@ -54,6 +74,55 @@ const ALL_FEATURES: FeatureItem[] = PLAN_FEATURES.map(feature => ({
   category: feature.category,
   helpCenterPath: FEATURE_HELP_PATHS[feature.key],
 }));
+
+/** Category filter dropdown with colored dots */
+export function FeatureCategoryDropdown({
+  activeCategory,
+  onCategoryChange,
+}: {
+  activeCategory: string | null;
+  onCategoryChange: (category: string | null) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2">
+          {activeCategory && (
+            <span 
+              className={cn("w-2 h-2 rounded-full", CATEGORY_DOT_COLORS[activeCategory])}
+              aria-hidden="true"
+            />
+          )}
+          {activeCategory || 'All Categories'}
+          <ChevronDown size={14} aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="bottom" align="end" sideOffset={4} className="min-w-[160px]">
+        <DropdownMenuItem
+          onClick={() => onCategoryChange(null)}
+          className={cn("gap-2", !activeCategory && "bg-accent")}
+        >
+          <span className="w-2 h-2" aria-hidden="true" />
+          All Categories
+        </DropdownMenuItem>
+        
+        {FEATURE_CATEGORIES.map(category => (
+          <DropdownMenuItem
+            key={category}
+            onClick={() => onCategoryChange(category)}
+            className={cn("gap-2", category === activeCategory && "bg-accent")}
+          >
+            <span 
+              className={cn("w-2 h-2 rounded-full", CATEGORY_DOT_COLORS[category])}
+              aria-hidden="true"
+            />
+            {category}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boolean }) {
   return (
@@ -119,7 +188,12 @@ function FeatureRowSkeleton() {
   );
 }
 
-export function FeaturesGrid({ features, loading }: FeaturesGridProps) {
+export function FeaturesGrid({ features, loading, activeCategory }: FeaturesGridProps) {
+  // Filter features by category
+  const filteredFeatures = activeCategory
+    ? ALL_FEATURES.filter(f => f.category === activeCategory)
+    : ALL_FEATURES;
+
   if (loading) {
     return (
       <div className="divide-y divide-border">
@@ -134,7 +208,7 @@ export function FeaturesGrid({ features, loading }: FeaturesGridProps) {
 
   return (
     <div className="divide-y divide-border">
-      {ALL_FEATURES.map((feature) => (
+      {filteredFeatures.map((feature) => (
         <FeatureRow
           key={feature.key}
           feature={feature}
