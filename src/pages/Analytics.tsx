@@ -19,6 +19,8 @@ import { SECTION_INFO, TOOLBAR_SECTIONS } from '@/lib/analytics-constants';
 import { AnalyticsDatePreset, getDateRangeFromPreset } from '@/components/analytics/constants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { getNavigationIcon } from '@/lib/navigation-icons';
+import { FeatureGate } from '@/components/subscription';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import {
   ConversationsSection,
@@ -107,102 +109,113 @@ function Analytics() {
   useTopBar(topBarConfig, 'analytics');
 
   return (
-    <div className="flex-1 h-full bg-muted/30 flex min-h-0">
-      <AnalyticsSectionMenu activeSection={activeTab} onSectionChange={setActiveTab} />
-      
-      <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
-        <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
-          {/* Section header */}
-          <div>
-            <h1 className="text-2xl font-bold">{SECTION_INFO[activeTab].title}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{SECTION_INFO[activeTab].description}</p>
-          </div>
-
-          {/* Sections */}
-          {activeTab === 'conversations' && (
-            <ConversationsSection
-              conversationStats={data.conversationStats}
-              funnelStages={data.funnelStages}
-              conversationTrendValue={data.conversationTrendValue}
-              loading={data.loading}
-              funnelLoading={data.funnelLoading}
-            />
-          )}
-
-          {activeTab === 'leads' && (
-            <LeadsSection
-              totalLeads={data.totalLeads}
-              conversionRate={data.conversionRate}
-              leadChartData={data.leadChartData}
-              conversionChartData={data.conversionChartData}
-              leadStats={data.leadStats}
-              leadChange={data.calculatePeriodChange(data.leadTrend)}
-              conversionChange={data.calculatePointChange(data.conversionTrend)}
-              leadTrendValue={data.leadTrendValue}
-              loading={data.loading}
-            />
-          )}
-
-          {activeTab === 'bookings' && (
-            <BookingsSection
-              totalBookings={data.totalBookings}
-              bookingChartData={data.bookingChartData}
-              bookingChange={data.calculatePeriodChange(data.bookingTrend)}
-              bookingsByLocation={data.bookingStats?.byLocation ?? []}
-              bookingTrendData={data.bookingStats?.trend ?? []}
-              bookingTrendValue={data.bookingTrendValue}
-              loading={data.bookingLoading}
-            />
-          )}
-
-          {activeTab === 'ai-performance' && (
-            <AIPerformanceSection
-              containmentRate={data.aiPerformanceStats?.containmentRate ?? 0}
-              resolutionRate={data.aiPerformanceStats?.resolutionRate ?? 0}
-              totalConversations={data.aiPerformanceStats?.totalConversations ?? 0}
-              humanTakeover={data.aiPerformanceStats?.humanTakeover ?? 0}
-              csatDistribution={data.satisfactionStats?.distribution ?? []}
-              averageRating={data.satisfactionStats?.averageRating ?? 0}
-              totalRatings={data.satisfactionStats?.totalRatings ?? 0}
-              recentFeedback={data.satisfactionStats?.recentFeedback ?? []}
-              aiContainmentTrendValue={data.aiContainmentTrendValue ?? 0}
-              aiPerformanceLoading={data.aiPerformanceLoading ?? false}
-              satisfactionLoading={data.satisfactionLoading}
-            />
-          )}
-
-          {activeTab === 'sources' && (
-            <SourcesSection
-              trafficSources={data.trafficSources}
-              sourcesByDate={data.sourcesByDate}
-              leadsBySource={data.leadsBySource}
-              engagement={data.engagement}
-              comparisonMode={false}
-              trafficLoading={data.trafficLoading}
-              comparisonTrafficLoading={false}
-            />
-          )}
-
-          {activeTab === 'pages' && data.engagement && (
-            <PagesSection
-              engagement={data.engagement}
-              landingPages={data.landingPages}
-              pageDepthDistribution={data.pageDepthDistribution}
-              trafficLoading={data.trafficLoading}
-            />
-          )}
-
-          {activeTab === 'geography' && (
-            <GeographySection
-              locationData={data.locationData}
-              trafficLoading={data.trafficLoading}
-            />
-          )}
-
-          {activeTab === 'reports' && <ReportsSection />}
+    <FeatureGate
+      feature="advanced_analytics"
+      loadingSkeleton={
+        <div className="flex-1 h-full bg-muted/30 p-8 space-y-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-32 w-full" />
         </div>
-      </main>
-    </div>
+      }
+    >
+      <div className="flex-1 h-full bg-muted/30 flex min-h-0">
+        <AnalyticsSectionMenu activeSection={activeTab} onSectionChange={setActiveTab} />
+        
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
+          <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
+            {/* Section header */}
+            <div>
+              <h1 className="text-2xl font-bold">{SECTION_INFO[activeTab].title}</h1>
+              <p className="text-sm text-muted-foreground mt-1">{SECTION_INFO[activeTab].description}</p>
+            </div>
+
+            {/* Sections */}
+            {activeTab === 'conversations' && (
+              <ConversationsSection
+                conversationStats={data.conversationStats}
+                funnelStages={data.funnelStages}
+                conversationTrendValue={data.conversationTrendValue}
+                loading={data.loading}
+                funnelLoading={data.funnelLoading}
+              />
+            )}
+
+            {activeTab === 'leads' && (
+              <LeadsSection
+                totalLeads={data.totalLeads}
+                conversionRate={data.conversionRate}
+                leadChartData={data.leadChartData}
+                conversionChartData={data.conversionChartData}
+                leadStats={data.leadStats}
+                leadChange={data.calculatePeriodChange(data.leadTrend)}
+                conversionChange={data.calculatePointChange(data.conversionTrend)}
+                leadTrendValue={data.leadTrendValue}
+                loading={data.loading}
+              />
+            )}
+
+            {activeTab === 'bookings' && (
+              <BookingsSection
+                totalBookings={data.totalBookings}
+                bookingChartData={data.bookingChartData}
+                bookingChange={data.calculatePeriodChange(data.bookingTrend)}
+                bookingsByLocation={data.bookingStats?.byLocation ?? []}
+                bookingTrendData={data.bookingStats?.trend ?? []}
+                bookingTrendValue={data.bookingTrendValue}
+                loading={data.bookingLoading}
+              />
+            )}
+
+            {activeTab === 'ai-performance' && (
+              <AIPerformanceSection
+                containmentRate={data.aiPerformanceStats?.containmentRate ?? 0}
+                resolutionRate={data.aiPerformanceStats?.resolutionRate ?? 0}
+                totalConversations={data.aiPerformanceStats?.totalConversations ?? 0}
+                humanTakeover={data.aiPerformanceStats?.humanTakeover ?? 0}
+                csatDistribution={data.satisfactionStats?.distribution ?? []}
+                averageRating={data.satisfactionStats?.averageRating ?? 0}
+                totalRatings={data.satisfactionStats?.totalRatings ?? 0}
+                recentFeedback={data.satisfactionStats?.recentFeedback ?? []}
+                aiContainmentTrendValue={data.aiContainmentTrendValue ?? 0}
+                aiPerformanceLoading={data.aiPerformanceLoading ?? false}
+                satisfactionLoading={data.satisfactionLoading}
+              />
+            )}
+
+            {activeTab === 'sources' && (
+              <SourcesSection
+                trafficSources={data.trafficSources}
+                sourcesByDate={data.sourcesByDate}
+                leadsBySource={data.leadsBySource}
+                engagement={data.engagement}
+                comparisonMode={false}
+                trafficLoading={data.trafficLoading}
+                comparisonTrafficLoading={false}
+              />
+            )}
+
+            {activeTab === 'pages' && data.engagement && (
+              <PagesSection
+                engagement={data.engagement}
+                landingPages={data.landingPages}
+                pageDepthDistribution={data.pageDepthDistribution}
+                trafficLoading={data.trafficLoading}
+              />
+            )}
+
+            {activeTab === 'geography' && (
+              <GeographySection
+                locationData={data.locationData}
+                trafficLoading={data.trafficLoading}
+              />
+            )}
+
+            {activeTab === 'reports' && <ReportsSection />}
+          </div>
+        </main>
+      </div>
+    </FeatureGate>
   );
 }
 

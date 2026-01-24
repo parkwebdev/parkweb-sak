@@ -37,6 +37,8 @@ import {
   parseCalendarSyncError 
 } from '@/lib/calendar-sync-utils';
 import { cn } from '@/lib/utils';
+import { FeatureGate } from '@/components/subscription';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CalendarConnectionsProps {
   locationId?: string; // Optional - if undefined, connects at agent level
@@ -233,57 +235,67 @@ export function CalendarConnections({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Connected Accounts */}
-      {accounts.length > 0 && (
-        <div className="space-y-2">
-          {accounts.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              onDisconnect={setDisconnectId}
-              onRefetch={refetch}
-            />
-          ))}
+    <FeatureGate 
+      feature="calendar_booking"
+      loadingSkeleton={
+        <div className="space-y-3">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-9 w-48" />
         </div>
-      )}
+      }
+    >
+      <div className="space-y-4">
+        {/* Connected Accounts */}
+        {accounts.length > 0 && (
+          <div className="space-y-2">
+            {accounts.map((account) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                onDisconnect={setDisconnectId}
+                onRefetch={refetch}
+              />
+            ))}
+          </div>
+        )}
 
-      {accounts.length > 0 && <Separator />}
+        {accounts.length > 0 && <Separator />}
 
-      {/* Connect Buttons */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => initiateOAuth('google')}
-          disabled={!!connecting}
-        >
-          <GoogleCalendarLogo className="w-4 h-4 mr-2" />
-          {connecting === 'google' ? 'Connecting...' : 'Connect Google Calendar'}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => initiateOAuth('outlook')}
-          disabled={!!connecting}
-        >
-          <MicrosoftOutlookLogo className="w-4 h-4 mr-2" />
-          {connecting === 'outlook' ? 'Connecting...' : 'Connect Outlook Calendar'}
-        </Button>
+        {/* Connect Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => initiateOAuth('google')}
+            disabled={!!connecting}
+          >
+            <GoogleCalendarLogo className="w-4 h-4 mr-2" />
+            {connecting === 'google' ? 'Connecting...' : 'Connect Google Calendar'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => initiateOAuth('outlook')}
+            disabled={!!connecting}
+          >
+            <MicrosoftOutlookLogo className="w-4 h-4 mr-2" />
+            {connecting === 'outlook' ? 'Connecting...' : 'Connect Outlook Calendar'}
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Connected calendars sync appointments in real-time and enable booking through Ari.
+        </p>
+
+        <DeleteConfirmationDialog
+          open={!!disconnectId}
+          onOpenChange={(open: boolean) => !open && setDisconnectId(null)}
+          title="Disconnect Calendar"
+          description={`Are you sure you want to disconnect "${accountToDisconnect?.account_email}"? Synced events will remain but new events won't be created.`}
+          onConfirm={handleDisconnect}
+          actionLabel="Disconnect"
+        />
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        Connected calendars sync appointments in real-time and enable booking through Ari.
-      </p>
-
-      <DeleteConfirmationDialog
-        open={!!disconnectId}
-        onOpenChange={(open: boolean) => !open && setDisconnectId(null)}
-        title="Disconnect Calendar"
-        description={`Are you sure you want to disconnect "${accountToDisconnect?.account_email}"? Synced events will remain but new events won't be created.`}
-        onConfirm={handleDisconnect}
-        actionLabel="Disconnect"
-      />
-    </div>
+    </FeatureGate>
   );
 }
