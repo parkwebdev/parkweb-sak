@@ -14,15 +14,15 @@ import { springs } from '@/lib/motion-variants';
 import { type RevenueSection } from '@/lib/admin/revenue-constants';
 import {
   LayoutAlt01,
-  TrendUp01,
-  CreditCard02,
+  PieChart01,
+  CreditCard01,
   TrendDown01,
   Users01,
 } from '@untitledui/icons';
+import { AnalyticsFilled } from '@/components/icons/SidebarIcons';
+import { OverviewFilled as AdminOverviewFilled } from '@/components/icons/AdminSidebarIcons';
+import { CreditCardIconFilled } from '@/components/ui/settings-icon';
 import {
-  OverviewFilled,
-  MRRFilled,
-  SubscriptionsFilled,
   ChurnFilled,
   AccountsFilled,
 } from './RevenueSectionIcons';
@@ -37,11 +37,11 @@ interface SectionItem {
 
 const SECTIONS: SectionItem[] = [
   // Summary
-  { id: 'overview', label: 'Overview', icon: LayoutAlt01, activeIcon: OverviewFilled, group: 'Summary' },
+  { id: 'overview', label: 'Overview', icon: LayoutAlt01, activeIcon: AdminOverviewFilled, group: 'Summary' },
   
   // Revenue
-  { id: 'mrr-breakdown', label: 'MRR Breakdown', icon: TrendUp01, activeIcon: MRRFilled, group: 'Revenue' },
-  { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard02, activeIcon: SubscriptionsFilled, group: 'Revenue' },
+  { id: 'mrr-breakdown', label: 'MRR Breakdown', icon: PieChart01, activeIcon: AnalyticsFilled, group: 'Revenue' },
+  { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard01, activeIcon: CreditCardIconFilled, group: 'Revenue' },
   
   // Retention
   { id: 'churn', label: 'Churn Analysis', icon: TrendDown01, activeIcon: ChurnFilled, group: 'Retention' },
