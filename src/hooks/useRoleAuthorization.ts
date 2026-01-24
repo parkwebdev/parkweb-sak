@@ -61,10 +61,6 @@ interface RoleAuthData {
   canViewWebhooks: boolean;
   canManageWebhooks: boolean;
   
-  // Permission checks - API Keys
-  canViewApiKeys: boolean;
-  canManageApiKeys: boolean;
-  
   // Generic permission checkers
   hasPermission: (permission: AppPermission) => boolean;
   hasAdminPermission: (permission: AdminPermission) => boolean;
@@ -177,10 +173,6 @@ export const useRoleAuthorization = (): RoleAuthData => {
   const canViewWebhooks = hasPermission('view_webhooks');
   const canManageWebhooks = hasPermission('manage_webhooks');
 
-  // API Keys
-  const canViewApiKeys = hasPermission('view_api_keys');
-  const canManageApiKeys = hasPermission('manage_api_keys');
-
   return {
     role,
     permissions,
@@ -215,8 +207,6 @@ export const useRoleAuthorization = (): RoleAuthData => {
     canManageIntegrations,
     canViewWebhooks,
     canManageWebhooks,
-    canViewApiKeys,
-    canManageApiKeys,
     
     // Generic checkers
     hasPermission,

@@ -281,7 +281,6 @@ export const ARI_SECTIONS: readonly AriSectionConfig[] = [
   { id: 'custom-tools', label: 'Custom Tools', group: 'Tools', requiredPermission: 'manage_ari', iconName: 'CodeBrowser', activeIconName: 'CodeBrowserFilled' },
   { id: 'webhooks', label: 'Webhooks', group: 'Tools', requiredPermission: 'manage_webhooks', iconName: 'Webhook', activeIconName: 'WebhookFilled' },
   { id: 'integrations', label: 'Integrations', group: 'Tools', requiredPermission: 'manage_integrations', iconName: 'DataFlow', activeIconName: 'DataFlowFilled' },
-  { id: 'api-access', label: 'API Access', group: 'Tools', requiredPermission: 'manage_api_keys', iconName: 'Key01', activeIconName: 'KeyFilled' },
   
   // Deploy
   { id: 'installation', label: 'Installation', group: 'Deploy', requiredPermission: 'manage_ari', iconName: 'Terminal', activeIconName: 'TerminalFilled' },

@@ -96,10 +96,7 @@ export type AppPermission =
   | 'manage_integrations'
   // Webhooks
   | 'view_webhooks'
-  | 'manage_webhooks'
-  // API Keys
-  | 'view_api_keys'
-  | 'manage_api_keys';
+  | 'manage_webhooks';
 
 /**
  * Permission groups for UI organization.
@@ -118,7 +115,6 @@ export const PERMISSION_GROUPS: Record<string, readonly AppPermission[]> = {
   'Billing': ['view_billing', 'manage_billing'],
   'Integrations': ['view_integrations', 'manage_integrations'],
   'Webhooks': ['view_webhooks', 'manage_webhooks'],
-  'API Keys': ['view_api_keys', 'manage_api_keys'],
 } as const;
 
 /**
@@ -147,8 +143,6 @@ export const PERMISSION_LABELS: Record<AppPermission, string> = {
   'manage_integrations': 'Manage Integrations',
   'view_webhooks': 'View Webhooks',
   'manage_webhooks': 'Manage Webhooks',
-  'view_api_keys': 'View API Keys',
-  'manage_api_keys': 'Manage API Keys',
 };
 
 /**
@@ -180,7 +174,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, AppPermission[]> = {
     'view_billing',
     'view_integrations',
     'view_webhooks',
-    'view_api_keys',
   ],
   member: [
     'view_dashboard',

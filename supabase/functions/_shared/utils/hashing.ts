@@ -1,28 +1,28 @@
 /**
  * Hashing Utilities
- * Provides SHA-256 hashing for API keys and query caching.
+ * Provides SHA-256 hashing for query caching.
  * 
  * @module _shared/utils/hashing
  * @description Cryptographic hashing utilities using Web Crypto API.
  * 
  * @example
  * ```typescript
- * import { hashApiKey, hashQuery } from "../_shared/utils/hashing.ts";
+ * import { hashString, hashQuery } from "../_shared/utils/hashing.ts";
  * 
- * const keyHash = await hashApiKey("api_key_here");
+ * const hash = await hashString("some_string");
  * const queryHash = await hashQuery("search query");
  * ```
  */
 
 /**
- * Simple SHA-256 hash function for API key validation.
+ * Simple SHA-256 hash function.
  * 
- * @param key - API key to hash
+ * @param input - String to hash
  * @returns Hex-encoded SHA-256 hash
  */
-export async function hashApiKey(key: string): Promise<string> {
+export async function hashString(input: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(key);
+  const data = encoder.encode(input);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -30,13 +30,13 @@ export async function hashApiKey(key: string): Promise<string> {
 
 /**
  * Hash a query string for cache lookups.
- * Uses the same SHA-256 algorithm as API key hashing.
+ * Uses the same SHA-256 algorithm.
  * 
  * @param query - Query string to hash
  * @returns Hex-encoded SHA-256 hash
  */
 export async function hashQuery(query: string): Promise<string> {
-  return hashApiKey(query); // Same implementation
+  return hashString(query);
 }
 
 /**
