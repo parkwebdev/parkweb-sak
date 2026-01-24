@@ -1648,6 +1648,7 @@ export type Database = {
         Row: {
           active: boolean | null
           created_at: string
+          description: string | null
           features: Json | null
           id: string
           limits: Json | null
@@ -1662,6 +1663,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           created_at?: string
+          description?: string | null
           features?: Json | null
           id?: string
           limits?: Json | null
@@ -1676,6 +1678,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           created_at?: string
+          description?: string | null
           features?: Json | null
           id?: string
           limits?: Json | null

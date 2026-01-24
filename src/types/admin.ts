@@ -69,6 +69,7 @@ export interface AdminSubscription {
 export interface AdminPlan {
   id: string;
   name: string;
+  description?: string;
   price_monthly: number;
   price_yearly: number;
   active: boolean;

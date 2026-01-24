@@ -37,6 +37,7 @@ export function useAdminPlans(): UseAdminPlansResult {
     mutationFn: async (plan: Omit<AdminPlan, 'id' | 'created_at' | 'updated_at'>) => {
       const { error } = await supabase.from('plans').insert({
         name: plan.name,
+        description: plan.description,
         price_monthly: plan.price_monthly,
         price_yearly: plan.price_yearly,
         active: plan.active,
@@ -60,7 +61,11 @@ export function useAdminPlans(): UseAdminPlansResult {
       const { error } = await supabase
         .from('plans')
         .update({
-          ...updates,
+          name: updates.name,
+          description: updates.description,
+          price_monthly: updates.price_monthly,
+          price_yearly: updates.price_yearly,
+          active: updates.active,
           features: updates.features as never,
           limits: updates.limits as never,
           updated_at: new Date().toISOString(),

@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { PlanLimitsEditor } from './PlanLimitsEditor';
 import { PlanFeaturesEditor } from './PlanFeaturesEditor';
 import type { AdminPlan } from '@/types/admin';
@@ -45,6 +46,7 @@ export function PlanEditorSheet({
 }: PlanEditorSheetProps) {
   const [formData, setFormData] = useState<Partial<AdminPlan>>({
     name: '',
+    description: '',
     price_monthly: 0,
     price_yearly: 0,
     active: true,
@@ -56,6 +58,7 @@ export function PlanEditorSheet({
     if (plan) {
       setFormData({
         name: plan.name,
+        description: plan.description || '',
         price_monthly: plan.price_monthly,
         price_yearly: plan.price_yearly,
         active: plan.active,
@@ -66,6 +69,7 @@ export function PlanEditorSheet({
       // New plan - start with empty values, admin must set everything
       setFormData({
         name: '',
+        description: '',
         price_monthly: 0,
         price_yearly: 0,
         active: true,
@@ -107,6 +111,23 @@ export function PlanEditorSheet({
                 }
                 placeholder="e.g., Pro, Enterprise"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="plan-description">Description</Label>
+              <Textarea
+                id="plan-description"
+                size="compact"
+                value={formData.description || ''}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="e.g., Perfect for growing teams with advanced needs"
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground">
+                Short description shown on pricing cards
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
