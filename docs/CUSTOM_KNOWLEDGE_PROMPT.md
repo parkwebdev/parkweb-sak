@@ -114,6 +114,55 @@ NEVER: `catch (error: any)` or `catch (error) { error.message }`
 ### Animations
 - Always check `useReducedMotion()` hook before animating
 - Use variants from `@/lib/motion-variants.ts` for consistent springs
+
+---
+
+## Performance Patterns
+
+### Lazy Loading Heavy Components (CRITICAL)
+Never import these components directly - always use their wrappers:
+
+| Component | Wrapper | Savings |
+|-----------|---------|---------|
+| RichTextEditor | `RichTextEditorWrapper` | ~100KB |
+| VisitorLocationMap | `VisitorLocationMapWrapper` | ~180KB |
+
+```tsx
+// ❌ WRONG - loads 100KB on page load
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+
+// ✅ CORRECT - deferred until needed
+import { RichTextEditorWrapper } from '@/components/ui/RichTextEditorWrapper';
+```
+
+### Admin Pages Lazy Loading
+All admin pages in `src/pages/admin/index.ts` use `lazy()` exports. When adding new admin pages:
+```tsx
+export const NewAdminPage = lazy(() => 
+  import('./NewAdminPage').then(m => ({ default: m.NewAdminPage }))
+);
+```
+
+### Database Query Optimization
+NEVER use `select('*')` - always import column constants from `@/lib/db-selects`:
+```tsx
+import { LEAD_LIST_COLUMNS } from '@/lib/db-selects';
+
+const { data } = await supabase
+  .from('leads')
+  .select(LEAD_LIST_COLUMNS)  // Not select('*')
+  .eq('user_id', accountOwnerId);
+```
+
+Available constants: `LEAD_LIST_COLUMNS`, `CONVERSATION_LIST_COLUMNS`, `MESSAGE_LIST_COLUMNS`, `CALENDAR_EVENT_LIST_COLUMNS`, `KNOWLEDGE_SOURCE_LIST_COLUMNS`, `NOTIFICATION_LIST_COLUMNS`, `PROFILE_LIST_COLUMNS`, etc.
+
+### Bundle Splitting (Vite Config)
+Heavy dependencies are auto-split via `vite.config.ts` manualChunks:
+- `pdf-vendor` - @react-pdf, pdfjs-dist, jspdf
+- `map-vendor` - maplibre-gl
+- `editor-vendor` - @tiptap/*
+
+When adding new heavy libraries, consider adding them to `manualChunks`.
 - Widget uses CSS animations, not motion/react (performance)
 
 ---
@@ -258,8 +307,10 @@ Always handle 429 (rate limit) and 402 (payment required) errors:
 |--------|----------|
 | Routes | `src/config/routes.ts` (ROUTE_CONFIG, ARI_SECTIONS) |
 | Query Keys | `src/lib/query-keys.ts` |
+| DB Column Selects | `src/lib/db-selects.ts` |
 | Priority Styles | `src/lib/priority-config.ts` |
 | Motion Variants | `src/lib/motion-variants.ts` |
+| Map Utilities | `src/lib/map-utils.ts` |
 | Error Utils | `src/types/errors.ts` |
 | Metadata Types | `src/types/metadata.ts` |
 
@@ -295,3 +346,6 @@ Always handle 429 (rate limit) and 402 (payment required) errors:
 11. Putting `AriSectionActionsProvider` inside page component instead of App.tsx root
 12. Forgetting `pageId` parameter in `useTopBar(config, pageId)` causing re-render loops
 13. Not memoizing `sectionActions` array in `useRegisterSectionActions`
+14. Importing heavy components directly (MapLibre, RichTextEditor) instead of lazy wrappers
+15. Using `select('*')` instead of column constants from `@/lib/db-selects.ts`
+16. Creating new admin pages without `lazy()` exports in `src/pages/admin/index.ts`
