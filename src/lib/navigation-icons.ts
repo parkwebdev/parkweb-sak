@@ -43,7 +43,6 @@ import {
   LineChartUp03,
   ClipboardCheck,
   Shield01,
-  TypeSquare,
 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from '@/components/icons/DashboardIcon';
@@ -53,6 +52,7 @@ import {
   OverviewFilled as AdminOverviewFilled,
   AccountsFilled as AdminAccountsFilled,
   TextInputFilled as AdminTextInputFilled,
+  TextInputOutline as AdminTextInputOutline,
   PilotTeamFilled as AdminPilotTeamFilled,
   MailFilled as AdminMailFilled,
   TrendUpFilled as AdminTrendUpFilled,
@@ -142,7 +142,7 @@ export const ACTIVE_ICON_MAP: Record<string, IconComponent | undefined> = {
 export const ADMIN_ICON_MAP: Record<string, IconComponent> = {
   LayoutAlt01: LayoutAlt01,
   Users01: User03,
-  TypeSquare: TypeSquare,
+  TypeSquare: AdminTextInputOutline,
   CreditCard01: CreditCard01,
   UserGroup: Users02,
   BookOpen01: BookOpen01,
