@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useCanManage } from '@/hooks/useCanManage';
 import { useNavigate } from 'react-router-dom';
-import { UsageMetricsGrid } from './UsageMetricsGrid';
+import { UsageBarChart } from './UsageBarChart';
 import { FeaturesGrid } from './FeaturesGrid';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -81,7 +81,7 @@ export const UsageSettings = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <UsageMetricsGrid usage={usage} limits={limits} />
+            <UsageBarChart usage={usage} limits={limits} />
           </CardContent>
         </Card>
       </AnimatedItem>
