@@ -27,9 +27,6 @@ const featureFields: { key: keyof PlanFeatures; label: string; description: stri
   { key: 'hosted_page', label: 'Hosted Page', description: 'Standalone chat page' },
   { key: 'api', label: 'API Access', description: 'Programmatic API access' },
   { key: 'webhooks', label: 'Webhooks', description: 'Event webhook notifications' },
-  { key: 'white_label', label: 'White Label', description: 'Remove Pilot branding' },
-  { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Detailed usage reports' },
-  { key: 'priority_support', label: 'Priority Support', description: 'Faster response times' },
 ];
 
 /**

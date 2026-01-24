@@ -87,9 +87,6 @@ export interface PlanFeatures {
   hosted_page?: boolean;
   api?: boolean;
   webhooks?: boolean;
-  white_label?: boolean;
-  advanced_analytics?: boolean;
-  priority_support?: boolean;
   [key: string]: boolean | undefined;
 }
 
