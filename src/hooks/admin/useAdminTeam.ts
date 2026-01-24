@@ -7,6 +7,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
+import { fetchTeam } from '@/lib/admin/admin-prefetch';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,63 +31,7 @@ export function useAdminTeam(): UseAdminTeamResult {
 
   const { data, isLoading, error } = useQuery({
     queryKey: adminQueryKeys.team.list(),
-    queryFn: async (): Promise<PilotTeamMember[]> => {
-      // Get all super_admin and pilot_support users
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role, admin_permissions, created_at')
-        .in('role', ['super_admin', 'pilot_support']);
-
-      if (rolesError) throw rolesError;
-      if (!roles || roles.length === 0) return [];
-
-      const userIds = roles.map((r) => r.user_id);
-
-      // Batch fetch profiles AND audit logs in parallel (avoids N+1)
-      const [profilesResult, auditLogsResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('user_id, display_name, email, avatar_url, last_login_at')
-          .in('user_id', userIds),
-        supabase
-          .from('admin_audit_log')
-          .select('admin_user_id')
-          .in('admin_user_id', userIds),
-      ]);
-
-      if (profilesResult.error) throw profilesResult.error;
-
-      // Count audit logs locally (group by admin_user_id)
-      const auditCountMap = new Map<string, number>();
-      (auditLogsResult.data || []).forEach((log) => {
-        const current = auditCountMap.get(log.admin_user_id) || 0;
-        auditCountMap.set(log.admin_user_id, current + 1);
-      });
-
-      // Create profile lookup map
-      const profileMap = new Map(
-        profilesResult.data?.map((p) => [p.user_id, p]) || []
-      );
-
-      // Map synchronously - no more N+1
-      const teamMembers: PilotTeamMember[] = roles.map((role) => {
-        const profile = profileMap.get(role.user_id);
-        return {
-          id: role.user_id,
-          user_id: role.user_id,
-          email: profile?.email || '',
-          display_name: profile?.display_name ?? null,
-          avatar_url: profile?.avatar_url ?? null,
-          role: role.role as PilotTeamMember['role'],
-          admin_permissions: (role.admin_permissions || []) as AdminPermission[],
-          created_at: role.created_at,
-          last_login_at: profile?.last_login_at ?? null,
-          audit_action_count: auditCountMap.get(role.user_id) || 0,
-        };
-      });
-
-      return teamMembers;
-    },
+    queryFn: fetchTeam, // Reuse extracted fetch function
     staleTime: 60000,
   });
 

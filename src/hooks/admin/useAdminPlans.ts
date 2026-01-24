@@ -7,11 +7,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
-import { useAuth } from '@/contexts/AuthContext';
+import { fetchPlans } from '@/lib/admin/admin-prefetch';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
-import { PLAN_COLUMNS } from '@/lib/db-selects';
-import type { AdminPlan, PlanFeatures, PlanLimits } from '@/types/admin';
+import type { AdminPlan } from '@/types/admin';
 
 interface UseAdminPlansResult {
   plans: AdminPlan[];
@@ -30,26 +29,7 @@ export function useAdminPlans(): UseAdminPlansResult {
 
   const { data, isLoading, error } = useQuery({
     queryKey: adminQueryKeys.plans.list(),
-    queryFn: async (): Promise<AdminPlan[]> => {
-      const { data, error } = await supabase
-        .from('plans')
-        .select(PLAN_COLUMNS)
-        .order('price_monthly', { ascending: true });
-
-      if (error) throw error;
-
-      return (data || []).map((plan) => ({
-        id: plan.id,
-        name: plan.name,
-        price_monthly: plan.price_monthly,
-        price_yearly: plan.price_yearly,
-        active: plan.active ?? true,
-        features: (plan.features as PlanFeatures) || {},
-        limits: (plan.limits as PlanLimits) || {},
-        created_at: plan.created_at,
-        updated_at: plan.updated_at,
-      }));
-    },
+    queryFn: fetchPlans, // Reuse extracted fetch function
     staleTime: 60000,
   });
 
