@@ -4,7 +4,7 @@
  * Respects manage_team permission for invite functionality.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { RoleManagementDialog } from './RoleManagementDialog';
 import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
@@ -17,6 +17,7 @@ import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { useCanManage } from '@/hooks/useCanManage';
 import { TeamMember, UserRole } from '@/types/team';
 import { SkeletonTableSection } from '@/components/ui/skeleton';
+import { useRegisterSettingsActions, SettingsSectionAction } from '@/contexts/SettingsSectionActionsContext';
 
 interface TeamSettingsProps {
   openMemberId?: string | null;
@@ -29,6 +30,7 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const { user } = useAuth();
   const { role: currentUserRole, hasPermission, isAdmin } = useRoleAuthorization();
   const { 
@@ -42,6 +44,17 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   } = useTeam();
 
   const canManageTeam = useCanManage('manage_team');
+
+  // Register TopBar action
+  const sectionActions = useMemo((): SettingsSectionAction[] => 
+    canManageTeam ? [{
+      id: 'invite-member',
+      label: 'Invite Member',
+      onClick: () => setIsInviteDialogOpen(true),
+    }] : []
+  , [canManageTeam]);
+
+  useRegisterSettingsActions('team', sectionActions);
 
   // Handle auto-opening a team member from URL parameter
   useEffect(() => {
@@ -84,17 +97,16 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   };
 
   const handleInviteMember = async (data: { firstName: string; lastName: string; email: string }): Promise<boolean> => {
-    return await inviteMember(data);
+    const success = await inviteMember(data);
+    if (success) {
+      setIsInviteDialogOpen(false);
+    }
+    return success;
   };
 
   if (loading) {
     return (
       <div className="space-y-6">
-        {canManageTeam && (
-          <div className="flex justify-end mb-6">
-            <InviteMemberDialog onInvite={handleInviteMember} />
-          </div>
-        )}
         <SkeletonTableSection rows={3} />
       </div>
     );
@@ -103,18 +115,13 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-end justify-between space-y-0">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-semibold">
-              Team Members
-            </CardTitle>
-            <CardDescription className="text-sm">
-              Manage your team members, roles, and permissions
-            </CardDescription>
-          </div>
-          {canManageTeam && (
-            <InviteMemberDialog onInvite={handleInviteMember} />
-          )}
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">
+            Team Members
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Manage your team members, roles, and permissions
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <TeamMembersTable
@@ -129,6 +136,15 @@ export function TeamSettings({ openMemberId }: TeamSettingsProps) {
           />
         </CardContent>
       </Card>
+
+      {/* Invite Dialog - controlled by TopBar action */}
+      {canManageTeam && (
+        <InviteMemberDialog 
+          onInvite={handleInviteMember}
+          open={isInviteDialogOpen}
+          onOpenChange={setIsInviteDialogOpen}
+        />
+      )}
 
       <RoleManagementDialog
         member={selectedMember}

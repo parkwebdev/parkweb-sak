@@ -3,7 +3,7 @@
  * Card-based layout with staggered animations matching other settings pages.
  */
 
-import { Button } from '@/components/ui/button';
+import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
@@ -13,6 +13,7 @@ import { UsageMetricsGrid } from './UsageMetricsGrid';
 import { FeaturesGrid } from './FeaturesGrid';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import { useRegisterSettingsActions, SettingsSectionAction } from '@/contexts/SettingsSectionActionsContext';
 
 const SkeletonCard = () => (
   <Card>
@@ -38,6 +39,17 @@ export const UsageSettings = () => {
   const navigate = useNavigate();
   const canViewBilling = useCanManage('view_billing');
 
+  // Register TopBar action
+  const sectionActions = useMemo((): SettingsSectionAction[] => 
+    canViewBilling ? [{
+      id: 'upgrade-plan',
+      label: 'Upgrade Plan',
+      onClick: () => navigate('/settings?tab=billing'),
+    }] : []
+  , [canViewBilling, navigate]);
+
+  useRegisterSettingsActions('usage', sectionActions);
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -52,11 +64,6 @@ export const UsageSettings = () => {
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <p className="text-muted-foreground mb-4">No active subscription</p>
-          {canViewBilling && (
-            <Button onClick={() => navigate('/settings?tab=billing')}>
-              Subscribe Now
-            </Button>
-          )}
         </CardContent>
       </Card>
     );
@@ -67,21 +74,11 @@ export const UsageSettings = () => {
       {/* Plan Overview Card */}
       <AnimatedItem>
         <Card>
-          <CardHeader className="flex flex-row items-start justify-between space-y-0">
-            <div className="space-y-1">
-              <CardTitle className="text-base font-semibold">Plan Overview</CardTitle>
-              <CardDescription className="text-sm">
-                Current usage for your {planName} plan
-              </CardDescription>
-            </div>
-            {canViewBilling && (
-              <Button 
-                size="sm"
-                onClick={() => navigate('/settings?tab=billing')}
-              >
-                Upgrade Plan
-              </Button>
-            )}
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Plan Overview</CardTitle>
+            <CardDescription className="text-sm">
+              Current usage for your {planName} plan
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <UsageMetricsGrid usage={usage} limits={limits} />

@@ -12,13 +12,28 @@ import { InviteMemberData } from '@/types/team';
 interface InviteMemberDialogProps {
   onInvite: (data: InviteMemberData) => Promise<boolean>;
   trigger?: React.ReactNode;
+  /** Controlled open state */
+  open?: boolean;
+  /** Callback when open state changes */
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function InviteMemberDialog({
   onInvite,
-  trigger
+  trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange
 }: InviteMemberDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setIsOpen = (value: boolean) => {
+    if (isControlled) {
+      controlledOnOpenChange?.(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -65,9 +80,12 @@ export function InviteMemberDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
+      {/* Only show trigger when not in controlled mode */}
+      {!isControlled && (
+        <DialogTrigger asChild>
+          {trigger || defaultTrigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Invite Team Member</DialogTitle>

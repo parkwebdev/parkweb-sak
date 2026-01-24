@@ -32,11 +32,17 @@ import { useCanManageChecker } from '@/hooks/useCanManage';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { springs } from '@/lib/motion-variants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
+import { Button } from '@/components/ui/button';
+import { 
+  SettingsSectionActionsProvider, 
+  useSettingsSectionActions 
+} from '@/contexts/SettingsSectionActionsContext';
 
-function Settings() {
+function SettingsContent() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { loading } = useRoleAuthorization();
   const canManage = useCanManageChecker();
+  const { actions, setCurrentSection } = useSettingsSectionActions();
   
   // Derive active tab directly from URL (source of truth)
   const activeTab = useMemo((): SettingsTab => {
@@ -46,16 +52,37 @@ function Settings() {
     return (validTab?.tabParam as SettingsTab) || 'general';
   }, [searchParams]);
 
+  // Update current section when tab changes
+  useEffect(() => {
+    setCurrentSection(activeTab);
+  }, [activeTab, setCurrentSection]);
+
   // Handle tab changes by updating URL
   const handleTabChange = (newTab: SettingsTab) => {
     setSearchParams({ tab: newTab }, { replace: true });
   };
   
-  // Configure top bar for this page
+  // Configure top bar with dynamic right section
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={getNavigationIcon('Settings01')} title="Settings" />,
-  }), []);
-  useTopBar(topBarConfig);
+    right: actions.length > 0 ? (
+      <div className="flex items-center gap-2">
+        {actions.map(action => (
+          <Button 
+            key={action.id}
+            size="sm"
+            variant={action.variant || 'default'}
+            onClick={action.onClick}
+            disabled={action.disabled}
+          >
+            {action.label}
+          </Button>
+        ))}
+      </div>
+    ) : null,
+  }), [actions]);
+  
+  useTopBar(topBarConfig, `settings-${activeTab}`);
 
   // Filter tabs for mobile view
   const visibleTabs = useMemo(() => {
@@ -143,6 +170,14 @@ function Settings() {
         </div>
       </main>
     </div>
+  );
+}
+
+function Settings() {
+  return (
+    <SettingsSectionActionsProvider>
+      <SettingsContent />
+    </SettingsSectionActionsProvider>
   );
 }
 
