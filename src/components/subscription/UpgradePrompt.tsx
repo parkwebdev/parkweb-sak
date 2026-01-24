@@ -6,20 +6,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Lock01, 
-  Code01, 
-  Link03, 
-  MessageChatCircle, 
-  Tool02, 
-  Dataflow03, 
-  Database01, 
-  MarkerPin01, 
-  Calendar,
-  TrendUp01,
-  BarChart01,
-  ClockRefresh,
-} from '@untitledui/icons';
+import { Lock01 } from '@untitledui/icons';
 import { useCanManage } from '@/hooks/useCanManage';
 
 type FeatureType = 
@@ -29,7 +16,6 @@ type FeatureType =
   | 'advanced_analytics' | 'report_builder' | 'scheduled_reports';
 
 interface FeatureInfo {
-  icon: React.ReactNode;
   title: string;
   description: string;
 }
@@ -37,55 +23,45 @@ interface FeatureInfo {
 const FEATURE_INFO: Record<FeatureType, FeatureInfo> = {
   // Core
   widget: {
-    icon: <MessageChatCircle size={24} aria-hidden="true" />,
     title: 'Chat Widget',
     description: 'Embed a chat widget on your website to engage visitors 24/7 with AI-powered conversations.',
   },
   webhooks: {
-    icon: <Link03 size={24} aria-hidden="true" />,
     title: 'Webhooks',
     description: 'Send real-time events to external APIs when actions occur in your conversations.',
   },
   // Tools
   custom_tools: {
-    icon: <Tool02 size={24} aria-hidden="true" />,
     title: 'Custom Tools',
     description: 'Create custom API integrations and external tool connections to extend Ari\'s capabilities.',
   },
   integrations: {
-    icon: <Dataflow03 size={24} aria-hidden="true" />,
     title: 'Integrations',
     description: 'Connect social media, email, and calendar services for multi-channel engagement.',
   },
   // Knowledge & Locations
   knowledge_sources: {
-    icon: <Database01 size={24} aria-hidden="true" />,
     title: 'Knowledge Sources',
     description: 'Train Ari with documents, URLs, and custom content to provide accurate, contextual responses.',
   },
   locations: {
-    icon: <MarkerPin01 size={24} aria-hidden="true" />,
     title: 'Locations',
     description: 'Manage multiple locations with location-specific knowledge and calendar integrations.',
   },
   calendar_booking: {
-    icon: <Calendar size={24} aria-hidden="true" />,
     title: 'Calendar Booking',
     description: 'Enable AI-powered appointment scheduling with integrated calendar connections.',
   },
   // Analytics & Reporting
   advanced_analytics: {
-    icon: <TrendUp01 size={24} aria-hidden="true" />,
     title: 'Advanced Analytics',
     description: 'Deep insights into AI performance, visitor behavior, and conversion metrics.',
   },
   report_builder: {
-    icon: <BarChart01 size={24} aria-hidden="true" />,
     title: 'Report Builder',
     description: 'Build and export custom analytics reports with flexible configuration options.',
   },
   scheduled_reports: {
-    icon: <ClockRefresh size={24} aria-hidden="true" />,
     title: 'Scheduled Reports',
     description: 'Automated report delivery via email on daily, weekly, or monthly schedules.',
   },
@@ -112,17 +88,10 @@ export function UpgradePrompt({ feature, className }: UpgradePromptProps) {
           <Lock01 size={20} className="text-muted-foreground" aria-hidden="true" />
         </div>
         
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-primary">{info.icon}</span>
-          <h3 className="text-lg font-semibold">{info.title}</h3>
-        </div>
+        <h3 className="text-lg font-semibold mb-2">{info.title}</h3>
         
         <p className="text-sm text-muted-foreground max-w-sm mb-6">
           {info.description}
-        </p>
-        
-        <p className="text-sm text-muted-foreground mb-4">
-          This feature is not included in your current plan.
         </p>
 
         {canViewBilling && (
