@@ -3,7 +3,7 @@
  * Groups features by category with tooltips for descriptions.
  */
 
-import { Check, Minus } from '@untitledui/icons';
+import { CheckCircle, Minus } from '@untitledui/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { cn } from '@/lib/utils';
@@ -82,7 +82,7 @@ export function FeatureComparisonTable({ plans }: FeatureComparisonTableProps) {
                     {sortedPlans.map(plan => (
                       <td key={plan.id} className="text-center py-2.5 px-4">
                         {plan.features[feature.key] ? (
-                          <Check size={16} className="text-success mx-auto" aria-label="Included" />
+                          <CheckCircle size={16} className="text-success mx-auto" aria-label="Included" />
                         ) : (
                           <Minus size={16} className="text-muted-foreground/40 mx-auto" aria-label="Not included" />
                         )}
