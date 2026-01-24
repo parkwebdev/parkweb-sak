@@ -41,6 +41,7 @@ export interface CurrentUsage {
   conversations_this_month: number;
   knowledge_sources: number;
   team_members: number;
+  webhooks: number;
 }
 
 export interface LimitCheck {
@@ -159,10 +160,17 @@ export const usePlanLimits = () => {
         .select('*', { count: 'exact', head: true })
         .eq('owner_id', accountOwnerId);
 
+      // Count webhooks (scoped to account owner)
+      const { count: webhooksCount } = await supabase
+        .from('webhooks')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', accountOwnerId);
+
       setUsage({
         conversations_this_month: conversationsCount || 0,
         knowledge_sources: knowledgeCount || 0,
         team_members: teamCount || 0,
+        webhooks: webhooksCount || 0,
       });
     } catch (error: unknown) {
       logger.error('Error fetching plan limits', error);
@@ -192,6 +200,7 @@ export const usePlanLimits = () => {
       conversations_this_month: limits?.max_conversations_per_month,
       knowledge_sources: limits?.max_knowledge_sources,
       team_members: limits?.max_team_members,
+      webhooks: limits?.max_webhooks,
     };
 
     const current = usage[resourceType];
@@ -230,6 +239,10 @@ export const usePlanLimits = () => {
 
   const canAddTeamMember = (): LimitCheck => {
     return checkLimit('team_members', 1);
+  };
+
+  const canAddWebhook = (): LimitCheck => {
+    return checkLimit('webhooks', 1);
   };
 
   const showLimitWarning = (
@@ -285,6 +298,7 @@ export const usePlanLimits = () => {
     checkLimit,
     canAddKnowledgeSource,
     canAddTeamMember,
+    canAddWebhook,
     showLimitWarning,
     // Features
     features,
