@@ -158,6 +158,11 @@ export function PlanCard({
             </Badge>
           )}
         </div>
+        {plan.description && (
+          <p className="text-sm font-medium text-foreground mt-1">
+            {plan.description}
+          </p>
+        )}
       </div>
 
       {/* Price */}
