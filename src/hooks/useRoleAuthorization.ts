@@ -1,10 +1,16 @@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useCallback, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { logger } from '@/utils/logger';
 import type { DatabaseRole, AppPermission } from '@/types/team';
 import type { AdminPermission } from '@/types/admin';
+
+interface RoleQueryResult {
+  role: DatabaseRole;
+  permissions: AppPermission[];
+  admin_permissions: AdminPermission[];
+}
 
 interface RoleAuthData {
   role: DatabaseRole | null;
@@ -68,16 +74,14 @@ interface RoleAuthData {
 
 /**
  * Hook for role-based authorization checks.
- * Uses React Query to cache role data for 5 minutes, preventing
- * redundant database calls on navigation.
+ * Uses React Query with real-time subscriptions for instant permission updates.
  * 
  * @returns {RoleAuthData} Role authorization data and permission helpers
  */
 export const useRoleAuthorization = (): RoleAuthData => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useSupabaseQuery<RoleQueryResult>({
     queryKey: ['user-role', user?.id],
     queryFn: async () => {
       try {
@@ -102,38 +106,14 @@ export const useRoleAuthorization = (): RoleAuthData => {
         return { role: 'member' as DatabaseRole, permissions: [], admin_permissions: [] };
       }
     },
+    realtime: user ? {
+      table: 'user_roles',
+      filter: `user_id=eq.${user.id}`,
+    } : undefined,
     enabled: !!user,
-    staleTime: 0,             // Always refetch when triggered
-    gcTime: 10 * 60 * 1000,   // 10 min cache retention
+    staleTime: 0,
+    gcTime: 10 * 60 * 1000,
   });
-
-  // Real-time subscription for permission changes
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel(`user-role-changes-${user.id}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'user_roles',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        logger.info('[useRoleAuthorization] Permission change detected', payload);
-        // Force immediate refetch instead of just invalidating
-        queryClient.refetchQueries({ 
-          queryKey: ['user-role', user.id],
-          type: 'active',
-        });
-      })
-      .subscribe((status) => {
-        logger.info('[useRoleAuthorization] Subscription status', { status });
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, queryClient]);
 
   // Extract values from cached data
   const role = data?.role ?? null;
