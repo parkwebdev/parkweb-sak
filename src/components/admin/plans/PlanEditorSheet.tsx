@@ -2,6 +2,7 @@
  * PlanEditorSheet Component
  * 
  * Sheet for creating and editing subscription plans.
+ * No hardcoded defaults - database is the single source of truth.
  * 
  * @module components/admin/plans/PlanEditorSheet
  */
@@ -21,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { PlanLimitsEditor } from './PlanLimitsEditor';
 import { PlanFeaturesEditor } from './PlanFeaturesEditor';
-import type { AdminPlan, PlanFeatures, PlanLimits } from '@/types/admin';
+import type { AdminPlan } from '@/types/admin';
 
 interface PlanEditorSheetProps {
   open: boolean;
@@ -31,28 +32,9 @@ interface PlanEditorSheetProps {
   saving?: boolean;
 }
 
-const defaultLimits: PlanLimits = {
-  agents: 1,
-  conversations_per_month: 100,
-  knowledge_sources: 5,
-  team_members: 1,
-  locations: 1,
-  api_calls_per_day: 1000,
-};
-
-const defaultFeatures: PlanFeatures = {
-  advanced_analytics: false,
-  custom_branding: false,
-  api_access: false,
-  priority_support: false,
-  sla: false,
-  sso: false,
-  audit_logs: false,
-  custom_integrations: false,
-};
-
 /**
  * Sheet component for editing plan details.
+ * No defaults - admin must explicitly set all values.
  */
 export function PlanEditorSheet({
   open,
@@ -66,8 +48,8 @@ export function PlanEditorSheet({
     price_monthly: 0,
     price_yearly: 0,
     active: true,
-    limits: defaultLimits,
-    features: defaultFeatures,
+    limits: {},
+    features: {},
   });
 
   useEffect(() => {
@@ -77,17 +59,18 @@ export function PlanEditorSheet({
         price_monthly: plan.price_monthly,
         price_yearly: plan.price_yearly,
         active: plan.active,
-        limits: plan.limits || defaultLimits,
-        features: plan.features || defaultFeatures,
+        limits: plan.limits || {},
+        features: plan.features || {},
       });
     } else {
+      // New plan - start with empty values, admin must set everything
       setFormData({
         name: '',
         price_monthly: 0,
         price_yearly: 0,
         active: true,
-        limits: defaultLimits,
-        features: defaultFeatures,
+        limits: {},
+        features: {},
       });
     }
   }, [plan]);
@@ -177,13 +160,13 @@ export function PlanEditorSheet({
 
           {/* Limits */}
           <PlanLimitsEditor
-            limits={formData.limits || defaultLimits}
+            limits={formData.limits || {}}
             onChange={(limits) => setFormData({ ...formData, limits })}
           />
 
           {/* Features */}
           <PlanFeaturesEditor
-            features={formData.features || defaultFeatures}
+            features={formData.features || {}}
             onChange={(features) => setFormData({ ...formData, features })}
           />
         </div>

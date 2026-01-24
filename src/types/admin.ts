@@ -78,16 +78,31 @@ export interface AdminPlan {
   mrr?: number;
 }
 
+/**
+ * Plan features - matches actual database keys.
+ * Only includes features that are actually implemented and enforced.
+ */
 export interface PlanFeatures {
-  [key: string]: boolean;
+  widget?: boolean;
+  hosted_page?: boolean;
+  api?: boolean;
+  webhooks?: boolean;
+  white_label?: boolean;
+  advanced_analytics?: boolean;
+  priority_support?: boolean;
+  [key: string]: boolean | undefined;
 }
 
+/**
+ * Plan limits - uses max_* naming convention to match database.
+ * Single-agent model: no agents limit (each account gets exactly one).
+ */
 export interface PlanLimits {
-  agents?: number;
-  conversations_per_month?: number;
-  knowledge_sources?: number;
-  team_members?: number;
-  api_requests_per_day?: number;
+  max_conversations_per_month?: number;
+  max_knowledge_sources?: number;
+  max_team_members?: number;
+  max_api_calls_per_month?: number;
+  max_webhooks?: number;
   [key: string]: number | undefined;
 }
 

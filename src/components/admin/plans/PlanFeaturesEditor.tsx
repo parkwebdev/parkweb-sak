@@ -2,6 +2,7 @@
  * PlanFeaturesEditor Component
  * 
  * Checkbox grid for toggling plan features.
+ * Only includes features that are actually implemented and enforced.
  * 
  * @module components/admin/plans/PlanFeaturesEditor
  */
@@ -11,21 +12,24 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import type { PlanFeatures } from '@/types/admin';
 
-
 interface PlanFeaturesEditorProps {
   features: PlanFeatures;
   onChange: (features: PlanFeatures) => void;
 }
 
+/**
+ * Feature fields that match actual database keys and are implemented.
+ * Removed: sso, audit_logs, custom_integrations, sla (not implemented)
+ * Renamed: custom_branding → white_label (to match DB)
+ */
 const featureFields: { key: keyof PlanFeatures; label: string; description: string }[] = [
-  { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Detailed usage & performance reports' },
-  { key: 'custom_branding', label: 'Custom Branding', description: 'White-label widget appearance' },
-  { key: 'api_access', label: 'API Access', description: 'Programmatic API access' },
+  { key: 'widget', label: 'Chat Widget', description: 'Embed chat widget on websites' },
+  { key: 'hosted_page', label: 'Hosted Page', description: 'Standalone chat page' },
+  { key: 'api', label: 'API Access', description: 'Programmatic API access' },
+  { key: 'webhooks', label: 'Webhooks', description: 'Event webhook notifications' },
+  { key: 'white_label', label: 'White Label', description: 'Remove Pilot branding' },
+  { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Detailed usage reports' },
   { key: 'priority_support', label: 'Priority Support', description: 'Faster response times' },
-  { key: 'sla', label: 'SLA', description: 'Service level agreement' },
-  { key: 'sso', label: 'SSO', description: 'Single sign-on integration' },
-  { key: 'audit_logs', label: 'Audit Logs', description: 'Activity logging & compliance' },
-  { key: 'custom_integrations', label: 'Custom Integrations', description: 'Custom integration support' },
 ];
 
 /**

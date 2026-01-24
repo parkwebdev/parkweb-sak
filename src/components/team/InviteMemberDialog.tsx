@@ -86,7 +86,7 @@ export function InviteMemberDialog({
             </Alert>
           )}
 
-          {limitCheck.isNearLimit && !limitCheck.isAtLimit && (
+          {limitCheck.isNearLimit && !limitCheck.isAtLimit && !limitCheck.isUnlimited && limitCheck.limit !== null && (
             <Alert>
               <AlertCircle className="h-4 w-4" aria-hidden="true" />
               <AlertDescription>

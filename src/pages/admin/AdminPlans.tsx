@@ -3,6 +3,7 @@
  * 
  * Manage subscription plans and Stripe integration.
  * View and edit plan features, limits, and pricing.
+ * Only super admins can create/edit/delete plans.
  * 
  * @module pages/admin/AdminPlans
  */
@@ -20,6 +21,7 @@ import {
 import type { PlansTab } from '@/components/admin/plans/PlansTabDropdown';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { useAdminPlans, useAdminSubscriptions } from '@/hooks/admin';
+import { useAdminRole } from '@/contexts/AdminRoleContext';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AdminPlan } from '@/types/admin';
 
@@ -30,6 +32,9 @@ export function AdminPlans() {
   const [activeTab, setActiveTab] = useState<PlansTab>('plans');
   const [editingPlan, setEditingPlan] = useState<AdminPlan | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  
+  // Only super admins can manage plans
+  const { isSuperAdmin } = useAdminRole();
 
   const handleCreatePlan = useCallback(() => {
     setEditingPlan(null);
@@ -45,14 +50,14 @@ export function AdminPlans() {
           activeTab={activeTab} 
           onTabChange={setActiveTab} 
         />
-        {activeTab === 'plans' && (
+        {activeTab === 'plans' && isSuperAdmin && (
           <Button size="sm" onClick={handleCreatePlan}>
             New Plan
           </Button>
         )}
       </div>
     ),
-  }), [handleCreatePlan, activeTab]);
+  }), [handleCreatePlan, activeTab, isSuperAdmin]);
   useTopBar(topBarConfig);
 
   const { 
@@ -94,6 +99,7 @@ export function AdminPlans() {
             onDelete={deletePlan}
             isUpdating={isUpdating}
             isCreating={isCreating}
+            canManage={isSuperAdmin}
           />
         )}
 
@@ -108,14 +114,16 @@ export function AdminPlans() {
           <StripeSync />
         )}
 
-        {/* Plan Editor Sheet */}
-        <PlanEditorSheet
-          open={editorOpen}
-          onOpenChange={setEditorOpen}
-          plan={editingPlan}
-          onSave={handleSavePlan}
-          saving={isCreating || isUpdating}
-        />
+        {/* Plan Editor Sheet - only super admins can save */}
+        {isSuperAdmin && (
+          <PlanEditorSheet
+            open={editorOpen}
+            onOpenChange={setEditorOpen}
+            plan={editingPlan}
+            onSave={handleSavePlan}
+            saving={isCreating || isUpdating}
+          />
+        )}
       </div>
     </AdminPermissionGuard>
   );

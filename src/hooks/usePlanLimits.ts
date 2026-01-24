@@ -4,26 +4,21 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
-import type { PlanLimits as PlanLimitsType, PlanFeatures as PlanFeaturesType } from '@/types/metadata';
+import type { PlanLimits as PlanLimitsType } from '@/types/metadata';
 
 /**
  * Hook for checking subscription plan limits and current usage.
- * Provides limit checks for agents, conversations, API calls, knowledge sources, and team members.
+ * Database is the single source of truth - no hardcoded fallbacks.
  * 
  * @returns {Object} Plan limits and usage data
- * @returns {PlanLimits|null} limits - Current plan's limits
- * @returns {CurrentUsage|null} usage - Current usage counts
- * @returns {boolean} loading - Loading state
- * @returns {Function} checkLimit - Check if action is within limits
- * @returns {Function} refetch - Manually refresh limits and usage
  */
 
 export interface PlanLimits {
-  max_conversations_per_month: number;
-  max_api_calls_per_month: number;
-  max_knowledge_sources: number;
-  max_team_members: number;
-  max_webhooks: number;
+  max_conversations_per_month?: number;
+  max_api_calls_per_month?: number;
+  max_knowledge_sources?: number;
+  max_team_members?: number;
+  max_webhooks?: number;
 }
 
 export interface CurrentUsage {
@@ -36,10 +31,11 @@ export interface CurrentUsage {
 export interface LimitCheck {
   allowed: boolean;
   current: number;
-  limit: number;
+  limit: number | null; // null means unlimited
   percentage: number;
   isNearLimit: boolean; // 80% or more
   isAtLimit: boolean; // 100% or more
+  isUnlimited: boolean;
 }
 
 export const usePlanLimits = () => {
@@ -48,7 +44,8 @@ export const usePlanLimits = () => {
   const [limits, setLimits] = useState<PlanLimits | null>(null);
   const [usage, setUsage] = useState<CurrentUsage | null>(null);
   const [loading, setLoading] = useState(true);
-  const [planName, setPlanName] = useState<string>('Free');
+  const [planName, setPlanName] = useState<string | null>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
 
   useEffect(() => {
     if (accountOwnerId && !ownerLoading) {
@@ -71,34 +68,32 @@ export const usePlanLimits = () => {
 
       if (subError && subError.code !== 'PGRST116') throw subError;
 
-      // Unlimited plan (owner account - no restrictions)
-      let planLimits: PlanLimits = {
-        max_conversations_per_month: 999999,
-        max_api_calls_per_month: 999999,
-        max_knowledge_sources: 999999,
-        max_team_members: 999999,
-        max_webhooks: 999999,
-      };
-
-      let currentPlanName = 'Free';
-
-      if (subscription?.plans) {
-        const plan = subscription.plans as { name?: string; limits?: PlanLimitsType };
-        currentPlanName = plan.name || 'Free';
-        const storedLimits = plan.limits;
-        if (storedLimits) {
-          planLimits = {
-            max_conversations_per_month: storedLimits.max_conversations_per_month || 100,
-            max_api_calls_per_month: storedLimits.max_api_calls_per_month || 1000,
-            max_knowledge_sources: storedLimits.max_knowledge_sources || 10,
-            max_team_members: storedLimits.max_team_members || 1,
-            max_webhooks: storedLimits.max_webhooks || 0,
-          };
-        }
+      if (!subscription?.plans) {
+        // No active subscription - no limits available
+        setHasActiveSubscription(false);
+        setPlanName(null);
+        setLimits(null);
+        setUsage(null);
+        setLoading(false);
+        return;
       }
 
-      setPlanName(currentPlanName);
-      setLimits(planLimits);
+      setHasActiveSubscription(true);
+      const plan = subscription.plans as { name?: string; limits?: PlanLimitsType };
+      setPlanName(plan.name || null);
+      
+      const storedLimits = plan.limits;
+      if (storedLimits) {
+        setLimits({
+          max_conversations_per_month: storedLimits.max_conversations_per_month,
+          max_api_calls_per_month: storedLimits.max_api_calls_per_month,
+          max_knowledge_sources: storedLimits.max_knowledge_sources,
+          max_team_members: storedLimits.max_team_members,
+          max_webhooks: storedLimits.max_webhooks,
+        });
+      } else {
+        setLimits({});
+      }
 
       // Get current usage (scoped to account owner)
       const now = new Date();
@@ -151,28 +146,43 @@ export const usePlanLimits = () => {
     resourceType: keyof CurrentUsage,
     additionalCount: number = 0
   ): LimitCheck => {
-    if (!limits || !usage) {
+    if (!hasActiveSubscription || !usage) {
       return {
         allowed: false,
         current: 0,
         limit: 0,
-        percentage: 0,
-        isNearLimit: false,
+        percentage: 100,
+        isNearLimit: true,
         isAtLimit: true,
+        isUnlimited: false,
       };
     }
 
-    const limitMap: Record<keyof CurrentUsage, number> = {
-      conversations_this_month: limits.max_conversations_per_month,
-      api_calls_this_month: limits.max_api_calls_per_month,
-      knowledge_sources: limits.max_knowledge_sources,
-      team_members: limits.max_team_members,
+    const limitMap: Record<keyof CurrentUsage, number | undefined> = {
+      conversations_this_month: limits?.max_conversations_per_month,
+      api_calls_this_month: limits?.max_api_calls_per_month,
+      knowledge_sources: limits?.max_knowledge_sources,
+      team_members: limits?.max_team_members,
     };
 
     const current = usage[resourceType];
     const limit = limitMap[resourceType];
+    
+    // undefined or null means unlimited
+    if (limit === undefined || limit === null) {
+      return {
+        allowed: true,
+        current: current + additionalCount,
+        limit: null,
+        percentage: 0,
+        isNearLimit: false,
+        isAtLimit: false,
+        isUnlimited: true,
+      };
+    }
+
     const newTotal = current + additionalCount;
-    const percentage = (newTotal / limit) * 100;
+    const percentage = limit > 0 ? (newTotal / limit) * 100 : 100;
 
     return {
       allowed: newTotal <= limit,
@@ -181,6 +191,7 @@ export const usePlanLimits = () => {
       percentage: Math.min(percentage, 100),
       isNearLimit: percentage >= 80,
       isAtLimit: percentage >= 100,
+      isUnlimited: false,
     };
   };
 
@@ -197,6 +208,8 @@ export const usePlanLimits = () => {
     check: LimitCheck,
     action: string = 'create'
   ) => {
+    if (check.isUnlimited) return false;
+    
     if (!check.allowed) {
       toast.error(
         `Plan limit reached: You can only ${action} ${check.limit} ${resourceType}. Upgrade your plan to continue.`,
@@ -220,6 +233,7 @@ export const usePlanLimits = () => {
     usage,
     loading,
     planName,
+    hasActiveSubscription,
     checkLimit,
     canAddKnowledgeSource,
     canAddTeamMember,
