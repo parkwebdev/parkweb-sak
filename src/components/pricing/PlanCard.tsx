@@ -34,6 +34,7 @@ interface PlanCardProps {
   allPlans: PlanData[];
   billingPeriod: 'monthly' | 'yearly';
   isCurrentPlan?: boolean;
+  currentPlanPrice?: number;
   onSelect: (priceId: string) => void;
   loading?: boolean;
   disabled?: boolean;
@@ -112,6 +113,7 @@ export function PlanCard({
   allPlans,
   billingPeriod,
   isCurrentPlan = false,
+  currentPlanPrice,
   onSelect,
   loading = false,
   disabled = false,
@@ -155,7 +157,7 @@ export function PlanCard({
       )}
       {plan.name === 'Enterprise' && (
         <Badge 
-          className="absolute top-3 right-3 bg-accent-orange text-white border-0 text-xs font-medium px-2.5 py-1"
+          className="absolute top-3 right-3 bg-foreground text-background border-0 text-xs font-medium px-2.5 py-1"
         >
           Sales Accelerator
         </Badge>
@@ -205,10 +207,12 @@ export function PlanCard({
           </>
         ) : isCurrentPlan ? (
           'Current Plan'
-        ) : priceId ? (
-          'Upgrade'
-        ) : (
+        ) : !priceId ? (
           'Contact Sales'
+        ) : currentPlanPrice !== undefined && plan.price_monthly < currentPlanPrice ? (
+          'Downgrade'
+        ) : (
+          'Upgrade'
         )}
       </Button>
 
