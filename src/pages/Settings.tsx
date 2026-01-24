@@ -54,34 +54,31 @@ function Settings() {
     });
   }, [canManage, loading]);
 
-  // Check for URL parameters
-  const tabParam = searchParams.get('tab');
-  const openMemberId = searchParams.get('open');
-
-  // Set active tab from URL parameter using centralized config
+  // Handle URL parameters for tab navigation (combined effect to avoid race condition)
   useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const openMemberId = searchParams.get('open');
+    
+    // Only process if we have parameters to handle
+    if (!tabParam && !openMemberId) return;
+    
     // Handle legacy subscription param
     if (tabParam === 'subscription') {
       setActiveTab('billing');
-      return;
+    } else if (tabParam) {
+      // Validate against centralized SETTINGS_TABS config
+      const validTabParams = SETTINGS_TABS.map(tab => tab.tabParam);
+      if (validTabParams.includes(tabParam)) {
+        setActiveTab(tabParam as SettingsTab);
+      }
     }
     
-    // Validate against centralized SETTINGS_TABS config
-    const validTabParams = SETTINGS_TABS.map(tab => tab.tabParam);
-    if (tabParam && validTabParams.includes(tabParam)) {
-      setActiveTab(tabParam as SettingsTab);
-    }
-  }, [tabParam]);
-
-  // Clear URL parameters after processing
-  useEffect(() => {
-    if (tabParam || openMemberId) {
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('tab');
-      newSearchParams.delete('open');
-      setSearchParams(newSearchParams, { replace: true });
-    }
-  }, [tabParam, openMemberId, searchParams, setSearchParams]);
+    // Clear URL parameters after setting the tab (in same effect cycle)
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete('tab');
+    newSearchParams.delete('open');
+    setSearchParams(newSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Listen for custom events from keyboard shortcuts
   React.useEffect(() => {
