@@ -27,7 +27,7 @@ import {
 
 // Phase 2: Utility functions
 import { extractPhoneNumbers } from "../_shared/utils/phone.ts";
-import { hashApiKey } from "../_shared/utils/hashing.ts";
+import { hashString } from "../_shared/utils/hashing.ts";
 import { fetchLinkPreviews } from "../_shared/utils/links.ts";
 import { detectConversationLanguage, LANGUAGE_NAMES } from "../_shared/utils/language.ts";
 
@@ -223,61 +223,14 @@ serve(async (req) => {
     
     // Widget requests are allowed through without API key validation
     if (isFromWidget) {
-      log.debug('Widget origin detected - bypassing API key validation');
-    } else if (authHeader && authHeader.startsWith('Bearer ')) {
-      // Non-widget requests with API key - validate it
-      const apiKey = authHeader.substring(7);
-      
-      // Hash the API key for comparison
-      const keyHash = await hashApiKey(apiKey);
-      
-      // Validate API key and check rate limits
-      const { data: validationResult, error: validationError } = await supabase
-        .rpc('validate_api_key', { p_key_hash: keyHash, p_agent_id: agentId });
-      
-      if (validationError) {
-        log.error('API key validation error', { error: validationError.message });
-        return createErrorResponse(
-          requestId,
-          ErrorCodes.INTERNAL_ERROR,
-          'API key validation failed',
-          500,
-          performance.now() - startTime
-        );
-      }
-      
-      const validation = validationResult?.[0];
-      
-      if (!validation?.valid) {
-        log.warn('Invalid API key attempt', { agentId });
-        return createErrorResponse(
-          requestId,
-          ErrorCodes.UNAUTHORIZED,
-          validation?.error_message || 'Invalid API key',
-          401,
-          performance.now() - startTime
-        );
-      }
-      
-      if (validation.rate_limited) {
-        log.warn('Rate limited API key', { keyId: validation.key_id });
-        return createErrorResponse(
-          requestId,
-          ErrorCodes.RATE_LIMITED,
-          validation.error_message || 'Rate limit exceeded',
-          429,
-          performance.now() - startTime
-        );
-      }
-      
-      log.info('API key authenticated', { keyId: validation.key_id });
+      log.debug('Widget origin detected - request authorized');
     } else {
-      // No API key and not from widget - reject
-      log.warn('Rejected - no API key and not from widget origin');
+      // Non-widget requests are not allowed (API access feature removed)
+      log.warn('Rejected - not from widget origin');
       return createErrorResponse(
         requestId,
         ErrorCodes.UNAUTHORIZED,
-        'API key required. Include Authorization: Bearer <api_key> header.',
+        'This endpoint is only accessible from the widget.',
         401,
         performance.now() - startTime
       );

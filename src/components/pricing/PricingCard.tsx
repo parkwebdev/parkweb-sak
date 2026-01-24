@@ -33,8 +33,6 @@ interface PricingCardProps {
 
 const FEATURE_LABELS: Record<string, string> = {
   widget: 'Chat Widget',
-  api: 'API Access',
-  api_access: 'API Access',
   webhooks: 'Webhooks',
   custom_tools: 'Custom AI Tools',
   integrations: 'Integrations',

@@ -175,23 +175,6 @@ export const ANNOUNCEMENT_LIST_COLUMNS = `
 `;
 
 /**
- * Columns for agent API key list views.
- */
-export const AGENT_API_KEY_COLUMNS = `
-  id,
-  agent_id,
-  key_prefix,
-  name,
-  requests_per_minute,
-  requests_per_day,
-  current_minute_requests,
-  current_day_requests,
-  last_used_at,
-  created_at,
-  revoked_at
-`;
-
-/**
  * Columns for lead stage list views.
  */
 export const LEAD_STAGE_COLUMNS = `
