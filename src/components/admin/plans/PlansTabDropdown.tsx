@@ -47,7 +47,7 @@ export function PlansTabDropdown({ activeTab, onTabChange }: PlansTabDropdownPro
           <DropdownMenuItem
             key={key}
             onClick={() => onTabChange(key)}
-            className={cn(activeTab === key && 'bg-accent')}
+            className={cn('py-1.5', activeTab === key && 'bg-accent')}
           >
             {label}
           </DropdownMenuItem>
