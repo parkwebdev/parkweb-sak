@@ -39,6 +39,8 @@ interface UseSubscriptionResult extends SubscriptionState {
   reactivateSubscription: () => Promise<void>;
   /** Whether checkout is in progress */
   checkoutLoading: boolean;
+  /** The specific priceId currently being processed for checkout */
+  checkoutLoadingPriceId: string | null;
   /** Whether portal redirect is in progress */
   portalLoading: boolean;
   /** Whether cancel is in progress */
@@ -74,7 +76,8 @@ const REFRESH_INTERVAL = 60 * 1000;
 export function useSubscription(): UseSubscriptionResult {
   const { user, session } = useAuth();
   const [state, setState] = useState<SubscriptionState>(INITIAL_STATE);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutLoadingPriceId, setCheckoutLoadingPriceId] = useState<string | null>(null);
+  const checkoutLoading = checkoutLoadingPriceId !== null;
   const [portalLoading, setPortalLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [reactivateLoading, setReactivateLoading] = useState(false);
@@ -130,7 +133,7 @@ export function useSubscription(): UseSubscriptionResult {
       return;
     }
 
-    setCheckoutLoading(true);
+    setCheckoutLoadingPriceId(priceId);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -159,7 +162,7 @@ export function useSubscription(): UseSubscriptionResult {
         description: getErrorMessage(error),
       });
     } finally {
-      setCheckoutLoading(false);
+      setCheckoutLoadingPriceId(null);
     }
   }, [user, session]);
 
@@ -325,10 +328,11 @@ export function useSubscription(): UseSubscriptionResult {
     cancelSubscription,
     reactivateSubscription,
     checkoutLoading,
+    checkoutLoadingPriceId,
     portalLoading,
     cancelLoading,
     reactivateLoading,
-  }), [state, checkSubscription, openCheckout, openCustomerPortal, cancelSubscription, reactivateSubscription, checkoutLoading, portalLoading, cancelLoading, reactivateLoading]);
+  }), [state, checkSubscription, openCheckout, openCustomerPortal, cancelSubscription, reactivateSubscription, checkoutLoading, checkoutLoadingPriceId, portalLoading, cancelLoading, reactivateLoading]);
 }
 
 export default useSubscription;
