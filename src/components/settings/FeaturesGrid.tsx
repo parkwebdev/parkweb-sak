@@ -6,7 +6,6 @@
 
 import { X, ChevronDown } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -140,23 +139,12 @@ function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boole
         <X size={16} className="text-muted-foreground/50 shrink-0 mt-0.5" aria-hidden="true" />
       )}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <span className={cn(
-            "text-sm font-medium",
-            enabled ? "text-foreground" : "text-muted-foreground/70"
-          )}>
-            {feature.label}
-          </span>
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "text-2xs shrink-0 border",
-              CATEGORY_COLORS[feature.category] || 'bg-muted/10 text-muted-foreground'
-            )}
-          >
-            {feature.category}
-          </Badge>
-        </div>
+        <span className={cn(
+          "text-sm font-medium",
+          enabled ? "text-foreground" : "text-muted-foreground/70"
+        )}>
+          {feature.label}
+        </span>
         <p className={cn(
           "text-xs mt-0.5",
           enabled ? "text-muted-foreground" : "text-muted-foreground/50"
