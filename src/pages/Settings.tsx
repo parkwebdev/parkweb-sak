@@ -14,7 +14,7 @@
  * @page
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { getNavigationIcon } from '@/lib/navigation-icons';
@@ -34,10 +34,22 @@ import { springs } from '@/lib/motion-variants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
 function Settings() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [searchParams, setSearchParams] = useSearchParams();
   const { loading } = useRoleAuthorization();
   const canManage = useCanManageChecker();
+  
+  // Derive active tab directly from URL (source of truth)
+  const activeTab = useMemo((): SettingsTab => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'subscription') return 'billing';
+    const validTab = SETTINGS_TABS.find(t => t.tabParam === tabParam);
+    return (validTab?.tabParam as SettingsTab) || 'general';
+  }, [searchParams]);
+
+  // Handle tab changes by updating URL
+  const handleTabChange = (newTab: SettingsTab) => {
+    setSearchParams({ tab: newTab }, { replace: true });
+  };
   
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
@@ -54,36 +66,10 @@ function Settings() {
     });
   }, [canManage, loading]);
 
-  // Handle URL parameters for tab navigation (combined effect to avoid race condition)
-  useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    const openMemberId = searchParams.get('open');
-    
-    // Only process if we have parameters to handle
-    if (!tabParam && !openMemberId) return;
-    
-    // Handle legacy subscription param
-    if (tabParam === 'subscription') {
-      setActiveTab('billing');
-    } else if (tabParam) {
-      // Validate against centralized SETTINGS_TABS config
-      const validTabParams = SETTINGS_TABS.map(tab => tab.tabParam);
-      if (validTabParams.includes(tabParam)) {
-        setActiveTab(tabParam as SettingsTab);
-      }
-    }
-    
-    // Clear URL parameters after setting the tab (in same effect cycle)
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.delete('tab');
-    newSearchParams.delete('open');
-    setSearchParams(newSearchParams, { replace: true });
-  }, [searchParams, setSearchParams]);
-
   // Listen for custom events from keyboard shortcuts
   React.useEffect(() => {
     const handleSetActiveTab = (event: CustomEvent<string>) => {
-      setActiveTab(event.detail as SettingsTab);
+      handleTabChange(event.detail as SettingsTab);
     };
 
     window.addEventListener('setActiveTab', handleSetActiveTab as EventListener);
@@ -116,7 +102,7 @@ function Settings() {
       {/* Left: Section Menu (Desktop) */}
       <SettingsSectionMenu
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
       />
 
       {/* Center: Content Area */}
@@ -127,7 +113,7 @@ function Settings() {
             {visibleTabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.tabParam as SettingsTab)}
+                onClick={() => handleTabChange(tab.tabParam as SettingsTab)}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap",
                   activeTab === tab.tabParam
