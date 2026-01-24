@@ -225,7 +225,9 @@ export const SubscriptionSettings = () => {
                   Compare all features
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
-                  <FeatureComparisonTable plans={plans} />
+                  <div className="rounded-lg border bg-card overflow-hidden">
+                    <FeatureComparisonTable plans={plans} />
+                  </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
