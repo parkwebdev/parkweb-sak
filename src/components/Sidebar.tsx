@@ -16,7 +16,7 @@ import { motion } from 'motion/react';
 import { useConversations } from '@/hooks/useConversations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
-import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import { useUnifiedSearch } from '@/contexts/UnifiedSearchContext';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
@@ -108,7 +108,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
   const { conversations } = useConversations();
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
-  const { setOpen: setSearchOpen } = useGlobalSearch();
+  const { setOpen: setSearchOpen } = useUnifiedSearch();
   const { hasPermission, hasAdminPermission, isAdmin, isSuperAdmin, isPilotTeamMember, loading: permissionsLoading } = useRoleAuthorization();
   
   // Check if we're on an admin route

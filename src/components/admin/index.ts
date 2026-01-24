@@ -8,7 +8,6 @@
 export { AdminSidebar } from './AdminSidebar';
 export { ImpersonationBanner } from './ImpersonationBanner';
 export { AdminPermissionGuard } from './AdminPermissionGuard';
-export { AdminGlobalSearch } from './AdminGlobalSearch';
 
 // Accounts components
 export * from './accounts';

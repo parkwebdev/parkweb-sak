@@ -20,10 +20,10 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AriSectionActionsProvider } from "@/contexts/AriSectionActionsContext";
-import { GlobalSearchProvider } from "@/contexts/GlobalSearchContext";
+import { UnifiedSearchProvider } from "@/contexts/UnifiedSearchContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PermissionGuard } from "@/components/PermissionGuard";
-import { GlobalSearch } from "@/components/GlobalSearch";
+import { UnifiedSearch } from "@/components/UnifiedSearch";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PointerEventsGuard } from "@/components/PointerEventsGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -121,13 +121,13 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="app-ui-theme">
         <TooltipProvider>
-          <GlobalSearchProvider>
-                <Toaster />
-                <PointerEventsGuard />
-                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                  <AuthProvider>
-                    <AriSectionActionsProvider>
-                    <GlobalSearch />
+          <Toaster />
+          <PointerEventsGuard />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <UnifiedSearchProvider>
+              <AuthProvider>
+                <AriSectionActionsProvider>
+                  <UnifiedSearch />
                 <Routes>
                   {/* Public routes */}
                   <Route path="/login" element={<Auth />} />
@@ -269,10 +269,10 @@ const App = () => (
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                    </AriSectionActionsProvider>
-                  </AuthProvider>
-                </BrowserRouter>
-          </GlobalSearchProvider>
+                </AriSectionActionsProvider>
+              </AuthProvider>
+            </UnifiedSearchProvider>
+          </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
