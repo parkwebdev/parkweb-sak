@@ -7,7 +7,7 @@
  * @module hooks/useSupabaseQuery
  */
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 import { 
   useQuery, 
   useMutation, 
@@ -18,6 +18,7 @@ import {
 } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { useStableArray } from '@/hooks/useStableObject';
 
 /**
  * Configuration for real-time subscriptions
@@ -80,11 +81,14 @@ export function useSupabaseQuery<TData, TError = Error>({
   const queryClient = useQueryClient();
   const channelRef = useRef<RealtimeChannel | null>(null);
   
-  // Memoize queryKey serialization to prevent unnecessary effect re-runs
-  const stableQueryKeyString = useMemo(
-    () => JSON.stringify(queryKey),
-    [queryKey]
-  );
+  // Stabilize queryKey to prevent subscription churn on every render
+  // This is critical - without it, the channel tears down/recreates constantly
+  const stableQueryKey = useStableArray(
+    Array.isArray(queryKey) ? queryKey : [queryKey]
+  ) as QueryKey;
+  
+  // Stable string for channel naming and effect dependencies
+  const stableQueryKeyString = JSON.stringify(stableQueryKey);
 
   // Set up real-time subscription for cache invalidation
   useEffect(() => {
@@ -92,8 +96,11 @@ export function useSupabaseQuery<TData, TError = Error>({
 
     const { table, schema = 'public', filter } = realtime;
 
-    // Deterministic channel name - reuses existing channel on re-subscribe
+    // Deterministic channel name based on stable values
     const channelName = `sq-${table}-${filter || 'all'}-${stableQueryKeyString.slice(0, 50)}`;
+
+    // Debug logging for published URL testing (only when explicitly enabled)
+    const debugEnabled = typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__realtimeDebug;
 
     const channel = supabase
       .channel(channelName)
@@ -105,16 +112,24 @@ export function useSupabaseQuery<TData, TError = Error>({
           table,
           filter,
         },
-        () => {
-          // Immediately refetch active queries when real-time changes occur
-          // Using refetchQueries instead of invalidateQueries to bypass staleTime
+        (payload) => {
+          if (debugEnabled) {
+            console.log('[useSupabaseQuery] Realtime event received:', { table, filter, payload });
+          }
+          // Refetch ALL matching queries (not just 'active') to ensure sidebar/layout updates
+          // Use exact: true to avoid false matches
           queryClient.refetchQueries({ 
-            queryKey, 
-            type: 'active',
+            queryKey: stableQueryKey, 
+            type: 'all',
+            exact: true,
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (debugEnabled) {
+          console.log('[useSupabaseQuery] Subscription status:', { channelName, status, table, filter });
+        }
+      });
 
     channelRef.current = channel;
 
@@ -124,10 +139,11 @@ export function useSupabaseQuery<TData, TError = Error>({
         channelRef.current = null;
       }
     };
-  }, [realtime?.table, realtime?.filter, enabled, queryClient, stableQueryKeyString]);
+  // Dependencies: only re-subscribe when actual values change (not references)
+  }, [realtime?.table, realtime?.filter, realtime?.schema, enabled, queryClient, stableQueryKeyString, stableQueryKey]);
 
   return useQuery({
-    queryKey,
+    queryKey: stableQueryKey,
     queryFn,
     enabled,
     ...options,
