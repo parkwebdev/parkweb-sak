@@ -4,10 +4,18 @@
  */
 
 import { Check, Loading02 } from '@untitledui/icons';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PLAN_FEATURES, PLAN_LIMITS, FEATURE_LABELS, LIMIT_DISPLAY_LABELS } from '@/lib/plan-config';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
+import { 
+  PLAN_FEATURES, 
+  PLAN_LIMITS, 
+  FEATURE_LABELS, 
+  LIMIT_DISPLAY_LABELS,
+  FEATURE_DESCRIPTIONS,
+  LIMIT_DESCRIPTIONS 
+} from '@/lib/plan-config';
 
 export interface PlanData {
   id: string;
@@ -75,6 +83,7 @@ export function PlanCard({
       key: l.key,
       label: LIMIT_DISPLAY_LABELS[l.key],
       value: formatLimitValue(plan.limits[l.key]),
+      description: LIMIT_DESCRIPTIONS[l.key],
     }))
     .filter(l => l.value !== null);
 
@@ -85,6 +94,7 @@ export function PlanCard({
     .map(f => ({
       key: f.key,
       label: FEATURE_LABELS[f.key],
+      description: FEATURE_DESCRIPTIONS[f.key],
     }));
 
   return (
@@ -147,12 +157,29 @@ export function PlanCard({
       {/* Limits */}
       {limits.length > 0 && (
         <div className="space-y-3 mb-4">
-          {limits.map(({ key, label, value }) => (
+          {limits.map(({ key, label, value, description }) => (
             <div key={key} className="flex items-center gap-2 text-sm">
               <Check size={14} className="text-success shrink-0" aria-hidden="true" />
               <span>
                 <span className="font-medium">{value}</span> {label}
               </span>
+              {description && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button 
+                      type="button" 
+                      className="group inline-flex text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={`More info about ${label}`}
+                    >
+                      <InfoCircleIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                      <InfoCircleIconFilled className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px]">
+                    {description}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
           ))}
         </div>
@@ -161,10 +188,27 @@ export function PlanCard({
       {/* Features - Only show enabled features new in this tier */}
       {enabledFeatures.length > 0 && (
         <div className="space-y-3 flex-1">
-          {enabledFeatures.map(({ key, label }) => (
+          {enabledFeatures.map(({ key, label, description }) => (
             <div key={key} className="flex items-center gap-2 text-sm">
               <Check size={14} className="text-success shrink-0" aria-hidden="true" />
               <span>{label}</span>
+              {description && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button 
+                      type="button" 
+                      className="group inline-flex text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={`More info about ${label}`}
+                    >
+                      <InfoCircleIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                      <InfoCircleIconFilled className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px]">
+                    {description}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
           ))}
         </div>

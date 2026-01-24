@@ -24,6 +24,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
 import { PlanCard, type PlanData } from '@/components/pricing/PlanCard';
 import { BillingToggle } from '@/components/pricing/BillingToggle';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 type Invoice = {
   id: string;
@@ -195,20 +196,22 @@ export const SubscriptionSettings = () => {
       </div>
 
       {/* Plans Grid - adapts to number of plans */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 ${plans && plans.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} divide-y md:divide-y-0 md:divide-x divide-border border rounded-lg bg-card`}>
-        {plans?.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            allPlans={plans}
-            billingPeriod={billingPeriod}
-            isCurrentPlan={plan.id === currentPlanId}
-            onSelect={handleSelectPlan}
-            loading={checkoutLoading}
-            disabled={!canManageBilling}
-          />
-        ))}
-      </div>
+      <TooltipProvider>
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${plans && plans.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} divide-y md:divide-y-0 md:divide-x divide-border border rounded-lg bg-card`}>
+          {plans?.map((plan) => (
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              allPlans={plans}
+              billingPeriod={billingPeriod}
+              isCurrentPlan={plan.id === currentPlanId}
+              onSelect={handleSelectPlan}
+              loading={checkoutLoading}
+              disabled={!canManageBilling}
+            />
+          ))}
+        </div>
+      </TooltipProvider>
 
       {/* Billing History */}
       <div className="space-y-4 pt-4 border-t">
