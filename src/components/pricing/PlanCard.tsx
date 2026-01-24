@@ -144,7 +144,23 @@ export function PlanCard({
   const { newFeatures, inheritedGroups } = buildFeatureGroups(plan, allPlans);
 
   return (
-    <div className="flex flex-col h-full p-6">
+    <div className="relative flex flex-col h-full p-6">
+      {/* Plan tier promotional badge */}
+      {plan.name === 'Business' && (
+        <Badge 
+          className="absolute top-3 right-3 bg-info text-info-foreground border-0 text-xs font-medium"
+        >
+          Most Popular
+        </Badge>
+      )}
+      {plan.name === 'Enterprise' && (
+        <Badge 
+          className="absolute top-3 right-3 bg-accent-purple text-white border-0 text-xs font-medium"
+        >
+          Complete Solution
+        </Badge>
+      )}
+
       {/* Plan Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
