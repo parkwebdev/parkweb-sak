@@ -141,6 +141,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--accent-purple))",
           foreground: "hsl(var(--accent-purple-foreground))",
         },
+        "accent-orange": {
+          DEFAULT: "hsl(var(--accent-orange))",
+          foreground: "hsl(var(--accent-orange-foreground))",
+        },
         rating: "hsl(var(--rating))",
       },
       borderRadius: {
