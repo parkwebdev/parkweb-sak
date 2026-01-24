@@ -1,5 +1,5 @@
 /**
- * @fileoverview Minimal plan card matching Time2book reference design.
+ * @fileoverview Plan card using centralized plan-config for consistent display.
  * Clean, borderless cards with subtle separators between columns.
  */
 
@@ -7,6 +7,7 @@ import { Check, X, Loading02 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PLAN_FEATURES, PLAN_LIMITS, FEATURE_LABELS, LIMIT_DISPLAY_LABELS } from '@/lib/plan-config';
 
 export interface PlanData {
   id: string;
@@ -29,45 +30,15 @@ interface PlanCardProps {
   disabled?: boolean;
 }
 
-// Feature labels for display
-const FEATURE_LABELS: Record<string, string> = {
-  widget: 'Chat Widget',
-  api: 'API Access',
-  api_access: 'API Access',
-  webhooks: 'Webhooks',
-  custom_tools: 'Custom Tools',
-  integrations: 'Integrations',
-  knowledge_sources: 'Knowledge Sources',
-  locations: 'Multiple Locations',
-  multi_location: 'Multi-Location',
-  calendar_booking: 'Calendar Booking',
-  advanced_analytics: 'Advanced Analytics',
-  report_builder: 'Report Builder',
-  scheduled_reports: 'Scheduled Reports',
-  custom_branding: 'Custom Branding',
-  team_collaboration: 'Team Collaboration',
-  white_label: 'White Label',
-  priority_support: 'Priority Support',
-};
-
-// Limit labels for display
-const LIMIT_LABELS: Record<string, string> = {
-  max_conversations: 'conversations/mo',
-  max_messages: 'messages/mo',
-  max_api_calls: 'API calls/mo',
-  max_knowledge_sources: 'knowledge sources',
-  max_locations: 'locations',
-  max_team_members: 'team members',
-};
-
-// Default descriptions based on plan name
-const PLAN_DESCRIPTIONS: Record<string, string> = {
-  'Starter': 'For solo users getting started.',
-  'Growth': 'For growing teams.',
-  'Professional': 'For established businesses.',
-  'Business': 'For larger organizations.',
-  'Enterprise': 'For enterprise needs.',
-};
+/**
+ * Formats a limit value for display.
+ * -1 = Unlimited, null/undefined = hidden, otherwise formatted number.
+ */
+function formatLimitValue(value: number | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  if (value === -1) return 'Unlimited';
+  return value.toLocaleString();
+}
 
 export function PlanCard({
   plan,
@@ -85,29 +56,27 @@ export function PlanCard({
     ? plan.stripe_price_id_yearly 
     : plan.stripe_price_id_monthly;
 
-  const description = plan.description || PLAN_DESCRIPTIONS[plan.name] || 'Perfect for your needs.';
-
   const handleSelect = () => {
     if (priceId && !isCurrentPlan) {
       onSelect(priceId);
     }
   };
 
-  // Get all features with their enabled state
-  const allFeatures = Object.entries(FEATURE_LABELS).map(([key, label]) => ({
-    key,
-    label,
-    enabled: plan.features[key] ?? false,
+  // Get features from centralized config with their enabled state
+  const allFeatures = PLAN_FEATURES.map(f => ({
+    key: f.key,
+    label: FEATURE_LABELS[f.key],
+    enabled: plan.features[f.key] ?? false,
   }));
 
-  // Get limits that have values
-  const limits = Object.entries(plan.limits)
-    .filter(([key]) => LIMIT_LABELS[key])
-    .map(([key, value]) => ({
-      key,
-      label: LIMIT_LABELS[key],
-      value: value === -1 ? 'Unlimited' : value.toLocaleString(),
-    }));
+  // Get limits from centralized config that have values
+  const limits = PLAN_LIMITS
+    .map(l => ({
+      key: l.key,
+      label: LIMIT_DISPLAY_LABELS[l.key],
+      value: formatLimitValue(plan.limits[l.key]),
+    }))
+    .filter(l => l.value !== null);
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -124,7 +93,6 @@ export function PlanCard({
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
 
       {/* Price */}
