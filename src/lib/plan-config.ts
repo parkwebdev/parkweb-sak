@@ -31,12 +31,12 @@ export const PLAN_FEATURES: FeatureConfig[] = [
   // Business tier features (growth)
   { key: 'locations', label: 'Locations', description: 'Manage multiple business locations with separate knowledge, hours, and booking calendars.', category: 'Knowledge' },
   { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Deep insights into conversation performance, visitor behavior, and conversion metrics.', category: 'Analytics' },
+  { key: 'custom_tools', label: 'Custom Tools', description: 'Connect external APIs so your AI can perform actions like checking inventory or updating CRMs.', category: 'Tools' },
   // Enterprise tier features (advanced)
   { key: 'calendar_booking', label: 'Calendar Booking', description: 'Let your AI agent schedule appointments directly into your connected calendar.', category: 'Knowledge' },
   { key: 'integrations', label: 'Integrations', description: 'Connect social media, email, and calendar platforms to centralize your conversations.', category: 'Tools' },
   { key: 'report_builder', label: 'Report Builder', description: 'Create custom reports with the metrics and visualizations you need.', category: 'Analytics' },
   { key: 'webhooks', label: 'Webhooks', description: 'Receive real-time HTTP notifications when events occur in your account.', category: 'Core' },
-  { key: 'custom_tools', label: 'Custom Tools', description: 'Connect external APIs so your AI can perform actions like checking inventory or updating CRMs.', category: 'Tools' },
   { key: 'scheduled_reports', label: 'Scheduled Reports', description: 'Automatically email reports on a daily, weekly, or monthly schedule.', category: 'Analytics' },
 ];
 
