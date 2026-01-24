@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichTextEditorWrapper } from '@/components/ui/RichTextEditorWrapper';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonTableSection } from '@/components/ui/skeleton';
@@ -871,9 +871,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
 
             <div className="space-y-2">
               <Label>Content *</Label>
-              <RichTextEditor
+              <RichTextEditorWrapper
                 content={formData.content}
-                onChange={(html) => setFormData({ ...formData, content: html })}
+                onChange={(html: string) => setFormData({ ...formData, content: html })}
                 placeholder="Write your help article content here..."
                 agentId={agentId}
                 userId={userId}

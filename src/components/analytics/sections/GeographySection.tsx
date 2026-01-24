@@ -7,7 +7,7 @@
  * @module components/analytics/sections/GeographySection
  */
 
-import { VisitorLocationMap } from '@/components/analytics/VisitorLocationMap';
+import { VisitorLocationMapWrapper } from '@/components/analytics/VisitorLocationMapWrapper';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import type { LocationData } from '@/types/analytics';
 
@@ -32,7 +32,7 @@ export function GeographySection({
           </div>
         )}
       >
-        <VisitorLocationMap data={locationData} loading={trafficLoading} />
+        <VisitorLocationMapWrapper data={locationData} loading={trafficLoading} />
       </ErrorBoundary>
     </div>
   );

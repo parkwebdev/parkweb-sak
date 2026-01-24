@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash01, DotsGrid, ChevronDown, Plus } from '@untitledui/icons';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichTextEditorWrapper } from '@/components/ui/RichTextEditorWrapper';
 import type { EmbeddedChatConfig, CustomField, FormStep } from '@/hooks/useEmbeddedChatConfig';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -162,9 +162,9 @@ function SortableFieldRow({ field, onUpdate, onRemove }: SortableFieldRowProps) 
 
               {/* Rich text editor for checkbox text */}
               {field.fieldType === 'checkbox' && (
-                <RichTextEditor
+                <RichTextEditorWrapper
                   content={field.richTextContent || ''}
-                  onChange={(html) => onUpdate({ richTextContent: html })}
+                  onChange={(html: string) => onUpdate({ richTextContent: html })}
                   placeholder="By submitting, you agree to our Terms of Service..."
                   minHeight="80px"
                   minimalMode={true}

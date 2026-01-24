@@ -34,7 +34,7 @@ import { uploadFeaturedImage, deleteArticleImage } from '@/lib/article-image-upl
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
 import { SkeletonNewsSection, Skeleton } from '@/components/ui/skeleton';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichTextEditorWrapper } from '@/components/ui/RichTextEditorWrapper';
 import { logger } from '@/utils/logger';
 import { format } from 'date-fns';
 
@@ -393,9 +393,9 @@ const NewsSheet = ({
               {/* Rich Text Editor for Body */}
               <div className="space-y-2">
                 <Label>Content *</Label>
-                <RichTextEditor
+                <RichTextEditorWrapper
                   content={formData.body}
-                  onChange={(html) => setFormData({ ...formData, body: html })}
+                  onChange={(html: string) => setFormData({ ...formData, body: html })}
                   placeholder="Write your news article content here..."
                   agentId={agentId}
                   userId={userId}
