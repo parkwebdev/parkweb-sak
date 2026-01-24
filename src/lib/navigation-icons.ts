@@ -48,7 +48,17 @@ import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { DashboardIcon, DashboardIconFilled } from '@/components/icons/DashboardIcon';
 import { InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled, HelpCenterFilled } from '@/components/icons/SidebarIcons';
 import * as AriMenuIcons from '@/components/icons/AriMenuIcons';
-
+import { 
+  OverviewFilled as AdminOverviewFilled,
+  AccountsFilled as AdminAccountsFilled,
+  TextInputFilled as AdminTextInputFilled,
+  PilotTeamFilled as AdminPilotTeamFilled,
+  MailFilled as AdminMailFilled,
+  TrendUpFilled as AdminTrendUpFilled,
+  ClipboardCheckFilled as AdminClipboardCheckFilled,
+} from '@/components/icons/AdminSidebarIcons';
+import { CreditCardIconFilled as AdminCreditCardFilled } from '@/components/ui/settings-icon';
+import { BookOpenFilled as AdminBookOpenFilled } from '@/components/icons/AriMenuIcons';
 type IconComponent = ComponentType<{ size?: number; className?: string }>;
 
 /** Icon mapping from route config iconName to component - Single source of truth */
@@ -139,6 +149,19 @@ export const ADMIN_ICON_MAP: Record<string, IconComponent> = {
   TrendUp01: TrendUp01,
   ClipboardCheck: ClipboardCheck,
   Shield01: Shield01,
+};
+
+/** Admin sidebar active (filled) icon mapping from ADMIN_SECTIONS iconName to component */
+export const ADMIN_ACTIVE_ICON_MAP: Record<string, IconComponent> = {
+  LayoutAlt01: AdminOverviewFilled,
+  Users01: AdminAccountsFilled,
+  FileCode01: AdminTextInputFilled,
+  CreditCard01: AdminCreditCardFilled,
+  UserGroup: AdminPilotTeamFilled,
+  BookOpen01: AdminBookOpenFilled,
+  Mail01: AdminMailFilled,
+  TrendUp01: AdminTrendUpFilled,
+  ClipboardCheck: AdminClipboardCheckFilled,
 };
 
 /** Get icon component from iconName, with fallback */

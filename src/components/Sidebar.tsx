@@ -21,7 +21,7 @@ import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import PilotLogo from './PilotLogo';
 import { springs } from '@/lib/motion-variants';
 import { getMainNavRoutes, getBottomNavRoutes, getRouteById, ADMIN_SECTIONS, type RouteConfig, type AdminSectionConfig } from '@/config/routes';
-import { NAVIGATION_ICON_MAP, ACTIVE_ICON_MAP, ADMIN_ICON_MAP } from '@/lib/navigation-icons';
+import { NAVIGATION_ICON_MAP, ACTIVE_ICON_MAP, ADMIN_ICON_MAP, ADMIN_ACTIVE_ICON_MAP } from '@/lib/navigation-icons';
 import type { ConversationMetadata } from '@/types/metadata';
 import type { AppPermission } from '@/types/team';
 import type { AdminPermission } from '@/types/admin';
@@ -69,6 +69,7 @@ function adminSectionToNavItem(section: AdminSectionConfig): NavigationItem {
     id: section.id,
     label: section.label,
     icon: ADMIN_ICON_MAP[section.iconName] ?? Grid,
+    activeIcon: ADMIN_ACTIVE_ICON_MAP[section.iconName],
     path: section.path,
   };
 }
