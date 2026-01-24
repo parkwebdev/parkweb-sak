@@ -1,6 +1,6 @@
 /**
  * @fileoverview Plan card using centralized plan-config for consistent display.
- * Clean, borderless cards with subtle separators between columns.
+ * Shows cumulative features with visual distinction between new and inherited.
  */
 
 import { Check, Loading02 } from '@untitledui/icons';
@@ -39,6 +39,17 @@ interface PlanCardProps {
   disabled?: boolean;
 }
 
+interface FeatureItem {
+  key: string;
+  label: string;
+  description: string;
+}
+
+interface InheritedGroup {
+  planName: string;
+  features: FeatureItem[];
+}
+
 /**
  * Formats a limit value for display.
  * -1 = Unlimited, null/undefined = hidden, otherwise formatted number.
@@ -47,6 +58,53 @@ function formatLimitValue(value: number | null | undefined): string | null {
   if (value === null || value === undefined) return null;
   if (value === -1) return 'Unlimited';
   return value.toLocaleString();
+}
+
+/**
+ * Builds feature groups showing new features and inherited features from previous tiers.
+ */
+function buildFeatureGroups(
+  plan: PlanData,
+  allPlans: PlanData[]
+): { newFeatures: FeatureItem[]; inheritedGroups: InheritedGroup[] } {
+  const sortedPlans = [...allPlans].sort((a, b) => a.price_monthly - b.price_monthly);
+  const currentIndex = sortedPlans.findIndex(p => p.id === plan.id);
+  const previousPlan = currentIndex > 0 ? sortedPlans[currentIndex - 1] : null;
+
+  // Features NEW in this tier
+  const newFeatures = PLAN_FEATURES
+    .filter(f => plan.features[f.key])
+    .filter(f => !previousPlan || !previousPlan.features[f.key])
+    .map(f => ({
+      key: f.key,
+      label: FEATURE_LABELS[f.key],
+      description: FEATURE_DESCRIPTIONS[f.key],
+    }));
+
+  // Build inherited feature groups from each previous tier
+  const inheritedGroups: InheritedGroup[] = [];
+  for (let i = currentIndex - 1; i >= 0; i--) {
+    const tierPlan = sortedPlans[i];
+    const prevPlan = i > 0 ? sortedPlans[i - 1] : null;
+    
+    const tierFeatures = PLAN_FEATURES
+      .filter(f => tierPlan.features[f.key])
+      .filter(f => !prevPlan || !prevPlan.features[f.key])
+      .map(f => ({
+        key: f.key,
+        label: FEATURE_LABELS[f.key],
+        description: FEATURE_DESCRIPTIONS[f.key],
+      }));
+    
+    if (tierFeatures.length > 0) {
+      inheritedGroups.push({
+        planName: tierPlan.name,
+        features: tierFeatures,
+      });
+    }
+  }
+
+  return { newFeatures, inheritedGroups };
 }
 
 export function PlanCard({
@@ -72,11 +130,6 @@ export function PlanCard({
     }
   };
 
-  // Determine plan hierarchy based on price
-  const sortedPlans = [...allPlans].sort((a, b) => a.price_monthly - b.price_monthly);
-  const currentIndex = sortedPlans.findIndex(p => p.id === plan.id);
-  const previousPlan = currentIndex > 0 ? sortedPlans[currentIndex - 1] : null;
-
   // Get limits from centralized config that have values
   const limits = PLAN_LIMITS
     .map(l => ({
@@ -87,15 +140,8 @@ export function PlanCard({
     }))
     .filter(l => l.value !== null);
 
-  // Get only enabled features that are NEW in this tier
-  const enabledFeatures = PLAN_FEATURES
-    .filter(f => plan.features[f.key])
-    .filter(f => !previousPlan || !previousPlan.features[f.key])
-    .map(f => ({
-      key: f.key,
-      label: FEATURE_LABELS[f.key],
-      description: FEATURE_DESCRIPTIONS[f.key],
-    }));
+  // Build cumulative feature groups
+  const { newFeatures, inheritedGroups } = buildFeatureGroups(plan, allPlans);
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -145,15 +191,6 @@ export function PlanCard({
         )}
       </Button>
 
-      {/* Previous Plan Reference - fixed height for alignment */}
-      <div className="h-6 mb-4">
-        {previousPlan && (
-          <p className="text-sm text-muted-foreground">
-            Everything in "{previousPlan.name}" +
-          </p>
-        )}
-      </div>
-
       {/* Limits */}
       {limits.length > 0 && (
         <div className="space-y-3 mb-4">
@@ -185,10 +222,10 @@ export function PlanCard({
         </div>
       )}
 
-      {/* Features - Only show enabled features new in this tier */}
-      {enabledFeatures.length > 0 && (
-        <div className="space-y-3 flex-1">
-          {enabledFeatures.map(({ key, label, description }) => (
+      {/* New Features - Full Opacity */}
+      {newFeatures.length > 0 && (
+        <div className="space-y-2.5">
+          {newFeatures.map(({ key, label, description }) => (
             <div key={key} className="flex items-center gap-2 text-sm">
               <Check size={14} className="text-success shrink-0" aria-hidden="true" />
               <span>{label}</span>
@@ -213,6 +250,23 @@ export function PlanCard({
           ))}
         </div>
       )}
+
+      {/* Inherited Feature Groups - Muted */}
+      {inheritedGroups.map(({ planName, features }) => (
+        <div key={planName} className="mt-4 pt-4 border-t border-border/50">
+          <p className="text-xs text-muted-foreground mb-2">
+            Includes from {planName}:
+          </p>
+          <div className="space-y-1.5">
+            {features.map(({ key, label }) => (
+              <div key={key} className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Check size={12} className="text-muted-foreground/50 shrink-0" aria-hidden="true" />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -78,3 +78,33 @@ export const FEATURE_DESCRIPTIONS = Object.fromEntries(
 export const LIMIT_DESCRIPTIONS = Object.fromEntries(
   PLAN_LIMITS.map(l => [l.key, l.description])
 ) as Record<string, string>;
+
+/** Centralized category color tokens for consistent styling across all feature displays */
+export const FEATURE_CATEGORY_COLORS = {
+  Core: {
+    bg: 'bg-info/10',
+    text: 'text-info',
+    border: 'border-info/20',
+    dot: 'bg-info',
+  },
+  Tools: {
+    bg: 'bg-accent-purple/10',
+    text: 'text-accent-purple',
+    border: 'border-accent-purple/20',
+    dot: 'bg-accent-purple',
+  },
+  Knowledge: {
+    bg: 'bg-warning/10',
+    text: 'text-warning',
+    border: 'border-warning/20',
+    dot: 'bg-warning',
+  },
+  Analytics: {
+    bg: 'bg-status-active/10',
+    text: 'text-status-active',
+    border: 'border-status-active/20',
+    dot: 'bg-status-active',
+  },
+} as const;
+
+export type FeatureCategory = keyof typeof FEATURE_CATEGORY_COLORS;

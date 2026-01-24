@@ -1,7 +1,7 @@
 /**
  * @fileoverview Features grid displaying plan features in a row-based list.
- * Shows enabled/disabled features with check/x icons, inline descriptions, and category badges.
- * Includes a category filter dropdown with colored dots.
+ * Shows enabled/disabled features with check/x icons, inline descriptions.
+ * Uses centralized plan-config for feature definitions and category colors.
  */
 
 import { X, ChevronDown } from '@untitledui/icons';
@@ -15,21 +15,26 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { PLAN_FEATURES } from '@/lib/plan-config';
+import { 
+  PLAN_FEATURES, 
+  FEATURE_CATEGORIES, 
+  FEATURE_CATEGORY_COLORS,
+  type FeatureCategory 
+} from '@/lib/plan-config';
 import type { PlanFeatures } from '@/hooks/usePlanLimits';
 
 interface FeaturesGridProps {
   features: PlanFeatures | null;
   loading?: boolean;
-  activeCategory: string | null;
-  onCategoryChange: (category: string | null) => void;
+  activeCategory: FeatureCategory | null;
+  onCategoryChange: (category: FeatureCategory | null) => void;
 }
 
 interface FeatureItem {
   key: string;
   label: string;
   description: string;
-  category: string;
+  category: FeatureCategory;
   helpCenterPath?: string;
 }
 
@@ -47,30 +52,12 @@ const FEATURE_HELP_PATHS: Record<string, string> = {
   scheduled_reports: '/help-center?category=analytics&article=report-builder',
 };
 
-// Category color mapping using semantic design tokens (for badges)
-const CATEGORY_COLORS: Record<string, string> = {
-  Core: 'bg-info/10 text-info border-info/20',
-  Tools: 'bg-accent-purple/10 text-accent-purple border-accent-purple/20',
-  Knowledge: 'bg-warning/10 text-warning border-warning/20',
-  Analytics: 'bg-status-active/10 text-status-active border-status-active/20',
-};
-
-// Category dot colors for dropdown
-const CATEGORY_DOT_COLORS: Record<string, string> = {
-  Core: 'bg-info',
-  Tools: 'bg-accent-purple',
-  Knowledge: 'bg-warning',
-  Analytics: 'bg-status-active',
-};
-
-const FEATURE_CATEGORIES = ['Core', 'Tools', 'Knowledge', 'Analytics'];
-
 // Flatten PLAN_FEATURES into a single list with help paths
 const ALL_FEATURES: FeatureItem[] = PLAN_FEATURES.map(feature => ({
   key: feature.key,
   label: feature.label,
   description: feature.description,
-  category: feature.category,
+  category: feature.category as FeatureCategory,
   helpCenterPath: FEATURE_HELP_PATHS[feature.key],
 }));
 
@@ -79,8 +66,8 @@ export function FeatureCategoryDropdown({
   activeCategory,
   onCategoryChange,
 }: {
-  activeCategory: string | null;
-  onCategoryChange: (category: string | null) => void;
+  activeCategory: FeatureCategory | null;
+  onCategoryChange: (category: FeatureCategory | null) => void;
 }) {
   return (
     <DropdownMenu>
@@ -88,7 +75,7 @@ export function FeatureCategoryDropdown({
         <Button variant="outline" size="sm" className="gap-2">
           {activeCategory && (
             <span 
-              className={cn("w-2 h-2 rounded-full", CATEGORY_DOT_COLORS[activeCategory])}
+              className={cn("w-2 h-2 rounded-full", FEATURE_CATEGORY_COLORS[activeCategory].dot)}
               aria-hidden="true"
             />
           )}
@@ -112,7 +99,7 @@ export function FeatureCategoryDropdown({
             className={cn("gap-2", category === activeCategory && "bg-accent")}
           >
             <span 
-              className={cn("w-2 h-2 rounded-full", CATEGORY_DOT_COLORS[category])}
+              className={cn("w-2 h-2 rounded-full", FEATURE_CATEGORY_COLORS[category].dot)}
               aria-hidden="true"
             />
             {category}
