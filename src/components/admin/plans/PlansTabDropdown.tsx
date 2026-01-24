@@ -42,12 +42,12 @@ export function PlansTabDropdown({ activeTab, onTabChange }: PlansTabDropdownPro
           <ChevronDown size={16} className="text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="start" sideOffset={4} className="min-w-[120px]">
+      <DropdownMenuContent side="bottom" align="start" sideOffset={4} className="min-w-[120px] space-y-1">
         {(Object.entries(TABS) as [PlansTab, string][]).map(([key, label]) => (
           <DropdownMenuItem
             key={key}
             onClick={() => onTabChange(key)}
-            className={cn('py-1.5', activeTab === key && 'bg-accent')}
+            className={cn(activeTab === key && 'bg-accent')}
           >
             {label}
           </DropdownMenuItem>
