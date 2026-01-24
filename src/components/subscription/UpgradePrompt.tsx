@@ -1,8 +1,9 @@
 /**
  * @fileoverview Upgrade prompt shown when a feature is not included in the user's plan.
- * Displays feature-specific messaging with an upgrade CTA.
+ * Displays feature-specific messaging with an upgrade CTA that navigates to billing settings.
  */
 
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -20,7 +21,6 @@ import {
   ClockRefresh,
 } from '@untitledui/icons';
 import { useCanManage } from '@/hooks/useCanManage';
-import { usePricingModal } from '@/contexts/PricingModalContext';
 
 type FeatureType = 
   | 'widget' | 'api' | 'webhooks'
@@ -102,9 +102,13 @@ interface UpgradePromptProps {
 }
 
 export function UpgradePrompt({ feature, className }: UpgradePromptProps) {
-  const { openPricingModal } = usePricingModal();
+  const navigate = useNavigate();
   const canViewBilling = useCanManage('view_billing');
   const info = FEATURE_INFO[feature];
+
+  const handleUpgrade = () => {
+    navigate('/settings?tab=billing');
+  };
 
   return (
     <Card className={className}>
@@ -127,7 +131,7 @@ export function UpgradePrompt({ feature, className }: UpgradePromptProps) {
         </p>
 
         {canViewBilling && (
-          <Button onClick={openPricingModal}>
+          <Button onClick={handleUpgrade}>
             Upgrade Plan
           </Button>
         )}
