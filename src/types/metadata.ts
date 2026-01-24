@@ -312,12 +312,10 @@ export interface AgentDeploymentConfig {
   customDomain?: string;
   /** Whether custom domain DNS is verified */
   domainVerified?: boolean;
-  /** Allowed origins for CORS (API access) */
+  /** Allowed origins for CORS (widget embedding) */
   allowedOrigins?: string[];
 
   // Deployment toggles
-  /** Whether API endpoint is enabled */
-  api_enabled?: boolean;
   /** Whether embeddable widget is enabled */
   widget_enabled?: boolean;
   /** Whether hosted page is enabled */

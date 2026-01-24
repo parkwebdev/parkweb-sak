@@ -87,7 +87,6 @@ export interface AdminPlan {
 export interface PlanFeatures {
   // Core
   widget?: boolean;
-  api?: boolean;
   webhooks?: boolean;
   // Tools
   custom_tools?: boolean;

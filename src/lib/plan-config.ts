@@ -35,7 +35,6 @@ export const PLAN_FEATURES: FeatureConfig[] = [
   { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Deep insights into conversation performance, visitor behavior, and conversion metrics.', category: 'Analytics' },
   { key: 'report_builder', label: 'Report Builder', description: 'Create custom reports with the metrics and visualizations you need.', category: 'Analytics' },
   // Advanced tier features (enterprise)
-  { key: 'api', label: 'API Access', description: 'Programmatically interact with your AI agent from your own applications.', category: 'Core' },
   { key: 'webhooks', label: 'Webhooks', description: 'Receive real-time HTTP notifications when events occur in your account.', category: 'Core' },
   { key: 'custom_tools', label: 'Custom Tools', description: 'Connect external APIs so your AI can perform actions like checking inventory or updating CRMs.', category: 'Tools' },
   { key: 'scheduled_reports', label: 'Scheduled Reports', description: 'Automatically email reports on a daily, weekly, or monthly schedule.', category: 'Analytics' },
