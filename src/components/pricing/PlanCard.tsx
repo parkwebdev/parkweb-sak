@@ -150,14 +150,14 @@ export function PlanCard({
       {/* Plan tier promotional badge */}
       {plan.name === 'Business' && (
         <Badge 
-          className="absolute top-3 right-3 bg-info text-white border-0 text-xs font-medium px-2.5 py-1"
+          className="absolute top-3 right-3 bg-info hover:bg-info text-white border-0 text-xs font-medium px-2.5 py-1"
         >
           Most Popular
         </Badge>
       )}
       {plan.name === 'Enterprise' && (
         <Badge 
-          className="absolute top-3 right-3 bg-foreground text-background border-0 text-xs font-medium px-2.5 py-1 badge-shine"
+          className="absolute top-3 right-3 bg-foreground hover:bg-foreground text-background border-0 text-xs font-medium px-2.5 py-1 badge-shine"
         >
           Sales Accelerator
         </Badge>
