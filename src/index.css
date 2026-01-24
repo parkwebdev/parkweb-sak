@@ -88,6 +88,33 @@
   .dark .btn-destructive:disabled {
     background: linear-gradient(180deg, #dc2626 0%, #e53e3e 100%);
   }
+
+  /* Shiny badge animation - matches ShinyButton aesthetic */
+  .badge-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .badge-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      -75deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 70%
+    );
+    animation: badge-shine 3s ease-in-out infinite;
+    animation-delay: 1s;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .badge-shine::after {
+      animation: none;
+    }
+  }
 }
 
 @layer base {
