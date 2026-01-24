@@ -200,6 +200,7 @@ export const SubscriptionSettings = () => {
           <PlanCard
             key={plan.id}
             plan={plan}
+            allPlans={plans}
             billingPeriod={billingPeriod}
             isCurrentPlan={plan.id === currentPlanId}
             onSelect={handleSelectPlan}

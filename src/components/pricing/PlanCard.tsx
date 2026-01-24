@@ -3,7 +3,7 @@
  * Clean, borderless cards with subtle separators between columns.
  */
 
-import { Check, X, Loading02 } from '@untitledui/icons';
+import { Check, Loading02 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ export interface PlanData {
 
 interface PlanCardProps {
   plan: PlanData;
+  allPlans: PlanData[];
   billingPeriod: 'monthly' | 'yearly';
   isCurrentPlan?: boolean;
   onSelect: (priceId: string) => void;
@@ -42,6 +43,7 @@ function formatLimitValue(value: number | null | undefined): string | null {
 
 export function PlanCard({
   plan,
+  allPlans,
   billingPeriod,
   isCurrentPlan = false,
   onSelect,
@@ -62,12 +64,10 @@ export function PlanCard({
     }
   };
 
-  // Get features from centralized config with their enabled state
-  const allFeatures = PLAN_FEATURES.map(f => ({
-    key: f.key,
-    label: FEATURE_LABELS[f.key],
-    enabled: plan.features[f.key] ?? false,
-  }));
+  // Determine plan hierarchy based on price
+  const sortedPlans = [...allPlans].sort((a, b) => a.price_monthly - b.price_monthly);
+  const currentIndex = sortedPlans.findIndex(p => p.id === plan.id);
+  const previousPlan = currentIndex > 0 ? sortedPlans[currentIndex - 1] : null;
 
   // Get limits from centralized config that have values
   const limits = PLAN_LIMITS
@@ -77,6 +77,15 @@ export function PlanCard({
       value: formatLimitValue(plan.limits[l.key]),
     }))
     .filter(l => l.value !== null);
+
+  // Get only enabled features that are NEW in this tier
+  const enabledFeatures = PLAN_FEATURES
+    .filter(f => plan.features[f.key])
+    .filter(f => !previousPlan || !previousPlan.features[f.key])
+    .map(f => ({
+      key: f.key,
+      label: FEATURE_LABELS[f.key],
+    }));
 
   return (
     <div className="flex flex-col h-full p-6">
@@ -126,6 +135,13 @@ export function PlanCard({
         )}
       </Button>
 
+      {/* Previous Plan Reference */}
+      {previousPlan && (
+        <p className="text-sm text-muted-foreground mb-3">
+          Everything in "{previousPlan.name}" +
+        </p>
+      )}
+
       {/* Limits */}
       {limits.length > 0 && (
         <div className="space-y-2 mb-4">
@@ -133,32 +149,24 @@ export function PlanCard({
             <div key={key} className="flex items-center gap-2 text-sm">
               <Check size={14} className="text-success shrink-0" aria-hidden="true" />
               <span>
-                Up to <span className="font-medium">{value}</span> {label}
+                <span className="font-medium">{value}</span> {label}
               </span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Features */}
-      <div className="space-y-2 flex-1">
-        {allFeatures.map(({ key, label, enabled }) => (
-          <div 
-            key={key} 
-            className={cn(
-              "flex items-center gap-2 text-sm",
-              !enabled && "text-muted-foreground"
-            )}
-          >
-            {enabled ? (
+      {/* Features - Only show enabled features new in this tier */}
+      {enabledFeatures.length > 0 && (
+        <div className="space-y-2 flex-1">
+          {enabledFeatures.map(({ key, label }) => (
+            <div key={key} className="flex items-center gap-2 text-sm">
               <Check size={14} className="text-success shrink-0" aria-hidden="true" />
-            ) : (
-              <X size={14} className="text-muted-foreground/50 shrink-0" aria-hidden="true" />
-            )}
-            <span>{label}</span>
-          </div>
-        ))}
-      </div>
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
