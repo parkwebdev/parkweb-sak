@@ -45,6 +45,7 @@ import BookingComponentsTest from "./pages/BookingComponentsTest";
 import EmailTemplatesTest from "./pages/EmailTemplatesTest";
 import ReportBuilder from "./pages/ReportBuilder";
 import HelpCenterWrapper from "./pages/HelpCenterWrapper";
+import Pricing from "./pages/Pricing";
 import { SkeletonAdminPage } from "@/components/ui/page-skeleton";
 import {
   AdminLayout,
@@ -132,6 +133,7 @@ const App = () => (
                   {/* Public routes */}
                   <Route path="/login" element={<Auth />} />
                   <Route path="/widget" element={<WidgetPage />} />
+                  <Route path="/pricing" element={<Pricing />} />
                   
                   {/* Protected routes with shared layout */}
                   <Route element={<ProtectedLayout />}>
