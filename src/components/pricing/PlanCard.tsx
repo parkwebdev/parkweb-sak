@@ -55,8 +55,8 @@ interface InheritedGroup {
  * -1 = Unlimited, null/undefined = hidden, otherwise formatted number.
  */
 function formatLimitValue(value: number | null | undefined): string | null {
-  if (value === null || value === undefined) return null;
-  if (value === -1) return 'Unlimited';
+  if (value === undefined) return null;
+  if (value === null || value === -1) return 'Unlimited';
   return value.toLocaleString();
 }
 
