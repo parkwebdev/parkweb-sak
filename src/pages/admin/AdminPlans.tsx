@@ -13,13 +13,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { 
   PlansTable, 
-  RevenueMetricsCards, 
   PlanEditorSheet, 
   SubscriptionsTable,
   StripeSync 
 } from '@/components/admin/plans';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
-import { useAdminPlans, useAdminSubscriptions, useRevenueAnalytics } from '@/hooks/admin';
+import { useAdminPlans, useAdminSubscriptions } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import type { AdminPlan } from '@/types/admin';
 
@@ -56,8 +55,7 @@ export function AdminPlans() {
     isUpdating,
   } = useAdminPlans();
 
-  const { subscriptions, activeSubscriptions, loading: subscriptionsLoading } = useAdminSubscriptions();
-  const { mrr, data: revenueData, loading: revenueLoading } = useRevenueAnalytics();
+  const { subscriptions, loading: subscriptionsLoading } = useAdminSubscriptions();
 
   const handleEditPlan = useCallback((plan: AdminPlan) => {
     setEditingPlan(plan);
@@ -76,16 +74,6 @@ export function AdminPlans() {
   return (
     <AdminPermissionGuard permission="view_revenue">
       <div className="p-6 space-y-6">
-        {/* Revenue Metrics - no header, TopBar handles page title */}
-        <RevenueMetricsCards
-          mrr={mrr}
-          arr={revenueData?.arr || 0}
-          churnRate={revenueData?.churnRate || 0}
-          activeSubscriptions={activeSubscriptions}
-          loading={revenueLoading}
-        />
-
-        {/* Tabs */}
         <Tabs defaultValue="plans" className="space-y-4">
           <TabsList>
             <TabsTrigger value="plans">Plans</TabsTrigger>
