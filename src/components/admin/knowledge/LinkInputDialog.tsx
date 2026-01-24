@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -55,6 +56,9 @@ export function LinkInputDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Insert Link</DialogTitle>
+          <DialogDescription>
+            Enter the URL for the link you want to insert.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
