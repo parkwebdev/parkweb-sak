@@ -214,7 +214,7 @@ export const SubscriptionSettings = () => {
                         <CreditCard01 className="h-4 w-4 mr-2" />
                         {portalLoading ? 'Loading...' : 'Manage Subscription'}
                       </Button>
-                      <Button size="sm" onClick={() => navigate('/pricing')}>
+                      <Button size="sm" onClick={openPricingModal}>
                         Upgrade Plan
                         <ArrowUpRight className="h-4 w-4 ml-2" />
                       </Button>
@@ -232,7 +232,7 @@ export const SubscriptionSettings = () => {
                   Choose a plan to unlock all features
                 </p>
                 {canManageBilling && (
-                  <Button onClick={() => navigate('/pricing')}>
+                  <Button onClick={openPricingModal}>
                     Choose a Plan
                   </Button>
                 )}
