@@ -196,65 +196,60 @@ export function PlanCard({
         )}
       </Button>
 
-      {/* Limits */}
-      {limits.length > 0 && (
-        <div className="space-y-2.5 mb-2">
-          {limits.map(({ key, label, value, description }) => (
-            <div key={key} className="flex items-center gap-2 text-sm">
-              <Check size={14} className="text-success shrink-0" aria-hidden="true" />
-              <span>
-                <span className="font-medium">{value}</span> {label}
-              </span>
-              {description && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button 
-                      type="button" 
-                      className="group inline-flex text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={`More info about ${label}`}
-                    >
-                      <InfoCircleIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                      <InfoCircleIconFilled className="h-3.5 w-3.5" aria-hidden="true" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-[220px]">
-                    {description}
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Limits & Features - Unified List */}
+      <div className="space-y-2.5">
+        {/* Limits */}
+        {limits.map(({ key, label, value, description }) => (
+          <div key={key} className="flex items-center gap-2 text-sm">
+            <Check size={14} className="text-success shrink-0" aria-hidden="true" />
+            <span>
+              <span className="font-medium">{value}</span> {label}
+            </span>
+            {description && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button 
+                    type="button" 
+                    className="group inline-flex text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={`More info about ${label}`}
+                  >
+                    <InfoCircleIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                    <InfoCircleIconFilled className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px]">
+                  {description}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        ))}
 
-      {/* New Features - Full Opacity */}
-      {newFeatures.length > 0 && (
-        <div className="space-y-2.5">
-          {newFeatures.map(({ key, label, description }) => (
-            <div key={key} className="flex items-center gap-2 text-sm">
-              <Check size={14} className="text-success shrink-0" aria-hidden="true" />
-              <span>{label}</span>
-              {description && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button 
-                      type="button" 
-                      className="group inline-flex text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={`More info about ${label}`}
-                    >
-                      <InfoCircleIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                      <InfoCircleIconFilled className="h-3.5 w-3.5" aria-hidden="true" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-[220px]">
-                    {description}
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+        {/* New Features */}
+        {newFeatures.map(({ key, label, description }) => (
+          <div key={key} className="flex items-center gap-2 text-sm">
+            <Check size={14} className="text-success shrink-0" aria-hidden="true" />
+            <span>{label}</span>
+            {description && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button 
+                    type="button" 
+                    className="group inline-flex text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={`More info about ${label}`}
+                  >
+                    <InfoCircleIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                    <InfoCircleIconFilled className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px]">
+                  {description}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        ))}
+      </div>
 
       {/* Inherited Feature Groups - Muted */}
       {inheritedGroups.map(({ planName, features }) => (
