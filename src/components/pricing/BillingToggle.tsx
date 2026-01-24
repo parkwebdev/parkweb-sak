@@ -42,7 +42,7 @@ export function BillingToggle({ value, onChange, className }: BillingToggleProps
           variant="secondary" 
           className="bg-savings text-savings-foreground border-0 text-xs font-medium hover:bg-savings"
         >
-          Save 20%
+          Save 17%
         </Badge>
       </button>
     </div>
