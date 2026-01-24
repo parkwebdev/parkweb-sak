@@ -24,7 +24,6 @@ interface PlanFeaturesEditorProps {
  */
 const featureFields: { key: keyof PlanFeatures; label: string; description: string }[] = [
   { key: 'widget', label: 'Chat Widget', description: 'Embed chat widget on websites' },
-  { key: 'hosted_page', label: 'Hosted Page', description: 'Standalone chat page' },
   { key: 'api', label: 'API Access', description: 'Programmatic API access' },
   { key: 'webhooks', label: 'Webhooks', description: 'Event webhook notifications' },
 ];
