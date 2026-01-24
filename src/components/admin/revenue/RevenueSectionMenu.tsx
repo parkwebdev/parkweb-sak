@@ -20,12 +20,9 @@ import {
   Users01,
 } from '@untitledui/icons';
 import { AnalyticsFilled } from '@/components/icons/SidebarIcons';
-import { OverviewFilled as AdminOverviewFilled } from '@/components/icons/AdminSidebarIcons';
+import { OverviewFilled as AdminOverviewFilled, AccountsFilled as AdminAccountsFilled } from '@/components/icons/AdminSidebarIcons';
 import { CreditCardIconFilled } from '@/components/ui/settings-icon';
-import {
-  ChurnFilled,
-  AccountsFilled,
-} from './RevenueSectionIcons';
+import { ChurnFilled } from './RevenueSectionIcons';
 
 interface SectionItem {
   id: RevenueSection;
@@ -47,7 +44,7 @@ const SECTIONS: SectionItem[] = [
   { id: 'churn', label: 'Churn Analysis', icon: TrendDown01, activeIcon: ChurnFilled, group: 'Retention' },
   
   // Accounts
-  { id: 'accounts', label: 'Top Accounts', icon: Users01, activeIcon: AccountsFilled, group: 'Accounts' },
+  { id: 'accounts', label: 'Top Accounts', icon: Users01, activeIcon: AdminAccountsFilled, group: 'Accounts' },
 ];
 
 interface RevenueSectionMenuProps {
