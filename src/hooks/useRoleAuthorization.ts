@@ -103,7 +103,7 @@ export const useRoleAuthorization = (): RoleAuthData => {
       }
     },
     enabled: !!user,
-    staleTime: 30_000,        // 30 sec - allow quick invalidation from realtime
+    staleTime: 0,             // Always refetch when triggered
     gcTime: 10 * 60 * 1000,   // 10 min cache retention
   });
 
@@ -118,10 +118,17 @@ export const useRoleAuthorization = (): RoleAuthData => {
         schema: 'public',
         table: 'user_roles',
         filter: `user_id=eq.${user.id}`,
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ['user-role', user.id] });
+      }, (payload) => {
+        logger.info('[useRoleAuthorization] Permission change detected', payload);
+        // Force immediate refetch instead of just invalidating
+        queryClient.refetchQueries({ 
+          queryKey: ['user-role', user.id],
+          type: 'active',
+        });
       })
-      .subscribe();
+      .subscribe((status) => {
+        logger.info('[useRoleAuthorization] Subscription status', { status });
+      });
 
     return () => {
       supabase.removeChannel(channel);
