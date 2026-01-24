@@ -144,6 +144,10 @@ serve(async (req) => {
     const productId = subscriptionItem.price.product as string;
     const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
     const status = subscription.status;
+    const cancelAtPeriodEnd = subscription.cancel_at_period_end;
+    const cancelAt = subscription.cancel_at 
+      ? new Date(subscription.cancel_at * 1000).toISOString()
+      : null;
     
     logStep("Active subscription found", {
       subscriptionId: subscription.id,
@@ -151,6 +155,8 @@ serve(async (req) => {
       priceId,
       status,
       endDate: subscriptionEnd,
+      cancelAtPeriodEnd,
+      cancelAt,
     });
 
     // Get product name from Stripe
@@ -198,6 +204,8 @@ serve(async (req) => {
         subscription_end: subscriptionEnd,
         status: status,
         plan_id: plan?.id || null,
+        cancel_at_period_end: cancelAtPeriodEnd,
+        cancel_at: cancelAt,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

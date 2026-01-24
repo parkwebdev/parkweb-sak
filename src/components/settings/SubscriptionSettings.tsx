@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCanManage } from '@/hooks/useCanManage';
 import { useSubscription } from '@/hooks/useSubscription';
 import { formatDate } from '@/lib/formatting';
-import { Download01, LinkExternal01, RefreshCw01, Receipt, CreditCard01 } from '@untitledui/icons';
+import { Download01, LinkExternal01, RefreshCw01, Receipt, CreditCard01, XCircle, RefreshCcw01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/lib/toast';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
@@ -26,6 +26,8 @@ import { PlanCard, type PlanData, FeatureComparisonTable } from '@/components/pr
 import { BillingToggle } from '@/components/pricing/BillingToggle';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { CancelSubscriptionDialog } from './CancelSubscriptionDialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type Invoice = {
   id: string;
@@ -83,6 +85,7 @@ export const SubscriptionSettings = () => {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const hasFetchedInvoicesRef = useRef(false);
   
   // Check if user can manage billing (upgrade, update payment, etc.)
@@ -91,10 +94,17 @@ export const SubscriptionSettings = () => {
   // Subscription actions from hook
   const { 
     planId: currentPlanId,
+    subscriptionEnd,
+    cancelAtPeriodEnd,
+    cancelAt,
     openCheckout, 
     checkoutLoading,
     openCustomerPortal, 
-    portalLoading 
+    portalLoading,
+    cancelSubscription,
+    cancelLoading,
+    reactivateSubscription,
+    reactivateLoading,
   } = useSubscription();
 
   // Fetch plans
@@ -138,6 +148,15 @@ export const SubscriptionSettings = () => {
     openCheckout(priceId);
   };
 
+  const handleCancelSubscription = async () => {
+    await cancelSubscription();
+    setCancelDialogOpen(false);
+  };
+
+  const handleReactivateSubscription = async () => {
+    await reactivateSubscription();
+  };
+
   const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'paid':
@@ -171,6 +190,34 @@ export const SubscriptionSettings = () => {
 
   return (
     <div className="space-y-8">
+      {/* Cancellation Banner */}
+      {cancelAtPeriodEnd && subscriptionEnd && (
+        <Alert className="border-warning/50 bg-warning/5">
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              Your subscription will end on{' '}
+              <strong>
+                {formatDate(new Date(subscriptionEnd), {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </strong>
+              . You'll retain access until then.
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReactivateSubscription}
+              disabled={reactivateLoading}
+            >
+              <RefreshCcw01 className="h-4 w-4 mr-2" />
+              {reactivateLoading ? 'Reactivating...' : 'Reactivate'}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header with Billing Toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -185,15 +232,28 @@ export const SubscriptionSettings = () => {
             onChange={setBillingPeriod} 
           />
           {canManageBilling && currentPlanId && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openCustomerPortal()}
-              disabled={portalLoading}
-            >
-              <CreditCard01 className="h-4 w-4 mr-2" />
-              {portalLoading ? 'Loading...' : 'Manage'}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openCustomerPortal()}
+                disabled={portalLoading}
+              >
+                <CreditCard01 className="h-4 w-4 mr-2" />
+                {portalLoading ? 'Loading...' : 'Manage'}
+              </Button>
+              {!cancelAtPeriodEnd && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCancelDialogOpen(true)}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -342,6 +402,15 @@ export const SubscriptionSettings = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cancel Subscription Dialog */}
+      <CancelSubscriptionDialog
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        onConfirm={handleCancelSubscription}
+        subscriptionEnd={subscriptionEnd}
+        loading={cancelLoading}
+      />
     </div>
   );
 };
