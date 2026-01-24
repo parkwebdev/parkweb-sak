@@ -33,6 +33,7 @@ export async function fetchPlans(): Promise<AdminPlan[]> {
   return (data || []).map((plan) => ({
     id: plan.id,
     name: plan.name,
+    description: plan.description || undefined,
     price_monthly: plan.price_monthly,
     price_yearly: plan.price_yearly,
     active: plan.active ?? true,

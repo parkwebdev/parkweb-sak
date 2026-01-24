@@ -516,6 +516,7 @@ export const PLATFORM_HC_ARTICLE_COLUMNS = `
 export const PLAN_COLUMNS = `
   id,
   name,
+  description,
   price_monthly,
   price_yearly,
   active,
