@@ -15,9 +15,7 @@ import { useMemo } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AdminGlobalSearchProvider } from '@/contexts/AdminGlobalSearchContext';
 import { AdminRoleProvider } from '@/contexts/AdminRoleContext';
-import { AdminGlobalSearch } from '@/components/admin/AdminGlobalSearch';
 import { useAdminKeyboardShortcuts } from '@/hooks/admin/useAdminKeyboardShortcuts';
 
 /**
@@ -66,10 +64,7 @@ export function AdminLayout() {
 
   return (
     <AdminRoleProvider value={roleContextValue}>
-      <AdminGlobalSearchProvider>
-        <AdminGlobalSearch />
-        <AdminLayoutInner />
-      </AdminGlobalSearchProvider>
+      <AdminLayoutInner />
     </AdminRoleProvider>
   );
 }

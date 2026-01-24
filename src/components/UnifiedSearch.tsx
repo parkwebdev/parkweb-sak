@@ -1,11 +1,11 @@
 /**
- * Admin Global Search Component
+ * Unified Search Component
  * 
- * Command palette for searching across admin content including
- * accounts, team members, help articles, and admin sections.
- * Activated via Cmd/Ctrl+K keyboard shortcut when in admin area.
+ * Command palette for searching across app content.
+ * Automatically switches between user and admin search data
+ * based on the current route.
  * 
- * @module components/admin/AdminGlobalSearch
+ * @module components/UnifiedSearch
  */
 
 import { useEffect, useState } from 'react';
@@ -19,27 +19,33 @@ import {
   CommandList,
   CommandShortcut,
 } from '@/components/ui/command';
-import { useAdminGlobalSearch } from '@/hooks/admin/useAdminGlobalSearch';
+import { useUnifiedSearch } from '@/contexts/UnifiedSearchContext';
+import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
 import { useAdminSearchData, type AdminSearchResult } from '@/hooks/admin/useAdminSearchData';
 import { SkeletonSearchResults } from '@/components/ui/skeleton';
 import { File06 } from '@untitledui/icons';
 import { NAVIGATION_ICON_MAP } from '@/lib/navigation-icons';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+
+/** Union type for both result types */
+type UnifiedSearchResult = SearchResult | AdminSearchResult;
 
 /**
- * Admin global search command palette component.
- * Provides unified search across all admin content.
- * 
- * @remarks
- * - Opens with Cmd/Ctrl+K when in /admin/* routes
- * - Groups results by category
- * - Supports navigation to admin sections
+ * Unified search command palette component.
+ * Switches between user and admin search based on current route.
  */
-export function AdminGlobalSearch() {
-  const { open, setOpen } = useAdminGlobalSearch();
-  const { searchResults, loading } = useAdminSearchData();
-  const [filteredResults, setFilteredResults] = useState<AdminSearchResult[]>([]);
-  const [search, setSearch] = useState('');
+export function UnifiedSearch() {
+  const { open, setOpen, isAdminMode } = useUnifiedSearch();
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const [filteredResults, setFilteredResults] = useState<UnifiedSearchResult[]>([]);
+
+  // Conditionally use the appropriate data hook
+  const userSearch = useSearchData();
+  const adminSearch = useAdminSearchData();
+
+  // Switch data source based on mode
+  const { searchResults, loading } = isAdminMode ? adminSearch : userSearch;
 
   // Filter results based on search query
   useEffect(() => {
@@ -65,12 +71,12 @@ export function AdminGlobalSearch() {
     }
     acc[result.category].push(result);
     return acc;
-  }, {} as Record<string, AdminSearchResult[]>);
+  }, {} as Record<string, UnifiedSearchResult[]>);
 
   /**
    * Handle result selection - navigate or execute action
    */
-  const handleSelect = (result: AdminSearchResult) => {
+  const handleSelect = (result: UnifiedSearchResult) => {
     if (result.action) {
       result.action();
     } else if (result.url) {
@@ -83,7 +89,7 @@ export function AdminGlobalSearch() {
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput
-        placeholder="Search admin..."
+        placeholder={isAdminMode ? 'Search admin...' : 'Type a command or search...'}
         value={search}
         onValueChange={setSearch}
       />
@@ -96,10 +102,13 @@ export function AdminGlobalSearch() {
             {Object.entries(groupedResults).map(([category, results]) => (
               <CommandGroup key={category} heading={category}>
                 {results.map((result) => {
-                  const IconComponent = result.iconName 
-                    ? NAVIGATION_ICON_MAP[result.iconName] 
-                    : null;
-                  
+                  const isAriLogo = result.iconName === 'AriLogo';
+                  const IconComponent = isAriLogo
+                    ? AriAgentsIcon
+                    : result.iconName
+                      ? NAVIGATION_ICON_MAP[result.iconName]
+                      : null;
+
                   return (
                     <CommandItem
                       key={result.id}

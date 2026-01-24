@@ -1,9 +1,12 @@
 /**
  * Hook for managing global search dialog state.
- * Re-exports from GlobalSearchContext for backwards compatibility.
+ * 
+ * @deprecated Use useUnifiedSearch from @/contexts/UnifiedSearchContext directly.
+ * This re-export is kept for backwards compatibility.
  * 
  * @returns {Object} Search dialog state
  * @returns {boolean} open - Whether search dialog is open
  * @returns {Function} setOpen - Toggle search dialog
+ * @returns {boolean} isAdminMode - Whether in admin mode
  */
-export { useGlobalSearch } from '@/contexts/GlobalSearchContext';
+export { useUnifiedSearch as useGlobalSearch } from '@/contexts/UnifiedSearchContext';
