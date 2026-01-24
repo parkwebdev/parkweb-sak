@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCanManage } from '@/hooks/useCanManage';
+import { useSubscription } from '@/hooks/useSubscription';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
 import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt, Zap, Calendar, CreditCard01, ArrowUpRight } from '@untitledui/icons';
@@ -41,6 +43,7 @@ type Invoice = {
 };
 
 export const SubscriptionSettings = () => {
+  const navigate = useNavigate();
   const { user, session } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +53,9 @@ export const SubscriptionSettings = () => {
   
   // Check if user can manage billing (upgrade, update payment, etc.)
   const canManageBilling = useCanManage('manage_billing');
+  
+  // Subscription actions from hook
+  const { openCustomerPortal, portalLoading } = useSubscription();
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -199,11 +205,16 @@ export const SubscriptionSettings = () => {
                 <div className="flex gap-3 pt-2">
                   {canManageBilling && (
                     <>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openCustomerPortal()}
+                        disabled={portalLoading}
+                      >
                         <CreditCard01 className="h-4 w-4 mr-2" />
-                        Manage Subscription
+                        {portalLoading ? 'Loading...' : 'Manage Subscription'}
                       </Button>
-                      <Button size="sm">
+                      <Button size="sm" onClick={() => navigate('/pricing')}>
                         Upgrade Plan
                         <ArrowUpRight className="h-4 w-4 ml-2" />
                       </Button>
@@ -220,7 +231,11 @@ export const SubscriptionSettings = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Choose a plan to unlock all features
                 </p>
-                {canManageBilling && <Button>Choose a Plan</Button>}
+                {canManageBilling && (
+                  <Button onClick={() => navigate('/pricing')}>
+                    Choose a Plan
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
@@ -240,8 +255,14 @@ export const SubscriptionSettings = () => {
                 cardholderName={cardholderName}
               />
               {canManageBilling && (
-                <Button variant="outline" size="sm" className="mt-4">
-                  Update Payment Method
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4"
+                  onClick={() => openCustomerPortal()}
+                  disabled={portalLoading}
+                >
+                  {portalLoading ? 'Loading...' : 'Update Payment Method'}
                 </Button>
               )}
             </div>
