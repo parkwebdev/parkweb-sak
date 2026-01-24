@@ -2,6 +2,7 @@
  * AriWebhooksSection
  * 
  * Webhooks management with full CRUD, test, and debug capabilities.
+ * Gated by 'webhooks' feature in subscription plan.
  */
 
 import { useState, useMemo } from 'react';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { Link03, Trash01, Eye, Edit03, PlayCircle, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -20,6 +22,7 @@ import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog'
 import { DebugConsole } from '@/components/agents/DebugConsole';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonListSection } from '@/components/ui/skeleton';
+import { FeatureGate } from '@/components/subscription';
 
 import { toast } from '@/lib/toast';
 
@@ -38,6 +41,7 @@ interface AriWebhooksSectionProps {
 export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
   const { webhooks, loading, createWebhook, updateWebhook, deleteWebhook, testWebhook, fetchLogs } = useWebhooks(agentId);
   const canManageWebhooks = useCanManage('manage_webhooks');
+  const { canUseWebhooks } = usePlanLimits();
   
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -129,8 +133,10 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
     setShowLogsDialog(true);
   };
 
-  // Register actions for TopBar
+  // Register actions for TopBar - only if feature is enabled
   const sectionActions: SectionAction[] = useMemo(() => {
+    if (!canUseWebhooks()) return [];
+    
     const actions: SectionAction[] = [];
     
     if (canManageWebhooks) {
@@ -151,7 +157,7 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
     });
     
     return actions;
-  }, [canManageWebhooks]);
+  }, [canManageWebhooks, canUseWebhooks]);
   
   useRegisterSectionActions('webhooks', sectionActions);
 
@@ -166,7 +172,8 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
         description="Send real-time events to external APIs when actions occur"
       />
 
-      <div className="space-y-4">
+      <FeatureGate feature="webhooks" loadingSkeleton={<SkeletonListSection items={2} />}>
+        <div className="space-y-4">
 
         {/* Webhooks List */}
         {webhooks.length === 0 ? (
@@ -245,7 +252,8 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
             onClear={() => setDebugLogs([])} 
           />
         )}
-      </div>
+        </div>
+      </FeatureGate>
 
       {/* Dialogs */}
       <CreateWebhookDialog

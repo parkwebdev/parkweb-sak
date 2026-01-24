@@ -1,18 +1,21 @@
 /**
- * @fileoverview Plan limits card showing usage vs limits for current plan.
- * Displays progress bars with warning colors near limits.
+ * @fileoverview Plan limits card showing usage vs limits and features for current plan.
+ * Displays progress bars with warning colors near limits plus feature status.
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useCanManage } from '@/hooks/useCanManage';
 import { useNavigate } from 'react-router-dom';
+import { Check, X } from '@untitledui/icons';
 
 export const PlanLimitsCard = () => {
-  const { limits, usage, loading, planName } = usePlanLimits();
+  const { limits, usage, features, loading, planName, hasActiveSubscription } = usePlanLimits();
   const navigate = useNavigate();
   
   const canViewBilling = useCanManage('view_billing');
@@ -28,6 +31,29 @@ export const PlanLimitsCard = () => {
           <Skeleton className="h-2 w-full rounded-full" />
           <Skeleton className="h-2 w-full rounded-full" />
           <Skeleton className="h-2 w-full rounded-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!hasActiveSubscription) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">Plan Usage</CardTitle>
+          <CardDescription className="text-sm">
+            No active subscription
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {canViewBilling && (
+            <Button 
+              className="w-full"
+              onClick={() => navigate('/settings?tab=billing')}
+            >
+              Subscribe Now
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
@@ -58,6 +84,12 @@ export const PlanLimitsCard = () => {
     },
   ];
 
+  const featureItems = [
+    { key: 'widget' as const, label: 'Chat Widget' },
+    { key: 'api' as const, label: 'API Access' },
+    { key: 'webhooks' as const, label: 'Webhooks' },
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -67,8 +99,8 @@ export const PlanLimitsCard = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Usage Limits */}
         {limitItems.map((item) => {
-          // Handle unlimited (undefined limit)
           const limit = item.limit;
           const isUnlimited = limit === undefined || limit === null;
           const percentage = isUnlimited ? 0 : (item.current / limit) * 100;
@@ -90,6 +122,43 @@ export const PlanLimitsCard = () => {
             </div>
           );
         })}
+
+        {/* Features Section */}
+        {features && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium">Features</h4>
+              <div className="grid grid-cols-1 gap-2">
+                {featureItems.map((item) => {
+                  const isEnabled = features[item.key] === true;
+                  return (
+                    <div key={item.key} className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">{item.label}</span>
+                      <Badge 
+                        variant={isEnabled ? 'default' : 'secondary'} 
+                        size="sm"
+                        className="gap-1"
+                      >
+                        {isEnabled ? (
+                          <>
+                            <Check size={12} aria-hidden="true" />
+                            Enabled
+                          </>
+                        ) : (
+                          <>
+                            <X size={12} aria-hidden="true" />
+                            Disabled
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
 
         {canViewBilling && (
           <div className="pt-4">
