@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 import type { DatabaseRole, AppPermission } from '@/types/team';
 import type { AdminPermission } from '@/types/admin';
@@ -71,56 +72,49 @@ interface RoleAuthData {
 
 /**
  * Hook for role-based authorization checks.
- * Fetches current user's role and permissions from database.
+ * Uses React Query to cache role data for 5 minutes, preventing
+ * redundant database calls on navigation.
  * 
  * @returns {RoleAuthData} Role authorization data and permission helpers
  */
 export const useRoleAuthorization = (): RoleAuthData => {
   const { user } = useAuth();
-  const [role, setRole] = useState<DatabaseRole | null>(null);
-  const [permissions, setPermissions] = useState<AppPermission[]>([]);
-  const [adminPermissions, setAdminPermissions] = useState<AdminPermission[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) {
-      setRole(null);
-      setPermissions([]);
-      setAdminPermissions([]);
-      setLoading(false);
-      return;
-    }
-
-    const fetchUserRole = async () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['user-role', user?.id],
+    queryFn: async () => {
       try {
         const { data, error } = await supabase
           .from('user_roles')
           .select('role, permissions, admin_permissions')
-          .eq('user_id', user.id)
+          .eq('user_id', user!.id)
           .single();
 
         if (error) {
           logger.error('Error fetching user role', error);
-          setRole('member');
-          setPermissions([]);
-          setAdminPermissions([]);
-        } else {
-          setRole(data.role as DatabaseRole);
-          setPermissions((data.permissions as AppPermission[]) || []);
-          setAdminPermissions((data.admin_permissions as AdminPermission[]) || []);
+          return { role: 'member' as DatabaseRole, permissions: [], admin_permissions: [] };
         }
+        
+        return {
+          role: data.role as DatabaseRole,
+          permissions: (data.permissions as AppPermission[]) || [],
+          admin_permissions: (data.admin_permissions as AdminPermission[]) || [],
+        };
       } catch (error: unknown) {
         logger.error('Error in fetchUserRole', error);
-        setRole('member');
-        setPermissions([]);
-        setAdminPermissions([]);
-      } finally {
-        setLoading(false);
+        return { role: 'member' as DatabaseRole, permissions: [], admin_permissions: [] };
       }
-    };
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,  // 5 min - role rarely changes mid-session
+    gcTime: 10 * 60 * 1000,    // 10 min cache retention
+  });
 
-    fetchUserRole();
-  }, [user]);
+  // Extract values from cached data
+  const role = data?.role ?? null;
+  const permissions = data?.permissions ?? [];
+  const adminPermissions = data?.admin_permissions ?? [];
+  const loading = isLoading;
 
   // Role-based checks
   const isSuperAdmin = role === 'super_admin';
