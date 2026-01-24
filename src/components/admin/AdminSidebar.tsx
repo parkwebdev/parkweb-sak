@@ -33,9 +33,9 @@ import {
 // Filled icon variants for active states
 import { DashboardIconFilled } from '@/components/icons/DashboardIcon';
 import { LeadsFilled } from '@/components/icons/SidebarIcons';
-import { FileFilled, BookOpenFilled } from '@/components/icons/AriMenuIcons';
-import { CreditCardIconFilled, UsersIconFilled } from '@/components/ui/settings-icon';
-import { MailFilled, TrendUpFilled, ClipboardCheckFilled } from '@/components/icons/AdminSidebarIcons';
+import { BookOpenFilled } from '@/components/icons/AriMenuIcons';
+import { CreditCardIconFilled } from '@/components/ui/settings-icon';
+import { MailFilled, TrendUpFilled, ClipboardCheckFilled, TextInputFilled, PilotTeamFilled } from '@/components/icons/AdminSidebarIcons';
 
 type IconComponent = React.ComponentType<{ size?: number; className?: string }>;
 
@@ -56,9 +56,9 @@ const iconMap: Record<string, IconComponent> = {
 const activeIconMap: Record<string, IconComponent> = {
   LayoutAlt01: DashboardIconFilled,
   Users01: LeadsFilled,
-  FileCode01: FileFilled,
+  FileCode01: TextInputFilled,
   CreditCard01: CreditCardIconFilled,
-  UserGroup: UsersIconFilled,
+  UserGroup: PilotTeamFilled,
   BookOpen01: BookOpenFilled,
   Mail01: MailFilled,
   TrendUp01: TrendUpFilled,
