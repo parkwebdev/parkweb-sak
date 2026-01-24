@@ -72,15 +72,15 @@ function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boole
           enabled ? "text-muted-foreground" : "text-muted-foreground/50"
         )}>
           {feature.description}
-          {enabled && feature.helpCenterPath && (
-            <Link 
-              to={feature.helpCenterPath}
-              className="text-primary hover:underline ml-2"
-            >
-              Learn more →
-            </Link>
-          )}
         </p>
+        {enabled && feature.helpCenterPath && (
+          <Link 
+            to={feature.helpCenterPath}
+            className="text-xs text-primary hover:underline mt-1 inline-block"
+          >
+            Learn more →
+          </Link>
+        )}
       </div>
     </div>
   );
