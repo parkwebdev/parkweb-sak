@@ -198,7 +198,7 @@ export function PlanCard({
 
       {/* Limits */}
       {limits.length > 0 && (
-        <div className="space-y-3 mb-4">
+        <div className="space-y-2.5">
           {limits.map(({ key, label, value, description }) => (
             <div key={key} className="flex items-center gap-2 text-sm">
               <Check size={14} className="text-success shrink-0" aria-hidden="true" />
