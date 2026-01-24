@@ -15,7 +15,6 @@ import type { PlanLimits as PlanLimitsType, PlanFeatures as PlanFeaturesType } f
 
 export interface PlanLimits {
   max_conversations_per_month?: number;
-  max_api_calls_per_month?: number;
   max_knowledge_sources?: number;
   max_team_members?: number;
   max_webhooks?: number;
@@ -24,7 +23,6 @@ export interface PlanLimits {
 export interface PlanFeatures {
   // Core
   widget?: boolean;
-  api?: boolean;
   webhooks?: boolean;
   // Tools
   custom_tools?: boolean;
@@ -41,7 +39,6 @@ export interface PlanFeatures {
 
 export interface CurrentUsage {
   conversations_this_month: number;
-  api_calls_this_month: number;
   knowledge_sources: number;
   team_members: number;
 }
@@ -107,7 +104,6 @@ export const usePlanLimits = () => {
       if (storedLimits) {
         setLimits({
           max_conversations_per_month: storedLimits.max_conversations_per_month,
-          max_api_calls_per_month: storedLimits.max_api_calls_per_month,
           max_knowledge_sources: storedLimits.max_knowledge_sources,
           max_team_members: storedLimits.max_team_members,
           max_webhooks: storedLimits.max_webhooks,
@@ -122,7 +118,6 @@ export const usePlanLimits = () => {
         setFeatures({
           // Core
           widget: storedFeatures.widget === true,
-          api: storedFeatures.api === true,
           webhooks: storedFeatures.webhooks === true,
           // Tools
           custom_tools: storedFeatures.custom_tools === true,
@@ -163,19 +158,8 @@ export const usePlanLimits = () => {
         .select('*', { count: 'exact', head: true })
         .eq('owner_id', accountOwnerId);
 
-      // Get API calls from usage metrics
-      const { data: usageMetrics } = await supabase
-        .from('usage_metrics')
-        .select('api_calls_count')
-        .eq('user_id', accountOwnerId)
-        .gte('period_start', firstDayOfMonth.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
       setUsage({
         conversations_this_month: conversationsCount || 0,
-        api_calls_this_month: usageMetrics?.api_calls_count || 0,
         knowledge_sources: knowledgeCount || 0,
         team_members: teamCount || 0,
       });
@@ -205,7 +189,6 @@ export const usePlanLimits = () => {
 
     const limitMap: Record<keyof CurrentUsage, number | undefined> = {
       conversations_this_month: limits?.max_conversations_per_month,
-      api_calls_this_month: limits?.max_api_calls_per_month,
       knowledge_sources: limits?.max_knowledge_sources,
       team_members: limits?.max_team_members,
     };
@@ -281,7 +264,6 @@ export const usePlanLimits = () => {
 
   // Core features
   const canUseWidget = (): boolean => hasFeature('widget');
-  const canUseApi = (): boolean => hasFeature('api');
   const canUseWebhooks = (): boolean => hasFeature('webhooks');
   // Tools features
   const canUseCustomTools = (): boolean => hasFeature('custom_tools');
@@ -307,7 +289,6 @@ export const usePlanLimits = () => {
     features,
     hasFeature,
     canUseWidget,
-    canUseApi,
     canUseWebhooks,
     canUseCustomTools,
     canUseIntegrations,

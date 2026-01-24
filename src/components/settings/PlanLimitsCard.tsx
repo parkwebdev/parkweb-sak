@@ -68,11 +68,6 @@ export const PlanLimitsCard = () => {
       limit: limits.max_conversations_per_month,
     },
     {
-      label: 'API Calls (this month)',
-      current: usage.api_calls_this_month,
-      limit: limits.max_api_calls_per_month,
-    },
-    {
       label: 'Knowledge Sources',
       current: usage.knowledge_sources,
       limit: limits.max_knowledge_sources,
@@ -87,7 +82,6 @@ export const PlanLimitsCard = () => {
   const featureItems: { key: keyof PlanFeatures; label: string; category: string }[] = [
     // Core
     { key: 'widget', label: 'Chat Widget', category: 'Core' },
-    { key: 'api', label: 'API Access', category: 'Core' },
     { key: 'webhooks', label: 'Webhooks', category: 'Core' },
     // Tools
     { key: 'custom_tools', label: 'Custom Tools', category: 'Tools' },

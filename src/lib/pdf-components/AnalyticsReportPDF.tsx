@@ -602,7 +602,6 @@ export function AnalyticsReportPDF({
                   series={[
                     { key: 'conversations', color: CHART_COLORS.primary, label: 'Conversations' },
                     { key: 'messages', color: CHART_COLORS.success, label: 'Messages' },
-                    { key: 'api_calls', color: CHART_COLORS.secondary, label: 'API Calls' },
                   ]}
                 />
               )}

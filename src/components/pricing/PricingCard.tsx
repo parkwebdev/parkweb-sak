@@ -54,7 +54,6 @@ const FEATURE_LABELS: Record<string, string> = {
 const LIMIT_LABELS: Record<string, string> = {
   max_conversations: 'Conversations/mo',
   max_messages: 'Messages/mo',
-  max_api_calls: 'API Calls/mo',
   max_knowledge_sources: 'Knowledge Sources',
   max_locations: 'Locations',
   max_team_members: 'Team Members',

@@ -212,9 +212,9 @@ export const generateCSVReport = (
   // Usage Metrics
   if (config.includeUsageMetrics && config.includeTables && data.usageMetrics) {
     lines.push('USAGE METRICS');
-    lines.push(createCSVRow('Date', 'Conversations', 'Messages', 'API Calls'));
+    lines.push(createCSVRow('Date', 'Conversations', 'Messages'));
     data.usageMetrics.forEach((metric: UsageMetric) => {
-      lines.push(createCSVRow(formatDateUS(metric.date), metric.conversations, metric.messages, metric.api_calls));
+      lines.push(createCSVRow(formatDateUS(metric.date), metric.conversations, metric.messages));
     });
     lines.push('');
   }

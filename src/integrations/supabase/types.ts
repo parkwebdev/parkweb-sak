@@ -53,65 +53,6 @@ export type Database = {
         }
         Relationships: []
       }
-      agent_api_keys: {
-        Row: {
-          agent_id: string
-          created_at: string
-          current_day_requests: number
-          current_minute_requests: number
-          day_window_start: string | null
-          id: string
-          key_hash: string
-          key_prefix: string
-          last_used_at: string | null
-          minute_window_start: string | null
-          name: string
-          requests_per_day: number
-          requests_per_minute: number
-          revoked_at: string | null
-        }
-        Insert: {
-          agent_id: string
-          created_at?: string
-          current_day_requests?: number
-          current_minute_requests?: number
-          day_window_start?: string | null
-          id?: string
-          key_hash: string
-          key_prefix: string
-          last_used_at?: string | null
-          minute_window_start?: string | null
-          name?: string
-          requests_per_day?: number
-          requests_per_minute?: number
-          revoked_at?: string | null
-        }
-        Update: {
-          agent_id?: string
-          created_at?: string
-          current_day_requests?: number
-          current_minute_requests?: number
-          day_window_start?: string | null
-          id?: string
-          key_hash?: string
-          key_prefix?: string
-          last_used_at?: string | null
-          minute_window_start?: string | null
-          name?: string
-          requests_per_day?: number
-          requests_per_minute?: number
-          revoked_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_apikeys_agent"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agent_tools: {
         Row: {
           agent_id: string
@@ -2347,7 +2288,6 @@ export type Database = {
       }
       usage_metrics: {
         Row: {
-          api_calls_count: number | null
           conversations_count: number | null
           created_at: string
           id: string
@@ -2358,7 +2298,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          api_calls_count?: number | null
           conversations_count?: number | null
           created_at?: string
           id?: string
@@ -2369,7 +2308,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          api_calls_count?: number | null
           conversations_count?: number | null
           created_at?: string
           id?: string
@@ -2777,15 +2715,6 @@ export type Database = {
       seed_default_lead_stages: {
         Args: { p_user_id: string }
         Returns: undefined
-      }
-      validate_api_key: {
-        Args: { p_agent_id: string; p_key_hash: string }
-        Returns: {
-          error_message: string
-          key_id: string
-          rate_limited: boolean
-          valid: boolean
-        }[]
       }
     }
     Enums: {

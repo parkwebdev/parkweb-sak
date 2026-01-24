@@ -60,7 +60,6 @@ interface UsageMetrics {
   date: string;
   conversations: number;
   messages: number;
-  api_calls: number;
 }
 
 interface AnalyticsFilters {
@@ -374,7 +373,6 @@ export const useAnalytics = (
           period_end,
           conversations_count,
           messages_count,
-          api_calls_count,
           tokens_used,
           created_at
         `)
@@ -389,7 +387,6 @@ export const useAnalytics = (
         date: format(new Date(metric.period_start), 'yyyy-MM-dd'),
         conversations: metric.conversations_count || 0,
         messages: metric.messages_count || 0,
-        api_calls: metric.api_calls_count || 0,
       })) || [];
 
       setUsageMetrics(metrics);

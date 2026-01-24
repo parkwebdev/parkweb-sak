@@ -23,7 +23,7 @@ import {
 import { useCanManage } from '@/hooks/useCanManage';
 
 type FeatureType = 
-  | 'widget' | 'api' | 'webhooks'
+  | 'widget' | 'webhooks'
   | 'custom_tools' | 'integrations'
   | 'knowledge_sources' | 'locations' | 'calendar_booking'
   | 'advanced_analytics' | 'report_builder' | 'scheduled_reports';
@@ -40,11 +40,6 @@ const FEATURE_INFO: Record<FeatureType, FeatureInfo> = {
     icon: <MessageChatCircle size={24} aria-hidden="true" />,
     title: 'Chat Widget',
     description: 'Embed a chat widget on your website to engage visitors 24/7 with AI-powered conversations.',
-  },
-  api: {
-    icon: <Code01 size={24} aria-hidden="true" />,
-    title: 'API Access',
-    description: 'Integrate Ari programmatically into your systems with full API access and custom workflows.',
   },
   webhooks: {
     icon: <Link03 size={24} aria-hidden="true" />,

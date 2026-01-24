@@ -67,8 +67,6 @@ export interface UsageMetric {
   conversations: number;
   /** Messages count on this date */
   messages: number;
-  /** API calls count on this date */
-  api_calls: number;
 }
 
 /**

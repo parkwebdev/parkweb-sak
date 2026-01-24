@@ -58,7 +58,6 @@ export interface UsageMetricItem {
   date: string;
   conversations: number;
   messages: number;
-  api_calls: number;
 }
 
 export interface PageVisitItem {
@@ -577,7 +576,6 @@ export const useAnalyticsData = (options: UseAnalyticsDataOptions): UseAnalytics
       date: u.date,
       conversations: u.conversations,
       messages: u.messages,
-      api_calls: u.api_calls,
     })),
     comparisonTrafficSources,
     

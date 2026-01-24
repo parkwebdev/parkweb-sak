@@ -49,7 +49,6 @@ export const PLAN_LIMITS: LimitConfig[] = [
   { key: 'max_conversations_per_month', label: 'Conversations/Month', displayLabel: 'conversations/mo', description: 'A conversation is a complete chat session with a visitor. Each new visitor or returning visitor after 24 hours counts as one conversation.' },
   { key: 'max_knowledge_sources', label: 'Knowledge Sources', displayLabel: 'knowledge sources', description: 'Documents, URLs, or files that train your AI agent. Each uploaded file or website link counts as one source.' },
   { key: 'max_team_members', label: 'Team Members', displayLabel: 'team members', description: 'Additional users who can access your account, view conversations, and manage your AI agent.' },
-  { key: 'max_api_calls_per_month', label: 'API Calls/Month', displayLabel: 'API calls/mo', description: 'Programmatic requests to your AI agent via the REST API. Each API request counts as one call.' },
   { key: 'max_webhooks', label: 'Webhooks', displayLabel: 'webhooks', description: 'Endpoints that receive real-time notifications when events occur, like new leads or completed bookings.' },
 ];
 
