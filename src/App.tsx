@@ -16,12 +16,10 @@ import { Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AriSectionActionsProvider } from "@/contexts/AriSectionActionsContext";
-import { PricingModalProvider } from "@/contexts/PricingModalContext";
-import { PricingModal } from "@/components/pricing/PricingModal";
 import { UnifiedSearchProvider } from "@/contexts/UnifiedSearchContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PermissionGuard } from "@/components/PermissionGuard";
@@ -47,7 +45,6 @@ import BookingComponentsTest from "./pages/BookingComponentsTest";
 import EmailTemplatesTest from "./pages/EmailTemplatesTest";
 import ReportBuilder from "./pages/ReportBuilder";
 import HelpCenterWrapper from "./pages/HelpCenterWrapper";
-import Pricing from "./pages/Pricing";
 import { SkeletonAdminPage } from "@/components/ui/page-skeleton";
 import {
   AdminLayout,
@@ -130,152 +127,150 @@ const App = () => (
             <UnifiedSearchProvider>
               <AuthProvider>
                 <AriSectionActionsProvider>
-                  <PricingModalProvider>
                   <UnifiedSearch />
-                  <PricingModal />
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/login" element={<Auth />} />
-                  <Route path="/widget" element={<WidgetPage />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  
-                  {/* Protected routes with shared layout */}
-                  <Route element={<ProtectedLayout />}>
-                    {/* Get Started - admin only onboarding page */}
-                    <Route 
-                      path="/" 
-                      element={
-                        <PermissionGuard {...getGuardProps('get-set-up')} redirectTo="/analytics">
-                          <GetStartedWrapper />
-                        </PermissionGuard>
-                      } 
-                    />
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/login" element={<Auth />} />
+                    <Route path="/widget" element={<WidgetPage />} />
+                    {/* Redirect /pricing to billing settings */}
+                    <Route path="/pricing" element={<Navigate to="/settings?tab=billing" replace />} />
                     
-                    {/* Dashboard - admin only, shown after onboarding complete */}
-                    <Route 
-                      path="/dashboard" 
-                      element={
-                        <PermissionGuard {...getGuardProps('dashboard')}>
-                          <Dashboard />
-                        </PermissionGuard>
-                      } 
-                    />
-                    
-                    {/* Ari Configuration - requires manage_ari permission */}
-                    <Route 
-                      path="/ari" 
-                      element={
-                        <PermissionGuard {...getGuardProps('ari')}>
-                          <AriConfiguratorWrapper />
-                        </PermissionGuard>
-                      } 
-                    />
-                    
-                    {/* Conversations - requires view_conversations permission */}
-                    <Route 
-                      path="/conversations" 
-                      element={
-                        <PermissionGuard {...getGuardProps('conversations')}>
-                          <ConversationsWrapper />
-                        </PermissionGuard>
-                      } 
-                    />
-                    
-                    {/* Planner/Bookings - requires view_bookings permission */}
-                    <Route 
-                      path="/planner" 
-                      element={
-                        <PermissionGuard {...getGuardProps('planner')}>
-                          <PlannerWrapper />
-                        </PermissionGuard>
-                      } 
-                    />
-                    
-                    {/* Leads - requires view_leads permission */}
-                    <Route 
-                      path="/leads" 
-                      element={
-                        <PermissionGuard {...getGuardProps('leads')}>
-                          <LeadsWrapper />
-                        </PermissionGuard>
-                      } 
-                    />
-                    
-                    {/* Analytics - requires view_dashboard permission */}
-                    <Route 
-                      path="/analytics" 
-                      element={
-                        <PermissionGuard {...getGuardProps('analytics')}>
-                          <AnalyticsWrapper />
-                        </PermissionGuard>
-                      } 
-                    />
-                    
-                    {/* Settings - requires view_settings permission */}
-                    <Route 
-                      path="/settings" 
-                      element={
-                        <PermissionGuard {...getGuardProps('settings')}>
-                          <SettingsWrapper />
-                        </PermissionGuard>
-                      } 
-                    />
-                    
-                    {/* Help Center - accessible to all authenticated users */}
-                    <Route 
-                      path="/help-center" 
-                      element={<HelpCenterWrapper />} 
-                    />
-                    
-                    
-                    {/* Report Builder - requires view_dashboard permission */}
-                    <Route 
-                      path="/report-builder" 
-                      element={
-                        <PermissionGuard {...getGuardProps('report-builder')}>
-                          <ReportBuilder />
-                        </PermissionGuard>
-                      } 
-                    />
-                    
-                    {/* Dev-only test routes */}
-                    {import.meta.env.DEV && (
-                      <>
-                        <Route path="/email-templates-test" element={<EmailTemplatesTest />} />
-                        <Route path="/booking-test" element={<BookingComponentsTest />} />
-                      </>
-                    )}
-                  </Route>
-                  
-                  {/* Admin Routes - Super Admin Only */}
-                  <Route element={<ProtectedLayout />}>
-                    <Route 
-                      path="/admin/*" 
-                      element={
-                        <PermissionGuard pilotTeamOnly redirectTo="/dashboard">
-                          <Suspense fallback={<SkeletonAdminPage />}>
-                            <AdminLayout />
-                          </Suspense>
-                        </PermissionGuard>
-                      }
-                    >
-                      <Route index element={<AdminDashboard />} />
-                      <Route path="accounts" element={<AdminAccounts />} />
-                      <Route path="prompts" element={<AdminPrompts />} />
-                      <Route path="plans" element={<AdminPlans />} />
-                      <Route path="team" element={<AdminTeam />} />
-                      <Route path="knowledge" element={<AdminKnowledge />} />
-                      <Route path="knowledge/new" element={<ArticleEditorPage />} />
-                      <Route path="knowledge/:articleId" element={<ArticleEditorPage />} />
-                      <Route path="emails" element={<AdminEmails />} />
-                      <Route path="analytics" element={<AdminRevenue />} />
-                      <Route path="audit" element={<AdminAuditLog />} />
+                    {/* Protected routes with shared layout */}
+                    <Route element={<ProtectedLayout />}>
+                      {/* Get Started - admin only onboarding page */}
+                      <Route 
+                        path="/" 
+                        element={
+                          <PermissionGuard {...getGuardProps('get-set-up')} redirectTo="/analytics">
+                            <GetStartedWrapper />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Dashboard - admin only, shown after onboarding complete */}
+                      <Route 
+                        path="/dashboard" 
+                        element={
+                          <PermissionGuard {...getGuardProps('dashboard')}>
+                            <Dashboard />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Ari Configuration - requires manage_ari permission */}
+                      <Route 
+                        path="/ari" 
+                        element={
+                          <PermissionGuard {...getGuardProps('ari')}>
+                            <AriConfiguratorWrapper />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Conversations - requires view_conversations permission */}
+                      <Route 
+                        path="/conversations" 
+                        element={
+                          <PermissionGuard {...getGuardProps('conversations')}>
+                            <ConversationsWrapper />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Planner/Bookings - requires view_bookings permission */}
+                      <Route 
+                        path="/planner" 
+                        element={
+                          <PermissionGuard {...getGuardProps('planner')}>
+                            <PlannerWrapper />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Leads - requires view_leads permission */}
+                      <Route 
+                        path="/leads" 
+                        element={
+                          <PermissionGuard {...getGuardProps('leads')}>
+                            <LeadsWrapper />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Analytics - requires view_dashboard permission */}
+                      <Route 
+                        path="/analytics" 
+                        element={
+                          <PermissionGuard {...getGuardProps('analytics')}>
+                            <AnalyticsWrapper />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Settings - requires view_settings permission */}
+                      <Route 
+                        path="/settings" 
+                        element={
+                          <PermissionGuard {...getGuardProps('settings')}>
+                            <SettingsWrapper />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Help Center - accessible to all authenticated users */}
+                      <Route 
+                        path="/help-center" 
+                        element={<HelpCenterWrapper />} 
+                      />
+                      
+                      
+                      {/* Report Builder - requires view_dashboard permission */}
+                      <Route 
+                        path="/report-builder" 
+                        element={
+                          <PermissionGuard {...getGuardProps('report-builder')}>
+                            <ReportBuilder />
+                          </PermissionGuard>
+                        } 
+                      />
+                      
+                      {/* Dev-only test routes */}
+                      {import.meta.env.DEV && (
+                        <>
+                          <Route path="/email-templates-test" element={<EmailTemplatesTest />} />
+                          <Route path="/booking-test" element={<BookingComponentsTest />} />
+                        </>
+                      )}
                     </Route>
-                  </Route>
-                  
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                </PricingModalProvider>
+                    
+                    {/* Admin Routes - Super Admin Only */}
+                    <Route element={<ProtectedLayout />}>
+                      <Route 
+                        path="/admin/*" 
+                        element={
+                          <PermissionGuard pilotTeamOnly redirectTo="/dashboard">
+                            <Suspense fallback={<SkeletonAdminPage />}>
+                              <AdminLayout />
+                            </Suspense>
+                          </PermissionGuard>
+                        }
+                      >
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="accounts" element={<AdminAccounts />} />
+                        <Route path="prompts" element={<AdminPrompts />} />
+                        <Route path="plans" element={<AdminPlans />} />
+                        <Route path="team" element={<AdminTeam />} />
+                        <Route path="knowledge" element={<AdminKnowledge />} />
+                        <Route path="knowledge/new" element={<ArticleEditorPage />} />
+                        <Route path="knowledge/:articleId" element={<ArticleEditorPage />} />
+                        <Route path="emails" element={<AdminEmails />} />
+                        <Route path="analytics" element={<AdminRevenue />} />
+                        <Route path="audit" element={<AdminAuditLog />} />
+                      </Route>
+                    </Route>
+                    
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
                 </AriSectionActionsProvider>
               </AuthProvider>
             </UnifiedSearchProvider>
