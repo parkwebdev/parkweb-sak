@@ -1,8 +1,8 @@
 /**
  * PlanFeaturesEditor Component
  * 
- * Row-based list for toggling plan features with inline category badges.
- * Uses centralized plan-config for consistent feature definitions.
+ * Row-based list for toggling plan features with colored category badges.
+ * Uses centralized plan-config for consistent feature definitions and colors.
  * 
  * @module components/admin/plans/PlanFeaturesEditor
  */
@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { PLAN_FEATURES, type FeatureConfig } from '@/lib/plan-config';
+import { cn } from '@/lib/utils';
+import { PLAN_FEATURES, FEATURE_CATEGORY_COLORS, type FeatureConfig } from '@/lib/plan-config';
 import type { PlanFeatures } from '@/types/admin';
 
 interface PlanFeaturesEditorProps {
@@ -26,9 +27,11 @@ interface FeatureRowProps {
 }
 
 /**
- * Individual feature row with checkbox, title, description, and category badge.
+ * Individual feature row with checkbox, title, description, and colored category badge.
  */
 function FeatureRow({ field, checked, onToggle }: FeatureRowProps) {
+  const colors = FEATURE_CATEGORY_COLORS[field.category];
+  
   return (
     <div 
       className="flex items-start gap-3 py-3 border-b border-border last:border-b-0 cursor-pointer hover:bg-muted/30 transition-colors -mx-4 px-4"
@@ -57,7 +60,15 @@ function FeatureRow({ field, checked, onToggle }: FeatureRowProps) {
           >
             {field.label}
           </Label>
-          <Badge variant="outline" className="text-2xs shrink-0">
+          <Badge 
+            variant="outline" 
+            className={cn(
+              "text-2xs shrink-0",
+              colors.bg,
+              colors.text,
+              colors.border
+            )}
+          >
             {field.category}
           </Badge>
         </div>

@@ -11,6 +11,7 @@ import { useCanManage } from '@/hooks/useCanManage';
 import { useNavigate } from 'react-router-dom';
 import { UsageBarChart } from './UsageBarChart';
 import { FeaturesGrid, FeatureCategoryDropdown } from './FeaturesGrid';
+import type { FeatureCategory } from '@/lib/plan-config';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { useRegisterSettingsActions, SettingsSectionAction } from '@/contexts/SettingsSectionActionsContext';
@@ -38,7 +39,7 @@ export const UsageSettings = () => {
   const { limits, usage, features, loading, planName, hasActiveSubscription } = usePlanLimits();
   const navigate = useNavigate();
   const canViewBilling = useCanManage('view_billing');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<FeatureCategory | null>(null);
 
   // Register TopBar action
   const sectionActions = useMemo((): SettingsSectionAction[] => 
