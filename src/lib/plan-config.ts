@@ -22,22 +22,22 @@ export interface LimitConfig {
 /**
  * All 11 gated features that can be toggled per plan.
  * Order determines display order in both admin and customer UIs.
+ * Ordered by tier introduction: Starter → Business → Advanced
  */
 export const PLAN_FEATURES: FeatureConfig[] = [
-  // Core
+  // Starter tier features (foundational)
   { key: 'widget', label: 'Chat Widget', description: 'Embed chat widget on websites', category: 'Core' },
-  { key: 'api', label: 'API Access', description: 'Programmatic API access', category: 'Core' },
-  { key: 'webhooks', label: 'Webhooks', description: 'Event webhook notifications', category: 'Core' },
-  // Tools
-  { key: 'custom_tools', label: 'Custom Tools', description: 'External API tool integrations', category: 'Tools' },
-  { key: 'integrations', label: 'Integrations', description: 'Social, email & calendar connections', category: 'Tools' },
-  // Knowledge
   { key: 'knowledge_sources', label: 'Knowledge Sources', description: 'Document & URL training', category: 'Knowledge' },
-  { key: 'locations', label: 'Locations', description: 'Multi-location management', category: 'Knowledge' },
   { key: 'calendar_booking', label: 'Calendar Booking', description: 'AI appointment scheduling', category: 'Knowledge' },
-  // Analytics
+  // Business tier features (growth)
+  { key: 'locations', label: 'Locations', description: 'Multi-location management', category: 'Knowledge' },
+  { key: 'integrations', label: 'Integrations', description: 'Social, email & calendar connections', category: 'Tools' },
   { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Deep performance insights', category: 'Analytics' },
   { key: 'report_builder', label: 'Report Builder', description: 'Custom report generation', category: 'Analytics' },
+  // Advanced tier features (enterprise)
+  { key: 'api', label: 'API Access', description: 'Programmatic API access', category: 'Core' },
+  { key: 'webhooks', label: 'Webhooks', description: 'Event webhook notifications', category: 'Core' },
+  { key: 'custom_tools', label: 'Custom Tools', description: 'External API tool integrations', category: 'Tools' },
   { key: 'scheduled_reports', label: 'Scheduled Reports', description: 'Automated email delivery', category: 'Analytics' },
 ];
 
