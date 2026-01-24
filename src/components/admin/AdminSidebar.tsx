@@ -4,6 +4,7 @@
  * Navigation sidebar for admin pages.
  * Filters sections based on user's admin_permissions.
  * Prefetches page chunks and data on hover for instant navigation.
+ * Uses filled icon variants for active states.
  * 
  * @module components/admin/AdminSidebar
  */
@@ -29,7 +30,17 @@ import {
   Shield01
 } from '@untitledui/icons';
 
-const iconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+// Filled icon variants for active states
+import { DashboardIconFilled } from '@/components/icons/DashboardIcon';
+import { LeadsFilled } from '@/components/icons/SidebarIcons';
+import { FileFilled, BookOpenFilled } from '@/components/icons/AriMenuIcons';
+import { CreditCardIconFilled, UsersIconFilled } from '@/components/ui/settings-icon';
+import { MailFilled, TrendUpFilled, ClipboardCheckFilled } from '@/components/icons/AdminSidebarIcons';
+
+type IconComponent = React.ComponentType<{ size?: number; className?: string }>;
+
+/** Outline icons for default state */
+const iconMap: Record<string, IconComponent> = {
   LayoutAlt01,
   Users01,
   FileCode01,
@@ -39,6 +50,19 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
   Mail01,
   TrendUp01,
   ClipboardCheck,
+};
+
+/** Filled icons for active state */
+const activeIconMap: Record<string, IconComponent> = {
+  LayoutAlt01: DashboardIconFilled,
+  Users01: LeadsFilled,
+  FileCode01: FileFilled,
+  CreditCard01: CreditCardIconFilled,
+  UserGroup: UsersIconFilled,
+  BookOpen01: BookOpenFilled,
+  Mail01: MailFilled,
+  TrendUp01: TrendUpFilled,
+  ClipboardCheck: ClipboardCheckFilled,
 };
 
 /**
@@ -106,14 +130,18 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {visibleSections.map((section) => {
-          const Icon = iconMap[section.iconName];
-          // Overview (/admin) should only be active on exact match
-          // Other sections should match if path starts with their path
           // Normalize pathname by removing trailing slash for comparison
           const normalizedPath = location.pathname.replace(/\/$/, '') || '/';
+          // Overview (/admin) should only be active on exact match
+          // Other sections should match if path starts with their path
           const isActive = section.id === 'overview'
             ? normalizedPath === '/admin'
             : normalizedPath.startsWith(section.path) && section.path !== '/admin';
+          
+          // Use filled icon for active state, outline for default
+          const Icon = isActive 
+            ? (activeIconMap[section.iconName] || iconMap[section.iconName])
+            : iconMap[section.iconName];
           
           return (
             <Link
