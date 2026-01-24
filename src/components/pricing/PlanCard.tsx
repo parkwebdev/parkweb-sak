@@ -157,7 +157,7 @@ export function PlanCard({
         <Badge 
           className="absolute top-3 right-3 bg-accent-orange text-white border-0 text-xs font-medium px-2.5 py-1"
         >
-          Complete Solution
+          Sales Accelerator
         </Badge>
       )}
 
