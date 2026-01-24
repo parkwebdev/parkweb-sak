@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { Keyboard01, ArrowLeft } from '@untitledui/icons';
+import { Keyboard01, ArrowLeft, ChevronRight } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -221,12 +221,19 @@ export function TopBarUserMenu() {
                 </>
               )}
               <DropdownMenuItem 
-                onMouseEnter={() => setShowShortcuts(true)}
-                className="gap-2 cursor-default"
+                onClick={() => setShowShortcuts(!showShortcuts)}
+                className="gap-2 cursor-pointer"
                 onSelect={(e) => e.preventDefault()}
               >
                 <Keyboard01 size={15} />
                 Shortcuts
+                <ChevronRight 
+                  size={14} 
+                  className={cn(
+                    "ml-auto transition-transform duration-200",
+                    showShortcuts && "rotate-180"
+                  )} 
+                />
               </DropdownMenuItem>
             </div>
             <DropdownMenuSeparator className="mx-0" />
@@ -242,10 +249,7 @@ export function TopBarUserMenu() {
 
           {/* Right column - Shortcuts (shows on hover) */}
           {showShortcuts && (
-            <div 
-              className="border-l border-border animate-fade-in flex-1 p-1"
-              onMouseLeave={() => setShowShortcuts(false)}
-            >
+            <div className="border-l border-border animate-fade-in flex-1 p-1">
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Shortcuts</div>
               <DropdownMenuSeparator className="mx-0" />
               <div className="space-y-1.5 px-2 py-1">
