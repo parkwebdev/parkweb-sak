@@ -15,28 +15,11 @@ import {
   ColumnDef,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Check, X, Trash01 } from '@untitledui/icons';
-import { IconButton } from '@/components/ui/icon-button';
 import { PlanActions } from './PlanActions';
-import { PlanLimitsEditor } from './PlanLimitsEditor';
-import { PlanFeaturesEditor } from './PlanFeaturesEditor';
 import { formatAdminCurrency } from '@/lib/admin/admin-utils';
-import type { AdminPlan, PlanLimits, PlanFeatures } from '@/types/admin';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+import type { AdminPlan, PlanLimits } from '@/types/admin';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,11 +34,8 @@ import {
 interface PlansTableProps {
   plans: AdminPlan[];
   loading: boolean;
-  onUpdate: (id: string, updates: Partial<AdminPlan>) => Promise<void>;
-  onCreate: (plan: Omit<AdminPlan, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  onEdit?: (plan: AdminPlan) => void;
   onDelete: (id: string) => Promise<void>;
-  isUpdating?: boolean;
-  isCreating?: boolean;
   /** Whether the current user can manage (edit/delete) plans - super admin only */
   canManage?: boolean;
 }
@@ -63,65 +43,17 @@ interface PlansTableProps {
 const columnHelper = createColumnHelper<AdminPlan>();
 
 /**
- * Plans table with full CRUD functionality.
+ * Plans table with display and action callbacks.
  * Edit/delete actions only shown to super admins.
  */
 export function PlansTable({
   plans,
   loading,
-  onUpdate,
-  onCreate,
+  onEdit,
   onDelete,
-  isUpdating,
-  isCreating,
   canManage = false,
 }: PlansTableProps) {
-  const [editPlan, setEditPlan] = useState<AdminPlan | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Partial<AdminPlan>>({
-    name: '',
-    price_monthly: 0,
-    price_yearly: 0,
-    active: true,
-    features: {},
-    limits: {},
-  });
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      price_monthly: 0,
-      price_yearly: 0,
-      active: true,
-      features: {},
-      limits: {},
-    });
-  };
-
-  const handleEdit = (plan: AdminPlan) => {
-    if (!canManage) return;
-    setFormData({
-      name: plan.name,
-      price_monthly: plan.price_monthly,
-      price_yearly: plan.price_yearly,
-      active: plan.active,
-      features: plan.features,
-      limits: plan.limits,
-    });
-    setEditPlan(plan);
-  };
-
-  const handleSave = async () => {
-    if (editPlan) {
-      await onUpdate(editPlan.id, formData);
-      setEditPlan(null);
-    } else {
-      await onCreate(formData as Omit<AdminPlan, 'id' | 'created_at' | 'updated_at'>);
-      setCreateOpen(false);
-    }
-    resetForm();
-  };
 
   const handleDelete = async () => {
     if (deleteConfirmId) {
@@ -195,7 +127,7 @@ export function PlansTable({
           cell: ({ row }) => (
             <div className="flex justify-end">
               <PlanActions
-                onEdit={() => handleEdit(row.original)}
+                onEdit={() => onEdit?.(row.original)}
                 onDelete={() => setDeleteConfirmId(row.original.id)}
               />
             </div>
@@ -203,7 +135,7 @@ export function PlansTable({
         }),
       ] : []),
     ],
-    [canManage]
+    [canManage, onEdit]
   );
 
   const table = useReactTable({
@@ -219,87 +151,8 @@ export function PlansTable({
         columns={columns}
         isLoading={loading}
         emptyMessage="No plans found"
-        onRowClick={canManage ? (row) => handleEdit(row) : undefined}
+        onRowClick={canManage ? (row) => onEdit?.(row) : undefined}
       />
-
-      {/* Edit/Create Plan Sheet - only for super admins */}
-      {canManage && (
-        <Sheet open={!!editPlan || createOpen} onOpenChange={() => { setEditPlan(null); setCreateOpen(false); resetForm(); }}>
-          <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>{editPlan ? 'Edit Plan' : 'Create Plan'}</SheetTitle>
-              <SheetDescription>
-                {editPlan ? 'Update plan details and pricing' : 'Create a new subscription plan'}
-              </SheetDescription>
-            </SheetHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="plan-name">Plan Name</Label>
-                <Input
-                  id="plan-name"
-                  placeholder="e.g., Starter, Pro, Enterprise"
-                  value={formData.name || ''}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price-monthly">Monthly Price ($)</Label>
-                  <Input
-                    id="price-monthly"
-                    type="number"
-                    min={0}
-                    value={formData.price_monthly || 0}
-                    onChange={(e) => setFormData({ ...formData, price_monthly: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="price-yearly">Yearly Price ($)</Label>
-                  <Input
-                    id="price-yearly"
-                    type="number"
-                    min={0}
-                    value={formData.price_yearly || 0}
-                    onChange={(e) => setFormData({ ...formData, price_yearly: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-medium">Active</p>
-                  <p className="text-xs text-muted-foreground">Make plan available for purchase</p>
-                </div>
-                <Switch
-                  checked={formData.active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-                />
-              </div>
-
-              <PlanLimitsEditor
-                limits={formData.limits || {}}
-                onChange={(limits) => setFormData({ ...formData, limits })}
-              />
-
-              <PlanFeaturesEditor
-                features={formData.features || {}}
-                onChange={(features) => setFormData({ ...formData, features })}
-              />
-            </div>
-
-            <SheetFooter>
-              <Button variant="outline" onClick={() => { setEditPlan(null); setCreateOpen(false); resetForm(); }}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave} disabled={isUpdating || isCreating || !formData.name}>
-                {isUpdating || isCreating ? 'Saving...' : 'Save Plan'}
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      )}
 
       {/* Delete Confirmation - only for super admins */}
       {canManage && (
@@ -359,7 +212,6 @@ export function SubscriptionsTable({
     );
   }
 
-  // Import StatusBadge dynamically to avoid circular deps
   const StatusBadge = ({ status }: { status: string }) => (
     <Badge variant={status === 'active' ? 'default' : 'secondary'} className="text-2xs">
       {status}

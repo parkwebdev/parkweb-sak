@@ -94,11 +94,8 @@ export function AdminPlans() {
           <PlansTable
             plans={plans}
             loading={plansLoading}
-            onUpdate={async (id, updates) => { await updatePlan(id, updates); }}
-            onCreate={async (plan) => { await createPlan(plan); }}
+            onEdit={handleEditPlan}
             onDelete={deletePlan}
-            isUpdating={isUpdating}
-            isCreating={isCreating}
             canManage={isSuperAdmin}
           />
         )}
