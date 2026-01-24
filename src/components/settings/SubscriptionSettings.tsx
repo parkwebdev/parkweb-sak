@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { usePricingModal } from '@/contexts/PricingModalContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ type Invoice = {
 };
 
 export const SubscriptionSettings = () => {
-  const navigate = useNavigate();
+  const { openPricingModal } = usePricingModal();
   const { user, session } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
