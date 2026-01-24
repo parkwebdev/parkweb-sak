@@ -20,21 +20,21 @@ export interface LimitConfig {
 }
 
 /**
- * All 11 gated features that can be toggled per plan.
+ * All 10 gated features that can be toggled per plan.
  * Order determines display order in both admin and customer UIs.
- * Ordered by tier introduction: Starter → Business → Advanced
+ * Ordered by tier introduction: Starter → Business → Enterprise
  */
 export const PLAN_FEATURES: FeatureConfig[] = [
   // Starter tier features (foundational)
   { key: 'widget', label: 'Chat Widget', description: 'Embed a chat bubble on your website that visitors can use to talk with your AI agent.', category: 'Core' },
   { key: 'knowledge_sources', label: 'Knowledge Sources', description: 'Upload documents, PDFs, or website URLs to train your AI on your specific business information.', category: 'Knowledge' },
-  { key: 'calendar_booking', label: 'Calendar Booking', description: 'Let your AI agent schedule appointments directly into your connected calendar.', category: 'Knowledge' },
   // Business tier features (growth)
   { key: 'locations', label: 'Locations', description: 'Manage multiple business locations with separate knowledge, hours, and booking calendars.', category: 'Knowledge' },
-  { key: 'integrations', label: 'Integrations', description: 'Connect social media, email, and calendar platforms to centralize your conversations.', category: 'Tools' },
   { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Deep insights into conversation performance, visitor behavior, and conversion metrics.', category: 'Analytics' },
+  // Enterprise tier features (advanced)
+  { key: 'calendar_booking', label: 'Calendar Booking', description: 'Let your AI agent schedule appointments directly into your connected calendar.', category: 'Knowledge' },
+  { key: 'integrations', label: 'Integrations', description: 'Connect social media, email, and calendar platforms to centralize your conversations.', category: 'Tools' },
   { key: 'report_builder', label: 'Report Builder', description: 'Create custom reports with the metrics and visualizations you need.', category: 'Analytics' },
-  // Advanced tier features (enterprise)
   { key: 'webhooks', label: 'Webhooks', description: 'Receive real-time HTTP notifications when events occur in your account.', category: 'Core' },
   { key: 'custom_tools', label: 'Custom Tools', description: 'Connect external APIs so your AI can perform actions like checking inventory or updating CRMs.', category: 'Tools' },
   { key: 'scheduled_reports', label: 'Scheduled Reports', description: 'Automatically email reports on a daily, weekly, or monthly schedule.', category: 'Analytics' },
