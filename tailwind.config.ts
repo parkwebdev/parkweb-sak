@@ -231,6 +231,10 @@ const config: Config = {
           "0%": { transform: "translateX(0)", opacity: "1" },
           "100%": { transform: "translateX(100%)", opacity: "0" },
         },
+        "badge-shine": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -246,6 +250,7 @@ const config: Config = {
         "grow-width": "growWidth 0.6s ease-out forwards",
         "slide-in-from-right": "slide-in-from-right 0.25s ease-out",
         "slide-out-to-right": "slide-out-to-right 0.2s ease-out",
+        "badge-shine": "badge-shine 3s ease-in-out infinite",
       },
     },
   },
