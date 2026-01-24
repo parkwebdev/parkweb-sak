@@ -16,6 +16,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Link03, CheckCircle, Mail01, LinkBroken01, Loading02 } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { FeatureGate } from '@/components/subscription';
 import { EmptyState } from '@/components/ui/empty-state';
 import { AriSectionHeader } from './AriSectionHeader';
 import { Facebook, Instagram, Google } from '@ridemountainpig/svgl-react';
@@ -366,11 +368,12 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
   }
 
   return (
-    <div>
-      <AriSectionHeader
-        title="Integrations"
-        description="Connect social media, email, and calendar services"
-      />
+    <FeatureGate feature="integrations" loadingSkeleton={<SkeletonIntegrationsSection />}>
+      <div>
+        <AriSectionHeader
+          title="Integrations"
+          description="Connect social media, email, and calendar services"
+        />
 
       <div className="space-y-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as IntegrationsTab)}>
@@ -465,6 +468,7 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
         onConfirm={handleDisconnect}
         actionLabel="Disconnect"
       />
-    </div>
+      </div>
+    </FeatureGate>
   );
 }

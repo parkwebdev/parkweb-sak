@@ -25,6 +25,8 @@ import { Separator } from '@/components/ui/separator';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { useLocations } from '@/hooks/useLocations';
 import { useCanManage } from '@/hooks/useCanManage';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { FeatureGate } from '@/components/subscription';
 import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { KnowledgeDetailsSheet } from '@/components/agents/knowledge';
@@ -87,6 +89,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
   
   const { locations } = useLocations(agentId);
   const canManageKnowledge = useCanManage('manage_knowledge');
+  const { canUseKnowledgeSources } = usePlanLimits();
   
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [isRetraining, setIsRetraining] = useState(false);
@@ -385,10 +388,11 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
     setRowSelection({});
   };
 
-  // Register actions for TopBar
+  // Register actions for TopBar - only if feature is enabled
   const sectionActions: SectionAction[] = useMemo(() => {
-    const actions: SectionAction[] = [];
+    if (!canUseKnowledgeSources()) return [];
     
+    const actions: SectionAction[] = [];
     if (canManageKnowledge && sources.length > 0) {
       actions.push({
         id: 'retrain',
@@ -414,7 +418,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
     }
     
     return actions;
-  }, [canManageKnowledge, sources.length, isRetraining, retrainProgress, outdatedCount, handleRetrainAll]);
+  }, [canManageKnowledge, canUseKnowledgeSources, sources.length, isRetraining, retrainProgress, outdatedCount, handleRetrainAll]);
   
   useRegisterSectionActions('knowledge', sectionActions);
 
@@ -542,11 +546,12 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
   );
 
   return (
-    <div>
-      <AriSectionHeader
-        title="Knowledge"
-        description="Add URLs, sitemaps, or documents to train Ari"
-      />
+    <FeatureGate feature="knowledge_sources" loadingSkeleton={<SkeletonTableSection rows={5} />}>
+      <div>
+        <AriSectionHeader
+          title="Knowledge"
+          description="Add URLs, sitemaps, or documents to train Ari"
+        />
 
       <div className="space-y-4">
         {sourcesWithMeta.length === 0 ? (
@@ -659,7 +664,8 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
           onConfirm={handleDeleteConfirm}
         />
       </div>
-    </div>
+      </div>
+    </FeatureGate>
   );
 };
 

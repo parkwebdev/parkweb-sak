@@ -22,9 +22,21 @@ export interface PlanLimits {
 }
 
 export interface PlanFeatures {
+  // Core
   widget?: boolean;
   api?: boolean;
   webhooks?: boolean;
+  // Tools
+  custom_tools?: boolean;
+  integrations?: boolean;
+  // Knowledge & Locations
+  knowledge_sources?: boolean;
+  locations?: boolean;
+  calendar_booking?: boolean;
+  // Analytics & Reporting
+  advanced_analytics?: boolean;
+  report_builder?: boolean;
+  scheduled_reports?: boolean;
 }
 
 export interface CurrentUsage {
@@ -108,9 +120,21 @@ export const usePlanLimits = () => {
       const storedFeatures = plan.features;
       if (storedFeatures) {
         setFeatures({
+          // Core
           widget: storedFeatures.widget === true,
           api: storedFeatures.api === true,
           webhooks: storedFeatures.webhooks === true,
+          // Tools
+          custom_tools: storedFeatures.custom_tools === true,
+          integrations: storedFeatures.integrations === true,
+          // Knowledge & Locations
+          knowledge_sources: storedFeatures.knowledge_sources === true,
+          locations: storedFeatures.locations === true,
+          calendar_booking: storedFeatures.calendar_booking === true,
+          // Analytics & Reporting
+          advanced_analytics: storedFeatures.advanced_analytics === true,
+          report_builder: storedFeatures.report_builder === true,
+          scheduled_reports: storedFeatures.scheduled_reports === true,
         });
       } else {
         setFeatures({});
@@ -255,9 +279,21 @@ export const usePlanLimits = () => {
     return features[feature] === true;
   };
 
+  // Core features
   const canUseWidget = (): boolean => hasFeature('widget');
   const canUseApi = (): boolean => hasFeature('api');
   const canUseWebhooks = (): boolean => hasFeature('webhooks');
+  // Tools features
+  const canUseCustomTools = (): boolean => hasFeature('custom_tools');
+  const canUseIntegrations = (): boolean => hasFeature('integrations');
+  // Knowledge & Locations features
+  const canUseKnowledgeSources = (): boolean => hasFeature('knowledge_sources');
+  const canUseLocations = (): boolean => hasFeature('locations');
+  const canUseCalendarBooking = (): boolean => hasFeature('calendar_booking');
+  // Analytics & Reporting features
+  const canUseAdvancedAnalytics = (): boolean => hasFeature('advanced_analytics');
+  const canUseReportBuilder = (): boolean => hasFeature('report_builder');
+  const canUseScheduledReports = (): boolean => hasFeature('scheduled_reports');
 
   return {
     // Limits
@@ -273,6 +309,14 @@ export const usePlanLimits = () => {
     canUseWidget,
     canUseApi,
     canUseWebhooks,
+    canUseCustomTools,
+    canUseIntegrations,
+    canUseKnowledgeSources,
+    canUseLocations,
+    canUseCalendarBooking,
+    canUseAdvancedAnalytics,
+    canUseReportBuilder,
+    canUseScheduledReports,
     // Common
     loading,
     planName,

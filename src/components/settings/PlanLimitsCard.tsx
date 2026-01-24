@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { usePlanLimits, type PlanFeatures } from '@/hooks/usePlanLimits';
 import { useCanManage } from '@/hooks/useCanManage';
 import { useNavigate } from 'react-router-dom';
 import { Check, X } from '@untitledui/icons';
@@ -84,11 +84,25 @@ export const PlanLimitsCard = () => {
     },
   ];
 
-  const featureItems = [
-    { key: 'widget' as const, label: 'Chat Widget' },
-    { key: 'api' as const, label: 'API Access' },
-    { key: 'webhooks' as const, label: 'Webhooks' },
+  const featureItems: { key: keyof PlanFeatures; label: string; category: string }[] = [
+    // Core
+    { key: 'widget', label: 'Chat Widget', category: 'Core' },
+    { key: 'api', label: 'API Access', category: 'Core' },
+    { key: 'webhooks', label: 'Webhooks', category: 'Core' },
+    // Tools
+    { key: 'custom_tools', label: 'Custom Tools', category: 'Tools' },
+    { key: 'integrations', label: 'Integrations', category: 'Tools' },
+    // Knowledge & Locations
+    { key: 'knowledge_sources', label: 'Knowledge Sources', category: 'Knowledge' },
+    { key: 'locations', label: 'Locations', category: 'Knowledge' },
+    { key: 'calendar_booking', label: 'Calendar Booking', category: 'Knowledge' },
+    // Analytics & Reporting
+    { key: 'advanced_analytics', label: 'Advanced Analytics', category: 'Analytics' },
+    { key: 'report_builder', label: 'Report Builder', category: 'Analytics' },
+    { key: 'scheduled_reports', label: 'Scheduled Reports', category: 'Analytics' },
   ];
+
+  const featureCategories = ['Core', 'Tools', 'Knowledge', 'Analytics'];
 
   return (
     <Card>
@@ -127,35 +141,42 @@ export const PlanLimitsCard = () => {
         {features && (
           <>
             <Separator />
-            <div className="space-y-3">
+            <div className="space-y-4">
               <h4 className="text-sm font-medium">Features</h4>
-              <div className="grid grid-cols-1 gap-2">
-                {featureItems.map((item) => {
-                  const isEnabled = features[item.key] === true;
-                  return (
-                    <div key={item.key} className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{item.label}</span>
-                      <Badge 
-                        variant={isEnabled ? 'default' : 'secondary'} 
-                        size="sm"
-                        className="gap-1"
-                      >
-                        {isEnabled ? (
-                          <>
-                            <Check size={12} aria-hidden="true" />
-                            Enabled
-                          </>
-                        ) : (
-                          <>
-                            <X size={12} aria-hidden="true" />
-                            Disabled
-                          </>
-                        )}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
+              {featureCategories.map((category) => (
+                <div key={category} className="space-y-2">
+                  <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{category}</h5>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {featureItems
+                      .filter((item) => item.category === category)
+                      .map((item) => {
+                        const isEnabled = features[item.key] === true;
+                        return (
+                          <div key={item.key} className="flex items-center justify-between py-0.5">
+                            <span className="text-sm text-muted-foreground">{item.label}</span>
+                            <Badge 
+                              variant={isEnabled ? 'default' : 'secondary'} 
+                              size="sm"
+                              className="gap-1"
+                            >
+                              {isEnabled ? (
+                                <>
+                                  <Check size={12} aria-hidden="true" />
+                                  Enabled
+                                </>
+                              ) : (
+                                <>
+                                  <X size={12} aria-hidden="true" />
+                                  Disabled
+                                </>
+                              )}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
             </div>
           </>
         )}

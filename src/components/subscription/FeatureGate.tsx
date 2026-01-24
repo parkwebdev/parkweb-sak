@@ -7,7 +7,11 @@ import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { UpgradePrompt } from './UpgradePrompt';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type FeatureType = 'widget' | 'api' | 'webhooks';
+type FeatureType = 
+  | 'widget' | 'api' | 'webhooks'
+  | 'custom_tools' | 'integrations'
+  | 'knowledge_sources' | 'locations' | 'calendar_booking'
+  | 'advanced_analytics' | 'report_builder' | 'scheduled_reports';
 
 interface FeatureGateProps {
   feature: FeatureType;
