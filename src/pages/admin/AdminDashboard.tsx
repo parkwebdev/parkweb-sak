@@ -25,9 +25,9 @@ import {
   ClipboardCheck,
   Shield01
 } from '@untitledui/icons';
-import { useAdminAccounts } from '@/hooks/admin/useAdminAccounts';
+import { useAdminAccountsCount } from '@/hooks/admin/useAdminAccountsCount';
 import { useRevenueAnalytics } from '@/hooks/admin/useRevenueAnalytics';
-import { useAdminSubscriptions } from '@/hooks/admin/useAdminSubscriptions';
+import { useAdminSubscriptionsCount } from '@/hooks/admin/useAdminSubscriptionsCount';
 import { formatAdminCurrency, formatCompactNumber, formatPercentage } from '@/lib/admin/admin-utils';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 
@@ -124,10 +124,10 @@ export function AdminDashboard() {
   }), []);
   useTopBar(topBarConfig);
 
-  // Fetch real data from hooks
-  const { totalCount: accountCount, loading: accountsLoading } = useAdminAccounts({ pageSize: 1 });
+  // Fetch data using lightweight count hooks
+  const { count: accountCount, loading: accountsLoading } = useAdminAccountsCount();
   const { data: revenueData, loading: revenueLoading } = useRevenueAnalytics();
-  const { activeSubscriptions, loading: subscriptionsLoading } = useAdminSubscriptions();
+  const { data: subscriptionCounts, loading: subscriptionsLoading } = useAdminSubscriptionsCount();
 
   // Compute metrics
   const isLoading = accountsLoading || revenueLoading || subscriptionsLoading;
@@ -140,11 +140,11 @@ export function AdminDashboard() {
     return {
       accounts: formatCompactNumber(accountCount),
       mrr: formatAdminCurrency(mrr),
-      activeSubscriptions: formatCompactNumber(activeSubscriptions),
+      activeSubscriptions: formatCompactNumber(subscriptionCounts.activeCount),
       growth: growth > 0 ? `+${formatPercentage(growth)}` : formatPercentage(growth),
       growthTrend: growth > 0 ? 'up' : growth < 0 ? 'down' : null,
     };
-  }, [accountCount, revenueData, activeSubscriptions]);
+  }, [accountCount, revenueData, subscriptionCounts]);
 
   // Quick action navigation items
   const quickActions: QuickActionCardProps[] = [

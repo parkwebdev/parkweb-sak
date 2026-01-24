@@ -31,10 +31,11 @@ export function useRevenueAnalytics(dateRange?: DateRange): UseRevenueAnalyticsR
 
   const range = dateRange || defaultRange;
 
-  // Serialize dates for stable query key
+  // Serialize dates for stable query key - use date-only format to prevent
+  // cache misses from millisecond differences between component mounts
   const serializedRange = useMemo(() => ({
-    from: range.from.toISOString(),
-    to: range.to.toISOString(),
+    from: range.from.toISOString().split('T')[0],  // '2025-01-24'
+    to: range.to.toISOString().split('T')[0],      // '2026-01-24'
   }), [range.from, range.to]);
 
   const { data, isLoading, error } = useQuery({

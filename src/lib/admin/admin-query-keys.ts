@@ -15,6 +15,7 @@ export const adminQueryKeys = {
   // Accounts
   accounts: {
     all: () => [...adminQueryKeys.all, 'accounts'] as const,
+    count: () => [...adminQueryKeys.accounts.all(), 'count'] as const,
     list: (filters: Partial<AdminAccountFilters>, page: number, pageSize: number) =>
       [...adminQueryKeys.accounts.all(), 'list', JSON.stringify(filters), page, pageSize] as const,
     detail: (userId: string) => [...adminQueryKeys.accounts.all(), 'detail', userId] as const,
@@ -24,6 +25,7 @@ export const adminQueryKeys = {
   // Subscriptions
   subscriptions: {
     all: () => [...adminQueryKeys.all, 'subscriptions'] as const,
+    count: () => [...adminQueryKeys.subscriptions.all(), 'count'] as const,
     list: (filters: Record<string, unknown>) =>
       [...adminQueryKeys.subscriptions.all(), 'list', filters] as const,
   },
