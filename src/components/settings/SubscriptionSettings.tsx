@@ -99,6 +99,7 @@ export const SubscriptionSettings = () => {
     cancelAt,
     openCheckout, 
     checkoutLoading,
+    checkoutLoadingPriceId,
     openCustomerPortal, 
     portalLoading,
     cancelSubscription,
@@ -267,19 +268,26 @@ export const SubscriptionSettings = () => {
               const currentPlan = plans?.find(p => p.id === currentPlanId);
               const currentPlanPrice = currentPlan?.price_monthly ?? 0;
               
-              return plans?.map((plan) => (
-                <PlanCard
-                  key={plan.id}
-                  plan={plan}
-                  allPlans={plans}
-                  billingPeriod={billingPeriod}
-                  isCurrentPlan={plan.id === currentPlanId}
-                  currentPlanPrice={currentPlanId ? currentPlanPrice : undefined}
-                  onSelect={handleSelectPlan}
-                  loading={checkoutLoading}
-                  disabled={!canManageBilling}
-                />
-              ));
+              return plans?.map((plan) => {
+                const planPriceId = billingPeriod === 'yearly' 
+                  ? plan.stripe_price_id_yearly 
+                  : plan.stripe_price_id_monthly;
+                const isThisPlanLoading = checkoutLoadingPriceId === planPriceId;
+                
+                return (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    allPlans={plans}
+                    billingPeriod={billingPeriod}
+                    isCurrentPlan={plan.id === currentPlanId}
+                    currentPlanPrice={currentPlanId ? currentPlanPrice : undefined}
+                    onSelect={handleSelectPlan}
+                    loading={isThisPlanLoading}
+                    disabled={!canManageBilling || (checkoutLoading && !isThisPlanLoading)}
+                  />
+                );
+              });
             })()}
           </div>
 
