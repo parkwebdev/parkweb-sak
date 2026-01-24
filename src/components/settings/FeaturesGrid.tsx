@@ -3,8 +3,9 @@
  * Shows enabled/disabled features with check/x icons in a compact grid.
  */
 
-import { Check, X } from '@untitledui/icons';
+import { Check, X, HelpCircle } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { PlanFeatures } from '@/hooks/usePlanLimits';
 
 interface FeaturesGridProps {
@@ -15,6 +16,8 @@ interface FeaturesGridProps {
 interface FeatureItem {
   key: keyof PlanFeatures;
   label: string;
+  description: string;
+  docUrl?: string;
 }
 
 interface CategoryConfig {
@@ -26,36 +29,86 @@ const FEATURE_CATEGORIES: CategoryConfig[] = [
   {
     name: 'Core',
     features: [
-      { key: 'widget', label: 'Chat Widget' },
-      { key: 'webhooks', label: 'Webhooks' },
+      { 
+        key: 'widget', 
+        label: 'Chat Widget',
+        description: 'Embeddable chat interface for your website that connects visitors to your AI agent.',
+        docUrl: 'https://docs.lovable.dev/features/widget',
+      },
+      { 
+        key: 'webhooks', 
+        label: 'Webhooks',
+        description: 'Send real-time notifications to external services when events occur.',
+        docUrl: 'https://docs.lovable.dev/features/webhooks',
+      },
     ],
   },
   {
     name: 'Tools',
     features: [
-      { key: 'custom_tools', label: 'Custom Tools' },
-      { key: 'integrations', label: 'Integrations' },
+      { 
+        key: 'custom_tools', 
+        label: 'Custom Tools',
+        description: 'Extend your agent with custom API integrations and actions.',
+        docUrl: 'https://docs.lovable.dev/features/tools',
+      },
+      { 
+        key: 'integrations', 
+        label: 'Integrations',
+        description: 'Connect to third-party services like CRMs, calendars, and more.',
+        docUrl: 'https://docs.lovable.dev/features/integrations',
+      },
     ],
   },
   {
     name: 'Knowledge',
     features: [
-      { key: 'knowledge_sources', label: 'Knowledge Sources' },
-      { key: 'locations', label: 'Locations' },
-      { key: 'calendar_booking', label: 'Calendar Booking' },
+      { 
+        key: 'knowledge_sources', 
+        label: 'Knowledge Sources',
+        description: 'Train your agent with documents, websites, and custom content.',
+        docUrl: 'https://docs.lovable.dev/features/knowledge',
+      },
+      { 
+        key: 'locations', 
+        label: 'Locations',
+        description: 'Manage multiple business locations with unique settings and hours.',
+        docUrl: 'https://docs.lovable.dev/features/locations',
+      },
+      { 
+        key: 'calendar_booking', 
+        label: 'Calendar Booking',
+        description: 'Let visitors book appointments directly through your agent.',
+        docUrl: 'https://docs.lovable.dev/features/calendar',
+      },
     ],
   },
   {
     name: 'Analytics',
     features: [
-      { key: 'advanced_analytics', label: 'Advanced Analytics' },
-      { key: 'report_builder', label: 'Report Builder' },
-      { key: 'scheduled_reports', label: 'Scheduled Reports' },
+      { 
+        key: 'advanced_analytics', 
+        label: 'Advanced Analytics',
+        description: 'Deep insights into conversation patterns, user behavior, and agent performance.',
+        docUrl: 'https://docs.lovable.dev/features/analytics',
+      },
+      { 
+        key: 'report_builder', 
+        label: 'Report Builder',
+        description: 'Create custom reports with the metrics that matter to your business.',
+        docUrl: 'https://docs.lovable.dev/features/reports',
+      },
+      { 
+        key: 'scheduled_reports', 
+        label: 'Scheduled Reports',
+        description: 'Automatically send reports to your team on a recurring schedule.',
+        docUrl: 'https://docs.lovable.dev/features/scheduled-reports',
+      },
     ],
   },
 ];
 
-function FeatureRow({ label, enabled }: { label: string; enabled: boolean }) {
+function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boolean }) {
   return (
     <div className="flex items-center gap-2 py-1">
       {enabled ? (
@@ -64,8 +117,32 @@ function FeatureRow({ label, enabled }: { label: string; enabled: boolean }) {
         <X size={16} className="text-muted-foreground/50 shrink-0" aria-hidden="true" />
       )}
       <span className={enabled ? 'text-foreground text-sm' : 'text-muted-foreground/70 text-sm'}>
-        {label}
+        {feature.label}
       </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button 
+            type="button" 
+            className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+            aria-label={`Learn more about ${feature.label}`}
+          >
+            <HelpCircle size={12} aria-hidden="true" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          <p className="text-sm">{feature.description}</p>
+          {feature.docUrl && (
+            <a 
+              href={feature.docUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline mt-1 inline-block"
+            >
+              Learn more →
+            </a>
+          )}
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 }
@@ -105,7 +182,7 @@ export function FeaturesGrid({ features, loading }: FeaturesGridProps) {
           {category.features.map((feature) => (
             <FeatureRow
               key={feature.key}
-              label={feature.label}
+              feature={feature}
               enabled={features[feature.key] === true}
             />
           ))}
