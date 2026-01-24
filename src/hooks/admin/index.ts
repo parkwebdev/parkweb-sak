@@ -11,6 +11,7 @@ export { useAccountActions } from './useAccountActions';
 
 export { useAdminPlans } from './useAdminPlans';
 export { useAdminSubscriptions } from './useAdminSubscriptions';
+export { useUpdateAccountPlan } from './useUpdateAccountPlan';
 export { useAdminSubscriptionsCount } from './useAdminSubscriptionsCount';
 export { useAdminTeam } from './useAdminTeam';
 export { useEmailDeliveryLogs } from './useEmailDeliveryLogs';

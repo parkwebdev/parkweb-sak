@@ -43,7 +43,9 @@ export interface AdminAccountDetail extends AdminAccount {
   company_phone: string | null;
   knowledge_source_count: number;
   location_count: number;
+  last_login_at: string | null;
   permissions: string[];
+  plan_id: string | null;
 }
 
 // Subscription types

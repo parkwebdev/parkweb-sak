@@ -33,6 +33,14 @@ import { formatAdminDate, formatRelativeTime } from '@/lib/admin/admin-utils';
 import { ImpersonateButton } from './ImpersonateButton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
+import { useAdminPlans, useUpdateAccountPlan } from '@/hooks/admin';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Mail01, 
   Building02, 
@@ -161,8 +169,17 @@ export function AccountDetailSheet({
 }: AccountDetailSheetProps) {
   const prefersReducedMotion = useReducedMotion();
   const { account, usage, loading } = useAccountDetail(accountId || undefined);
+  const { plans } = useAdminPlans();
+  const updatePlan = useUpdateAccountPlan();
   const [contentReady, setContentReady] = useState(false);
   const [showMore, setShowMore] = useState(false);
+
+  const handlePlanChange = (planId: string) => {
+    if (!account) return;
+    // 'free' is a special value meaning no subscription
+    const newPlanId = planId === 'free' ? null : planId;
+    updatePlan.mutate({ userId: account.user_id, planId: newPlanId });
+  };
 
   // Defer content mounting for smooth animation
   useEffect(() => {
@@ -266,11 +283,29 @@ export function AccountDetailSheet({
                   label="Last interaction" 
                   value={account.last_login_at ? formatRelativeTime(account.last_login_at) : 'Never'} 
                 />
-                <DetailRow 
-                  icon={CreditCard01} 
-                  label="Plan" 
-                  value={account.plan_name || 'Free'} 
-                />
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <CreditCard01 size={16} className="shrink-0" aria-hidden="true" />
+                    <span>Plan</span>
+                  </div>
+                  <Select 
+                    value={account.plan_id || 'free'} 
+                    onValueChange={handlePlanChange}
+                    disabled={updatePlan.isPending}
+                  >
+                    <SelectTrigger className="w-[130px]" size="sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free</SelectItem>
+                      {plans.map(plan => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <User01 size={16} className="shrink-0" aria-hidden="true" />

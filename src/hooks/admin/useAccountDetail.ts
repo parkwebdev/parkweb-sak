@@ -68,13 +68,18 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         effectiveCompanyPhone = ownerProfile?.company_phone || profile.company_phone;
       }
 
-      // Fetch counts (without agents)
-      const [conversationResult, leadResult, knowledgeResult, locationResult] = await Promise.all([
+      // Fetch counts and subscription data
+      const [conversationResult, leadResult, knowledgeResult, locationResult, subscriptionResult] = await Promise.all([
         supabase.from('conversations').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('leads').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('knowledge_sources').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('locations').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('subscriptions').select('plan_id, status, plans!inner(id, name)').eq('user_id', userId).maybeSingle(),
       ]);
+
+      // Extract subscription data
+      const subscriptionData = subscriptionResult.data;
+      const planData = subscriptionData?.plans as { id: string; name: string } | null;
 
       const account: AdminAccountDetail = {
         id: profile.id,
@@ -88,8 +93,9 @@ export function useAccountDetail(userId: string | undefined): UseAccountDetailRe
         created_at: profile.created_at,
         role: roleData?.role || 'user',
         status: (profile.status || 'active') as 'active' | 'inactive' | 'suspended',
-        plan_name: null,
-        subscription_status: null,
+        plan_name: planData?.name || null,
+        plan_id: planData?.id || null,
+        subscription_status: subscriptionData?.status || null,
         mrr: 0,
         lead_count: leadResult.count || 0,
         knowledge_source_count: knowledgeResult.count || 0,
