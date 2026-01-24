@@ -35,7 +35,7 @@ const getBarColor = (percentage: number): string => {
 function UsageBarChartSkeleton() {
   return (
     <div className="space-y-3">
-      {[1, 2, 3].map((i) => (
+      {[1, 2, 3, 4].map((i) => (
         <div key={i} className="flex items-center gap-3">
           <Skeleton className="h-4 w-40" />
           <Skeleton className="h-6 flex-1 rounded-md" />
@@ -79,6 +79,14 @@ export function UsageBarChart({ usage, limits, loading }: UsageBarChartProps) {
       limit: limits.max_team_members,
       description: 'Users with access to your account. Includes admins and team members.',
       helpCenterPath: '/help-center?category=settings&article=team',
+    },
+    {
+      key: 'webhooks',
+      label: 'Webhooks',
+      current: usage.webhooks,
+      limit: limits.max_webhooks,
+      description: 'Automated integrations that send data to external services when events occur.',
+      helpCenterPath: '/help-center?category=ari&article=webhooks',
     },
   ];
 
