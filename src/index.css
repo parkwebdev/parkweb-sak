@@ -140,6 +140,10 @@
     --info: 221 83% 53%;
     --info-foreground: 210 40% 98%;
     
+    /* Savings Badge */
+    --savings: 142 76% 90%;
+    --savings-foreground: 142 69% 28%;
+    
     /* Status Badge Colors (semantic) */
     --status-active: 142 76% 36%;
     --status-active-foreground: 142 76% 26%;
@@ -212,6 +216,10 @@
     --warning-foreground: 48 96% 5%;
     --info: 217 91% 60%;
     --info-foreground: 222 84% 5%;
+    
+    /* Savings Badge */
+    --savings: 142 69% 18%;
+    --savings-foreground: 142 76% 70%;
     
     /* Status Badge Colors (semantic) */
     --status-active: 142 76% 46%;

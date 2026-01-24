@@ -39,8 +39,8 @@ export function BillingToggle({ value, onChange, className }: BillingToggleProps
       >
         Pay yearly
         <Badge 
-          variant="outline" 
-          className="bg-success/10 text-success border-success/20 text-xs"
+          variant="secondary" 
+          className="bg-savings text-savings-foreground border-0 text-xs font-medium"
         >
           Save 20%
         </Badge>

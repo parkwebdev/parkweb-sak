@@ -99,6 +99,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        savings: {
+          DEFAULT: "hsl(var(--savings))",
+          foreground: "hsl(var(--savings-foreground))",
+        },
         status: {
           active: {
             DEFAULT: "hsl(var(--status-active))",
