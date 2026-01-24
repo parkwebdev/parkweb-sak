@@ -3,14 +3,14 @@
  * Card-based layout with staggered animations matching other settings pages.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useCanManage } from '@/hooks/useCanManage';
 import { useNavigate } from 'react-router-dom';
 import { UsageBarChart } from './UsageBarChart';
-import { FeaturesGrid } from './FeaturesGrid';
+import { FeaturesGrid, FeatureCategoryDropdown } from './FeaturesGrid';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { useRegisterSettingsActions, SettingsSectionAction } from '@/contexts/SettingsSectionActionsContext';
@@ -38,6 +38,7 @@ export const UsageSettings = () => {
   const { limits, usage, features, loading, planName, hasActiveSubscription } = usePlanLimits();
   const navigate = useNavigate();
   const canViewBilling = useCanManage('view_billing');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   // Register TopBar action
   const sectionActions = useMemo((): SettingsSectionAction[] => 
@@ -90,14 +91,24 @@ export const UsageSettings = () => {
       {features && (
         <AnimatedItem>
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">Plan Features</CardTitle>
-              <CardDescription className="text-sm">
-                Features included in your current plan
-              </CardDescription>
+            <CardHeader className="flex flex-row items-start justify-between space-y-0">
+              <div className="space-y-1">
+                <CardTitle className="text-base font-semibold">Plan Features</CardTitle>
+                <CardDescription className="text-sm">
+                  Features included in your current plan
+                </CardDescription>
+              </div>
+              <FeatureCategoryDropdown
+                activeCategory={activeCategory}
+                onCategoryChange={setActiveCategory}
+              />
             </CardHeader>
             <CardContent>
-              <FeaturesGrid features={features} />
+              <FeaturesGrid 
+                features={features} 
+                activeCategory={activeCategory}
+                onCategoryChange={setActiveCategory}
+              />
             </CardContent>
           </Card>
         </AnimatedItem>
