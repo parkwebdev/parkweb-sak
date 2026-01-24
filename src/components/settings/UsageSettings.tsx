@@ -76,7 +76,6 @@ export const UsageSettings = () => {
             </div>
             {canViewBilling && (
               <Button 
-                variant="outline" 
                 size="sm"
                 onClick={() => navigate('/settings?tab=billing')}
               >
