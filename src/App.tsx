@@ -253,17 +253,17 @@ const App = () => (
                         </PermissionGuard>
                       }
                     >
-                      <Route index element={<Suspense fallback={<SkeletonAdminPage />}><AdminDashboard /></Suspense>} />
-                      <Route path="accounts" element={<Suspense fallback={<SkeletonAdminPage />}><AdminAccounts /></Suspense>} />
-                      <Route path="prompts" element={<Suspense fallback={<SkeletonAdminPage />}><AdminPrompts /></Suspense>} />
-                      <Route path="plans" element={<Suspense fallback={<SkeletonAdminPage />}><AdminPlans /></Suspense>} />
-                      <Route path="team" element={<Suspense fallback={<SkeletonAdminPage />}><AdminTeam /></Suspense>} />
-                      <Route path="knowledge" element={<Suspense fallback={<SkeletonAdminPage />}><AdminKnowledge /></Suspense>} />
-                      <Route path="knowledge/new" element={<Suspense fallback={<SkeletonAdminPage />}><ArticleEditorPage /></Suspense>} />
-                      <Route path="knowledge/:articleId" element={<Suspense fallback={<SkeletonAdminPage />}><ArticleEditorPage /></Suspense>} />
-                      <Route path="emails" element={<Suspense fallback={<SkeletonAdminPage />}><AdminEmails /></Suspense>} />
-                      <Route path="analytics" element={<Suspense fallback={<SkeletonAdminPage />}><AdminRevenue /></Suspense>} />
-                      <Route path="audit" element={<Suspense fallback={<SkeletonAdminPage />}><AdminAuditLog /></Suspense>} />
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="accounts" element={<AdminAccounts />} />
+                      <Route path="prompts" element={<AdminPrompts />} />
+                      <Route path="plans" element={<AdminPlans />} />
+                      <Route path="team" element={<AdminTeam />} />
+                      <Route path="knowledge" element={<AdminKnowledge />} />
+                      <Route path="knowledge/new" element={<ArticleEditorPage />} />
+                      <Route path="knowledge/:articleId" element={<ArticleEditorPage />} />
+                      <Route path="emails" element={<AdminEmails />} />
+                      <Route path="analytics" element={<AdminRevenue />} />
+                      <Route path="audit" element={<AdminAuditLog />} />
                     </Route>
                   </Route>
                   
