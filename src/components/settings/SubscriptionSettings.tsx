@@ -22,9 +22,11 @@ import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 import { SkeletonSettingsCard, SkeletonTableRow } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
-import { PlanCard, type PlanData } from '@/components/pricing/PlanCard';
+import { PlanCard, type PlanData, FeatureComparisonTable } from '@/components/pricing';
 import { BillingToggle } from '@/components/pricing/BillingToggle';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from '@untitledui/icons';
 
 type Invoice = {
   id: string;
@@ -197,19 +199,41 @@ export const SubscriptionSettings = () => {
 
       {/* Plans Grid - adapts to number of plans */}
       <TooltipProvider>
-        <div className={`grid grid-cols-1 md:grid-cols-2 ${plans && plans.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} divide-y md:divide-y-0 md:divide-x divide-border border rounded-lg bg-card`}>
-          {plans?.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              allPlans={plans}
-              billingPeriod={billingPeriod}
-              isCurrentPlan={plan.id === currentPlanId}
-              onSelect={handleSelectPlan}
-              loading={checkoutLoading}
-              disabled={!canManageBilling}
-            />
-          ))}
+        <div className="space-y-4">
+          {/* Plans Grid */}
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${plans && plans.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} divide-y md:divide-y-0 md:divide-x divide-border border rounded-lg bg-card`}>
+            {plans?.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                allPlans={plans}
+                billingPeriod={billingPeriod}
+                isCurrentPlan={plan.id === currentPlanId}
+                onSelect={handleSelectPlan}
+                loading={checkoutLoading}
+                disabled={!canManageBilling}
+              />
+            ))}
+          </div>
+
+          {/* Feature Comparison Table - Collapsible */}
+          {plans && plans.length > 0 && (
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between text-muted-foreground hover:text-foreground">
+                  <span className="text-sm">Compare all features</span>
+                  <ChevronDown size={16} className="transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <Card className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <FeatureComparisonTable plans={plans} />
+                  </CardContent>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </div>
       </TooltipProvider>
 
