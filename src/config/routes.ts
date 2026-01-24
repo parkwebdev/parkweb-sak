@@ -330,7 +330,7 @@ export interface AdminSectionConfig {
 export const ADMIN_SECTIONS: readonly AdminSectionConfig[] = [
   { id: 'overview', label: 'Overview', iconName: 'LayoutAlt01', path: '/admin', description: 'Dashboard overview' },
   { id: 'accounts', label: 'Accounts', iconName: 'Users01', path: '/admin/accounts', description: 'Manage user accounts' },
-  { id: 'prompts', label: 'Baseline Prompt', iconName: 'FileCode01', path: '/admin/prompts', description: 'Configure AI baseline' },
+  { id: 'prompts', label: 'Baseline Prompt', iconName: 'TypeSquare', path: '/admin/prompts', description: 'Configure AI baseline' },
   { id: 'plans', label: 'Plans & Billing', iconName: 'CreditCard01', path: '/admin/plans', description: 'Manage subscription plans' },
   { id: 'team', label: 'Pilot Team', iconName: 'UserGroup', path: '/admin/team', description: 'Manage internal team' },
   { id: 'knowledge', label: 'Help Articles', iconName: 'BookOpen01', path: '/admin/knowledge', description: 'Edit user documentation' },
