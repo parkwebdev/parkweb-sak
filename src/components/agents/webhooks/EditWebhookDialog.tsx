@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -181,6 +182,9 @@ export const EditWebhookDialog = ({ open, onOpenChange, webhook, onSave }: EditW
       <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit Webhook</DialogTitle>
+          <DialogDescription>
+            Modify the webhook configuration, authentication, and response actions.
+          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-180px)] pr-4">
           <Tabs defaultValue="basic" className="w-full">

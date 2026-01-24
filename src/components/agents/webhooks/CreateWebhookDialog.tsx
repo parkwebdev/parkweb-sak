@@ -3,6 +3,7 @@ import { logger } from '@/utils/logger';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -197,6 +198,9 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Webhook</DialogTitle>
+          <DialogDescription>
+            Configure a new webhook to receive real-time notifications for events.
+          </DialogDescription>
         </DialogHeader>
         <div className="flex-1 min-h-0 overflow-y-auto pr-4">
           <Tabs defaultValue="basic" className="w-full">
