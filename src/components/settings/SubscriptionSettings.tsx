@@ -108,6 +108,9 @@ export const SubscriptionSettings = () => {
     reactivateLoading,
   } = useSubscription();
 
+  // Mutual exclusion for subscription actions
+  const anyActionLoading = checkoutLoading || portalLoading || cancelLoading || reactivateLoading;
+
   // Fetch plans
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ['billing-plans'],
@@ -210,7 +213,7 @@ export const SubscriptionSettings = () => {
               variant="outline"
               size="sm"
               onClick={handleReactivateSubscription}
-              disabled={reactivateLoading}
+              disabled={anyActionLoading}
             >
               <RefreshCcw01 className="h-4 w-4 mr-2" />
               {reactivateLoading ? 'Reactivating...' : 'Reactivate'}
@@ -238,7 +241,7 @@ export const SubscriptionSettings = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => openCustomerPortal()}
-                disabled={portalLoading}
+                disabled={anyActionLoading}
               >
                 <CreditCard01 className="h-4 w-4 mr-2" />
                 {portalLoading ? 'Loading...' : 'Manage'}
@@ -248,6 +251,7 @@ export const SubscriptionSettings = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setCancelDialogOpen(true)}
+                  disabled={anyActionLoading}
                   className="text-muted-foreground hover:text-destructive"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
