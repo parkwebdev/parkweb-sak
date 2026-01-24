@@ -77,7 +77,7 @@ async function fetchPlans(): Promise<PlanData[]> {
 
 export const SubscriptionSettings = () => {
   const { user, session } = useAuth();
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
   const hasFetchedInvoicesRef = useRef(false);
