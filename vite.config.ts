@@ -46,6 +46,22 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('widget-entry') || id.includes('src/widget/') || id.includes('src/pages/WidgetPage')) {
             return 'widget';
           }
+          
+          // PDF libraries - only loaded by ReportBuilder
+          if (id.includes('@react-pdf') || id.includes('pdfjs-dist') || id.includes('jspdf')) {
+            return 'pdf-vendor';
+          }
+          
+          // Map library - lazy loaded via VisitorLocationMapWrapper
+          if (id.includes('maplibre-gl')) {
+            return 'map-vendor';
+          }
+          
+          // Rich text editor - lazy loaded via RichTextEditorWrapper
+          if (id.includes('@tiptap')) {
+            return 'editor-vendor';
+          }
+          
           // Let Vite auto-split shared deps (react, supabase) into smaller chunks
           // DO NOT force all node_modules into one vendor chunk - this was causing
           // the widget to load 872KB of unused main app dependencies

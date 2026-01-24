@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichTextEditorWrapper } from '@/components/ui/RichTextEditorWrapper';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   File06, Trash01, CheckCircle, Clock, Image01, XClose, RefreshCcw01, Calendar
@@ -284,7 +284,7 @@ export function ArticleDetailsSheet({
               {/* Content */}
               <div className="space-y-2">
                 <Label>Content *</Label>
-                <RichTextEditor
+                <RichTextEditorWrapper
                   content={content}
                   onChange={setContent}
                   placeholder="Write your help article content here..."

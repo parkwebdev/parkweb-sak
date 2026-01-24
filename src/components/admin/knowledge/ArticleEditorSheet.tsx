@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichTextEditorWrapper } from '@/components/ui/RichTextEditorWrapper';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { PlatformHCArticle, PlatformHCArticleInput, PlatformHCCategory } from '@/types/platform-hc';
 
@@ -222,9 +222,9 @@ export function ArticleEditorSheet({
             {/* Content Editor */}
             <div className="space-y-2">
               <Label>Content</Label>
-              <RichTextEditor
+              <RichTextEditorWrapper
                 content={formData.content}
-                onChange={(html) => setFormData({ ...formData, content: html })}
+                onChange={(html: string) => setFormData({ ...formData, content: html })}
                 placeholder="Write your article content..."
                 minHeight="400px"
               />
