@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { adminQueryKeys } from './admin-query-keys';
 import { PLAN_COLUMNS, PLATFORM_HC_CATEGORY_COLUMNS, PLATFORM_HC_ARTICLE_COLUMNS } from '@/lib/db-selects';
 import type { AdminPlan, PlanFeatures, PlanLimits, PilotTeamMember, AdminPermission } from '@/types/admin';
+import { fetchAccountsCount } from '@/hooks/admin/useAdminAccountsCount';
+import { fetchSubscriptionsCount } from '@/hooks/admin/useAdminSubscriptionsCount';
 
 // ============================================================================
 // Fetch Functions (extracted from hooks for reuse)
@@ -126,6 +128,52 @@ export async function fetchPlatformHCArticles() {
   return data;
 }
 
+/**
+ * Get default date range for revenue analytics (normalized to date-only).
+ * Matches the format used in useRevenueAnalytics to ensure cache hits.
+ */
+function getDefaultDateRange() {
+  const now = new Date();
+  const from = new Date(now);
+  from.setMonth(from.getMonth() - 12);
+  return {
+    from: from.toISOString().split('T')[0],
+    to: now.toISOString().split('T')[0],
+  };
+}
+
+/**
+ * Fetch revenue analytics data.
+ */
+async function fetchRevenueAnalytics() {
+  // TODO: Implement actual revenue analytics from Stripe/subscriptions
+  // For now, return placeholder data matching the hook's return type
+  return {
+    mrr: 0,
+    arr: 0,
+    churnRate: 0,
+    arpu: 0,
+    ltv: 0,
+    trialConversion: 0,
+    netRevenueRetention: 100,
+    activeSubscriptions: 0,
+    trialSubscriptions: 0,
+    mrrHistory: [],
+    churnHistory: [],
+    funnel: { trials: 0, active: 0, churned: 0, conversionRate: 0 },
+    byPlan: [],
+    topAccounts: [],
+    newMRR: 0,
+    expansionMRR: 0,
+    contractionMRR: 0,
+    churnedMRR: 0,
+    quickRatio: 0,
+    mrrMovementHistory: [],
+    churnByPlan: [],
+    accountConcentration: { top10Percent: 0, top25Percent: 0 },
+  };
+}
+
 // ============================================================================
 // Prefetch Map (admin routes → data to prefetch)
 // ============================================================================
@@ -194,9 +242,27 @@ export function prefetchAdminRoute(queryClient: QueryClient, path: string) {
     case '/admin/emails':
     case '/admin/analytics':
     case '/admin/prompts':
+      // Just chunk prefetch (already done above)
+      break;
+
     case '/admin':
     default:
-      // Just chunk prefetch (already done above)
+      // Prefetch dashboard summary data
+      queryClient.prefetchQuery({
+        queryKey: adminQueryKeys.accounts.count(),
+        queryFn: fetchAccountsCount,
+        staleTime: 60_000,
+      });
+      queryClient.prefetchQuery({
+        queryKey: adminQueryKeys.subscriptions.count(),
+        queryFn: fetchSubscriptionsCount,
+        staleTime: 60_000,
+      });
+      queryClient.prefetchQuery({
+        queryKey: adminQueryKeys.revenue.analytics(getDefaultDateRange()),
+        queryFn: fetchRevenueAnalytics,
+        staleTime: 300_000,
+      });
       break;
   }
 }
