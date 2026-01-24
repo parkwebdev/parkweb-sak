@@ -39,17 +39,19 @@ export function AdminPlans() {
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={CreditCard01} title="Plans & Billing" />,
-    center: (
-      <PlansTabDropdown 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-      />
+    right: (
+      <div className="flex items-center gap-2">
+        <PlansTabDropdown 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+        />
+        {activeTab === 'plans' && (
+          <Button size="sm" onClick={handleCreatePlan}>
+            New Plan
+          </Button>
+        )}
+      </div>
     ),
-    right: activeTab === 'plans' ? (
-      <Button size="sm" onClick={handleCreatePlan}>
-        New Plan
-      </Button>
-    ) : undefined,
   }), [handleCreatePlan, activeTab]);
   useTopBar(topBarConfig);
 

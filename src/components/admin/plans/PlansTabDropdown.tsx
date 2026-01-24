@@ -37,12 +37,12 @@ export function PlansTabDropdown({ activeTab, onTabChange }: PlansTabDropdownPro
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 font-medium">
+        <Button variant="outline" size="sm" className="gap-2 font-medium min-w-[120px] justify-between">
           <span>{TABS[activeTab]}</span>
           <ChevronDown size={16} className="text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="start" sideOffset={4}>
+      <DropdownMenuContent side="bottom" align="start" sideOffset={4} className="min-w-[120px]">
         {(Object.entries(TABS) as [PlansTab, string][]).map(([key, label]) => (
           <DropdownMenuItem
             key={key}
