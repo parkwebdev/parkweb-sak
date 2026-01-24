@@ -146,11 +146,12 @@ export const usePlanLimits = () => {
         .eq('user_id', accountOwnerId)
         .gte('created_at', firstDayOfMonth.toISOString());
 
-      // Count knowledge sources
+      // Count knowledge sources (exclude auto-synced wordpress_home entries)
       const { count: knowledgeCount } = await supabase
         .from('knowledge_sources')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', accountOwnerId);
+        .eq('user_id', accountOwnerId)
+        .neq('source_type', 'wordpress_home');
 
       // Count team members (where account owner is the owner)
       const { count: teamCount } = await supabase
