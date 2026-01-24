@@ -68,20 +68,23 @@ export const PlanLimitsCard = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         {limitItems.map((item) => {
-          const percentage = (item.current / item.limit) * 100;
-          const isNearLimit = percentage >= 80;
-          const isAtLimit = percentage >= 100;
+          // Handle unlimited (undefined limit)
+          const limit = item.limit;
+          const isUnlimited = limit === undefined || limit === null;
+          const percentage = isUnlimited ? 0 : (item.current / limit) * 100;
+          const isNearLimit = !isUnlimited && percentage >= 80;
+          const isAtLimit = !isUnlimited && percentage >= 100;
 
           return (
             <div key={item.label} className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{item.label}</span>
                 <span className={`font-medium ${isAtLimit ? 'text-destructive' : isNearLimit ? 'text-warning' : 'text-foreground'}`}>
-                  {item.current.toLocaleString()} / {item.limit.toLocaleString()}
+                  {item.current.toLocaleString()} / {isUnlimited ? '∞' : limit.toLocaleString()}
                 </span>
               </div>
               <Progress 
-                value={Math.min(percentage, 100)} 
+                value={isUnlimited ? 0 : Math.min(percentage, 100)} 
                 variant={isAtLimit ? 'destructive' : isNearLimit ? 'warning' : 'success'}
               />
             </div>

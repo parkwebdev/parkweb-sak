@@ -2,6 +2,7 @@
  * PlansTable Component
  * 
  * Table displaying subscription plans with management actions.
+ * Only super admins can edit/delete plans.
  * 
  * @module components/admin/plans/PlansTable
  */
@@ -16,7 +17,6 @@ import {
 import { DataTable } from '@/components/data-table/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +25,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Check, X, Trash01 } from '@untitledui/icons';
 import { IconButton } from '@/components/ui/icon-button';
 import { PlanActions } from './PlanActions';
+import { PlanLimitsEditor } from './PlanLimitsEditor';
+import { PlanFeaturesEditor } from './PlanFeaturesEditor';
 import { formatAdminCurrency } from '@/lib/admin/admin-utils';
 import type { AdminPlan, PlanLimits, PlanFeatures } from '@/types/admin';
 import {
@@ -54,12 +56,15 @@ interface PlansTableProps {
   onDelete: (id: string) => Promise<void>;
   isUpdating?: boolean;
   isCreating?: boolean;
+  /** Whether the current user can manage (edit/delete) plans - super admin only */
+  canManage?: boolean;
 }
 
 const columnHelper = createColumnHelper<AdminPlan>();
 
 /**
  * Plans table with full CRUD functionality.
+ * Edit/delete actions only shown to super admins.
  */
 export function PlansTable({
   plans,
@@ -69,6 +74,7 @@ export function PlansTable({
   onDelete,
   isUpdating,
   isCreating,
+  canManage = false,
 }: PlansTableProps) {
   const [editPlan, setEditPlan] = useState<AdminPlan | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -94,6 +100,7 @@ export function PlansTable({
   };
 
   const handleEdit = (plan: AdminPlan) => {
+    if (!canManage) return;
     setFormData({
       name: plan.name,
       price_monthly: plan.price_monthly,
@@ -156,12 +163,19 @@ export function PlansTable({
         header: 'Limits',
         cell: ({ getValue }) => {
           const limits = getValue() as PlanLimits;
+          const limitParts: string[] = [];
+          if (limits.max_conversations_per_month !== undefined) {
+            limitParts.push(`${limits.max_conversations_per_month} convos/mo`);
+          }
+          if (limits.max_team_members !== undefined) {
+            limitParts.push(`${limits.max_team_members} team`);
+          }
+          if (limits.max_knowledge_sources !== undefined) {
+            limitParts.push(`${limits.max_knowledge_sources} sources`);
+          }
           return (
-            <div className="text-xs text-muted-foreground space-x-2">
-              {limits.agents !== undefined && <span>{limits.agents} agents</span>}
-              {limits.conversations_per_month !== undefined && (
-                <span>• {limits.conversations_per_month} convos/mo</span>
-              )}
+            <div className="text-xs text-muted-foreground">
+              {limitParts.length > 0 ? limitParts.join(' • ') : 'No limits set'}
             </div>
           );
         },
@@ -172,21 +186,24 @@ export function PlansTable({
           <span className="font-mono text-sm">{getValue() || 0}</span>
         ),
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: '',
-        size: 50,
-        cell: ({ row }) => (
-          <div className="flex justify-end">
-            <PlanActions
-              onEdit={() => handleEdit(row.original)}
-              onDelete={() => setDeleteConfirmId(row.original.id)}
-            />
-          </div>
-        ),
-      }),
+      // Only show actions column if user can manage
+      ...(canManage ? [
+        columnHelper.display({
+          id: 'actions',
+          header: '',
+          size: 50,
+          cell: ({ row }) => (
+            <div className="flex justify-end">
+              <PlanActions
+                onEdit={() => handleEdit(row.original)}
+                onDelete={() => setDeleteConfirmId(row.original.id)}
+              />
+            </div>
+          ),
+        }),
+      ] : []),
     ],
-    []
+    [canManage]
   );
 
   const table = useReactTable({
@@ -202,225 +219,107 @@ export function PlansTable({
         columns={columns}
         isLoading={loading}
         emptyMessage="No plans found"
-        onRowClick={(row) => handleEdit(row)}
+        onRowClick={canManage ? (row) => handleEdit(row) : undefined}
       />
 
-      {/* Edit/Create Plan Sheet */}
-      <Sheet open={!!editPlan || createOpen} onOpenChange={() => { setEditPlan(null); setCreateOpen(false); resetForm(); }}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{editPlan ? 'Edit Plan' : 'Create Plan'}</SheetTitle>
-            <SheetDescription>
-              {editPlan ? 'Update plan details and pricing' : 'Create a new subscription plan'}
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="plan-name">Plan Name</Label>
-              <Input
-                id="plan-name"
-                placeholder="e.g., Starter, Pro, Enterprise"
-                value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+      {/* Edit/Create Plan Sheet - only for super admins */}
+      {canManage && (
+        <Sheet open={!!editPlan || createOpen} onOpenChange={() => { setEditPlan(null); setCreateOpen(false); resetForm(); }}>
+          <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>{editPlan ? 'Edit Plan' : 'Create Plan'}</SheetTitle>
+              <SheetDescription>
+                {editPlan ? 'Update plan details and pricing' : 'Create a new subscription plan'}
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="price-monthly">Monthly Price ($)</Label>
+                <Label htmlFor="plan-name">Plan Name</Label>
                 <Input
-                  id="price-monthly"
-                  type="number"
-                  min={0}
-                  value={formData.price_monthly || 0}
-                  onChange={(e) => setFormData({ ...formData, price_monthly: parseFloat(e.target.value) || 0 })}
+                  id="plan-name"
+                  placeholder="e.g., Starter, Pro, Enterprise"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="price-yearly">Yearly Price ($)</Label>
-                <Input
-                  id="price-yearly"
-                  type="number"
-                  min={0}
-                  value={formData.price_yearly || 0}
-                  onChange={(e) => setFormData({ ...formData, price_yearly: parseFloat(e.target.value) || 0 })}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price-monthly">Monthly Price ($)</Label>
+                  <Input
+                    id="price-monthly"
+                    type="number"
+                    min={0}
+                    value={formData.price_monthly || 0}
+                    onChange={(e) => setFormData({ ...formData, price_monthly: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price-yearly">Yearly Price ($)</Label>
+                  <Input
+                    id="price-yearly"
+                    type="number"
+                    min={0}
+                    value={formData.price_yearly || 0}
+                    onChange={(e) => setFormData({ ...formData, price_yearly: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm font-medium">Active</p>
+                  <p className="text-xs text-muted-foreground">Make plan available for purchase</p>
+                </div>
+                <Switch
+                  checked={formData.active}
+                  onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                 />
               </div>
-            </div>
 
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <p className="text-sm font-medium">Active</p>
-                <p className="text-xs text-muted-foreground">Make plan available for purchase</p>
-              </div>
-              <Switch
-                checked={formData.active}
-                onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+              <PlanLimitsEditor
+                limits={formData.limits || {}}
+                onChange={(limits) => setFormData({ ...formData, limits })}
+              />
+
+              <PlanFeaturesEditor
+                features={formData.features || {}}
+                onChange={(features) => setFormData({ ...formData, features })}
               />
             </div>
 
-            <PlanLimitsEditor
-              limits={formData.limits || {}}
-              onChange={(limits) => setFormData({ ...formData, limits })}
-            />
+            <SheetFooter>
+              <Button variant="outline" onClick={() => { setEditPlan(null); setCreateOpen(false); resetForm(); }}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={isUpdating || isCreating || !formData.name}>
+                {isUpdating || isCreating ? 'Saving...' : 'Save Plan'}
+              </Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      )}
 
-            <PlanFeaturesEditor
-              features={formData.features || {}}
-              onChange={(features) => setFormData({ ...formData, features })}
-            />
-          </div>
-
-          <SheetFooter>
-            <Button variant="outline" onClick={() => { setEditPlan(null); setCreateOpen(false); resetForm(); }}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isUpdating || isCreating || !formData.name}>
-              {isUpdating || isCreating ? 'Saving...' : 'Save Plan'}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Plan</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this plan? Existing subscribers will not be affected.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
-
-/**
- * Plan limits editor component.
- */
-export function PlanLimitsEditor({
-  limits,
-  onChange,
-}: {
-  limits: PlanLimits;
-  onChange: (limits: PlanLimits) => void;
-}) {
-  const limitFields = [
-    { key: 'agents', label: 'Max Agents' },
-    { key: 'conversations_per_month', label: 'Conversations/Month' },
-    { key: 'knowledge_sources', label: 'Knowledge Sources' },
-    { key: 'team_members', label: 'Team Members' },
-    { key: 'api_requests_per_day', label: 'API Requests/Day' },
-  ];
-
-  return (
-    <div className="space-y-3">
-      <Label>Limits</Label>
-      <div className="grid grid-cols-2 gap-3">
-        {limitFields.map(({ key, label }) => (
-          <div key={key} className="space-y-1">
-            <Label className="text-xs text-muted-foreground">{label}</Label>
-            <Input
-              type="number"
-              min={0}
-              placeholder="Unlimited"
-              value={limits[key] ?? ''}
-              onChange={(e) => {
-                const value = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                onChange({ ...limits, [key]: value });
-              }}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Plan features editor component.
- */
-export function PlanFeaturesEditor({
-  features,
-  onChange,
-}: {
-  features: PlanFeatures;
-  onChange: (features: PlanFeatures) => void;
-}) {
-  const [newFeature, setNewFeature] = useState('');
-
-  const featureList = Object.keys(features);
-
-  const handleAdd = () => {
-    if (newFeature && !features[newFeature]) {
-      onChange({ ...features, [newFeature]: true });
-      setNewFeature('');
-    }
-  };
-
-  const handleToggle = (key: string) => {
-    onChange({ ...features, [key]: !features[key] });
-  };
-
-  const handleRemove = (key: string) => {
-    const updated = { ...features };
-    delete updated[key];
-    onChange(updated);
-  };
-
-  return (
-    <div className="space-y-3">
-      <Label>Features</Label>
-      <div className="flex gap-2">
-        <Input
-          placeholder="Feature name"
-          value={newFeature}
-          onChange={(e) => setNewFeature(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-        />
-        <IconButton label="Add feature" size="sm" variant="outline" onClick={handleAdd}>
-          <Plus size={14} />
-        </IconButton>
-      </div>
-      <div className="space-y-2">
-        {featureList.map((key) => (
-          <div key={key} className="flex items-center justify-between p-2 rounded bg-muted/50">
-            <div className="flex items-center gap-2">
-              {features[key] ? (
-                <Check size={14} className="text-status-active" aria-hidden="true" />
-              ) : (
-                <X size={14} className="text-muted-foreground" aria-hidden="true" />
-              )}
-              <span className="text-sm">{key}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={features[key]}
-                onCheckedChange={() => handleToggle(key)}
-              />
-              <IconButton
-                label="Remove feature"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemove(key)}
-              >
-                <Trash01 size={12} className="text-destructive" />
-              </IconButton>
-            </div>
-          </div>
-        ))}
-        {featureList.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-2">No features added</p>
-        )}
-      </div>
+      {/* Delete Confirmation - only for super admins */}
+      {canManage && (
+        <AlertDialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Plan</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this plan? Existing subscribers will not be affected.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }
@@ -460,6 +359,13 @@ export function SubscriptionsTable({
     );
   }
 
+  // Import StatusBadge dynamically to avoid circular deps
+  const StatusBadge = ({ status }: { status: string }) => (
+    <Badge variant={status === 'active' ? 'default' : 'secondary'} className="text-2xs">
+      {status}
+    </Badge>
+  );
+
   return (
     <div className="rounded-lg border border-border divide-y divide-border">
       {subscriptions.map((sub) => (
@@ -469,7 +375,7 @@ export function SubscriptionsTable({
             <p className="text-xs text-muted-foreground">{sub.plan_name}</p>
           </div>
           <div className="flex items-center gap-4">
-            <StatusBadge status={sub.status} type="subscription" />
+            <StatusBadge status={sub.status} />
             <span className="font-mono text-sm">{formatAdminCurrency(sub.mrr)}/mo</span>
           </div>
         </div>
