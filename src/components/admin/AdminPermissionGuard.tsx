@@ -4,14 +4,16 @@
  * Protects admin pages by checking if the current user has
  * the required admin permission. Super admins bypass all checks.
  * 
+ * Uses AdminRoleContext (provided by AdminLayout) for instant
+ * permission checks without loading states or redundant DB calls.
+ * 
  * @module components/admin/AdminPermissionGuard
  */
 
 import { Link } from 'react-router-dom';
 import { Lock01 } from '@untitledui/icons';
-import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
+import { useAdminRole } from '@/contexts/AdminRoleContext';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ADMIN_PERMISSION_LABELS, type AdminPermission } from '@/types/admin';
 
 interface AdminPermissionGuardProps {
@@ -23,24 +25,12 @@ interface AdminPermissionGuardProps {
 /**
  * Guards admin pages based on granular admin permissions.
  * Super admins automatically have access to all pages.
+ * 
+ * No loading state needed - permissions are already loaded
+ * and cached by AdminLayout via AdminRoleContext.
  */
 export function AdminPermissionGuard({ children, permission }: AdminPermissionGuardProps) {
-  const { hasAdminPermission, isSuperAdmin, isPilotTeamMember, loading } = useRoleAuthorization();
-
-  // Show loading skeleton while checking permissions
-  if (loading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
-  // Not a pilot team member - shouldn't be here (AdminLayout should catch this)
-  if (!isPilotTeamMember) {
-    return null;
-  }
+  const { isSuperAdmin, hasAdminPermission } = useAdminRole();
 
   // Super admins have unrestricted access
   if (isSuperAdmin) {
