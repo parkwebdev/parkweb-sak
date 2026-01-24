@@ -41,6 +41,7 @@ import {
   CreditCard01,
   Mail01,
   TrendUp01,
+  LineChartUp03,
   ClipboardCheck,
   Shield01,
 } from '@untitledui/icons';
@@ -146,7 +147,7 @@ export const ADMIN_ICON_MAP: Record<string, IconComponent> = {
   UserGroup: Users02,
   BookOpen01: BookOpen01,
   Mail01: Mail01,
-  TrendUp01: TrendUp01,
+  TrendUp01: LineChartUp03,
   ClipboardCheck: ClipboardCheck,
   Shield01: Shield01,
 };
