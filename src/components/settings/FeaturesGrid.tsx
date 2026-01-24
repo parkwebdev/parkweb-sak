@@ -1,6 +1,6 @@
 /**
- * @fileoverview Features grid displaying plan features in a row-based list.
- * Shows enabled/disabled features with check/x icons, inline descriptions, and category badges.
+ * @fileoverview Features grid displaying plan features grouped by category.
+ * Shows enabled/disabled features with check/x icons and inline descriptions.
  */
 
 import { X } from '@untitledui/icons';
@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { PLAN_FEATURES } from '@/lib/plan-config';
+import { PLAN_FEATURES, FEATURE_CATEGORIES } from '@/lib/plan-config';
 import type { PlanFeatures } from '@/hooks/usePlanLimits';
 
 interface FeaturesGridProps {
@@ -55,6 +55,12 @@ const ALL_FEATURES: FeatureItem[] = PLAN_FEATURES.map(feature => ({
   helpCenterPath: FEATURE_HELP_PATHS[feature.key],
 }));
 
+// Group features by category
+const FEATURES_BY_CATEGORY = FEATURE_CATEGORIES.map(category => ({
+  category,
+  features: ALL_FEATURES.filter(f => f.category === category),
+})).filter(group => group.features.length > 0);
+
 function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boolean }) {
   return (
     <div className="flex items-start gap-3 py-3">
@@ -71,23 +77,12 @@ function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boole
         <X size={16} className="text-muted-foreground/50 shrink-0 mt-0.5" aria-hidden="true" />
       )}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <span className={cn(
-            "text-sm font-medium",
-            enabled ? "text-foreground" : "text-muted-foreground/70"
-          )}>
-            {feature.label}
-          </span>
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "text-2xs shrink-0 border",
-              CATEGORY_COLORS[feature.category] || 'bg-muted/10 text-muted-foreground'
-            )}
-          >
-            {feature.category}
-          </Badge>
-        </div>
+        <span className={cn(
+          "text-sm font-medium",
+          enabled ? "text-foreground" : "text-muted-foreground/70"
+        )}>
+          {feature.label}
+        </span>
         <p className={cn(
           "text-xs mt-0.5",
           enabled ? "text-muted-foreground" : "text-muted-foreground/50"
@@ -107,14 +102,50 @@ function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boole
   );
 }
 
-function FeatureRowSkeleton() {
+function CategorySection({ 
+  category, 
+  features, 
+  planFeatures 
+}: { 
+  category: string; 
+  features: FeatureItem[]; 
+  planFeatures: PlanFeatures;
+}) {
   return (
-    <div className="py-3 space-y-1">
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-4 w-16" />
+    <div className="py-4 first:pt-0 last:pb-0">
+      <div className="flex items-center gap-2 pb-2">
+        <Badge 
+          variant="outline" 
+          className={cn("text-xs border", CATEGORY_COLORS[category])}
+        >
+          {category}
+        </Badge>
       </div>
-      <Skeleton className="h-3 w-full max-w-md" />
+      <div className="divide-y divide-border/50">
+        {features.map((feature) => (
+          <FeatureRow
+            key={feature.key}
+            feature={feature}
+            enabled={planFeatures[feature.key as keyof PlanFeatures] === true}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CategorySectionSkeleton() {
+  return (
+    <div className="py-4 first:pt-0 last:pb-0">
+      <Skeleton className="h-5 w-20 mb-2" />
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <div key={i} className="py-3 space-y-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-full max-w-md" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -123,8 +154,8 @@ export function FeaturesGrid({ features, loading }: FeaturesGridProps) {
   if (loading) {
     return (
       <div className="divide-y divide-border">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <FeatureRowSkeleton key={i} />
+        {[1, 2, 3, 4].map((i) => (
+          <CategorySectionSkeleton key={i} />
         ))}
       </div>
     );
@@ -134,11 +165,12 @@ export function FeaturesGrid({ features, loading }: FeaturesGridProps) {
 
   return (
     <div className="divide-y divide-border">
-      {ALL_FEATURES.map((feature) => (
-        <FeatureRow
-          key={feature.key}
-          feature={feature}
-          enabled={features[feature.key as keyof PlanFeatures] === true}
+      {FEATURES_BY_CATEGORY.map(({ category, features: categoryFeatures }) => (
+        <CategorySection
+          key={category}
+          category={category}
+          features={categoryFeatures}
+          planFeatures={features}
         />
       ))}
     </div>
