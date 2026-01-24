@@ -230,7 +230,7 @@ function aggregateUsageMetrics(
     metrics,
     grouping,
     'date',
-    ['conversations', 'messages', 'api_calls']
+    ['conversations', 'messages']
   );
 }
 

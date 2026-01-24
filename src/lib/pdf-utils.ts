@@ -314,7 +314,6 @@ export function sanitizePDFData(data: PDFData): PDFData {
       date: sanitizeString(u.date),
       conversations: sanitizeNumber(u.conversations),
       messages: sanitizeNumber(u.messages),
-      api_calls: sanitizeNumber(u.api_calls),
     })),
 
     agentPerformance: truncateArray(data.agentPerformance, limits.DEFAULT).map(a => ({
