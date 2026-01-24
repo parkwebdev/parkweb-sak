@@ -84,7 +84,6 @@ export interface AdminPlan {
  */
 export interface PlanFeatures {
   widget?: boolean;
-  hosted_page?: boolean;
   api?: boolean;
   webhooks?: boolean;
   [key: string]: boolean | undefined;
