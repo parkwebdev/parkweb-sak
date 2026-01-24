@@ -9,14 +9,15 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { CreditCard01 } from '@untitledui/icons';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { 
   PlansTable, 
   PlanEditorSheet, 
   SubscriptionsTable,
-  StripeSync 
+  StripeSync,
+  PlansTabDropdown,
 } from '@/components/admin/plans';
+import type { PlansTab } from '@/components/admin/plans/PlansTabDropdown';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { useAdminPlans, useAdminSubscriptions } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
@@ -26,6 +27,7 @@ import type { AdminPlan } from '@/types/admin';
  * Plans and billing management page for Super Admin.
  */
 export function AdminPlans() {
+  const [activeTab, setActiveTab] = useState<PlansTab>('plans');
   const [editingPlan, setEditingPlan] = useState<AdminPlan | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
 
@@ -37,12 +39,18 @@ export function AdminPlans() {
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={CreditCard01} title="Plans & Billing" />,
-    right: (
+    center: (
+      <PlansTabDropdown 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+      />
+    ),
+    right: activeTab === 'plans' ? (
       <Button size="sm" onClick={handleCreatePlan}>
         New Plan
       </Button>
-    ),
-  }), [handleCreatePlan]);
+    ) : undefined,
+  }), [handleCreatePlan, activeTab]);
   useTopBar(topBarConfig);
 
   const { 
@@ -74,36 +82,29 @@ export function AdminPlans() {
   return (
     <AdminPermissionGuard permission="view_revenue">
       <div className="p-6 space-y-6">
-        <Tabs defaultValue="plans" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="plans">Plans</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="stripe">Stripe</TabsTrigger>
-          </TabsList>
+        {/* Tab Content - rendered conditionally based on activeTab */}
+        {activeTab === 'plans' && (
+          <PlansTable
+            plans={plans}
+            loading={plansLoading}
+            onUpdate={async (id, updates) => { await updatePlan(id, updates); }}
+            onCreate={async (plan) => { await createPlan(plan); }}
+            onDelete={deletePlan}
+            isUpdating={isUpdating}
+            isCreating={isCreating}
+          />
+        )}
 
-          <TabsContent value="plans" className="space-y-4">
-            <PlansTable
-              plans={plans}
-              loading={plansLoading}
-              onUpdate={async (id, updates) => { await updatePlan(id, updates); }}
-              onCreate={async (plan) => { await createPlan(plan); }}
-              onDelete={deletePlan}
-              isUpdating={isUpdating}
-              isCreating={isCreating}
-            />
-          </TabsContent>
+        {activeTab === 'subscriptions' && (
+          <SubscriptionsTable
+            subscriptions={subscriptions}
+            loading={subscriptionsLoading}
+          />
+        )}
 
-          <TabsContent value="subscriptions">
-            <SubscriptionsTable
-              subscriptions={subscriptions}
-              loading={subscriptionsLoading}
-            />
-          </TabsContent>
-
-          <TabsContent value="stripe">
-            <StripeSync />
-          </TabsContent>
-        </Tabs>
+        {activeTab === 'stripe' && (
+          <StripeSync />
+        )}
 
         {/* Plan Editor Sheet */}
         <PlanEditorSheet

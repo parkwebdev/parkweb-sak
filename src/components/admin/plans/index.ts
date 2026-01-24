@@ -10,3 +10,4 @@ export { PlanLimitsEditor } from './PlanLimitsEditor';
 export { PlanFeaturesEditor } from './PlanFeaturesEditor';
 export { SubscriptionsTable } from './SubscriptionsTable';
 export { StripeSync } from './StripeSync';
+export { PlansTabDropdown } from './PlansTabDropdown';
