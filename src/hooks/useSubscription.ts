@@ -22,6 +22,8 @@ export interface SubscriptionState {
   planId: string | null;
   subscriptionEnd: string | null;
   status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | null;
+  cancelAtPeriodEnd: boolean;
+  cancelAt: string | null;
 }
 
 interface UseSubscriptionResult extends SubscriptionState {
@@ -31,10 +33,18 @@ interface UseSubscriptionResult extends SubscriptionState {
   openCheckout: (priceId: string, options?: CheckoutOptions) => Promise<void>;
   /** Open Stripe Customer Portal for subscription management */
   openCustomerPortal: () => Promise<void>;
+  /** Cancel subscription at period end */
+  cancelSubscription: () => Promise<void>;
+  /** Reactivate a subscription scheduled for cancellation */
+  reactivateSubscription: () => Promise<void>;
   /** Whether checkout is in progress */
   checkoutLoading: boolean;
   /** Whether portal redirect is in progress */
   portalLoading: boolean;
+  /** Whether cancel is in progress */
+  cancelLoading: boolean;
+  /** Whether reactivate is in progress */
+  reactivateLoading: boolean;
 }
 
 interface CheckoutOptions {
@@ -51,6 +61,8 @@ const INITIAL_STATE: SubscriptionState = {
   planId: null,
   subscriptionEnd: null,
   status: null,
+  cancelAtPeriodEnd: false,
+  cancelAt: null,
 };
 
 // Check subscription every 60 seconds
@@ -64,6 +76,8 @@ export function useSubscription(): UseSubscriptionResult {
   const [state, setState] = useState<SubscriptionState>(INITIAL_STATE);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [reactivateLoading, setReactivateLoading] = useState(false);
 
   /**
    * Check subscription status from Stripe.
@@ -98,6 +112,8 @@ export function useSubscription(): UseSubscriptionResult {
         planId: data.plan_id ?? null,
         subscriptionEnd: data.subscription_end ?? null,
         status: data.status ?? null,
+        cancelAtPeriodEnd: data.cancel_at_period_end ?? false,
+        cancelAt: data.cancel_at ?? null,
       });
     } catch (error: unknown) {
       console.error('[useSubscription] Failed to check subscription:', getErrorMessage(error));
@@ -183,6 +199,78 @@ export function useSubscription(): UseSubscriptionResult {
     }
   }, [user, session]);
 
+  /**
+   * Cancel subscription at period end.
+   */
+  const cancelSubscription = useCallback(async () => {
+    if (!user || !session) {
+      toast.error('Please sign in to cancel your subscription');
+      return;
+    }
+
+    setCancelLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('cancel-subscription');
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success('Subscription canceled', {
+        description: 'Your subscription will end at the current billing period.',
+      });
+      
+      // Refresh subscription state
+      await checkSubscription();
+    } catch (error: unknown) {
+      toast.error('Failed to cancel subscription', {
+        description: getErrorMessage(error),
+      });
+    } finally {
+      setCancelLoading(false);
+    }
+  }, [user, session, checkSubscription]);
+
+  /**
+   * Reactivate a subscription scheduled for cancellation.
+   */
+  const reactivateSubscription = useCallback(async () => {
+    if (!user || !session) {
+      toast.error('Please sign in to reactivate your subscription');
+      return;
+    }
+
+    setReactivateLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reactivate-subscription');
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success('Subscription reactivated', {
+        description: 'Your subscription will continue as normal.',
+      });
+      
+      // Refresh subscription state
+      await checkSubscription();
+    } catch (error: unknown) {
+      toast.error('Failed to reactivate subscription', {
+        description: getErrorMessage(error),
+      });
+    } finally {
+      setReactivateLoading(false);
+    }
+  }, [user, session, checkSubscription]);
+
   // Check subscription on mount and when user changes
   useEffect(() => {
     if (user && session) {
@@ -234,9 +322,13 @@ export function useSubscription(): UseSubscriptionResult {
     checkSubscription,
     openCheckout,
     openCustomerPortal,
+    cancelSubscription,
+    reactivateSubscription,
     checkoutLoading,
     portalLoading,
-  }), [state, checkSubscription, openCheckout, openCustomerPortal, checkoutLoading, portalLoading]);
+    cancelLoading,
+    reactivateLoading,
+  }), [state, checkSubscription, openCheckout, openCustomerPortal, cancelSubscription, reactivateSubscription, checkoutLoading, portalLoading, cancelLoading, reactivateLoading]);
 }
 
 export default useSubscription;
