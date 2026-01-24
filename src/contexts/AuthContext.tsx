@@ -334,7 +334,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.removeItem('pilot_session_temporary_flag');
     
     const { error } = await supabase.auth.signOut();
+    
+    // Treat "session missing" as successful sign-out
+    // This happens when session expired, was revoked from another device, or already signed out
     if (error) {
+      const isSessionMissing = 
+        error.message?.includes('session missing') || 
+        error.name === 'AuthSessionMissingError' ||
+        (error as { code?: string }).code === 'session_not_found';
+      
+      if (isSessionMissing) {
+        // Session is already gone - this is effectively a successful sign-out
+        logger.info('Session already expired or revoked, treating as successful sign-out');
+        // Clear local state to ensure clean logout
+        setSession(null);
+        setUser(null);
+        return;
+      }
+      
+      // Only throw for unexpected errors
       logger.error('Error signing out:', error);
       throw error;
     }
