@@ -26,19 +26,19 @@ export interface LimitConfig {
  */
 export const PLAN_FEATURES: FeatureConfig[] = [
   // Starter tier features (foundational)
-  { key: 'widget', label: 'Chat Widget', description: 'Embed chat widget on websites', category: 'Core' },
-  { key: 'knowledge_sources', label: 'Knowledge Sources', description: 'Document & URL training', category: 'Knowledge' },
-  { key: 'calendar_booking', label: 'Calendar Booking', description: 'AI appointment scheduling', category: 'Knowledge' },
+  { key: 'widget', label: 'Chat Widget', description: 'Embed a chat bubble on your website that visitors can use to talk with your AI agent.', category: 'Core' },
+  { key: 'knowledge_sources', label: 'Knowledge Sources', description: 'Upload documents, PDFs, or website URLs to train your AI on your specific business information.', category: 'Knowledge' },
+  { key: 'calendar_booking', label: 'Calendar Booking', description: 'Let your AI agent schedule appointments directly into your connected calendar.', category: 'Knowledge' },
   // Business tier features (growth)
-  { key: 'locations', label: 'Locations', description: 'Multi-location management', category: 'Knowledge' },
-  { key: 'integrations', label: 'Integrations', description: 'Social, email & calendar connections', category: 'Tools' },
-  { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Deep performance insights', category: 'Analytics' },
-  { key: 'report_builder', label: 'Report Builder', description: 'Custom report generation', category: 'Analytics' },
+  { key: 'locations', label: 'Locations', description: 'Manage multiple business locations with separate knowledge, hours, and booking calendars.', category: 'Knowledge' },
+  { key: 'integrations', label: 'Integrations', description: 'Connect social media, email, and calendar platforms to centralize your conversations.', category: 'Tools' },
+  { key: 'advanced_analytics', label: 'Advanced Analytics', description: 'Deep insights into conversation performance, visitor behavior, and conversion metrics.', category: 'Analytics' },
+  { key: 'report_builder', label: 'Report Builder', description: 'Create custom reports with the metrics and visualizations you need.', category: 'Analytics' },
   // Advanced tier features (enterprise)
-  { key: 'api', label: 'API Access', description: 'Programmatic API access', category: 'Core' },
-  { key: 'webhooks', label: 'Webhooks', description: 'Event webhook notifications', category: 'Core' },
-  { key: 'custom_tools', label: 'Custom Tools', description: 'External API tool integrations', category: 'Tools' },
-  { key: 'scheduled_reports', label: 'Scheduled Reports', description: 'Automated email delivery', category: 'Analytics' },
+  { key: 'api', label: 'API Access', description: 'Programmatically interact with your AI agent from your own applications.', category: 'Core' },
+  { key: 'webhooks', label: 'Webhooks', description: 'Receive real-time HTTP notifications when events occur in your account.', category: 'Core' },
+  { key: 'custom_tools', label: 'Custom Tools', description: 'Connect external APIs so your AI can perform actions like checking inventory or updating CRMs.', category: 'Tools' },
+  { key: 'scheduled_reports', label: 'Scheduled Reports', description: 'Automatically email reports on a daily, weekly, or monthly schedule.', category: 'Analytics' },
 ];
 
 /**
@@ -46,11 +46,11 @@ export const PLAN_FEATURES: FeatureConfig[] = [
  * Uses max_* naming convention to match database keys.
  */
 export const PLAN_LIMITS: LimitConfig[] = [
-  { key: 'max_conversations_per_month', label: 'Conversations/Month', displayLabel: 'conversations/mo', description: 'Monthly conversation limit' },
-  { key: 'max_knowledge_sources', label: 'Knowledge Sources', displayLabel: 'knowledge sources', description: 'Max knowledge sources' },
-  { key: 'max_team_members', label: 'Team Members', displayLabel: 'team members', description: 'Max team members' },
-  { key: 'max_api_calls_per_month', label: 'API Calls/Month', displayLabel: 'API calls/mo', description: 'Monthly API call limit' },
-  { key: 'max_webhooks', label: 'Webhooks', displayLabel: 'webhooks', description: 'Max webhook endpoints' },
+  { key: 'max_conversations_per_month', label: 'Conversations/Month', displayLabel: 'conversations/mo', description: 'A conversation is a complete chat session with a visitor. Each new visitor or returning visitor after 24 hours counts as one conversation.' },
+  { key: 'max_knowledge_sources', label: 'Knowledge Sources', displayLabel: 'knowledge sources', description: 'Documents, URLs, or files that train your AI agent. Each uploaded file or website link counts as one source.' },
+  { key: 'max_team_members', label: 'Team Members', displayLabel: 'team members', description: 'Additional users who can access your account, view conversations, and manage your AI agent.' },
+  { key: 'max_api_calls_per_month', label: 'API Calls/Month', displayLabel: 'API calls/mo', description: 'Programmatic requests to your AI agent via the REST API. Each API request counts as one call.' },
+  { key: 'max_webhooks', label: 'Webhooks', displayLabel: 'webhooks', description: 'Endpoints that receive real-time notifications when events occur, like new leads or completed bookings.' },
 ];
 
 /** Feature categories for grouping in admin UI */
@@ -69,4 +69,14 @@ export const LIMIT_DISPLAY_LABELS = Object.fromEntries(
 /** Helper map for quick admin label lookup by limit key */
 export const LIMIT_LABELS = Object.fromEntries(
   PLAN_LIMITS.map(l => [l.key, l.label])
+) as Record<string, string>;
+
+/** Helper map for feature descriptions (customer-facing) */
+export const FEATURE_DESCRIPTIONS = Object.fromEntries(
+  PLAN_FEATURES.map(f => [f.key, f.description])
+) as Record<string, string>;
+
+/** Helper map for limit descriptions (customer-facing) */
+export const LIMIT_DESCRIPTIONS = Object.fromEntries(
+  PLAN_LIMITS.map(l => [l.key, l.description])
 ) as Record<string, string>;
