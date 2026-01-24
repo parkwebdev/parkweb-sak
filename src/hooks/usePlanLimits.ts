@@ -4,13 +4,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAccountOwnerId } from '@/hooks/useAccountOwnerId';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
-import type { PlanLimits as PlanLimitsType } from '@/types/metadata';
+import type { PlanLimits as PlanLimitsType, PlanFeatures as PlanFeaturesType } from '@/types/metadata';
 
 /**
- * Hook for checking subscription plan limits and current usage.
+ * Hook for checking subscription plan limits, features, and current usage.
  * Database is the single source of truth - no hardcoded fallbacks.
  * 
- * @returns {Object} Plan limits and usage data
+ * @returns {Object} Plan limits, features, and usage data
  */
 
 export interface PlanLimits {
@@ -19,6 +19,12 @@ export interface PlanLimits {
   max_knowledge_sources?: number;
   max_team_members?: number;
   max_webhooks?: number;
+}
+
+export interface PlanFeatures {
+  widget?: boolean;
+  api?: boolean;
+  webhooks?: boolean;
 }
 
 export interface CurrentUsage {
@@ -42,6 +48,7 @@ export const usePlanLimits = () => {
   const { user } = useAuth();
   const { accountOwnerId, loading: ownerLoading } = useAccountOwnerId();
   const [limits, setLimits] = useState<PlanLimits | null>(null);
+  const [features, setFeatures] = useState<PlanFeatures | null>(null);
   const [usage, setUsage] = useState<CurrentUsage | null>(null);
   const [loading, setLoading] = useState(true);
   const [planName, setPlanName] = useState<string | null>(null);
@@ -58,10 +65,10 @@ export const usePlanLimits = () => {
 
     setLoading(true);
     try {
-      // Get subscription and plan limits (always from account owner)
+      // Get subscription, plan limits, and features (always from account owner)
       const { data: subscription, error: subError } = await supabase
         .from('subscriptions')
-        .select('plan_id, plans(name, limits)')
+        .select('plan_id, plans(name, limits, features)')
         .eq('user_id', accountOwnerId)
         .eq('status', 'active')
         .maybeSingle();
@@ -69,19 +76,21 @@ export const usePlanLimits = () => {
       if (subError && subError.code !== 'PGRST116') throw subError;
 
       if (!subscription?.plans) {
-        // No active subscription - no limits available
+        // No active subscription - no limits/features available
         setHasActiveSubscription(false);
         setPlanName(null);
         setLimits(null);
+        setFeatures(null);
         setUsage(null);
         setLoading(false);
         return;
       }
 
       setHasActiveSubscription(true);
-      const plan = subscription.plans as { name?: string; limits?: PlanLimitsType };
+      const plan = subscription.plans as { name?: string; limits?: PlanLimitsType; features?: PlanFeaturesType };
       setPlanName(plan.name || null);
       
+      // Set limits
       const storedLimits = plan.limits;
       if (storedLimits) {
         setLimits({
@@ -93,6 +102,18 @@ export const usePlanLimits = () => {
         });
       } else {
         setLimits({});
+      }
+
+      // Set features
+      const storedFeatures = plan.features;
+      if (storedFeatures) {
+        setFeatures({
+          widget: storedFeatures.widget === true,
+          api: storedFeatures.api === true,
+          webhooks: storedFeatures.webhooks === true,
+        });
+      } else {
+        setFeatures({});
       }
 
       // Get current usage (scoped to account owner)
@@ -228,16 +249,34 @@ export const usePlanLimits = () => {
     return false;
   };
 
+  // Feature checking helpers
+  const hasFeature = (feature: keyof PlanFeatures): boolean => {
+    if (!hasActiveSubscription || !features) return false;
+    return features[feature] === true;
+  };
+
+  const canUseWidget = (): boolean => hasFeature('widget');
+  const canUseApi = (): boolean => hasFeature('api');
+  const canUseWebhooks = (): boolean => hasFeature('webhooks');
+
   return {
+    // Limits
     limits,
     usage,
-    loading,
-    planName,
-    hasActiveSubscription,
     checkLimit,
     canAddKnowledgeSource,
     canAddTeamMember,
     showLimitWarning,
+    // Features
+    features,
+    hasFeature,
+    canUseWidget,
+    canUseApi,
+    canUseWebhooks,
+    // Common
+    loading,
+    planName,
+    hasActiveSubscription,
     refetch: fetchLimitsAndUsage,
   };
 };
