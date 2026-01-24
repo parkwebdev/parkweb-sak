@@ -251,14 +251,14 @@ export function PlanCard({
         ))}
       </div>
 
-      {/* Inherited Feature Groups - Muted */}
-      {inheritedGroups.map(({ planName, features }) => (
-        <div key={planName} className="mt-4 pt-4 border-t border-border/50">
+      {/* Inherited Features - Combined */}
+      {inheritedGroups.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-border/50">
           <p className="text-xs text-muted-foreground mb-2">
-            Includes from {planName}:
+            Includes from {inheritedGroups.map(g => g.planName).join(' & ')}:
           </p>
           <div className="space-y-1.5">
-            {features.map(({ key, label }) => (
+            {inheritedGroups.flatMap(({ features }) => features).map(({ key, label }) => (
               <div key={key} className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Check size={12} className="text-muted-foreground/50 shrink-0" aria-hidden="true" />
                 <span>{label}</span>
@@ -266,7 +266,7 @@ export function PlanCard({
             ))}
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }
