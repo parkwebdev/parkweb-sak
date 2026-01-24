@@ -19,8 +19,8 @@ import {
   BarChart01,
   ClockRefresh,
 } from '@untitledui/icons';
-import { useNavigate } from 'react-router-dom';
 import { useCanManage } from '@/hooks/useCanManage';
+import { usePricingModal } from '@/contexts/PricingModalContext';
 
 type FeatureType = 
   | 'widget' | 'api' | 'webhooks'
@@ -102,7 +102,7 @@ interface UpgradePromptProps {
 }
 
 export function UpgradePrompt({ feature, className }: UpgradePromptProps) {
-  const navigate = useNavigate();
+  const { openPricingModal } = usePricingModal();
   const canViewBilling = useCanManage('view_billing');
   const info = FEATURE_INFO[feature];
 
@@ -127,7 +127,7 @@ export function UpgradePrompt({ feature, className }: UpgradePromptProps) {
         </p>
 
         {canViewBilling && (
-          <Button onClick={() => navigate('/settings?tab=billing')}>
+          <Button onClick={openPricingModal}>
             Upgrade Plan
           </Button>
         )}

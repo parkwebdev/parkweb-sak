@@ -20,6 +20,8 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AriSectionActionsProvider } from "@/contexts/AriSectionActionsContext";
+import { PricingModalProvider } from "@/contexts/PricingModalContext";
+import { PricingModal } from "@/components/pricing/PricingModal";
 import { UnifiedSearchProvider } from "@/contexts/UnifiedSearchContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PermissionGuard } from "@/components/PermissionGuard";
@@ -128,7 +130,9 @@ const App = () => (
             <UnifiedSearchProvider>
               <AuthProvider>
                 <AriSectionActionsProvider>
+                  <PricingModalProvider>
                   <UnifiedSearch />
+                  <PricingModal />
                 <Routes>
                   {/* Public routes */}
                   <Route path="/login" element={<Auth />} />
@@ -271,6 +275,7 @@ const App = () => (
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                </PricingModalProvider>
                 </AriSectionActionsProvider>
               </AuthProvider>
             </UnifiedSearchProvider>
