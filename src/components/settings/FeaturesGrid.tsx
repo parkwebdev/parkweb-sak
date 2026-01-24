@@ -6,6 +6,7 @@
 import { Check, X, HelpCircle } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Link } from 'react-router-dom';
 import type { PlanFeatures } from '@/hooks/usePlanLimits';
 
 interface FeaturesGridProps {
@@ -17,7 +18,7 @@ interface FeatureItem {
   key: keyof PlanFeatures;
   label: string;
   description: string;
-  docUrl?: string;
+  helpCenterPath?: string;
 }
 
 interface CategoryConfig {
@@ -33,13 +34,13 @@ const FEATURE_CATEGORIES: CategoryConfig[] = [
         key: 'widget', 
         label: 'Chat Widget',
         description: 'Embeddable chat interface for your website that connects visitors to your AI agent.',
-        docUrl: 'https://docs.lovable.dev/features/widget',
+        helpCenterPath: '/help-center/getting-started/widget-installation',
       },
       { 
         key: 'webhooks', 
         label: 'Webhooks',
         description: 'Send real-time notifications to external services when events occur.',
-        docUrl: 'https://docs.lovable.dev/features/webhooks',
+        helpCenterPath: '/help-center/integrations/webhooks',
       },
     ],
   },
@@ -50,13 +51,13 @@ const FEATURE_CATEGORIES: CategoryConfig[] = [
         key: 'custom_tools', 
         label: 'Custom Tools',
         description: 'Extend your agent with custom API integrations and actions.',
-        docUrl: 'https://docs.lovable.dev/features/tools',
+        helpCenterPath: '/help-center/agent-configuration/custom-tools',
       },
       { 
         key: 'integrations', 
         label: 'Integrations',
         description: 'Connect to third-party services like CRMs, calendars, and more.',
-        docUrl: 'https://docs.lovable.dev/features/integrations',
+        helpCenterPath: '/help-center/integrations/overview',
       },
     ],
   },
@@ -67,19 +68,19 @@ const FEATURE_CATEGORIES: CategoryConfig[] = [
         key: 'knowledge_sources', 
         label: 'Knowledge Sources',
         description: 'Train your agent with documents, websites, and custom content.',
-        docUrl: 'https://docs.lovable.dev/features/knowledge',
+        helpCenterPath: '/help-center/getting-started/knowledge-sources',
       },
       { 
         key: 'locations', 
         label: 'Locations',
         description: 'Manage multiple business locations with unique settings and hours.',
-        docUrl: 'https://docs.lovable.dev/features/locations',
+        helpCenterPath: '/help-center/agent-configuration/locations',
       },
       { 
         key: 'calendar_booking', 
         label: 'Calendar Booking',
         description: 'Let visitors book appointments directly through your agent.',
-        docUrl: 'https://docs.lovable.dev/features/calendar',
+        helpCenterPath: '/help-center/integrations/calendar-booking',
       },
     ],
   },
@@ -90,19 +91,19 @@ const FEATURE_CATEGORIES: CategoryConfig[] = [
         key: 'advanced_analytics', 
         label: 'Advanced Analytics',
         description: 'Deep insights into conversation patterns, user behavior, and agent performance.',
-        docUrl: 'https://docs.lovable.dev/features/analytics',
+        helpCenterPath: '/help-center/analytics/overview',
       },
       { 
         key: 'report_builder', 
         label: 'Report Builder',
         description: 'Create custom reports with the metrics that matter to your business.',
-        docUrl: 'https://docs.lovable.dev/features/reports',
+        helpCenterPath: '/help-center/analytics/report-builder',
       },
       { 
         key: 'scheduled_reports', 
         label: 'Scheduled Reports',
         description: 'Automatically send reports to your team on a recurring schedule.',
-        docUrl: 'https://docs.lovable.dev/features/scheduled-reports',
+        helpCenterPath: '/help-center/analytics/scheduled-reports',
       },
     ],
   },
@@ -131,15 +132,13 @@ function FeatureRow({ feature, enabled }: { feature: FeatureItem; enabled: boole
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs">
           <p className="text-sm">{feature.description}</p>
-          {feature.docUrl && (
-            <a 
-              href={feature.docUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+          {feature.helpCenterPath && (
+            <Link 
+              to={feature.helpCenterPath}
               className="text-xs text-primary hover:underline mt-1 inline-block"
             >
               Learn more →
-            </a>
+            </Link>
           )}
         </TooltipContent>
       </Tooltip>
