@@ -3,10 +3,12 @@
  * 
  * Navigation sidebar for admin pages.
  * Filters sections based on user's admin_permissions.
+ * Prefetches page chunks on hover for instant navigation.
  * 
  * @module components/admin/AdminSidebar
  */
 
+import { useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ADMIN_SECTIONS } from '@/config/routes';
@@ -38,6 +40,22 @@ const iconMap: Record<string, React.ComponentType<{ size?: number; className?: s
 };
 
 /**
+ * Prefetch admin page chunks on hover.
+ * Maps admin paths to their lazy import functions.
+ */
+const prefetchChunk: Record<string, () => Promise<unknown>> = {
+  '/admin': () => import('@/pages/admin/AdminDashboard'),
+  '/admin/accounts': () => import('@/pages/admin/AdminAccounts'),
+  '/admin/prompts': () => import('@/pages/admin/AdminPrompts'),
+  '/admin/plans': () => import('@/pages/admin/AdminPlans'),
+  '/admin/team': () => import('@/pages/admin/AdminTeam'),
+  '/admin/knowledge': () => import('@/pages/admin/AdminKnowledge'),
+  '/admin/emails': () => import('@/pages/admin/AdminEmails'),
+  '/admin/analytics': () => import('@/pages/admin/AdminRevenue'),
+  '/admin/audit': () => import('@/pages/admin/AdminAuditLog'),
+};
+
+/**
  * Map admin section IDs to required permissions.
  * null = accessible to all pilot team members.
  */
@@ -60,6 +78,11 @@ const SECTION_PERMISSIONS: Record<string, AdminPermission | null> = {
 export function AdminSidebar() {
   const location = useLocation();
   const { isSuperAdmin, hasAdminPermission } = useRoleAuthorization();
+  
+  // Prefetch chunk on hover - memoized to avoid recreating function
+  const handlePrefetch = useCallback((path: string) => {
+    prefetchChunk[path]?.();
+  }, []);
   
   // Filter sections based on permissions
   const visibleSections = ADMIN_SECTIONS.filter(section => {
@@ -109,6 +132,7 @@ export function AdminSidebar() {
             <Link
               key={section.id}
               to={section.path}
+              onMouseEnter={() => handlePrefetch(section.path)}
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                 isActive 
