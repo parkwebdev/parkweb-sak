@@ -3,6 +3,7 @@
  * 
  * Embed code and installation instructions.
  * Marks installation step as viewed when user visits this section.
+ * Gated by 'widget' feature in subscription plan.
  */
 
 import { useEffect } from 'react';
@@ -11,6 +12,7 @@ import { useAgent } from '@/hooks/useAgent';
 import { InstallationSection } from '@/components/agents/embed/sections/InstallationSection';
 import { AriSectionHeader } from './AriSectionHeader';
 import { SkeletonCodeSection } from '@/components/ui/skeleton';
+import { FeatureGate } from '@/components/subscription';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
@@ -37,17 +39,19 @@ export function AriInstallationSection({ agentId }: AriInstallationSectionProps)
     }
   }, [agentId, agent]);
 
-  if (loading) {
-    return <SkeletonCodeSection />;
-  }
-
   return (
     <div>
       <AriSectionHeader
         title="Installation"
         description="Get your embed code to add Ari to your website"
       />
-      <InstallationSection embedCode={generateEmbedCode()} />
+      <FeatureGate feature="widget" loadingSkeleton={<SkeletonCodeSection />}>
+        {loading ? (
+          <SkeletonCodeSection />
+        ) : (
+          <InstallationSection embedCode={generateEmbedCode()} />
+        )}
+      </FeatureGate>
     </div>
   );
-};
+}
