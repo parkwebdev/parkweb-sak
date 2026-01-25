@@ -24,6 +24,7 @@ interface IdentitySectionProps {
   onSave: (value: string) => Promise<void>;
   loading?: boolean;
   lastUpdated?: string;
+  onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>) => void;
 }
 
 const IDENTITY_TIPS = [
@@ -38,6 +39,7 @@ export function IdentitySection({
   onSave,
   loading,
   lastUpdated,
+  onUnsavedChange,
 }: IdentitySectionProps) {
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
@@ -47,6 +49,16 @@ export function IdentitySection({
     setLocalValue(value);
     setHasChanges(false);
   }, [value]);
+
+  // Notify parent of unsaved changes
+  useEffect(() => {
+    const saveFunction = async () => {
+      const result = validatePromptSection('identity', localValue);
+      if (!result.valid) throw new Error(result.error);
+      await onSave(localValue);
+    };
+    onUnsavedChange?.(hasChanges, saveFunction);
+  }, [hasChanges, localValue, onSave, onUnsavedChange]);
 
   const validation = useMemo(
     () => validatePromptSection('identity', localValue),

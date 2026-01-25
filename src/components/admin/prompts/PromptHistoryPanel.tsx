@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Clock, RefreshCcw01, X } from '@untitledui/icons';
+import { Clock, RefreshCcw01, ArrowsRight } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,8 +31,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { usePromptHistory, type PromptHistoryEntry } from '@/hooks/admin/usePromptHistory';
 import { PROMPT_CONFIG_KEYS } from '@/lib/prompt-defaults';
+import { PromptDiffView } from './PromptDiffView';
 import type { PromptSection } from './AdminPromptSectionMenu';
 
 interface PromptHistoryPanelProps {
@@ -65,6 +73,8 @@ export function PromptHistoryPanel({
   const [open, setOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<PromptHistoryEntry | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [diffOpen, setDiffOpen] = useState(false);
+  const [diffEntry, setDiffEntry] = useState<PromptHistoryEntry | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
 
   const configKey = PROMPT_CONFIG_KEYS[section];
@@ -90,6 +100,11 @@ export function PromptHistoryPanel({
   const handleSelectRestore = (entry: PromptHistoryEntry) => {
     setSelectedEntry(entry);
     setConfirmOpen(true);
+  };
+
+  const handleViewDiff = (entry: PromptHistoryEntry) => {
+    setDiffEntry(entry);
+    setDiffOpen(true);
   };
 
   return (
@@ -166,15 +181,26 @@ export function PromptHistoryPanel({
                       </div>
                       
                       {!isCurrent && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="mt-2 gap-1.5"
-                          onClick={() => handleSelectRestore(entry)}
-                        >
-                          <RefreshCcw01 size={14} aria-hidden="true" />
-                          Restore this version
-                        </Button>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1.5"
+                            onClick={() => handleViewDiff(entry)}
+                          >
+                            <ArrowsRight size={14} aria-hidden="true" />
+                            View diff
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1.5"
+                            onClick={() => handleSelectRestore(entry)}
+                          >
+                            <RefreshCcw01 size={14} aria-hidden="true" />
+                            Restore
+                          </Button>
+                        </div>
                       )}
                     </div>
                   );
@@ -202,6 +228,26 @@ export function PromptHistoryPanel({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Diff View Dialog */}
+      <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Compare Changes</DialogTitle>
+            <DialogDescription>
+              Comparing version {diffEntry?.version} to current {sectionLabel.toLowerCase()}
+            </DialogDescription>
+          </DialogHeader>
+          {diffEntry && (
+            <PromptDiffView
+              oldValue={extractHistoryValue(diffEntry.value)}
+              newValue={currentValue}
+              oldLabel={`v${diffEntry.version}`}
+              newLabel="Current"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
