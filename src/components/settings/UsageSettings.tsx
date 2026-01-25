@@ -16,18 +16,43 @@ import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { useRegisterSettingsActions, SettingsSectionAction } from '@/contexts/SettingsSectionActionsContext';
 
-const SkeletonCard = () => (
+// Skeleton for Plan Overview card (matches UsageBarChart layout)
+const PlanOverviewSkeleton = () => (
   <Card>
     <CardHeader>
-      <Skeleton className="h-5 w-32" />
-      <Skeleton className="h-4 w-48 mt-1" />
+      <Skeleton className="h-5 w-28" />
+      <Skeleton className="h-4 w-52 mt-1" />
     </CardHeader>
     <CardContent>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="flex flex-col items-center gap-3">
-            <Skeleton className="h-24 w-24 rounded-full" />
+      <div className="space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="h-4 w-44" />
+            <Skeleton className="h-6 flex-1 rounded-md" />
             <Skeleton className="h-4 w-20" />
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Skeleton for Plan Features card (matches FeaturesGrid layout)
+const PlanFeaturesSkeleton = () => (
+  <Card>
+    <CardHeader className="flex flex-row items-start justify-between space-y-0">
+      <div className="space-y-1">
+        <Skeleton className="h-5 w-28" />
+        <Skeleton className="h-4 w-56" />
+      </div>
+      <Skeleton className="h-8 w-32 rounded-md" />
+    </CardHeader>
+    <CardContent>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="flex items-center gap-2 p-2">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-4 w-32" />
           </div>
         ))}
       </div>
@@ -55,8 +80,8 @@ export const UsageSettings = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <SkeletonCard />
-        <SkeletonCard />
+        <PlanOverviewSkeleton />
+        <PlanFeaturesSkeleton />
       </div>
     );
   }
