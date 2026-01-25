@@ -13,5 +13,5 @@ export { EmailDeliveryStats } from './EmailDeliveryStats';
 export { EmailStatsSection } from './EmailStatsSection';
 export { SendTestEmailDialog } from './SendTestEmailDialog';
 export { EmailsTabDropdown, type EmailsTab } from './EmailsTabDropdown';
-export { EmailsNavSidebar } from './EmailsNavSidebar';
+export { EmailsNavSidebar, EMAILS_NAV_ITEMS } from './EmailsNavSidebar';
 export { EmailPreviewControls } from './EmailPreviewControls';

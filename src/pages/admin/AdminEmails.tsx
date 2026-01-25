@@ -24,7 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
 import { type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
-import { EmailDeliveryLogs, EmailStatsSection, AnnouncementBuilder, EmailsNavSidebar, EmailPreviewControls, type EmailsTab } from '@/components/admin/emails';
+import { EmailDeliveryLogs, EmailStatsSection, AnnouncementBuilder, EmailsNavSidebar, EMAILS_NAV_ITEMS, EmailPreviewControls, type EmailsTab } from '@/components/admin/emails';
 import { useEmailDeliveryLogs } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import {
@@ -283,9 +283,12 @@ export function AdminEmails() {
   // Check if current template is backed by edge function
   const isEdgeBacked = EDGE_BACKED_TEMPLATES.includes(activeTemplate);
 
+  // Derive subtitle from active tab
+  const activeTabLabel = EMAILS_NAV_ITEMS.find(item => item.id === activeTab)?.label ?? '';
+
   // Configure top bar for this page with preview controls when on preview tab
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Mail01} title="Emails" />,
+    left: <TopBarPageContext icon={Mail01} title="Emails" subtitle={activeTabLabel} />,
     right: activeTab === 'preview' ? (
       <EmailPreviewControls
         previewWidth={previewWidth}
@@ -297,7 +300,7 @@ export function AdminEmails() {
         showSupabaseOption={supportsSupabaseExport}
       />
     ) : undefined,
-  }), [activeTab, previewWidth, darkMode, previewMode, supportsSupabaseExport]);
+  }), [activeTab, activeTabLabel, previewWidth, darkMode, previewMode, supportsSupabaseExport]);
   useTopBar(topBarConfig);
 
   // =============================================================================
