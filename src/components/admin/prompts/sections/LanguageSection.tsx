@@ -75,7 +75,6 @@ export function LanguageSection({
       <AdminSectionHeader
         title="Language Instruction"
         description="How Ari handles multilingual conversations"
-        version={version}
         lastUpdated={lastUpdated}
         status={status}
         hasChanges={hasChanges}
