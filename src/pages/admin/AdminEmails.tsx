@@ -198,17 +198,18 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
             className="flex justify-center p-4 transition-colors duration-200"
             style={{ backgroundColor: darkMode ? '#0d0d0d' : '#f5f5f5' }}
           >
-            <iframe
-              srcDoc={previewHtml}
-              style={{ 
-                width: iframeWidth, 
-                height: 650, 
-                border: 'none', 
-                background: darkMode ? '#1a1a1a' : '#ffffff',
-                borderRadius: 8,
-              }}
-              title="Email Preview"
-            />
+              <iframe
+                srcDoc={previewHtml}
+                sandbox="allow-same-origin"
+                style={{ 
+                  width: iframeWidth, 
+                  height: 650, 
+                  border: 'none', 
+                  background: darkMode ? '#1a1a1a' : '#ffffff',
+                  borderRadius: 8,
+                }}
+                title="Email Preview"
+              />
           </div>
         )}
       </CardContent>
