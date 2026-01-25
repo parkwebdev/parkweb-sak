@@ -64,7 +64,7 @@ export function HCCallout({ variant = 'info', title, children }: HCCalloutProps)
   return (
     <div 
       className={cn(
-        'rounded-lg border p-4 my-4',
+        'rounded-card border p-4 my-4',
         config.containerClass
       )}
       role="note"

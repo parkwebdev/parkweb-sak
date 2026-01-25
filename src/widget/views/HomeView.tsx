@@ -139,7 +139,7 @@ export const HomeView = ({
                     {config.announcements.map((announcement) => (
                       <CSSAnimatedItem key={announcement.id}>
                         <div 
-                          className="rounded-lg overflow-hidden cursor-pointer transition-colors bg-card border shadow-sm hover:bg-accent/50"
+                          className="rounded-card overflow-hidden cursor-pointer transition-colors bg-card border shadow-sm hover:bg-accent/50"
                           onClick={() => {
                             if (announcement.action_type === 'open_url' && announcement.action_url) {
                               window.open(announcement.action_url, '_blank', 'noopener,noreferrer');
@@ -180,7 +180,7 @@ export const HomeView = ({
                   {config.quickActions.map((action) => (
                     <CSSAnimatedItem key={action.id}>
                       <div
-                        className="px-3 py-2.5 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
+                        className="px-3 py-2.5 border rounded-card bg-card hover:bg-accent/50 cursor-pointer transition-all"
                         onClick={() => onQuickActionClick(action.action || action.actionType)}
                       >
                         <div className="flex items-center gap-3">

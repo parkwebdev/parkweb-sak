@@ -298,7 +298,7 @@ export const HelpView = ({
                   {filteredArticles.map((article) => (
                     <CSSAnimatedItem key={article.id}>
                       <div
-                        className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                        className="p-3 border rounded-card hover:bg-accent cursor-pointer transition-colors"
                         onClick={() => {
                           setSelectedArticle(article);
                           setHelpSearchQuery('');
@@ -333,7 +333,7 @@ export const HelpView = ({
                     return (
                       <CSSAnimatedItem key={category.id}>
                         <button
-                          className="w-full px-3 py-2.5 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-colors text-left"
+                          className="w-full px-3 py-2.5 border rounded-card bg-card hover:bg-accent/50 cursor-pointer transition-colors text-left"
                           onClick={() => setSelectedCategory(category.id)}
                         >
                           <div className="flex items-center gap-3">
@@ -403,7 +403,7 @@ export const HelpView = ({
                 {filteredArticles.map((article) => (
                   <CSSAnimatedItem key={article.id}>
                     <button
-                      className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
+                      className="w-full p-3 border rounded-card hover:bg-accent cursor-pointer transition-colors text-left"
                       onClick={() => setSelectedArticle(article)}
                     >
                       <div className="flex items-center justify-between gap-2">

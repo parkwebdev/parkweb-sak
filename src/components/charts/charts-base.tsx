@@ -110,7 +110,7 @@ export const ChartTooltipContent = ({
   secondaryTitle = isSingleDataPoint && labelFormatter ? labelFormatter(String(secondaryTitle), payload) : secondaryTitle;
 
   return (
-    <div className="flex flex-col gap-0.5 rounded-lg bg-foreground px-3 py-2 shadow-lg">
+    <div className="flex flex-col gap-0.5 rounded-card bg-foreground px-3 py-2 shadow-lg">
       <p className="text-xs font-semibold text-background">{String(title)}</p>
 
       {!secondaryTitle ? null : Array.isArray(secondaryTitle) ? (

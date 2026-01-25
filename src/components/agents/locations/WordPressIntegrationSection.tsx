@@ -186,7 +186,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-left"
+        className="w-full flex items-center gap-3 p-3 rounded-card border bg-card hover:bg-accent/50 transition-colors text-left"
       >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#21759b]/10">
           <WordPressIcon className="h-4 w-4" />
@@ -220,7 +220,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
             <div className="mt-3 space-y-4 pl-11">
               {/* Connection Status Card - shown when connected */}
               {isConnected && !isEditing && (
-                <div className="p-3 rounded-lg bg-muted/50 border space-y-3">
+                <div className="p-3 rounded-card bg-muted/50 border space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Connected Site</Label>

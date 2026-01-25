@@ -174,7 +174,7 @@ export const AdminMessageBubble = memo(function AdminMessageBubble({
                 {msgMetadata.files.map((file: { name: string; url: string; type?: string; size?: number }, i: number) => (
                   <div key={i}>
                     {file.type?.startsWith('image/') ? (
-                      <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 max-w-[280px]">
+                      <div className="flex items-center gap-3 p-2 border rounded-card bg-background/50 max-w-[280px]">
                         <a href={file.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
                           <img 
                             src={file.url} 
@@ -199,7 +199,7 @@ export const AdminMessageBubble = memo(function AdminMessageBubble({
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 max-w-[280px]">
+                      <div className="flex items-center gap-3 p-2 border rounded-card bg-background/50 max-w-[280px]">
                         <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{file.name}</p>

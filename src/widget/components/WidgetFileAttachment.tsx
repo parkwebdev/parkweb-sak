@@ -44,7 +44,7 @@ export function WidgetFileAttachment({
     <div className="relative group">
       {isImage ? (
         // Image preview layout - 128x128 with filename overlay
-        <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-border">
+        <div className="relative w-32 h-32 rounded-card overflow-hidden border border-border">
           <img
             src={fileUrl}
             alt={file.name}
@@ -73,7 +73,7 @@ export function WidgetFileAttachment({
         </div>
       ) : (
         // Non-image file layout - horizontal with icon, name, size, remove
-        <div className="relative flex items-center gap-3 p-3 border border-border rounded-lg bg-background">
+        <div className="relative flex items-center gap-3 p-3 border border-border rounded-card bg-background">
           <FileTypeIcon fileName={file.name} width={40} height={40} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{file.name}</p>
@@ -133,7 +133,7 @@ export function WidgetMessageFileAttachment({
 
   if (isImage) {
     return (
-      <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background/50 max-w-[280px]">
+      <div className="flex items-center gap-3 p-3 border border-border rounded-card bg-background/50 max-w-[280px]">
         <a 
           href={fileUrl} 
           target="_blank" 
@@ -171,7 +171,7 @@ export function WidgetMessageFileAttachment({
   }
 
   return (
-    <div className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background/50 max-w-[280px]">
+    <div className="flex items-center gap-3 p-3 border border-border rounded-card bg-background/50 max-w-[280px]">
       <FileTypeIcon fileName={fileName} width={40} height={40} className="shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{fileName}</p>
