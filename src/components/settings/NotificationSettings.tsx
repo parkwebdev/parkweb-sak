@@ -16,6 +16,7 @@ import { AnimatedItem } from '@/components/ui/animated-item';
 import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
+import { NOTIFICATION_ICON_PATH, NOTIFICATION_BADGE_PATH } from '@/lib/browser-notifications';
 
 
 interface NotificationPreferences {
@@ -317,7 +318,8 @@ export function NotificationSettings() {
 
     new Notification('Test Notification', {
       body: 'This is a test notification from Pilot.',
-      icon: '/notification-icon.png?v=2',
+      icon: NOTIFICATION_ICON_PATH,
+      badge: NOTIFICATION_BADGE_PATH,
     });
 
     toast.success("Test notification sent", {

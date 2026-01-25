@@ -10,6 +10,18 @@
 import type { Notification as AppNotification } from '@/hooks/useUserNotifications';
 
 /**
+ * Notification icon path with cache-busting version.
+ * Used by both production notifications and test notifications.
+ */
+export const NOTIFICATION_ICON_PATH = '/notification-icon.png?v=2';
+
+/**
+ * Badge icon for notification status bar (monochrome recommended).
+ * Some platforms use this for a smaller status indicator.
+ */
+export const NOTIFICATION_BADGE_PATH = '/notification-icon.png?v=2';
+
+/**
  * Check if browser notifications are supported and permitted.
  */
 export function canShowBrowserNotification(): boolean {
@@ -45,12 +57,12 @@ export function showBrowserNotification(notification: AppNotification): boolean 
   }
 
   try {
-    const icon = '/notification-icon.png?v=2';
     const tag = `notification-${notification.id}`;
 
     const browserNotification = new Notification(notification.title, {
       body: notification.message,
-      icon,
+      icon: NOTIFICATION_ICON_PATH,
+      badge: NOTIFICATION_BADGE_PATH,
       tag, // Prevents duplicate notifications
       requireInteraction: false,
       silent: true, // We handle sound separately
