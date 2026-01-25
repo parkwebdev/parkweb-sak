@@ -112,7 +112,7 @@ export const WidgetHeader = ({
             <SlidersIcon className="h-4 w-4" aria-hidden="true" />
           </WidgetButton>
           {showSettingsDropdown && (
-            <div className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-lg p-3 z-50 min-w-[160px]">
+            <div className="absolute right-0 top-full mt-1 bg-card border rounded-card shadow-lg p-3 z-50 min-w-[160px]">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   {soundEnabled ? (

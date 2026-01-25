@@ -804,25 +804,68 @@ Standard duration: 150ms (Tailwind default)
 
 | Token | Value | Class | Usage |
 |-------|-------|-------|-------|
-| `--radius` | 0.5rem (8px) | `rounded-lg` | Cards, buttons |
-| `--radius - 2px` | 6px | `rounded-md` | Badges, inputs, smaller elements |
-| `--radius - 4px` | 4px | `rounded-sm` | Small elements, chips |
-| Full | 9999px | `rounded-full` | Avatars, pills |
+| `--radius-card` | 12px | `rounded-card` | **Cards, containers, alerts, modals, sheets, accordions** |
+| `--radius` | 8px | `rounded-lg` | **Buttons, icon containers, smaller interactive elements** |
+| `calc(--radius - 2px)` | 6px | `rounded-md` | **Inputs, badges, inline elements** |
+| `calc(--radius - 4px)` | 4px | `rounded-sm` | Small elements, chips |
+| Full | 9999px | `rounded-full` | Avatars, pills, dots |
+
+### Key Rule
+
+**If an element has `bg-card border` or acts as a container/section, use `rounded-card` (12px).**
+**If it's a button, icon container, or inline element, use `rounded-lg` (8px) or `rounded-md` (6px).**
+
+### Decision Guide
+
+| Element Type | Class | Why |
+|--------------|-------|-----|
+| Card components | `rounded-card` | Container with border/background |
+| Alert banners | `rounded-card` | Container element |
+| Dialog/Sheet content | `rounded-card` | Modal containers |
+| Accordion wrapper | `rounded-card` | Expandable container |
+| Skeleton cards | `rounded-card` | Loading placeholders for cards |
+| Table containers | `rounded-card` | Data containers |
+| Buttons | `rounded-lg` or `rounded-md` | Interactive elements |
+| Icon backgrounds | `rounded-lg` | Small decorative containers |
+| Input fields | `rounded-md` | Form elements |
+| Badges | `rounded-md` | Inline indicators |
+| Menu items | `rounded-md` | List items (not the menu container) |
+| Avatars | `rounded-full` | Circular elements |
 
 ### Common Patterns
 
 ```tsx
-// Cards
-<Card className="rounded-lg">
+// Cards and containers - use rounded-card
+<Card className="rounded-card">
+<div className="rounded-card border bg-card p-4">
+<Alert className="rounded-card">
 
-// Buttons
-<Button className="rounded-md">
+// Buttons and smaller elements - use rounded-lg/rounded-md
+<Button className="rounded-lg">
+<IconButton className="rounded-lg">
 
-// Avatars
-<Avatar className="rounded-full">
-
-// Input fields
+// Form elements - use rounded-md
 <Input className="rounded-md">
+<Badge className="rounded-md">
+
+// Avatars - use rounded-full
+<Avatar className="rounded-full">
+```
+
+### Skeleton Loading States
+
+Skeleton components must match their real counterpart's border radius:
+
+```tsx
+// CORRECT - skeleton for a card uses rounded-card
+<div className="rounded-card border bg-card p-4">
+  <Skeleton className="h-4 w-32" />
+</div>
+
+// WRONG - using rounded-lg for card skeleton
+<div className="rounded-lg border bg-card p-4">
+  <Skeleton className="h-4 w-32" />
+</div>
 ```
 
 ---

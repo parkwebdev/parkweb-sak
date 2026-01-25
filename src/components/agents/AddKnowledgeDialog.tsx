@@ -254,7 +254,7 @@ export function AddKnowledgeDialog({
           </TabsList>
 
           <TabsContent value="upload" className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center">
+            <div className="border-2 border-dashed rounded-card p-8 text-center">
               <Upload01 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
                 Upload PDF, CSV, JSON, or XML files
@@ -337,7 +337,7 @@ export function AddKnowledgeDialog({
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-4 pt-2">
-                  <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
+                  <div className="rounded-card border bg-muted/30 p-4 space-y-4">
                     <div>
                       <Label htmlFor="exclude-patterns">Exclude Patterns</Label>
                       <Input

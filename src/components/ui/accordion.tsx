@@ -60,7 +60,7 @@ function Accordion({
     <AccordionProvider value={{ value, setValue }}>
       <AccordionPrimitive.Root
         data-slot="accordion"
-        className={cn("bg-primary-foreground rounded-lg border px-5", className)}
+        className={cn("bg-primary-foreground rounded-card border px-5", className)}
         {...props}
         value={value as string & string[]}
         onValueChange={setValue as ((value: string) => void) & ((value: string[]) => void)}
