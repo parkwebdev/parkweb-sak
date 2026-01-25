@@ -52,6 +52,9 @@ function SettingsContent() {
     return (validTab?.tabParam as SettingsTab) || 'general';
   }, [searchParams]);
 
+  // Get active tab config for subtitle
+  const activeTabConfig = SETTINGS_TABS.find(t => t.tabParam === activeTab);
+
   // Update current section when tab changes
   useEffect(() => {
     setCurrentSection(activeTab);
@@ -64,7 +67,13 @@ function SettingsContent() {
   
   // Configure top bar with dynamic right section
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={getNavigationIcon('Settings01')} title="Settings" />,
+    left: (
+      <TopBarPageContext 
+        icon={getNavigationIcon('Settings01')} 
+        title="Settings" 
+        subtitle={activeTabConfig?.label}
+      />
+    ),
     right: actions.length > 0 ? (
       <div className="flex items-center gap-2">
         {actions.map(action => (
@@ -80,7 +89,7 @@ function SettingsContent() {
         ))}
       </div>
     ) : null,
-  }), [actions]);
+  }), [actions, activeTabConfig?.label]);
   
   useTopBar(topBarConfig, `settings-${activeTab}`);
 
