@@ -132,10 +132,6 @@ export function EmailTemplateSidebar({
 
   return (
     <aside className="w-64 shrink-0 border-r border-border bg-card overflow-y-auto flex flex-col">
-      <div className="p-4 border-b border-border">
-        <h2 className="text-sm font-semibold text-foreground">Templates</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">Select a template to preview</p>
-      </div>
 
       {/* Preview Controls */}
       <div className="p-3 space-y-3">
