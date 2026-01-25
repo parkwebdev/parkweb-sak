@@ -90,7 +90,9 @@ export function HCSidebar({
           className="space-y-1 bg-transparent border-none shadow-none p-0 rounded-none"
         >
           {filteredCategories.map((category) => {
-            const isCategoryActive = isCategoryView && category.id === selectedCategoryId;
+            // Show active state for category page OR any article within the category
+            const isCategorySelected = category.id === selectedCategoryId;
+            const isCategoryPageActive = isCategoryView && isCategorySelected;
             const colorClass = getCategoryColor(category.id, category.color);
             const activeRingClass = getActiveRing(colorClass);
             const hoverClass = getHoverClass(colorClass);
@@ -103,12 +105,14 @@ export function HCSidebar({
               >
                 <AccordionTrigger 
                   showIcon={true}
+                  onClick={() => onSelectCategory(category)}
                   className={cn(
                     'w-full flex items-center justify-between gap-1 px-2 py-1.5 rounded-md transition-colors',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                     '[&>svg]:size-3.5 [&>svg]:text-muted-foreground/50',
                     'hover:no-underline pt-1.5',
-                    isCategoryActive
+                    // Show ring when viewing category page OR any article in this category
+                    isCategorySelected
                       ? cn('ring-1', activeRingClass)
                       : hoverClass
                   )}
@@ -120,7 +124,7 @@ export function HCSidebar({
                     />
                     <span className={cn(
                       'text-2xs font-semibold uppercase tracking-wider',
-                      isCategoryActive
+                      isCategorySelected
                         ? 'text-foreground'
                         : 'text-muted-foreground/60 group-hover:text-muted-foreground'
                     )}>
