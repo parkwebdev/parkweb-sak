@@ -298,6 +298,25 @@ function getPreviousWeekRange(currentStart: string): { start: string; end: strin
 }
 
 // =============================================================================
+// TIMEZONE HELPERS
+// =============================================================================
+
+function getHourInTimezone(timezone: string): number {
+  try {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    });
+    return parseInt(formatter.format(now), 10);
+  } catch {
+    // Fallback to America/New_York if timezone is invalid
+    return getHourInTimezone('America/New_York');
+  }
+}
+
+// =============================================================================
 // MAIN HANDLER
 // =============================================================================
 
@@ -323,22 +342,36 @@ const handler = async (req: Request): Promise<Response> => {
       throw profilesError;
     }
 
-    // Get notification preferences for these users (no FK exists, fetch separately)
+    // Get notification preferences for these users (including new weekly report fields)
     const userIds = profiles?.map(p => p.user_id) || [];
     const { data: notifPrefs } = await supabase
       .from('notification_preferences')
-      .select('user_id, report_email_notifications')
+      .select('user_id, report_email_notifications, weekly_report_enabled, weekly_report_timezone')
       .in('user_id', userIds);
 
-    // Merge data and filter to users with report notifications enabled
+    // Filter to users who:
+    // 1. Have weekly_report_enabled = true (or null, which defaults to true)
+    // 2. It's 8 AM in their timezone right now
     const eligibleUsers = profiles?.map(profile => ({
       ...profile,
       notification_preferences: notifPrefs?.find(np => np.user_id === profile.user_id)
-    })).filter(owner => 
-      owner.notification_preferences?.report_email_notifications !== false
-    ) || [];
+    })).filter(owner => {
+      const prefs = owner.notification_preferences;
+      
+      // Check weekly_report_enabled (defaults to true if null/undefined)
+      if (prefs?.weekly_report_enabled === false) {
+        return false;
+      }
+      
+      // Get user's timezone (defaults to America/New_York)
+      const userTimezone = prefs?.weekly_report_timezone || 'America/New_York';
+      const userLocalHour = getHourInTimezone(userTimezone);
+      
+      // Only include if it's 8 AM in their timezone
+      return userLocalHour === 8;
+    }) || [];
 
-    console.log(`Found ${eligibleUsers.length} eligible users for weekly reports`);
+    console.log(`Found ${eligibleUsers.length} eligible users for weekly reports (8 AM in their timezone)`);
 
     // Get date ranges
     const { start: weekStart, end: weekEnd, displayRange } = getLastWeekRange();

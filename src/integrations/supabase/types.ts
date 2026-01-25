@@ -1514,6 +1514,8 @@ export type Database = {
           team_notifications: boolean | null
           updated_at: string
           user_id: string
+          weekly_report_enabled: boolean | null
+          weekly_report_timezone: string | null
         }
         Insert: {
           agent_email_notifications?: boolean | null
@@ -1534,6 +1536,8 @@ export type Database = {
           team_notifications?: boolean | null
           updated_at?: string
           user_id: string
+          weekly_report_enabled?: boolean | null
+          weekly_report_timezone?: string | null
         }
         Update: {
           agent_email_notifications?: boolean | null
@@ -1554,6 +1558,8 @@ export type Database = {
           team_notifications?: boolean | null
           updated_at?: string
           user_id?: string
+          weekly_report_enabled?: boolean | null
+          weekly_report_timezone?: string | null
         }
         Relationships: []
       }
