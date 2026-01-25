@@ -48,14 +48,14 @@ export function TopBarSearchResultItem({
     <button
       onClick={handleClick}
       className={cn(
-        "w-full px-3 py-2.5 text-left hover:bg-accent flex items-start gap-3 transition-colors",
+        "w-full px-3 py-2.5 text-left hover:bg-accent flex items-center gap-3 transition-colors",
         "border-t border-border first:border-t-0",
         className
       )}
       type="button"
     >
       {icon && (
-        <span className="flex-shrink-0 text-muted-foreground mt-0.5">
+        <span className="flex-shrink-0 text-muted-foreground">
           {icon}
         </span>
       )}
@@ -70,7 +70,7 @@ export function TopBarSearchResultItem({
         )}
       </div>
       {statusIndicator && (
-        <span className="flex-shrink-0 mt-1.5">
+        <span className="flex-shrink-0">
           {statusIndicator}
         </span>
       )}

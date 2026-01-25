@@ -9,7 +9,6 @@
 
 import { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { BookOpen01 } from '@untitledui/icons';
 import { TopBarSearchResultItem, TopBarSearchEmptyState } from '@/components/layout/TopBarSearchResultItem';
 import { Badge } from '@/components/ui/badge';
 import { usePlatformHelpCenter, type PlatformHCCategory, type PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
@@ -83,7 +82,6 @@ export function HCSearchResults({
             transition={{ delay: index * 0.03, ...springs.smooth }}
           >
             <TopBarSearchResultItem
-              icon={<BookOpen01 size={16} />}
               title={article.title}
               statusIndicator={
                 <Badge 
