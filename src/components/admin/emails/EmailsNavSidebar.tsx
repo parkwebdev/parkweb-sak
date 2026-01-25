@@ -59,7 +59,7 @@ interface EmailsNavSidebarProps {
   failedEmailCount?: number;
 }
 
-const NAV_ITEMS: { id: EmailsTab; label: string; icon: typeof Mail01 }[] = [
+export const EMAILS_NAV_ITEMS: { id: EmailsTab; label: string; icon: typeof Mail01 }[] = [
   { id: 'preview', label: 'Preview', icon: Mail01 },
   { id: 'stats', label: 'Stats', icon: TrendUp01 },
   { id: 'logs', label: 'Delivery Logs', icon: File02 },
@@ -80,7 +80,7 @@ export function EmailsNavSidebar({ activeTab, onTabChange, failedEmailCount }: E
 
       {/* Navigation Items */}
       <nav className="p-2 space-y-0.5">
-        {NAV_ITEMS.map((item) => {
+        {EMAILS_NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
             <NavItem
