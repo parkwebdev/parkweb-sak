@@ -21,6 +21,7 @@ import { springs } from '@/lib/motion-variants';
 import { useTrackArticleView } from '@/hooks/useHCArticleViews';
 import { HCArticleFeedback } from './HCArticleFeedback';
 import { HCDatabaseArticleRenderer } from './HCDatabaseArticleRenderer';
+import { HCKeyboardShortcutsDropdown } from './HCKeyboardShortcutsDropdown';
 import { VideoBlockHydrator } from './VideoBlockHydrator';
 import { getCategoryColor, getGradientClass } from '@/lib/hc-category-colors';
 import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
@@ -163,8 +164,9 @@ export function HCArticleView({
           <span className="text-foreground font-medium">{article.title}</span>
         </div>
         
-        {/* Share/Copy actions */}
+        {/* Actions */}
         <div className="flex items-center gap-1 no-print">
+          <HCKeyboardShortcutsDropdown />
           <CopyButton
             content={articleUrl}
             showToast
