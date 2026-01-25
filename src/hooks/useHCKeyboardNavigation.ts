@@ -1,8 +1,9 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, RefObject } from 'react';
 
 interface UseHCKeyboardNavigationOptions {
   onPrevious?: () => void;
   onNext?: () => void;
+  scrollContainerRef?: RefObject<HTMLElement>;
   enabled?: boolean;
 }
 
@@ -18,6 +19,7 @@ interface UseHCKeyboardNavigationOptions {
 export function useHCKeyboardNavigation({
   onPrevious,
   onNext,
+  scrollContainerRef,
   enabled = true,
 }: UseHCKeyboardNavigationOptions) {
   
@@ -58,10 +60,10 @@ export function useHCKeyboardNavigation({
       case 'Home':
       case 't': // Scroll to top
         event.preventDefault();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollContainerRef?.current?.scrollTo({ top: 0, behavior: 'smooth' });
         break;
     }
-  }, [onPrevious, onNext, enabled]);
+  }, [onPrevious, onNext, scrollContainerRef, enabled]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
