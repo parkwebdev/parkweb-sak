@@ -92,7 +92,7 @@ export const ToolUseCasesModal = ({ open, onOpenChange }: ToolUseCasesModalProps
             {useCases.map((useCase) => (
               <div 
                 key={useCase.title}
-                className="p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="p-4 rounded-card border bg-muted/30 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-md bg-primary/10">
@@ -120,7 +120,7 @@ export const ToolUseCasesModal = ({ open, onOpenChange }: ToolUseCasesModalProps
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-2">
-              <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
+              <div className="p-4 rounded-card bg-muted/30 border space-y-3">
                 <div className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-medium flex items-center justify-center">1</span>
                   <p className="text-sm text-muted-foreground">User asks: <span className="text-foreground">"What's the weather in NYC?"</span></p>
@@ -170,7 +170,7 @@ Body: {"location": "NYC"}`}
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-2">
               <div className="space-y-3">
-                <div className="p-4 rounded-lg bg-muted/30 border">
+                <div className="p-4 rounded-card bg-muted/30 border">
                   <p className="text-xs text-muted-foreground mb-2">
                     <strong className="text-foreground">Name:</strong> check_inventory
                   </p>
@@ -192,7 +192,7 @@ Body: {"location": "NYC"}`}
           </Collapsible>
 
           {/* Important Note */}
-          <div className="p-4 rounded-lg bg-info/10 border border-info/20">
+          <div className="p-4 rounded-card bg-info/10 border border-info/20">
             <h4 className="text-sm font-medium text-info mb-1">Important</h4>
             <p className="text-xs text-muted-foreground">
               Your endpoint must accept POST requests with JSON body containing the tool arguments. 

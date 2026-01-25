@@ -66,7 +66,7 @@ export function WordPressConnectionCard({ agent, onSyncComplete }: WordPressConn
   };
 
   return (
-    <div className="rounded-lg border bg-card p-4 mb-4">
+    <div className="rounded-card border bg-card p-4 mb-4">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
           <Globe01 className="h-5 w-5 text-primary" />

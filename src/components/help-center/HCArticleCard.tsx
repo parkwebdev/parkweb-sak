@@ -27,7 +27,7 @@ export function HCArticleCard({ article, categoryColor, onClick }: HCArticleCard
     <motion.button
       onClick={onClick}
       className={cn(
-        'group w-full text-left p-4 rounded-lg border border-border bg-card',
+        'group w-full text-left p-4 rounded-card border border-border bg-card',
         'transition-colors hover:border-border/80 hover:bg-accent/30',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
       )}

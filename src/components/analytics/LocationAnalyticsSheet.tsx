@@ -80,7 +80,7 @@ export function LocationAnalyticsSheet({
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             {/* Visitors */}
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <div className="rounded-card border border-border bg-muted/30 p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-2">
                 <Users01 size={14} />
                 <span className="text-xs font-medium">Visitors</span>
@@ -91,7 +91,7 @@ export function LocationAnalyticsSheet({
             </div>
 
             {/* Percentage */}
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <div className="rounded-card border border-border bg-muted/30 p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-2">
                 <PieChart01 size={14} />
                 <span className="text-xs font-medium">Of Total</span>
@@ -139,7 +139,7 @@ export function LocationAnalyticsSheet({
           </div>
 
           {/* Context Info */}
-          <div className="rounded-lg border border-border bg-muted/20 p-4">
+          <div className="rounded-card border border-border bg-muted/20 p-4">
             <p className="text-xs text-muted-foreground leading-relaxed">
               This location represents <span className="font-medium text-foreground">{percentage}%</span> of your total 
               traffic with <span className="font-medium text-foreground">{marker.count.toLocaleString()}</span> visitors 

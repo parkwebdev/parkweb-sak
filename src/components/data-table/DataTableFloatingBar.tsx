@@ -32,7 +32,7 @@ export function DataTableFloatingBar<TData>({
         className
       )}
     >
-      <div className="flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 shadow-lg">
+      <div className="flex items-center gap-2 rounded-card border bg-card px-4 py-2.5 shadow-lg">
         <span className="text-sm font-medium whitespace-nowrap">
           {selectedCount} selected
         </span>

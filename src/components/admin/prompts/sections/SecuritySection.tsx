@@ -147,7 +147,7 @@ export function SecuritySection({
 
       <div className="space-y-6">
         {/* Master Toggle */}
-        <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
+        <div className="flex items-center justify-between p-4 rounded-card border border-border bg-muted/30">
           <div>
             <p className="text-sm font-medium">Enable Security Guardrails</p>
             <p className="text-xs text-muted-foreground">Master toggle for all security features</p>
@@ -169,7 +169,7 @@ export function SecuritySection({
               {GUARDRAIL_OPTIONS.map((option) => (
                 <div
                   key={option.key}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border"
+                  className="flex items-center justify-between p-3 rounded-card border border-border"
                 >
                   <div>
                     <p className="text-sm">{option.label}</p>

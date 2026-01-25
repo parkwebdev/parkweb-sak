@@ -102,7 +102,7 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
       href={data.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block mt-2 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors overflow-hidden group"
+      className="block mt-2 rounded-card border border-border bg-card hover:bg-accent/50 transition-colors overflow-hidden group"
     >
       {/* Image - only show if available and not compact */}
       {hasImage && !compact && (

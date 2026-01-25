@@ -318,7 +318,7 @@ export function AnnouncementPreview({
         <CardTitle className="text-base">Preview</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-lg border border-border bg-muted/50 p-4">
+        <div className="rounded-card border border-border bg-muted/50 p-4">
           <h4 className="font-medium mb-2">{title || 'Announcement Title'}</h4>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">
             {content || 'Announcement content will appear here...'}

@@ -70,7 +70,7 @@ function AccountCard({ account, onDisconnect, onRefetch }: AccountCardProps) {
     <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
       <div
         className={cn(
-          'rounded-lg border bg-muted/30 transition-colors',
+          'rounded-card border bg-muted/30 transition-colors',
           account.sync_error && 'border-destructive/30 bg-destructive/5'
         )}
       >

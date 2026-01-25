@@ -119,7 +119,7 @@ export function WidgetSkeletonBooking() {
 /** Link preview skeleton */
 export function WidgetSkeletonLinkPreview() {
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-3">
+    <div className="rounded-card border border-border bg-muted/30 p-3">
       <WidgetSkeleton className="h-3 w-24 mb-2" />
       <WidgetSkeleton className="h-4 w-3/4 mb-1" />
       <WidgetSkeleton className="h-3 w-full" />

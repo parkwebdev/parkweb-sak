@@ -71,7 +71,7 @@ export const DebugConsole = ({ logs, onClear, className }: DebugConsoleProps) =>
   };
 
   return (
-    <div className={cn('rounded-lg border bg-card overflow-hidden', className)}>
+    <div className={cn('rounded-card border bg-card overflow-hidden', className)}>
       {/* Header */}
       <div 
         className="flex items-center justify-between px-4 py-2.5 bg-muted/50 border-b cursor-pointer"

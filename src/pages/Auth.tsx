@@ -732,7 +732,7 @@ const Auth = () => {
               </div>
 
               <div className="flex flex-col gap-4">
-                <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
+                <div className="rounded-card border border-border bg-muted/50 p-4 text-center">
                   <p className="text-sm text-muted-foreground">
                     Please check your inbox and click the confirmation link to activate your account.
                   </p>
@@ -801,7 +801,7 @@ const Auth = () => {
             </div>
 
             <div className="flex flex-col gap-4">
-              <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
+              <div className="rounded-card border border-border bg-muted/50 p-4 text-center">
                 <p className="text-sm text-muted-foreground">
                   Please check your inbox and click the confirmation link to activate your account.
                 </p>

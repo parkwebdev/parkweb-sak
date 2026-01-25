@@ -69,7 +69,7 @@ export const DeleteLeadDialog = ({
                 This action cannot be undone. {isBulk ? 'These leads' : 'This lead'} will be permanently deleted.
               </p>
 
-              <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-2">
+              <div className="rounded-card border border-border bg-muted/50 p-3 space-y-2">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What gets deleted:</p>
                 <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                   <li>Lead contact information</li>
@@ -85,7 +85,7 @@ export const DeleteLeadDialog = ({
               </div>
               
               {hasConversations && (
-                <div className="rounded-lg border p-4 space-y-3">
+                <div className="rounded-card border p-4 space-y-3">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-warning mt-0.5 flex-shrink-0" />
                     <p className="text-sm">

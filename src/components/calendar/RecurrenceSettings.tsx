@@ -59,7 +59,7 @@ export function RecurrenceSettings({
   };
 
   return (
-    <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30">
+    <div className="space-y-4 rounded-card border border-border p-4 bg-muted/30">
       {/* Frequency and Interval */}
       <div className="flex items-center gap-3">
         <Label className="text-sm text-muted-foreground min-w-fit">Repeat every</Label>

@@ -181,7 +181,7 @@ export function PilotTeamTable({
   if (!loading && team.length === 0) {
     return (
       <motion.div 
-        className="rounded-lg border border-border bg-card p-8 text-center"
+        className="rounded-card border border-border bg-card p-8 text-center"
         initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={springs.smooth}

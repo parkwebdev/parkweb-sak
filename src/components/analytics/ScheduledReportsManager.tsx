@@ -71,7 +71,7 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div key={i} className="flex items-center justify-between p-3 rounded-card border bg-card">
                   <div className="flex-1 min-w-0 space-y-2">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-48" />
@@ -92,7 +92,7 @@ export const ScheduledReportsManager = ({ loading: externalLoading }: ScheduledR
           ) : (
             <div className="space-y-3">
               {reports.map((report) => (
-                <div key={report.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div key={report.id} className="flex items-center justify-between p-3 rounded-card border bg-card">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{report.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
