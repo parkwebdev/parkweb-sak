@@ -117,7 +117,7 @@ export const PageEngagementCard = React.memo(function PageEngagementCard({
           {metrics.map((metric) => (
             <Tooltip key={metric.label}>
               <TooltipTrigger asChild>
-                <div className="p-4 rounded-lg bg-muted/50 border border-border/50 cursor-help transition-colors hover:bg-muted/70">
+                <div className="p-4 rounded-card bg-muted/50 border border-border/50 cursor-help transition-colors hover:bg-muted/70">
                   <p className="text-xs font-medium text-muted-foreground mb-2">{metric.label}</p>
                   <p className={cn("text-2xl font-bold tabular-nums tracking-tight", metric.colorClass)}>
                     {hasData ? metric.value : '—'}

@@ -64,7 +64,7 @@ export const WebhookLogsDialog = ({ open, onOpenChange, webhookId, agentId }: We
               {logs.map((log) => (
                 <div
                   key={log.id}
-                  className="border rounded-lg p-4 space-y-3 hover:bg-accent/50 transition-colors"
+                  className="border rounded-card p-4 space-y-3 hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">

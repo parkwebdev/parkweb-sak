@@ -455,7 +455,7 @@ const NewsSheet = ({
               
               <div className="grid grid-cols-2 gap-4">
                 {/* Primary CTA */}
-                <div className="space-y-3 p-4 border rounded-lg">
+                <div className="space-y-3 p-4 border rounded-card">
                   <Label className="text-sm font-medium">Primary Button</Label>
                   <div className="space-y-2">
                     <Input
@@ -472,7 +472,7 @@ const NewsSheet = ({
                   </div>
                 </div>
                 {/* Secondary CTA */}
-                <div className="space-y-3 p-4 border rounded-lg">
+                <div className="space-y-3 p-4 border rounded-card">
                   <Label className="text-sm font-medium">Secondary Button</Label>
                   <div className="space-y-2">
                     <Input
@@ -499,7 +499,7 @@ const NewsSheet = ({
             <section className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Settings</h3>
               
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center justify-between p-4 border rounded-card">
                 <div className="space-y-0.5">
                   <Label htmlFor="is_published">Published</Label>
                   <p className="text-sm text-muted-foreground">

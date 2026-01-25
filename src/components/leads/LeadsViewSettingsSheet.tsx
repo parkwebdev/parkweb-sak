@@ -805,7 +805,7 @@ export function LeadsViewSettingsSheet({
                 <Separator />
 
                 {/* Current view indicator */}
-                <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30">
+                <div className="flex items-center gap-3 p-3 border rounded-card bg-muted/30">
                   {viewMode === 'kanban' ? (
                     <LayoutAlt04 size={20} className="text-muted-foreground" />
                   ) : (
@@ -1145,7 +1145,7 @@ export function LeadsViewSettingsSheet({
                     {presets.map(preset => (
                       <div
                         key={preset.id}
-                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors group"
+                        className="flex items-center gap-3 p-3 border rounded-card hover:bg-muted/50 transition-colors group"
                       >
                         {preset.viewMode === 'kanban' ? (
                           <LayoutAlt04 size={16} className="text-muted-foreground" />

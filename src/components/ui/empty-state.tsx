@@ -36,7 +36,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={cn(
-      "text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30",
+      "text-center py-12 px-8 rounded-card border border-dashed bg-muted/30",
       className
     )}>
       <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3" aria-hidden="true">

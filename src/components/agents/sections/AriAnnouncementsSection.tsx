@@ -386,7 +386,7 @@ const AnnouncementSheet = ({
             <section className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Settings</h3>
               
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center justify-between p-4 border rounded-card">
                 <div className="space-y-0.5">
                   <Label htmlFor="is_active">Active</Label>
                   <p className="text-sm text-muted-foreground">
