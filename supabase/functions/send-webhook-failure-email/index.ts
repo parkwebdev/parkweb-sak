@@ -37,6 +37,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Initialize Supabase client first (needed for email logging and security events)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const {
       recipientEmail,
       webhookId,
@@ -128,11 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Log security event
     try {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
 
       await supabase.rpc("log_security_event", {
         p_user_id: null,
