@@ -1,6 +1,9 @@
+import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { CopyButton } from '@/components/ui/copy-button';
+import { BookOpen01 } from '@untitledui/icons';
 
 interface InstallationSectionProps {
   embedCode: string;
@@ -37,11 +40,17 @@ export const InstallationSection = ({ embedCode }: InstallationSectionProps) => 
         </ol>
       </div>
 
-      <div className="space-y-2 p-4 bg-muted/50 rounded-card">
+      <div className="space-y-3 p-4 bg-muted/50 rounded-card">
         <p className="text-sm font-medium">Need help?</p>
         <p className="text-sm text-muted-foreground">
           Check out our documentation for detailed integration guides for popular platforms like WordPress, Shopify, Webflow, and more.
         </p>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/help-center">
+            <BookOpen01 size={16} className="mr-1.5" aria-hidden="true" />
+            Help Center
+          </Link>
+        </Button>
       </div>
     </div>
   );

@@ -270,7 +270,7 @@ export const ARI_SECTIONS: readonly AriSectionConfig[] = [
   
   // Knowledge
   { id: 'knowledge', label: 'Knowledge', group: 'Knowledge', requiredPermission: 'manage_knowledge', iconName: 'Database01', activeIconName: 'DatabaseFilled' },
-  { id: 'locations', label: 'Locations', group: 'Knowledge', requiredPermission: 'manage_ari', iconName: 'MarkerPin01', activeIconName: 'MarkerPinFilled' },
+  { id: 'locations', label: 'Locations', group: 'Knowledge', requiredPermission: 'manage_ari', iconName: 'MarkerPin04', activeIconName: 'MarkerPinFilled' },
   { id: 'help-articles', label: 'Help Articles', group: 'Knowledge', requiredPermission: 'manage_help_articles', iconName: 'BookOpen01', activeIconName: 'BookOpenFilled' },
   
   // Content

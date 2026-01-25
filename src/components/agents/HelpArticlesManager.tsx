@@ -596,7 +596,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       label: 'Add Article',
       onClick: () => setDialogOpen(true),
       variant: 'default',
-      icon: <Plus size={16} aria-hidden="true" />,
     });
     
     return actions;

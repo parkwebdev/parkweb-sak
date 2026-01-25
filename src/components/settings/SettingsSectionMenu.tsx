@@ -91,7 +91,7 @@ export function SettingsSectionMenu({
   }, [canManage, loading]);
 
   return (
-    <nav className="w-[240px] flex-shrink-0 border-r h-full overflow-y-auto py-4 px-3 hidden lg:block">
+    <nav className="w-[240px] flex-shrink-0 border-r h-full overflow-y-auto py-4 px-3 hidden lg:block bg-background">
       <div className="mb-4 px-2.5">
         <h2 className="text-lg font-semibold text-foreground">Settings</h2>
         <p className="text-xs text-muted-foreground">
