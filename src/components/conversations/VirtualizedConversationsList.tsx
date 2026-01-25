@@ -189,7 +189,7 @@ export const VirtualizedConversationsList = memo(function VirtualizedConversatio
           {loading ? (
             <div className="space-y-1 p-2">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="p-3 rounded-lg">
+                <div key={i} className="p-3 rounded-card">
                   <div className="flex items-center gap-3">
                     <Skeleton className="h-10 w-10 rounded-full" />
                     <div className="flex-1 space-y-2">

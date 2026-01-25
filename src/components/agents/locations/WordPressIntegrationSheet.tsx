@@ -438,7 +438,7 @@ export function WordPressIntegrationSheet({
                       className="space-y-2"
                     >
                       <div 
-                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        className={`flex items-start gap-3 p-3 rounded-card border cursor-pointer transition-colors ${
                           extractionMode === 'standard' 
                             ? 'border-primary bg-primary/5' 
                             : 'hover:bg-muted/50'
@@ -458,7 +458,7 @@ export function WordPressIntegrationSheet({
                       </div>
                       
                       <div 
-                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        className={`flex items-start gap-3 p-3 rounded-card border cursor-pointer transition-colors ${
                           extractionMode === 'ai' 
                             ? 'border-primary bg-primary/5' 
                             : 'hover:bg-muted/50'
@@ -739,7 +739,7 @@ export function WordPressIntegrationSheet({
           </AlertDialogHeader>
           
           <div className="space-y-4 py-2">
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-destructive/20 bg-destructive/5">
+            <div className="flex items-start gap-3 p-3 rounded-card border border-destructive/20 bg-destructive/5">
               <Trash01 size={16} className="text-destructive mt-0.5 shrink-0" aria-hidden="true" />
               <div className="space-y-2 flex-1">
                 <div className="flex items-center justify-between">
