@@ -3,7 +3,7 @@
  * Manages email categories, browser, and sound notification toggles with toast auto-save feedback.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
@@ -17,6 +17,8 @@ import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import { NOTIFICATION_ICON_PATH, NOTIFICATION_BADGE_PATH } from '@/lib/browser-notifications';
+import { getBrowserDisplayName, getNotificationLimitations, getOSDisplayName, isSafari } from '@/lib/browser-detection';
+import { AlertTriangle } from '@untitledui/icons';
 
 
 interface NotificationPreferences {
@@ -59,6 +61,11 @@ export function NotificationSettings() {
   const [loading, setLoading] = useState(true);
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
+
+  // Memoize browser detection to avoid re-running on every render
+  const browserName = useMemo(() => getBrowserDisplayName(), []);
+  const osName = useMemo(() => getOSDisplayName(), []);
+  const notificationLimitation = useMemo(() => getNotificationLimitations(), []);
 
   // Handle deep linking for unsubscribe URLs
   useEffect(() => {
@@ -316,11 +323,15 @@ export function NotificationSettings() {
       }
     }
 
-    new Notification('Test Notification', {
+    // Use Safari-aware notification options
+    const options: NotificationOptions = {
       body: 'This is a test notification from Pilot.',
       icon: NOTIFICATION_ICON_PATH,
-      badge: NOTIFICATION_BADGE_PATH,
-    });
+      // Only add badge for non-Safari browsers
+      ...(!isSafari() && { badge: NOTIFICATION_BADGE_PATH }),
+    };
+
+    new Notification('Test Notification', options);
 
     toast.success("Test notification sent", {
       description: "Check your browser for the notification!",
@@ -464,6 +475,14 @@ export function NotificationSettings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Browser-specific limitation warning */}
+            {notificationLimitation && (
+              <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                <AlertTriangle size={16} className="shrink-0 mt-0.5 text-warning" aria-hidden="true" />
+                <p>{notificationLimitation}</p>
+              </div>
+            )}
+
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <ToggleSettingRow
@@ -574,6 +593,9 @@ export function NotificationSettings() {
                       ? 'Notifications are blocked. Enable in browser settings.'
                       : 'Notifications permission not requested'
                     : 'Browser notifications not supported'}
+                </p>
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  Using {browserName} on {osName}
                 </p>
               </div>
               <Button 

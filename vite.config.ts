@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -19,6 +20,23 @@ export default defineConfig(({ mode }) => ({
       gzipSize: true,
       brotliSize: true,
       open: false, // Don't auto-open in browser
+    }),
+    // PWA with custom service worker for push notifications
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      },
+      includeAssets: ['favicon.ico', 'notification-icon.png', 'apple-touch-icon.png'],
+      manifest: false, // Use existing site.webmanifest
+      devOptions: {
+        enabled: true,
+        type: 'module',
+      },
     }),
   ].filter(Boolean),
   resolve: {
