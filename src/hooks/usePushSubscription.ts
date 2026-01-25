@@ -121,8 +121,25 @@ export function usePushSubscription() {
 
       const registration = await navigator.serviceWorker.ready;
       
+      // Clear any existing subscription first (handles VAPID key mismatch)
+      const existingSubscription = await registration.pushManager.getSubscription();
+      if (existingSubscription) {
+        logger.info('Clearing existing push subscription before re-subscribing');
+        await existingSubscription.unsubscribe();
+        // Also clean up from database
+        const { error: deleteError } = await supabase
+          .from('push_subscriptions')
+          .delete()
+          .eq('endpoint', existingSubscription.endpoint);
+        if (deleteError) {
+          logger.warn('Failed to delete old subscription from DB:', deleteError);
+        }
+      }
+      
       // Convert VAPID key to ArrayBuffer (required by pushManager.subscribe)
       const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      
+      logger.info('Creating new push subscription with VAPID key');
       
       // Subscribe to push with VAPID key
       const subscription = await registration.pushManager.subscribe({
