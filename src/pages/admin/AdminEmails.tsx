@@ -8,6 +8,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -83,7 +85,14 @@ interface EmailPreviewProps {
 }
 
 function EmailPreview({ html, width, showSource, templateType, subject, darkMode, isLoading, onRefresh }: EmailPreviewProps) {
+  const prefersReducedMotion = useReducedMotion();
   const iframeWidth = width === 'mobile' ? 375 : 600;
+  
+  // Animation settings respecting reduced motion
+  const fadeTransition = prefersReducedMotion ? { duration: 0 } : { duration: 0.15 };
+  const springTransition = prefersReducedMotion 
+    ? { duration: 0 } 
+    : { type: 'spring' as const, stiffness: 300, damping: 30 };
   const [testEmail, setTestEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -185,33 +194,60 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-[650px] bg-muted/20">
-            <Loading02 size={24} className="animate-spin text-muted-foreground" />
-          </div>
-        ) : showSource ? (
-          <pre className="p-4 text-xs overflow-auto max-h-[600px] bg-muted">
-            <code>{html}</code>
-          </pre>
-        ) : (
-          <div 
-            className="flex justify-center p-4 transition-colors duration-200"
-            style={{ backgroundColor: darkMode ? '#0d0d0d' : '#f5f5f5' }}
-          >
-              <iframe
-                srcDoc={previewHtml}
-                sandbox="allow-same-origin"
-                style={{ 
-                  width: iframeWidth, 
-                  height: 650, 
-                  border: 'none', 
-                  background: darkMode ? '#1a1a1a' : '#ffffff',
-                  borderRadius: 8,
-                }}
-                title="Email Preview"
-              />
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={fadeTransition}
+              className="flex items-center justify-center h-[650px] bg-muted/20"
+            >
+              <Loading02 size={24} className="animate-spin text-muted-foreground" />
+            </motion.div>
+          ) : showSource ? (
+            <motion.pre
+              key="source"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={fadeTransition}
+              className="p-4 text-xs overflow-auto max-h-[600px] bg-muted"
+            >
+              <code>{html}</code>
+            </motion.pre>
+          ) : (
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={fadeTransition}
+              className="flex justify-center p-4 transition-colors duration-200"
+              style={{ backgroundColor: darkMode ? '#0d0d0d' : '#f5f5f5' }}
+            >
+              <motion.div
+                animate={{ width: iframeWidth }}
+                transition={springTransition}
+                className="overflow-hidden"
+                style={{ borderRadius: 8 }}
+              >
+                <iframe
+                  srcDoc={previewHtml}
+                  sandbox="allow-same-origin"
+                  style={{ 
+                    width: iframeWidth, 
+                    height: 650, 
+                    border: 'none', 
+                    background: darkMode ? '#1a1a1a' : '#ffffff',
+                  }}
+                  title="Email Preview"
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );
