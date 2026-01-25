@@ -25,8 +25,10 @@ import {
   Announcement01,
   File06,
   Key01,
+  MarkerPin04,
+  MessageTextSquare01,
 } from '@untitledui/icons';
-import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled, UserFilled, DatabaseFilled, MarkerPin, MarkerPinFilled, BookOpenFilled, AnnouncementFilled, NewsFilled, CodeBrowser, CodeBrowserFilled, Webhook, WebhookFilled, DataFlow, DataFlowFilled, KeyFilled, Terminal, TerminalFilled } from '@/components/icons/AriMenuIcons';
+import { FileFilled, PaletteFilled, MessageSquareFilled, UserFilled, DatabaseFilled, MarkerPinFilled, BookOpenFilled, AnnouncementFilled, NewsFilled, CodeBrowser, CodeBrowserFilled, Webhook, WebhookFilled, DataFlow, DataFlowFilled, KeyFilled, Terminal, TerminalFilled } from '@/components/icons/AriMenuIcons';
 
 // Re-export the section type from routes.ts
 export type AriSection = typeof ARI_SECTIONS[number]['id'];
@@ -42,14 +44,14 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   Announcement01,
   File06,
   Key01,
+  MarkerPin04,
+  MessageTextSquare01,
   // Custom filled icons
   FileFilled,
   PaletteFilled,
-  MessageSquare,
   MessageSquareFilled,
   UserFilled,
   DatabaseFilled,
-  MarkerPin,
   MarkerPinFilled,
   BookOpenFilled,
   AnnouncementFilled,

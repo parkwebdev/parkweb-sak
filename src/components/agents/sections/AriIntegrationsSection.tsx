@@ -212,7 +212,7 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
   const outlookCalendarAccount = connectedCalendars.find(a => a.provider === 'outlook_calendar');
 
   const IntegrationCard = ({ integration }: { integration: Integration }) => (
-    <div className="px-4 py-3 rounded-card border bg-card hover:bg-muted/30 transition-colors">
+    <div className="px-4 py-3 rounded-card border bg-card">
       <div className="flex items-center gap-3">
         <div className="h-8 w-8 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {integration.logoComponent ? (
@@ -305,7 +305,7 @@ export function AriIntegrationsSection({ agentId }: AriIntegrationsSectionProps)
     const isConnecting = connecting === provider;
     
     return (
-      <div className="px-4 py-3 rounded-card border bg-card hover:bg-muted/30 transition-colors">
+      <div className="px-4 py-3 rounded-card border bg-card">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0 overflow-hidden">
             <Logo className="h-5 w-5" />
