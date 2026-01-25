@@ -30,6 +30,8 @@ export default defineConfig(({ mode }) => ({
       filename: 'sw.ts',
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Increase limit for large vendor chunks (pdf-vendor is ~2.4MB)
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
       },
       includeAssets: ['favicon.ico', 'notification-icon.png', 'apple-touch-icon.png'],
       manifest: false, // Use existing site.webmanifest
