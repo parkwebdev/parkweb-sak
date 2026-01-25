@@ -22,7 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
 import { EmailPreviewModeToggle, type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
-import { EmailDeliveryLogs, EmailStatsSection, AnnouncementBuilder, EmailsTabDropdown, type EmailsTab } from '@/components/admin/emails';
+import { EmailDeliveryLogs, EmailStatsSection, AnnouncementBuilder, EmailsNavSidebar, type EmailsTab } from '@/components/admin/emails';
 import { useEmailDeliveryLogs } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import {
@@ -221,15 +221,17 @@ export function AdminEmails() {
   // Tab state for TopBar dropdown
   const [activeTab, setActiveTab] = useState<EmailsTab>('preview');
 
-  // Configure top bar for this page
+  // Configure top bar for this page (simplified - no dropdown)
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={Mail01} title="Emails" />,
-    right: <EmailsTabDropdown activeTab={activeTab} onTabChange={setActiveTab} />,
-  }), [activeTab]);
+  }), []);
   useTopBar(topBarConfig);
 
   // Fetch email delivery logs and stats
   const { logs, stats, loading: logsLoading } = useEmailDeliveryLogs();
+
+  // Calculate failed email count for badge
+  const failedEmailCount = stats?.failed ?? 0;
 
   const [activeTemplate, setActiveTemplate] = useState<EmailTemplateType>('invitation');
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>('desktop');
@@ -815,14 +817,24 @@ export function AdminEmails() {
   return (
     <AdminPermissionGuard permission="view_content">
       <div className="h-full bg-background flex min-h-0">
-        <EmailTemplateSidebar 
-          activeTemplate={activeTemplate} 
-          onTemplateChange={setActiveTemplate}
-          previewWidth={previewWidth}
-          onPreviewWidthChange={setPreviewWidth}
-          darkMode={darkMode}
-          onDarkModeChange={setDarkMode}
+        {/* Primary section navigation */}
+        <EmailsNavSidebar 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          failedEmailCount={failedEmailCount}
         />
+
+        {/* Template sidebar - only visible in Preview mode */}
+        {activeTab === 'preview' && (
+          <EmailTemplateSidebar 
+            activeTemplate={activeTemplate} 
+            onTemplateChange={setActiveTemplate}
+            previewWidth={previewWidth}
+            onPreviewWidthChange={setPreviewWidth}
+            darkMode={darkMode}
+            onDarkModeChange={setDarkMode}
+          />
+        )}
 
         <main className="flex-1 min-w-0 overflow-y-auto">
           <div className="p-6 space-y-4">
