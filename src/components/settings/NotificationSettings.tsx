@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { toast } from '@/lib/toast';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { useAuth } from '@/hooks/useAuth';
@@ -341,103 +342,110 @@ export function NotificationSettings() {
       {/* Email Notifications Section */}
       <AnimatedItem>
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              Email Notifications
-            </CardTitle>
-            <CardDescription className="text-sm">
-              Control which types of emails you receive from Pilot
-            </CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div className="space-y-1">
+              <CardTitle className="text-base font-semibold">
+                Email Notifications
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Control which types of emails you receive from Pilot
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <label htmlFor="email-notifications-toggle" className="text-xs text-muted-foreground">
+                Toggle all
+              </label>
+              <Switch
+                id="email-notifications-toggle"
+                checked={preferences.email_notifications}
+                onCheckedChange={(checked) => updatePreference('email_notifications', checked)}
+              />
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <ToggleSettingRow
-              id="email-notifications"
-              label="Enable Email Notifications"
-              description="Receive important updates and alerts via email"
-              checked={preferences.email_notifications}
-              onCheckedChange={(checked) => updatePreference('email_notifications', checked)}
-            />
+            <div id="booking-emails" className="transition-all duration-300 rounded-lg">
+              <ToggleSettingRow
+                id="booking-email-notifications"
+                label="Booking Emails"
+                description="Confirmations, reminders, cancellations, and reschedules"
+                checked={preferences.booking_email_notifications && preferences.email_notifications}
+                onCheckedChange={(checked) => updatePreference('booking_email_notifications', checked)}
+                disabled={!preferences.email_notifications}
+              />
+            </div>
 
-            {preferences.email_notifications && (
-              <div className="pl-4 border-l-2 border-border space-y-6">
-                <div id="booking-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">
-                  <ToggleSettingRow
-                    id="booking-email-notifications"
-                    label="Booking Emails"
-                    description="Confirmations, reminders, cancellations, and reschedules"
-                    checked={preferences.booking_email_notifications}
-                    onCheckedChange={(checked) => updatePreference('booking_email_notifications', checked)}
-                  />
-                </div>
+            <div id="lead-emails" className="transition-all duration-300 rounded-lg">
+              <ToggleSettingRow
+                id="lead-email-notifications"
+                label="Lead Emails"
+                description="New leads, status changes, and human takeover requests"
+                checked={preferences.lead_email_notifications && preferences.email_notifications}
+                onCheckedChange={(checked) => updatePreference('lead_email_notifications', checked)}
+                disabled={!preferences.email_notifications}
+              />
+            </div>
 
-                <div id="lead-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">
-                  <ToggleSettingRow
-                    id="lead-email-notifications"
-                    label="Lead Emails"
-                    description="New leads, status changes, and human takeover requests"
-                    checked={preferences.lead_email_notifications}
-                    onCheckedChange={(checked) => updatePreference('lead_email_notifications', checked)}
-                  />
-                </div>
+            <div id="team-emails" className="transition-all duration-300 rounded-lg">
+              <ToggleSettingRow
+                id="team-email-notifications"
+                label="Team Emails"
+                description="Invitations and team member changes"
+                checked={preferences.team_email_notifications && preferences.email_notifications}
+                onCheckedChange={(checked) => updatePreference('team_email_notifications', checked)}
+                disabled={!preferences.email_notifications}
+              />
+            </div>
 
-                <div id="team-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">
-                  <ToggleSettingRow
-                    id="team-email-notifications"
-                    label="Team Emails"
-                    description="Invitations and team member changes"
-                    checked={preferences.team_email_notifications}
-                    onCheckedChange={(checked) => updatePreference('team_email_notifications', checked)}
-                  />
-                </div>
+            <div id="agent-emails" className="transition-all duration-300 rounded-lg">
+              <ToggleSettingRow
+                id="agent-email-notifications"
+                label="Agent Emails"
+                description="Webhook failures and agent error alerts"
+                checked={preferences.agent_email_notifications && preferences.email_notifications}
+                onCheckedChange={(checked) => updatePreference('agent_email_notifications', checked)}
+                disabled={!preferences.email_notifications}
+              />
+            </div>
 
-                <div id="agent-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">
-                  <ToggleSettingRow
-                    id="agent-email-notifications"
-                    label="Agent Emails"
-                    description="Webhook failures and agent error alerts"
-                    checked={preferences.agent_email_notifications}
-                    onCheckedChange={(checked) => updatePreference('agent_email_notifications', checked)}
-                  />
-                </div>
+            <div id="report-emails" className="transition-all duration-300 rounded-lg">
+              <ToggleSettingRow
+                id="report-email-notifications"
+                label="Scheduled Report Emails"
+                description="Reports you've scheduled in the Analytics section"
+                checked={preferences.report_email_notifications && preferences.email_notifications}
+                onCheckedChange={(checked) => updatePreference('report_email_notifications', checked)}
+                disabled={!preferences.email_notifications}
+              />
+            </div>
 
-                <div id="report-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">
-                  <ToggleSettingRow
-                    id="report-email-notifications"
-                    label="Scheduled Report Emails"
-                    description="Reports you've scheduled in the Analytics section"
-                    checked={preferences.report_email_notifications}
-                    onCheckedChange={(checked) => updatePreference('report_email_notifications', checked)}
-                  />
-                </div>
+            <div id="weekly-report" className="transition-all duration-300 rounded-lg">
+              <ToggleSettingRow
+                id="weekly-report-enabled"
+                label="Weekly Analytics Digest"
+                description={`Receive a summary every Monday at 8 AM (${getTimezoneLabel()})`}
+                checked={preferences.weekly_report_enabled && preferences.email_notifications}
+                onCheckedChange={(checked) => {
+                  updatePreference('weekly_report_enabled', checked);
+                  if (checked) {
+                    // Auto-detect and save timezone when enabling
+                    const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    updatePreference('weekly_report_timezone', detectedTimezone);
+                  }
+                }}
+                disabled={!preferences.email_notifications}
+              />
+            </div>
 
-                <div id="weekly-report" className="transition-all duration-300 rounded-lg p-3 -m-3">
-                  <ToggleSettingRow
-                    id="weekly-report-enabled"
-                    label="Weekly Analytics Digest"
-                    description={`Receive a summary every Monday at 8 AM (${getTimezoneLabel()})`}
-                    checked={preferences.weekly_report_enabled}
-                    onCheckedChange={(checked) => {
-                      updatePreference('weekly_report_enabled', checked);
-                      if (checked) {
-                        // Auto-detect and save timezone when enabling
-                        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                        updatePreference('weekly_report_timezone', detectedTimezone);
-                      }
-                    }}
-                  />
-                </div>
-
-                <div id="product-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">
-                  <ToggleSettingRow
-                    id="product-email-notifications"
-                    label="Product Updates"
-                    description="Feature announcements and product news"
-                    checked={preferences.product_email_notifications}
-                    onCheckedChange={(checked) => updatePreference('product_email_notifications', checked)}
-                  />
-                </div>
-              </div>
-            )}
+            <div id="product-emails" className="transition-all duration-300 rounded-lg">
+              <ToggleSettingRow
+                id="product-email-notifications"
+                label="Product Updates"
+                description="Feature announcements and product news"
+                checked={preferences.product_email_notifications && preferences.email_notifications}
+                onCheckedChange={(checked) => updatePreference('product_email_notifications', checked)}
+                disabled={!preferences.email_notifications}
+              />
+            </div>
           </CardContent>
         </Card>
       </AnimatedItem>
