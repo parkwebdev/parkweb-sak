@@ -9,6 +9,7 @@ import {
   FACEBOOK_ICON_URL,
   getBaseStyles
 } from '../_shared/email-template.ts';
+import { logEmailSent } from '../_shared/email-logging.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -443,7 +444,7 @@ const handler = async (req: Request): Promise<Response> => {
         // Send email via Resend
         const unsubscribeUrl = `${appUrl}/settings?tab=notifications#report-emails`;
         
-        const { error: emailError } = await resend.emails.send({
+        const { data: emailResponse, error: emailError } = await resend.emails.send({
           from: 'Pilot <reports@getpilot.io>',
           to: [user.email!],
           subject: `Weekly Report: ${displayRange}`,
@@ -462,6 +463,17 @@ const handler = async (req: Request): Promise<Response> => {
         } else {
           console.log(`Sent weekly report to ${user.email}`);
           successCount++;
+
+          // Log email send for delivery tracking
+          if (emailResponse?.id) {
+            await logEmailSent(supabase, {
+              resendEmailId: emailResponse.id,
+              toEmail: user.email!,
+              fromEmail: 'reports@getpilot.io',
+              subject: `Weekly Report: ${displayRange}`,
+              templateType: 'weekly_report',
+            });
+          }
         }
 
       } catch (userError) {

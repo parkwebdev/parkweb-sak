@@ -12,6 +12,7 @@ import {
   colors,
 } from "../_shared/email-template.ts";
 import { getErrorMessage } from '../_shared/errors.ts';
+import { logEmailSent } from '../_shared/email-logging.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -114,6 +115,18 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log(`[send-webhook-failure-email] Email sent successfully:`, emailResponse);
+
+    // Log email send for delivery tracking
+    if (emailResponse.data?.id) {
+      await logEmailSent(supabase, {
+        resendEmailId: emailResponse.data.id,
+        toEmail: recipientEmail,
+        fromEmail: 'notifications@mail.getpilot.co',
+        subject: `Webhook failed: ${webhookName}`,
+        templateType: 'webhook_failure',
+        metadata: { webhook_id: webhookId, error_code: errorCode },
+      });
+    }
 
     // Log security event
     try {
