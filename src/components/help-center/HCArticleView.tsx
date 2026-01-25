@@ -10,18 +10,15 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ChevronLeft, ChevronRight, Clock, Share07 } from '@untitledui/icons';
+import { ChevronLeft, ChevronRight, Clock } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CopyButton } from '@/components/ui/copy-button';
-import { IconButton } from '@/components/ui/icon-button';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { useTrackArticleView } from '@/hooks/useHCArticleViews';
 import { HCArticleFeedback } from './HCArticleFeedback';
 import { HCDatabaseArticleRenderer } from './HCDatabaseArticleRenderer';
-import { HCKeyboardShortcutsDropdown } from './HCKeyboardShortcutsDropdown';
 import { VideoBlockHydrator } from './VideoBlockHydrator';
 import { getCategoryColor, getGradientClass } from '@/lib/hc-category-colors';
 import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
@@ -59,25 +56,6 @@ export function HCArticleView({
   const colorClass = getCategoryColor(category.id, category.color);
   const gradientClasses = getGradientClass(colorClass);
   
-  // Get the current article URL for sharing
-  const articleUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/help-center?category=${category.id}&article=${article.slug}`
-    : '';
-  
-  // Handle native share (only reliable on mobile)
-  const handleShare = async () => {
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({
-          title: article.title,
-          text: article.description || undefined,
-          url: articleUrl,
-        });
-      } catch {
-        // User cancelled or share failed - ignore
-      }
-    }
-  };
   
   // Intercept article link clicks for client-side navigation
   useEffect(() => {
@@ -146,47 +124,6 @@ export function HCArticleView({
 
   return (
     <div className="px-8">
-      {/* Sticky Breadcrumb with actions */}
-      <nav 
-        className="sticky top-0 z-10 flex items-center justify-between gap-2 text-sm text-muted-foreground py-3 -mx-8 px-8 bg-background border-b border-border" 
-        aria-label="Breadcrumb"
-        data-print="hide"
-      >
-        <div className="flex items-center gap-2">
-          <span className={cn('w-2 h-2 rounded-full', colorClass)} aria-hidden="true" />
-          <button
-            onClick={() => setSearchParams({ category: category.id })}
-            className="hover:text-foreground hover:underline transition-colors"
-          >
-            {category.label}
-          </button>
-          <span aria-hidden="true">/</span>
-          <span className="text-foreground font-medium">{article.title}</span>
-        </div>
-        
-        {/* Actions */}
-        <div className="flex items-center gap-1 no-print">
-          <HCKeyboardShortcutsDropdown />
-          <CopyButton
-            content={articleUrl}
-            showToast
-            toastMessage="Article link copied!"
-            variant="ghost"
-            size="sm"
-          />
-          {typeof navigator.share === 'function' && (
-            <IconButton
-              label="Share article"
-              variant="ghost"
-              size="sm"
-              onClick={handleShare}
-            >
-              <Share07 size={16} />
-            </IconButton>
-          )}
-        </div>
-      </nav>
-      
       {/* Header with gradient background */}
       <header className={cn(
         'bg-gradient-to-b py-8 -mx-8 px-8',

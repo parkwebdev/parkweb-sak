@@ -45,17 +45,8 @@ export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProp
 
   return (
     <div className="px-8">
-      {/* Sticky Breadcrumb - matches article view */}
-      <nav 
-        className="sticky top-0 z-10 flex items-center gap-2 text-sm text-muted-foreground py-3 -mx-8 px-8 bg-background border-b border-border" 
-        aria-label="Breadcrumb"
-      >
-        <span className={cn('w-2 h-2 rounded-full', colorClass)} aria-hidden="true" />
-        <span className="text-foreground font-medium">{category.label}</span>
-      </nav>
-      
-      {/* Header with gradient background - matches article view sizing */}
-      <header className={cn('bg-gradient-to-b py-8 -mx-8 px-8', gradientClasses)}>
+      {/* Header with gradient background */}
+      <header className={cn('bg-gradient-to-b py-8 -mx-8 px-8 mt-0', gradientClasses)}>
         <h1 className="text-2xl font-semibold text-foreground mb-2">
           {category.label}
         </h1>

@@ -15,6 +15,8 @@ import { HCCategoryView } from '@/components/help-center/HCCategoryView';
 import { HCTableOfContents } from '@/components/help-center/HCTableOfContents';
 import { HCPopularArticles } from '@/components/help-center/HCPopularArticles';
 import { HCTopBarSearch } from '@/components/help-center/HCTopBarSearch';
+import { HCTopBarBreadcrumb } from '@/components/help-center/HCTopBarBreadcrumb';
+import { HCTopBarActions } from '@/components/help-center/HCTopBarActions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useHCKeyboardNavigation } from '@/hooks/useHCKeyboardNavigation';
@@ -70,15 +72,34 @@ export default function HelpCenter() {
     setSearchQuery('');
   }, [setSearchParams]);
   
+  const handleBreadcrumbCategoryClick = useCallback(() => {
+    if (currentCategory) {
+      setSearchParams({ category: currentCategory.id });
+    }
+  }, [currentCategory, setSearchParams]);
+  
   const topBarConfig = useMemo(() => ({
     left: (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <TopBarPageContext icon={getNavigationIcon('BookOpen01')} title="Help Center" />
-        <HCTopBarSearch onSelect={handleSearchSelect} />
+        {currentCategory && (
+          <>
+            <span className="text-muted-foreground shrink-0">/</span>
+            <HCTopBarBreadcrumb
+              category={currentCategory}
+              article={currentArticle}
+              onCategoryClick={handleBreadcrumbCategoryClick}
+            />
+          </>
+        )}
       </div>
     ),
-  }), [handleSearchSelect]);
-  useTopBar(topBarConfig);
+    center: <HCTopBarSearch onSelect={handleSearchSelect} />,
+    right: currentArticle && currentCategory ? (
+      <HCTopBarActions category={currentCategory} article={currentArticle} />
+    ) : undefined,
+  }), [currentCategory, currentArticle, handleSearchSelect, handleBreadcrumbCategoryClick]);
+  useTopBar(topBarConfig, `help-center-${categoryId}-${articleSlug}`);
   
   useEffect(() => {
     // Wait for data to load
