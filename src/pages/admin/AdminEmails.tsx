@@ -255,7 +255,7 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
 
 export function AdminEmails() {
   // Tab state for TopBar dropdown
-  const [activeTab, setActiveTab] = useState<EmailsTab>('preview');
+  const [activeTab, setActiveTab] = useState<EmailsTab>('stats');
 
   // Fetch email delivery logs and stats
   const { logs, stats, loading: logsLoading } = useEmailDeliveryLogs();
