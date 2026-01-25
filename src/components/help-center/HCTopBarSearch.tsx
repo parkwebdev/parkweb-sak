@@ -40,6 +40,7 @@ export const HCTopBarSearch = memo(function HCTopBarSearch({
       value={searchQuery}
       onChange={setSearchQuery}
       renderResults={renderResults}
+      className="w-64 lg:w-80"
     />
   );
 });

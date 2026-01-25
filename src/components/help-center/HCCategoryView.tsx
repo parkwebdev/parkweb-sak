@@ -15,7 +15,7 @@ import { HCArticleCard } from './HCArticleCard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import { cn } from '@/lib/utils';
-import { getCategoryColor, getGradientClass } from '@/lib/hc-category-colors';
+import { getCategoryColor, getSolidBgClass } from '@/lib/hc-category-colors';
 import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
 
 interface HCCategoryViewProps {
@@ -29,7 +29,7 @@ export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProp
   
   // Get color class for this category
   const colorClass = getCategoryColor(category.id, category.color);
-  const gradientClasses = getGradientClass(colorClass);
+  const solidBgClass = getSolidBgClass(colorClass);
   
   // Filter articles based on search
   const filteredArticles = useMemo(() => {
@@ -45,8 +45,8 @@ export function HCCategoryView({ category, onSelectArticle }: HCCategoryViewProp
 
   return (
     <div className="px-8">
-      {/* Header with gradient background */}
-      <header className={cn('bg-gradient-to-b py-8 -mx-8 px-8 mt-0', gradientClasses)}>
+      {/* Header with solid background */}
+      <header className={cn('py-8 -mx-8 px-8 mt-0', solidBgClass)}>
         <h1 className="text-2xl font-semibold text-foreground mb-2">
           {category.label}
         </h1>

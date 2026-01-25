@@ -51,6 +51,28 @@ export const HC_GRADIENT_MAP: Record<string, string> = {
   'bg-muted-foreground': 'from-muted/15 via-muted/5 to-transparent',
 };
 
+/** Solid background classes for article/category headers */
+export const HC_SOLID_BG_MAP: Record<string, string> = {
+  'bg-info': 'bg-info/10',
+  'bg-accent-purple': 'bg-accent-purple/10',
+  'bg-success': 'bg-success/10',
+  'bg-warning': 'bg-warning/10',
+  'bg-status-active': 'bg-status-active/10',
+  'bg-destructive': 'bg-destructive/10',
+  'bg-muted-foreground': 'bg-muted/10',
+};
+
+/** Badge classes for category-colored badges */
+export const HC_BADGE_MAP: Record<string, string> = {
+  'bg-info': 'bg-info/15 text-info border-info/20',
+  'bg-accent-purple': 'bg-accent-purple/15 text-accent-purple border-accent-purple/20',
+  'bg-success': 'bg-success/15 text-success border-success/20',
+  'bg-warning': 'bg-warning/15 text-warning border-warning/20',
+  'bg-status-active': 'bg-status-active/15 text-status-active border-status-active/20',
+  'bg-destructive': 'bg-destructive/15 text-destructive border-destructive/20',
+  'bg-muted-foreground': 'bg-muted text-muted-foreground border-border',
+};
+
 /** Available color options for category creation/editing */
 export const HC_COLOR_OPTIONS = [
   { value: 'bg-info', label: 'Blue' },
@@ -94,4 +116,18 @@ export function getHoverClass(colorClass: string): string {
  */
 export function getGradientClass(colorClass: string): string {
   return HC_GRADIENT_MAP[colorClass] || 'from-muted/15 via-muted/5 to-transparent';
+}
+
+/**
+ * Get solid background class for a color (headers)
+ */
+export function getSolidBgClass(colorClass: string): string {
+  return HC_SOLID_BG_MAP[colorClass] || 'bg-muted/10';
+}
+
+/**
+ * Get badge classes for a category color
+ */
+export function getCategoryBadgeClasses(colorClass: string): string {
+  return HC_BADGE_MAP[colorClass] || 'bg-muted text-muted-foreground';
 }
