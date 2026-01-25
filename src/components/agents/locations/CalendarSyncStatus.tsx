@@ -22,7 +22,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow, isAfter, parseISO, addDays } from 'date-fns';
+import { isAfter, parseISO, addDays } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import type { ConnectedAccount } from '@/hooks/useConnectedAccounts';
 
 interface CalendarSyncStatusProps {
@@ -66,7 +67,7 @@ function getStatusMessage(account: ConnectedAccount, health: SyncHealth): string
   }
   
   if (health === 'warning' && account.webhook_expires_at) {
-    return `Webhook expires ${formatDistanceToNow(parseISO(account.webhook_expires_at), { addSuffix: true })}`;
+    return `Webhook expires ${formatShortTime(parseISO(account.webhook_expires_at))}`;
   }
   
   if (!account.is_active) {
@@ -149,7 +150,7 @@ export function CalendarSyncStatus({
             <p>{statusMessage}</p>
             {account.webhook_expires_at && health !== 'error' && (
               <p className="text-muted-foreground mt-1">
-                Webhook expires: {formatDistanceToNow(parseISO(account.webhook_expires_at), { addSuffix: true })}
+                Webhook expires: {formatShortTime(parseISO(account.webhook_expires_at))}
               </p>
             )}
           </TooltipContent>
@@ -163,7 +164,7 @@ export function CalendarSyncStatus({
             <TooltipTrigger asChild>
               <span className="text-2xs text-muted-foreground cursor-help flex items-center gap-1">
                 <CheckCircle size={10} />
-                {formatDistanceToNow(parseISO(account.last_synced_at), { addSuffix: true })}
+                {formatShortTime(parseISO(account.last_synced_at))}
               </span>
             </TooltipTrigger>
             <TooltipContent side="top">

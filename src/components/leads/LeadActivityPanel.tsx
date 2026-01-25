@@ -6,7 +6,7 @@
  */
 
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { motion, AnimatePresence } from 'motion/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -448,7 +448,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                             {comment.profile?.display_name || 'Unknown'}
                           </span>
                           <time className="text-2xs text-muted-foreground flex-shrink-0">
-                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                            {formatShortTime(new Date(comment.created_at))}
                           </time>
                           
                           {isOwner && !isEditing && (
@@ -530,7 +530,7 @@ export function LeadActivityPanel({ leadId }: LeadActivityPanelProps) {
                           {renderActivityDescription(activity)}
                         </div>
                         <time className="text-2xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                          {formatShortTime(new Date(activity.created_at))}
                         </time>
                       </div>
                     </motion.div>

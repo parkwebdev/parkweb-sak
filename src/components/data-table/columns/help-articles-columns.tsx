@@ -19,7 +19,7 @@ import {
   Truck01, MessageChatCircle, Building07
 } from '@untitledui/icons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 /**
  * Help article type with category metadata for table display.
  * This is a standalone interface matching the transformed data shape.
@@ -274,24 +274,9 @@ export const createHelpArticlesColumns = ({
       const date = row.original.createdAt;
       if (!date) return <span className="text-muted-foreground text-center block">-</span>;
       
-      const distance = formatDistanceToNow(new Date(date));
-      // Convert "about X hours" to "Xhrs", "X days" to "Xd", etc.
-      const short = distance
-        .replace(/^about /, '')
-        .replace(/^less than /, '<')
-        .replace(/^over /, '>')
-        .replace(/ seconds?/, 's')
-        .replace(/ minutes?/, 'm')
-        .replace(/ hours?/, 'hrs')
-        .replace(/ days?/, 'd')
-        .replace(/ weeks?/, 'w')
-        .replace(/ months?/, 'mo')
-        .replace(/ years?/, 'y')
-        .replace(/ /, '');
-      
       return (
-        <span className="text-sm text-muted-foreground whitespace-nowrap block text-center">
-          {short} ago
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {formatShortTime(new Date(date))}
         </span>
       );
     },

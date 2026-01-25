@@ -10,7 +10,7 @@
 import React, { memo } from 'react';
 import { WidgetStarIcon } from '@/widget/icons/WidgetStarIcon';
 import { Badge } from '@/components/ui/badge';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { getStatusColor, getUnreadCount } from '@/lib/conversation-utils';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
@@ -102,7 +102,7 @@ export const ConversationItem = memo(function ConversationItem({
             ) : conversation.status}
           </Badge>
           <span className="text-2xs text-muted-foreground">
-            • {formatDistanceToNow(new Date(conversation.updated_at), { addSuffix: true })}
+            • {formatShortTime(new Date(conversation.updated_at))}
           </span>
         </div>
       </div>

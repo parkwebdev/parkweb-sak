@@ -25,7 +25,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { 
   File06, Trash01, CheckCircle, Clock, Image01, XClose, RefreshCcw01, Calendar
 } from '@untitledui/icons';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { toast } from '@/lib/toast';
 import { uploadFeaturedImage } from '@/lib/article-image-upload';
 import { UploadProgress } from '@/components/ui/upload-progress';
@@ -364,7 +365,7 @@ export function ArticleDetailsSheet({
                       <Calendar className="h-3 w-3 text-muted-foreground" />
                       {format(new Date(article.createdAt), 'PPp')}
                       <span className="text-muted-foreground ml-1">
-                        ({formatDistanceToNow(new Date(article.createdAt), { addSuffix: true })})
+                        ({formatShortTime(new Date(article.createdAt))})
                       </span>
                     </span>
                   </div>
@@ -375,7 +376,7 @@ export function ArticleDetailsSheet({
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground w-20 shrink-0">Updated</span>
                     <span className="text-sm">
-                      {formatDistanceToNow(new Date(article.updatedAt), { addSuffix: true })}
+                      {formatShortTime(new Date(article.updatedAt))}
                     </span>
                   </div>
                 )}

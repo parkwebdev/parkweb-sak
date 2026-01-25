@@ -98,7 +98,8 @@ const countryCodeToFlag = (code: string): string => {
     .join('');
 };
 
-import { formatDistanceToNow, format } from 'date-fns';
+import { format } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata, VisitedPage, ReferrerJourney } from '@/types/metadata';
 import { cn } from '@/lib/utils';
@@ -539,7 +540,7 @@ export function ConversationMetadataPanel({
                       <div className="flex items-center gap-2.5 text-sm">
                         <ClockStopwatch className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span>
-                          Duration: {formatDistanceToNow(new Date(metadata.session_started_at))}
+                          Duration: {formatShortTime(new Date(metadata.session_started_at))}
                         </span>
                       </div>
                     </TooltipTrigger>
@@ -614,7 +615,7 @@ export function ConversationMetadataPanel({
                     <div className="flex items-center gap-2.5 text-sm">
                       <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       <span>
-                        Started {formatDistanceToNow(new Date(conversation.created_at), { addSuffix: true })}
+                        Started {formatShortTime(new Date(conversation.created_at))}
                       </span>
                     </div>
                   </TooltipTrigger>

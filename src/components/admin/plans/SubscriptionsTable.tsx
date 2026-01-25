@@ -17,7 +17,7 @@ import { DataTable } from '@/components/data-table/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import type { AdminSubscription } from '@/types/admin';
 
 interface SubscriptionsTableProps {
@@ -63,7 +63,7 @@ export function SubscriptionsTable({ subscriptions, loading }: SubscriptionsTabl
           const date = getValue();
           return date ? (
             <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(date), { addSuffix: true })}
+              {formatShortTime(new Date(date))}
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">—</span>
@@ -74,7 +74,7 @@ export function SubscriptionsTable({ subscriptions, loading }: SubscriptionsTabl
         header: 'Started',
         cell: ({ getValue }) => (
           <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(getValue()), { addSuffix: true })}
+            {formatShortTime(new Date(getValue()))}
           </span>
         ),
       }),

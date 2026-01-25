@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Globe01, RefreshCw01, Check, AlertCircle, ArrowRight } from '@untitledui/icons';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -59,7 +59,7 @@ export function WordPressConnectionCard({ agent, onSyncComplete }: WordPressConn
   const formatLastSync = () => {
     if (!lastSync) return null;
     try {
-      return formatDistanceToNow(new Date(lastSync), { addSuffix: true });
+      return formatShortTime(new Date(lastSync));
     } catch {
       return null;
     }

@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useCallback } from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { 
   MessageChatSquare, 
   User01, 
@@ -76,7 +76,7 @@ function NotificationItem({
 }) {
   const config = notificationTypeConfig[notification.type] || notificationTypeConfig.system;
   const Icon = config.icon;
-  const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true });
+  const timeAgo = formatShortTime(new Date(notification.created_at));
 
   // Swipe state
   const [swipeX, setSwipeX] = useState(0);

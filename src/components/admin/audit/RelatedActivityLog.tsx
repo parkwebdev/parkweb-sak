@@ -9,7 +9,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { useRelatedAuditActivity } from '@/hooks/admin/useRelatedAuditActivity';
 import { getAuditActionLabel } from '@/lib/admin/audit-actions';
 import type { AuditAction } from '@/types/admin';
@@ -76,7 +76,7 @@ export function RelatedActivityLog({
                     {getAuditActionLabel(entry.action as AuditAction)}
                   </Badge>
                   <span className="text-2xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+                    {formatShortTime(new Date(entry.created_at))}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5 truncate">

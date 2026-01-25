@@ -19,7 +19,7 @@ import {
   Clock, AlertCircle, Globe01, ChevronDown, ChevronUp, Building07, 
   Calendar, RefreshCw01 
 } from '@untitledui/icons';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { SitemapChildPages } from './SitemapChildPages';
 import type { Tables } from '@/integrations/supabase/types';
 import type { KnowledgeSourceMetadata, RefreshStrategy } from '@/types/metadata';
@@ -257,7 +257,7 @@ export const KnowledgeSourceCard = React.memo(function KnowledgeSourceCard({
                         <p>Auto-refreshes {REFRESH_STRATEGY_LABELS[refreshStrategy].toLowerCase()}</p>
                         {nextRefreshAt && (
                           <p className="text-xs text-muted-foreground">
-                            Next: {formatDistanceToNow(new Date(nextRefreshAt), { addSuffix: true })}
+                            Next: {formatShortTime(new Date(nextRefreshAt))}
                           </p>
                         )}
                       </TooltipContent>
@@ -356,14 +356,14 @@ export const KnowledgeSourceCard = React.memo(function KnowledgeSourceCard({
             
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-3">
-                <span>Added {formatDistanceToNow(new Date(source.created_at), { addSuffix: true })}</span>
+                <span>Added {formatShortTime(new Date(source.created_at))}</span>
                 {!isSitemap && !isPropertyListing && metadata.chunks_count && (
                   <span className="text-primary font-medium">{metadata.chunks_count} chunks indexed</span>
                 )}
                 {lastFetchedAt && (
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    Last fetched {formatDistanceToNow(new Date(lastFetchedAt), { addSuffix: true })}
+                    Last fetched {formatShortTime(new Date(lastFetchedAt))}
                   </span>
                 )}
               </div>

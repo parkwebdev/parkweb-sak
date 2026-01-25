@@ -4,7 +4,8 @@
  * @module lib/admin/admin-utils
  */
 
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
+import { formatShortTime } from '../time-formatting';
 
 // Re-export consolidated utilities from formatting-utils
 export { getInitials, truncateText, formatDateUS as formatAdminDate } from '../formatting-utils';
@@ -58,11 +59,11 @@ export function formatAdminDateTime(date: string | Date): string {
 }
 
 /**
- * Format relative time
+ * Format relative time using compact format
  */
 export function formatRelativeTime(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return formatDistanceToNow(d, { addSuffix: true });
+  return formatShortTime(d);
 }
 
 /**
