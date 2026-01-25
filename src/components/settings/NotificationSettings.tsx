@@ -317,7 +317,7 @@ export function NotificationSettings() {
 
     new Notification('Test Notification', {
       body: 'This is a test notification from Pilot.',
-      icon: '/favicon.png',
+      icon: '/notification-icon.png?v=2',
     });
 
     toast.success("Test notification sent", {
