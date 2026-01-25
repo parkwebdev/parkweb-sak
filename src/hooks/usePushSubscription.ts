@@ -14,7 +14,7 @@ import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 
 // VAPID public key from environment
-const VAPID_PUBLIC_KEY = 'BLzV9aE5oTF_2bGk8lJQv8sEbE3IzLQxVmcMZxDhJz0YwqJKVEwYHpCpN_kFhN2wP0xE5RQz4xKNhJwYVxqPz8Y';
+const VAPID_PUBLIC_KEY = 'BMEV-72Ezu6iLrxtY6HVARJzuv1ebX_uqzY1JnVvg0nz3tPLmWZyGDSlyb8W4SazKaPpeDURrVI2H8ue7ItunMg';
 
 /**
  * Convert a base64 string to Uint8Array for applicationServerKey
