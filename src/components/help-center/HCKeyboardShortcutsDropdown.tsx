@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Keyboard01 } from '@untitledui/icons';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -42,15 +42,14 @@ export function HCKeyboardShortcutsDropdown() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="default"
+        <IconButton
+          label="Keyboard shortcuts"
+          variant="ghost"
           size="sm"
-          aria-label="Keyboard shortcuts"
           aria-keyshortcuts="?"
-          className="h-7 w-7 p-0"
         >
-          <Keyboard01 size={14} aria-hidden="true" />
-        </Button>
+          <Keyboard01 size={16} aria-hidden="true" />
+        </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>Keyboard Shortcuts</DropdownMenuLabel>
