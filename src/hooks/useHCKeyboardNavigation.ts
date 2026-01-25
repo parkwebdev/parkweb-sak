@@ -9,6 +9,7 @@ interface UseHCKeyboardNavigationOptions {
 /**
  * Hook for Help Center keyboard navigation.
  * Supports arrow keys and vim-style j/k bindings for article navigation.
+ * Also supports Home/T for scroll-to-top.
  * 
  * @param onPrevious - Callback for previous article navigation
  * @param onNext - Callback for next article navigation  
@@ -52,6 +53,12 @@ export function useHCKeyboardNavigation({
           event.preventDefault();
           onNext();
         }
+        break;
+        
+      case 'Home':
+      case 't': // Scroll to top
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         break;
     }
   }, [onPrevious, onNext, enabled]);
