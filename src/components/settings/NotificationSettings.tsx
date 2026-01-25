@@ -10,6 +10,7 @@ import { toast } from '@/lib/toast';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -28,6 +29,7 @@ interface NotificationPreferences {
   email_notifications: boolean;
   browser_notifications: boolean;
   sound_notifications: boolean;
+  background_push_enabled: boolean;
   // Category toggles (in-app/browser)
   conversation_notifications: boolean;
   lead_notifications: boolean;
@@ -57,8 +59,10 @@ function getTimezoneLabel(): string {
 export function NotificationSettings() {
   const { user } = useAuth();
   const { requestBrowserNotificationPermission } = useNotifications();
+  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, isSupported: pushSupported } = usePushSubscription();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pushActionLoading, setPushActionLoading] = useState(false);
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
@@ -118,6 +122,7 @@ export function NotificationSettings() {
         email_notifications: data.email_notifications ?? true,
         browser_notifications: data.browser_notifications ?? true,
         sound_notifications: data.sound_notifications ?? true,
+        background_push_enabled: data.background_push_enabled ?? false,
         conversation_notifications: data.conversation_notifications ?? true,
         lead_notifications: data.lead_notifications ?? true,
         agent_notifications: data.agent_notifications ?? true,
@@ -176,6 +181,7 @@ export function NotificationSettings() {
         email_notifications: data.email_notifications ?? true,
         browser_notifications: data.browser_notifications ?? true,
         sound_notifications: data.sound_notifications ?? true,
+        background_push_enabled: data.background_push_enabled ?? false,
         conversation_notifications: data.conversation_notifications ?? true,
         lead_notifications: data.lead_notifications ?? true,
         agent_notifications: data.agent_notifications ?? true,
@@ -515,6 +521,41 @@ export function NotificationSettings() {
               checked={preferences.sound_notifications}
               onCheckedChange={(checked) => updatePreference('sound_notifications', checked)}
             />
+
+            {/* Background Push Notifications */}
+            {pushSupported && (
+              <ToggleSettingRow
+                id="background-push-notifications"
+                label="Background Notifications"
+                description={
+                  isSubscribed
+                    ? "Receive alerts even when the app is closed"
+                    : "Enable to receive notifications when the app is closed"
+                }
+                checked={isSubscribed}
+                onCheckedChange={async (checked) => {
+                  setPushActionLoading(true);
+                  try {
+                    if (checked) {
+                      const success = await subscribe();
+                      if (success) {
+                        await updatePreference('background_push_enabled', true);
+                        toast.success("Background notifications enabled");
+                      }
+                    } else {
+                      const success = await unsubscribe();
+                      if (success) {
+                        await updatePreference('background_push_enabled', false);
+                        toast.success("Background notifications disabled");
+                      }
+                    }
+                  } finally {
+                    setPushActionLoading(false);
+                  }
+                }}
+                disabled={pushLoading || pushActionLoading}
+              />
+            )}
           </CardContent>
         </Card>
       </AnimatedItem>
