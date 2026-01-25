@@ -1,14 +1,12 @@
-import { useState } from 'react';
 import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { 
-  Mail01, Calendar, File02, Key01, Phone01, Monitor01, Moon01, Sun,
+  Mail01, Calendar, File02, Key01,
   XCircle, Clock, Users01, UserPlus01, RefreshCw01,
   AlertTriangle, UserMinus01, Announcement01, InfoCircle
 } from '@untitledui/icons';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
 
 /** Supabase brand icon */
 function SupabaseIcon({ className }: { className?: string }) {
@@ -101,23 +99,13 @@ const TEMPLATES: TemplateItem[] = [
 interface EmailTemplateSidebarProps {
   activeTemplate: EmailTemplateType;
   onTemplateChange: (template: EmailTemplateType) => void;
-  previewWidth: PreviewWidth;
-  onPreviewWidthChange: (width: PreviewWidth) => void;
-  darkMode: boolean;
-  onDarkModeChange: (dark: boolean) => void;
 }
 
 export function EmailTemplateSidebar({ 
   activeTemplate, 
   onTemplateChange,
-  previewWidth,
-  onPreviewWidthChange,
-  darkMode,
-  onDarkModeChange,
 }: EmailTemplateSidebarProps) {
   const prefersReducedMotion = useReducedMotion();
-  const [hoveredDevice, setHoveredDevice] = useState<PreviewWidth | null>(null);
-  const [hoveredTheme, setHoveredTheme] = useState<'light' | 'dark' | null>(null);
 
   // Group templates by their group
   const groupedTemplates = TEMPLATES.reduce((acc, template) => {
@@ -132,113 +120,6 @@ export function EmailTemplateSidebar({
 
   return (
     <aside className="w-64 shrink-0 border-r border-border bg-card overflow-y-auto flex flex-col">
-
-      {/* Preview Controls */}
-      <div className="p-3 space-y-3">
-        {/* Width Toggle */}
-        <div className="space-y-1.5">
-          <span className="text-2xs font-medium text-foreground uppercase tracking-wider px-1">Device</span>
-          <div 
-            className="relative flex rounded-lg border overflow-hidden"
-            onMouseLeave={() => setHoveredDevice(null)}
-          >
-            <motion.div
-              className="absolute inset-y-0 bg-muted"
-              style={{ width: '50%' }}
-              initial={false}
-              animate={{
-                x: (hoveredDevice ?? previewWidth) === 'desktop' ? '100%' : '0%',
-              }}
-              transition={{
-                type: 'spring',
-                stiffness: 500,
-                damping: 35,
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => onPreviewWidthChange('mobile')}
-              onMouseEnter={() => setHoveredDevice('mobile')}
-              className={cn(
-                'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm flex-1',
-                previewWidth === 'mobile'
-                  ? 'text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Phone01 size={14} />
-              <span>Mobile</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onPreviewWidthChange('desktop')}
-              onMouseEnter={() => setHoveredDevice('desktop')}
-              className={cn(
-                'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm flex-1',
-                previewWidth === 'desktop'
-                  ? 'text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Monitor01 size={14} />
-              <span>Desktop</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Dark Mode Toggle */}
-        <div className="space-y-1.5">
-          <span className="text-2xs font-medium text-foreground uppercase tracking-wider px-1">Theme</span>
-          <div 
-            className="relative flex rounded-lg border overflow-hidden"
-            onMouseLeave={() => setHoveredTheme(null)}
-          >
-            <motion.div
-              className="absolute inset-y-0 bg-muted"
-              style={{ width: '50%' }}
-              initial={false}
-              animate={{
-                x: (hoveredTheme ?? (darkMode ? 'dark' : 'light')) === 'dark' ? '100%' : '0%',
-              }}
-              transition={{
-                type: 'spring',
-                stiffness: 500,
-                damping: 35,
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => onDarkModeChange(false)}
-              onMouseEnter={() => setHoveredTheme('light')}
-              className={cn(
-                'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm flex-1',
-                !darkMode
-                  ? 'text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Sun size={14} />
-              <span>Light</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onDarkModeChange(true)}
-              onMouseEnter={() => setHoveredTheme('dark')}
-              className={cn(
-                'relative z-10 flex h-8 items-center justify-center gap-1.5 px-3 transition-colors text-sm flex-1',
-                darkMode
-                  ? 'text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <Moon01 size={14} />
-              <span>Dark</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <Separator />
       
       <nav className="p-2 space-y-4 flex-1">
         {groupOrder.map((group, groupIndex) => {
