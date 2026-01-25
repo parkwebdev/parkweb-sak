@@ -41,6 +41,7 @@ export const adminQueryKeys = {
   config: {
     all: () => [...adminQueryKeys.all, 'config'] as const,
     byKey: (key: string) => [...adminQueryKeys.config.all(), key] as const,
+    history: (key: string) => [...adminQueryKeys.config.all(), 'history', key] as const,
   },
 
   // Team

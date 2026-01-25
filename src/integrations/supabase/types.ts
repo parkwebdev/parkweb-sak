@@ -1746,6 +1746,36 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_config_history: {
+        Row: {
+          change_summary: string | null
+          config_key: string
+          created_at: string
+          created_by: string | null
+          id: string
+          value: Json
+          version: number
+        }
+        Insert: {
+          change_summary?: string | null
+          config_key: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          value: Json
+          version: number
+        }
+        Update: {
+          change_summary?: string | null
+          config_key?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          value?: Json
+          version?: number
+        }
+        Relationships: []
+      }
       platform_hc_articles: {
         Row: {
           category_id: string

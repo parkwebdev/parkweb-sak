@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileCode01 } from '@untitledui/icons';
 import { AdminPromptSectionMenu, type PromptSection } from '@/components/admin/prompts/AdminPromptSectionMenu';
 import { AdminPromptPreviewPanel } from '@/components/admin/prompts/AdminPromptPreviewPanel';
+import { PromptHistoryPanel } from '@/components/admin/prompts/PromptHistoryPanel';
 import { IdentitySection } from '@/components/admin/prompts/sections/IdentitySection';
 import { FormattingSection } from '@/components/admin/prompts/sections/FormattingSection';
 import { SecuritySection } from '@/components/admin/prompts/sections/SecuritySection';
@@ -42,6 +43,27 @@ export function AdminPrompts() {
   // Get current section version for TopBar badge
   const currentVersion = versions[activeSection]?.version;
 
+  // Get current section value for history comparison
+  const currentSectionValue = useMemo(() => {
+    switch (activeSection) {
+      case 'identity':
+        return sections.identity;
+      case 'formatting':
+        return sections.formatting;
+      case 'security':
+        return sections.security;
+      case 'language':
+        return sections.language;
+      default:
+        return '';
+    }
+  }, [activeSection, sections]);
+
+  // Handle restore from history
+  const handleHistoryRestore = useCallback(async (value: string) => {
+    await updateSection(activeSection, value);
+  }, [activeSection, updateSection]);
+
   // Configure top bar for this page with dynamic subtitle and version badge
   const topBarConfig = useMemo(() => ({
     left: (
@@ -54,7 +76,15 @@ export function AdminPrompts() {
         ) : undefined}
       />
     ),
-  }), [activeSection, currentVersion]);
+    right: (
+      <PromptHistoryPanel
+        section={activeSection}
+        sectionLabel={SECTION_LABELS[activeSection]}
+        currentValue={currentSectionValue}
+        onRestore={handleHistoryRestore}
+      />
+    ),
+  }), [activeSection, currentVersion, currentSectionValue, handleHistoryRestore]);
   useTopBar(topBarConfig, `prompts-${activeSection}-${currentVersion}`);
 
   const handleIdentitySave = useCallback(async (value: string) => {
@@ -85,7 +115,6 @@ export function AdminPrompts() {
             value={sections.identity}
             onSave={handleIdentitySave}
             loading={loading}
-            version={versions.identity?.version}
             lastUpdated={versions.identity?.updatedAt}
           />
         );
@@ -95,7 +124,6 @@ export function AdminPrompts() {
             value={sections.formatting}
             onSave={handleFormattingSave}
             loading={loading}
-            version={versions.formatting?.version}
             lastUpdated={versions.formatting?.updatedAt}
           />
         );
@@ -107,7 +135,6 @@ export function AdminPrompts() {
             onSave={handleSecuritySave}
             onGuardrailsChange={handleGuardrailsChange}
             loading={loading}
-            version={versions.security?.version}
             lastUpdated={versions.security?.updatedAt}
           />
         );
@@ -117,7 +144,6 @@ export function AdminPrompts() {
             value={sections.language}
             onSave={handleLanguageSave}
             loading={loading}
-            version={versions.language?.version}
             lastUpdated={versions.language?.updatedAt}
           />
         );
