@@ -75,7 +75,6 @@ export function IdentitySection({
       <AdminSectionHeader
         title="Identity & Role"
         description="The foundational prompt that defines who Ari is and how it behaves"
-        version={version}
         lastUpdated={lastUpdated}
         status={status}
         hasChanges={hasChanges}

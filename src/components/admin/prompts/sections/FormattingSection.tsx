@@ -75,7 +75,6 @@ export function FormattingSection({
       <AdminSectionHeader
         title="Response Formatting"
         description="Controls message chunking, conciseness, and link formatting"
-        version={version}
         lastUpdated={lastUpdated}
         status={status}
         hasChanges={hasChanges}

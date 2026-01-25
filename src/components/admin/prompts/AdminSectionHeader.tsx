@@ -16,7 +16,6 @@ type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 interface AdminSectionHeaderProps {
   title: string;
   description?: string;
-  version?: number;
   lastUpdated?: string;
   status?: SaveStatus;
   hasChanges?: boolean;
@@ -26,7 +25,6 @@ interface AdminSectionHeaderProps {
 export function AdminSectionHeader({
   title,
   description,
-  version,
   status,
   hasChanges,
   extra,
@@ -37,9 +35,6 @@ export function AdminSectionHeader({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
-            {version !== undefined && (
-              <Badge variant="secondary" size="sm">v{version}</Badge>
-            )}
             {hasChanges && status !== 'saving' && (
               <Badge variant="outline" size="sm" className="text-amber-600 border-amber-300">
                 Unsaved

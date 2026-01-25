@@ -111,7 +111,6 @@ export function SecuritySection({
       <AdminSectionHeader
         title="Security Guardrails"
         description="Rules to prevent prompt injection, PII exposure, and misuse"
-        version={version}
         lastUpdated={lastUpdated}
         status={status}
         hasChanges={hasChanges}

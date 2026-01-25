@@ -28,6 +28,8 @@ interface TopBarPageContextProps {
   icon?: React.ComponentType<{ size?: number }>;
   /** Optional subtitle/secondary info */
   subtitle?: string;
+  /** Optional badge to display after subtitle */
+  badge?: React.ReactNode;
   /** Optional dropdown menu items */
   menuItems?: PageContextMenuItem[];
   /** Additional className */
@@ -42,6 +44,7 @@ export function TopBarPageContext({
   title, 
   icon: Icon, 
   subtitle, 
+  badge,
   menuItems,
   className 
 }: TopBarPageContextProps) {
@@ -59,6 +62,7 @@ export function TopBarPageContext({
             — {subtitle}
           </span>
         )}
+        {badge}
       </div>
       {menuItems && menuItems.length > 0 && (
         <DropdownMenu>

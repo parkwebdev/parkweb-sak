@@ -9,6 +9,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { Badge } from '@/components/ui/badge';
 import { FileCode01 } from '@untitledui/icons';
 import { AdminPromptSectionMenu, type PromptSection } from '@/components/admin/prompts/AdminPromptSectionMenu';
 import { AdminPromptPreviewPanel } from '@/components/admin/prompts/AdminPromptPreviewPanel';
@@ -36,19 +37,25 @@ export function AdminPrompts() {
   const prefersReducedMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<PromptSection>('identity');
 
-  // Configure top bar for this page with dynamic subtitle
+  const { sections, versions, loading, updateSection } = usePromptSections();
+
+  // Get current section version for TopBar badge
+  const currentVersion = versions[activeSection]?.version;
+
+  // Configure top bar for this page with dynamic subtitle and version badge
   const topBarConfig = useMemo(() => ({
     left: (
       <TopBarPageContext 
         icon={FileCode01} 
         title="Prompts" 
-        subtitle={SECTION_LABELS[activeSection]} 
+        subtitle={SECTION_LABELS[activeSection]}
+        badge={currentVersion !== undefined ? (
+          <Badge variant="secondary" size="sm" className="hidden sm:inline-flex">v{currentVersion}</Badge>
+        ) : undefined}
       />
     ),
-  }), [activeSection]);
-  useTopBar(topBarConfig, `prompts-${activeSection}`);
-
-  const { sections, versions, loading, updateSection } = usePromptSections();
+  }), [activeSection, currentVersion]);
+  useTopBar(topBarConfig, `prompts-${activeSection}-${currentVersion}`);
 
   const handleIdentitySave = useCallback(async (value: string) => {
     await updateSection('identity', value);
