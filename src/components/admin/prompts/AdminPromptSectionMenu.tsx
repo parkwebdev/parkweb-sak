@@ -12,16 +12,14 @@ import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import {
-  User01,
+  Atom01,
   MessageTextSquare01,
-  ShieldTick,
-  Globe01,
+  ShieldZap,
+  Translate01,
 } from '@untitledui/icons';
 import {
-  UserFilled,
-  MessageFilled,
-  ShieldFilled,
-  GlobeFilled,
+  MessageSquareFilled,
+  ShieldZapFilled,
 } from '@/components/icons/AdminPromptIcons';
 
 export type PromptSection = 'identity' | 'formatting' | 'security' | 'language';
@@ -38,29 +36,29 @@ const PROMPT_SECTIONS: PromptSectionConfig[] = [
   {
     id: 'identity',
     label: 'Identity & Role',
-    icon: User01,
-    activeIcon: UserFilled,
+    icon: Atom01,
+    activeIcon: Atom01,
     group: 'Core Prompts',
   },
   {
     id: 'formatting',
     label: 'Response Formatting',
     icon: MessageTextSquare01,
-    activeIcon: MessageFilled,
+    activeIcon: MessageSquareFilled,
     group: 'Core Prompts',
   },
   {
     id: 'security',
     label: 'Security Guardrails',
-    icon: ShieldTick,
-    activeIcon: ShieldFilled,
+    icon: ShieldZap,
+    activeIcon: ShieldZapFilled,
     group: 'Security',
   },
   {
     id: 'language',
     label: 'Language Instruction',
-    icon: Globe01,
-    activeIcon: GlobeFilled,
+    icon: Translate01,
+    activeIcon: Translate01,
     group: 'Behavior',
   },
 ];
