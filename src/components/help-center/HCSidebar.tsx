@@ -105,7 +105,13 @@ export function HCSidebar({
               >
                 <AccordionTrigger 
                   showIcon={true}
-                  onClick={() => onSelectCategory(category)}
+                  onClick={() => {
+                    // Only navigate if clicking a different category
+                    // If already on this category, just let accordion toggle
+                    if (category.id !== selectedCategoryId) {
+                      onSelectCategory(category);
+                    }
+                  }}
                   className={cn(
                     'w-full flex items-center justify-between gap-1 px-2 py-1.5 rounded-md transition-colors',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
