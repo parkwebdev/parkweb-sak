@@ -7,13 +7,16 @@
  * @module pages/admin/AdminPrompts
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
-import { FileCode01 } from '@untitledui/icons';
+import { Button } from '@/components/ui/button';
+import { FileCode01, Download01, Upload01 } from '@untitledui/icons';
 import { AdminPromptSectionMenu, type PromptSection } from '@/components/admin/prompts/AdminPromptSectionMenu';
 import { AdminPromptPreviewPanel } from '@/components/admin/prompts/AdminPromptPreviewPanel';
 import { PromptHistoryPanel } from '@/components/admin/prompts/PromptHistoryPanel';
+import { UnsavedChangesDialog } from '@/components/admin/prompts/UnsavedChangesDialog';
 import { IdentitySection } from '@/components/admin/prompts/sections/IdentitySection';
 import { FormattingSection } from '@/components/admin/prompts/sections/FormattingSection';
 import { SecuritySection } from '@/components/admin/prompts/sections/SecuritySection';
@@ -22,6 +25,11 @@ import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { usePromptSections } from '@/hooks/admin/usePromptSections';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { springs } from '@/lib/motion-variants';
+import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
+import { PROMPT_CONFIG_KEYS } from '@/lib/prompt-defaults';
+import { exportPromptConfig, parseImportFile } from '@/lib/prompt-import-export';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/types/errors';
 
 /** Labels for each prompt section */
 const SECTION_LABELS: Record<PromptSection, string> = {
@@ -36,7 +44,14 @@ const SECTION_LABELS: Record<PromptSection, string> = {
  */
 export function AdminPrompts() {
   const prefersReducedMotion = useReducedMotion();
+  const queryClient = useQueryClient();
   const [activeSection, setActiveSection] = useState<PromptSection>('identity');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingSection, setPendingSection] = useState<PromptSection | null>(null);
+  const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
+  const [isSavingForSwitch, setIsSavingForSwitch] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const savePendingRef = useRef<(() => Promise<void>) | null>(null);
 
   const { sections, versions, loading, updateSection } = usePromptSections();
 
@@ -59,10 +74,107 @@ export function AdminPrompts() {
     }
   }, [activeSection, sections]);
 
-  // Handle restore from history
+  // Handle restore from history - also invalidate history query
   const handleHistoryRestore = useCallback(async (value: string) => {
     await updateSection(activeSection, value);
-  }, [activeSection, updateSection]);
+    // Invalidate history query so it shows the new version
+    queryClient.invalidateQueries({ 
+      queryKey: adminQueryKeys.config.history(PROMPT_CONFIG_KEYS[activeSection]) 
+    });
+  }, [activeSection, updateSection, queryClient]);
+
+  // Unsaved changes warning on page unload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Handle section change with unsaved changes check
+  const handleSectionChange = useCallback((section: PromptSection) => {
+    if (hasUnsavedChanges) {
+      setPendingSection(section);
+      setUnsavedDialogOpen(true);
+    } else {
+      setActiveSection(section);
+    }
+  }, [hasUnsavedChanges]);
+
+  // Discard changes and switch section
+  const handleDiscardChanges = useCallback(() => {
+    setHasUnsavedChanges(false);
+    if (pendingSection) {
+      setActiveSection(pendingSection);
+      setPendingSection(null);
+    }
+    setUnsavedDialogOpen(false);
+  }, [pendingSection]);
+
+  // Save changes and then switch section
+  const handleSaveAndSwitch = useCallback(async () => {
+    if (savePendingRef.current) {
+      setIsSavingForSwitch(true);
+      try {
+        await savePendingRef.current();
+        setHasUnsavedChanges(false);
+        if (pendingSection) {
+          setActiveSection(pendingSection);
+          setPendingSection(null);
+        }
+        setUnsavedDialogOpen(false);
+      } catch (error: unknown) {
+        toast.error('Failed to save', { description: getErrorMessage(error) });
+      } finally {
+        setIsSavingForSwitch(false);
+      }
+    }
+  }, [pendingSection]);
+
+  // Export all prompts
+  const handleExport = useCallback(() => {
+    exportPromptConfig({
+      identity: sections.identity,
+      formatting: sections.formatting,
+      security: sections.security,
+      language: sections.language,
+      guardrailsConfig: sections.guardrailsConfig,
+    });
+    toast.success('Prompts exported');
+  }, [sections]);
+
+  // Import prompts
+  const handleImport = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const result = await parseImportFile(file);
+    if (!result.valid || !result.data) {
+      toast.error('Import failed', { description: result.error });
+      return;
+    }
+
+    // Apply imported sections
+    const importedSections = result.data.sections;
+    try {
+      if (importedSections.identity) await updateSection('identity', importedSections.identity);
+      if (importedSections.formatting) await updateSection('formatting', importedSections.formatting);
+      if (importedSections.security) await updateSection('security', importedSections.security);
+      if (importedSections.language) await updateSection('language', importedSections.language);
+      if (result.data.guardrailsConfig) await updateSection('guardrailsConfig', result.data.guardrailsConfig);
+      
+      toast.success('Prompts imported', { description: `From ${new Date(result.data.exportedAt).toLocaleDateString()}` });
+    } catch (error: unknown) {
+      toast.error('Import failed', { description: getErrorMessage(error) });
+    }
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [updateSection]);
 
   // Configure top bar for this page with dynamic subtitle and version badge
   const topBarConfig = useMemo(() => ({
@@ -77,14 +189,31 @@ export function AdminPrompts() {
       />
     ),
     right: (
-      <PromptHistoryPanel
-        section={activeSection}
-        sectionLabel={SECTION_LABELS[activeSection]}
-        currentValue={currentSectionValue}
-        onRestore={handleHistoryRestore}
-      />
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleExport}>
+          <Download01 size={16} aria-hidden="true" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
+        <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => fileInputRef.current?.click()}>
+          <Upload01 size={16} aria-hidden="true" />
+          <span className="hidden sm:inline">Import</span>
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleImport}
+          className="hidden"
+        />
+        <PromptHistoryPanel
+          section={activeSection}
+          sectionLabel={SECTION_LABELS[activeSection]}
+          currentValue={currentSectionValue}
+          onRestore={handleHistoryRestore}
+        />
+      </div>
     ),
-  }), [activeSection, currentVersion, currentSectionValue, handleHistoryRestore]);
+  }), [activeSection, currentVersion, currentSectionValue, handleHistoryRestore, handleExport, handleImport]);
   useTopBar(topBarConfig, `prompts-${activeSection}-${currentVersion}`);
 
   const handleIdentitySave = useCallback(async (value: string) => {
@@ -107,6 +236,12 @@ export function AdminPrompts() {
     await updateSection('guardrailsConfig', config);
   }, [updateSection]);
 
+  // Handle unsaved change notifications from sections
+  const handleUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>) => {
+    setHasUnsavedChanges(hasChanges);
+    savePendingRef.current = saveFunction;
+  }, []);
+
   const renderSectionContent = () => {
     switch (activeSection) {
       case 'identity':
@@ -116,6 +251,7 @@ export function AdminPrompts() {
             onSave={handleIdentitySave}
             loading={loading}
             lastUpdated={versions.identity?.updatedAt}
+            onUnsavedChange={handleUnsavedChange}
           />
         );
       case 'formatting':
@@ -125,6 +261,7 @@ export function AdminPrompts() {
             onSave={handleFormattingSave}
             loading={loading}
             lastUpdated={versions.formatting?.updatedAt}
+            onUnsavedChange={handleUnsavedChange}
           />
         );
       case 'security':
@@ -136,6 +273,7 @@ export function AdminPrompts() {
             onGuardrailsChange={handleGuardrailsChange}
             loading={loading}
             lastUpdated={versions.security?.updatedAt}
+            onUnsavedChange={handleUnsavedChange}
           />
         );
       case 'language':
@@ -145,6 +283,7 @@ export function AdminPrompts() {
             onSave={handleLanguageSave}
             loading={loading}
             lastUpdated={versions.language?.updatedAt}
+            onUnsavedChange={handleUnsavedChange}
           />
         );
       default:
@@ -158,7 +297,7 @@ export function AdminPrompts() {
         {/* Left: Section Menu */}
         <AdminPromptSectionMenu
           activeSection={activeSection}
-          onSectionChange={setActiveSection}
+          onSectionChange={handleSectionChange}
         />
 
         {/* Center: Content Area */}
@@ -179,6 +318,15 @@ export function AdminPrompts() {
         {/* Right: Test Chat Panel */}
         <AdminPromptPreviewPanel />
       </div>
+
+      {/* Unsaved Changes Dialog */}
+      <UnsavedChangesDialog
+        open={unsavedDialogOpen}
+        onOpenChange={setUnsavedDialogOpen}
+        onDiscard={handleDiscardChanges}
+        onSave={handleSaveAndSwitch}
+        isSaving={isSavingForSwitch}
+      />
     </AdminPermissionGuard>
   );
 }

@@ -33,6 +33,7 @@ interface SecuritySectionProps {
   onGuardrailsChange: (config: SecurityGuardrailsConfig) => Promise<void>;
   loading?: boolean;
   lastUpdated?: string;
+  onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>) => void;
 }
 
 const GUARDRAIL_OPTIONS = [
@@ -62,6 +63,7 @@ export function SecuritySection({
   onGuardrailsChange,
   loading,
   lastUpdated,
+  onUnsavedChange,
 }: SecuritySectionProps) {
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
@@ -76,6 +78,16 @@ export function SecuritySection({
   useEffect(() => {
     setLocalConfig(guardrailsConfig);
   }, [guardrailsConfig]);
+
+  // Notify parent of unsaved changes
+  useEffect(() => {
+    const saveFunction = async () => {
+      const result = validatePromptSection('security', localValue);
+      if (!result.valid) throw new Error(result.error);
+      await onSave(localValue);
+    };
+    onUnsavedChange?.(hasChanges, saveFunction);
+  }, [hasChanges, localValue, onSave, onUnsavedChange]);
 
   const validation = useMemo(
     () => validatePromptSection('security', localValue),
