@@ -45,7 +45,7 @@ export function showBrowserNotification(notification: AppNotification): boolean 
   }
 
   try {
-    const icon = '/favicon.ico';
+    const icon = '/notification-icon.png';
     const tag = `notification-${notification.id}`;
 
     const browserNotification = new Notification(notification.title, {
