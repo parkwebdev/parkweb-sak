@@ -41,7 +41,7 @@ export function AdminPrompts() {
     left: (
       <TopBarPageContext 
         icon={FileCode01} 
-        title="Baseline Prompt" 
+        title="Prompts" 
         subtitle={SECTION_LABELS[activeSection]} 
       />
     ),

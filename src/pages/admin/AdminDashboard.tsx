@@ -156,7 +156,7 @@ export function AdminDashboard() {
     },
     { 
       icon: FileCode01, 
-      label: 'Baseline Prompt', 
+      label: 'Prompts', 
       description: 'Configure AI baseline settings', 
       href: '/admin/prompts' 
     },
