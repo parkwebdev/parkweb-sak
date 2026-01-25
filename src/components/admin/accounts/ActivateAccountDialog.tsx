@@ -55,7 +55,7 @@ export function ActivateAccountDialog({
         </AlertDialogHeader>
 
         <div className="py-2">
-          <div className="rounded-lg bg-status-active/5 border border-status-active/20 p-3 text-sm text-muted-foreground">
+          <div className="rounded-card bg-status-active/5 border border-status-active/20 p-3 text-sm text-muted-foreground">
             <p className="font-medium text-status-active mb-1">This will:</p>
             <ul className="list-disc list-inside space-y-1">
               <li>Allow the user to log in again</li>

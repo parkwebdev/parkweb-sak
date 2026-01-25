@@ -138,7 +138,7 @@ export const KanbanBoard = ({ id, children, className, stageColor }: KanbanBoard
       ref={setNodeRef}
       style={bgStyle}
       className={cn(
-        "flex w-80 shrink-0 flex-col rounded-lg p-2 transition-all duration-200",
+        "flex w-80 shrink-0 flex-col rounded-card p-2 transition-all duration-200",
         !bgStyle && "bg-muted/40",
         !bgStyle && isOver && "bg-muted/60",
         isOver && "ring-2 ring-primary/20",
