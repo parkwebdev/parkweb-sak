@@ -1,60 +1,95 @@
 /**
  * Category Icons
  * 
- * Dynamic icon loading for help center categories.
- * Icons are loaded on-demand to reduce initial bundle size.
- * Only the icons actually used are fetched.
+ * Static icon imports for help center categories.
+ * Uses direct imports since these icons are already in the widget bundle.
  * 
  * @module widget/category-icons
  */
 
-import { useState, useEffect, memo } from 'react';
+import { memo } from 'react';
 
-// Icon name to dynamic import mapping - only loads what's needed
-const iconImports: Record<string, () => Promise<{ default: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }>> = {
-  book: () => import('@untitledui/icons/BookOpen01').then(m => ({ default: m.BookOpen01 })),
-  help: () => import('@untitledui/icons/HelpCircle').then(m => ({ default: m.HelpCircle })),
-  user: () => import('@untitledui/icons/User01').then(m => ({ default: m.User01 })),
-  billing: () => import('@untitledui/icons/CreditCard01').then(m => ({ default: m.CreditCard01 })),
-  settings: () => import('@untitledui/icons/Settings01').then(m => ({ default: m.Settings01 })),
-  email: () => import('@untitledui/icons/Mail01').then(m => ({ default: m.Mail01 })),
-  phone: () => import('@untitledui/icons/Phone01').then(m => ({ default: m.Phone01 })),
-  security: () => import('@untitledui/icons/Shield01').then(m => ({ default: m.Shield01 })),
-  rocket: () => import('@untitledui/icons/Rocket01').then(m => ({ default: m.Rocket01 })),
-  star: () => import('@untitledui/icons/Star01').then(m => ({ default: m.Star01 })),
-  tools: () => import('@untitledui/icons/Tool01').then(m => ({ default: m.Tool01 })),
-  idea: () => import('@untitledui/icons/Lightbulb01').then(m => ({ default: m.Lightbulb01 })),
-  docs: () => import('@untitledui/icons/File06').then(m => ({ default: m.File06 })),
-  home: () => import('@untitledui/icons/Home01').then(m => ({ default: m.Home01 })),
-  shop: () => import('@untitledui/icons/ShoppingBag01').then(m => ({ default: m.ShoppingBag01 })),
-  calendar: () => import('@untitledui/icons/Calendar').then(m => ({ default: m.Calendar })),
-  globe: () => import('@untitledui/icons/Globe01').then(m => ({ default: m.Globe01 })),
-  download: () => import('@untitledui/icons/DownloadCloud01').then(m => ({ default: m.DownloadCloud01 })),
-  link: () => import('@untitledui/icons/Link01').then(m => ({ default: m.Link01 })),
-  video: () => import('@untitledui/icons/PlayCircle').then(m => ({ default: m.PlayCircle })),
-  gift: () => import('@untitledui/icons/Gift01').then(m => ({ default: m.Gift01 })),
-  shipping: () => import('@untitledui/icons/Truck01').then(m => ({ default: m.Truck01 })),
-  clock: () => import('@untitledui/icons/Clock').then(m => ({ default: m.Clock })),
-  chat: () => import('@untitledui/icons/MessageChatCircle').then(m => ({ default: m.MessageChatCircle })),
-  company: () => import('@untitledui/icons/Building07').then(m => ({ default: m.Building07 })),
-  heart: () => import('@untitledui/icons/Heart').then(m => ({ default: m.Heart })),
-  zap: () => import('@untitledui/icons/Zap').then(m => ({ default: m.Zap })),
-  wallet: () => import('@untitledui/icons/Wallet01').then(m => ({ default: m.Wallet01 })),
-  team: () => import('@untitledui/icons/Users01').then(m => ({ default: m.Users01 })),
-  trophy: () => import('@untitledui/icons/Trophy01').then(m => ({ default: m.Trophy01 })),
-  education: () => import('@untitledui/icons/GraduationHat01').then(m => ({ default: m.GraduationHat01 })),
-  medical: () => import('@untitledui/icons/MedicalCross').then(m => ({ default: m.MedicalCross })),
-  map: () => import('@untitledui/icons/Map01').then(m => ({ default: m.Map01 })),
-  package: () => import('@untitledui/icons/Package').then(m => ({ default: m.Package })),
-  camera: () => import('@untitledui/icons/Camera01').then(m => ({ default: m.Camera01 })),
-  target: () => import('@untitledui/icons/Target01').then(m => ({ default: m.Target01 })),
-  briefcase: () => import('@untitledui/icons/Briefcase01').then(m => ({ default: m.Briefcase01 })),
+// Static imports - these are already bundled via other widget imports
+import { BookOpen01 } from '@untitledui/icons/BookOpen01';
+import { HelpCircle } from '@untitledui/icons/HelpCircle';
+import { User01 } from '@untitledui/icons/User01';
+import { CreditCard01 } from '@untitledui/icons/CreditCard01';
+import { Settings01 } from '@untitledui/icons/Settings01';
+import { Mail01 } from '@untitledui/icons/Mail01';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { Shield01 } from '@untitledui/icons/Shield01';
+import { Rocket01 } from '@untitledui/icons/Rocket01';
+import { Star01 } from '@untitledui/icons/Star01';
+import { Tool01 } from '@untitledui/icons/Tool01';
+import { Lightbulb01 } from '@untitledui/icons/Lightbulb01';
+import { File06 } from '@untitledui/icons/File06';
+import { Home01 } from '@untitledui/icons/Home01';
+import { ShoppingBag01 } from '@untitledui/icons/ShoppingBag01';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Globe01 } from '@untitledui/icons/Globe01';
+import { DownloadCloud01 } from '@untitledui/icons/DownloadCloud01';
+import { Link01 } from '@untitledui/icons/Link01';
+import { PlayCircle } from '@untitledui/icons/PlayCircle';
+import { Gift01 } from '@untitledui/icons/Gift01';
+import { Truck01 } from '@untitledui/icons/Truck01';
+import { Clock } from '@untitledui/icons/Clock';
+import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
+import { Building07 } from '@untitledui/icons/Building07';
+import { Heart } from '@untitledui/icons/Heart';
+import { Zap } from '@untitledui/icons/Zap';
+import { Wallet01 } from '@untitledui/icons/Wallet01';
+import { Users01 } from '@untitledui/icons/Users01';
+import { Trophy01 } from '@untitledui/icons/Trophy01';
+import { GraduationHat01 } from '@untitledui/icons/GraduationHat01';
+import { MedicalCross } from '@untitledui/icons/MedicalCross';
+import { Map01 } from '@untitledui/icons/Map01';
+import { Package } from '@untitledui/icons/Package';
+import { Camera01 } from '@untitledui/icons/Camera01';
+import { Target01 } from '@untitledui/icons/Target01';
+import { Briefcase01 } from '@untitledui/icons/Briefcase01';
+
+// Icon name to component mapping
+const iconComponents: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+  book: BookOpen01,
+  help: HelpCircle,
+  user: User01,
+  billing: CreditCard01,
+  settings: Settings01,
+  email: Mail01,
+  phone: Phone01,
+  security: Shield01,
+  rocket: Rocket01,
+  star: Star01,
+  tools: Tool01,
+  idea: Lightbulb01,
+  docs: File06,
+  home: Home01,
+  shop: ShoppingBag01,
+  calendar: Calendar,
+  globe: Globe01,
+  download: DownloadCloud01,
+  link: Link01,
+  video: PlayCircle,
+  gift: Gift01,
+  shipping: Truck01,
+  clock: Clock,
+  chat: MessageChatCircle,
+  company: Building07,
+  heart: Heart,
+  zap: Zap,
+  wallet: Wallet01,
+  team: Users01,
+  trophy: Trophy01,
+  education: GraduationHat01,
+  medical: MedicalCross,
+  map: Map01,
+  package: Package,
+  camera: Camera01,
+  target: Target01,
+  briefcase: Briefcase01,
 };
 
-export type CategoryIconName = keyof typeof iconImports;
-
-// Cache for loaded icons to avoid re-fetching
-const iconCache = new Map<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>();
+export type CategoryIconName = keyof typeof iconComponents;
 
 interface CategoryIconProps {
   name?: string;
@@ -63,41 +98,11 @@ interface CategoryIconProps {
 }
 
 /**
- * Dynamic category icon component.
- * Loads icons on-demand and caches them for reuse.
+ * Category icon component.
+ * Renders the appropriate icon based on name.
  */
 export const CategoryIcon = memo(({ name = 'book', className, style }: CategoryIconProps) => {
-  const [Icon, setIcon] = useState<React.ComponentType<{ className?: string; style?: React.CSSProperties }> | null>(
-    () => iconCache.get(name) || null
-  );
-
-  useEffect(() => {
-    // If already cached, use it
-    if (iconCache.has(name)) {
-      setIcon(() => iconCache.get(name)!);
-      return;
-    }
-
-    // Load the icon dynamically
-    const loadIcon = iconImports[name as CategoryIconName] || iconImports.book;
-    loadIcon().then(mod => {
-      iconCache.set(name, mod.default);
-      setIcon(() => mod.default);
-    }).catch(() => {
-      // Fallback to book icon on error
-      if (name !== 'book') {
-        iconImports.book().then(mod => {
-          setIcon(() => mod.default);
-        });
-      }
-    });
-  }, [name]);
-
-  // Placeholder while loading - matches icon dimensions
-  if (!Icon) {
-    return <div className={className} style={{ ...style, width: 20, height: 20 }} />;
-  }
-
+  const Icon = iconComponents[name] || iconComponents.book;
   return <Icon className={className} style={style} />;
 });
 
