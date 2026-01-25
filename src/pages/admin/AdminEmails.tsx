@@ -852,14 +852,6 @@ export function AdminEmails() {
 
             {activeTab === 'preview' && (
               <div className="space-y-4">
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground">
-                    Preview and test email templates
-                    {isEdgeBacked && !supabaseExportMode && (
-                      <span className="ml-2 text-xs text-status-active">• Using Edge Function</span>
-                    )}
-                  </p>
-                </div>
 
                 {/* Compact Mock Data Section */}
                 {!supabaseExportMode && (
