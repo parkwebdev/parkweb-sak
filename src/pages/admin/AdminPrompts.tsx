@@ -21,6 +21,14 @@ import { usePromptSections } from '@/hooks/admin/usePromptSections';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { springs } from '@/lib/motion-variants';
 
+/** Labels for each prompt section */
+const SECTION_LABELS: Record<PromptSection, string> = {
+  identity: 'Identity & Role',
+  formatting: 'Response Formatting',
+  security: 'Security Guardrails',
+  language: 'Language Instruction',
+};
+
 /**
  * System prompt configuration page for Super Admin.
  */
@@ -28,11 +36,17 @@ export function AdminPrompts() {
   const prefersReducedMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<PromptSection>('identity');
 
-  // Configure top bar for this page
+  // Configure top bar for this page with dynamic subtitle
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={FileCode01} title="System Prompt Configuration" />,
-  }), []);
-  useTopBar(topBarConfig);
+    left: (
+      <TopBarPageContext 
+        icon={FileCode01} 
+        title="Baseline Prompt" 
+        subtitle={SECTION_LABELS[activeSection]} 
+      />
+    ),
+  }), [activeSection]);
+  useTopBar(topBarConfig, `prompts-${activeSection}`);
 
   const { sections, versions, loading, updateSection } = usePromptSections();
 
