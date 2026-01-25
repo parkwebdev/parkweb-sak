@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { usePlatformHelpCenter, type PlatformHCCategory, type PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
+import { getCategoryColor, getCategoryBadgeClasses } from '@/lib/hc-category-colors';
 
 interface SearchResult {
   category: PlatformHCCategory;
@@ -72,21 +73,32 @@ export function HCSearchResults({
 
   return (
     <>
-      {results.map(({ category, article }, index) => (
-        <motion.div
-          key={`${category.id}-${article.id}`}
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.03, ...springs.smooth }}
-        >
-          <TopBarSearchResultItem
-            icon={<BookOpen01 size={16} />}
-            title={article.title}
-            subtitle={<Badge variant="secondary" size="sm">{category.label}</Badge>}
-            onClick={() => onSelect(category, article)}
-          />
-        </motion.div>
-      ))}
+      {results.map(({ category, article }, index) => {
+        const colorClass = getCategoryColor(category.id, category.color);
+        return (
+          <motion.div
+            key={`${category.id}-${article.id}`}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.03, ...springs.smooth }}
+          >
+            <TopBarSearchResultItem
+              icon={<BookOpen01 size={16} />}
+              title={article.title}
+              statusIndicator={
+                <Badge 
+                  variant="secondary" 
+                  size="sm"
+                  className={getCategoryBadgeClasses(colorClass)}
+                >
+                  {category.label}
+                </Badge>
+              }
+              onClick={() => onSelect(category, article)}
+            />
+          </motion.div>
+        );
+      })}
     </>
   );
 }

@@ -20,7 +20,7 @@ import { useTrackArticleView } from '@/hooks/useHCArticleViews';
 import { HCArticleFeedback } from './HCArticleFeedback';
 import { HCDatabaseArticleRenderer } from './HCDatabaseArticleRenderer';
 import { VideoBlockHydrator } from './VideoBlockHydrator';
-import { getCategoryColor, getGradientClass } from '@/lib/hc-category-colors';
+import { getCategoryColor, getSolidBgClass } from '@/lib/hc-category-colors';
 import type { PlatformHCCategory, PlatformHCArticle } from '@/hooks/usePlatformHelpCenter';
 
 interface HCArticleViewProps {
@@ -54,8 +54,7 @@ export function HCArticleView({
   
   // Get color class for this category
   const colorClass = getCategoryColor(category.id, category.color);
-  const gradientClasses = getGradientClass(colorClass);
-  
+  const solidBgClass = getSolidBgClass(colorClass);
   
   // Intercept article link clicks for client-side navigation
   useEffect(() => {
@@ -124,10 +123,10 @@ export function HCArticleView({
 
   return (
     <div className="px-8">
-      {/* Header with gradient background */}
+      {/* Header with solid background */}
       <header className={cn(
-        'bg-gradient-to-b py-8 -mx-8 px-8',
-        gradientClasses
+        'py-8 -mx-8 px-8',
+        solidBgClass
       )}>
         <div className="flex-1">
           <h1 className="text-2xl font-semibold text-foreground mb-2">
