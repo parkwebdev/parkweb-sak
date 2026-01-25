@@ -6,14 +6,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from '@/lib/toast';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { useAuth } from '@/hooks/useAuth';
@@ -53,25 +45,11 @@ interface NotificationPreferences {
   updated_at: string;
 }
 
-// Common timezones for the dropdown
-const TIMEZONE_OPTIONS = [
-  { value: 'America/New_York', label: 'Eastern Time (ET)' },
-  { value: 'America/Chicago', label: 'Central Time (CT)' },
-  { value: 'America/Denver', label: 'Mountain Time (MT)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
-  { value: 'America/Phoenix', label: 'Arizona (no DST)' },
-  { value: 'America/Anchorage', label: 'Alaska Time (AKT)' },
-  { value: 'Pacific/Honolulu', label: 'Hawaii Time (HT)' },
-  { value: 'Europe/London', label: 'London (GMT/BST)' },
-  { value: 'Europe/Paris', label: 'Central European (CET)' },
-  { value: 'Europe/Berlin', label: 'Berlin (CET)' },
-  { value: 'Asia/Tokyo', label: 'Japan (JST)' },
-  { value: 'Asia/Shanghai', label: 'China (CST)' },
-  { value: 'Asia/Singapore', label: 'Singapore (SGT)' },
-  { value: 'Australia/Sydney', label: 'Sydney (AEST)' },
-  { value: 'Australia/Melbourne', label: 'Melbourne (AEST)' },
-  { value: 'UTC', label: 'UTC' },
-];
+// Get friendly timezone label from IANA timezone
+function getTimezoneLabel(): string {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return tz.split('/').pop()?.replace(/_/g, ' ') || tz;
+}
 
 export function NotificationSettings() {
   const { user } = useAuth();
@@ -421,42 +399,21 @@ export function NotificationSettings() {
                   />
                 </div>
 
-                <div id="weekly-report" className="transition-all duration-300 rounded-lg p-3 -m-3 space-y-3">
+                <div id="weekly-report" className="transition-all duration-300 rounded-lg p-3 -m-3">
                   <ToggleSettingRow
                     id="weekly-report-enabled"
                     label="Weekly Analytics Digest"
-                    description="Receive a summary of your key metrics every Monday at 8 AM"
+                    description={`Receive a summary every Monday at 8 AM (${getTimezoneLabel()})`}
                     checked={preferences.weekly_report_enabled}
-                    onCheckedChange={(checked) => updatePreference('weekly_report_enabled', checked)}
+                    onCheckedChange={(checked) => {
+                      updatePreference('weekly_report_enabled', checked);
+                      if (checked) {
+                        // Auto-detect and save timezone when enabling
+                        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                        updatePreference('weekly_report_timezone', detectedTimezone);
+                      }
+                    }}
                   />
-                  
-                  {preferences.weekly_report_enabled && (
-                    <div className="pl-4 border-l-2 border-border">
-                      <div className="space-y-2">
-                        <Label htmlFor="weekly-report-timezone" className="text-sm font-medium">
-                          Delivery Timezone
-                        </Label>
-                        <Select
-                          value={preferences.weekly_report_timezone}
-                          onValueChange={(value) => updatePreference('weekly_report_timezone', value)}
-                        >
-                          <SelectTrigger id="weekly-report-timezone" className="w-full max-w-xs">
-                            <SelectValue placeholder="Select timezone" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {TIMEZONE_OPTIONS.map((tz) => (
-                              <SelectItem key={tz.value} value={tz.value}>
-                                {tz.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          Your weekly report will arrive at 8 AM in this timezone
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div id="product-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">
