@@ -1508,6 +1508,11 @@ export type Database = {
           lead_email_notifications: boolean | null
           lead_notifications: boolean | null
           product_email_notifications: boolean | null
+          push_booking_notifications: boolean | null
+          push_conversation_notifications: boolean | null
+          push_lead_notifications: boolean | null
+          push_message_notifications: boolean | null
+          push_team_notifications: boolean | null
           report_email_notifications: boolean | null
           report_notifications: boolean | null
           sound_notifications: boolean | null
@@ -1531,6 +1536,11 @@ export type Database = {
           lead_email_notifications?: boolean | null
           lead_notifications?: boolean | null
           product_email_notifications?: boolean | null
+          push_booking_notifications?: boolean | null
+          push_conversation_notifications?: boolean | null
+          push_lead_notifications?: boolean | null
+          push_message_notifications?: boolean | null
+          push_team_notifications?: boolean | null
           report_email_notifications?: boolean | null
           report_notifications?: boolean | null
           sound_notifications?: boolean | null
@@ -1554,6 +1564,11 @@ export type Database = {
           lead_email_notifications?: boolean | null
           lead_notifications?: boolean | null
           product_email_notifications?: boolean | null
+          push_booking_notifications?: boolean | null
+          push_conversation_notifications?: boolean | null
+          push_lead_notifications?: boolean | null
+          push_message_notifications?: boolean | null
+          push_team_notifications?: boolean | null
           report_email_notifications?: boolean | null
           report_notifications?: boolean | null
           sound_notifications?: boolean | null

@@ -46,6 +46,12 @@ interface NotificationPreferences {
   // Weekly report specific
   weekly_report_enabled: boolean;
   weekly_report_timezone: string;
+  // Per-type push preferences
+  push_lead_notifications: boolean;
+  push_conversation_notifications: boolean;
+  push_booking_notifications: boolean;
+  push_team_notifications: boolean;
+  push_message_notifications: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -136,6 +142,12 @@ export function NotificationSettings() {
         product_email_notifications: data.product_email_notifications ?? true,
         weekly_report_enabled: data.weekly_report_enabled ?? true,
         weekly_report_timezone: data.weekly_report_timezone ?? 'America/New_York',
+        // Per-type push preferences (default to true)
+        push_lead_notifications: data.push_lead_notifications ?? true,
+        push_conversation_notifications: data.push_conversation_notifications ?? true,
+        push_booking_notifications: data.push_booking_notifications ?? true,
+        push_team_notifications: data.push_team_notifications ?? true,
+        push_message_notifications: data.push_message_notifications ?? true,
       });
     } catch (error: unknown) {
       logger.error('Error in fetchNotificationPreferences:', error);
@@ -195,6 +207,12 @@ export function NotificationSettings() {
         product_email_notifications: data.product_email_notifications ?? true,
         weekly_report_enabled: data.weekly_report_enabled ?? true,
         weekly_report_timezone: data.weekly_report_timezone ?? 'America/New_York',
+        // Per-type push preferences (default to true)
+        push_lead_notifications: data.push_lead_notifications ?? true,
+        push_conversation_notifications: data.push_conversation_notifications ?? true,
+        push_booking_notifications: data.push_booking_notifications ?? true,
+        push_team_notifications: data.push_team_notifications ?? true,
+        push_message_notifications: data.push_message_notifications ?? true,
       });
     } catch (error: unknown) {
       logger.error('Error in createDefaultPreferences:', error);
@@ -342,6 +360,42 @@ export function NotificationSettings() {
     toast.success("Test notification sent", {
       description: "Check your browser for the notification!",
     });
+  };
+
+  // Test background push notification
+  const testBackgroundPush = async () => {
+    if (!user || !isSubscribed) {
+      toast.error("Background notifications not enabled", {
+        description: "Please enable background notifications first.",
+      });
+      return;
+    }
+
+    const toastId = toast.loading("Sending test notification...");
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_id: user.id,
+          title: 'Test Background Notification',
+          body: 'This is a test push notification from Pilot.',
+          url: '/settings?tab=notifications',
+          tag: 'test-push',
+        }
+      });
+
+      if (error) throw error;
+
+      toast.dismiss(toastId);
+      toast.success("Test notification sent!", {
+        description: data?.sent > 0 
+          ? "Check your device for the notification" 
+          : "No active subscriptions found",
+      });
+    } catch (error: unknown) {
+      toast.dismiss(toastId);
+      toast.error("Failed to send test", { description: getErrorMessage(error) });
+    }
   };
 
   if (loading) {
@@ -524,37 +578,98 @@ export function NotificationSettings() {
 
             {/* Background Push Notifications */}
             {pushSupported && (
-              <ToggleSettingRow
-                id="background-push-notifications"
-                label="Background Notifications"
-                description={
-                  isSubscribed
-                    ? "Receive alerts even when the app is closed"
-                    : "Enable to receive notifications when the app is closed"
-                }
-                checked={isSubscribed}
-                onCheckedChange={async (checked) => {
-                  setPushActionLoading(true);
-                  try {
-                    if (checked) {
-                      const success = await subscribe();
-                      if (success) {
-                        await updatePreference('background_push_enabled', true);
-                        toast.success("Background notifications enabled");
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <ToggleSettingRow
+                      id="background-push-notifications"
+                      label="Background Notifications"
+                      description={
+                        isSubscribed
+                          ? "Receive alerts even when the app is closed"
+                          : "Enable to receive notifications when the app is closed"
                       }
-                    } else {
-                      const success = await unsubscribe();
-                      if (success) {
-                        await updatePreference('background_push_enabled', false);
-                        toast.success("Background notifications disabled");
-                      }
-                    }
-                  } finally {
-                    setPushActionLoading(false);
-                  }
-                }}
-                disabled={pushLoading || pushActionLoading}
-              />
+                      checked={isSubscribed}
+                      onCheckedChange={async (checked) => {
+                        setPushActionLoading(true);
+                        try {
+                          if (checked) {
+                            const success = await subscribe();
+                            if (success) {
+                              await updatePreference('background_push_enabled', true);
+                              toast.success("Background notifications enabled");
+                            }
+                          } else {
+                            const success = await unsubscribe();
+                            if (success) {
+                              await updatePreference('background_push_enabled', false);
+                              toast.success("Background notifications disabled");
+                            }
+                          }
+                        } finally {
+                          setPushActionLoading(false);
+                        }
+                      }}
+                      disabled={pushLoading || pushActionLoading}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={testBackgroundPush}
+                    disabled={!isSubscribed || pushLoading || pushActionLoading}
+                  >
+                    Send Test
+                  </Button>
+                </div>
+
+                {/* Per-type push preferences - only show when subscribed */}
+                {isSubscribed && (
+                  <div className="pl-4 border-l-2 border-border space-y-4 mt-2">
+                    <p className="text-xs text-muted-foreground">Choose which events trigger background alerts:</p>
+                    
+                    <ToggleSettingRow
+                      id="push-lead-notifications"
+                      label="New Leads"
+                      description="When a visitor submits a contact form"
+                      checked={preferences.push_lead_notifications}
+                      onCheckedChange={(checked) => updatePreference('push_lead_notifications', checked)}
+                    />
+                    
+                    <ToggleSettingRow
+                      id="push-conversation-notifications"
+                      label="New Conversations"
+                      description="When a visitor starts a chat"
+                      checked={preferences.push_conversation_notifications}
+                      onCheckedChange={(checked) => updatePreference('push_conversation_notifications', checked)}
+                    />
+                    
+                    <ToggleSettingRow
+                      id="push-message-notifications"
+                      label="New Messages"
+                      description="When a visitor sends a message in an active chat"
+                      checked={preferences.push_message_notifications}
+                      onCheckedChange={(checked) => updatePreference('push_message_notifications', checked)}
+                    />
+                    
+                    <ToggleSettingRow
+                      id="push-booking-notifications"
+                      label="New Bookings"
+                      description="When a tour or appointment is scheduled"
+                      checked={preferences.push_booking_notifications}
+                      onCheckedChange={(checked) => updatePreference('push_booking_notifications', checked)}
+                    />
+                    
+                    <ToggleSettingRow
+                      id="push-team-notifications"
+                      label="Team Activity"
+                      description="When someone joins your team"
+                      checked={preferences.push_team_notifications}
+                      onCheckedChange={(checked) => updatePreference('push_team_notifications', checked)}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

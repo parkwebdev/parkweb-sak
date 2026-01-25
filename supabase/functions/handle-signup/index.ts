@@ -225,7 +225,7 @@ const handler = async (req: Request): Promise<Response> => {
             url: '/settings?tab=team',
             tag: 'team-joined',
             data: { member_id: user_id },
-          });
+          }, 'team');
         }
       }
 

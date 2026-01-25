@@ -669,7 +669,7 @@ serve(async (req) => {
         url: '/ari/calendar',
         tag: 'booking-new',
         data: { booking_id: bookingId },
-      });
+      }, 'booking');
     }
 
     console.log('Booking created successfully:', bookingId);

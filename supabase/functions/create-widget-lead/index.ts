@@ -454,7 +454,7 @@ serve(async (req) => {
       url: '/leads',
       tag: 'lead-new',
       data: { lead_id: lead.id },
-    });
+    }, 'lead');
 
     // Notification for new conversation started
     supabase.from('notifications').insert({
@@ -475,7 +475,7 @@ serve(async (req) => {
       url: '/ari/inbox',
       tag: 'conversation-new',
       data: { conversation_id: conversationId },
-    });
+    }, 'conversation');
 
     // Send new lead email notification (fire and forget)
     (async () => {
