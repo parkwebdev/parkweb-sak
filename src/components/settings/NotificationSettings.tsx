@@ -65,7 +65,7 @@ function getTimezoneLabel(): string {
 export function NotificationSettings() {
   const { user } = useAuth();
   const { requestBrowserNotificationPermission } = useNotifications();
-  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, isSupported: pushSupported } = usePushSubscription();
+  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, isSupported: pushSupported, error: pushError } = usePushSubscription();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [pushActionLoading, setPushActionLoading] = useState(false);
@@ -607,6 +607,10 @@ export function NotificationSettings() {
                             if (success) {
                               await updatePreference('background_push_enabled', true);
                               toast.success("Background notifications enabled");
+                            } else {
+                              toast.error("Subscription failed", {
+                                description: "Please check your browser supports push notifications and try again."
+                              });
                             }
                           } else {
                             const success = await unsubscribe();
