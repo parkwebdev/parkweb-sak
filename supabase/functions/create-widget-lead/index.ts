@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getErrorMessage } from '../_shared/errors.ts';
+import { dispatchPushIfEnabled } from '../_shared/push-notifications.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -445,6 +446,16 @@ serve(async (req) => {
     }).then(() => console.log('Lead notification created'))
       .catch(err => console.error('Failed to create lead notification:', err));
 
+    // Push notification for new lead
+    dispatchPushIfEnabled(supabase, supabaseUrl, {
+      user_id: agent.user_id,
+      title: 'New Lead Captured',
+      body: `${leadName} submitted a contact form`,
+      url: '/leads',
+      tag: 'lead-new',
+      data: { lead_id: lead.id },
+    });
+
     // Notification for new conversation started
     supabase.from('notifications').insert({
       user_id: agent.user_id,
@@ -455,6 +466,16 @@ serve(async (req) => {
       read: false
     }).then(() => console.log('Conversation notification created'))
       .catch(err => console.error('Failed to create conversation notification:', err));
+
+    // Push notification for new conversation
+    dispatchPushIfEnabled(supabase, supabaseUrl, {
+      user_id: agent.user_id,
+      title: 'New Conversation Started',
+      body: `${leadName} started a chat`,
+      url: '/ari/inbox',
+      tag: 'conversation-new',
+      data: { conversation_id: conversationId },
+    });
 
     // Send new lead email notification (fire and forget)
     (async () => {
