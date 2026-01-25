@@ -11,3 +11,4 @@ export { AnnouncementPreview } from './AnnouncementPreview';
 export { EmailDeliveryLogs } from './EmailDeliveryLogs';
 export { EmailDeliveryStats } from './EmailDeliveryStats';
 export { SendTestEmailDialog } from './SendTestEmailDialog';
+export { EmailsTabDropdown, type EmailsTab } from './EmailsTabDropdown';

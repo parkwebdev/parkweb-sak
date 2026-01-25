@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { Copy01, Send01, Loading02, ChevronDown, RefreshCw02, Mail01 } from '@untitledui/icons';
 import { toast } from '@/lib/toast';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -22,7 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
 import { EmailPreviewModeToggle, type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
-import { EmailDeliveryLogs, EmailDeliveryStats, AnnouncementBuilder } from '@/components/admin/emails';
+import { EmailDeliveryLogs, EmailDeliveryStats, AnnouncementBuilder, EmailsTabDropdown, type EmailsTab } from '@/components/admin/emails';
 import { useEmailDeliveryLogs } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import {
@@ -217,10 +217,14 @@ function EmailPreview({ html, width, showSource, templateType, subject, darkMode
 }
 
 export function AdminEmails() {
+  // Tab state for TopBar dropdown
+  const [activeTab, setActiveTab] = useState<EmailsTab>('preview');
+
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext icon={Mail01} title="Emails" />,
-  }), []);
+    right: <EmailsTabDropdown activeTab={activeTab} onTabChange={setActiveTab} />,
+  }), [activeTab]);
   useTopBar(topBarConfig);
 
   // Fetch email delivery logs and stats
@@ -824,15 +828,9 @@ export function AdminEmails() {
             {/* Delivery Stats */}
             <EmailDeliveryStats stats={stats} loading={logsLoading} />
 
-            {/* Tabs for Preview / Logs / Announcements */}
-            <Tabs defaultValue="preview" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="preview">Preview</TabsTrigger>
-                <TabsTrigger value="logs">Delivery Logs</TabsTrigger>
-                <TabsTrigger value="announcements">Announcements</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="preview" className="space-y-4 mt-0">
+            {/* Content based on active tab */}
+            {activeTab === 'preview' && (
+              <div className="space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">
@@ -896,16 +894,16 @@ export function AdminEmails() {
                   isLoading={isEdgeBacked && isLoadingEdge}
                   onRefresh={isEdgeBacked ? fetchEdgePreview : undefined}
                 />
-              </TabsContent>
+              </div>
+            )}
 
-              <TabsContent value="logs" className="mt-0">
-                <EmailDeliveryLogs logs={logs || []} loading={logsLoading} />
-              </TabsContent>
+            {activeTab === 'logs' && (
+              <EmailDeliveryLogs logs={logs || []} loading={logsLoading} />
+            )}
 
-              <TabsContent value="announcements" className="mt-0">
-                <AnnouncementBuilder onSend={async () => {}} />
-              </TabsContent>
-            </Tabs>
+            {activeTab === 'announcements' && (
+              <AnnouncementBuilder onSend={async () => {}} />
+            )}
           </div>
         </main>
       </div>
