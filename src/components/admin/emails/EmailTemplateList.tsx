@@ -31,7 +31,7 @@ import {
   AlertCircle, 
   Clock 
 } from '@untitledui/icons';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { formatCompactNumber } from '@/lib/admin/admin-utils';
 import type { EmailTemplate, EmailDeliveryLog, EmailDeliveryStats as EmailStats } from '@/types/admin';
 import {
@@ -94,7 +94,7 @@ export function EmailTemplateList({
         header: 'Updated',
         cell: ({ getValue }) => (
           <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(getValue()), { addSuffix: true })}
+            {formatShortTime(new Date(getValue()))}
           </span>
         ),
       }),
@@ -375,7 +375,7 @@ export function EmailDeliveryLogs({
           const val = getValue();
           return (
           <span className="text-xs text-muted-foreground">
-            {val ? formatDistanceToNow(new Date(val), { addSuffix: true }) : '—'}
+            {val ? formatShortTime(new Date(val)) : '—'}
           </span>
         );
         },

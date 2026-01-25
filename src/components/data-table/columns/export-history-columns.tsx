@@ -14,7 +14,8 @@ import { Download01, Trash01 } from '@untitledui/icons';
 import { PdfIcon, CsvIcon } from '@/components/analytics/ExportIcons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { formatDateRangeFromStrings, formatFileSize } from '@/lib/formatting-utils';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import type { ReportExport } from '@/hooks/useReportExports';
 
 /**
@@ -146,7 +147,7 @@ export const createExportHistoryColumns = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="text-muted-foreground whitespace-nowrap cursor-default">
-              {formatDistanceToNow(new Date(date), { addSuffix: true })}
+              {formatShortTime(new Date(date))}
             </span>
           </TooltipTrigger>
           <TooltipContent>

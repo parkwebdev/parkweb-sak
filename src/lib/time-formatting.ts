@@ -5,9 +5,9 @@
  */
 
 /**
- * Format a date as relative time (e.g., "5 mins ago", "2 hrs ago")
+ * Format a date as compact relative time (e.g., "5min ago", "2hrs ago")
  * @param date - The date to format
- * @returns Formatted string like "now", "5 mins ago", "2 hrs ago", "3 days ago", or "Jan 15"
+ * @returns Formatted string like "now", "5min ago", "2hrs ago", "3d ago", or "Jan 15"
  */
 export const formatShortTime = (date: Date): string => {
   const now = new Date();
@@ -17,9 +17,9 @@ export const formatShortTime = (date: Date): string => {
   const diffDays = Math.floor(diffHrs / 24);
   
   if (diffMins < 1) return 'now';
-  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHrs < 24) return `${diffHrs} hr${diffHrs > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  if (diffMins < 60) return `${diffMins}min ago`;
+  if (diffHrs < 24) return `${diffHrs}${diffHrs === 1 ? 'hr' : 'hrs'} ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 

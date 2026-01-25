@@ -45,7 +45,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import type { PlatformHCArticleInput } from '@/types/platform-hc';
 
 
@@ -133,7 +133,7 @@ const TopBarRight = memo(function TopBarRight({
       )}
       {!isSaving && !hasUnsavedChanges && lastSavedAt && (
         <span className="text-xs text-muted-foreground">
-          Saved {formatDistanceToNow(lastSavedAt, { addSuffix: true })}
+          Saved {formatShortTime(lastSavedAt)}
         </span>
       )}
       

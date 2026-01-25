@@ -5,7 +5,7 @@
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
-import { formatDistanceToNow } from "date-fns";
+import { formatShortTime } from '@/lib/time-formatting';
 import { 
   Mail01, 
   Phone, 
@@ -292,13 +292,13 @@ export const LeadCardContent = React.memo(function LeadCardContent({
     createdAt: () => (
       <div key="createdAt" className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Calendar size={12} aria-hidden="true" />
-        <span>{formatDistanceToNow(new Date(lead.created_at), { addSuffix: true })}</span>
+        <span>{formatShortTime(new Date(lead.created_at))}</span>
       </div>
     ),
     lastUpdated: () => (
       <div key="lastUpdated" className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Clock size={12} aria-hidden="true" />
-        <span>Updated {formatDistanceToNow(new Date(lead.updated_at), { addSuffix: true })}</span>
+        <span>Updated {formatShortTime(new Date(lead.updated_at))}</span>
       </div>
     ),
   }), [lead, assignees, onAddAssignee, onRemoveAssignee]);

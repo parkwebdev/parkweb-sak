@@ -17,7 +17,7 @@ import { DataTable } from '@/components/data-table/DataTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import type { EmailDeliveryLog } from '@/types/admin';
 
 interface EmailDeliveryLogsProps {
@@ -67,7 +67,7 @@ export function EmailDeliveryLogs({ logs, loading }: EmailDeliveryLogsProps) {
           const val = getValue();
           return (
             <span className="text-xs text-muted-foreground">
-              {val ? formatDistanceToNow(new Date(val), { addSuffix: true }) : '—'}
+              {val ? formatShortTime(new Date(val)) : '—'}
             </span>
           );
         },

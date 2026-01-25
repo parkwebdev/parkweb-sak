@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import {
@@ -307,7 +307,7 @@ export const createLeadsColumns = ({
       <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ row }) =>
-      formatDistanceToNow(new Date(row.original.created_at), { addSuffix: true }),
+      formatShortTime(new Date(row.original.created_at)),
   },
   {
     accessorKey: 'updated_at',
@@ -318,7 +318,7 @@ export const createLeadsColumns = ({
       <DataTableColumnHeader column={column} title="Last Updated" />
     ),
     cell: ({ row }) =>
-      formatDistanceToNow(new Date(row.original.updated_at), { addSuffix: true }),
+      formatShortTime(new Date(row.original.updated_at)),
   },
   // Actions column
   {

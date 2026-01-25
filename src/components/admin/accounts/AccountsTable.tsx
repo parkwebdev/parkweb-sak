@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { AccountStatusBadge } from './AccountStatusBadge';
 import { AccountActions } from './AccountActions';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { getInitials } from '@/lib/formatting-utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
@@ -100,7 +100,7 @@ export function AccountsTable({
         header: 'Created',
         cell: ({ getValue }) => (
           <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(getValue()), { addSuffix: true })}
+            {formatShortTime(new Date(getValue()))}
           </span>
         ),
       }),

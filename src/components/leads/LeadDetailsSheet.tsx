@@ -19,7 +19,8 @@ import { PHONE_FIELD_KEYS, EXCLUDED_LEAD_FIELDS, isConsentFieldKey, getPhoneFrom
 import DOMPurify from 'isomorphic-dompurify';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { SkeletonLeadDetails } from '@/components/ui/page-skeleton';
 import type { Tables, Enums, Json } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
@@ -906,7 +907,7 @@ export const LeadDetailsSheet = ({
                       {/* Row 2: Time, Landing/Referrer */}
                       <div className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span>{lead.created_at ? formatDistanceToNow(new Date(lead.created_at), { addSuffix: false }) : '—'}</span>
+                        <span>{lead.created_at ? formatShortTime(new Date(lead.created_at)).replace(' ago', '') : '—'}</span>
                       </div>
                       {conversationMetadata.landing_page ? (
                         <div className="flex items-center gap-1.5 truncate">

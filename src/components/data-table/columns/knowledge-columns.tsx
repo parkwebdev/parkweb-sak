@@ -15,7 +15,7 @@ import {
   Clock, Globe01, Building07, AlertCircle 
 } from '@untitledui/icons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import type { Tables } from '@/integrations/supabase/types';
 import type { KnowledgeSourceMetadata, RefreshStrategy, KnowledgeSourceType } from '@/types/metadata';
 import { REFRESH_STRATEGY_LABELS, SOURCE_TYPE_LABELS } from '@/types/metadata';
@@ -363,7 +363,7 @@ export const createKnowledgeColumns = ({
       if (!date) return <span className="text-muted-foreground">-</span>;
       return (
         <span className="text-sm text-muted-foreground whitespace-nowrap">
-          {formatDistanceToNow(new Date(date), { addSuffix: true })}
+          {formatShortTime(new Date(date))}
         </span>
       );
     },

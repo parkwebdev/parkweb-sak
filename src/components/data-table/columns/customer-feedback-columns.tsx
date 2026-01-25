@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Star01, ArrowNarrowRight } from "@untitledui/icons";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
+import { formatShortTime } from "@/lib/time-formatting";
 import { Badge } from "@/components/ui/badge";
 import { IconButton } from "@/components/ui/icon-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -97,7 +98,7 @@ export const customerFeedbackColumns: ColumnDef<CustomerFeedbackData>[] = [
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="text-muted-foreground cursor-help">
-              {formatDistanceToNow(date, { addSuffix: true })}
+              {formatShortTime(date)}
             </span>
           </TooltipTrigger>
           <TooltipContent side="top">

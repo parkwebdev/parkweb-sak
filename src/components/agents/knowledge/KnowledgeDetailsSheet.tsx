@@ -23,7 +23,8 @@ import {
   File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, 
   Clock, AlertCircle, Globe01, Building07, Calendar, RefreshCw01, LinkExternal01
 } from '@untitledui/icons';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { SitemapChildPages } from '../SitemapChildPages';
 import { SkeletonKnowledgeDetails } from '@/components/ui/page-skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -277,7 +278,7 @@ export function KnowledgeDetailsSheet({
                   <span className="text-sm">
                     {format(new Date(source.created_at), 'PPp')}
                     <span className="text-muted-foreground ml-1">
-                      ({formatDistanceToNow(new Date(source.created_at), { addSuffix: true })})
+                      ({formatShortTime(new Date(source.created_at))})
                     </span>
                   </span>
                 </div>
@@ -288,7 +289,7 @@ export function KnowledgeDetailsSheet({
                     <span className="text-sm text-muted-foreground w-24 shrink-0">Last Fetched</span>
                     <span className="text-sm flex items-center gap-1">
                       <Calendar className="h-3 w-3 text-muted-foreground" />
-                      {formatDistanceToNow(new Date(lastFetchedAt), { addSuffix: true })}
+                      {formatShortTime(new Date(lastFetchedAt))}
                     </span>
                   </div>
                 )}
@@ -301,7 +302,7 @@ export function KnowledgeDetailsSheet({
                     {REFRESH_STRATEGY_LABELS[refreshStrategy]}
                     {nextRefreshAt && refreshStrategy !== 'manual' && (
                       <span className="text-muted-foreground">
-                        (next: {formatDistanceToNow(new Date(nextRefreshAt), { addSuffix: true })})
+                        (next: {formatShortTime(new Date(nextRefreshAt))})
                       </span>
                     )}
                   </span>

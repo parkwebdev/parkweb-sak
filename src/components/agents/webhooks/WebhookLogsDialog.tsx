@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useWebhooks } from '@/hooks/useWebhooks';
 import { CheckCircle, XCircle, Clock } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface WebhookLogsDialogProps {
@@ -82,7 +82,7 @@ export const WebhookLogsDialog = ({ open, onOpenChange, webhookId, agentId }: We
                       )}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                      {formatShortTime(new Date(log.created_at))}
                     </span>
                   </div>
 

@@ -36,7 +36,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { cn } from '@/lib/utils';
 import { WordPressIcon } from '@/components/icons/WordPressIcon';
 import type { Tables } from '@/integrations/supabase/types';
@@ -128,7 +128,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
   const formatLastSync = (lastSync: string | null) => {
     if (!lastSync) return null;
     try {
-      return formatDistanceToNow(new Date(lastSync), { addSuffix: true });
+      return formatShortTime(new Date(lastSync));
     } catch {
       return null;
     }

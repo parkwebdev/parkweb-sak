@@ -17,7 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RoleBadge } from '@/components/admin/shared/RoleBadge';
 import { Shield01 } from '@untitledui/icons';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { getInitials } from '@/lib/formatting-utils';
 import { DataTable } from '@/components/data-table/DataTable';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -120,7 +120,7 @@ export function PilotTeamTable({
           const value = row.original.created_at;
           return value ? (
             <span className="text-sm text-muted-foreground">
-              {formatDistanceToNow(new Date(value), { addSuffix: true })}
+              {formatShortTime(new Date(value))}
             </span>
           ) : (
             <span className="text-sm text-muted-foreground">—</span>
@@ -135,7 +135,7 @@ export function PilotTeamTable({
           const value = row.original.last_login_at;
           return value ? (
             <span className="text-sm text-muted-foreground">
-              {formatDistanceToNow(new Date(value), { addSuffix: true })}
+              {formatShortTime(new Date(value))}
             </span>
           ) : (
             <span className="text-sm text-muted-foreground">Never</span>

@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Trash01 } from '@untitledui/icons';
 import { PlatformArticleActions } from './PlatformArticleActions';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import type { PlatformHCArticle } from '@/types/platform-hc';
 
 interface PlatformArticlesTableProps {
@@ -160,7 +160,7 @@ export function PlatformArticlesTable({
         ),
         cell: ({ getValue }) => (
           <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(getValue()), { addSuffix: true })}
+            {formatShortTime(new Date(getValue()))}
           </span>
         ),
       }),

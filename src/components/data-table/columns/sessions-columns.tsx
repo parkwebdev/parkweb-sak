@@ -11,7 +11,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Monitor01, Phone01 } from '@untitledui/icons';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 
 export interface SessionData {
   id: string;
@@ -88,7 +88,7 @@ export const createSessionColumns = ({
       <span className="text-sm text-muted-foreground">
         {row.original.is_current 
           ? 'Now' 
-          : formatDistanceToNow(new Date(row.original.updated_at), { addSuffix: true })}
+          : formatShortTime(new Date(row.original.updated_at))}
       </span>
     ),
   },
