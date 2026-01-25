@@ -267,7 +267,7 @@ export const SubscriptionSettings = () => {
       <TooltipProvider>
         <div className="space-y-4">
           {/* Plans Grid */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${plans && plans.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} divide-y md:divide-y-0 md:divide-x divide-border border rounded-lg bg-card`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${plans && plans.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} divide-y md:divide-y-0 md:divide-x divide-border border rounded-card bg-card`}>
             {(() => {
               const currentPlan = plans?.find(p => p.id === currentPlanId);
               const currentPlanPrice = currentPlan?.price_monthly ?? 0;
@@ -303,7 +303,7 @@ export const SubscriptionSettings = () => {
                   Compare all features
                 </AccordionTrigger>
                 <AccordionContent className="pb-0">
-                  <div className="rounded-lg border bg-card overflow-hidden">
+                  <div className="rounded-card border bg-card overflow-hidden">
                     <FeatureComparisonTable plans={plans} />
                   </div>
                 </AccordionContent>
