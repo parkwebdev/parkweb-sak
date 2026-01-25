@@ -177,7 +177,7 @@ export default function BookingComponentsTest() {
         </div>
 
         {/* Controls */}
-        <div className="flex flex-wrap items-end gap-4 p-4 bg-card border border-border rounded-lg">
+        <div className="flex flex-wrap items-end gap-4 p-4 bg-card border border-border rounded-card">
           <div className="space-y-2">
             <Label htmlFor="primaryColor">Primary Color</Label>
             <Input
@@ -234,7 +234,7 @@ export default function BookingComponentsTest() {
 
         {/* Selection Status */}
         {(selectedDay || selectedTime) && (
-          <div className="p-3 bg-muted rounded-lg text-sm">
+          <div className="p-3 bg-muted rounded-card text-sm">
             <span className="font-medium">Current selections:</span>
             {selectedDay && <span className="ml-2">Day: {selectedDay.dayName} {selectedDay.dayNumber}</span>}
             {selectedTime && <span className="ml-2">• Time: {selectedTime.time}</span>}
@@ -251,7 +251,7 @@ export default function BookingComponentsTest() {
               style={{ maxWidth: 380 }}
             >
               {/* Simulated message bubble */}
-              <div className="bg-muted rounded-lg p-3 mb-2">
+              <div className="bg-muted rounded-card p-3 mb-2">
                 <p className="text-sm text-foreground">
                   {activeStep === 1 && "Great! I'd love to help you schedule a tour. Which day works best for you?"}
                   {activeStep === 2 && `Perfect! What time works best for you on ${dynamicTimePickerData.selectedDayDisplay}?`}
@@ -287,7 +287,7 @@ export default function BookingComponentsTest() {
           {/* Interaction Log */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Interaction Log</h2>
-            <div className="bg-card border border-border rounded-lg p-4 h-[300px] overflow-y-auto font-mono text-xs">
+            <div className="bg-card border border-border rounded-card p-4 h-[300px] overflow-y-auto font-mono text-xs">
               {logs.length === 0 ? (
                 <p className="text-muted-foreground">Interactions will appear here...</p>
               ) : (

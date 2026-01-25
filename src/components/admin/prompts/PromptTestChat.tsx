@@ -251,7 +251,7 @@ export function PromptTestChat() {
                 <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                   <ChatBubbleIcon className="h-4 w-4 text-foreground" />
                 </div>
-                <div className="bg-muted p-3 rounded-lg">
+                <div className="bg-muted p-3 rounded-card">
                   <div className="flex gap-1">
                     <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

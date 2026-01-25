@@ -101,7 +101,7 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
   };
 
   return (
-    <div className="p-6 bg-muted/30 rounded-lg h-[700px]">
+    <div className="p-6 bg-muted/30 rounded-card h-[700px]">
       <div className="h-full flex flex-col">
         <div className="text-center mb-4">
           <span className="text-xs text-muted-foreground">Live Preview</span>

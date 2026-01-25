@@ -94,7 +94,7 @@ export const TestToolResultDialog = ({
               {result.body !== undefined && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Response:</p>
-                  <pre className="text-xs bg-muted p-3 rounded-lg border overflow-auto max-h-64 font-mono">
+                  <pre className="text-xs bg-muted p-3 rounded-card border overflow-auto max-h-64 font-mono">
                     {typeof result.body === 'string' 
                       ? result.body 
                       : JSON.stringify(result.body, null, 2)
