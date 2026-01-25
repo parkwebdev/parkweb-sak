@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { TopBarUserMenu } from './TopBarUserMenu';
 import { NotificationBell } from './NotificationBell';
+import { KeyboardShortcutsButton } from './KeyboardShortcutsButton';
 
 interface TopBarProps {
   /** Left section - page context/entity indicator */
@@ -69,6 +70,7 @@ export function TopBar({
       {/* Right section - action buttons + notifications + user menu */}
       <div className="flex items-center gap-3 shrink-0">
         {right}
+        <KeyboardShortcutsButton />
         <NotificationBell />
         <TopBarUserMenu />
       </div>
