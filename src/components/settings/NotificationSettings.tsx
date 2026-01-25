@@ -190,49 +190,48 @@ export function NotificationSettings() {
   const updatePreference = async (key: keyof NotificationPreferences, value: boolean | string) => {
     if (!user || !preferences) return;
 
-    // Update local state immediately
-    setPreferences(prev => prev ? { ...prev, [key]: value } : null);
-
-    // Handle browser notification permission requests
+    // Handle browser notification permission requests BEFORE updating state
     if (key === 'browser_notifications' && value) {
       if (!('Notification' in window)) {
         toast.error("Not supported", {
           description: "Browser notifications are not supported in this environment.",
         });
-        return;
+        return; // Don't update state
       }
       
       const currentPermission = Notification.permission;
       
       if (currentPermission === 'denied') {
         toast.error("Permission blocked", {
-          description: "Browser notifications are blocked. Please enable them in your browser settings and refresh the page.",
+          description: "Browser notifications are blocked. Click the lock icon in your address bar to enable them.",
         });
-        return;
+        return; // Don't update state - toggle stays off
       }
       
       if (currentPermission === 'default') {
         try {
           const permission = await Notification.requestPermission();
           if (permission !== 'granted') {
-            let description = "Browser notifications require permission to be enabled.";
-            if (permission === 'denied') {
-              description = "Notifications were denied. Please enable them in your browser settings and refresh the page.";
-            }
             toast.error("Permission not granted", {
-              description,
+              description: permission === 'denied' 
+                ? "Notifications were denied. Click the lock icon in your address bar to enable them."
+                : "Browser notifications require permission to be enabled.",
             });
-            return;
+            return; // Don't update state - toggle stays off
           }
         } catch (error: unknown) {
           logger.error('Error requesting notification permission:', error);
           toast.error("Permission request failed", {
-            description: "Unable to request notification permission. Please enable notifications manually in your browser settings.",
+            description: "Unable to request notification permission.",
           });
-          return;
+          return; // Don't update state
         }
       }
+      // If we reach here, permission is 'granted' - proceed to update state
     }
+
+    // Now update local state (only after permission checks pass for browser_notifications)
+    setPreferences(prev => prev ? { ...prev, [key]: value } : null);
 
     // Clear existing timer for this field
     if (saveTimers.current[key]) {
@@ -264,6 +263,28 @@ export function NotificationSettings() {
       }
     }, 500);
   };
+
+  // Sync browser_notifications preference with actual browser permission state
+  useEffect(() => {
+    if (!preferences || !user) return;
+    
+    // If DB says enabled but browser has denied permission, sync to false
+    if (preferences.browser_notifications && 'Notification' in window && Notification.permission === 'denied') {
+      // Silently update the preference to match reality
+      setPreferences(prev => prev ? { ...prev, browser_notifications: false } : null);
+      
+      // Also save to database
+      supabase
+        .from('notification_preferences')
+        .update({ browser_notifications: false })
+        .eq('user_id', user.id)
+        .then(({ error }) => {
+          if (error) {
+            logger.error('Error syncing browser notification preference:', error);
+          }
+        });
+    }
+  }, [preferences?.browser_notifications, user]);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -441,13 +462,20 @@ export function NotificationSettings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <ToggleSettingRow
-              id="browser-notifications"
-              label="Browser Notifications"
-              description="Show desktop notifications in your browser"
-              checked={preferences.browser_notifications}
-              onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
-            />
+            <div className="space-y-1">
+              <ToggleSettingRow
+                id="browser-notifications"
+                label="Browser Notifications"
+                description={
+                  'Notification' in window && Notification.permission === 'denied'
+                    ? "Blocked by browser. Click the lock icon in your address bar to enable."
+                    : "Show desktop notifications in your browser"
+                }
+                checked={preferences.browser_notifications && ('Notification' in window ? Notification.permission === 'granted' : false)}
+                onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
+                disabled={'Notification' in window && Notification.permission === 'denied'}
+              />
+            </div>
 
             <ToggleSettingRow
               id="sound-notifications"
