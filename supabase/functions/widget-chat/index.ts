@@ -5,6 +5,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 // SHARED MODULES (Phase 1 + Phase 2 + Phase 3 + Phase 4 Extraction)
 // ============================================
 
+// Push notifications for real-time message alerts
+import { dispatchPushIfEnabled } from "../_shared/push-notifications.ts";
+
 // Phase 1: Core infrastructure
 import { corsHeaders } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
@@ -406,6 +409,31 @@ serve(async (req) => {
     // Early return if user message was blocked by content moderation
     if (userMessageBlocked) {
       return blockResponse!;
+    }
+
+    // ============================================
+    // PUSH NOTIFICATION FOR NEW USER MESSAGE
+    // Fire-and-forget - non-blocking to maintain response speed
+    // ============================================
+    if (!isGreetingRequest && !previewMode && userMessageId) {
+      const conversationMetadata = (conversation?.metadata || {}) as ConversationMetadata;
+      const userMessageContent = messages?.[messages.length - 1]?.content || '';
+      const userMessagePreview = userMessageContent.substring(0, 60) + (userMessageContent.length > 60 ? '...' : '');
+      const leadName = (conversationMetadata?.lead_name as string) || 'Visitor';
+      
+      // Dispatch push notification (non-blocking)
+      dispatchPushIfEnabled(
+        supabase,
+        supabaseUrl,
+        {
+          user_id: agent.user_id,
+          title: `Message from ${leadName}`,
+          body: userMessagePreview,
+          url: `/ari/inbox?conversation=${activeConversationId}`,
+          tag: `message-${activeConversationId}`, // Collapses multiple messages from same conversation
+        },
+        'message'
+      ).catch(err => console.error('Push dispatch error (non-critical):', err));
     }
 
     // ============================================

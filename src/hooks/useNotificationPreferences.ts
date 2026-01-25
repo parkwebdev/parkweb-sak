@@ -17,6 +17,12 @@ export interface NotificationPreferences {
   browser_notifications: boolean;
   weekly_report_enabled: boolean;
   weekly_report_timezone: string;
+  // Per-type push preferences
+  push_lead_notifications: boolean;
+  push_conversation_notifications: boolean;
+  push_booking_notifications: boolean;
+  push_team_notifications: boolean;
+  push_message_notifications: boolean;
 }
 
 const DEFAULT_PREFERENCES: NotificationPreferences = {
@@ -24,6 +30,12 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   browser_notifications: false,
   weekly_report_enabled: true,
   weekly_report_timezone: 'America/New_York',
+  // Per-type push preferences default to true
+  push_lead_notifications: true,
+  push_conversation_notifications: true,
+  push_booking_notifications: true,
+  push_team_notifications: true,
+  push_message_notifications: true,
 };
 
 /**
@@ -40,7 +52,7 @@ export function useNotificationPreferences() {
 
       const { data, error } = await supabase
         .from('notification_preferences')
-        .select('sound_notifications, browser_notifications, weekly_report_enabled, weekly_report_timezone')
+        .select('sound_notifications, browser_notifications, weekly_report_enabled, weekly_report_timezone, push_lead_notifications, push_conversation_notifications, push_booking_notifications, push_team_notifications, push_message_notifications')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -54,6 +66,12 @@ export function useNotificationPreferences() {
         browser_notifications: data?.browser_notifications ?? false,
         weekly_report_enabled: data?.weekly_report_enabled ?? true,
         weekly_report_timezone: data?.weekly_report_timezone ?? 'America/New_York',
+        // Per-type push preferences (default to true)
+        push_lead_notifications: data?.push_lead_notifications ?? true,
+        push_conversation_notifications: data?.push_conversation_notifications ?? true,
+        push_booking_notifications: data?.push_booking_notifications ?? true,
+        push_team_notifications: data?.push_team_notifications ?? true,
+        push_message_notifications: data?.push_message_notifications ?? true,
       };
     },
     enabled: !!user?.id,
