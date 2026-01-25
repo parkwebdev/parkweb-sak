@@ -5,7 +5,7 @@
  * Now uses database-driven content from platform_hc_categories and platform_hc_articles.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { getNavigationIcon } from '@/lib/navigation-icons';
@@ -45,6 +45,7 @@ export default function HelpCenter() {
   const prefersReducedMotion = useReducedMotion();
   const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const mainContentRef = useRef<HTMLDivElement>(null);
   
   // Use DB-driven hook for categories and articles
   const {
@@ -136,6 +137,7 @@ export default function HelpCenter() {
   useHCKeyboardNavigation({
     onPrevious: adjacent.prev ? handlePrevious : undefined,
     onNext: adjacent.next ? handleNext : undefined,
+    scrollContainerRef: mainContentRef,
     enabled: !!currentArticle, // Only enable when viewing an article
   });
 
@@ -167,7 +169,7 @@ export default function HelpCenter() {
         searchQuery={searchQuery}
       />
       
-      <main className="flex-1 overflow-y-auto print:overflow-visible">
+      <main ref={mainContentRef} className="flex-1 overflow-y-auto print:overflow-visible">
         <AnimatePresence mode="wait">
           {isCategoryView && currentCategory ? (
             <motion.div
