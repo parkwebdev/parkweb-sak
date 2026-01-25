@@ -387,11 +387,20 @@ export function NotificationSettings() {
       if (error) throw error;
 
       toast.dismiss(toastId);
-      toast.success("Test notification sent!", {
-        description: data?.sent > 0 
-          ? "Check your device for the notification" 
-          : "No active subscriptions found",
-      });
+      
+      if (data?.sent > 0) {
+        toast.success("Test notification sent!", {
+          description: "Check your device for the notification",
+        });
+      } else if (data?.vapid_mismatch > 0) {
+        toast.error("Push delivery failed", {
+          description: "Your subscription key is outdated. Please toggle Background Notifications off and on again.",
+        });
+      } else {
+        toast.warning("No devices subscribed", {
+          description: "Toggle Background Notifications on to subscribe this device.",
+        });
+      }
     } catch (error: unknown) {
       toast.dismiss(toastId);
       toast.error("Failed to send test", { description: getErrorMessage(error) });
