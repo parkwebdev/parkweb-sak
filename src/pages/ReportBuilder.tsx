@@ -885,7 +885,7 @@ export default function ReportBuilder() {
                   </div>
 
                   {/* Config Summary */}
-                  <div className="rounded-lg border bg-muted/50 p-3 space-y-1">
+                  <div className="rounded-card border bg-muted/50 p-3 space-y-1">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Report Configuration</p>
                     <div className="text-sm space-y-0.5">
                       <p><span className="text-muted-foreground">Format:</span> {config.format.toUpperCase()}</p>

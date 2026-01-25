@@ -38,7 +38,7 @@ export const MessagesView = ({
               <div
                 key={conversation.id}
                 onClick={() => onOpenConversation(conversation.id)}
-                className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                className="p-3 border rounded-card hover:bg-accent cursor-pointer transition-colors"
               >
                 <div className="flex items-start gap-2">
                   <MessageChatCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />

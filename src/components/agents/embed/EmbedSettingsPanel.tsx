@@ -236,7 +236,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
                   {/* Existing Custom Fields */}
                   {config.customFields.map((field) => (
-                    <div key={field.id} className="p-3 border rounded-lg space-y-2">
+                    <div key={field.id} className="p-3 border rounded-card space-y-2">
                       <div className="flex items-center justify-between">
                         <Input
                           value={field.label}
@@ -303,7 +303,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   ))}
 
                   {/* Add New Field */}
-                  <div className="p-3 bg-muted/30 rounded-lg space-y-2">
+                  <div className="p-3 bg-muted/30 rounded-card space-y-2">
                     <Label className="text-sm">Add Custom Field</Label>
                     <div className="flex gap-2">
                       <Input
