@@ -107,7 +107,7 @@ export function LocationDetails({
 
       {/* Connected Calendars - Always visible */}
       <AnimatedItem>
-        <div className="space-y-2 p-3 rounded-lg bg-muted/30">
+      <div className="space-y-2 p-3 rounded-card bg-muted/30">
           <span className="text-xs text-muted-foreground uppercase tracking-wide">Connected Calendars</span>
           
           {/* Fallback indicator */}
@@ -129,7 +129,7 @@ export function LocationDetails({
 
       {/* Social Accounts - Always visible */}
       <AnimatedItem>
-        <div className="space-y-2 p-3 rounded-lg bg-muted/30">
+        <div className="space-y-2 p-3 rounded-card bg-muted/30">
           <span className="text-xs text-muted-foreground uppercase tracking-wide">Social Accounts</span>
           <SocialConnections
             locationId={location.id}

@@ -509,7 +509,7 @@ export function SkeletonKnowledgeDetails({ className }: { className?: string }) 
       </div>
       
       {/* Content preview */}
-      <div className="space-y-2 p-3 rounded-lg border">
+      <div className="space-y-2 p-3 rounded-card border">
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/4" />
