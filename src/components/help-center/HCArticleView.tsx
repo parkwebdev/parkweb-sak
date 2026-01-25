@@ -140,7 +140,7 @@ export function HCArticleView({
           
           {/* Reading time badge */}
           {readingTime > 0 && (
-            <Badge variant="secondary" className="mt-3 gap-1.5 py-1 bg-background dark:bg-foreground dark:text-background border-border/50">
+            <Badge variant="secondary" className="mt-3 gap-1.5 py-1 bg-foreground text-background dark:bg-background dark:text-foreground border-border/50">
               <Clock size={12} aria-hidden="true" />
               {readingTime} min read
             </Badge>
