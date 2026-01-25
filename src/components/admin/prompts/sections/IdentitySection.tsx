@@ -6,7 +6,7 @@
  * @module components/admin/prompts/sections/IdentitySection
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,12 +14,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AdminSectionHeader } from '../AdminSectionHeader';
+import { PromptMetrics } from '../PromptMetrics';
+import { ResetToDefaultButton } from '../ResetToDefaultButton';
+import { validatePromptSection } from '@/lib/prompt-validation';
+import { DEFAULT_IDENTITY_PROMPT } from '@/lib/prompt-defaults';
 
 interface IdentitySectionProps {
   value: string;
   onSave: (value: string) => Promise<void>;
   loading?: boolean;
-  version?: number;
   lastUpdated?: string;
 }
 
@@ -34,7 +37,6 @@ export function IdentitySection({
   value,
   onSave,
   loading,
-  version,
   lastUpdated,
 }: IdentitySectionProps) {
   const [localValue, setLocalValue] = useState(value);
@@ -46,8 +48,20 @@ export function IdentitySection({
     setHasChanges(false);
   }, [value]);
 
+  const validation = useMemo(
+    () => validatePromptSection('identity', localValue),
+    [localValue]
+  );
+
+  const isDefault = localValue === DEFAULT_IDENTITY_PROMPT;
+
   const { save, status } = useAutoSave({
     onSave: async (newValue: string) => {
+      // Validate before saving
+      const result = validatePromptSection('identity', newValue);
+      if (!result.valid) {
+        throw new Error(result.error);
+      }
       await onSave(newValue);
       setHasChanges(false);
     },
@@ -59,6 +73,10 @@ export function IdentitySection({
     setHasChanges(newValue !== value);
     save(newValue);
   }, [value, save]);
+
+  const handleReset = useCallback(() => {
+    handleChange(DEFAULT_IDENTITY_PROMPT);
+  }, [handleChange]);
 
   if (loading) {
     return (
@@ -79,40 +97,50 @@ export function IdentitySection({
         status={status}
         hasChanges={hasChanges}
         extra={
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                  onMouseEnter={() => setIsHoveringTip(true)}
-                  onMouseLeave={() => setIsHoveringTip(false)}
-                >
-                  {isHoveringTip ? (
-                    <LightbulbIconFilled className="w-4 h-4 text-warning" />
-                  ) : (
-                    <LightbulbIcon className="w-4 h-4" />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs p-3">
-                <p className="font-medium text-xs mb-1">Identity Tips</p>
-                <ul className="text-xs space-y-0.5 text-muted-foreground">
-                  {IDENTITY_TIPS.map((tip, i) => (
-                    <li key={i}>• {tip}</li>
-                  ))}
-                </ul>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="flex items-center gap-1">
+            <ResetToDefaultButton
+              onReset={handleReset}
+              disabled={isDefault}
+              sectionName="Identity & Role"
+            />
+            <TooltipProvider>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                    onMouseEnter={() => setIsHoveringTip(true)}
+                    onMouseLeave={() => setIsHoveringTip(false)}
+                  >
+                    {isHoveringTip ? (
+                      <LightbulbIconFilled className="w-4 h-4 text-warning" />
+                    ) : (
+                      <LightbulbIcon className="w-4 h-4" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs p-3">
+                  <p className="font-medium text-xs mb-1">Identity Tips</p>
+                  <ul className="text-xs space-y-0.5 text-muted-foreground">
+                    {IDENTITY_TIPS.map((tip, i) => (
+                      <li key={i}>• {tip}</li>
+                    ))}
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         }
       />
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="identity-prompt" className="text-sm font-medium">
-            Base Personality
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="identity-prompt" className="text-sm font-medium">
+              Base Personality
+            </Label>
+            <PromptMetrics content={localValue} />
+          </div>
           <Textarea
             id="identity-prompt"
             value={localValue}
@@ -120,7 +148,14 @@ export function IdentitySection({
             placeholder="You are Ari, a helpful AI assistant..."
             rows={14}
             className="font-mono text-sm resize-y min-h-[200px]"
+            aria-invalid={!validation.valid}
+            aria-describedby={!validation.valid ? 'identity-error' : undefined}
           />
+          {!validation.valid && (
+            <p id="identity-error" className="text-xs text-destructive">
+              {validation.error}
+            </p>
+          )}
         </div>
       </div>
     </div>

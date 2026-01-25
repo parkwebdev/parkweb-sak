@@ -6,7 +6,7 @@
  * @module components/admin/prompts/sections/SecuritySection
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -15,6 +15,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AdminSectionHeader } from '../AdminSectionHeader';
+import { PromptMetrics } from '../PromptMetrics';
+import { ResetToDefaultButton } from '../ResetToDefaultButton';
+import { validatePromptSection } from '@/lib/prompt-validation';
+import { DEFAULT_SECURITY_GUARDRAILS } from '@/lib/prompt-defaults';
 
 interface SecurityGuardrailsConfig {
   enabled: boolean;
@@ -28,7 +32,6 @@ interface SecuritySectionProps {
   onSave: (value: string) => Promise<void>;
   onGuardrailsChange: (config: SecurityGuardrailsConfig) => Promise<void>;
   loading?: boolean;
-  version?: number;
   lastUpdated?: string;
 }
 
@@ -58,7 +61,6 @@ export function SecuritySection({
   onSave,
   onGuardrailsChange,
   loading,
-  version,
   lastUpdated,
 }: SecuritySectionProps) {
   const [localValue, setLocalValue] = useState(value);
@@ -75,8 +77,19 @@ export function SecuritySection({
     setLocalConfig(guardrailsConfig);
   }, [guardrailsConfig]);
 
+  const validation = useMemo(
+    () => validatePromptSection('security', localValue),
+    [localValue]
+  );
+
+  const isDefault = localValue === DEFAULT_SECURITY_GUARDRAILS;
+
   const { save, status } = useAutoSave({
     onSave: async (newValue: string) => {
+      const result = validatePromptSection('security', newValue);
+      if (!result.valid) {
+        throw new Error(result.error);
+      }
       await onSave(newValue);
       setHasChanges(false);
     },
@@ -88,6 +101,10 @@ export function SecuritySection({
     setHasChanges(newValue !== value);
     save(newValue);
   }, [value, save]);
+
+  const handleReset = useCallback(() => {
+    handleChange(DEFAULT_SECURITY_GUARDRAILS);
+  }, [handleChange]);
 
   const handleToggle = useCallback(async (key: keyof SecurityGuardrailsConfig, checked: boolean) => {
     const newConfig = { ...localConfig, [key]: checked };
@@ -115,32 +132,39 @@ export function SecuritySection({
         status={status}
         hasChanges={hasChanges}
         extra={
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                  onMouseEnter={() => setIsHoveringTip(true)}
-                  onMouseLeave={() => setIsHoveringTip(false)}
-                >
-                  {isHoveringTip ? (
-                    <LightbulbIconFilled className="w-4 h-4 text-warning" />
-                  ) : (
-                    <LightbulbIcon className="w-4 h-4" />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs p-3">
-                <p className="font-medium text-xs mb-1">Security Tips</p>
-                <ul className="text-xs space-y-0.5 text-muted-foreground">
-                  {SECURITY_TIPS.map((tip, i) => (
-                    <li key={i}>• {tip}</li>
-                  ))}
-                </ul>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <div className="flex items-center gap-1">
+            <ResetToDefaultButton
+              onReset={handleReset}
+              disabled={isDefault}
+              sectionName="Security Guardrails"
+            />
+            <TooltipProvider>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+                    onMouseEnter={() => setIsHoveringTip(true)}
+                    onMouseLeave={() => setIsHoveringTip(false)}
+                  >
+                    {isHoveringTip ? (
+                      <LightbulbIconFilled className="w-4 h-4 text-warning" />
+                    ) : (
+                      <LightbulbIcon className="w-4 h-4" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs p-3">
+                  <p className="font-medium text-xs mb-1">Security Tips</p>
+                  <ul className="text-xs space-y-0.5 text-muted-foreground">
+                    {SECURITY_TIPS.map((tip, i) => (
+                      <li key={i}>• {tip}</li>
+                    ))}
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         }
       />
 
@@ -187,9 +211,12 @@ export function SecuritySection({
         {/* Custom Security Text */}
         {localConfig.enabled && (
           <div className="space-y-2">
-            <Label htmlFor="security-text" className="text-sm font-medium">
-              Custom Security Rules
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="security-text" className="text-sm font-medium">
+                Custom Security Rules
+              </Label>
+              <PromptMetrics content={localValue} />
+            </div>
             <p className="text-xs text-muted-foreground">
               When provided, this replaces the auto-generated rules from toggles above
             </p>
@@ -200,7 +227,14 @@ export function SecuritySection({
               placeholder="SECURITY RULES (ABSOLUTE - NEVER VIOLATE)..."
               rows={10}
               className="font-mono text-sm resize-y min-h-[150px]"
+              aria-invalid={!validation.valid}
+              aria-describedby={!validation.valid ? 'security-error' : undefined}
             />
+            {!validation.valid && (
+              <p id="security-error" className="text-xs text-destructive">
+                {validation.error}
+              </p>
+            )}
           </div>
         )}
       </div>
