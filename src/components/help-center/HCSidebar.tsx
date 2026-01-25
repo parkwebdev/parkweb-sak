@@ -99,39 +99,33 @@ export function HCSidebar({
                 value={category.id}
                 className="border-none"
               >
-                <div className="flex items-center gap-0">
-                  <AccordionTrigger 
-                    showIcon={true}
-                    className={cn(
-                      'flex-1 flex-row-reverse justify-end gap-1 px-2 py-1.5 rounded-md transition-colors',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                      '[&>svg]:size-3.5 [&>svg]:text-muted-foreground/50',
-                      'hover:no-underline pt-1.5',
+                <AccordionTrigger 
+                  showIcon={true}
+                  className={cn(
+                    'w-full flex-row-reverse justify-end gap-1 px-2 py-1.5 rounded-md transition-colors',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                    '[&>svg]:size-3.5 [&>svg]:text-muted-foreground/50',
+                    'hover:no-underline pt-1.5',
+                    isCategoryActive
+                      ? cn('ring-1', activeRingClass)
+                      : hoverClass
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', colorClass)} 
+                      aria-hidden="true"
+                    />
+                    <span className={cn(
+                      'text-2xs font-semibold uppercase tracking-wider',
                       isCategoryActive
-                        ? cn('ring-1', activeRingClass)
-                        : hoverClass
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectCategory(category);
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span 
-                        className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', colorClass)} 
-                        aria-hidden="true"
-                      />
-                      <span className={cn(
-                        'text-2xs font-semibold uppercase tracking-wider',
-                        isCategoryActive
-                          ? 'text-foreground'
-                          : 'text-muted-foreground/60 group-hover:text-muted-foreground'
-                      )}>
-                        {category.label}
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                </div>
+                        ? 'text-foreground'
+                        : 'text-muted-foreground/60 group-hover:text-muted-foreground'
+                    )}>
+                      {category.label}
+                    </span>
+                  </div>
+                </AccordionTrigger>
                 
                 <AccordionContent className="ml-5 mt-0.5 space-y-0.5 pb-1">
                   {category.articles.map((article) => {
