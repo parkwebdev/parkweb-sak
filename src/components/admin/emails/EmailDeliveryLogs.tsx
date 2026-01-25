@@ -14,7 +14,7 @@ import {
   ColumnDef,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { formatShortTime } from '@/lib/time-formatting';
@@ -83,19 +83,11 @@ export function EmailDeliveryLogs({ logs, loading }: EmailDeliveryLogsProps) {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Delivery Logs</CardTitle>
-        <CardDescription>Recent email delivery status</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <DataTable
-          table={table}
-          columns={columns}
-          isLoading={loading}
-          emptyMessage="No delivery logs found"
-        />
-      </CardContent>
-    </Card>
+    <DataTable
+      table={table}
+      columns={columns}
+      isLoading={loading}
+      emptyMessage="No delivery logs found"
+    />
   );
 }
