@@ -19,52 +19,11 @@ import { toast } from '@/lib/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { ThemeSwitcher } from '@/components/ui/theme-switcher';
-
-/** Keyboard shortcut definition */
-interface KeyboardShortcut {
-  key: string;
-  ctrlKey?: boolean;
-  altKey?: boolean;
-  shiftKey?: boolean;
-  description: string;
-}
-
-/** Regular app shortcuts */
-const appShortcuts: KeyboardShortcut[] = [
-  { key: 'k', ctrlKey: true, description: 'Global Search' },
-  { key: 't', altKey: true, description: 'Theme' },
-  { key: 'a', altKey: true, description: 'Ari' },
-  { key: 'c', altKey: true, description: 'Inbox' },
-  { key: 'l', altKey: true, description: 'Leads' },
-  { key: 'y', altKey: true, description: 'Analytics' },
-  { key: 'p', altKey: true, description: 'Planner' },
-  { key: 's', altKey: true, description: 'Settings' },
-  { key: 'h', altKey: true, description: 'Help Center' },
-];
-
-/** Admin area shortcuts */
-const adminShortcuts: KeyboardShortcut[] = [
-  { key: 'k', ctrlKey: true, description: 'Admin Search' },
-  { key: 't', altKey: true, description: 'Theme' },
-  { key: 'o', altKey: true, description: 'Overview' },
-  { key: 'a', altKey: true, description: 'Accounts' },
-  { key: 'p', altKey: true, description: 'Prompts' },
-  { key: 'b', altKey: true, description: 'Plans & Billing' },
-  { key: 'm', altKey: true, description: 'Pilot Team' },
-  { key: 'h', altKey: true, description: 'Help Articles' },
-  { key: 'e', altKey: true, description: 'Emails' },
-  { key: 'r', altKey: true, description: 'Revenue' },
-  { key: 'l', altKey: true, description: 'Audit Log' },
-];
-
-const formatShortcut = (shortcut: KeyboardShortcut): string[] => {
-  const keys: string[] = [];
-  if (shortcut.ctrlKey) keys.push('⌘');
-  if (shortcut.altKey) keys.push('Alt');
-  if (shortcut.shiftKey) keys.push('⇧');
-  keys.push(shortcut.key.toUpperCase());
-  return keys;
-};
+import { 
+  APP_SHORTCUTS, 
+  ADMIN_SHORTCUTS, 
+  formatShortcutKeys 
+} from '@/lib/keyboard-shortcuts';
 
 /**
  * Compact user menu for the TopBar with avatar trigger and full dropdown.
@@ -81,7 +40,7 @@ export function TopBarUserMenu() {
   
   // Detect if we're in the admin area
   const isAdminArea = location.pathname.startsWith('/admin');
-  const shortcuts = isAdminArea ? adminShortcuts : appShortcuts;
+  const shortcuts = isAdminArea ? ADMIN_SHORTCUTS : APP_SHORTCUTS;
 
   const isActiveRoute = (path: string) => {
     if (path.includes('?tab=')) {
@@ -257,7 +216,7 @@ export function TopBarUserMenu() {
                   <div key={index} className="flex items-center justify-between w-full py-0.5">
                     <span className="text-xs text-foreground">{shortcut.description}</span>
                     <div className="flex items-center gap-0.5 ml-auto">
-                      {formatShortcut(shortcut).map((key, keyIndex) => (
+                      {formatShortcutKeys(shortcut).map((key, keyIndex) => (
                         <Badge 
                           key={keyIndex}
                           variant="secondary" 
