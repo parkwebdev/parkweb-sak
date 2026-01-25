@@ -334,7 +334,7 @@ export const ADMIN_SECTIONS: readonly AdminSectionConfig[] = [
   { id: 'team', label: 'Pilot Team', iconName: 'UserGroup', path: '/admin/team', description: 'Manage internal team' },
   { id: 'knowledge', label: 'Help Articles', iconName: 'BookOpen01', path: '/admin/knowledge', description: 'Edit user documentation' },
   { id: 'emails', label: 'Emails', iconName: 'Mail01', path: '/admin/emails', description: 'Templates & announcements' },
-  { id: 'analytics', label: 'Revenue', iconName: 'TrendUp01', path: '/admin/analytics', description: 'Revenue & metrics' },
+  { id: 'analytics', label: 'Analytics', iconName: 'TrendUp01', path: '/admin/analytics', description: 'Revenue & metrics' },
   { id: 'audit', label: 'Audit Log', iconName: 'ClipboardCheck', path: '/admin/audit', description: 'View admin actions' },
 ] as const;
 

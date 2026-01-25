@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
-export type EmailsTab = 'preview' | 'logs' | 'announcements';
+export type EmailsTab = 'preview' | 'stats' | 'logs' | 'announcements';
 
 interface EmailsTabDropdownProps {
   activeTab: EmailsTab;
@@ -26,6 +26,7 @@ interface EmailsTabDropdownProps {
 
 const TABS: Record<EmailsTab, string> = {
   preview: 'Preview',
+  stats: 'Stats',
   logs: 'Delivery Logs',
   announcements: 'Announcements',
 };

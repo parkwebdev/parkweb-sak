@@ -22,7 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
 import { EmailPreviewModeToggle, type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
-import { EmailDeliveryLogs, EmailDeliveryStats, AnnouncementBuilder, EmailsTabDropdown, type EmailsTab } from '@/components/admin/emails';
+import { EmailDeliveryLogs, EmailStatsSection, AnnouncementBuilder, EmailsTabDropdown, type EmailsTab } from '@/components/admin/emails';
 import { useEmailDeliveryLogs } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import {
@@ -825,10 +825,11 @@ export function AdminEmails() {
 
         <main className="flex-1 min-w-0 overflow-y-auto">
           <div className="p-6 space-y-4">
-            {/* Delivery Stats */}
-            <EmailDeliveryStats stats={stats} loading={logsLoading} />
-
             {/* Content based on active tab */}
+            {activeTab === 'stats' && (
+              <EmailStatsSection stats={stats} loading={logsLoading} />
+            )}
+
             {activeTab === 'preview' && (
               <div className="space-y-4">
                 <div className="flex items-start justify-between gap-4">
