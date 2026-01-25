@@ -10,9 +10,13 @@
 import { memo } from 'react';
 import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { Mail01, TrendUp01, File02, Announcement01 } from '@untitledui/icons';
+import { Mail01, BarChartSquarePlus, Dotpoints01, Announcement01 } from '@untitledui/icons';
+import { MailFilled } from '@/components/icons/AdminSidebarIcons';
+import { BarChartSquarePlusFilled, AnnouncementFilled } from '@/components/icons/EmailsSidebarIcons';
 import { cn } from '@/lib/utils';
 import type { EmailsTab } from './EmailsTabDropdown';
+
+type IconComponent = React.ComponentType<{ size?: number; className?: string }>;
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -59,11 +63,18 @@ interface EmailsNavSidebarProps {
   failedEmailCount?: number;
 }
 
-export const EMAILS_NAV_ITEMS: { id: EmailsTab; label: string; icon: typeof Mail01 }[] = [
-  { id: 'preview', label: 'Preview', icon: Mail01 },
-  { id: 'stats', label: 'Stats', icon: TrendUp01 },
-  { id: 'logs', label: 'Delivery Logs', icon: File02 },
-  { id: 'announcements', label: 'Announcements', icon: Announcement01 },
+interface NavItemConfig {
+  id: EmailsTab;
+  label: string;
+  icon: IconComponent;
+  activeIcon?: IconComponent;
+}
+
+export const EMAILS_NAV_ITEMS: NavItemConfig[] = [
+  { id: 'preview', label: 'Preview', icon: Mail01, activeIcon: MailFilled },
+  { id: 'stats', label: 'Stats', icon: BarChartSquarePlus, activeIcon: BarChartSquarePlusFilled },
+  { id: 'logs', label: 'Delivery Logs', icon: Dotpoints01 },
+  { id: 'announcements', label: 'Announcements', icon: Announcement01, activeIcon: AnnouncementFilled },
 ];
 
 /**
@@ -76,13 +87,15 @@ export function EmailsNavSidebar({ activeTab, onTabChange, failedEmailCount }: E
       {/* Navigation Items */}
       <nav className="p-2 pt-4 space-y-0.5">
         {EMAILS_NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          const Icon = isActive && item.activeIcon ? item.activeIcon : item.icon;
+          
           return (
             <NavItem
               key={item.id}
               icon={<Icon size={16} />}
               label={item.label}
-              isActive={activeTab === item.id}
+              isActive={isActive}
               onClick={() => onTabChange(item.id)}
               badge={item.id === 'logs' ? failedEmailCount : undefined}
             />
