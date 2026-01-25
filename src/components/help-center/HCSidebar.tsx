@@ -113,10 +113,10 @@ export function HCSidebar({
                     }
                   }}
                   className={cn(
-                    'w-full flex items-center justify-between gap-1 px-2 py-1.5 rounded-md transition-colors',
+                    'w-full flex items-center justify-between gap-1 px-2.5 py-1.5 rounded-md transition-colors',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                     '[&>svg]:size-3.5 [&>svg]:text-muted-foreground/50',
-                    'hover:no-underline pt-1.5',
+                    'hover:no-underline',
                     // Show ring when viewing category page OR any article in this category
                     isCategorySelected
                       ? cn('ring-1', activeRingClass)
@@ -139,7 +139,7 @@ export function HCSidebar({
                   </div>
                 </AccordionTrigger>
                 
-                <AccordionContent className="ml-5 mt-0.5 space-y-0.5 pb-1">
+                <AccordionContent className="ml-5 mt-1.5 space-y-0.5 pb-1">
                   {category.articles.map((article) => {
                     const isSelected = 
                       category.id === selectedCategoryId && article.slug === selectedArticleSlug;
