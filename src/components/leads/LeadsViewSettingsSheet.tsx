@@ -1240,7 +1240,7 @@ export function LeadsViewSettingsSheet({
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-3">
+                    <div className="grid grid-cols-2 gap-2 rounded-card border bg-muted/30 p-3">
                       {ALL_COLUMNS.map(column => (
                         <div key={column} className="flex items-center gap-2">
                           <Checkbox

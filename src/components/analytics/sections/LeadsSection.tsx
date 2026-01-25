@@ -77,7 +77,7 @@ export function LeadsSection({
         <AnimatedItem>
           <ErrorBoundary
             fallback={(error) => (
-              <div className="rounded-lg border border-border bg-card p-4">
+              <div className="rounded-card border border-border bg-card p-4">
                 <p className="text-sm font-medium text-foreground">Lead conversion chart failed to load</p>
                 <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
               </div>

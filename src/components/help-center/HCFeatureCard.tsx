@@ -22,7 +22,7 @@ interface HCFeatureCardProps {
 export function HCFeatureCard({ title, description, icon, className }: HCFeatureCardProps) {
   return (
     <div className={cn(
-      'rounded-lg border border-border bg-card p-4 shadow-sm',
+      'rounded-card border border-border bg-card p-4 shadow-sm',
       className
     )}>
       <div className="flex items-start gap-3">

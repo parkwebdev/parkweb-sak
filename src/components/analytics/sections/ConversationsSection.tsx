@@ -42,7 +42,7 @@ export function ConversationsSection({
       {/* Peak Activity Heatmap - full width */}
       <ErrorBoundary
         fallback={(error) => (
-          <div className="rounded-lg border border-border bg-card p-4">
+          <div className="rounded-card border border-border bg-card p-4">
             <p className="text-sm font-medium text-foreground">Peak activity chart failed to load</p>
             <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
           </div>
@@ -59,7 +59,7 @@ export function ConversationsSection({
         <AnimatedItem>
           <ErrorBoundary
             fallback={(error) => (
-              <div className="rounded-lg border border-border bg-card p-4">
+              <div className="rounded-card border border-border bg-card p-4">
                 <p className="text-sm font-medium text-foreground">Conversation chart failed to load</p>
                 <p className="text-xs text-muted-foreground mt-1">{error?.message || 'An unexpected error occurred.'}</p>
               </div>

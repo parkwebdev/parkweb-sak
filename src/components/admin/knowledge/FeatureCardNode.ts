@@ -169,7 +169,7 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
       'div',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
         'data-feature-card': '',
-        class: 'feature-card rounded-lg border border-border bg-card p-4 shadow-sm',
+        class: 'feature-card rounded-card border border-border bg-card p-4 shadow-sm',
       }),
       0,
     ];
@@ -179,7 +179,7 @@ export const FeatureCardNode = Node.create<FeatureCardOptions>({
     return () => {
       const dom = document.createElement('div');
       dom.setAttribute('data-feature-card', '');
-      dom.className = 'feature-card rounded-lg border border-border bg-card p-4 shadow-sm';
+      dom.className = 'feature-card rounded-card border border-border bg-card p-4 shadow-sm';
 
       // Content hole for h4 + p (the actual editable content)
       const contentDOM = document.createElement('div');

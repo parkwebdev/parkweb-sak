@@ -206,7 +206,7 @@ export function SubscriptionsTable({
 
   if (!subscriptions.length) {
     return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
+      <div className="rounded-card border border-border bg-card p-8 text-center">
         <p className="text-sm text-muted-foreground">No subscriptions found</p>
       </div>
     );
@@ -219,7 +219,7 @@ export function SubscriptionsTable({
   );
 
   return (
-    <div className="rounded-lg border border-border divide-y divide-border">
+    <div className="rounded-card border border-border divide-y divide-border">
       {subscriptions.map((sub) => (
         <div key={sub.id} className="p-4 flex items-center justify-between">
           <div>
