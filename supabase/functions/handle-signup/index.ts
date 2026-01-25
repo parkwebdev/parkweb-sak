@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getErrorMessage } from '../_shared/errors.ts';
+import { dispatchPushIfEnabled } from '../_shared/push-notifications.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -164,6 +165,17 @@ const handler = async (req: Request): Promise<Response> => {
         });
         console.log('Pilot team member join notification created');
 
+        // Push notification for pilot team join
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        dispatchPushIfEnabled(supabase, supabaseUrl, {
+          user_id: invitation.invited_by,
+          title: 'Pilot Team Member Joined',
+          body: `${email} joined as ${invitation.pilot_role === 'super_admin' ? 'Super Admin' : 'Pilot Support'}`,
+          url: '/admin/team',
+          tag: 'team-joined',
+          data: { member_id: user_id },
+        });
+
         // Log to admin audit log
         await supabase.from('admin_audit_log').insert({
           admin_user_id: invitation.invited_by,
@@ -203,6 +215,17 @@ const handler = async (req: Request): Promise<Response> => {
             read: false
           });
           console.log('Team member join notification created');
+
+          // Push notification for team join
+          const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+          dispatchPushIfEnabled(supabase, supabaseUrl, {
+            user_id: invitation.invited_by,
+            title: 'Team Member Joined',
+            body: `${email} accepted your invitation`,
+            url: '/settings?tab=team',
+            tag: 'team-joined',
+            data: { member_id: user_id },
+          });
         }
       }
 

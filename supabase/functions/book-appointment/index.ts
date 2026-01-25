@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getErrorMessage } from '../_shared/errors.ts';
+import { dispatchPushIfEnabled } from '../_shared/push-notifications.ts';
 import type { SupabaseClientType } from '../_shared/types/supabase.ts';
 import type { GoogleCalendarEventBody, MicrosoftCalendarEventBody, ScheduleItem } from '../_shared/types.ts';
 
@@ -623,6 +624,52 @@ serve(async (req) => {
       });
     } catch (webhookError) {
       console.error('Webhook dispatch failed (non-critical):', webhookError);
+    }
+
+    // Get agent's user_id for notifications
+    const { data: agent } = await supabase
+      .from('agents')
+      .select('user_id')
+      .eq('id', location.agent_id)
+      .single();
+
+    if (agent?.user_id) {
+      // Format time for notification message
+      const formattedTime = startTime.toLocaleString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZone: timezone,
+      });
+
+      // Create in-app notification for booking
+      supabase.from('notifications').insert({
+        user_id: agent.user_id,
+        type: 'booking',
+        title: 'New Tour Booked',
+        message: `${booking.visitor_name} booked a tour at ${location.name}`,
+        data: {
+          booking_id: bookingId,
+          location_id: booking.location_id,
+          start_time: startTime.toISOString(),
+          visitor_name: booking.visitor_name,
+          visitor_email: booking.visitor_email,
+        },
+        read: false
+      }).then(() => console.log('Booking notification created'))
+        .catch(err => console.error('Failed to create booking notification:', err));
+
+      // Push notification for new booking
+      dispatchPushIfEnabled(supabase, supabaseUrl, {
+        user_id: agent.user_id,
+        title: 'New Tour Booked',
+        body: `${booking.visitor_name} - ${formattedTime}`,
+        url: '/ari/calendar',
+        tag: 'booking-new',
+        data: { booking_id: bookingId },
+      });
     }
 
     console.log('Booking created successfully:', bookingId);
