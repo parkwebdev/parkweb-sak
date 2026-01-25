@@ -15,9 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-import { Copy01, Send01, Loading02, ChevronDown, RefreshCw02, Mail01 } from '@untitledui/icons';
+import { Copy01, Send01, Loading02, RefreshCw02, Mail01 } from '@untitledui/icons';
 import { toast } from '@/lib/toast';
 import { copyToClipboard } from '@/lib/clipboard';
 import { supabase } from '@/integrations/supabase/client';
@@ -267,7 +267,8 @@ export function AdminEmails() {
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>('desktop');
   const [previewMode, setPreviewMode] = useState<EmailPreviewMode>('preview');
   const [darkMode, setDarkMode] = useState(false);
-  const [mockDataOpen, setMockDataOpen] = useState(false);
+  // Mock data accordion state - use 'mock-data' string for open, undefined for closed
+  const [mockDataValue, setMockDataValue] = useState<string | undefined>(undefined);
   
   // Edge function preview state
   const [edgeHtml, setEdgeHtml] = useState<string>('');
@@ -894,28 +895,29 @@ export function AdminEmails() {
 
                 {/* Compact Mock Data Section */}
                 {!supabaseExportMode && (
-                  <Collapsible open={mockDataOpen} onOpenChange={setMockDataOpen}>
-                    <Card>
-                      <CollapsibleTrigger asChild>
-                        <CardHeader className="py-2.5 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <CardTitle className="text-sm font-medium">Mock Data</CardTitle>
-                              {!mockDataOpen && (
-                                <span className="text-xs text-muted-foreground truncate max-w-[300px]">
-                                  {getMockDataSummary()}
-                                </span>
-                              )}
-                            </div>
-                            <ChevronDown size={16} className="text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
-                          </div>
-                        </CardHeader>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
+                  <Accordion 
+                    type="single" 
+                    collapsible 
+                    value={mockDataValue} 
+                    onValueChange={setMockDataValue}
+                    className="bg-card"
+                  >
+                    <AccordionItem value="mock-data" className="border-0">
+                      <AccordionTrigger className="py-2.5 px-4 text-sm font-medium hover:no-underline">
+                        <div className="flex items-center gap-3">
+                          <span>Mock Data</span>
+                          {!mockDataValue && (
+                            <span className="text-xs text-muted-foreground font-normal truncate max-w-[300px]">
+                              {getMockDataSummary()}
+                            </span>
+                          )}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-0 pb-0">
                         {renderMockDataControls()}
-                      </CollapsibleContent>
-                    </Card>
-                  </Collapsible>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 )}
 
                 {/* Supabase Export Info */}
