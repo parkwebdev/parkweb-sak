@@ -462,19 +462,29 @@ export function NotificationSettings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-1">
-              <ToggleSettingRow
-                id="browser-notifications"
-                label="Browser Notifications"
-                description={
-                  'Notification' in window && Notification.permission === 'denied'
-                    ? "Blocked by browser. Click the lock icon in your address bar to enable."
-                    : "Show desktop notifications in your browser"
-                }
-                checked={preferences.browser_notifications && ('Notification' in window ? Notification.permission === 'granted' : false)}
-                onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
-                disabled={'Notification' in window && Notification.permission === 'denied'}
-              />
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <ToggleSettingRow
+                  id="browser-notifications"
+                  label="Browser Notifications"
+                  description={
+                    'Notification' in window && Notification.permission === 'denied'
+                      ? "Blocked by browser. Click the lock icon in your address bar to enable."
+                      : "Show desktop notifications in your browser"
+                  }
+                  checked={preferences.browser_notifications && ('Notification' in window ? Notification.permission === 'granted' : false)}
+                  onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
+                  disabled={'Notification' in window && Notification.permission === 'denied'}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={testNotification}
+                disabled={!preferences.browser_notifications || ('Notification' in window && Notification.permission !== 'granted')}
+              >
+                Send Test
+              </Button>
             </div>
 
             <ToggleSettingRow
