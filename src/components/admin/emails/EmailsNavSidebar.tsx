@@ -73,13 +73,8 @@ export const EMAILS_NAV_ITEMS: { id: EmailsTab; label: string; icon: typeof Mail
 export function EmailsNavSidebar({ activeTab, onTabChange, failedEmailCount }: EmailsNavSidebarProps) {
   return (
     <aside className="w-48 shrink-0 border-r border-border bg-background flex flex-col">
-      {/* Header */}
-      <div className="h-14 border-b border-border flex items-center px-3">
-        <h2 className="text-sm font-semibold text-foreground">Emails</h2>
-      </div>
-
       {/* Navigation Items */}
-      <nav className="p-2 space-y-0.5">
+      <nav className="p-2 pt-4 space-y-0.5">
         {EMAILS_NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
