@@ -141,7 +141,7 @@ verify_jwt = false
 
 [functions.send-weekly-report]
 verify_jwt = false
-schedule = "0 8 * * 1"
+schedule = "0 * * * 1"
 
 [functions.send-webhook-failure-email]
 verify_jwt = true

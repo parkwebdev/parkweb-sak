@@ -6,6 +6,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from '@/lib/toast';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,9 +46,32 @@ interface NotificationPreferences {
   agent_email_notifications: boolean;
   report_email_notifications: boolean;
   product_email_notifications: boolean;
+  // Weekly report specific
+  weekly_report_enabled: boolean;
+  weekly_report_timezone: string;
   created_at: string;
   updated_at: string;
 }
+
+// Common timezones for the dropdown
+const TIMEZONE_OPTIONS = [
+  { value: 'America/New_York', label: 'Eastern Time (ET)' },
+  { value: 'America/Chicago', label: 'Central Time (CT)' },
+  { value: 'America/Denver', label: 'Mountain Time (MT)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+  { value: 'America/Phoenix', label: 'Arizona (no DST)' },
+  { value: 'America/Anchorage', label: 'Alaska Time (AKT)' },
+  { value: 'Pacific/Honolulu', label: 'Hawaii Time (HT)' },
+  { value: 'Europe/London', label: 'London (GMT/BST)' },
+  { value: 'Europe/Paris', label: 'Central European (CET)' },
+  { value: 'Europe/Berlin', label: 'Berlin (CET)' },
+  { value: 'Asia/Tokyo', label: 'Japan (JST)' },
+  { value: 'Asia/Shanghai', label: 'China (CST)' },
+  { value: 'Asia/Singapore', label: 'Singapore (SGT)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEST)' },
+  { value: 'Australia/Melbourne', label: 'Melbourne (AEST)' },
+  { value: 'UTC', label: 'UTC' },
+];
 
 export function NotificationSettings() {
   const { user } = useAuth();
@@ -112,6 +143,8 @@ export function NotificationSettings() {
         agent_email_notifications: data.agent_email_notifications ?? true,
         report_email_notifications: data.report_email_notifications ?? true,
         product_email_notifications: data.product_email_notifications ?? true,
+        weekly_report_enabled: data.weekly_report_enabled ?? true,
+        weekly_report_timezone: data.weekly_report_timezone ?? 'America/New_York',
       });
     } catch (error: unknown) {
       logger.error('Error in fetchNotificationPreferences:', error);
@@ -168,13 +201,15 @@ export function NotificationSettings() {
         agent_email_notifications: data.agent_email_notifications ?? true,
         report_email_notifications: data.report_email_notifications ?? true,
         product_email_notifications: data.product_email_notifications ?? true,
+        weekly_report_enabled: data.weekly_report_enabled ?? true,
+        weekly_report_timezone: data.weekly_report_timezone ?? 'America/New_York',
       });
     } catch (error: unknown) {
       logger.error('Error in createDefaultPreferences:', error);
     }
   };
 
-  const updatePreference = async (key: keyof NotificationPreferences, value: boolean) => {
+  const updatePreference = async (key: keyof NotificationPreferences, value: boolean | string) => {
     if (!user || !preferences) return;
 
     // Update local state immediately
@@ -379,11 +414,49 @@ export function NotificationSettings() {
                 <div id="report-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">
                   <ToggleSettingRow
                     id="report-email-notifications"
-                    label="Report Emails"
-                    description="Scheduled reports and analytics digests"
+                    label="Scheduled Report Emails"
+                    description="Reports you've scheduled in the Analytics section"
                     checked={preferences.report_email_notifications}
                     onCheckedChange={(checked) => updatePreference('report_email_notifications', checked)}
                   />
+                </div>
+
+                <div id="weekly-report" className="transition-all duration-300 rounded-lg p-3 -m-3 space-y-3">
+                  <ToggleSettingRow
+                    id="weekly-report-enabled"
+                    label="Weekly Analytics Digest"
+                    description="Receive a summary of your key metrics every Monday at 8 AM"
+                    checked={preferences.weekly_report_enabled}
+                    onCheckedChange={(checked) => updatePreference('weekly_report_enabled', checked)}
+                  />
+                  
+                  {preferences.weekly_report_enabled && (
+                    <div className="pl-4 border-l-2 border-border">
+                      <div className="space-y-2">
+                        <Label htmlFor="weekly-report-timezone" className="text-sm font-medium">
+                          Delivery Timezone
+                        </Label>
+                        <Select
+                          value={preferences.weekly_report_timezone}
+                          onValueChange={(value) => updatePreference('weekly_report_timezone', value)}
+                        >
+                          <SelectTrigger id="weekly-report-timezone" className="w-full max-w-xs">
+                            <SelectValue placeholder="Select timezone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIMEZONE_OPTIONS.map((tz) => (
+                              <SelectItem key={tz.value} value={tz.value}>
+                                {tz.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Your weekly report will arrive at 8 AM in this timezone
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div id="product-emails" className="transition-all duration-300 rounded-lg p-3 -m-3">

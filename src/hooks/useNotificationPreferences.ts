@@ -15,11 +15,15 @@ import { queryKeys } from '@/lib/query-keys';
 export interface NotificationPreferences {
   sound_notifications: boolean;
   browser_notifications: boolean;
+  weekly_report_enabled: boolean;
+  weekly_report_timezone: string;
 }
 
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   sound_notifications: true,
   browser_notifications: false,
+  weekly_report_enabled: true,
+  weekly_report_timezone: 'America/New_York',
 };
 
 /**
@@ -36,7 +40,7 @@ export function useNotificationPreferences() {
 
       const { data, error } = await supabase
         .from('notification_preferences')
-        .select('sound_notifications, browser_notifications')
+        .select('sound_notifications, browser_notifications, weekly_report_enabled, weekly_report_timezone')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -48,6 +52,8 @@ export function useNotificationPreferences() {
       return {
         sound_notifications: data?.sound_notifications ?? true,
         browser_notifications: data?.browser_notifications ?? false,
+        weekly_report_enabled: data?.weekly_report_enabled ?? true,
+        weekly_report_timezone: data?.weekly_report_timezone ?? 'America/New_York',
       };
     },
     enabled: !!user?.id,
