@@ -33,7 +33,24 @@ interface PushSubscription {
 }
 
 /**
+ * Convert base64url to base64
+ */
+function base64urlToBase64(base64url: string): string {
+  return base64url.replace(/-/g, '+').replace(/_/g, '/');
+}
+
+/**
+ * Convert base64 to base64url
+ */
+function base64ToBase64url(base64: string): string {
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/**
  * Generate VAPID JWT token for push authentication
+ * 
+ * VAPID keys are raw EC P-256 keys, not PKCS#8 format.
+ * We import them using JWK format which handles raw keys properly.
  */
 async function generateVapidJwt(
   audience: string,
@@ -51,18 +68,43 @@ async function generateVapidJwt(
     sub: subject,
   };
 
-  // Base64url encode
+  // Base64url encode header and payload
   const encoder = new TextEncoder();
-  const headerB64 = btoa(JSON.stringify(header)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const payloadB64 = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const headerB64 = base64ToBase64url(btoa(JSON.stringify(header)));
+  const payloadB64 = base64ToBase64url(btoa(JSON.stringify(payload)));
   const unsignedToken = `${headerB64}.${payloadB64}`;
 
-  // Import private key for signing
-  const privateKeyBytes = Uint8Array.from(atob(privateKey.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  // Decode the raw public key (65 bytes uncompressed: 0x04 + 32-byte X + 32-byte Y)
+  const publicKeyBytes = Uint8Array.from(
+    atob(base64urlToBase64(publicKey)), 
+    c => c.charCodeAt(0)
+  );
   
+  // Extract X and Y coordinates from uncompressed public key
+  // Skip first byte (0x04 marker) and split remaining 64 bytes
+  const xBytes = publicKeyBytes.slice(1, 33);
+  const yBytes = publicKeyBytes.slice(33, 65);
+  
+  // Convert to base64url for JWK
+  const x = base64ToBase64url(btoa(String.fromCharCode(...xBytes)));
+  const y = base64ToBase64url(btoa(String.fromCharCode(...yBytes)));
+  
+  // The private key is already the raw 32-byte 'd' parameter in base64url
+  const d = base64ToBase64url(privateKey);
+
+  // Create JWK for EC P-256 private key
+  const jwk = {
+    kty: 'EC',
+    crv: 'P-256',
+    x,
+    y,
+    d,
+  };
+
+  // Import private key using JWK format (handles raw keys properly)
   const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8',
-    privateKeyBytes,
+    'jwk',
+    jwk,
     { name: 'ECDSA', namedCurve: 'P-256' },
     false,
     ['sign']
@@ -75,11 +117,11 @@ async function generateVapidJwt(
     encoder.encode(unsignedToken)
   );
 
-  // Convert signature to base64url
-  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  // Convert DER signature to raw format (required for JWT)
+  // crypto.subtle returns IEEE P1363 format already for ECDSA
+  const signatureB64 = base64ToBase64url(
+    btoa(String.fromCharCode(...new Uint8Array(signature)))
+  );
 
   return `${unsignedToken}.${signatureB64}`;
 }
