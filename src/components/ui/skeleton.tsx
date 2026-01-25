@@ -65,7 +65,7 @@ interface SkeletonCardProps {
 
 function SkeletonCard({ className, withHeader = true, withFooter = false }: SkeletonCardProps) {
   return (
-    <div className={cn("rounded-lg border bg-card p-4 space-y-4", className)}>
+    <div className={cn("rounded-card border bg-card p-4 space-y-4", className)}>
       {withHeader && (
         <div className="space-y-2">
           <Skeleton className="h-4 w-1/3" />
@@ -200,7 +200,7 @@ function SkeletonTableSection({ className, rows = 5 }: { className?: string; row
         <Skeleton className="h-9 w-20" />
       </div>
       {/* Table header */}
-      <div className="rounded-lg border">
+      <div className="rounded-card border">
         <div className="border-b px-4 py-3 flex items-center gap-4 bg-muted/30">
           <Skeleton className="h-4 w-4" />
           <Skeleton className="h-4 w-24" />
@@ -239,7 +239,7 @@ function SkeletonListSection({ className, items = 3 }: { className?: string; ite
       {/* List items */}
       <div className="space-y-2">
         {Array.from({ length: items }).map((_, i) => (
-          <div key={i} className="rounded-lg border bg-card p-4">
+          <div key={i} className="rounded-card border bg-card p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ function SkeletonCodeSection({ className }: { className?: string }) {
  */
 function SkeletonSettingsCard({ className }: { className?: string }) {
   return (
-    <div className={cn("rounded-lg border bg-card", className)}>
+    <div className={cn("rounded-card border bg-card", className)}>
       <div className="p-6 space-y-1.5 border-b">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="h-3 w-64" />
@@ -332,7 +332,7 @@ function SkeletonSettingsCard({ className }: { className?: string }) {
  */
 function SkeletonProfileCard({ className }: { className?: string }) {
   return (
-    <div className={cn("rounded-lg border bg-card", className)}>
+    <div className={cn("rounded-card border bg-card", className)}>
       <div className="p-6 space-y-1.5 border-b">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="h-3 w-56" />
@@ -383,7 +383,7 @@ function SkeletonLeadsTableView({ className }: { className?: string }) {
   return (
     <div className={cn("space-y-6", className)}>
       {/* Table */}
-      <div className="rounded-lg border">
+      <div className="rounded-card border">
         {/* Table header */}
         <div className="border-b px-4 py-3 bg-muted/30 flex items-center gap-4">
           <Skeleton className="h-4 w-4" />
@@ -431,7 +431,7 @@ function SkeletonLeadsKanbanView({ className }: { className?: string }) {
             </div>
             {/* Column cards */}
             {Array.from({ length: 3 }).map((_, j) => (
-              <div key={j} className="rounded-lg border bg-card p-4 space-y-3">
+              <div key={j} className="rounded-card border bg-card p-4 space-y-3">
                 <div className="flex items-start justify-between">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-5 w-5 rounded" />
@@ -493,7 +493,7 @@ function SkeletonNewsSection({ items = 3, className }: { items?: number; classNa
       {/* News cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: items }).map((_, i) => (
-          <div key={i} className="rounded-lg border bg-card overflow-hidden">
+          <div key={i} className="rounded-card border bg-card overflow-hidden">
             {/* Featured image placeholder */}
             <Skeleton className="h-32 w-full" />
             <div className="p-4 space-y-3">
@@ -534,7 +534,7 @@ function SkeletonIntegrationsSection({ className }: { className?: string }) {
       {/* Integration cards */}
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="px-4 py-3 rounded-lg border bg-card">
+          <div key={i} className="px-4 py-3 rounded-card border bg-card">
             <div className="flex items-center gap-3">
               <Skeleton className="h-8 w-8 rounded-md" />
               <div className="flex-1 min-w-0 space-y-1.5">
@@ -566,7 +566,7 @@ function SkeletonBadge({ width = "w-16", className }: { width?: string; classNam
  */
 function SkeletonChart({ height = "h-64", className }: { height?: string; className?: string }) {
   return (
-    <div className={cn("rounded-lg border bg-card p-4 space-y-3", className)}>
+    <div className={cn("rounded-card border bg-card p-4 space-y-3", className)}>
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-8 w-24" />
@@ -594,7 +594,7 @@ function SkeletonForm({ fields = 3, className }: { fields?: number; className?: 
  */
 function SkeletonMetricCard({ className }: { className?: string }) {
   return (
-    <div className={cn("rounded-lg border bg-card p-4 space-y-3", className)}>
+    <div className={cn("rounded-card border bg-card p-4 space-y-3", className)}>
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-24" />
         <SkeletonBadge width="w-12" />

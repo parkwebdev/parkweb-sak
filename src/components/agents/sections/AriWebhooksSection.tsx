@@ -185,7 +185,7 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
         ) : (
           <div className="space-y-2">
             {webhooks.map((webhook) => (
-              <div key={webhook.id} className="p-4 rounded-lg border bg-card">
+              <div key={webhook.id} className="p-4 rounded-card border bg-card">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">

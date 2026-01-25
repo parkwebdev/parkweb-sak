@@ -235,7 +235,7 @@ function SortableStageItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex items-center gap-2 p-2.5 bg-card border rounded-lg',
+        'flex items-center gap-2 p-2.5 bg-card border rounded-card',
         isDragging && 'opacity-50 shadow-lg'
       )}
     >

@@ -328,7 +328,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
         ) : (
           <div className="space-y-2">
             {tools.map((tool) => (
-              <div key={tool.id} className="rounded-lg border bg-card overflow-hidden">
+              <div key={tool.id} className="rounded-card border bg-card overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
