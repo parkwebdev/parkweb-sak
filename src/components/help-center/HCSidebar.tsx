@@ -46,12 +46,14 @@ export function HCSidebar({
 }: HCSidebarProps) {
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   
-  // Auto-expand the selected category
+  // Auto-expand the selected category (only when selection changes)
   useEffect(() => {
-    if (selectedCategoryId && !expandedCategories.includes(selectedCategoryId)) {
-      setExpandedCategories(prev => [...prev, selectedCategoryId]);
+    if (selectedCategoryId) {
+      setExpandedCategories(prev => 
+        prev.includes(selectedCategoryId) ? prev : [...prev, selectedCategoryId]
+      );
     }
-  }, [selectedCategoryId, expandedCategories]);
+  }, [selectedCategoryId]);
   
   // Filter articles based on search query
   const filteredCategories = useMemo(() => {
@@ -102,7 +104,7 @@ export function HCSidebar({
                 <AccordionTrigger 
                   showIcon={true}
                   className={cn(
-                    'w-full flex-row-reverse justify-end gap-1 px-2 py-1.5 rounded-md transition-colors',
+                    'w-full flex items-center justify-between gap-1 px-2 py-1.5 rounded-md transition-colors',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                     '[&>svg]:size-3.5 [&>svg]:text-muted-foreground/50',
                     'hover:no-underline pt-1.5',
