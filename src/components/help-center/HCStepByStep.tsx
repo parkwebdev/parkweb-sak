@@ -61,7 +61,7 @@ export function HCStepByStep({ steps, className }: HCStepByStepProps) {
               </p>
             )}
             {step.screenshot && (
-              <div className="overflow-hidden rounded-lg border border-border bg-muted/30 shadow-sm">
+              <div className="overflow-hidden rounded-card border border-border bg-muted/30 shadow-sm">
                 <img
                   src={step.screenshot}
                   alt={step.screenshotAlt || step.title}

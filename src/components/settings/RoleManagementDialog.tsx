@@ -247,7 +247,7 @@ export function RoleManagementDialog({
 
           {/* Permissions Section */}
           {role === 'admin' ? (
-            <div className="p-6 border border-border rounded-lg bg-muted/50 text-center">
+            <div className="p-6 border border-border rounded-card bg-muted/50 text-center">
               <p className="text-sm font-medium text-foreground">Full Access</p>
               <p className="text-xs text-muted-foreground mt-1">
                 Admins have unrestricted access to all features and settings.

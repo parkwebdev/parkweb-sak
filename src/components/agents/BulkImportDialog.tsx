@@ -294,7 +294,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
             <div className="space-y-4">
               <div
                 className={cn(
-                  "border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer",
+                  "border-2 border-dashed rounded-card p-8 text-center transition-colors cursor-pointer",
                   isDragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                 )}
                 onDrop={handleDrop}
@@ -343,7 +343,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
 
               <div className="space-y-3">
                 <Label className="text-xs text-muted-foreground">Map your CSV columns to article fields:</Label>
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border rounded-card overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                       <tr>
@@ -393,7 +393,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
               </div>
 
               {!canProceedToStep3 && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs">
+                <div className="flex items-start gap-2 p-3 rounded-card bg-destructive/10 text-destructive text-xs">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-medium">Required mappings missing:</p>
@@ -411,7 +411,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
           {/* Step 3: Preview & Import */}
           {step === 3 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+              <div className="flex items-center gap-4 p-3 rounded-card bg-muted/50">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-status-active" />
                   <span className="text-sm font-medium">{validCount} articles ready</span>
@@ -430,7 +430,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
                 </div>
               </div>
 
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-card overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>

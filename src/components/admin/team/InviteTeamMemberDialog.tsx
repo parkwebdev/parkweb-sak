@@ -229,7 +229,7 @@ export function InviteTeamMemberDialog({
                 animate={{ opacity: 1 }}
                 exit={prefersReducedMotion ? undefined : { opacity: 0 }}
                 transition={springs.smooth}
-                className="p-4 border border-border rounded-lg bg-muted/50 text-center"
+                className="p-4 border border-border rounded-card bg-muted/50 text-center"
               >
                 <p className="text-sm font-medium text-foreground">Full Access</p>
                 <p className="text-xs text-muted-foreground mt-1">

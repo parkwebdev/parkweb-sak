@@ -228,7 +228,7 @@ export const BookingsByLocationChart = React.memo(function BookingsByLocationCha
                   if (active && payload && payload.length) {
                     const item = payload[0].payload;
                     return (
-                      <div className="bg-popover text-popover-foreground border rounded-lg p-2 shadow-lg">
+                      <div className="bg-popover text-popover-foreground border rounded-card p-2 shadow-lg">
                         <p className="font-medium text-xs">{item.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {item.bookings} booking{item.bookings !== 1 ? 's' : ''}

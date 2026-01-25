@@ -14,7 +14,7 @@ interface DraggedEventPreviewProps {
 export function DraggedEventPreview({ event }: DraggedEventPreviewProps) {
   return (
     <div
-      className="px-3 py-2 rounded-lg shadow-xl text-sm pointer-events-none min-w-[140px] border border-border bg-card"
+      className="px-3 py-2 rounded-card shadow-xl text-sm pointer-events-none min-w-[140px] border border-border bg-card"
       style={{
         backgroundColor: event.color ? `${event.color}30` : 'hsl(var(--card))',
         borderLeft: `3px solid ${event.color || 'hsl(var(--primary))'}`,
