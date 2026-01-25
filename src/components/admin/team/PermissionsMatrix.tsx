@@ -92,7 +92,7 @@ export function PermissionsMatrix({
         </>
       )}
       
-      <div className="border border-border rounded-lg overflow-hidden">
+      <div className="border border-border rounded-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">

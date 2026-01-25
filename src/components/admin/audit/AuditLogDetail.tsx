@@ -185,7 +185,7 @@ export function AuditLogDetail({ entry, onClose }: AuditLogDetailProps) {
           {hasDetails && (
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Details</Label>
-              <div className="bg-muted/50 p-3 rounded-lg">
+              <div className="bg-muted/50 p-3 rounded-card">
                 <DetailsList details={entry.details as Record<string, unknown>} />
               </div>
             </div>
