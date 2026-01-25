@@ -71,8 +71,8 @@ interface NavItemConfig {
 }
 
 export const EMAILS_NAV_ITEMS: NavItemConfig[] = [
-  { id: 'preview', label: 'Preview', icon: Mail01, activeIcon: MailFilled },
   { id: 'stats', label: 'Stats', icon: BarChartSquarePlus, activeIcon: BarChartSquarePlusFilled },
+  { id: 'preview', label: 'Preview', icon: Mail01, activeIcon: MailFilled },
   { id: 'logs', label: 'Delivery Logs', icon: Dotpoints01 },
   { id: 'announcements', label: 'Announcements', icon: Announcement01, activeIcon: AnnouncementFilled },
 ];
