@@ -150,9 +150,9 @@ const getBaseStyles = (): string => `
 // EMAIL WRAPPER
 // =============================================================================
 
-const LOGO_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Pilot%20Email%20Logo%20%40%20481px.png';
-const LINKEDIN_ICON_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/LinkedIn%20Icon@4x.png';
-const FACEBOOK_ICON_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/Email/Facebook%20Icon@4x.png';
+const LOGO_URL = 'https://cdn.getpilot.io/v1/object/public/Email/PilotEmailLogo.png';
+const LINKEDIN_ICON_URL = 'https://cdn.getpilot.io/v1/object/public/Email/LinkedIn.png';
+const FACEBOOK_ICON_URL = 'https://cdn.getpilot.io/v1/object/public/Email/Facebook.png';
 
 type FooterType = 'simple' | 'social' | 'social-unsubscribe';
 
