@@ -900,7 +900,7 @@ export function AdminEmails() {
                     collapsible 
                     value={mockDataValue} 
                     onValueChange={setMockDataValue}
-                    className="bg-card"
+                    className="bg-card px-0"
                   >
                     <AccordionItem value="mock-data" className="border-0">
                       <AccordionTrigger className="py-2.5 px-4 text-sm font-medium hover:no-underline">
