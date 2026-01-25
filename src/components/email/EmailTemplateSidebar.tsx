@@ -146,16 +146,16 @@ export function EmailTemplateSidebar({
                           duration: 0.2,
                           delay: prefersReducedMotion ? 0 : groupIndex * 0.05 + itemIndex * 0.03,
                         }}
-                        className={`
+                      className={`
                           w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-sm
                           transition-colors duration-150
                           ${isActive 
-                            ? 'bg-primary/10 text-primary font-medium' 
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                            ? 'bg-accent text-accent-foreground font-medium' 
+                            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                           }
                         `}
                       >
-                        <Icon size={16} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
+                        <Icon size={16} className={isActive ? 'text-accent-foreground' : 'text-muted-foreground'} />
                         <span className="flex-1 text-left truncate">{template.label}</span>
                         <div className="flex items-center gap-1 shrink-0">
                           {/* Delivery method badge with brand icon */}
