@@ -233,10 +233,13 @@ export function HCArticleView({
               variant="ghost"
               onClick={onPrevious}
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              aria-keyshortcuts="ArrowLeft k"
             >
               <ChevronLeft size={16} aria-hidden="true" />
               <div className="text-left">
-                <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Previous</div>
+                <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">
+                  Previous <span className="hidden sm:inline">(← or K)</span>
+                </div>
                 <div className="text-sm font-medium">{prevArticle.title}</div>
               </div>
             </Button>
@@ -249,9 +252,12 @@ export function HCArticleView({
               variant="ghost"
               onClick={onNext}
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              aria-keyshortcuts="ArrowRight j"
             >
               <div className="text-right">
-                <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">Next</div>
+                <div className="text-2xs uppercase tracking-wide text-muted-foreground/60">
+                  Next <span className="hidden sm:inline">(→ or J)</span>
+                </div>
                 <div className="text-sm font-medium">{nextArticle.title}</div>
               </div>
               <ChevronRight size={16} aria-hidden="true" />

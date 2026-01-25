@@ -17,6 +17,7 @@ import { HCPopularArticles } from '@/components/help-center/HCPopularArticles';
 import { HCTopBarSearch } from '@/components/help-center/HCTopBarSearch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useHCKeyboardNavigation } from '@/hooks/useHCKeyboardNavigation';
 import { springs } from '@/lib/motion-variants';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { 
@@ -130,6 +131,13 @@ export default function HelpCenter() {
       handleSelectArticle(adjacent.next.category, adjacent.next.article);
     }
   };
+  
+  // Keyboard navigation for articles (arrow keys and j/k)
+  useHCKeyboardNavigation({
+    onPrevious: adjacent.prev ? handlePrevious : undefined,
+    onNext: adjacent.next ? handleNext : undefined,
+    enabled: !!currentArticle, // Only enable when viewing an article
+  });
 
   // Show loading state while fetching from DB
   if (isLoading) {
