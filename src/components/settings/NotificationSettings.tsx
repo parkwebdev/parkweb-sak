@@ -3,13 +3,12 @@
  * Manages email categories, browser, and sound notification toggles with toast auto-save feedback.
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { useAuth } from '@/hooks/useAuth';
-import { useNotifications } from '@/hooks/useNotifications';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -17,9 +16,6 @@ import { AnimatedItem } from '@/components/ui/animated-item';
 import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
-import { NOTIFICATION_ICON_PATH, NOTIFICATION_BADGE_PATH } from '@/lib/browser-notifications';
-import { getBrowserDisplayName, getNotificationLimitations, getOSDisplayName, isSafari } from '@/lib/browser-detection';
-import { AlertTriangle } from '@untitledui/icons';
 
 
 interface NotificationPreferences {
@@ -64,18 +60,12 @@ function getTimezoneLabel(): string {
 
 export function NotificationSettings() {
   const { user } = useAuth();
-  const { requestBrowserNotificationPermission } = useNotifications();
-  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, isSupported: pushSupported, error: pushError } = usePushSubscription();
+  const { isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, isSupported: pushSupported } = usePushSubscription();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [pushActionLoading, setPushActionLoading] = useState(false);
   
   const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
-
-  // Memoize browser detection to avoid re-running on every render
-  const browserName = useMemo(() => getBrowserDisplayName(), []);
-  const osName = useMemo(() => getOSDisplayName(), []);
-  const notificationLimitation = useMemo(() => getNotificationLimitations(), []);
 
   // Handle deep linking for unsubscribe URLs
   useEffect(() => {
@@ -325,88 +315,6 @@ export function NotificationSettings() {
     };
   }, []);
 
-  const testNotification = async () => {
-    if (!('Notification' in window)) {
-      toast.error("Not supported", {
-        description: "Browser notifications are not supported in this environment.",
-      });
-      return;
-    }
-
-    if (!preferences?.browser_notifications) {
-      toast.error("Browser notifications disabled", {
-        description: "Please enable browser notifications first.",
-      });
-      return;
-    }
-
-    if (Notification.permission !== 'granted') {
-      const permission = await requestBrowserNotificationPermission();
-      if (permission !== 'granted') {
-        return;
-      }
-    }
-
-    // Use Safari-aware notification options
-    const options: NotificationOptions = {
-      body: 'This is a test notification from Pilot.',
-      icon: NOTIFICATION_ICON_PATH,
-      // Only add badge for non-Safari browsers
-      ...(!isSafari() && { badge: NOTIFICATION_BADGE_PATH }),
-    };
-
-    new Notification('Test Notification', options);
-
-    toast.success("Test notification sent", {
-      description: "Check your browser for the notification!",
-    });
-  };
-
-  // Test background push notification
-  const testBackgroundPush = async () => {
-    if (!user || !isSubscribed) {
-      toast.error("Background notifications not enabled", {
-        description: "Please enable background notifications first.",
-      });
-      return;
-    }
-
-    const toastId = toast.loading("Sending test notification...");
-
-    try {
-      const { data, error } = await supabase.functions.invoke('send-push-notification', {
-        body: {
-          user_id: user.id,
-          title: 'Test Background Notification',
-          body: 'This is a test push notification from Pilot.',
-          url: '/settings?tab=notifications',
-          tag: 'test-push',
-        }
-      });
-
-      if (error) throw error;
-
-      toast.dismiss(toastId);
-      
-      if (data?.sent > 0) {
-        toast.success("Test notification sent!", {
-          description: "Check your device for the notification",
-        });
-      } else if (data?.vapid_mismatch > 0) {
-        toast.error("Push delivery failed", {
-          description: "Your subscription key is outdated. Please toggle Background Notifications off and on again.",
-        });
-      } else {
-        toast.warning("No devices subscribed", {
-          description: "Toggle Background Notifications on to subscribe this device.",
-        });
-      }
-    } catch (error: unknown) {
-      toast.dismiss(toastId);
-      toast.error("Failed to send test", { description: getErrorMessage(error) });
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -544,38 +452,18 @@ export function NotificationSettings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Browser-specific limitation warning */}
-            {notificationLimitation && (
-              <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-                <AlertTriangle size={16} className="shrink-0 mt-0.5 text-warning" aria-hidden="true" />
-                <p>{notificationLimitation}</p>
-              </div>
-            )}
-
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <ToggleSettingRow
-                  id="browser-notifications"
-                  label="Browser Notifications"
-                  description={
-                    'Notification' in window && Notification.permission === 'denied'
-                      ? "Blocked by browser. Click the lock icon in your address bar to enable."
-                      : "Show desktop notifications in your browser"
-                  }
-                  checked={preferences.browser_notifications && ('Notification' in window ? Notification.permission === 'granted' : false)}
-                  onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
-                  disabled={'Notification' in window && Notification.permission === 'denied'}
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={testNotification}
-                disabled={!preferences.browser_notifications || ('Notification' in window && Notification.permission !== 'granted')}
-              >
-                Send Test
-              </Button>
-            </div>
+            <ToggleSettingRow
+              id="browser-notifications"
+              label="Browser Notifications"
+              description={
+                'Notification' in window && Notification.permission === 'denied'
+                  ? "Blocked by browser. Click the lock icon in your address bar to enable."
+                  : "Show desktop notifications in your browser"
+              }
+              checked={preferences.browser_notifications && ('Notification' in window ? Notification.permission === 'granted' : false)}
+              onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
+              disabled={'Notification' in window && Notification.permission === 'denied'}
+            />
 
             <ToggleSettingRow
               id="sound-notifications"
@@ -588,53 +476,41 @@ export function NotificationSettings() {
             {/* Background Push Notifications */}
             {pushSupported && (
               <>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <ToggleSettingRow
-                      id="background-push-notifications"
-                      label="Background Notifications"
-                      description={
-                        isSubscribed
-                          ? "Receive alerts even when the app is closed"
-                          : "Enable to receive notifications when the app is closed"
-                      }
-                      checked={isSubscribed}
-                      onCheckedChange={async (checked) => {
-                        setPushActionLoading(true);
-                        try {
-                          if (checked) {
-                            const success = await subscribe();
-                            if (success) {
-                              await updatePreference('background_push_enabled', true);
-                              toast.success("Background notifications enabled");
-                            } else {
-                              toast.error("Subscription failed", {
-                                description: "Please check your browser supports push notifications and try again."
-                              });
-                            }
-                          } else {
-                            const success = await unsubscribe();
-                            if (success) {
-                              await updatePreference('background_push_enabled', false);
-                              toast.success("Background notifications disabled");
-                            }
-                          }
-                        } finally {
-                          setPushActionLoading(false);
+                <ToggleSettingRow
+                  id="background-push-notifications"
+                  label="Background Notifications"
+                  description={
+                    isSubscribed
+                      ? "Receive alerts even when the app is closed"
+                      : "Enable to receive notifications when the app is closed"
+                  }
+                  checked={isSubscribed}
+                  onCheckedChange={async (checked) => {
+                    setPushActionLoading(true);
+                    try {
+                      if (checked) {
+                        const success = await subscribe();
+                        if (success) {
+                          await updatePreference('background_push_enabled', true);
+                          toast.success("Background notifications enabled");
+                        } else {
+                          toast.error("Subscription failed", {
+                            description: "Please check your browser supports push notifications and try again."
+                          });
                         }
-                      }}
-                      disabled={pushLoading || pushActionLoading}
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={testBackgroundPush}
-                    disabled={!isSubscribed || pushLoading || pushActionLoading}
-                  >
-                    Send Test
-                  </Button>
-                </div>
+                      } else {
+                        const success = await unsubscribe();
+                        if (success) {
+                          await updatePreference('background_push_enabled', false);
+                          toast.success("Background notifications disabled");
+                        }
+                      }
+                    } finally {
+                      setPushActionLoading(false);
+                    }
+                  }}
+                  disabled={pushLoading || pushActionLoading}
+                />
 
                 {/* Per-type push preferences - only show when subscribed */}
                 {isSubscribed && (
@@ -737,45 +613,6 @@ export function NotificationSettings() {
               checked={preferences.report_notifications}
               onCheckedChange={(checked) => updatePreference('report_notifications', checked)}
             />
-          </CardContent>
-        </Card>
-      </AnimatedItem>
-
-      {/* Browser Status */}
-      <AnimatedItem>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Browser Permission Status</CardTitle>
-            <CardDescription className="text-xs">
-              Current browser notification permission
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium">Permission Status</p>
-                <p className="text-xs text-muted-foreground">
-                  {typeof window !== 'undefined' && 'Notification' in window
-                    ? Notification.permission === 'granted'
-                      ? 'Notifications are enabled'
-                      : Notification.permission === 'denied'
-                      ? 'Notifications are blocked. Enable in browser settings.'
-                      : 'Notifications permission not requested'
-                    : 'Browser notifications not supported'}
-                </p>
-                <p className="text-xs text-muted-foreground/70 mt-1">
-                  Using {browserName} on {osName}
-                </p>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={testNotification}
-                disabled={!preferences.browser_notifications}
-              >
-                Test Notification
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </AnimatedItem>
