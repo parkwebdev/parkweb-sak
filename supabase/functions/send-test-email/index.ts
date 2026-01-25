@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { Resend } from "npm:resend@4.0.0";
+import { logEmailSent } from '../_shared/email-logging.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,6 +61,21 @@ serve(async (req: Request): Promise<Response> => {
     });
 
     console.log("Test email sent successfully:", emailResponse);
+
+    // Log email send for delivery tracking
+    if (emailResponse.data?.id) {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      await logEmailSent(supabase, {
+        resendEmailId: emailResponse.data.id,
+        toEmail: to,
+        fromEmail: 'test@getpilot.io',
+        subject: `[TEST] ${subject}`,
+        templateType: `test_${templateType}`,
+      });
+    }
 
     return new Response(
       JSON.stringify({ success: true, id: emailResponse.data?.id }),

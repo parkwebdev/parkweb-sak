@@ -23,6 +23,7 @@ import {
   spacer, 
   generateWrapper 
 } from '../_shared/email-template.ts';
+import { logEmailSent } from '../_shared/email-logging.ts';
 import { AnalyticsReportPDF, sanitizePDFData, normalizePDFConfig } from '../_shared/pdf/index.ts';
 import { buildPDFDataFromSupabase } from '../_shared/build-pdf-data.ts';
 import type { PDFData, PDFConfig } from '../_shared/pdf/types.ts';
@@ -498,10 +499,12 @@ serve(async (req: Request): Promise<Response> => {
           
           const unsubscribeUrl = `${appUrl}/settings?tab=notifications#report-emails`;
           
-          await resend.emails.send({
+          const subject = `${report.name} - ${report.frequency.charAt(0).toUpperCase() + report.frequency.slice(1)} Report`;
+          
+          const { data: emailResponse } = await resend.emails.send({
             from: "Pilot Analytics <reports@getpilot.io>",
             to: [recipient],
-            subject: `${report.name} - ${report.frequency.charAt(0).toUpperCase() + report.frequency.slice(1)} Report`,
+            subject,
             html: emailContent,
             headers: {
               'List-Unsubscribe': `<${unsubscribeUrl}>`,
@@ -510,6 +513,18 @@ serve(async (req: Request): Promise<Response> => {
               'X-Auto-Response-Suppress': 'All',
             },
           });
+
+          // Log email send for delivery tracking
+          if (emailResponse?.id) {
+            await logEmailSent(supabase, {
+              resendEmailId: emailResponse.id,
+              toEmail: recipient,
+              fromEmail: 'reports@getpilot.io',
+              subject,
+              templateType: 'scheduled_report',
+              metadata: { report_id: report.id, frequency: report.frequency },
+            });
+          }
         }
 
         // Update last_sent_at

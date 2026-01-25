@@ -14,6 +14,7 @@ import {
   generateWrapper 
 } from '../_shared/email-template.ts';
 import { getErrorMessage } from '../_shared/errors.ts';
+import { logEmailSent } from '../_shared/email-logging.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -113,6 +114,17 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Member removed email sent successfully:", emailResponse);
+
+    // Log email send for delivery tracking
+    if (emailResponse.data?.id) {
+      await logEmailSent(supabase, {
+        resendEmailId: emailResponse.data.id,
+        toEmail: email,
+        fromEmail: 'team@getpilot.io',
+        subject: `${memberFullName} has been removed from ${companyName}`,
+        templateType: 'member_removed',
+      });
+    }
 
     // Log security event
     const authHeader = req.headers.get('authorization');

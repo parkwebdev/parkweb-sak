@@ -15,6 +15,7 @@ import {
   generateWrapper 
 } from '../_shared/email-template.ts';
 import { getErrorMessage } from '../_shared/errors.ts';
+import { logEmailSent } from '../_shared/email-logging.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -190,6 +191,18 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log("Pilot team invitation email sent successfully:", emailResponse);
+
+    // Log email send for delivery tracking
+    if (emailResponse.data?.id) {
+      await logEmailSent(supabase, {
+        resendEmailId: emailResponse.data.id,
+        toEmail: email,
+        fromEmail: 'team@getpilot.io',
+        subject: `${invitedBy} invited you to join the Pilot Team`,
+        templateType: 'pilot_team_invitation',
+        metadata: { role, invited_by: user.id },
+      });
+    }
 
     // Store the pending invitation in the database with permissions
     const { error: pendingError } = await supabase

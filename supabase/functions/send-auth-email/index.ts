@@ -8,6 +8,7 @@
  */
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { Resend } from "npm:resend@2.0.0";
 import { 
   colors,
@@ -17,6 +18,7 @@ import {
   spacer,
   generateWrapper 
 } from '../_shared/email-template.ts';
+import { logEmailSent } from '../_shared/email-logging.ts';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -123,6 +125,21 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     console.log(`[send-auth-email] Email sent successfully:`, emailResponse);
+
+    // Log email send for delivery tracking
+    if (emailResponse.data?.id) {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      await logEmailSent(supabase, {
+        resendEmailId: emailResponse.data.id,
+        toEmail: to,
+        fromEmail: 'team@getpilot.io',
+        subject,
+        templateType: `auth_${type}`,
+      });
+    }
 
     return new Response(
       JSON.stringify({ success: true, id: emailResponse.data?.id }),
