@@ -148,14 +148,14 @@ export function ContactFormPreview({
 
   if (!enabled) {
     return (
-      <div className="bg-muted rounded-lg p-6 flex items-center justify-center min-h-[200px]">
+      <div className="bg-muted rounded-card p-6 flex items-center justify-center min-h-[200px]">
         <p className="text-sm text-muted-foreground">Contact form is disabled</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-muted rounded-lg p-4">
+    <div className="bg-muted rounded-card p-4">
       {/* Step indicator */}
       {totalSteps > 1 && (
         <div className="flex items-center justify-center gap-1.5 mb-3">

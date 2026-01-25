@@ -387,7 +387,7 @@ export const ContactForm = ({
 
   return (
     <div className="flex items-start">
-      <div className="bg-muted rounded-lg p-3 w-full">
+      <div className="bg-muted rounded-card p-3 w-full">
         {/* Step indicator */}
         {totalSteps > 1 && (
           <div className="flex items-center justify-center gap-1.5 mb-3">

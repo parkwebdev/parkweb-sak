@@ -127,7 +127,7 @@ class ErrorBoundary extends Component<Props, State> {
               </button>
             </div>
             {import.meta.env.DEV && this.state.error && (
-              <details className="mt-6 text-left p-4 bg-muted rounded-lg">
+              <details className="mt-6 text-left p-4 bg-muted rounded-card">
                 <summary className="text-sm font-medium cursor-pointer text-muted-foreground">
                   Error Details (Dev Only)
                 </summary>

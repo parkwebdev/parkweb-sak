@@ -46,7 +46,7 @@ const RouteErrorFallback = ({ error }: RouteErrorFallbackProps) => {
           </Button>
         </div>
         {import.meta.env.DEV && error && (
-          <details className="mt-6 text-left p-4 bg-muted rounded-lg">
+          <details className="mt-6 text-left p-4 bg-muted rounded-card">
             <summary className="text-sm font-medium cursor-pointer text-muted-foreground">
               Error Details (Dev Only)
             </summary>

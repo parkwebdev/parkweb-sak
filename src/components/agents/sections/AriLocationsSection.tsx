@@ -652,7 +652,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
       <div className="space-y-4">
         {/* Validation Warning Banner - Properties View */}
         {viewMode === 'properties' && validationStats.missingLotNumber > 0 && (
-          <div className="flex items-center gap-3 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+          <div className="flex items-center gap-3 p-3 bg-warning/10 border border-warning/30 rounded-card">
             <AlertTriangle size={16} className="text-warning flex-shrink-0" />
             <span className="text-sm flex-1">
               <strong>{validationStats.missingLotNumber}</strong> propert{validationStats.missingLotNumber > 1 ? 'ies are' : 'y is'} missing lot numbers.{' '}
