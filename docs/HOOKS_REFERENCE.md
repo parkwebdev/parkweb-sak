@@ -1735,6 +1735,39 @@ const isMobile = useMobile(); // boolean - true if viewport < 768px
 
 ---
 
+### useServiceWorker
+
+Manages service worker registration and lifecycle for PWA push notifications.
+
+```tsx
+import { useServiceWorker } from '@/hooks/useServiceWorker';
+
+const {
+  registration,        // ServiceWorkerRegistration | null
+  isReady,             // boolean - SW ready for push subscriptions
+  isUpdateAvailable,   // boolean - New version available
+  error,               // Error | null - Registration error
+  skipWaiting,         // () => void - Activate new SW immediately
+  checkForUpdates,     // () => Promise<void> - Manual update check
+} = useServiceWorker();
+```
+
+**Usage for Push Subscriptions**:
+```tsx
+// Get push subscription for server notifications
+if (isReady && registration) {
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: vapidPublicKey,
+  });
+  // Send subscription to server
+}
+```
+
+**File**: `src/hooks/useServiceWorker.ts`
+
+---
+
 ---
 
 ### useReducedMotion

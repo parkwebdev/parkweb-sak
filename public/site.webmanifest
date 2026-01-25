@@ -1,6 +1,13 @@
 {
   "name": "Pilot",
   "short_name": "Pilot",
+  "description": "Real Estate Chat Agents",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#171717",
+  "background_color": "#171717",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -13,9 +20,20 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/notification-icon.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "theme_color": "#171717",
-  "background_color": "#171717",
-  "display": "standalone"
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false
 }

@@ -2,12 +2,13 @@
  * Browser Push Notifications Utility
  * 
  * Handles browser notification delivery when tab is not focused.
- * Includes permission checking and graceful fallbacks.
+ * Includes permission checking, graceful fallbacks, and cross-browser support.
  * 
  * @module lib/browser-notifications
  */
 
 import type { Notification as AppNotification } from '@/hooks/useUserNotifications';
+import { isSafari } from './browser-detection';
 
 /**
  * Notification icon path with cache-busting version.
@@ -39,6 +40,31 @@ export function isTabFocused(): boolean {
 }
 
 /**
+ * Get browser-optimized notification options.
+ * Safari ignores badge, silent, and requireInteraction properties.
+ */
+function getNotificationOptions(notification: AppNotification): NotificationOptions {
+  const baseOptions: NotificationOptions = {
+    body: notification.message,
+    icon: NOTIFICATION_ICON_PATH,
+    tag: `notification-${notification.id}`,
+  };
+
+  // Safari ignores these properties - only add for other browsers
+  // to keep the options clean and avoid potential issues
+  if (!isSafari()) {
+    return {
+      ...baseOptions,
+      badge: NOTIFICATION_BADGE_PATH,
+      requireInteraction: false,
+      silent: true, // We handle sound separately
+    };
+  }
+
+  return baseOptions;
+}
+
+/**
  * Show a browser notification for a new app notification.
  * Only shows if tab is not focused and permissions are granted.
  * 
@@ -57,16 +83,8 @@ export function showBrowserNotification(notification: AppNotification): boolean 
   }
 
   try {
-    const tag = `notification-${notification.id}`;
-
-    const browserNotification = new Notification(notification.title, {
-      body: notification.message,
-      icon: NOTIFICATION_ICON_PATH,
-      badge: NOTIFICATION_BADGE_PATH,
-      tag, // Prevents duplicate notifications
-      requireInteraction: false,
-      silent: true, // We handle sound separately
-    });
+    const options = getNotificationOptions(notification);
+    const browserNotification = new Notification(notification.title, options);
 
     // Auto-close after 5 seconds
     setTimeout(() => {
