@@ -20,9 +20,9 @@ import { toast } from '@/lib/toast';
 import { copyToClipboard } from '@/lib/clipboard';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailTemplateSidebar, type EmailTemplateType } from '@/components/email/EmailTemplateSidebar';
-import { EmailPreviewModeToggle, type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
+import { type EmailPreviewMode } from '@/components/email/EmailPreviewModeToggle';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
-import { EmailDeliveryLogs, EmailStatsSection, AnnouncementBuilder, EmailsNavSidebar, type EmailsTab } from '@/components/admin/emails';
+import { EmailDeliveryLogs, EmailStatsSection, AnnouncementBuilder, EmailsNavSidebar, EmailPreviewControls, type EmailsTab } from '@/components/admin/emails';
 import { useEmailDeliveryLogs } from '@/hooks/admin';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import {
@@ -221,12 +221,6 @@ export function AdminEmails() {
   // Tab state for TopBar dropdown
   const [activeTab, setActiveTab] = useState<EmailsTab>('preview');
 
-  // Configure top bar for this page (simplified - no dropdown)
-  const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Mail01} title="Emails" />,
-  }), []);
-  useTopBar(topBarConfig);
-
   // Fetch email delivery logs and stats
   const { logs, stats, loading: logsLoading } = useEmailDeliveryLogs();
 
@@ -252,6 +246,23 @@ export function AdminEmails() {
   
   // Check if current template is backed by edge function
   const isEdgeBacked = EDGE_BACKED_TEMPLATES.includes(activeTemplate);
+
+  // Configure top bar for this page with preview controls when on preview tab
+  const topBarConfig = useMemo(() => ({
+    left: <TopBarPageContext icon={Mail01} title="Emails" />,
+    right: activeTab === 'preview' ? (
+      <EmailPreviewControls
+        previewWidth={previewWidth}
+        onPreviewWidthChange={setPreviewWidth}
+        darkMode={darkMode}
+        onDarkModeChange={setDarkMode}
+        previewMode={previewMode}
+        onPreviewModeChange={setPreviewMode}
+        showSupabaseOption={supportsSupabaseExport}
+      />
+    ) : undefined,
+  }), [activeTab, previewWidth, darkMode, previewMode, supportsSupabaseExport]);
+  useTopBar(topBarConfig);
 
   // =============================================================================
   // MOCK DATA STATE - Edge-backed templates
@@ -829,10 +840,6 @@ export function AdminEmails() {
           <EmailTemplateSidebar 
             activeTemplate={activeTemplate} 
             onTemplateChange={setActiveTemplate}
-            previewWidth={previewWidth}
-            onPreviewWidthChange={setPreviewWidth}
-            darkMode={darkMode}
-            onDarkModeChange={setDarkMode}
           />
         )}
 
@@ -845,20 +852,13 @@ export function AdminEmails() {
 
             {activeTab === 'preview' && (
               <div className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Preview and test email templates
-                      {isEdgeBacked && !supabaseExportMode && (
-                        <span className="ml-2 text-xs text-status-active">• Using Edge Function</span>
-                      )}
-                    </p>
-                  </div>
-                  <EmailPreviewModeToggle
-                    mode={previewMode}
-                    onModeChange={setPreviewMode}
-                    showSupabaseOption={supportsSupabaseExport}
-                  />
+                <div className="mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    Preview and test email templates
+                    {isEdgeBacked && !supabaseExportMode && (
+                      <span className="ml-2 text-xs text-status-active">• Using Edge Function</span>
+                    )}
+                  </p>
                 </div>
 
                 {/* Compact Mock Data Section */}
