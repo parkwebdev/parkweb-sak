@@ -456,7 +456,7 @@ export function ExportLeadsDialog({
         </div>
 
         {/* Preview Count */}
-        <div className="rounded-lg bg-muted/50 p-3 text-center">
+        <div className="rounded-card bg-muted/50 p-3 text-center">
           <span className="text-sm text-muted-foreground">
             Exporting{' '}
             <span className="font-semibold text-foreground">{previewCount}</span>{' '}

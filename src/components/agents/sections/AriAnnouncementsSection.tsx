@@ -406,7 +406,7 @@ const AnnouncementSheet = ({
             <section className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Preview</h3>
               
-              <div className="rounded-lg overflow-hidden bg-card border shadow-sm">
+              <div className="rounded-card overflow-hidden bg-card border shadow-sm">
                 <div className="px-3 py-2.5 flex items-center gap-3">
                   {imagePreview && (
                     <img 

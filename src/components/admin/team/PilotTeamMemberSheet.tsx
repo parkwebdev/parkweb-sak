@@ -269,7 +269,7 @@ export function PilotTeamMemberSheet({
 
               {/* Self-edit or Super Admin warning */}
               {!canEdit && (
-                <div className="rounded-lg bg-muted/50 p-3 mt-3">
+                <div className="rounded-card bg-muted/50 p-3 mt-3">
                   <p className="text-sm text-muted-foreground">
                     {isSelf
                       ? "You cannot edit your own role or permissions."
