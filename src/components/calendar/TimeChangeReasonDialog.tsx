@@ -113,7 +113,7 @@ export function TimeChangeReasonDialog({
           <ConflictWarningBanner conflictingEvents={conflictingEvents} />
 
           {/* Time change summary */}
-          <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+          <div className="space-y-2 p-3 bg-muted/50 rounded-card">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-muted-foreground uppercase">From:</span>
               <span className="text-sm line-through text-muted-foreground">

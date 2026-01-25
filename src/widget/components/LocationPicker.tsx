@@ -49,7 +49,7 @@ export function LocationPicker({
               key={location.id}
               onClick={() => onSelect(location.id)}
               className={`
-                w-full flex items-center gap-3 p-3 rounded-lg border transition-all
+                w-full flex items-center gap-3 p-3 rounded-card border transition-all
                 ${isSelected 
                   ? 'border-2 bg-opacity-10' 
                   : 'border-border hover:border-primary/50 hover:bg-muted/50'

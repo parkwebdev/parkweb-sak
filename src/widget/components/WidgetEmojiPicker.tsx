@@ -99,7 +99,7 @@ export function WidgetEmojiPicker({
   const [activeTab, setActiveTab] = useState<CategoryKey>('smileys');
 
   return (
-    <div className="w-[320px] bg-background border border-border rounded-lg shadow-lg overflow-hidden">
+    <div className="w-[320px] bg-background border border-border rounded-card shadow-lg overflow-hidden">
       {/* Tab Bar - CSS-only, no Radix */}
       <div className="w-full grid grid-cols-8 h-12 bg-muted/50">
         {(Object.entries(EMOJI_CATEGORIES) as [CategoryKey, typeof EMOJI_CATEGORIES[CategoryKey]][]).map(([key, category]) => (

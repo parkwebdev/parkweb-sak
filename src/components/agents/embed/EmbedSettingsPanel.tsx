@@ -366,7 +366,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
               </div>
             </div>
 
-            <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+            <div className="space-y-2 p-3 bg-muted/50 rounded-card">
               <p className="text-sm font-medium">Installation Steps:</p>
               <ol className="list-decimal list-inside space-y-1 text-xs text-muted-foreground">
                 <li>Copy the embed code above</li>

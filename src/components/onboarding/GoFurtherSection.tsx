@@ -83,7 +83,7 @@ function FeatureCardItem({
     >
       <Link
         to={card.route}
-        className="block bg-muted/50 rounded-lg p-3 hover:bg-muted transition-colors group"
+        className="block bg-muted/50 rounded-card p-3 hover:bg-muted transition-colors group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

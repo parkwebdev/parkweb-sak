@@ -27,7 +27,7 @@ export const InstallationSection = ({ embedCode }: InstallationSectionProps) => 
         </div>
       </div>
 
-      <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+      <div className="space-y-3 p-4 bg-muted/50 rounded-card">
         <p className="text-sm font-medium">Installation Steps:</p>
         <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
           <li>Copy the embed code above</li>
@@ -37,7 +37,7 @@ export const InstallationSection = ({ embedCode }: InstallationSectionProps) => 
         </ol>
       </div>
 
-      <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+      <div className="space-y-2 p-4 bg-muted/50 rounded-card">
         <p className="text-sm font-medium">Need help?</p>
         <p className="text-sm text-muted-foreground">
           Check out our documentation for detailed integration guides for popular platforms like WordPress, Shopify, Webflow, and more.

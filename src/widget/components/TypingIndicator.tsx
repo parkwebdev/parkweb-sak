@@ -31,7 +31,7 @@ export const TypingIndicator = ({ primaryColor, isHumanTyping, typingAgentName }
       <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
         <ChatBubbleIcon className="h-4 w-4 text-foreground" />
       </div>
-      <div className="bg-muted rounded-lg p-3">
+      <div className="bg-muted rounded-card p-3">
         <div className="flex items-center gap-1.5">
           {isHumanTyping && typingAgentName && (
             <span className="text-xs text-info font-medium mr-1">{typingAgentName}</span>

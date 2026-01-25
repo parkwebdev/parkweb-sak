@@ -162,7 +162,7 @@ export const MessageBubble = React.memo(function MessageBubble({
         {/* Message bubble - only show if there's text content */}
         {message.content && (
           <div 
-            className={`rounded-lg p-3 text-foreground ${isUser ? '' : 'bg-muted'}`}
+            className={`rounded-card p-3 text-foreground ${isUser ? '' : 'bg-muted'}`}
             style={isUser ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
           >
             {message.type === 'audio' && message.audioUrl && (

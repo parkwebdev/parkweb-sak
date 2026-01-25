@@ -880,7 +880,7 @@ export function MapLibreMap({
       )}
 
       {showControls && markers.length > 0 && (
-        <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border border-border rounded-lg p-3 text-xs z-10">
+        <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border border-border rounded-card p-3 text-xs z-10">
           <div className="font-medium mb-2">{showHeatmap ? "Density intensity" : "Visitor density"}</div>
           {showHeatmap ? (
             <div className="flex items-center gap-1">
