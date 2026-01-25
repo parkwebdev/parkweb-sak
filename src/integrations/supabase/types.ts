@@ -1498,6 +1498,7 @@ export type Database = {
         Row: {
           agent_email_notifications: boolean | null
           agent_notifications: boolean | null
+          background_push_enabled: boolean | null
           booking_email_notifications: boolean | null
           browser_notifications: boolean | null
           conversation_notifications: boolean | null
@@ -1520,6 +1521,7 @@ export type Database = {
         Insert: {
           agent_email_notifications?: boolean | null
           agent_notifications?: boolean | null
+          background_push_enabled?: boolean | null
           booking_email_notifications?: boolean | null
           browser_notifications?: boolean | null
           conversation_notifications?: boolean | null
@@ -1542,6 +1544,7 @@ export type Database = {
         Update: {
           agent_email_notifications?: boolean | null
           agent_notifications?: boolean | null
+          background_push_enabled?: boolean | null
           booking_email_notifications?: boolean | null
           browser_notifications?: boolean | null
           conversation_notifications?: boolean | null
@@ -1986,6 +1989,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       query_embedding_cache: {
         Row: {
