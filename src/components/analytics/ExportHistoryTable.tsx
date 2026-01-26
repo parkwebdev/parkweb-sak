@@ -20,6 +20,7 @@ import { useReportExports, type ReportExport } from '@/hooks/useReportExports';
 import { downloadFile, downloadFilesAsZip } from '@/lib/file-download';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { FileX02, Trash01, Download01 } from '@untitledui/icons';
 import { format } from 'date-fns';
@@ -179,7 +180,11 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
           onClick={handleBulkDownload}
           disabled={isBulkDownloading}
         >
-          <Download01 className="mr-1.5 size-4" aria-hidden="true" />
+          {isBulkDownloading ? (
+            <Spinner size="sm" className="mr-1.5" />
+          ) : (
+            <Download01 className="mr-1.5 size-4" aria-hidden="true" />
+          )}
           {isBulkDownloading ? 'Downloading...' : 'Download'}
         </Button>
         <Button
