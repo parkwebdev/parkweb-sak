@@ -9,6 +9,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { cn } from '@/lib/utils';
 import { X, Grid01 as Grid, SearchMd, Shield01, ArrowLeft } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { Link, useLocation } from 'react-router-dom';
@@ -187,18 +188,23 @@ function SidebarComponent({ onClose }: SidebarProps) {
   }).length;
 
   return (
-    <aside className="flex h-screen w-[240px] bg-background border-r border-border">
-      <nav className="w-full flex flex-col pt-6 px-3 pb-4" aria-label="Main navigation">
+    <aside className={cn(
+      "flex h-screen w-[240px] border-r",
+      isPilotTeamMember && isOnAdminRoute
+        ? "bg-black border-white/10"
+        : "bg-background border-border"
+    )}>
+      <nav className={cn("w-full flex flex-col pt-6 px-3 pb-4", isPilotTeamMember && isOnAdminRoute && "text-white")} aria-label="Main navigation">
         {/* Header with logo */}
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
             {isPilotTeamMember && isOnAdminRoute ? (
               // Admin mode header
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-destructive/10 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-lg bg-destructive/20 flex items-center justify-center">
                   <Shield01 size={14} className="text-destructive" />
                 </div>
-                <span className="text-sm font-semibold text-foreground">{isSuperAdmin ? 'Super Admin' : 'Admin'}</span>
+                <span className="text-sm font-semibold text-white">{isSuperAdmin ? 'Super Admin' : 'Admin'}</span>
               </div>
             ) : (
               <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
@@ -206,7 +212,12 @@ function SidebarComponent({ onClose }: SidebarProps) {
             {onClose && (
               <button
                 onClick={onClose}
-                className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                className={cn(
+                  "lg:hidden p-1 rounded-md",
+                  isPilotTeamMember && isOnAdminRoute
+                    ? "hover:bg-white/5 text-white/60 hover:text-white"
+                    : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                )}
                 aria-label="Close menu"
               >
                 <X size={16} />
@@ -225,7 +236,12 @@ function SidebarComponent({ onClose }: SidebarProps) {
           >
             <button
               onClick={() => setSearchOpen(true)}
-              className="items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50"
+              className={cn(
+                "items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border",
+                isPilotTeamMember && isOnAdminRoute
+                  ? "bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border-white/10"
+                  : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50"
+              )}
             >
               <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
                 <SearchMd size={14} className="flex-shrink-0" />
@@ -233,10 +249,20 @@ function SidebarComponent({ onClose }: SidebarProps) {
                   Search...
                 </span>
                 <div className="flex items-center gap-0.5 ml-auto">
-                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
+                  <kbd className={cn(
+                    "pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border px-1 font-mono text-2xs font-medium min-w-[20px]",
+                    isPilotTeamMember && isOnAdminRoute
+                      ? "bg-white/10 border-white/10 text-white/50"
+                      : "bg-background border-border text-muted-foreground"
+                  )}>
                     <span className="text-xs">⌘</span>
                   </kbd>
-                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
+                  <kbd className={cn(
+                    "pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border px-1 font-mono text-2xs font-medium min-w-[20px]",
+                    isPilotTeamMember && isOnAdminRoute
+                      ? "bg-white/10 border-white/10 text-white/50"
+                      : "bg-background border-border text-muted-foreground"
+                  )}>
                     K
                   </kbd>
                 </div>
@@ -261,11 +287,16 @@ function SidebarComponent({ onClose }: SidebarProps) {
                   <Link 
                     to={item.path}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                    className={cn(
+                      "items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       isActive 
-                        ? 'bg-accent text-accent-foreground' 
-                        : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                    }`}
+                        ? isPilotTeamMember && isOnAdminRoute
+                          ? 'bg-white/10 text-white'
+                          : 'bg-accent text-accent-foreground'
+                        : isPilotTeamMember && isOnAdminRoute
+                          ? 'bg-transparent hover:bg-white/5 text-white/60 hover:text-white'
+                          : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                    )}
                   >
                     <div className="items-center flex gap-2 my-auto w-full">
                       <div className="items-center flex my-auto w-[18px] flex-shrink-0 relative">
@@ -403,14 +434,22 @@ function SidebarComponent({ onClose }: SidebarProps) {
           {/* Back to Dashboard link for admin mode */}
           {isSuperAdmin && isOnAdminRoute && (
             <motion.div 
-              className="items-center flex w-full py-0.5 mt-2 pt-2 border-t border-border"
+              className={cn(
+                "items-center flex w-full py-0.5 mt-2 pt-2 border-t",
+                isPilotTeamMember && isOnAdminRoute ? "border-white/10" : "border-border"
+              )}
               initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, ...springs.smooth }}
             >
               <Link 
                 to="/dashboard"
-                className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                className={cn(
+                  "items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent",
+                  isPilotTeamMember && isOnAdminRoute
+                    ? "hover:bg-white/5 text-white/60 hover:text-white"
+                    : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                )}
               >
                 <div className="items-center flex gap-2 my-auto w-full">
                   <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
