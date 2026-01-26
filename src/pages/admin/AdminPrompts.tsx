@@ -12,7 +12,8 @@ import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileCode01, Download01, Upload01 } from '@untitledui/icons';
+import { FileCode01 } from '@untitledui/icons';
+import { ImportExportDropdown } from '@/components/admin/prompts/ImportExportDropdown';
 import { AdminPromptSectionMenu, type PromptSection } from '@/components/admin/prompts/AdminPromptSectionMenu';
 import { AdminPromptPreviewPanel } from '@/components/admin/prompts/AdminPromptPreviewPanel';
 import { PromptHistoryPanel } from '@/components/admin/prompts/PromptHistoryPanel';
@@ -189,15 +190,11 @@ export function AdminPrompts() {
       />
     ),
     right: (
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleExport}>
-          <Download01 size={16} aria-hidden="true" />
-          <span className="hidden sm:inline">Export</span>
-        </Button>
-        <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => fileInputRef.current?.click()}>
-          <Upload01 size={16} aria-hidden="true" />
-          <span className="hidden sm:inline">Import</span>
-        </Button>
+      <div className="flex items-center gap-2">
+        <ImportExportDropdown
+          onExport={handleExport}
+          onImport={() => fileInputRef.current?.click()}
+        />
         <input
           ref={fileInputRef}
           type="file"
