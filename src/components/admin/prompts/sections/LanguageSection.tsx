@@ -10,11 +10,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/lib/toast';
-import { getErrorMessage } from '@/types/errors';
 import { AdminSectionHeader } from '../AdminSectionHeader';
 import { PromptMetrics } from '../PromptMetrics';
-import { ResetToDefaultButton } from '../ResetToDefaultButton';
 import { validatePromptSection } from '@/lib/prompt-validation';
 import { DEFAULT_LANGUAGE_INSTRUCTION } from '@/lib/prompt-defaults';
 
@@ -23,7 +20,7 @@ interface LanguageSectionProps {
   onSave: (value: string) => Promise<void>;
   loading?: boolean;
   lastUpdated?: string;
-  onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => void;
+  onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string, resetFunction?: () => void) => void;
 }
 
 
@@ -36,7 +33,6 @@ export function LanguageSection({
 }: LanguageSectionProps) {
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   
 
   // Store latest onSave in ref to avoid effect dependency issues
@@ -50,6 +46,15 @@ export function LanguageSection({
     setHasChanges(false);
   }, [value]);
 
+  const handleChange = useCallback((newValue: string) => {
+    setLocalValue(newValue);
+    setHasChanges(newValue !== value);
+  }, [value]);
+
+  const handleReset = useCallback(() => {
+    handleChange(DEFAULT_LANGUAGE_INSTRUCTION);
+  }, [handleChange]);
+
   // Notify parent of unsaved changes
   useEffect(() => {
     const saveFunction = async () => {
@@ -57,43 +62,13 @@ export function LanguageSection({
       if (!result.valid) throw new Error(result.error);
       await onSaveRef.current(localValue);
     };
-    onUnsavedChange?.(hasChanges, saveFunction, hasChanges ? localValue : undefined);
-  }, [hasChanges, localValue, onUnsavedChange]);
+    onUnsavedChange?.(hasChanges, saveFunction, hasChanges ? localValue : undefined, handleReset);
+  }, [hasChanges, localValue, onUnsavedChange, handleReset]);
 
   const validation = useMemo(
     () => validatePromptSection('language', localValue),
     [localValue]
   );
-
-  const isDefault = localValue === DEFAULT_LANGUAGE_INSTRUCTION;
-
-  const handleChange = useCallback((newValue: string) => {
-    setLocalValue(newValue);
-    setHasChanges(newValue !== value);
-  }, [value]);
-
-  const handleSave = useCallback(async () => {
-    const result = validatePromptSection('language', localValue);
-    if (!result.valid) {
-      toast.error('Validation failed', { description: result.error });
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      await onSave(localValue);
-      setHasChanges(false);
-      toast.success('Saved');
-    } catch (error: unknown) {
-      toast.error('Failed to save', { description: getErrorMessage(error) });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [localValue, onSave]);
-
-  const handleReset = useCallback(() => {
-    handleChange(DEFAULT_LANGUAGE_INSTRUCTION);
-  }, [handleChange]);
 
   if (loading) {
     return (
@@ -111,16 +86,6 @@ export function LanguageSection({
         title="Language Instruction"
         description="How Ari handles multilingual conversations"
         lastUpdated={lastUpdated}
-        hasChanges={hasChanges}
-        isSaving={isSaving}
-        onSave={handleSave}
-        extra={
-          <ResetToDefaultButton
-            onReset={handleReset}
-            disabled={isDefault}
-            sectionName="Language Instruction"
-          />
-        }
       />
 
       <div className="space-y-4">

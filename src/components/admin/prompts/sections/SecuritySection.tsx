@@ -11,11 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/lib/toast';
-import { getErrorMessage } from '@/types/errors';
 import { AdminSectionHeader } from '../AdminSectionHeader';
 import { PromptMetrics } from '../PromptMetrics';
-import { ResetToDefaultButton } from '../ResetToDefaultButton';
 import { validatePromptSection } from '@/lib/prompt-validation';
 import { DEFAULT_SECURITY_GUARDRAILS } from '@/lib/prompt-defaults';
 
@@ -32,7 +29,7 @@ interface SecuritySectionProps {
   onGuardrailsChange: (config: SecurityGuardrailsConfig) => Promise<void>;
   loading?: boolean;
   lastUpdated?: string;
-  onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => void;
+  onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string, resetFunction?: () => void) => void;
 }
 
 const GUARDRAIL_OPTIONS = [
@@ -60,7 +57,6 @@ export function SecuritySection({
 }: SecuritySectionProps) {
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [localConfig, setLocalConfig] = useState<SecurityGuardrailsConfig>(guardrailsConfig);
   
 
@@ -79,6 +75,15 @@ export function SecuritySection({
     setLocalConfig(guardrailsConfig);
   }, [guardrailsConfig]);
 
+  const handleChange = useCallback((newValue: string) => {
+    setLocalValue(newValue);
+    setHasChanges(newValue !== value);
+  }, [value]);
+
+  const handleReset = useCallback(() => {
+    handleChange(DEFAULT_SECURITY_GUARDRAILS);
+  }, [handleChange]);
+
   // Notify parent of unsaved changes
   useEffect(() => {
     const saveFunction = async () => {
@@ -86,43 +91,13 @@ export function SecuritySection({
       if (!result.valid) throw new Error(result.error);
       await onSaveRef.current(localValue);
     };
-    onUnsavedChange?.(hasChanges, saveFunction, hasChanges ? localValue : undefined);
-  }, [hasChanges, localValue, onUnsavedChange]);
+    onUnsavedChange?.(hasChanges, saveFunction, hasChanges ? localValue : undefined, handleReset);
+  }, [hasChanges, localValue, onUnsavedChange, handleReset]);
 
   const validation = useMemo(
     () => validatePromptSection('security', localValue),
     [localValue]
   );
-
-  const isDefault = localValue === DEFAULT_SECURITY_GUARDRAILS;
-
-  const handleChange = useCallback((newValue: string) => {
-    setLocalValue(newValue);
-    setHasChanges(newValue !== value);
-  }, [value]);
-
-  const handleSave = useCallback(async () => {
-    const result = validatePromptSection('security', localValue);
-    if (!result.valid) {
-      toast.error('Validation failed', { description: result.error });
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      await onSave(localValue);
-      setHasChanges(false);
-      toast.success('Saved');
-    } catch (error: unknown) {
-      toast.error('Failed to save', { description: getErrorMessage(error) });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [localValue, onSave]);
-
-  const handleReset = useCallback(() => {
-    handleChange(DEFAULT_SECURITY_GUARDRAILS);
-  }, [handleChange]);
 
   const handleToggle = useCallback(async (key: keyof SecurityGuardrailsConfig, checked: boolean) => {
     const newConfig = { ...localConfig, [key]: checked };
@@ -147,16 +122,6 @@ export function SecuritySection({
         title="Security Guardrails"
         description="Rules to prevent prompt injection, PII exposure, and misuse"
         lastUpdated={lastUpdated}
-        hasChanges={hasChanges}
-        isSaving={isSaving}
-        onSave={handleSave}
-        extra={
-          <ResetToDefaultButton
-            onReset={handleReset}
-            disabled={isDefault}
-            sectionName="Security Guardrails"
-          />
-        }
       />
 
       <div className="space-y-6">

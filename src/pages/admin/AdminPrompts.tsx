@@ -17,6 +17,7 @@ import { ImportExportDropdown } from '@/components/admin/prompts/ImportExportDro
 import { AdminPromptSectionMenu, type PromptSection } from '@/components/admin/prompts/AdminPromptSectionMenu';
 import { AdminPromptPreviewPanel } from '@/components/admin/prompts/AdminPromptPreviewPanel';
 import { PromptHistoryPanel } from '@/components/admin/prompts/PromptHistoryPanel';
+import { ResetToDefaultButton } from '@/components/admin/prompts/ResetToDefaultButton';
 import { UnsavedChangesDialog } from '@/components/admin/prompts/UnsavedChangesDialog';
 import { IdentitySection } from '@/components/admin/prompts/sections/IdentitySection';
 import { FormattingSection } from '@/components/admin/prompts/sections/FormattingSection';
@@ -27,7 +28,13 @@ import { usePromptSections } from '@/hooks/admin/usePromptSections';
 import { useTopBar, TopBarPageContext } from '@/components/layout/TopBar';
 import { springs } from '@/lib/motion-variants';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
-import { PROMPT_CONFIG_KEYS } from '@/lib/prompt-defaults';
+import { 
+  PROMPT_CONFIG_KEYS,
+  DEFAULT_IDENTITY_PROMPT,
+  DEFAULT_FORMATTING_RULES,
+  DEFAULT_SECURITY_GUARDRAILS,
+  DEFAULT_LANGUAGE_INSTRUCTION,
+} from '@/lib/prompt-defaults';
 import { exportPromptConfig, parseImportFile } from '@/lib/prompt-import-export';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
@@ -51,8 +58,10 @@ export function AdminPrompts() {
   const [pendingSection, setPendingSection] = useState<PromptSection | null>(null);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [isSavingForSwitch, setIsSavingForSwitch] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const savePendingRef = useRef<(() => Promise<void>) | null>(null);
+  const resetFunctionRef = useRef<(() => void) | null>(null);
 
   const { sections, versions, loading, updateSection } = usePromptSections();
 
@@ -177,6 +186,38 @@ export function AdminPrompts() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, [updateSection]);
 
+  // Check if current section matches default
+  const isDefault = useMemo(() => {
+    switch (activeSection) {
+      case 'identity': return sections.identity === DEFAULT_IDENTITY_PROMPT;
+      case 'formatting': return sections.formatting === DEFAULT_FORMATTING_RULES;
+      case 'security': return sections.security === DEFAULT_SECURITY_GUARDRAILS;
+      case 'language': return sections.language === DEFAULT_LANGUAGE_INSTRUCTION;
+      default: return true;
+    }
+  }, [activeSection, sections]);
+
+  // Handle save from TopBar
+  const handleTopBarSave = useCallback(async () => {
+    if (savePendingRef.current) {
+      setIsSaving(true);
+      try {
+        await savePendingRef.current();
+        setHasUnsavedChanges(false);
+        toast.success('Saved');
+      } catch (error: unknown) {
+        toast.error('Failed to save', { description: getErrorMessage(error) });
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  }, []);
+
+  // Handle reset from TopBar
+  const handleTopBarReset = useCallback(() => {
+    resetFunctionRef.current?.();
+  }, []);
+
   // Configure top bar for this page with dynamic subtitle and version badge
   const topBarConfig = useMemo(() => ({
     left: (
@@ -208,10 +249,22 @@ export function AdminPrompts() {
           currentValue={currentSectionValue}
           onRestore={handleHistoryRestore}
         />
+        <ResetToDefaultButton
+          onReset={handleTopBarReset}
+          disabled={isDefault && !hasUnsavedChanges}
+          sectionName={SECTION_LABELS[activeSection]}
+        />
+        <Button
+          size="sm"
+          onClick={handleTopBarSave}
+          disabled={!hasUnsavedChanges || isSaving}
+        >
+          {isSaving ? 'Saving...' : 'Save'}
+        </Button>
       </div>
     ),
-  }), [activeSection, currentVersion, currentSectionValue, handleHistoryRestore, handleExport, handleImport]);
-  useTopBar(topBarConfig, `prompts-${activeSection}-${currentVersion}`);
+  }), [activeSection, currentVersion, currentSectionValue, handleHistoryRestore, handleExport, handleImport, handleTopBarReset, isDefault, hasUnsavedChanges, handleTopBarSave, isSaving]);
+  useTopBar(topBarConfig, `prompts-${activeSection}-${currentVersion}-${hasUnsavedChanges}-${isSaving}`);
 
   const handleIdentitySave = useCallback(async (value: string) => {
     await updateSection('identity', value);
@@ -246,10 +299,14 @@ export function AdminPrompts() {
     section: PromptSection,
     hasChanges: boolean, 
     saveFunction: () => Promise<void>,
-    draftValue?: string
+    draftValue?: string,
+    resetFunction?: () => void
   ) => {
     setHasUnsavedChanges(hasChanges);
     savePendingRef.current = saveFunction;
+    if (resetFunction) {
+      resetFunctionRef.current = resetFunction;
+    }
     
     // Track draft value for this section
     if (hasChanges && draftValue !== undefined) {
@@ -264,20 +321,20 @@ export function AdminPrompts() {
   }, []);
 
   // Create section-specific unsaved change handlers
-  const handleIdentityUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => {
-    handleUnsavedChange('identity', hasChanges, saveFunction, draftValue);
+  const handleIdentityUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string, resetFunction?: () => void) => {
+    handleUnsavedChange('identity', hasChanges, saveFunction, draftValue, resetFunction);
   }, [handleUnsavedChange]);
 
-  const handleFormattingUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => {
-    handleUnsavedChange('formatting', hasChanges, saveFunction, draftValue);
+  const handleFormattingUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string, resetFunction?: () => void) => {
+    handleUnsavedChange('formatting', hasChanges, saveFunction, draftValue, resetFunction);
   }, [handleUnsavedChange]);
 
-  const handleSecurityUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => {
-    handleUnsavedChange('security', hasChanges, saveFunction, draftValue);
+  const handleSecurityUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string, resetFunction?: () => void) => {
+    handleUnsavedChange('security', hasChanges, saveFunction, draftValue, resetFunction);
   }, [handleUnsavedChange]);
 
-  const handleLanguageUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => {
-    handleUnsavedChange('language', hasChanges, saveFunction, draftValue);
+  const handleLanguageUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string, resetFunction?: () => void) => {
+    handleUnsavedChange('language', hasChanges, saveFunction, draftValue, resetFunction);
   }, [handleUnsavedChange]);
 
   const renderSectionContent = () => {
