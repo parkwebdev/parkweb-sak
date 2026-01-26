@@ -5,9 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Qwen3 embedding model via OpenRouter (1024 dimensions - truncated from 4096 via MRL)
-const EMBEDDING_MODEL = 'qwen/qwen3-embedding-8b';
-const EMBEDDING_DIMENSIONS = 1024;
+import { EMBEDDING_MODEL, EMBEDDING_DIMENSIONS } from '../_shared/ai/config.ts';
 
 async function generateEmbedding(text: string): Promise<number[]> {
   const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
@@ -26,6 +24,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
     body: JSON.stringify({
       input: text,
       model: EMBEDDING_MODEL,
+      dimensions: EMBEDDING_DIMENSIONS,
     }),
   });
 
@@ -35,10 +34,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
   }
 
   const data = await response.json();
-  const fullEmbedding = data.data[0].embedding;
-  
-  // Qwen3 returns 4096 dimensions - truncate to 1024 via Matryoshka (MRL)
-  return fullEmbedding.slice(0, EMBEDDING_DIMENSIONS);
+  return data.data[0].embedding;
 }
 
 // Strip HTML tags and extract clean text from article content

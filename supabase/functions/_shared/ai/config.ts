@@ -15,10 +15,10 @@
 // EMBEDDING MODEL CONFIGURATION
 // ============================================
 
-/** Qwen3 embedding model via OpenRouter (1024 dimensions - truncated from 4096 via MRL) */
-export const EMBEDDING_MODEL = 'qwen/qwen3-embedding-8b';
+/** OpenAI text-embedding-3-large via OpenRouter (truncated to 1024 via Matryoshka) */
+export const EMBEDDING_MODEL = 'openai/text-embedding-3-large';
 
-/** Embedding vector dimensions (truncated via MRL for efficiency) */
+/** Embedding vector dimensions (truncated for efficiency, matches existing schema) */
 export const EMBEDDING_DIMENSIONS = 1024;
 
 // ============================================
