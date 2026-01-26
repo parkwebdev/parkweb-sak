@@ -6,7 +6,7 @@
  * @module components/admin/prompts/sections/FormattingSection
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,6 +47,12 @@ export function FormattingSection({
   const [isSaving, setIsSaving] = useState(false);
   const [isHoveringTip, setIsHoveringTip] = useState(false);
 
+  // Store latest onSave in ref to avoid effect dependency issues
+  const onSaveRef = useRef(onSave);
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
   useEffect(() => {
     setLocalValue(value);
     setHasChanges(false);
@@ -57,10 +63,10 @@ export function FormattingSection({
     const saveFunction = async () => {
       const result = validatePromptSection('formatting', localValue);
       if (!result.valid) throw new Error(result.error);
-      await onSave(localValue);
+      await onSaveRef.current(localValue);
     };
     onUnsavedChange?.(hasChanges, saveFunction, hasChanges ? localValue : undefined);
-  }, [hasChanges, localValue, onSave, onUnsavedChange]);
+  }, [hasChanges, localValue, onUnsavedChange]);
 
   const validation = useMemo(
     () => validatePromptSection('formatting', localValue),
