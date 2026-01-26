@@ -202,7 +202,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
               // Admin mode header
               <div className="flex items-center gap-2">
                 <PilotLogo className="h-6 w-6 text-white flex-shrink-0" />
-                <span className="text-sm font-semibold text-white">{isSuperAdmin ? 'Super Admin' : 'Admin'}</span>
+                <span className="text-sm font-semibold text-white">Admin</span>
               </div>
             ) : (
               <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
