@@ -22,12 +22,12 @@ export function JsonExportIcon({ size = 16, className }: JsonExportIconProps) {
       aria-hidden="true"
     >
       <path
-        className="stroke-muted-foreground/50"
+        className="stroke-primary/50"
         strokeWidth={1.5}
         d="M7.75 4A3.25 3.25 0 0 1 11 .75h16c.121 0 .238.048.323.134l10.793 10.793a.46.46 0 0 1 .134.323v24A3.25 3.25 0 0 1 35 39.25H11A3.25 3.25 0 0 1 7.75 36z"
       />
       <path 
-        className="stroke-muted-foreground/50" 
+        className="stroke-primary/50" 
         strokeWidth={1.5} 
         d="M27 .5V8a4 4 0 0 0 4 4h7.5" 
       />
