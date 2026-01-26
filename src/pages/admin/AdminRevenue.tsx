@@ -7,7 +7,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { TrendUp01 } from '@untitledui/icons';
+import { LineChartUp03 } from '@untitledui/icons';
 import { RevenueSectionMenu } from '@/components/admin/revenue/RevenueSectionMenu';
 import {
   OverviewSection,
@@ -30,7 +30,7 @@ export function AdminRevenue() {
 
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={TrendUp01} title="Revenue Analytics" />,
+    left: <TopBarPageContext icon={LineChartUp03} title="Revenue Analytics" />,
   }), []);
   useTopBar(topBarConfig);
 

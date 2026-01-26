@@ -9,7 +9,7 @@
 
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Users01 } from '@untitledui/icons';
+import { User03 } from '@untitledui/icons';
 import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 import { AccountsTable, AccountDetailSheet, AccountsTopBarSearch, AdminAccountsFilters } from '@/components/admin/accounts';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
@@ -95,7 +95,7 @@ export function AdminAccounts() {
   const topBarConfig = useMemo(() => ({
     left: (
       <div className="flex items-center gap-3">
-        <TopBarPageContext icon={Users01} title="Accounts" />
+        <TopBarPageContext icon={User03} title="Accounts" />
         <AccountsTopBarSearch 
           accounts={accounts}
           onSelect={handleSearchSelect}
