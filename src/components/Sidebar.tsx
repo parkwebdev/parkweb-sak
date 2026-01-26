@@ -200,17 +200,12 @@ function SidebarComponent({ onClose }: SidebarProps) {
                 <span className="text-sm font-semibold text-white">Admin</span>
               </div>
             ) : (
-              <PilotLogo className="h-6 w-6 text-foreground flex-shrink-0" />
+              <PilotLogo className="h-6 w-6 text-white flex-shrink-0" />
             )}
             {onClose && (
               <button
                 onClick={onClose}
-                className={cn(
-                  "lg:hidden p-1 rounded-md",
-                  isPilotTeamMember && isOnAdminRoute
-                    ? "hover:bg-white/5 text-white/60 hover:text-white"
-                    : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                )}
+                className="lg:hidden p-1 rounded-md hover:bg-white/5 text-white/60 hover:text-white"
                 aria-label="Close menu"
               >
                 <X size={16} />
@@ -229,12 +224,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
           >
             <button
               onClick={() => setSearchOpen(true)}
-              className={cn(
-                "items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background border",
-                isPilotTeamMember && isOnAdminRoute
-                  ? "bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border-white/10"
-                  : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/50"
-              )}
+              className="items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar border bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border-white/10"
             >
               <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
                 <SearchMd size={14} className="flex-shrink-0" />
@@ -242,20 +232,10 @@ function SidebarComponent({ onClose }: SidebarProps) {
                   Search...
                 </span>
                 <div className="flex items-center gap-0.5 ml-auto">
-                  <kbd className={cn(
-                    "pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border px-1 font-mono text-2xs font-medium min-w-[20px]",
-                    isPilotTeamMember && isOnAdminRoute
-                      ? "bg-white/10 border-white/10 text-white/50"
-                      : "bg-background border-border text-muted-foreground"
-                  )}>
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border px-1 font-mono text-2xs font-medium min-w-[20px] bg-white/10 border-white/10 text-white/50">
                     <span className="text-xs">⌘</span>
                   </kbd>
-                  <kbd className={cn(
-                    "pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border px-1 font-mono text-2xs font-medium min-w-[20px]",
-                    isPilotTeamMember && isOnAdminRoute
-                      ? "bg-white/10 border-white/10 text-white/50"
-                      : "bg-background border-border text-muted-foreground"
-                  )}>
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border px-1 font-mono text-2xs font-medium min-w-[20px] bg-white/10 border-white/10 text-white/50">
                     K
                   </kbd>
                 </div>
@@ -281,14 +261,10 @@ function SidebarComponent({ onClose }: SidebarProps) {
                     to={item.path}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      "items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      "items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
                       isActive 
-                        ? isPilotTeamMember && isOnAdminRoute
-                          ? 'bg-white/10 text-white'
-                          : 'bg-accent text-accent-foreground'
-                        : isPilotTeamMember && isOnAdminRoute
-                          ? 'bg-transparent hover:bg-white/5 text-white/60 hover:text-white'
-                          : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                        ? 'bg-white/10 text-white'
+                        : 'bg-transparent hover:bg-white/5 text-white/60 hover:text-white'
                     )}
                   >
                     <div className="items-center flex gap-2 my-auto w-full">
@@ -365,7 +341,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
-                      className="text-muted-foreground/30"
+                      className="text-white/30"
                     />
                     <circle
                       cx="8"
@@ -401,11 +377,12 @@ function SidebarComponent({ onClose }: SidebarProps) {
                 <Link 
                   to={item.path}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                  className={cn(
+                    "items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
                     isActive 
-                      ? 'bg-accent text-accent-foreground' 
-                      : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                  }`}
+                      ? 'bg-white/10 text-white' 
+                      : 'bg-transparent hover:bg-white/5 text-white/60 hover:text-white'
+                  )}
                 >
                   <div className="items-center flex gap-2 my-auto w-full">
                     <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
@@ -427,22 +404,14 @@ function SidebarComponent({ onClose }: SidebarProps) {
           {/* Back to Dashboard link for admin mode */}
           {isSuperAdmin && isOnAdminRoute && (
             <motion.div 
-              className={cn(
-                "items-center flex w-full py-0.5 mt-2 pt-2 border-t",
-                isPilotTeamMember && isOnAdminRoute ? "border-white/10" : "border-border"
-              )}
+              className="items-center flex w-full py-0.5 mt-2 pt-2 border-t border-white/10"
               initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, ...springs.smooth }}
             >
               <Link 
                 to="/dashboard"
-                className={cn(
-                  "items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent",
-                  isPilotTeamMember && isOnAdminRoute
-                    ? "hover:bg-white/5 text-white/60 hover:text-white"
-                    : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                )}
+                className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar bg-transparent hover:bg-white/5 text-white/60 hover:text-white"
               >
                 <div className="items-center flex gap-2 my-auto w-full">
                   <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
@@ -459,14 +428,14 @@ function SidebarComponent({ onClose }: SidebarProps) {
           {/* Admin Dashboard link for super admins when not on admin routes */}
           {isSuperAdmin && !isOnAdminRoute && (
             <motion.div 
-              className="items-center flex w-full py-0.5 mt-2 pt-2 border-t border-border"
+              className="items-center flex w-full py-0.5 mt-2 pt-2 border-t border-white/10"
               initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, ...springs.smooth }}
             >
               <Link 
                 to="/admin"
-                className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar bg-transparent hover:bg-white/5 text-white/60 hover:text-white"
               >
                 <div className="items-center flex gap-2 my-auto w-full">
                   <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
