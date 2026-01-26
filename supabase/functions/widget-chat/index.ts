@@ -159,7 +159,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId, previewMode, browserLanguage } = await req.json();
+    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId, previewMode, browserLanguage, promptOverrides } = await req.json();
 
     // Log incoming request
     log.info('Request received', {
@@ -520,6 +520,7 @@ serve(async (req) => {
       activeConversationId,
       hasLocations,
       businessContext,
+      promptOverrides: previewMode ? promptOverrides : undefined, // Only apply in preview mode
     });
 
     // Check if we got a cached response (early return)

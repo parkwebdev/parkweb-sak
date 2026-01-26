@@ -236,11 +236,52 @@ export function AdminPrompts() {
     await updateSection('guardrailsConfig', config);
   }, [updateSection]);
 
+  // Track draft (unsaved) values for all sections
+  const [draftValues, setDraftValues] = useState<{
+    identity?: string;
+    formatting?: string;
+    security?: string;
+    language?: string;
+  }>({});
+
   // Handle unsaved change notifications from sections
-  const handleUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>) => {
+  const handleUnsavedChange = useCallback((
+    section: PromptSection,
+    hasChanges: boolean, 
+    saveFunction: () => Promise<void>,
+    draftValue?: string
+  ) => {
     setHasUnsavedChanges(hasChanges);
     savePendingRef.current = saveFunction;
+    
+    // Track draft value for this section
+    if (hasChanges && draftValue !== undefined) {
+      setDraftValues(prev => ({ ...prev, [section]: draftValue }));
+    } else if (!hasChanges) {
+      setDraftValues(prev => {
+        const next = { ...prev };
+        delete next[section];
+        return next;
+      });
+    }
   }, []);
+
+  // Create section-specific unsaved change handlers
+  const handleIdentityUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => {
+    handleUnsavedChange('identity', hasChanges, saveFunction, draftValue);
+  }, [handleUnsavedChange]);
+
+  const handleFormattingUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => {
+    handleUnsavedChange('formatting', hasChanges, saveFunction, draftValue);
+  }, [handleUnsavedChange]);
+
+  const handleSecurityUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => {
+    handleUnsavedChange('security', hasChanges, saveFunction, draftValue);
+  }, [handleUnsavedChange]);
+
+  const handleLanguageUnsavedChange = useCallback((hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => {
+    handleUnsavedChange('language', hasChanges, saveFunction, draftValue);
+  }, [handleUnsavedChange]);
 
   const renderSectionContent = () => {
     switch (activeSection) {
@@ -251,7 +292,7 @@ export function AdminPrompts() {
             onSave={handleIdentitySave}
             loading={loading}
             lastUpdated={versions.identity?.updatedAt}
-            onUnsavedChange={handleUnsavedChange}
+            onUnsavedChange={handleIdentityUnsavedChange}
           />
         );
       case 'formatting':
@@ -261,7 +302,7 @@ export function AdminPrompts() {
             onSave={handleFormattingSave}
             loading={loading}
             lastUpdated={versions.formatting?.updatedAt}
-            onUnsavedChange={handleUnsavedChange}
+            onUnsavedChange={handleFormattingUnsavedChange}
           />
         );
       case 'security':
@@ -273,7 +314,7 @@ export function AdminPrompts() {
             onGuardrailsChange={handleGuardrailsChange}
             loading={loading}
             lastUpdated={versions.security?.updatedAt}
-            onUnsavedChange={handleUnsavedChange}
+            onUnsavedChange={handleSecurityUnsavedChange}
           />
         );
       case 'language':
@@ -283,7 +324,7 @@ export function AdminPrompts() {
             onSave={handleLanguageSave}
             loading={loading}
             lastUpdated={versions.language?.updatedAt}
-            onUnsavedChange={handleUnsavedChange}
+            onUnsavedChange={handleLanguageUnsavedChange}
           />
         );
       default:
@@ -316,7 +357,10 @@ export function AdminPrompts() {
         </main>
 
         {/* Right: Test Chat Panel */}
-        <AdminPromptPreviewPanel />
+        <AdminPromptPreviewPanel 
+          draftPrompts={draftValues}
+          hasDraftChanges={hasUnsavedChanges}
+        />
       </div>
 
       {/* Unsaved Changes Dialog */}

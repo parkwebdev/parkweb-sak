@@ -505,6 +505,16 @@ export interface ReferrerJourney {
  * console.log(response.response); // AI response
  * ```
  */
+/**
+ * Prompt overrides for testing unsaved prompt changes in preview mode.
+ */
+export interface PromptOverrides {
+  identity?: string;
+  formatting?: string;
+  security?: string;
+  language?: string;
+}
+
 export async function sendChatMessage(
   agentId: string, 
   conversationId: string | null, 
@@ -515,7 +525,8 @@ export async function sendChatMessage(
   visitorId?: string,
   locationId?: string,
   previewMode?: boolean,
-  browserLanguage?: string | null
+  browserLanguage?: string | null,
+  promptOverrides?: PromptOverrides
 ): Promise<ChatResponse> {
   // Client-side validation before making request
   if (newUserMessage.content && newUserMessage.content.length > MAX_MESSAGE_LENGTH) {
@@ -550,6 +561,7 @@ export async function sendChatMessage(
       locationId,
       previewMode, // Skip persistence for preview/testing
       browserLanguage, // Browser language preference for detection (e.g., "es", "es-ES")
+      promptOverrides: previewMode ? promptOverrides : undefined, // Only send in preview mode
     }),
   });
 

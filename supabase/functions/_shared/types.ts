@@ -255,3 +255,18 @@ export interface MicrosoftCalendarEventBody {
   end: { dateTime: string; timeZone: string };
   attendees?: Array<{ emailAddress: { address: string }; type: string }>;
 }
+
+// ============================================
+// PROMPT OVERRIDE TYPES
+// ============================================
+
+/**
+ * Prompt overrides for testing unsaved changes in preview mode.
+ * Only applied when previewMode is true.
+ */
+export interface PromptOverrides {
+  identity?: string;
+  formatting?: string;
+  security?: string;
+  language?: string;
+}

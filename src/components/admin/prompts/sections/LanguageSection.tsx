@@ -24,7 +24,7 @@ interface LanguageSectionProps {
   onSave: (value: string) => Promise<void>;
   loading?: boolean;
   lastUpdated?: string;
-  onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>) => void;
+  onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => void;
 }
 
 const LANGUAGE_TIPS = [
@@ -57,7 +57,7 @@ export function LanguageSection({
       if (!result.valid) throw new Error(result.error);
       await onSave(localValue);
     };
-    onUnsavedChange?.(hasChanges, saveFunction);
+    onUnsavedChange?.(hasChanges, saveFunction, hasChanges ? localValue : undefined);
   }, [hasChanges, localValue, onSave, onUnsavedChange]);
 
   const validation = useMemo(

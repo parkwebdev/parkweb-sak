@@ -8,7 +8,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import type { ConversationMetadata, ShownProperty, ChatMessage } from "../types.ts";
+import type { ConversationMetadata, ShownProperty, ChatMessage, PromptOverrides } from "../types.ts";
 import { 
   generateEmbedding, 
   getCachedEmbedding, 
@@ -212,6 +212,7 @@ export async function buildContext(
     activeConversationId: string;
     hasLocations: boolean;
     businessContext?: BusinessContext;
+    promptOverrides?: PromptOverrides;
   }
 ): Promise<ContextResult> {
   const {
@@ -224,6 +225,7 @@ export async function buildContext(
     activeConversationId,
     hasLocations,
     businessContext,
+    promptOverrides,
   } = options;
 
   // Fetch ALL platform configuration (baseline prompt, formatting, language, guardrails)
@@ -237,6 +239,23 @@ export async function buildContext(
   
   try {
     platformConfig = await fetchPlatformConfig(supabase);
+    
+    // Apply prompt overrides for draft testing (only in preview mode)
+    if (promptOverrides) {
+      console.log('[buildContext] Applying prompt overrides for draft testing');
+      if (promptOverrides.identity !== undefined) {
+        platformConfig.baselinePrompt = promptOverrides.identity;
+      }
+      if (promptOverrides.formatting !== undefined) {
+        platformConfig.responseFormatting = promptOverrides.formatting;
+      }
+      if (promptOverrides.security !== undefined) {
+        platformConfig.securityText = promptOverrides.security;
+      }
+      if (promptOverrides.language !== undefined) {
+        platformConfig.languageInstruction = promptOverrides.language;
+      }
+    }
     
     if (platformConfig.baselinePrompt) {
       console.log('Platform baseline prompt loaded:', platformConfig.baselinePrompt.substring(0, 50) + '...');
