@@ -9,7 +9,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Users02 } from '@untitledui/icons';
+import { Users01 } from '@untitledui/icons';
 import { PilotTeamTable } from '@/components/admin/team';
 import { AdminPermissionGuard } from '@/components/admin/AdminPermissionGuard';
 import { useAdminTeam } from '@/hooks/admin';
@@ -47,7 +47,7 @@ export function AdminTeam() {
 
   // Configure top bar for this page - only super admins can invite
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Users02} title="Pilot Team" />,
+    left: <TopBarPageContext icon={Users01} title="Pilot Team" />,
     right: isSuperAdmin ? (
       <Button size="sm" onClick={() => setInviteOpen(true)}>
         Invite Member

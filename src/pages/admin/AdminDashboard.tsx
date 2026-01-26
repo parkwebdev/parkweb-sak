@@ -23,7 +23,7 @@ import {
   BookOpen01,
   Mail01,
   ClipboardCheck,
-  Shield01
+  LayoutAlt01,
 } from '@untitledui/icons';
 import { useAdminAccountsCount } from '@/hooks/admin/useAdminAccountsCount';
 import { useRevenueAnalytics } from '@/hooks/admin/useRevenueAnalytics';
@@ -120,7 +120,7 @@ function QuickActionCard({ icon: Icon, label, description, href }: QuickActionCa
 export function AdminDashboard() {
   // Configure top bar for this page
   const topBarConfig = useMemo(() => ({
-    left: <TopBarPageContext icon={Shield01} title="Platform Overview" />,
+    left: <TopBarPageContext icon={LayoutAlt01} title="Platform Overview" />,
   }), []);
   useTopBar(topBarConfig);
 
