@@ -201,9 +201,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
             {isPilotTeamMember && isOnAdminRoute ? (
               // Admin mode header
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-destructive/20 flex items-center justify-center">
-                  <Shield01 size={14} className="text-destructive" />
-                </div>
+                <PilotLogo className="h-6 w-6 text-white flex-shrink-0" />
                 <span className="text-sm font-semibold text-white">{isSuperAdmin ? 'Super Admin' : 'Admin'}</span>
               </div>
             ) : (
