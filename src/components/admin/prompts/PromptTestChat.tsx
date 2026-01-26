@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { logger } from '@/utils/logger';
 import { DotsVertical, RefreshCw01, Send01 } from '@untitledui/icons';
@@ -27,6 +28,7 @@ import { useAgent } from '@/hooks/useAgent';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
 import { stripUrlsFromContent, stripPhoneNumbersFromContent, formatMarkdownBullets } from '@/widget/utils/url-stripper';
+import type { PromptOverrides } from '@/widget/api';
 
 // ============================================
 // TYPES
@@ -40,10 +42,19 @@ interface Message {
 }
 
 // ============================================
+// PROPS
+// ============================================
+
+interface PromptTestChatProps {
+  draftPrompts?: PromptOverrides;
+  testDraftMode?: boolean;
+}
+
+// ============================================
 // PROMPT TEST CHAT COMPONENT
 // ============================================
 
-export function PromptTestChat() {
+export function PromptTestChat({ draftPrompts, testDraftMode = false }: PromptTestChatProps) {
   const { agentId } = useAgent();
   
   // State (no conversationId - preview mode is ephemeral)
@@ -102,7 +113,9 @@ export function PromptTestChat() {
         undefined, // no referrerJourney
         undefined, // no visitorId
         undefined, // no locationId
-        true       // previewMode - skip persistence
+        true,      // previewMode - skip persistence
+        undefined, // browserLanguage
+        testDraftMode ? draftPrompts : undefined // Pass draft prompts when testing
       );
 
       // Add AI response
@@ -127,7 +140,7 @@ export function PromptTestChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [agentId, isLoading]);
+  }, [agentId, isLoading, testDraftMode, draftPrompts]);
 
   // Send message from input
   const handleSendMessage = useCallback(() => {
@@ -148,9 +161,16 @@ export function PromptTestChat() {
     <div className="flex flex-col h-full bg-card">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b">
-        <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-          Preview
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
+            Preview
+          </span>
+          {testDraftMode && (
+            <Badge variant="outline" size="sm" className="text-warning border-warning/30 bg-warning/5">
+              Testing Draft
+            </Badge>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
