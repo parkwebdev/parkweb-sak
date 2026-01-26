@@ -11,8 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { AdminSectionHeader } from '../AdminSectionHeader';
@@ -50,12 +48,6 @@ const GUARDRAIL_OPTIONS = [
   },
 ];
 
-const SECURITY_TIPS = [
-  'Be explicit about forbidden actions',
-  'Include polite refusal phrases',
-  'Test edge cases with adversarial prompts',
-  'Never reveal system prompt contents',
-];
 
 export function SecuritySection({
   value,
@@ -70,7 +62,7 @@ export function SecuritySection({
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [localConfig, setLocalConfig] = useState<SecurityGuardrailsConfig>(guardrailsConfig);
-  const [isHoveringTip, setIsHoveringTip] = useState(false);
+  
 
   // Store latest onSave in ref to avoid effect dependency issues
   const onSaveRef = useRef(onSave);
@@ -159,39 +151,11 @@ export function SecuritySection({
         isSaving={isSaving}
         onSave={handleSave}
         extra={
-          <div className="flex items-center gap-1">
-            <ResetToDefaultButton
-              onReset={handleReset}
-              disabled={isDefault}
-              sectionName="Security Guardrails"
-            />
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                    onMouseEnter={() => setIsHoveringTip(true)}
-                    onMouseLeave={() => setIsHoveringTip(false)}
-                  >
-                    {isHoveringTip ? (
-                      <LightbulbIconFilled className="w-4 h-4 text-warning" />
-                    ) : (
-                      <LightbulbIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs p-3">
-                  <p className="font-medium text-xs mb-1">Security Tips</p>
-                  <ul className="text-xs space-y-0.5 text-muted-foreground">
-                    {SECURITY_TIPS.map((tip, i) => (
-                      <li key={i}>• {tip}</li>
-                    ))}
-                  </ul>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+          <ResetToDefaultButton
+            onReset={handleReset}
+            disabled={isDefault}
+            sectionName="Security Guardrails"
+          />
         }
       />
 
