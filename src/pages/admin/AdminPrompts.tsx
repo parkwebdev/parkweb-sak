@@ -12,7 +12,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileCode01 } from '@untitledui/icons';
+import { TextInputOutline } from '@/components/icons/AdminSidebarIcons';
 import { ImportExportDropdown } from '@/components/admin/prompts/ImportExportDropdown';
 import { AdminPromptSectionMenu, type PromptSection } from '@/components/admin/prompts/AdminPromptSectionMenu';
 import { AdminPromptPreviewPanel } from '@/components/admin/prompts/AdminPromptPreviewPanel';
@@ -222,7 +222,7 @@ export function AdminPrompts() {
   const topBarConfig = useMemo(() => ({
     left: (
       <TopBarPageContext 
-        icon={FileCode01} 
+        icon={TextInputOutline} 
         title="Prompts" 
         subtitle={SECTION_LABELS[activeSection]}
         badge={currentVersion !== undefined ? (
