@@ -104,23 +104,23 @@ export function AdminSidebar() {
   });
   
   return (
-    <aside className="w-64 border-r border-border bg-card flex flex-col">
+    <aside className="w-64 border-r border-white/10 bg-black flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-white/10">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center">
             <Shield01 size={16} className="text-destructive" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-foreground">
+            <h1 className="text-sm font-semibold text-white">
               {isSuperAdmin ? 'Super Admin' : 'Admin'}
             </h1>
-            <p className="text-2xs text-muted-foreground">Platform Management</p>
+            <p className="text-2xs text-white/60">Platform Management</p>
           </div>
         </div>
         <Link 
           to="/settings" 
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-xs text-white/60 hover:text-white transition-colors"
         >
           <ArrowLeft size={14} aria-hidden="true" />
           Back to Settings
@@ -151,11 +151,11 @@ export function AdminSidebar() {
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                 isActive 
-                  ? 'bg-accent text-accent-foreground font-medium' 
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                  ? 'bg-white/10 text-white font-medium' 
+                  : 'text-white/60 hover:bg-white/5 hover:text-white'
               )}
             >
-              {Icon && <Icon size={18} aria-hidden="true" className={isActive ? 'text-foreground' : 'text-muted-foreground'} />}
+              {Icon && <Icon size={18} aria-hidden="true" className={isActive ? 'text-white' : 'text-white/60'} />}
               {section.label}
             </Link>
           );
@@ -163,7 +163,7 @@ export function AdminSidebar() {
       </nav>
       
       {/* Footer */}
-      <div className="p-4 border-t border-border text-xs text-muted-foreground">
+      <div className="p-4 border-t border-white/10 text-xs text-white/40">
         {isSuperAdmin ? 'Super Admin Access' : 'Admin Access'}
       </div>
     </aside>
