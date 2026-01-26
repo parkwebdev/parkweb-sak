@@ -14,13 +14,14 @@ import {
   RowSelectionState,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
+import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
 import { createExportHistoryColumns } from '@/components/data-table/columns/export-history-columns';
 import { useReportExports, type ReportExport } from '@/hooks/useReportExports';
 import { downloadFile } from '@/lib/file-download';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { FileX02 } from '@untitledui/icons';
+import { FileX02, Trash01 } from '@untitledui/icons';
 
 interface ExportHistoryTableProps {
   /** Optional external loading state override */
@@ -117,31 +118,24 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
 
   return (
     <>
-      {/* Bulk actions bar */}
-      {selectedCount > 0 && (
-        <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md mb-4">
-          <span className="text-sm text-muted-foreground">
-            {selectedCount} selected
-          </span>
-          <Button size="sm" variant="ghost" onClick={() => setRowSelection({})}>
-            Clear
-          </Button>
-          <Button 
-            size="sm" 
-            variant="destructive" 
-            onClick={() => setIsBulkDeleteOpen(true)}
-          >
-            Delete Selected
-          </Button>
-        </div>
-      )}
-
       <DataTable
         table={table}
         columns={columns}
         isLoading={loading}
         emptyMessage={emptyMessage}
       />
+
+      {/* Floating bar for bulk actions */}
+      <DataTableFloatingBar table={table}>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setIsBulkDeleteOpen(true)}
+        >
+          <Trash01 className="mr-1.5 size-4" aria-hidden="true" />
+          Delete
+        </Button>
+      </DataTableFloatingBar>
 
       {/* Delete confirmation dialog */}
       <DeleteConfirmationDialog
