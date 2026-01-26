@@ -95,19 +95,24 @@ export function PlansTable({
         header: 'Limits',
         cell: ({ getValue }) => {
           const limits = getValue() as PlanLimits;
-          const limitParts: string[] = [];
-          if (limits.max_conversations_per_month !== undefined) {
-            limitParts.push(`${limits.max_conversations_per_month} convos/mo`);
-          }
-          if (limits.max_team_members !== undefined) {
-            limitParts.push(`${limits.max_team_members} team`);
-          }
-          if (limits.max_knowledge_sources !== undefined) {
-            limitParts.push(`${limits.max_knowledge_sources} sources`);
-          }
+          
+          // Helper to format limit value - null/undefined means unlimited
+          const formatLimit = (value: number | null | undefined, label: string) => {
+            if (value === null || value === undefined) {
+              return `∞ ${label}`;
+            }
+            return `${value} ${label}`;
+          };
+          
+          const limitParts = [
+            formatLimit(limits.max_conversations_per_month, 'convos/mo'),
+            formatLimit(limits.max_team_members, 'team'),
+            formatLimit(limits.max_knowledge_sources, 'sources'),
+          ];
+          
           return (
             <div className="text-xs text-muted-foreground">
-              {limitParts.length > 0 ? limitParts.join(' • ') : 'No limits set'}
+              {limitParts.join(' • ')}
             </div>
           );
         },
