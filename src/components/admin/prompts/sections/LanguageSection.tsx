@@ -12,7 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
-import { useAutoSave } from '@/hooks/useAutoSave';
+import { toast } from '@/lib/toast';
+import { getErrorMessage } from '@/types/errors';
 import { AdminSectionHeader } from '../AdminSectionHeader';
 import { PromptMetrics } from '../PromptMetrics';
 import { ResetToDefaultButton } from '../ResetToDefaultButton';
@@ -43,6 +44,7 @@ export function LanguageSection({
 }: LanguageSectionProps) {
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isHoveringTip, setIsHoveringTip] = useState(false);
 
   useEffect(() => {
@@ -67,23 +69,29 @@ export function LanguageSection({
 
   const isDefault = localValue === DEFAULT_LANGUAGE_INSTRUCTION;
 
-  const { save, status } = useAutoSave({
-    onSave: async (newValue: string) => {
-      const result = validatePromptSection('language', newValue);
-      if (!result.valid) {
-        throw new Error(result.error);
-      }
-      await onSave(newValue);
-      setHasChanges(false);
-    },
-    debounceMs: 1500,
-  });
-
   const handleChange = useCallback((newValue: string) => {
     setLocalValue(newValue);
     setHasChanges(newValue !== value);
-    save(newValue);
-  }, [value, save]);
+  }, [value]);
+
+  const handleSave = useCallback(async () => {
+    const result = validatePromptSection('language', localValue);
+    if (!result.valid) {
+      toast.error('Validation failed', { description: result.error });
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      await onSave(localValue);
+      setHasChanges(false);
+      toast.success('Saved');
+    } catch (error: unknown) {
+      toast.error('Failed to save', { description: getErrorMessage(error) });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [localValue, onSave]);
 
   const handleReset = useCallback(() => {
     handleChange(DEFAULT_LANGUAGE_INSTRUCTION);
@@ -105,8 +113,9 @@ export function LanguageSection({
         title="Language Instruction"
         description="How Ari handles multilingual conversations"
         lastUpdated={lastUpdated}
-        status={status}
         hasChanges={hasChanges}
+        isSaving={isSaving}
+        onSave={handleSave}
         extra={
           <div className="flex items-center gap-1">
             <ResetToDefaultButton
