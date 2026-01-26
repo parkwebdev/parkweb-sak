@@ -516,7 +516,7 @@ export interface PromptOverrides {
 }
 
 export async function sendChatMessage(
-  agentId: string, 
+  agentId: string | null, 
   conversationId: string | null, 
   newUserMessage: { role: string; content: string; files?: Array<{ name: string; url: string; type: string; size: number }> },
   leadId?: string,
@@ -526,7 +526,9 @@ export async function sendChatMessage(
   locationId?: string,
   previewMode?: boolean,
   browserLanguage?: string | null,
-  promptOverrides?: PromptOverrides
+  promptOverrides?: PromptOverrides,
+  adminTestMode?: boolean,
+  authToken?: string // Optional auth token for admin test mode
 ): Promise<ChatResponse> {
   // Client-side validation before making request
   if (newUserMessage.content && newUserMessage.content.length > MAX_MESSAGE_LENGTH) {
@@ -543,10 +545,13 @@ export async function sendChatMessage(
     );
   }
 
+  // Use provided auth token for admin mode, otherwise use anon key
+  const authHeader = authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_ANON_KEY}`;
+
   const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Authorization': authHeader,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -562,6 +567,7 @@ export async function sendChatMessage(
       previewMode, // Skip persistence for preview/testing
       browserLanguage, // Browser language preference for detection (e.g., "es", "es-ES")
       promptOverrides: previewMode ? promptOverrides : undefined, // Only send in preview mode
+      adminTestMode, // Super Admin prompt testing mode - bypass agent requirement
     }),
   });
 

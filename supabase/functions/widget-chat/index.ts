@@ -159,7 +159,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId, previewMode, browserLanguage, promptOverrides } = await req.json();
+    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId, previewMode, browserLanguage, promptOverrides, adminTestMode } = await req.json();
 
     // Log incoming request
     log.info('Request received', {
@@ -171,10 +171,11 @@ serve(async (req) => {
       visitorId: visitorId || null,
       previewMode: !!previewMode,
       browserLanguage: browserLanguage || null,
+      adminTestMode: !!adminTestMode,
     });
 
-    // Validate required fields
-    if (!agentId) {
+    // Validate required fields - either agentId OR adminTestMode required
+    if (!agentId && !adminTestMode) {
       return createErrorResponse(
         requestId,
         ErrorCodes.INVALID_REQUEST,
@@ -224,8 +225,56 @@ serve(async (req) => {
     const authHeader = req.headers.get('authorization');
     const isFromWidget = isWidgetRequest(req);
     
-    // Widget requests are allowed through without API key validation
-    if (isFromWidget) {
+    // Admin test mode requires authenticated admin user
+    if (adminTestMode) {
+      if (!authHeader) {
+        return createErrorResponse(
+          requestId,
+          ErrorCodes.UNAUTHORIZED,
+          'Authentication required for admin test mode',
+          401,
+          performance.now() - startTime
+        );
+      }
+      
+      // Verify the user is a super_admin or pilot_support
+      const token = authHeader.replace('Bearer ', '');
+      const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+      
+      if (claimsError || !claimsData?.claims?.sub) {
+        log.warn('Admin test mode - invalid token');
+        return createErrorResponse(
+          requestId,
+          ErrorCodes.UNAUTHORIZED,
+          'Invalid authentication token',
+          401,
+          performance.now() - startTime
+        );
+      }
+      
+      const adminUserId = claimsData.claims.sub as string;
+      
+      // Check if user has super_admin or pilot_support role
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', adminUserId)
+        .single();
+      
+      if (!userRole || !['super_admin', 'pilot_support'].includes(userRole.role)) {
+        log.warn('Admin test mode - insufficient permissions', { userId: adminUserId, role: userRole?.role });
+        return createErrorResponse(
+          requestId,
+          ErrorCodes.UNAUTHORIZED,
+          'Admin access required for prompt testing',
+          403,
+          performance.now() - startTime
+        );
+      }
+      
+      log.info('Admin test mode authorized', { userId: adminUserId, role: userRole.role });
+    } else if (isFromWidget) {
+      // Widget requests are allowed through without API key validation
       log.debug('Widget origin detected - request authorized');
     } else {
       // Non-widget requests are not allowed (API access feature removed)
@@ -239,79 +288,117 @@ serve(async (req) => {
       );
     }
 
-    // Get agent configuration and user_id
-    const { data: agent, error: agentError } = await supabase
-      .from('agents')
-      .select('system_prompt, model, user_id, temperature, max_tokens, deployment_config')
-      .eq('id', agentId)
-      .single();
-
-    if (agentError) throw agentError;
-
-    // Fetch owner's profile for business context AND suspension check
-    const { data: ownerProfile } = await supabase
-      .from('profiles')
-      .select('company_name, company_address, company_phone, status')
-      .eq('user_id', agent.user_id)
-      .single();
-
-    // Check if account owner is suspended - block chat access
-    if (ownerProfile?.status === 'suspended') {
-      log.warn('Chat blocked: Account is suspended', { userId: agent.user_id });
-      return createErrorResponse(
-        requestId,
-        ErrorCodes.UNAUTHORIZED,
-        'Service temporarily unavailable',
-        503,
-        performance.now() - startTime
-      );
-    }
-
-    const businessContext = {
-      companyName: ownerProfile?.company_name || null,
-      companyAddress: ownerProfile?.company_address || null,
-      companyPhone: ownerProfile?.company_phone || null,
+    // Get agent configuration - use minimal config for admin test mode
+    let agent: {
+      system_prompt: string;
+      model: string;
+      user_id: string;
+      temperature: number | null;
+      max_tokens: number | null;
+      deployment_config: Record<string, unknown> | null;
     };
+    let businessContext = {
+      companyName: null as string | null,
+      companyAddress: null as string | null,
+      companyPhone: null as string | null,
+    };
+    let deploymentConfig: { embedded_chat?: Record<string, unknown> } = {};
+    let enabledTools: EnabledTool[] = [];
+    let hasLocations = false;
     
-    if (businessContext.companyName) {
-      console.log(`Business context loaded: ${businessContext.companyName}`);
+    if (adminTestMode) {
+      // Admin test mode: Use minimal agent config, only platform prompts apply
+      // Get the admin user ID from the token we already validated
+      const token = authHeader!.replace('Bearer ', '');
+      const { data: claimsData } = await supabase.auth.getClaims(token);
+      const adminUserId = claimsData?.claims?.sub as string;
+      
+      agent = {
+        system_prompt: '', // Empty - only platform-level prompts will apply
+        model: 'gpt-4.1-mini',
+        user_id: adminUserId,
+        temperature: 0.7,
+        max_tokens: 1000,
+        deployment_config: null,
+      };
+      
+      log.info('Admin test mode: Using minimal agent config (platform prompts only)');
+    } else {
+      // Normal mode: Fetch agent from database
+      const { data: agentData, error: agentError } = await supabase
+        .from('agents')
+        .select('system_prompt, model, user_id, temperature, max_tokens, deployment_config')
+        .eq('id', agentId)
+        .single();
+
+      if (agentError) throw agentError;
+      agent = agentData;
+
+      // Fetch owner's profile for business context AND suspension check
+      const { data: ownerProfile } = await supabase
+        .from('profiles')
+        .select('company_name, company_address, company_phone, status')
+        .eq('user_id', agent.user_id)
+        .single();
+
+      // Check if account owner is suspended - block chat access
+      if (ownerProfile?.status === 'suspended') {
+        log.warn('Chat blocked: Account is suspended', { userId: agent.user_id });
+        return createErrorResponse(
+          requestId,
+          ErrorCodes.UNAUTHORIZED,
+          'Service temporarily unavailable',
+          503,
+          performance.now() - startTime
+        );
+      }
+
+      businessContext = {
+        companyName: ownerProfile?.company_name || null,
+        companyAddress: ownerProfile?.company_address || null,
+        companyPhone: ownerProfile?.company_phone || null,
+      };
+      
+      if (businessContext.companyName) {
+        console.log(`Business context loaded: ${businessContext.companyName}`);
+      }
+
+      deploymentConfig = (agent.deployment_config || {}) as { embedded_chat?: Record<string, unknown> };
+
+      // Fetch enabled custom tools for this agent
+      const { data: agentTools, error: toolsError } = await supabase
+        .from('agent_tools')
+        .select('id, name, description, parameters, endpoint_url, headers, timeout_ms')
+        .eq('agent_id', agentId)
+        .eq('enabled', true);
+
+      if (toolsError) {
+        console.error('Error fetching tools:', toolsError);
+      }
+
+      // Filter to only tools with valid endpoint URLs
+      enabledTools = (agentTools || []).filter(tool => tool.endpoint_url).map(t => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        parameters: t.parameters,
+        endpoint_url: t.endpoint_url,
+        headers: t.headers,
+        timeout_ms: t.timeout_ms,
+      }));
+      console.log(`Found ${enabledTools.length} enabled tools with endpoints for agent ${agentId}`);
+
+      // Check if agent has locations (enables booking tools)
+      const { data: agentLocations } = await supabase
+        .from('locations')
+        .select('id')
+        .eq('agent_id', agentId)
+        .eq('is_active', true)
+        .limit(1);
+      
+      hasLocations = agentLocations && agentLocations.length > 0;
+      console.log(`Agent has locations: ${hasLocations}`);
     }
-
-    const deploymentConfig = (agent.deployment_config || {}) as { embedded_chat?: Record<string, unknown> };
-
-    // Fetch enabled custom tools for this agent
-    const { data: agentTools, error: toolsError } = await supabase
-      .from('agent_tools')
-      .select('id, name, description, parameters, endpoint_url, headers, timeout_ms')
-      .eq('agent_id', agentId)
-      .eq('enabled', true);
-
-    if (toolsError) {
-      console.error('Error fetching tools:', toolsError);
-    }
-
-    // Filter to only tools with valid endpoint URLs
-    const enabledTools: EnabledTool[] = (agentTools || []).filter(tool => tool.endpoint_url).map(t => ({
-      id: t.id,
-      name: t.name,
-      description: t.description,
-      parameters: t.parameters,
-      endpoint_url: t.endpoint_url,
-      headers: t.headers,
-      timeout_ms: t.timeout_ms,
-    }));
-    console.log(`Found ${enabledTools.length} enabled tools with endpoints for agent ${agentId}`);
-
-    // Check if agent has locations (enables booking tools)
-    const { data: agentLocations } = await supabase
-      .from('locations')
-      .select('id')
-      .eq('agent_id', agentId)
-      .eq('is_active', true)
-      .limit(1);
-    
-    const hasLocations = agentLocations && agentLocations.length > 0;
-    console.log(`Agent has locations: ${hasLocations}`);
 
     // Format tools for OpenAI/Lovable AI API
     // Include booking tools if agent has locations configured
