@@ -111,9 +111,8 @@ export function PromptHistoryPanel({
     <>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Clock size={16} aria-hidden="true" />
-            <span className="hidden sm:inline">History</span>
+          <Button variant="outline" size="sm">
+            History
           </Button>
         </SheetTrigger>
         <SheetContent className="w-[400px] sm:w-[540px] flex flex-col">
