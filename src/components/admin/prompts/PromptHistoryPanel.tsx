@@ -162,7 +162,7 @@ export function PromptHistoryPanel({
                             </Badge>
                           )}
                           {isCurrent && (
-                            <Badge size="sm" className="bg-status-active/10 text-status-active-foreground">
+                            <Badge size="sm" className="bg-status-active/10 text-status-active-foreground pointer-events-none">
                               Current
                             </Badge>
                           )}
