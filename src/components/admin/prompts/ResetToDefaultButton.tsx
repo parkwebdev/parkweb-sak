@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { RefreshCcw01 } from '@untitledui/icons';
-import { Button } from '@/components/ui/button';
+import { IconButton } from '@/components/ui/icon-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +21,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ResetToDefaultButtonProps {
   onReset: () => void;
@@ -43,26 +42,16 @@ export function ResetToDefaultButton({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <TooltipProvider>
-        <Tooltip delayDuration={0}>
-          <AlertDialogTrigger asChild>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled={disabled}
-                className="h-8 w-8"
-              >
-                <RefreshCcw01 size={16} aria-hidden="true" />
-                <span className="sr-only">Reset to default</span>
-              </Button>
-            </TooltipTrigger>
-          </AlertDialogTrigger>
-          <TooltipContent side="bottom">
-            <p className="text-xs">Reset to default</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <AlertDialogTrigger asChild>
+        <IconButton
+          label="Reset to default"
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+        >
+          <RefreshCcw01 size={16} />
+        </IconButton>
+      </AlertDialogTrigger>
       
       <AlertDialogContent>
         <AlertDialogHeader>
