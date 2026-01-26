@@ -13,7 +13,8 @@ import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
-import { useAutoSave } from '@/hooks/useAutoSave';
+import { toast } from '@/lib/toast';
+import { getErrorMessage } from '@/types/errors';
 import { AdminSectionHeader } from '../AdminSectionHeader';
 import { PromptMetrics } from '../PromptMetrics';
 import { ResetToDefaultButton } from '../ResetToDefaultButton';
@@ -67,6 +68,7 @@ export function SecuritySection({
 }: SecuritySectionProps) {
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [localConfig, setLocalConfig] = useState<SecurityGuardrailsConfig>(guardrailsConfig);
   const [isHoveringTip, setIsHoveringTip] = useState(false);
 
@@ -96,23 +98,29 @@ export function SecuritySection({
 
   const isDefault = localValue === DEFAULT_SECURITY_GUARDRAILS;
 
-  const { save, status } = useAutoSave({
-    onSave: async (newValue: string) => {
-      const result = validatePromptSection('security', newValue);
-      if (!result.valid) {
-        throw new Error(result.error);
-      }
-      await onSave(newValue);
-      setHasChanges(false);
-    },
-    debounceMs: 1500,
-  });
-
   const handleChange = useCallback((newValue: string) => {
     setLocalValue(newValue);
     setHasChanges(newValue !== value);
-    save(newValue);
-  }, [value, save]);
+  }, [value]);
+
+  const handleSave = useCallback(async () => {
+    const result = validatePromptSection('security', localValue);
+    if (!result.valid) {
+      toast.error('Validation failed', { description: result.error });
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      await onSave(localValue);
+      setHasChanges(false);
+      toast.success('Saved');
+    } catch (error: unknown) {
+      toast.error('Failed to save', { description: getErrorMessage(error) });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [localValue, onSave]);
 
   const handleReset = useCallback(() => {
     handleChange(DEFAULT_SECURITY_GUARDRAILS);
@@ -141,8 +149,9 @@ export function SecuritySection({
         title="Security Guardrails"
         description="Rules to prevent prompt injection, PII exposure, and misuse"
         lastUpdated={lastUpdated}
-        status={status}
         hasChanges={hasChanges}
+        isSaving={isSaving}
+        onSave={handleSave}
         extra={
           <div className="flex items-center gap-1">
             <ResetToDefaultButton

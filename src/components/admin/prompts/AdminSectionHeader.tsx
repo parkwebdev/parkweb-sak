@@ -1,32 +1,31 @@
 /**
  * AdminSectionHeader Component
  * 
- * Consistent header for Admin prompt sections with status indicators.
- * Matches the AriSectionHeader pattern.
+ * Section header for admin prompt editing pages with save button and status indicators.
  * 
  * @module components/admin/prompts/AdminSectionHeader
  */
 
-import { motion } from 'motion/react';
-import { Check } from '@untitledui/icons';
 import { Badge } from '@/components/ui/badge';
-
-type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
+import { Button } from '@/components/ui/button';
 
 interface AdminSectionHeaderProps {
   title: string;
   description?: string;
   lastUpdated?: string;
-  status?: SaveStatus;
   hasChanges?: boolean;
+  isSaving?: boolean;
+  onSave?: () => void;
   extra?: React.ReactNode;
 }
 
 export function AdminSectionHeader({
   title,
   description,
-  status,
-  hasChanges,
+  lastUpdated,
+  hasChanges = false,
+  isSaving = false,
+  onSave,
   extra,
 }: AdminSectionHeaderProps) {
   return (
@@ -34,37 +33,35 @@ export function AdminSectionHeader({
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
-            {hasChanges && status !== 'saving' && (
-              <Badge variant="outline" size="sm" className="text-amber-600 border-amber-300">
+            <h2 className="text-base font-semibold text-foreground">{title}</h2>
+            {hasChanges && !isSaving && (
+              <Badge variant="outline" size="sm" className="text-amber-600 border-amber-300 bg-amber-50">
                 Unsaved
               </Badge>
-            )}
-            {status === 'saving' && (
-              <Badge variant="outline" size="sm" className="text-blue-600 border-blue-300">
-                Saving...
-              </Badge>
-            )}
-            {status === 'saved' && !hasChanges && (
-              <motion.span
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-              >
-                <Check size={16} className="text-status-active" aria-hidden="true" />
-              </motion.span>
             )}
           </div>
           {description && (
             <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
           )}
         </div>
-        {extra && (
-          <div className="flex items-center gap-3">
-            {extra}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {onSave && (
+            <Button
+              size="sm"
+              onClick={onSave}
+              disabled={!hasChanges || isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </Button>
+          )}
+          {extra}
+        </div>
       </div>
+      {lastUpdated && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Last updated: {new Date(lastUpdated).toLocaleString()}
+        </p>
+      )}
     </div>
   );
 }

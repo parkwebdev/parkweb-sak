@@ -12,7 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
-import { useAutoSave } from '@/hooks/useAutoSave';
+import { toast } from '@/lib/toast';
+import { getErrorMessage } from '@/types/errors';
 import { AdminSectionHeader } from '../AdminSectionHeader';
 import { PromptMetrics } from '../PromptMetrics';
 import { ResetToDefaultButton } from '../ResetToDefaultButton';
@@ -43,6 +44,7 @@ export function IdentitySection({
 }: IdentitySectionProps) {
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isHoveringTip, setIsHoveringTip] = useState(false);
 
   useEffect(() => {
@@ -67,24 +69,29 @@ export function IdentitySection({
 
   const isDefault = localValue === DEFAULT_IDENTITY_PROMPT;
 
-  const { save, status } = useAutoSave({
-    onSave: async (newValue: string) => {
-      // Validate before saving
-      const result = validatePromptSection('identity', newValue);
-      if (!result.valid) {
-        throw new Error(result.error);
-      }
-      await onSave(newValue);
-      setHasChanges(false);
-    },
-    debounceMs: 1500,
-  });
-
   const handleChange = useCallback((newValue: string) => {
     setLocalValue(newValue);
     setHasChanges(newValue !== value);
-    save(newValue);
-  }, [value, save]);
+  }, [value]);
+
+  const handleSave = useCallback(async () => {
+    const result = validatePromptSection('identity', localValue);
+    if (!result.valid) {
+      toast.error('Validation failed', { description: result.error });
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      await onSave(localValue);
+      setHasChanges(false);
+      toast.success('Saved');
+    } catch (error: unknown) {
+      toast.error('Failed to save', { description: getErrorMessage(error) });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [localValue, onSave]);
 
   const handleReset = useCallback(() => {
     handleChange(DEFAULT_IDENTITY_PROMPT);
@@ -106,8 +113,9 @@ export function IdentitySection({
         title="Identity & Role"
         description="The foundational prompt that defines who Ari is and how it behaves"
         lastUpdated={lastUpdated}
-        status={status}
         hasChanges={hasChanges}
+        isSaving={isSaving}
+        onSave={handleSave}
         extra={
           <div className="flex items-center gap-1">
             <ResetToDefaultButton
