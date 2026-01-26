@@ -6,7 +6,7 @@
  * @module components/admin/prompts/ImportExportDropdown
  */
 
-import { ChevronDown, Download01, Upload01 } from '@untitledui/icons';
+import { ChevronDown, Download02, Upload02 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -36,11 +36,11 @@ export function ImportExportDropdown({ onExport, onImport }: ImportExportDropdow
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end" sideOffset={4} className="w-[--radix-dropdown-menu-trigger-width]">
         <DropdownMenuItem onClick={onImport} className="gap-2">
-          <Upload01 size={16} aria-hidden="true" />
+          <Upload02 size={16} aria-hidden="true" />
           Import
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onExport} className="gap-2">
-          <Download01 size={16} aria-hidden="true" />
+          <Download02 size={16} aria-hidden="true" />
           Export
         </DropdownMenuItem>
       </DropdownMenuContent>
