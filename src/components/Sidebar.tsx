@@ -191,7 +191,7 @@ function SidebarComponent({ onClose }: SidebarProps) {
     <aside className={cn(
       "flex h-full w-[240px] rounded-xl border",
       isPilotTeamMember && isOnAdminRoute
-        ? "bg-primary border-white/10"
+        ? "bg-sidebar-admin border-sidebar-admin-border"
         : "bg-background border-border"
     )}>
       <nav className={cn("w-full flex flex-col pt-6 px-3 pb-4", isPilotTeamMember && isOnAdminRoute && "text-white")} aria-label="Main navigation">

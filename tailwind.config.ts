@@ -78,6 +78,8 @@ const config: Config = {
         sidebar: {
           DEFAULT: "hsl(var(--sidebar))",
           foreground: "hsl(var(--sidebar-foreground))",
+          admin: "hsl(var(--sidebar-admin))",
+          "admin-border": "hsl(var(--sidebar-admin-border))",
         },
         "app-background": "hsl(var(--app-background))",
         chart: {
