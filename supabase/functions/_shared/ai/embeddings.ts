@@ -25,10 +25,10 @@ import { EMBEDDING_MODEL, EMBEDDING_DIMENSIONS } from './config.ts';
 // ============================================
 
 /**
- * Generate embedding using Qwen3 via OpenRouter (consolidated billing)
+ * Generate embedding using OpenAI text-embedding-3-large via OpenRouter
  * 
  * @param query - Text to embed
- * @returns Embedding vector (1024 dimensions, truncated from 4096 via MRL)
+ * @returns Embedding vector (1024 dimensions, truncated via Matryoshka)
  * @throws Error if OPENROUTER_API_KEY not configured or API fails
  */
 export async function generateEmbedding(query: string): Promise<number[]> {
@@ -48,6 +48,7 @@ export async function generateEmbedding(query: string): Promise<number[]> {
     body: JSON.stringify({
       model: EMBEDDING_MODEL,
       input: query,
+      dimensions: EMBEDDING_DIMENSIONS,
     }),
   });
 
@@ -58,11 +59,7 @@ export async function generateEmbedding(query: string): Promise<number[]> {
   }
 
   const data = await response.json();
-  const fullEmbedding = data.data[0].embedding;
-  
-  // Qwen3 returns 4096 dimensions - truncate to 1024 via Matryoshka (MRL)
-  // This maintains quality while reducing storage and compute costs
-  return fullEmbedding.slice(0, EMBEDDING_DIMENSIONS);
+  return data.data[0].embedding;
 }
 
 // ============================================

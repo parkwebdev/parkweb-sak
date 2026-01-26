@@ -29,10 +29,10 @@
  * - standard: Full capability for tools, RAG, and complex queries
  */
 export const MODEL_TIERS = {
-  /** $0.015/M input, $0.06/M output - simple lookups */
-  lite: 'google/gemini-2.5-flash-lite',
-  /** $0.15/M input, $0.60/M output - full capability */
-  standard: 'google/gemini-2.5-flash',
+  /** Claude Haiku 4.5 - optimized for RAG, tool use, multi-prompt flows */
+  lite: 'anthropic/claude-haiku-4.5',
+  /** Claude Sonnet 4.5 - best customer service quality for complex conversations */
+  standard: 'anthropic/claude-sonnet-4.5',
 } as const;
 
 export type ModelTier = keyof typeof MODEL_TIERS;
