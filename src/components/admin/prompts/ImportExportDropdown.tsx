@@ -34,7 +34,7 @@ export function ImportExportDropdown({ onExport, onImport }: ImportExportDropdow
           <ChevronDown size={16} className="text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="end" sideOffset={4} className="min-w-[130px]">
+      <DropdownMenuContent side="bottom" align="end" sideOffset={4} className="w-[--radix-dropdown-menu-trigger-width]">
         <DropdownMenuItem onClick={onImport} className="gap-2">
           <Upload01 size={16} aria-hidden="true" />
           Import
