@@ -24,7 +24,7 @@ function AppLayoutInner({ children }: AppLayoutProps) {
   useKeyboardShortcuts();
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-muted p-3 gap-3">
       {/* Skip Navigation Link - WCAG AAA */}
       <a
         href="#main-content"
@@ -40,15 +40,20 @@ function AppLayoutInner({ children }: AppLayoutProps) {
         />
       )}
       
-      {/* Free-floating Sidebar */}
-      <div className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0 ${
+      {/* Mobile Sidebar - slide-in overlay */}
+      <div className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:hidden ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
       
-      {/* Main Content Container - Full height, edge-to-edge */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full lg:ml-[240px]">
+      {/* Desktop Sidebar - floating card */}
+      <div className="hidden lg:block shrink-0">
+        <Sidebar />
+      </div>
+      
+      {/* Main Content Container - floating card */}
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 bg-background rounded-xl overflow-hidden">
         {/* Global Top Bar - always visible */}
         <TopBar 
           left={config.left}

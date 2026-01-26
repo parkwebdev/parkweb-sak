@@ -189,10 +189,10 @@ function SidebarComponent({ onClose }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "flex h-screen w-[240px] border-r",
+      "flex h-full w-[240px] rounded-xl",
       isPilotTeamMember && isOnAdminRoute
-        ? "bg-black border-white/10"
-        : "bg-background border-border"
+        ? "bg-black"
+        : "bg-background"
     )}>
       <nav className={cn("w-full flex flex-col pt-6 px-3 pb-4", isPilotTeamMember && isOnAdminRoute && "text-white")} aria-label="Main navigation">
         {/* Header with logo */}
