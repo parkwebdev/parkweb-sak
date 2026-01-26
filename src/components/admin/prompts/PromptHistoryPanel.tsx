@@ -144,7 +144,7 @@ export function PromptHistoryPanel({
               <div className="space-y-3 pb-4">
                 {history.map((entry, index) => {
                   const value = extractHistoryValue(entry.value);
-                  const isCurrent = value === currentValue;
+                  const isCurrent = index === 0;
                   
                   return (
                     <div
