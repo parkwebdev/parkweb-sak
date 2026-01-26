@@ -101,7 +101,7 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
         if (url) {
           const extension = exportItem.format === 'csv' ? 'csv' : 'pdf';
           // Always include creation date for uniqueness and context
-          const fileName = `${exportItem.name} (${format(new Date(exportItem.created_at), 'yyyy-MM-dd')}).${extension}`;
+          const fileName = `${exportItem.name} (${format(new Date(exportItem.created_at), 'M-d-yyyy')}).${extension}`;
           files.push({ url, fileName });
         }
       }
