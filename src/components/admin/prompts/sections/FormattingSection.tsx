@@ -10,8 +10,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { AdminSectionHeader } from '../AdminSectionHeader';
@@ -28,12 +26,6 @@ interface FormattingSectionProps {
   onUnsavedChange?: (hasChanges: boolean, saveFunction: () => Promise<void>, draftValue?: string) => void;
 }
 
-const FORMATTING_TIPS = [
-  'Keep messages short for chat interfaces',
-  'Use "|||" for message chunking/pauses',
-  'Avoid excessive markdown in responses',
-  'Match the brand voice and tone',
-];
 
 export function FormattingSection({
   value,
@@ -45,7 +37,7 @@ export function FormattingSection({
   const [localValue, setLocalValue] = useState(value);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isHoveringTip, setIsHoveringTip] = useState(false);
+  
 
   // Store latest onSave in ref to avoid effect dependency issues
   const onSaveRef = useRef(onSave);
@@ -123,39 +115,11 @@ export function FormattingSection({
         isSaving={isSaving}
         onSave={handleSave}
         extra={
-          <div className="flex items-center gap-1">
-            <ResetToDefaultButton
-              onReset={handleReset}
-              disabled={isDefault}
-              sectionName="Response Formatting"
-            />
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                    onMouseEnter={() => setIsHoveringTip(true)}
-                    onMouseLeave={() => setIsHoveringTip(false)}
-                  >
-                    {isHoveringTip ? (
-                      <LightbulbIconFilled className="w-4 h-4 text-warning" />
-                    ) : (
-                      <LightbulbIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs p-3">
-                  <p className="font-medium text-xs mb-1">Formatting Tips</p>
-                  <ul className="text-xs space-y-0.5 text-muted-foreground">
-                    {FORMATTING_TIPS.map((tip, i) => (
-                      <li key={i}>• {tip}</li>
-                    ))}
-                  </ul>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+          <ResetToDefaultButton
+            onReset={handleReset}
+            disabled={isDefault}
+            sectionName="Response Formatting"
+          />
         }
       />
 
