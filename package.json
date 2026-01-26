@@ -64,6 +64,7 @@
     "isomorphic-dompurify": "^2.26.0",
     "jspdf": "^3.0.2",
     "jspdf-autotable": "^5.0.2",
+    "jszip": "^3.10.1",
     "libphonenumber-js": "^1.12.31",
     "maplibre-gl": "^5.15.0",
     "motion": "^12.23.24",

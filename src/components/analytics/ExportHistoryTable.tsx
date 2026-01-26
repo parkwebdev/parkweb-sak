@@ -17,11 +17,12 @@ import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
 import { createExportHistoryColumns } from '@/components/data-table/columns/export-history-columns';
 import { useReportExports, type ReportExport } from '@/hooks/useReportExports';
-import { downloadFile } from '@/lib/file-download';
+import { downloadFile, downloadFilesAsZip } from '@/lib/file-download';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
-import { FileX02, Trash01 } from '@untitledui/icons';
+import { FileX02, Trash01, Download01 } from '@untitledui/icons';
+import { format } from 'date-fns';
 
 interface ExportHistoryTableProps {
   /** Optional external loading state override */
@@ -36,6 +37,7 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
   ]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isBulkDownloading, setIsBulkDownloading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ReportExport | null>(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
@@ -77,6 +79,51 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
     setRowSelection({});
     setIsBulkDeleteOpen(false);
   }, [rowSelection, exports, deleteExport]);
+
+  // Handle bulk download as ZIP
+  const handleBulkDownload = useCallback(async () => {
+    const selectedIndices = Object.keys(rowSelection);
+    const selectedExports = selectedIndices
+      .map((index) => exports[parseInt(index)])
+      .filter(Boolean);
+    
+    if (selectedExports.length === 0) return;
+    
+    setIsBulkDownloading(true);
+    
+    try {
+      // Build file list with signed URLs
+      const files: { url: string; fileName: string }[] = [];
+      
+      for (const exportItem of selectedExports) {
+        const url = await getDownloadUrl(exportItem.file_path);
+        if (url) {
+          const extension = exportItem.format === 'csv' ? 'csv' : 'pdf';
+          files.push({
+            url,
+            fileName: `${exportItem.name}.${extension}`,
+          });
+        }
+      }
+      
+      if (files.length === 0) {
+        toast.error('No files to download');
+        return;
+      }
+      
+      // Generate ZIP filename with date
+      const zipFileName = `reports-export-${format(new Date(), 'yyyy-MM-dd')}.zip`;
+      
+      await downloadFilesAsZip(files, zipFileName);
+      
+      toast.success(`Downloaded ${files.length} report${files.length > 1 ? 's' : ''}`);
+      setRowSelection({});
+    } catch {
+      toast.error('Failed to create download');
+    } finally {
+      setIsBulkDownloading(false);
+    }
+  }, [rowSelection, exports, getDownloadUrl]);
 
   // Memoize columns
   const columns = useMemo(() => createExportHistoryColumns({
@@ -127,6 +174,15 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
 
       {/* Floating bar for bulk actions */}
       <DataTableFloatingBar table={table}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBulkDownload}
+          disabled={isBulkDownloading}
+        >
+          <Download01 className="mr-1.5 size-4" aria-hidden="true" />
+          {isBulkDownloading ? 'Downloading...' : 'Download'}
+        </Button>
         <Button
           variant="destructive"
           size="sm"
