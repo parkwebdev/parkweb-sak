@@ -4,7 +4,8 @@
  * @module hooks/admin/usePromptSections
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, QueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { adminQueryKeys } from '@/lib/admin/admin-query-keys';
 import { useAuth } from '@/contexts/AuthContext';
@@ -205,17 +206,19 @@ export function usePromptSections(): UsePromptSectionsResult {
     },
   });
 
-  const updateSection = async (sectionKey: keyof PromptSections, value: string | object) => {
+  const updateSection = useCallback(async (sectionKey: keyof PromptSections, value: string | object) => {
     const configKey = PROMPT_CONFIG_KEYS[sectionKey];
-    const versions = data?.versions as PromptSectionVersions | undefined;
-    const currentVersion = versions?.[sectionKey as keyof PromptSectionVersions]?.version || 0;
+    const currentData = queryClient.getQueryData<{ sections: PromptSections; versions: PromptSectionVersions }>(
+      adminQueryKeys.config.all()
+    );
+    const currentVersion = currentData?.versions?.[sectionKey as keyof PromptSectionVersions]?.version || 0;
     
     await updateMutation.mutateAsync({
       key: configKey,
       value,
       currentVersion,
     });
-  };
+  }, [updateMutation, queryClient]);
 
   const defaultSections: PromptSections = {
     identity: DEFAULT_IDENTITY_PROMPT,

@@ -6,7 +6,7 @@
  * @module components/admin/prompts/sections/SecuritySection
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -72,6 +72,12 @@ export function SecuritySection({
   const [localConfig, setLocalConfig] = useState<SecurityGuardrailsConfig>(guardrailsConfig);
   const [isHoveringTip, setIsHoveringTip] = useState(false);
 
+  // Store latest onSave in ref to avoid effect dependency issues
+  const onSaveRef = useRef(onSave);
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
   useEffect(() => {
     setLocalValue(value);
     setHasChanges(false);
@@ -86,10 +92,10 @@ export function SecuritySection({
     const saveFunction = async () => {
       const result = validatePromptSection('security', localValue);
       if (!result.valid) throw new Error(result.error);
-      await onSave(localValue);
+      await onSaveRef.current(localValue);
     };
     onUnsavedChange?.(hasChanges, saveFunction, hasChanges ? localValue : undefined);
-  }, [hasChanges, localValue, onSave, onUnsavedChange]);
+  }, [hasChanges, localValue, onUnsavedChange]);
 
   const validation = useMemo(
     () => validatePromptSection('security', localValue),
