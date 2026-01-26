@@ -232,6 +232,17 @@ export function AdminPrompts() {
     ),
     right: (
       <div className="flex items-center gap-2">
+        <ResetToDefaultButton
+          onReset={handleTopBarReset}
+          disabled={isDefault && !hasUnsavedChanges}
+          sectionName={SECTION_LABELS[activeSection]}
+        />
+        <PromptHistoryPanel
+          section={activeSection}
+          sectionLabel={SECTION_LABELS[activeSection]}
+          currentValue={currentSectionValue}
+          onRestore={handleHistoryRestore}
+        />
         <ImportExportDropdown
           onExport={handleExport}
           onImport={() => fileInputRef.current?.click()}
@@ -242,17 +253,6 @@ export function AdminPrompts() {
           accept=".json"
           onChange={handleImport}
           className="hidden"
-        />
-        <PromptHistoryPanel
-          section={activeSection}
-          sectionLabel={SECTION_LABELS[activeSection]}
-          currentValue={currentSectionValue}
-          onRestore={handleHistoryRestore}
-        />
-        <ResetToDefaultButton
-          onReset={handleTopBarReset}
-          disabled={isDefault && !hasUnsavedChanges}
-          sectionName={SECTION_LABELS[activeSection]}
         />
         <Button
           size="sm"
