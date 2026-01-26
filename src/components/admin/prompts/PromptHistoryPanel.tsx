@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatShortTime } from '@/lib/time-formatting';
 import { Clock, RefreshCcw01, ArrowsRight } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -168,7 +168,7 @@ export function PromptHistoryPanel({
                           )}
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
+                          {formatShortTime(new Date(entry.createdAt))}
                         </span>
                       </div>
                       
