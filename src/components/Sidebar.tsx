@@ -188,13 +188,8 @@ function SidebarComponent({ onClose }: SidebarProps) {
   }).length;
 
   return (
-    <aside className={cn(
-      "flex h-full w-[240px] rounded-xl border",
-      isPilotTeamMember && isOnAdminRoute
-        ? "bg-sidebar-admin border-sidebar-admin-border"
-        : "bg-background border-border"
-    )}>
-      <nav className={cn("w-full flex flex-col pt-6 px-3 pb-4", isPilotTeamMember && isOnAdminRoute && "text-white")} aria-label="Main navigation">
+    <aside className="flex h-full w-[240px] rounded-xl border bg-sidebar border-sidebar-border">
+      <nav className="w-full flex flex-col pt-6 px-3 pb-4 text-sidebar-foreground" aria-label="Main navigation">
         {/* Header with logo */}
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
