@@ -24,10 +24,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { sendChatMessage, type ChatResponse } from '@/widget/api';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
-import { useAgent } from '@/hooks/useAgent';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/types/errors';
 import { stripUrlsFromContent, stripPhoneNumbersFromContent, formatMarkdownBullets } from '@/widget/utils/url-stripper';
+import { supabase } from '@/integrations/supabase/client';
 import type { PromptOverrides } from '@/widget/api';
 
 // ============================================
@@ -55,7 +55,7 @@ interface PromptTestChatProps {
 // ============================================
 
 export function PromptTestChat({ draftPrompts, testDraftMode = false }: PromptTestChatProps) {
-  const { agentId } = useAgent();
+  // Note: No agent needed - admin test mode uses platform prompts only
   
   // State (no conversationId - preview mode is ephemeral)
   const [messages, setMessages] = useState<Message[]>([]);
@@ -86,11 +86,6 @@ export function PromptTestChat({ draftPrompts, testDraftMode = false }: PromptTe
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
 
-    if (!agentId) {
-      toast.error('No agent configured', { description: 'Please configure an agent first.' });
-      return;
-    }
-
     // Add user message immediately
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -103,10 +98,20 @@ export function PromptTestChat({ draftPrompts, testDraftMode = false }: PromptTe
     setIsLoading(true);
 
     try {
-      // Send to API in preview mode (ephemeral, no persistence)
+      // Get the current session token for admin authentication
+      const { data: sessionData } = await supabase.auth.getSession();
+      const authToken = sessionData?.session?.access_token;
+      
+      if (!authToken) {
+        toast.error('Authentication required', { description: 'Please log in to test prompts.' });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Send to API in admin test mode (no agent required, uses platform prompts only)
       const response: ChatResponse = await sendChatMessage(
-        agentId,
-        null, // no conversationId - each message is independent in preview
+        null,      // no agentId - admin test mode
+        null,      // no conversationId - each message is independent in preview
         { role: 'user', content: content.trim() },
         undefined, // no leadId
         undefined, // no pageVisits
@@ -115,7 +120,9 @@ export function PromptTestChat({ draftPrompts, testDraftMode = false }: PromptTe
         undefined, // no locationId
         true,      // previewMode - skip persistence
         undefined, // browserLanguage
-        testDraftMode ? draftPrompts : undefined // Pass draft prompts when testing
+        testDraftMode ? draftPrompts : undefined, // Pass draft prompts when testing
+        true,      // adminTestMode - bypass agent requirement for super admin testing
+        authToken  // Pass the user's auth token for admin verification
       );
 
       // Add AI response
@@ -140,7 +147,7 @@ export function PromptTestChat({ draftPrompts, testDraftMode = false }: PromptTe
     } finally {
       setIsLoading(false);
     }
-  }, [agentId, isLoading, testDraftMode, draftPrompts]);
+  }, [isLoading, testDraftMode, draftPrompts]);
 
   // Send message from input
   const handleSendMessage = useCallback(() => {
