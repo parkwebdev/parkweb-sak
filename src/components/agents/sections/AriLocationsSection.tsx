@@ -669,130 +669,155 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
           </div>
         )}
 
-        {/* Communities View */}
-        {viewMode === 'communities' && (
+        {/* Global empty state - only when BOTH are empty */}
+        {locationsWithCounts.length === 0 && propertiesWithLocation.length === 0 ? (
+          <EmptyState
+            icon={<MarkerPin01 className="h-5 w-5 text-muted-foreground/50" />}
+            title="No locations yet"
+            description="Add locations to organize your business"
+            action={
+              canManageLocations && (
+                <Button onClick={() => setCreateDialogOpen(true)} size="sm">
+                  Add Location
+                </Button>
+              )
+            }
+          />
+        ) : (
           <>
-            {locationsWithCounts.length === 0 ? (
-              <EmptyState
-                icon={<MarkerPin01 className="h-5 w-5 text-muted-foreground/50" />}
-                title="No locations yet"
-                description="Add locations to organize your business"
-                action={
-                  canManageLocations && (
-                    <Button onClick={() => setCreateDialogOpen(true)} size="sm">
-                      Add Location
-                    </Button>
-                  )
-                }
-              />
-            ) : (
-              <div className="space-y-3">
-                <DataTableToolbar
-                  table={locationsTable}
-                  searchPlaceholder="Search..."
-                  globalFilter
-                >
-                  {ViewToggle}
-                  {FilterPopover}
-                </DataTableToolbar>
-
-                {activeFilters.length > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {activeFilters.map(filter => (
-                      <Badge
-                        key={`${filter.type}-${filter.value}`}
-                        variant="secondary"
-                        className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
-                        onClick={() => clearFilter(filter.type, filter.value)}
-                      >
-                        {filter.label}
-                        <X className="h-3 w-3" />
-                      </Badge>
-                    ))}
-                    {activeFilters.length > 1 && (
-                      <Button variant="ghost" size="xs" className="text-muted-foreground" onClick={clearAllFilters}>
-                        Clear all
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                <DataTable
-                  table={locationsTable}
-                  columns={locationColumns}
-                  onRowClick={(row) => handleViewLocation(row)}
-                />
-
-                {displayCount < filteredLocations.length && (
-                  <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-                    <span className="text-sm text-muted-foreground">Loading more...</span>
-                  </div>
-                )}
-
-                <p className="text-xs text-muted-foreground text-center">
-                  Showing {displayedLocations.length} of {filteredLocations.length} locations
-                </p>
+            {/* Always show ViewToggle when any data exists */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1 flex-wrap">
+                {ViewToggle}
               </div>
+              <div className="flex items-center gap-2">
+                {/* Only show filters when current view has data */}
+                {((viewMode === 'communities' && locationsWithCounts.length > 0) ||
+                  (viewMode === 'properties' && propertiesWithLocation.length > 0)) && 
+                  FilterPopover}
+              </div>
+            </div>
+
+            {/* Communities View */}
+            {viewMode === 'communities' && (
+              <>
+                {locationsWithCounts.length === 0 ? (
+                  <EmptyState
+                    icon={<MarkerPin01 className="h-5 w-5 text-muted-foreground/50" />}
+                    title="No communities yet"
+                    description="Switch to Properties to see synced homes, or add a community manually"
+                    action={
+                      canManageLocations && (
+                        <Button onClick={() => setCreateDialogOpen(true)} size="sm">
+                          Add Location
+                        </Button>
+                      )
+                    }
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    <DataTableToolbar
+                      table={locationsTable}
+                      searchPlaceholder="Search..."
+                      globalFilter
+                    />
+
+                    {activeFilters.length > 0 && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {activeFilters.map(filter => (
+                          <Badge
+                            key={`${filter.type}-${filter.value}`}
+                            variant="secondary"
+                            className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
+                            onClick={() => clearFilter(filter.type, filter.value)}
+                          >
+                            {filter.label}
+                            <X className="h-3 w-3" />
+                          </Badge>
+                        ))}
+                        {activeFilters.length > 1 && (
+                          <Button variant="ghost" size="xs" className="text-muted-foreground" onClick={clearAllFilters}>
+                            Clear all
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    <DataTable
+                      table={locationsTable}
+                      columns={locationColumns}
+                      onRowClick={(row) => handleViewLocation(row)}
+                    />
+
+                    {displayCount < filteredLocations.length && (
+                      <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground">Loading more...</span>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground text-center">
+                      Showing {displayedLocations.length} of {filteredLocations.length} locations
+                    </p>
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
 
-        {/* Properties View */}
-        {viewMode === 'properties' && (
-          <>
-            {propertiesWithLocation.length === 0 ? (
-              <EmptyState
-                icon={<Home01 className="h-5 w-5 text-muted-foreground/50" />}
-                title="No properties yet"
-                description="Properties will appear here after syncing from WordPress"
-              />
-            ) : (
-              <div className="space-y-3">
-                <DataTableToolbar
-                  table={propertiesTable}
-                  searchPlaceholder="Search..."
-                  globalFilter
-                >
-                  {ViewToggle}
-                  {FilterPopover}
-                </DataTableToolbar>
+            {/* Properties View */}
+            {viewMode === 'properties' && (
+              <>
+                {propertiesWithLocation.length === 0 ? (
+                  <EmptyState
+                    icon={<Home01 className="h-5 w-5 text-muted-foreground/50" />}
+                    title="No properties yet"
+                    description="Properties will appear here after syncing from WordPress"
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    <DataTableToolbar
+                      table={propertiesTable}
+                      searchPlaceholder="Search..."
+                      globalFilter
+                    />
 
-                {activeFilters.length > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {activeFilters.map(filter => (
-                      <Badge
-                        key={`${filter.type}-${filter.value}`}
-                        variant="secondary"
-                        className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
-                        onClick={() => clearFilter(filter.type, filter.value)}
-                      >
-                        {filter.label}
-                        <X className="h-3 w-3" />
-                      </Badge>
-                    ))}
-                    {activeFilters.length > 1 && (
-                      <Button variant="ghost" size="xs" className="text-muted-foreground" onClick={clearAllFilters}>
-                        Clear all
-                      </Button>
+                    {activeFilters.length > 0 && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {activeFilters.map(filter => (
+                          <Badge
+                            key={`${filter.type}-${filter.value}`}
+                            variant="secondary"
+                            className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
+                            onClick={() => clearFilter(filter.type, filter.value)}
+                          >
+                            {filter.label}
+                            <X className="h-3 w-3" />
+                          </Badge>
+                        ))}
+                        {activeFilters.length > 1 && (
+                          <Button variant="ghost" size="xs" className="text-muted-foreground" onClick={clearAllFilters}>
+                            Clear all
+                          </Button>
+                        )}
+                      </div>
                     )}
+
+                    <DataTable
+                      table={propertiesTable}
+                      columns={propertyColumns}
+                    />
+
+                    {displayCount < filteredProperties.length && (
+                      <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+                        <span className="text-sm text-muted-foreground">Loading more...</span>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground text-center">
+                      Showing {displayedProperties.length} of {filteredProperties.length} properties
+                    </p>
                   </div>
                 )}
-
-                <DataTable
-                  table={propertiesTable}
-                  columns={propertyColumns}
-                />
-
-                {displayCount < filteredProperties.length && (
-                  <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-                    <span className="text-sm text-muted-foreground">Loading more...</span>
-                  </div>
-                )}
-
-                <p className="text-xs text-muted-foreground text-center">
-                  Showing {displayedProperties.length} of {filteredProperties.length} properties
-                </p>
-              </div>
+              </>
             )}
           </>
         )}
