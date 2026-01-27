@@ -32,8 +32,9 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { 
-  BookOpen01, XClose, Image01, Plus, FilterLines, SearchSm, Trash01, RefreshCcw01, ChevronDown, X, Upload01 
+  BookOpen01, XClose, Image01, Plus, FilterLines, SearchSm, Trash01, RefreshCcw01, ChevronDown, X 
 } from '@untitledui/icons';
+import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { useCanManage } from '@/hooks/useCanManage';
 import { toast } from '@/lib/toast';
@@ -579,7 +580,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       label: 'Import CSV',
       onClick: () => setBulkImportOpen(true),
       variant: 'outline',
-      icon: <Upload01 size={16} aria-hidden="true" />,
+      icon: <CsvExportIcon size={16} />,
     });
     
     // Categories
@@ -784,6 +785,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                 Add Article
               </Button>
               <Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)}>
+                <CsvExportIcon size={16} className="mr-1.5" />
                 Import CSV
               </Button>
             </div>
