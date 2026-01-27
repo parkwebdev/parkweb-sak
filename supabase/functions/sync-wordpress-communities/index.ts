@@ -532,7 +532,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter, useAiExtraction } = await req.json();
+    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter, useAiExtraction, forceFullSync } = await req.json();
 
     // Verify user has access to this agent
     const { data: agent, error: agentError } = await supabase
@@ -620,7 +620,21 @@ Deno.serve(async (req: Request) => {
       
       // Determine if this is an incremental sync
       const lastSync = modifiedAfter || wpConfig?.last_community_sync;
-      const isIncremental = !!lastSync;
+      let isIncremental = !!lastSync && !forceFullSync;
+      
+      // Smart detection: if local communities count is 0 but we had some before, force full sync
+      if (isIncremental) {
+        const { count: localCount } = await supabase
+          .from('locations')
+          .select('id', { count: 'exact', head: true })
+          .eq('agent_id', agentId)
+          .not('wordpress_community_id', 'is', null);
+        
+        if (localCount === 0 && wpConfig?.community_count && wpConfig.community_count > 0) {
+          console.log(`Detected missing local communities (0 vs ${wpConfig.community_count} expected). Forcing full sync.`);
+          isIncremental = false;
+        }
+      }
       
       if (!urlToSync) {
         return new Response(

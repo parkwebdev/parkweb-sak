@@ -298,8 +298,8 @@ export function WordPressIntegrationSheet({
     setUrlInput('');
   };
 
-  const handleSyncCommunities = () => importCommunities(undefined, undefined, extractionMode === 'ai');
-  const handleSyncHomes = () => syncHomes(undefined, extractionMode === 'ai');
+  const handleSyncCommunities = (forceFullSync = false) => importCommunities(undefined, undefined, extractionMode === 'ai', forceFullSync);
+  const handleSyncHomes = (forceFullSync = false) => syncHomes(undefined, extractionMode === 'ai', undefined, forceFullSync);
 
   const isLoading = connectionTesting || connectionSyncing || homesSyncing;
 
@@ -499,20 +499,31 @@ export function WordPressIntegrationSheet({
                           </Badge>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleSyncCommunities}
-                        disabled={isLoading}
-                        className="h-8 w-8 p-0"
-                      >
-                        <RefreshCw01 
-                          size={16} 
-                          className={connectionSyncing ? 'animate-spin' : ''} 
-                          aria-hidden="true" 
-                        />
-                        <span className="sr-only">Sync communities</span>
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={isLoading}
+                            className="h-8 w-8 p-0"
+                          >
+                            <RefreshCw01 
+                              size={16} 
+                              className={connectionSyncing ? 'animate-spin' : ''} 
+                              aria-hidden="true" 
+                            />
+                            <span className="sr-only">Sync communities</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleSyncCommunities(false)}>
+                            Quick Sync
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSyncCommunities(true)}>
+                            Full Resync
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                     
                     <div className="text-xs text-muted-foreground">
