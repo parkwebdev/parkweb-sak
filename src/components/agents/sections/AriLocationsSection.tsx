@@ -459,13 +459,17 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
     return <SkeletonTableSection rows={5} />;
   }
 
-  // View toggle component - same height as Filters button
+  // View toggle component - pill container with compact buttons
   const ViewToggle = (
-    <div className="flex items-center gap-1">
+    <div className="inline-flex items-center gap-1 rounded-md bg-muted p-1">
       <Button 
+        size="sm"
         variant={viewMode === 'communities' ? 'secondary' : 'ghost'}
         onClick={() => setViewMode('communities')}
-        className={viewMode === 'communities' ? 'bg-muted hover:bg-muted/80' : ''}
+        className={viewMode === 'communities' 
+          ? 'bg-background shadow-sm hover:bg-background/90' 
+          : 'hover:bg-transparent'
+        }
       >
         Communities
         <Badge variant="outline" size="counter" className="ml-1.5">
@@ -473,9 +477,13 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
         </Badge>
       </Button>
       <Button 
+        size="sm"
         variant={viewMode === 'properties' ? 'secondary' : 'ghost'}
         onClick={() => setViewMode('properties')}
-        className={viewMode === 'properties' ? 'bg-muted hover:bg-muted/80' : ''}
+        className={viewMode === 'properties' 
+          ? 'bg-background shadow-sm hover:bg-background/90' 
+          : 'hover:bg-transparent'
+        }
       >
         Properties
         <Badge variant="outline" size="counter" className="ml-1.5">
@@ -498,7 +506,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const FilterPopover = (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="gap-1.5">
+        <Button variant="outline" size="sm" className="gap-1.5">
           <FilterLines size={16} />
           Filters
           {activeFilters.length > 0 && (
