@@ -14,18 +14,7 @@ import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import type { Tables } from '@/integrations/supabase/types';
 import type { AgentDeploymentConfig } from '@/types/metadata';
-
-interface WordPressConfig {
-  site_url: string;
-  community_endpoint?: string;
-  home_endpoint?: string;
-  last_community_sync?: string;
-  community_count?: number;
-  community_sync_interval?: string;
-  home_sync_interval?: string;
-  last_home_sync?: string;
-  home_count?: number;
-}
+import type { SamplePostResult, WordPressConfig } from '@/types/wordpress';
 
 interface TestResult {
   success: boolean;
@@ -68,16 +57,30 @@ interface UseWordPressConnectionOptions {
 }
 
 /** Connection flow steps */
-export type ConnectionStep = 'url' | 'discovering' | 'mapping' | 'connected';
+export type ConnectionStep = 'url' | 'discovering' | 'mapping' | 'field-mapping' | 'connected';
+
+/** Sample post data for field mapping */
+interface SamplePostData {
+  community: SamplePostResult | null;
+  property: SamplePostResult | null;
+}
 
 export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressConnectionOptions) {
   const [isTesting, setIsTesting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(false);
+  const [isFetchingSample, setIsFetchingSample] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [discoveredEndpoints, setDiscoveredEndpoints] = useState<DiscoveredEndpoints | null>(null);
   const [connectionStep, setConnectionStep] = useState<ConnectionStep>('url');
+  
+  // Sample post data for field mapping
+  const [samplePostData, setSamplePostData] = useState<SamplePostData>({ community: null, property: null });
+  
+  // User's field mapping selections
+  const [communityFieldMappings, setCommunityFieldMappings] = useState<Record<string, string>>({});
+  const [propertyFieldMappings, setPropertyFieldMappings] = useState<Record<string, string>>({});
   
   // Local state for optimistic UI updates
   const [localCommunitySyncInterval, setLocalCommunitySyncInterval] = useState<string | null>(null);
@@ -89,8 +92,11 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   const wordpressConfig = useMemo((): WordPressConfig | null => {
     if (!agent?.deployment_config) return null;
     const config = agent.deployment_config as AgentDeploymentConfig & { wordpress?: WordPressConfig };
-    return config.wordpress || null;
+    return config.wordpress ?? null;
   }, [agent?.deployment_config]);
+  
+  // Stored site URL for API calls
+  const storedSiteUrl = wordpressConfig?.site_url || '';
 
   // Reset local state when agent config changes
   useEffect(() => {
@@ -537,7 +543,45 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   }, [agent?.id]);
 
   /**
-   * Save endpoint mappings and complete connection.
+   * Fetch sample post from an endpoint for field mapping.
+   */
+  const fetchSamplePost = useCallback(async (
+    endpoint: string,
+    type: 'community' | 'property'
+  ): Promise<SamplePostResult | null> => {
+    if (!agent?.id || !storedSiteUrl) return null;
+
+    setIsFetchingSample(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const { data, error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          action: 'fetch-sample',
+          agentId: agent.id,
+          siteUrl: storedSiteUrl,
+          endpoint,
+          type,
+        },
+      });
+
+      if (error) throw error;
+      return data as SamplePostResult;
+    } catch (error: unknown) {
+      logger.error('Failed to fetch sample post', error);
+      return null;
+    } finally {
+      setIsFetchingSample(false);
+    }
+  }, [agent?.id, storedSiteUrl]);
+
+  /**
+   * Save endpoint mappings and transition to field mapping step.
    */
   const saveEndpointMappings = useCallback(async (
     communityEndpoint: string | null,
@@ -553,6 +597,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
         throw new Error('Not authenticated');
       }
 
+      // Save endpoint selection first
       const body: Record<string, unknown> = {
         action: 'save',
         agentId: agent.id,
@@ -572,10 +617,35 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
 
       if (error) throw error;
 
-      setConnectionStep('connected');
-      toast.success('WordPress connected', {
-        description: 'Endpoints mapped successfully. You can now sync data.',
+      // Fetch sample posts for field mapping
+      const [communitySample, propertySample] = await Promise.all([
+        communityEndpoint ? fetchSamplePost(communityEndpoint, 'community') : Promise.resolve(null),
+        homeEndpoint ? fetchSamplePost(homeEndpoint, 'property') : Promise.resolve(null),
+      ]);
+
+      setSamplePostData({
+        community: communitySample,
+        property: propertySample,
       });
+
+      // Pre-populate field mappings with suggestions
+      if (communitySample?.suggestedMappings) {
+        setCommunityFieldMappings(communitySample.suggestedMappings);
+      }
+      if (propertySample?.suggestedMappings) {
+        setPropertyFieldMappings(propertySample.suggestedMappings);
+      }
+
+      // If we have sample data, go to field mapping; otherwise complete
+      if (communitySample || propertySample) {
+        setConnectionStep('field-mapping');
+      } else {
+        setConnectionStep('connected');
+        toast.success('WordPress connected', {
+          description: 'Endpoints mapped successfully. You can now sync data.',
+        });
+      }
+      
       onSyncComplete?.();
       return true;
     } catch (error: unknown) {
@@ -586,7 +656,64 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     } finally {
       setIsSaving(false);
     }
+  }, [agent?.id, onSyncComplete, fetchSamplePost]);
+
+  /**
+   * Save field mappings and complete connection.
+   */
+  const saveFieldMappings = useCallback(async (
+    communityMappings: Record<string, string>,
+    propertyMappings: Record<string, string>
+  ): Promise<boolean> => {
+    if (!agent?.id) return false;
+
+    setIsSaving(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const body: Record<string, unknown> = {
+        action: 'save',
+        agentId: agent.id,
+        communityFieldMappings: communityMappings,
+        propertyFieldMappings: propertyMappings,
+      };
+
+      const { error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body,
+      });
+
+      if (error) throw error;
+
+      setConnectionStep('connected');
+      toast.success('WordPress connected', {
+        description: 'Field mappings saved. You can now sync data.',
+      });
+      onSyncComplete?.();
+      return true;
+    } catch (error: unknown) {
+      toast.error('Failed to save field mappings', {
+        description: getErrorMessage(error),
+      });
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
   }, [agent?.id, onSyncComplete]);
+
+  /**
+   * Skip field mapping and complete connection.
+   */
+  const skipFieldMapping = useCallback(() => {
+    setConnectionStep('connected');
+    toast.success('WordPress connected', {
+      description: 'Using auto-detection for field mapping.',
+    });
+  }, []);
 
   /**
    * Reset connection flow to URL entry step.
@@ -595,6 +722,9 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     setConnectionStep('url');
     setDiscoveredEndpoints(null);
     setTestResult(null);
+    setSamplePostData({ community: null, property: null });
+    setCommunityFieldMappings({});
+    setPropertyFieldMappings({});
   }, []);
 
   return {
@@ -610,10 +740,14 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     isSyncing,
     isSaving,
     isDiscovering,
+    isFetchingSample,
     testResult,
     discoveredEndpoints,
     isConnected: !!siteUrl,
     connectionStep,
+    samplePostData,
+    communityFieldMappings,
+    propertyFieldMappings,
 
     // Actions
     testConnection,
@@ -626,6 +760,11 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     disconnect,
     connectWithDiscovery,
     saveEndpointMappings,
+    saveFieldMappings,
+    skipFieldMapping,
+    fetchSamplePost,
+    setCommunityFieldMappings,
+    setPropertyFieldMappings,
     resetConnectionFlow,
     setConnectionStep,
     clearTestResult: () => setTestResult(null),
