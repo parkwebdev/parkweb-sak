@@ -11,7 +11,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { logger } from '@/utils/logger';
-import { DotsVertical, RefreshCw01, Send01 } from '@untitledui/icons';
+import { DotsVertical, Send01 } from '@untitledui/icons';
+import { LayoutPanelRight } from '@/components/icons/LayoutPanelIcons';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -48,13 +49,15 @@ interface Message {
 interface PromptTestChatProps {
   draftPrompts?: PromptOverrides;
   testDraftMode?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 // ============================================
 // PROMPT TEST CHAT COMPONENT
 // ============================================
 
-export function PromptTestChat({ draftPrompts, testDraftMode = false }: PromptTestChatProps) {
+export function PromptTestChat({ draftPrompts, testDraftMode = false, isCollapsed, onToggleCollapse }: PromptTestChatProps) {
   // Note: No agent needed - admin test mode uses platform prompts only
   
   // State (no conversationId - preview mode is ephemeral)
@@ -195,14 +198,16 @@ export function PromptTestChat({ draftPrompts, testDraftMode = false }: PromptTe
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <IconButton 
-            variant="ghost" 
-            size="sm" 
-            label="Reset preview"
-            onClick={handleClearConversation}
-          >
-            <RefreshCw01 size={16} />
-          </IconButton>
+          {onToggleCollapse && (
+            <IconButton 
+              variant="ghost" 
+              size="sm" 
+              label={isCollapsed ? "Expand preview" : "Collapse preview"}
+              onClick={onToggleCollapse}
+            >
+              <LayoutPanelRight filled={!isCollapsed} className="h-4 w-4" />
+            </IconButton>
+          )}
         </div>
       </div>
 

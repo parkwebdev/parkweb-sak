@@ -11,8 +11,6 @@
 import { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { LayoutPanelRight } from '@/components/icons/LayoutPanelIcons';
 import { PromptTestChat } from './PromptTestChat';
 import { cn } from '@/lib/utils';
 import type { PromptOverrides } from '@/widget/api';
@@ -39,26 +37,6 @@ export function AdminPromptPreviewPanel({
         isCollapsed ? "w-12" : "w-[360px]"
       )}
     >
-      {/* Header with collapse button */}
-      <div className={cn(
-        "h-14 border-b flex items-center justify-between shrink-0",
-        isCollapsed ? "px-2" : "px-4"
-      )}>
-        {!isCollapsed && (
-          <h3 className="font-semibold text-sm">Test Chat</h3>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn("h-7 w-7 p-0 transition-colors duration-200", isCollapsed && "mx-auto")}
-          onClick={onToggleCollapse}
-          aria-label={isCollapsed ? "Expand preview" : "Collapse preview"}
-        >
-          <LayoutPanelRight filled={!isCollapsed} className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Content - hidden when collapsed */}
       <div 
         className={cn(
           "flex-1 min-h-0 flex flex-col transition-opacity duration-200",
@@ -85,6 +63,8 @@ export function AdminPromptPreviewPanel({
         <PromptTestChat 
           draftPrompts={draftPrompts}
           testDraftMode={testDraftMode && hasDraftChanges}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={onToggleCollapse}
         />
       </div>
     </div>
