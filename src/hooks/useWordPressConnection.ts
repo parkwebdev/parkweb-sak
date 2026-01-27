@@ -33,7 +33,7 @@ interface TestResult {
   communityCount?: number;
 }
 
-interface DiscoveredEndpoint {
+export interface DiscoveredEndpoint {
   slug: string;
   name: string;
   rest_base: string;
@@ -43,7 +43,7 @@ interface DiscoveredEndpoint {
   postCount?: number;
 }
 
-interface DiscoveredEndpoints {
+export interface DiscoveredEndpoints {
   communityEndpoints: DiscoveredEndpoint[];
   homeEndpoints: DiscoveredEndpoint[];
   unclassifiedEndpoints?: DiscoveredEndpoint[];
@@ -67,6 +67,9 @@ interface UseWordPressConnectionOptions {
   onSyncComplete?: () => void;
 }
 
+/** Connection flow steps */
+export type ConnectionStep = 'url' | 'discovering' | 'mapping' | 'connected';
+
 export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressConnectionOptions) {
   const [isTesting, setIsTesting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -74,6 +77,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [discoveredEndpoints, setDiscoveredEndpoints] = useState<DiscoveredEndpoints | null>(null);
+  const [connectionStep, setConnectionStep] = useState<ConnectionStep>('url');
   
   // Local state for optimistic UI updates
   const [localCommunitySyncInterval, setLocalCommunitySyncInterval] = useState<string | null>(null);
@@ -476,6 +480,123 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     }
   }, [agent?.id, onSyncComplete]);
 
+  /**
+   * Connect to WordPress with auto-discovery flow.
+   * Saves URL and discovers endpoints in one step.
+   */
+  const connectWithDiscovery = useCallback(async (url: string): Promise<{
+    success: boolean;
+    endpoints: DiscoveredEndpoints | null;
+    error?: string;
+  }> => {
+    if (!agent?.id || !url.trim()) {
+      return { success: false, endpoints: null, error: 'No agent or URL provided' };
+    }
+
+    setConnectionStep('discovering');
+    setIsDiscovering(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      // Use the new 'connect' action that combines URL validation + discovery
+      const { data, error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          action: 'connect',
+          agentId: agent.id,
+          siteUrl: url.trim(),
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        const endpoints: DiscoveredEndpoints = {
+          communityEndpoints: data.communityEndpoints || [],
+          homeEndpoints: data.homeEndpoints || [],
+          unclassifiedEndpoints: data.unclassifiedEndpoints || [],
+        };
+        setDiscoveredEndpoints(endpoints);
+        setConnectionStep('mapping');
+        return { success: true, endpoints };
+      }
+
+      setConnectionStep('url');
+      return { success: false, endpoints: null, error: data.message || 'Connection failed' };
+    } catch (error: unknown) {
+      logger.error('Failed to connect with discovery', error);
+      setConnectionStep('url');
+      return { success: false, endpoints: null, error: getErrorMessage(error) };
+    } finally {
+      setIsDiscovering(false);
+    }
+  }, [agent?.id]);
+
+  /**
+   * Save endpoint mappings and complete connection.
+   */
+  const saveEndpointMappings = useCallback(async (
+    communityEndpoint: string | null,
+    homeEndpoint: string | null
+  ): Promise<boolean> => {
+    if (!agent?.id) return false;
+
+    setIsSaving(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const body: Record<string, unknown> = {
+        action: 'save',
+        agentId: agent.id,
+      };
+
+      if (communityEndpoint !== null) {
+        body.communityEndpoint = communityEndpoint;
+      }
+      if (homeEndpoint !== null) {
+        body.homeEndpoint = homeEndpoint;
+      }
+
+      const { error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body,
+      });
+
+      if (error) throw error;
+
+      setConnectionStep('connected');
+      toast.success('WordPress connected', {
+        description: 'Endpoints mapped successfully. You can now sync data.',
+      });
+      onSyncComplete?.();
+      return true;
+    } catch (error: unknown) {
+      toast.error('Failed to save endpoint mappings', {
+        description: getErrorMessage(error),
+      });
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [agent?.id, onSyncComplete]);
+
+  /**
+   * Reset connection flow to URL entry step.
+   */
+  const resetConnectionFlow = useCallback(() => {
+    setConnectionStep('url');
+    setDiscoveredEndpoints(null);
+    setTestResult(null);
+  }, []);
+
   return {
     // State
     siteUrl,
@@ -492,6 +613,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     testResult,
     discoveredEndpoints,
     isConnected: !!siteUrl,
+    connectionStep,
 
     // Actions
     testConnection,
@@ -502,6 +624,10 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     updateEndpoint,
     discoverEndpoints,
     disconnect,
+    connectWithDiscovery,
+    saveEndpointMappings,
+    resetConnectionFlow,
+    setConnectionStep,
     clearTestResult: () => setTestResult(null),
     clearDiscoveredEndpoints: () => setDiscoveredEndpoints(null),
   };

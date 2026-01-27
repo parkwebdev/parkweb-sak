@@ -2,6 +2,7 @@
  * WordPress Integration Sheet
  * 
  * Clean, card-based layout for managing WordPress connection and sync settings.
+ * Now includes multi-step connection flow with intelligent endpoint discovery.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -57,10 +58,13 @@ import {
   Edit02,
   XClose,
   Database01,
+  SearchRefraction,
 } from '@untitledui/icons';
 import { DataExtractionIcon, LightningBoltFilled } from '@/components/icons/WordPressIcons';
-import { useWordPressConnection } from '@/hooks/useWordPressConnection';
+import { useWordPressConnection, type ConnectionStep } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
+import { WordPressEndpointMapper } from './WordPressEndpointMapper';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
 
 interface DiscoveredEndpoint {
@@ -214,6 +218,10 @@ export function WordPressIntegrationSheet({
   // Local state for endpoint inputs (for auto-save debouncing)
   const [localCommunityEndpoint, setLocalCommunityEndpoint] = useState('');
   const [localHomeEndpoint, setLocalHomeEndpoint] = useState('');
+  
+  // Selected endpoints during mapping step
+  const [selectedCommunityEndpoint, setSelectedCommunityEndpoint] = useState<string | null>(null);
+  const [selectedPropertyEndpoint, setSelectedPropertyEndpoint] = useState<string | null>(null);
 
   const {
     siteUrl,
@@ -225,16 +233,23 @@ export function WordPressIntegrationSheet({
     homeEndpoint,
     isTesting: connectionTesting,
     isSyncing: connectionSyncing,
+    isSaving,
     isDiscovering,
     testResult: connectionTestResult,
     discoveredEndpoints,
     isConnected,
+    connectionStep,
     testConnection,
     importCommunities,
     updateSyncInterval,
     updateEndpoint,
     disconnect,
     discoverEndpoints,
+    connectWithDiscovery,
+    saveEndpointMappings,
+    resetConnectionFlow,
+    setConnectionStep,
+    clearTestResult,
   } = useWordPressConnection({ agent, onSyncComplete });
 
   const {
@@ -284,10 +299,33 @@ export function WordPressIntegrationSheet({
 
   const handleConnect = async () => {
     if (!urlInput.trim()) return;
-    const result = await testConnection(urlInput.trim());
-    if (result.success) {
+    
+    // Use the new connect with discovery flow
+    const result = await connectWithDiscovery(urlInput.trim());
+    
+    if (!result.success) {
+      // Show error toast - the hook already handles this
+      clearTestResult();
+    }
+  };
+
+  const handleConfirmMapping = async () => {
+    // Use the pre-selected endpoints from discovery or user selection
+    const communityEp = selectedCommunityEndpoint ?? 
+      discoveredEndpoints?.communityEndpoints[0]?.rest_base ?? null;
+    const propertyEp = selectedPropertyEndpoint ?? 
+      discoveredEndpoints?.homeEndpoints[0]?.rest_base ?? null;
+    
+    const success = await saveEndpointMappings(communityEp, propertyEp);
+    if (success) {
       setIsEditing(false);
     }
+  };
+
+  const handleCancelMapping = () => {
+    resetConnectionFlow();
+    setSelectedCommunityEndpoint(null);
+    setSelectedPropertyEndpoint(null);
   };
 
   const handleDisconnect = async () => {
@@ -296,12 +334,13 @@ export function WordPressIntegrationSheet({
     setDeleteLocationsOnDisconnect(false);
     setDeleteConfirmation('');
     setUrlInput('');
+    resetConnectionFlow();
   };
 
   const handleSyncCommunities = (forceFullSync = false) => importCommunities(undefined, undefined, extractionMode === 'ai', forceFullSync);
   const handleSyncHomes = (forceFullSync = false) => syncHomes(undefined, extractionMode === 'ai', undefined, forceFullSync);
 
-  const isLoading = connectionTesting || connectionSyncing || homesSyncing;
+  const isLoading = connectionTesting || connectionSyncing || homesSyncing || isDiscovering || isSaving;
 
   return (
     <>
@@ -321,48 +360,111 @@ export function WordPressIntegrationSheet({
             <Card>
               <CardContent className="p-4">
                 <AnimatePresence mode="wait">
-                  {isConnected && !isEditing ? (
+                  {/* Step: Connected */}
+                  {isConnected && !isEditing && connectionStep !== 'mapping' ? (
                     <motion.div
                       key="connected"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="flex items-center justify-between gap-3"
+                      className="space-y-3"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="h-2 w-2 rounded-full bg-status-active shrink-0" />
-                        <a 
-                          href={siteUrl?.startsWith('http') ? siteUrl : `https://${siteUrl}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium text-foreground hover:text-primary truncate flex items-center gap-1"
-                        >
-                          {siteUrl?.replace(/^https?:\/\//, '')}
-                          <LinkExternal01 size={12} aria-hidden="true" />
-                        </a>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="h-2 w-2 rounded-full bg-status-active shrink-0" />
+                          <a 
+                            href={siteUrl?.startsWith('http') ? siteUrl : `https://${siteUrl}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium text-foreground hover:text-primary truncate flex items-center gap-1"
+                          >
+                            {siteUrl?.replace(/^https?:\/\//, '')}
+                            <LinkExternal01 size={12} aria-hidden="true" />
+                          </a>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsEditing(true)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit02 size={16} aria-hidden="true" />
+                            <span className="sr-only">Edit URL</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowDisconnectDialog(true)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          >
+                            <XClose size={16} aria-hidden="true" />
+                            <span className="sr-only">Disconnect</span>
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsEditing(true)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit02 size={16} aria-hidden="true" />
-                          <span className="sr-only">Edit URL</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowDisconnectDialog(true)}
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        >
-                          <XClose size={16} aria-hidden="true" />
-                          <span className="sr-only">Disconnect</span>
-                        </Button>
+                      
+                      {/* Show current endpoint mappings */}
+                      {(communityEndpoint || homeEndpoint) && (
+                        <div className="text-xs text-muted-foreground space-y-1 pt-1 border-t">
+                          {communityEndpoint && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">Communities:</span>
+                              <code className="font-mono text-foreground">{communityEndpoint}</code>
+                            </div>
+                          )}
+                          {homeEndpoint && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">Properties:</span>
+                              <code className="font-mono text-foreground">{homeEndpoint}</code>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </motion.div>
+                  ) : connectionStep === 'discovering' ? (
+                    /* Step: Discovering endpoints */
+                    <motion.div
+                      key="discovering"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <SearchRefraction size={16} className="text-primary animate-pulse" aria-hidden="true" />
+                        <span className="text-sm font-medium">Discovering endpoints...</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Scanning {urlInput} for available data types.
+                      </p>
+                      <div className="space-y-2">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-3/4" />
                       </div>
                     </motion.div>
+                  ) : connectionStep === 'mapping' && discoveredEndpoints ? (
+                    /* Step: Mapping endpoints */
+                    <motion.div
+                      key="mapping"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <WordPressEndpointMapper
+                        discoveredEndpoints={discoveredEndpoints}
+                        selectedCommunityEndpoint={selectedCommunityEndpoint}
+                        selectedPropertyEndpoint={selectedPropertyEndpoint}
+                        onCommunitySelect={setSelectedCommunityEndpoint}
+                        onPropertySelect={setSelectedPropertyEndpoint}
+                        onConfirm={handleConfirmMapping}
+                        onCancel={handleCancelMapping}
+                        isLoading={isSaving}
+                      />
+                    </motion.div>
                   ) : (
+                    /* Step: URL entry */
                     <motion.div
                       key="editing"
                       initial={{ opacity: 0 }}
@@ -381,22 +483,24 @@ export function WordPressIntegrationSheet({
                             value={urlInput}
                             onChange={(e) => setUrlInput(e.target.value)}
                             className="flex-1"
+                            disabled={isDiscovering}
                           />
                           <Button
                             onClick={handleConnect}
-                            disabled={!urlInput.trim() || connectionTesting}
-                            loading={connectionTesting}
+                            disabled={!urlInput.trim() || isDiscovering}
+                            loading={isDiscovering}
                             size="sm"
                           >
-                            {isEditing ? 'Update' : 'Connect'}
+                            {isDiscovering ? 'Connecting...' : isEditing ? 'Update' : 'Connect'}
                           </Button>
-                          {isEditing && (
+                          {isEditing && !isDiscovering && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => {
                                 setIsEditing(false);
                                 setUrlInput(siteUrl || '');
+                                resetConnectionFlow();
                               }}
                             >
                               Cancel
@@ -405,26 +509,24 @@ export function WordPressIntegrationSheet({
                         </div>
                       </div>
                       
-                      {connectionTestResult && (
-                        <div className={`flex items-start gap-2 text-sm ${
-                          connectionTestResult.success ? 'text-status-active' : 'text-destructive'
-                        }`}>
-                          {connectionTestResult.success ? (
-                            <Check size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-                          ) : (
-                            <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-                          )}
+                      {connectionTestResult && !connectionTestResult.success && (
+                        <div className="flex items-start gap-2 text-sm text-destructive">
+                          <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
                           <span>{connectionTestResult.message}</span>
                         </div>
                       )}
+                      
+                      <p className="text-xs text-muted-foreground">
+                        We'll automatically detect available data endpoints on your WordPress site.
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </CardContent>
             </Card>
 
-            {/* Sync sections - only when connected */}
-            {isConnected && !isEditing && (
+            {/* Sync sections - only when fully connected (not during mapping) */}
+            {isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && (
               <>
                 {/* Data Extraction Mode Card */}
                 <Card>
