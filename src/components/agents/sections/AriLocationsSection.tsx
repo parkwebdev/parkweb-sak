@@ -763,7 +763,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                       />
 
                       {/* Pagination */}
-                      <DataTablePagination table={locationsTable} showRowsPerPage showSelectedCount />
+                      <DataTablePagination table={locationsTable} showRowsPerPage />
                     </div>
                   )}
                 </motion.div>
@@ -823,7 +823,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                       />
 
                       {/* Pagination */}
-                      <DataTablePagination table={propertiesTable} showRowsPerPage showSelectedCount />
+                      <DataTablePagination table={propertiesTable} showRowsPerPage />
                     </div>
                   )}
                 </motion.div>
