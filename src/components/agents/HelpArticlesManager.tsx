@@ -51,7 +51,8 @@ import {
   type HelpArticleWithMeta 
 } from '@/components/data-table/columns/help-articles-columns';
 import { supabase } from '@/integrations/supabase/client';
-import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
+import { useRegisterSectionActions, useRegisterSectionCenterContent, type SectionAction } from '@/contexts/AriSectionActionsContext';
+import { HelpArticlesTopBarSearch } from './articles/HelpArticlesTopBarSearch';
 
 interface HelpArticlesManagerProps {
   agentId: string;
@@ -603,6 +604,16 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
 
   useRegisterSectionActions('help-articles', sectionActions);
 
+  // Register center content for TopBar (search bar)
+  const centerContent = useMemo(() => (
+    <HelpArticlesTopBarSearch
+      value={globalFilter}
+      onChange={setGlobalFilter}
+    />
+  ), [globalFilter]);
+
+  useRegisterSectionCenterContent('help-articles', centerContent);
+
   // Save from sheet
   const handleSaveArticle = async (id: string, data: { title: string; content: string; category_id: string; featured_image: string | null }) => {
     const category = categories.find(c => c.id === data.category_id);
@@ -788,6 +799,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                 searchPlaceholder="Search articles..."
                 globalFilter
                 searchClassName="max-w-xs"
+                hideSearch
               />
               {FilterPopover}
             </div>
