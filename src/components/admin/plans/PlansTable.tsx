@@ -11,10 +11,13 @@ import { useState, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel,
   createColumnHelper,
   ColumnDef,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlanActions } from './PlanActions';
@@ -147,10 +150,17 @@ export function PlansTable({
     data: plans,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: { pageSize: 25 },
+    },
   });
 
   return (
     <div className="space-y-4">
+      {/* Results info */}
+      <DataTableResultsInfo table={table} label="plans" />
+
       <DataTable
         table={table}
         columns={columns}
@@ -158,6 +168,9 @@ export function PlansTable({
         emptyMessage="No plans found"
         onRowClick={canManage ? (row) => onEdit?.(row) : undefined}
       />
+
+      {/* Pagination */}
+      {plans.length > 0 && <DataTablePagination table={table} showRowsPerPage />}
 
       {/* Delete Confirmation - only for super admins */}
       {canManage && (

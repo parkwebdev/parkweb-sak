@@ -10,10 +10,13 @@ import { useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel,
   createColumnHelper,
   ColumnDef,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -86,6 +89,10 @@ export function SubscriptionsTable({ subscriptions, loading }: SubscriptionsTabl
     data: subscriptions,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: { pageSize: 25 },
+    },
   });
 
   if (loading) {
@@ -99,11 +106,15 @@ export function SubscriptionsTable({ subscriptions, loading }: SubscriptionsTabl
   }
 
   return (
-    <DataTable
-      table={table}
-      columns={columns}
-      isLoading={loading}
-      emptyMessage="No subscriptions found"
-    />
+    <div className="space-y-4">
+      <DataTableResultsInfo table={table} label="subscriptions" />
+      <DataTable
+        table={table}
+        columns={columns}
+        isLoading={loading}
+        emptyMessage="No subscriptions found"
+      />
+      {subscriptions.length > 0 && <DataTablePagination table={table} showRowsPerPage />}
+    </div>
   );
 }

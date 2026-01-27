@@ -10,10 +10,13 @@ import { useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel,
   createColumnHelper,
   ColumnDef,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
@@ -80,14 +83,22 @@ export function EmailDeliveryLogs({ logs, loading }: EmailDeliveryLogsProps) {
     data: logs,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: { pageSize: 25 },
+    },
   });
 
   return (
-    <DataTable
-      table={table}
-      columns={columns}
-      isLoading={loading}
-      emptyMessage="No delivery logs found"
-    />
+    <div className="space-y-4">
+      {logs.length > 0 && <DataTableResultsInfo table={table} label="logs" />}
+      <DataTable
+        table={table}
+        columns={columns}
+        isLoading={loading}
+        emptyMessage="No delivery logs found"
+      />
+      {logs.length > 0 && <DataTablePagination table={table} showRowsPerPage />}
+    </div>
   );
 }

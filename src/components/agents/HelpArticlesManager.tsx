@@ -7,13 +7,14 @@
  * @module components/agents/HelpArticlesManager
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { logger } from '@/utils/logger';
 import {
   useReactTable,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   type SortingState,
   type RowSelectionState,
 } from '@tanstack/react-table';
@@ -46,6 +47,8 @@ import { ArticleDetailsSheet } from './articles/ArticleDetailsSheet';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
 import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { 
   createHelpArticlesColumns, 
@@ -100,9 +103,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   
-  // Infinite scroll state
-  const [displayCount, setDisplayCount] = useState(20);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  // Pagination now handled by TanStack Table
   
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -236,35 +237,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     setStatusFilter([]);
   };
 
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && displayCount < filteredArticles.length) {
-          setDisplayCount(prev => Math.min(prev + 20, filteredArticles.length));
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [filteredArticles.length, displayCount]);
-
-  // Reset display count when filters change
-  useEffect(() => {
-    setDisplayCount(20);
-  }, [categoryFilter, statusFilter, globalFilter]);
-
-  // Displayed articles with pagination
-  const displayedArticles = useMemo(
-    () => filteredArticles.slice(0, displayCount),
-    [filteredArticles, displayCount]
-  );
-
   // Get articles sorted by category and order for move operations
   const getArticlesByCategoryOrder = useCallback((categoryName: string) => {
     return articlesWithMeta
@@ -374,14 +346,17 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     canManage: canManageHelpArticles,
   }), [handleView, handleSetDeleteArticle, handleMoveUp, handleMoveDown, canMoveUp, canMoveDown, canManageHelpArticles]);
 
-  // Table instance with displayed (paginated) articles
+  // Table instance with pagination
   const table = useReactTable({
-    data: displayedArticles,
+    data: filteredArticles,
     columns,
     state: {
       sorting,
       rowSelection,
       globalFilter,
+    },
+    initialState: {
+      pagination: { pageSize: 25 },
     },
     enableRowSelection: true,
     onSortingChange: setSorting,
@@ -390,6 +365,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const selectedCount = Object.keys(rowSelection).length;
@@ -793,9 +769,10 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         />
       ) : (
         <>
-          {/* Toolbar */}
+          {/* Results count and toolbar */}
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+            <DataTableResultsInfo table={table} label="articles" />
+            <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap justify-end">
               <DataTableToolbar
                 table={table}
                 searchPlaceholder="Search articles..."
@@ -805,7 +782,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
               />
               {FilterPopover}
             </div>
-
           </div>
 
           {/* Active Filter Chips */}
@@ -853,12 +829,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
             />
           )}
 
-          {/* Infinite scroll trigger */}
-          {displayCount < filteredArticles.length && (
-            <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-              <span className="text-sm text-muted-foreground">Loading more...</span>
-            </div>
-          )}
+          {/* Pagination */}
+          <DataTablePagination table={table} showRowsPerPage showSelectedCount />
         </>
       )}
 
