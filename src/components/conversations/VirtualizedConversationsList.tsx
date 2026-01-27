@@ -139,7 +139,7 @@ export const VirtualizedConversationsList = memo(function VirtualizedConversatio
             onClick={onToggleCollapse}
             aria-label={isCollapsed ? 'Expand conversations' : 'Collapse conversations'}
           >
-            <LayoutPanelLeft filled={isCollapsed} className="h-4 w-4" />
+            <LayoutPanelLeft filled={!isCollapsed} className="h-4 w-4" />
           </Button>
         </div>
         

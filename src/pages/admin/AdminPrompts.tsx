@@ -65,6 +65,21 @@ export function AdminPrompts() {
 
   const { sections, versions, loading, updateSection } = usePromptSections();
 
+  // Preview panel collapse state with localStorage persistence
+  const [previewCollapsed, setPreviewCollapsed] = useState(() => {
+    const saved = localStorage.getItem('admin_prompts_preview_collapsed');
+    return saved === 'true';
+  });
+
+  // Persist preview collapse state to localStorage
+  useEffect(() => {
+    localStorage.setItem('admin_prompts_preview_collapsed', String(previewCollapsed));
+  }, [previewCollapsed]);
+
+  const handleTogglePreview = useCallback(() => {
+    setPreviewCollapsed(prev => !prev);
+  }, []);
+
   // Get current section version for TopBar badge
   const currentVersion = versions[activeSection]?.version;
 
@@ -414,6 +429,8 @@ export function AdminPrompts() {
         <AdminPromptPreviewPanel 
           draftPrompts={draftValues}
           hasDraftChanges={hasUnsavedChanges}
+          isCollapsed={previewCollapsed}
+          onToggleCollapse={handleTogglePreview}
         />
       </div>
 

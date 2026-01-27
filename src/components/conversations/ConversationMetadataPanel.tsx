@@ -338,8 +338,9 @@ export function ConversationMetadataPanel({
             size="sm"
             className={cn("h-7 w-7 p-0 transition-colors duration-200", isCollapsed && "mx-auto")}
             onClick={onToggleCollapse}
+            aria-label={isCollapsed ? "Expand details" : "Collapse details"}
           >
-            <LayoutPanelRight filled={isCollapsed} className="h-4 w-4" />
+            <LayoutPanelRight filled={!isCollapsed} className="h-4 w-4" />
           </Button>
         )}
       </div>
