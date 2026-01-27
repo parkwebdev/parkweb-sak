@@ -563,7 +563,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter, useAiExtraction, forceFullSync, communityFieldMappings, propertyFieldMappings } = await req.json();
+    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations, modifiedAfter, useAiExtraction, forceFullSync, communityFieldMappings, propertyFieldMappings, endpoint, type: mappingType } = await req.json();
 
     // Verify user has access to this agent
     const { data: agent, error: agentError } = await supabase
@@ -693,9 +693,7 @@ Deno.serve(async (req: Request) => {
 
     // Handle fetch-sample action - get sample post and available fields for mapping
     if (action === 'fetch-sample') {
-      const { endpoint: sampleEndpoint, type: mappingType } = await req.clone().json();
-      
-      if (!siteUrl || !sampleEndpoint) {
+      if (!siteUrl || !endpoint) {
         return new Response(
           JSON.stringify({ error: 'Site URL and endpoint are required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -703,7 +701,7 @@ Deno.serve(async (req: Request) => {
       }
 
       const normalizedUrl = normalizeSiteUrl(siteUrl);
-      const sampleResult = await fetchSamplePostForMapping(normalizedUrl, sampleEndpoint, mappingType || 'community');
+      const sampleResult = await fetchSamplePostForMapping(normalizedUrl, endpoint, mappingType || 'community');
       
       return new Response(
         JSON.stringify(sampleResult),
