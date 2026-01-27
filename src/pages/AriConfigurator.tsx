@@ -9,7 +9,7 @@
  * @module pages/AriConfigurator
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAgent } from '@/hooks/useAgent';
@@ -147,6 +147,21 @@ function AriConfiguratorContent() {
   
   const { announcements: allAnnouncements } = useAnnouncements(agentId ?? '');
   logger.debug('AriConfigurator: useAnnouncements complete', { announcementCount: allAnnouncements?.length });
+
+  // Preview panel collapse state with localStorage persistence
+  const [previewCollapsed, setPreviewCollapsed] = useState(() => {
+    const saved = localStorage.getItem('ari_preview_collapsed');
+    return saved === 'true';
+  });
+
+  // Persist preview collapse state to localStorage
+  useEffect(() => {
+    localStorage.setItem('ari_preview_collapsed', String(previewCollapsed));
+  }, [previewCollapsed]);
+
+  const handleTogglePreview = useCallback(() => {
+    setPreviewCollapsed(prev => !prev);
+  }, []);
 
   const handleUpdate = async (_id: string, updates: Partial<Agent>): Promise<Agent | null> => {
     if (!agent) return null;
@@ -346,6 +361,8 @@ function AriConfiguratorContent() {
           primaryColor: embedConfig.primaryColor,
           formSteps: embedConfig.formSteps,
         } : null}
+        isCollapsed={previewCollapsed}
+        onToggleCollapse={handleTogglePreview}
       />
 
       {/* Mobile/Tablet: Floating widget preview */}
