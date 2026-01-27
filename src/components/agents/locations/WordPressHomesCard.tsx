@@ -12,7 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Home01, RefreshCw01, Check, AlertCircle, Zap } from '@untitledui/icons';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Home01, RefreshCw01, Check, AlertCircle, Zap, ChevronDown } from '@untitledui/icons';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
 import { formatShortTime } from '@/lib/time-formatting';
@@ -156,23 +157,32 @@ export function WordPressHomesCard({ agent, onSyncComplete }: WordPressHomesCard
           >
             {isTesting ? 'Testing...' : 'Test'}
           </Button>
-          <Button
-            size="sm"
-            onClick={handleSync}
-            disabled={isSyncing}
-          >
-            {isSyncing ? (
-              <>
-                <RefreshCw01 className="h-4 w-4 mr-1.5 animate-spin" />
-                Syncing...
-              </>
-            ) : (
-              <>
-                <RefreshCw01 className="h-4 w-4 mr-1.5" />
-                Sync Homes
-              </>
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" disabled={isSyncing}>
+                {isSyncing ? (
+                  <>
+                    <RefreshCw01 className="h-4 w-4 mr-1.5 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw01 className="h-4 w-4 mr-1.5" />
+                    Sync
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => syncHomes(undefined, useAiExtraction)}>
+                Quick Sync (new changes only)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => syncHomes(undefined, useAiExtraction, undefined, true)}>
+                Full Resync (all properties)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

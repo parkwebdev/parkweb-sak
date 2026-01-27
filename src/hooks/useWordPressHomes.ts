@@ -106,7 +106,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
     }
   }, [agent?.id, homeEndpoint]);
 
-  const syncHomes = useCallback(async (url?: string, useAiExtraction?: boolean, endpoint?: string): Promise<SyncResult> => {
+  const syncHomes = useCallback(async (url?: string, useAiExtraction?: boolean, endpoint?: string, forceFullSync?: boolean): Promise<SyncResult> => {
     if (!agent?.id) {
       return { success: false, errors: ['No agent selected'] };
     }
@@ -131,6 +131,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
           siteUrl: syncUrl,
           homeEndpoint: endpoint || homeEndpoint || undefined,
           useAiExtraction: useAiExtraction ?? false,
+          forceFullSync: forceFullSync ?? false,
         },
       });
 
