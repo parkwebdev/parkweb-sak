@@ -129,6 +129,16 @@ function getValueByPath(obj: Record<string, unknown>, path: string | undefined):
   // Convert value to string if it exists and isn't already
   if (current === null || current === undefined) return null;
   if (typeof current === 'object') {
+    // Handle arrays - extract first element (WordPress often wraps values in arrays)
+    if (Array.isArray(current)) {
+      if (current.length === 0) return null;
+      const firstItem = current[0];
+      // If first item is an object with 'rendered', extract it
+      if (typeof firstItem === 'object' && firstItem !== null && 'rendered' in firstItem) {
+        return (firstItem as Record<string, unknown>).rendered;
+      }
+      return firstItem;
+    }
     // For objects like {rendered: "text"}, try to get rendered value
     const asObj = current as Record<string, unknown>;
     if ('rendered' in asObj) return asObj.rendered;
