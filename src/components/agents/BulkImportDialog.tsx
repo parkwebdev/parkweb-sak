@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload01, File06, AlertCircle, CheckCircle, Download01, ArrowLeft, ArrowRight } from '@untitledui/icons';
+import { Upload01, File06, AlertCircle, CheckCircle, ArrowLeft, ArrowRight } from '@untitledui/icons';
+import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 import { cn } from '@/lib/utils';
 import { logger } from '@/utils/logger';
 
@@ -321,7 +322,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
                 onClick={downloadTemplate}
                 className="flex items-center gap-2 text-xs text-primary hover:underline mx-auto"
               >
-                <Download01 className="w-3.5 h-3.5" />
+                <CsvExportIcon size={14} />
                 Download sample template
               </button>
             </div>
