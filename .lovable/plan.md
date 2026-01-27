@@ -1,103 +1,165 @@
 
-# Plan: Use Custom CSV Icon for Import/Download CSV Actions
+
+# Plan: Compact ViewToggle & Filters in Locations Section
 
 ## Overview
 
-Replace generic UntitledUI icons (`Upload01`, `Download01`) with the custom `CsvExportIcon` for all CSV-related import and download actions, matching the pattern used with `JsonExportIcon` for JSON operations.
+Update the Locations section's ViewToggle (Communities/Properties) and Filters button to use smaller, TopBar-consistent sizing, wrapped in a pill-style container.
 
 ---
 
 ## Current State
 
-The project has a beautiful custom `CsvExportIcon` component (`src/components/admin/shared/CsvExportIcon.tsx`) that displays a document with a green "CSV" badge. However, several places still use generic UntitledUI icons for CSV operations.
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ [Communities (12)]  [Properties (345)]        [Filters ▾]       │
+│  ↑                   ↑                          ↑               │
+│  Default size        Default size               Default size    │
+│  No container        No container               h-10 button     │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+## Target State
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ ╭─────────────────────────────────────────────╮                  │
+│ │ [Communities (12)] [Properties (345)]       │  [Filters ▾]    │
+│ ╰─────────────────────────────────────────────╯   ↑              │
+│   ↑ bg-muted rounded container with sm buttons   size="sm" h-8  │
+└──────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Files to Update
+## Technical Changes
 
-### 1. HelpArticlesManager.tsx - TopBar "Import CSV" Action
+### File: `src/components/agents/sections/AriLocationsSection.tsx`
 
-**Location:** Line 582  
-**Current:** Uses `Upload01` icon  
-**Change:** Use `CsvExportIcon` (the document icon provides clear context; "Import CSV" label indicates direction)
+#### 1. Update ViewToggle Component (lines 463-486)
 
+Wrap the buttons in a pill container and use `size="sm"` for smaller buttons:
+
+**Before:**
 ```tsx
-// Before
-icon: <Upload01 size={16} aria-hidden="true" />,
-
-// After
-icon: <CsvExportIcon size={16} />,
+const ViewToggle = (
+  <div className="flex items-center gap-1">
+    <Button 
+      variant={viewMode === 'communities' ? 'secondary' : 'ghost'}
+      onClick={() => setViewMode('communities')}
+      className={viewMode === 'communities' ? 'bg-muted hover:bg-muted/80' : ''}
+    >
+      Communities
+      <Badge variant="outline" size="counter" className="ml-1.5">
+        {locations.length}
+      </Badge>
+    </Button>
+    <Button 
+      variant={viewMode === 'properties' ? 'secondary' : 'ghost'}
+      onClick={() => setViewMode('properties')}
+      className={viewMode === 'properties' ? 'bg-muted hover:bg-muted/80' : ''}
+    >
+      Properties
+      <Badge variant="outline" size="counter" className="ml-1.5">
+        {propertiesWithLocation.length}
+      </Badge>
+    </Button>
+  </div>
+);
 ```
 
-### 2. HelpArticlesManager.tsx - Fallback "Import CSV" Button  
-
-**Location:** Line 786-787  
-**Current:** Button has no icon  
-**Change:** Add `CsvExportIcon` for consistency
-
+**After:**
 ```tsx
-// Before
-<Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)}>
-  Import CSV
+const ViewToggle = (
+  <div className="inline-flex items-center gap-1 rounded-md bg-muted p-1">
+    <Button 
+      size="sm"
+      variant={viewMode === 'communities' ? 'secondary' : 'ghost'}
+      onClick={() => setViewMode('communities')}
+      className={viewMode === 'communities' 
+        ? 'bg-background shadow-sm hover:bg-background/90' 
+        : 'hover:bg-transparent'
+      }
+    >
+      Communities
+      <Badge variant="outline" size="counter" className="ml-1.5">
+        {locations.length}
+      </Badge>
+    </Button>
+    <Button 
+      size="sm"
+      variant={viewMode === 'properties' ? 'secondary' : 'ghost'}
+      onClick={() => setViewMode('properties')}
+      className={viewMode === 'properties' 
+        ? 'bg-background shadow-sm hover:bg-background/90' 
+        : 'hover:bg-transparent'
+      }
+    >
+      Properties
+      <Badge variant="outline" size="counter" className="ml-1.5">
+        {propertiesWithLocation.length}
+      </Badge>
+    </Button>
+  </div>
+);
+```
+
+**Key changes:**
+- Container: `inline-flex items-center gap-1 rounded-md bg-muted p-1`
+- Buttons: Add `size="sm"` for h-8 height
+- Active style: `bg-background shadow-sm` (matches TabsList active state pattern)
+- Inactive ghost: `hover:bg-transparent` to prevent double-hover effect inside container
+
+#### 2. Update FilterPopover Button (lines 500-509)
+
+Add `size="sm"` to the Filters button:
+
+**Before:**
+```tsx
+<Button variant="outline" className="gap-1.5">
+  <FilterLines size={16} />
+  Filters
+  {activeFilters.length > 0 && (
+    <Badge variant="secondary" size="counter" className="ml-1">
+      {activeFilters.length}
+    </Badge>
+  )}
 </Button>
+```
 
-// After
-<Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)}>
-  <CsvExportIcon size={16} className="mr-1.5" />
-  Import CSV
+**After:**
+```tsx
+<Button variant="outline" size="sm" className="gap-1.5">
+  <FilterLines size={16} />
+  Filters
+  {activeFilters.length > 0 && (
+    <Badge variant="secondary" size="counter" className="ml-1">
+      {activeFilters.length}
+    </Badge>
+  )}
 </Button>
 ```
 
-### 3. BulkImportDialog.tsx - "Download sample template" Link
+---
 
-**Location:** Line 322-325  
-**Current:** Uses generic `Download01` icon  
-**Change:** Use `CsvExportIcon` since it's downloading a CSV file
+## Visual Comparison
 
-```tsx
-// Before
-<Download01 className="w-3.5 h-3.5" />
-Download sample template
-
-// After
-<CsvExportIcon size={14} />
-Download sample template
-```
+| Element | Before | After |
+|---------|--------|-------|
+| ViewToggle container | No container | `rounded-md bg-muted p-1` pill |
+| ViewToggle buttons | Default (h-10) | `size="sm"` (h-8) |
+| Active button style | `bg-muted` | `bg-background shadow-sm` |
+| Filters button | Default (h-10) | `size="sm"` (h-8) |
 
 ---
 
-## Import Changes Required
+## Design Pattern Reference
 
-### HelpArticlesManager.tsx
-```tsx
-// Add import
-import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
-
-// Can remove Upload01 from the untitledui imports if no longer needed elsewhere
-```
-
-### BulkImportDialog.tsx
-```tsx
-// Add import
-import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
-
-// Remove Download01 from the imports (line 15) since it won't be used
-```
-
----
-
-## Visual Consistency
-
-After this change, all CSV-related buttons will show the distinctive green CSV document icon:
-
-| Component | Action | Icon |
-|-----------|--------|------|
-| Help Articles TopBar | Import CSV | 📄 CSV (green) |
-| Help Articles Fallback | Import CSV | 📄 CSV (green) |
-| Bulk Import Dialog | Download template | 📄 CSV (green) |
-| Leads TopBar | Export CSV | 📄 CSV (green) ✅ (already correct) |
-| Admin Accounts | Export | 📄 CSV (green) ✅ (already correct) |
-| Admin Audit Log | Export CSV | 📄 CSV (green) ✅ (already correct) |
+This matches existing patterns in the codebase:
+- **TabsList**: `inline-flex h-10 items-center justify-center rounded-md bg-muted p-1`
+- **AnimatedTabsList**: `relative inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1`
+- **ThemeSwitcher**: `inline-flex items-center gap-1 rounded-md bg-muted p-1`
+- **TopBar actions**: All use `size="sm"` (h-8 buttons)
 
 ---
 
@@ -105,11 +167,5 @@ After this change, all CSV-related buttons will show the distinctive green CSV d
 
 | File | Changes |
 |------|---------|
-| `src/components/agents/HelpArticlesManager.tsx` | Import `CsvExportIcon`, use for Import CSV action and button |
-| `src/components/agents/BulkImportDialog.tsx` | Import `CsvExportIcon`, replace `Download01` for template download |
+| `src/components/agents/sections/AriLocationsSection.tsx` | Wrap ViewToggle in container, add `size="sm"` to all buttons |
 
----
-
-## Design Rationale
-
-Using the same CSV document icon for both import and export follows the existing pattern with `JsonExportIcon` (used for both "Import" and "Export" in the prompts dropdown). The action label ("Import CSV", "Export CSV", "Download template") provides the directional context, while the distinctive file-type icon (green CSV badge) immediately communicates what type of file is involved.
