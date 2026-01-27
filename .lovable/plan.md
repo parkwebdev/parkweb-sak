@@ -1,78 +1,111 @@
 
+# Plan: Add Collapsible Preview Panels with Icon Toggle
 
-## Fix: Communities Sync Button Missing Dropdown
+## Overview
+Add the same collapse functionality from the Inbox page to both the Ari Configurator and Admin Prompts preview panels. The icon should be **filled when the panel is visible** and **unfilled when collapsed** (reversing the current inbox behavior).
 
-### Problem Found
-The dropdown menu with "Quick Sync" and "Full Resync" was only added to the **Property Listings** sync button. The **Communities** sync button at lines 502-515 still uses a simple `<Button>` without a dropdown:
+## Technical Changes
+
+### 1. Centralize Layout Panel Icons
+**File:** `src/components/icons/LayoutPanelIcons.tsx` (new)
+
+Create a shared icon file for `LayoutPanelRight` to avoid duplication across components:
 
 ```tsx
-// Current code - NO dropdown
-<Button
-  variant="ghost"
-  size="sm"
-  onClick={handleSyncCommunities}
-  disabled={isLoading}
-  className="h-8 w-8 p-0"
->
-  <RefreshCw01 ... />
-</Button>
+// Custom SVG with filled prop
+// LayoutPanelRight - panel on right side (for preview columns)
+export function LayoutPanelRight({ 
+  filled = false, 
+  className 
+}: { 
+  filled?: boolean; 
+  className?: string 
+}) { /* SVG implementation */ }
 ```
 
-### Solution
-Replace the Communities sync button with the same dropdown pattern used for Properties.
+### 2. Update AriPreviewColumn Component
+**File:** `src/components/agents/AriPreviewColumn.tsx`
+
+Add collapse functionality:
+- Add `isCollapsed` and `onToggleCollapse` props
+- Add sticky header with collapse button
+- Animate width transition (375px → 48px collapsed)
+- Use `LayoutPanelRight` icon with `filled={!isCollapsed}` (filled when visible)
+
+```tsx
+interface AriPreviewColumnProps {
+  agentId: string;
+  primaryColor?: string;
+  contactFormPreview?: ContactFormConfig | null;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+}
+```
+
+### 3. Update AdminPromptPreviewPanel Component
+**File:** `src/components/admin/prompts/AdminPromptPreviewPanel.tsx`
+
+Add collapse functionality:
+- Add `isCollapsed` and `onToggleCollapse` props
+- Add header row with "Test Chat" title and collapse button
+- Animate width transition (360px → 48px collapsed)
+- Use `LayoutPanelRight` icon with `filled={!isCollapsed}` (filled when visible)
+
+### 4. Update AriConfigurator Page
+**File:** `src/pages/AriConfigurator.tsx`
+
+Manage collapse state:
+- Add `previewCollapsed` state with localStorage persistence
+- Pass `isCollapsed` and `onToggleCollapse` props to `AriPreviewColumn`
+
+```tsx
+const [previewCollapsed, setPreviewCollapsed] = useState(() => {
+  const saved = localStorage.getItem('ari_preview_collapsed');
+  return saved === 'true';
+});
+
+// Persist to localStorage
+useEffect(() => {
+  localStorage.setItem('ari_preview_collapsed', String(previewCollapsed));
+}, [previewCollapsed]);
+```
+
+### 5. Update AdminPrompts Page
+**File:** `src/pages/admin/AdminPrompts.tsx`
+
+Manage collapse state:
+- Add `previewCollapsed` state with localStorage persistence
+- Pass `isCollapsed` and `onToggleCollapse` props to `AdminPromptPreviewPanel`
+
+### 6. Fix Existing Inbox Icon States (Reversal)
+**Files:**
+- `src/components/conversations/ConversationsList.tsx`
+- `src/components/conversations/VirtualizedConversationsList.tsx`
+- `src/components/conversations/ConversationMetadataPanel.tsx`
+
+Change icon logic from `filled={isCollapsed}` to `filled={!isCollapsed}`:
+- When panel is **visible** → icon is **filled** (active state)
+- When panel is **collapsed** → icon is **unfilled** (inactive state)
 
 ---
 
-### File Changes
+## Visual Behavior
 
-#### 1. Edge Function: `supabase/functions/sync-wordpress-communities/index.ts`
+| State | Panel Width | Icon State |
+|-------|-------------|------------|
+| Expanded (visible) | 375px / 360px | **Filled** |
+| Collapsed | 48px | Unfilled |
 
-Add `forceFullSync` parameter support and smart detection logic (same pattern as homes).
+## Accessibility
+- Button has `aria-label` describing the action: "Collapse preview" / "Expand preview"
+- Width transition uses CSS `transition-all duration-200 ease-in-out`
 
-#### 2. Hook: `src/hooks/useWordPressConnection.ts`
-
-Update `importCommunities` function signature to accept `forceFullSync` parameter.
-
-#### 3. Component: `src/components/agents/locations/WordPressIntegrationSheet.tsx`
-
-**Replace lines 502-515** (Communities sync button) with a dropdown:
-
-```tsx
-<DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button
-      variant="ghost"
-      size="sm"
-      disabled={isLoading}
-      className="h-8 w-8 p-0"
-    >
-      <RefreshCw01 
-        size={16} 
-        className={connectionSyncing ? 'animate-spin' : ''} 
-        aria-hidden="true" 
-      />
-      <span className="sr-only">Sync communities</span>
-    </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent align="end">
-    <DropdownMenuItem onClick={() => importCommunities(undefined, undefined, undefined, false)}>
-      Quick Sync
-    </DropdownMenuItem>
-    <DropdownMenuItem onClick={() => importCommunities(undefined, undefined, undefined, true)}>
-      Full Resync
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
-```
-
----
-
-### Summary
-
-| Button | Before | After |
-|--------|--------|-------|
-| Communities Sync | Simple button, no options | Dropdown with Quick/Full Resync |
-| Property Sync | Already has dropdown | No change needed |
-
-This will give both sync buttons the same Quick Sync / Full Resync dropdown menu.
-
+## Files Changed
+1. `src/components/icons/LayoutPanelIcons.tsx` — New file with centralized icon
+2. `src/components/agents/AriPreviewColumn.tsx` — Add collapse support
+3. `src/components/admin/prompts/AdminPromptPreviewPanel.tsx` — Add collapse support
+4. `src/pages/AriConfigurator.tsx` — Manage collapse state
+5. `src/pages/admin/AdminPrompts.tsx` — Manage collapse state
+6. `src/components/conversations/ConversationsList.tsx` — Reverse icon fill logic
+7. `src/components/conversations/VirtualizedConversationsList.tsx` — Reverse icon fill logic
+8. `src/components/conversations/ConversationMetadataPanel.tsx` — Reverse icon fill logic
