@@ -571,6 +571,77 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Handle connect action - combines URL save + endpoint discovery in one step
+    if (action === 'connect') {
+      if (!siteUrl) {
+        return new Response(
+          JSON.stringify({ error: 'Site URL is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const normalizedUrl = normalizeSiteUrl(siteUrl);
+      
+      // First, validate the URL is reachable
+      try {
+        const testResponse = await fetch(`${normalizedUrl}/wp-json`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Pilot/1.0',
+          },
+        });
+        
+        if (!testResponse.ok) {
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              message: `WordPress REST API not accessible (HTTP ${testResponse.status})` 
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (error: unknown) {
+        const connError = error instanceof Error ? getConnectionErrorMessage(error) : null;
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: connError || 'Could not connect to WordPress site' 
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Save the URL to agent config
+      const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
+      const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
+      
+      const updatedConfig = {
+        ...deploymentConfig,
+        wordpress: {
+          ...wpConfig,
+          site_url: normalizedUrl,
+        },
+      };
+
+      await supabase
+        .from('agents')
+        .update({ deployment_config: updatedConfig })
+        .eq('id', agentId);
+
+      // Discover endpoints
+      const endpoints = await discoverEndpoints(normalizedUrl);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Connected successfully',
+          normalizedUrl,
+          ...endpoints 
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Handle discover action - auto-detect available endpoints
     if (action === 'discover') {
       if (!siteUrl) {
