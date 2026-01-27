@@ -142,10 +142,21 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
         if (data.created > 0) parts.push(`${data.created} new`);
         if (data.updated > 0) parts.push(`${data.updated} updated`);
         if (data.deleted > 0) parts.push(`${data.deleted} removed`);
+        if (data.unchanged > 0) parts.push(`${data.unchanged} unchanged`);
         
-        toast.success('Homes synchronized', { 
-          description: parts.length > 0 ? parts.join(', ') : 'No changes' 
-        });
+        // Check if there were errors even if sync succeeded
+        const hasErrors = data.errors && data.errors.length > 0;
+        
+        if (hasErrors) {
+          // Show warning toast when there are errors
+          toast.warning('Sync completed with warnings', { 
+            description: `${parts.length > 0 ? parts.join(', ') + '. ' : ''}${data.errors.length} error(s): ${data.errors[0]}${data.errors.length > 1 ? '...' : ''}` 
+          });
+        } else {
+          toast.success('Homes synchronized', { 
+            description: parts.length > 0 ? parts.join(', ') : 'No changes' 
+          });
+        }
         onSyncComplete?.();
       } else {
         toast.error('Sync failed', { description: data.error || 'Unknown error' });
