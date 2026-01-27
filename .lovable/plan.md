@@ -1,73 +1,107 @@
 
-# Plan: Fix WordPress Integration Flow Race Condition
+# Plan: Fix Field Mapping Not Appearing
 
-## Problem
+## Problem Identified
 
-When a user enters a WordPress URL and the scan completes, there's a brief delay (1-2 seconds) where the "connected" static view (green dot + URL with edit/delete buttons) is shown before the endpoint mapping flow appears.
+The Field Mapping step is being **skipped entirely** because `fetchSamplePost()` always returns `null`. Here's why:
+
+**Timeline during endpoint confirmation:**
+
+1. User clicks "Continue" on endpoint mapping step
+2. `handleConfirmMapping()` calls `saveEndpointMappings(communityEp, propertyEp)`
+3. `saveEndpointMappings` saves endpoints to database
+4. `saveEndpointMappings` calls `fetchSamplePost()` to get sample data
+5. `fetchSamplePost` checks: `if (!agent?.id || !storedSiteUrl) return null;`
+6. **`storedSiteUrl` is empty!** Because it comes from `wordpressConfig?.site_url` which derives from `agent.deployment_config` - the agent hasn't been refetched yet
+7. Both `communitySample` and `propertySample` are `null`
+8. Code evaluates: `if (communitySample || propertySample)` → **false**
+9. Goes directly to `'connected'` step, skipping field mapping entirely
+
+The URL was saved during `connectWithDiscovery`, but the hook's `agent` prop still has the old config.
 
 ## Root Cause
 
-The conditional rendering logic on line 406 of `WordPressIntegrationSheet.tsx` has a race condition:
+```typescript
+// In fetchSamplePost (line 552)
+if (!agent?.id || !storedSiteUrl) return null;  // storedSiteUrl is "" !!
 
-```tsx
-{isConnected && !isEditing && connectionStep !== 'mapping' ? (
+// storedSiteUrl comes from:
+const storedSiteUrl = wordpressConfig?.site_url || '';  // agent not refreshed yet
 ```
-
-**Timeline during connection:**
-1. User clicks "Connect"
-2. `connectWithDiscovery()` sets `connectionStep = 'discovering'`
-3. Edge function saves URL to database
-4. `onSyncComplete()` triggers agent refetch
-5. Agent updates → `isConnected` becomes `true` (from `!!siteUrl`)
-6. **Race window**: `isConnected = true` but `connectionStep` is still `'discovering'`
-7. Edge function returns → `connectionStep = 'mapping'`
-
-During step 6, the condition evaluates:
-- `isConnected` = true
-- `!isEditing` = true  
-- `connectionStep !== 'mapping'` = true (it's `'discovering'`)
-
-This causes the "connected" view to briefly flash before the mapping UI renders.
 
 ## Solution
 
-Update the conditional to explicitly check that we're NOT in any in-progress step:
+Track the connected URL locally within the hook during the connection flow, independent of the agent config refresh timing.
 
-**Line 406 change:**
-```tsx
-// BEFORE
-{isConnected && !isEditing && connectionStep !== 'mapping' ? (
+### Changes to `useWordPressConnection.ts`
 
-// AFTER  
-{isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && connectionStep !== 'field-mapping' ? (
+**1. Add local URL state (around line 76):**
+```typescript
+const [connectionStep, setConnectionStep] = useState<ConnectionStep>('url');
+const [connectedUrl, setConnectedUrl] = useState<string>('');  // NEW: Track URL locally
 ```
 
-This ensures the "connected" view only shows when:
-- Site is connected
-- Not editing
-- Not in discovering/mapping/field-mapping flow
+**2. Set the URL in `connectWithDiscovery` (around line 530):**
+```typescript
+if (data.success) {
+  const endpoints: DiscoveredEndpoints = { ... };
+  setDiscoveredEndpoints(endpoints);
+  setConnectedUrl(url.trim());  // NEW: Store URL immediately
+  setConnectionStep('mapping');
+  return { success: true, endpoints };
+}
+```
 
-**Line 641 also needs update** to exclude `'field-mapping'`:
-```tsx
-// BEFORE
-{isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && (
+**3. Use `connectedUrl` in `fetchSamplePost` (line 552):**
+```typescript
+const fetchSamplePost = useCallback(async (
+  endpoint: string,
+  type: 'community' | 'property'
+): Promise<SamplePostResult | null> => {
+  const siteUrlToUse = connectedUrl || storedSiteUrl;  // NEW: Prefer local URL
+  if (!agent?.id || !siteUrlToUse) return null;
 
-// AFTER
-{isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && connectionStep !== 'field-mapping' && (
+  // ... rest of function uses siteUrlToUse instead of storedSiteUrl
+}, [agent?.id, storedSiteUrl, connectedUrl]);  // Add connectedUrl to deps
+```
+
+**4. Reset `connectedUrl` in `resetConnectionFlow` (around line 730):**
+```typescript
+const resetConnectionFlow = useCallback(() => {
+  setConnectionStep('url');
+  setDiscoveredEndpoints(null);
+  setSamplePostData({ community: null, property: null });
+  setCommunityFieldMappings({});
+  setPropertyFieldMappings({});
+  setConnectedUrl('');  // NEW: Clear local URL
+}, []);
+```
+
+**5. Also reset in `disconnect` function (around line 475):**
+```typescript
+toast.success('WordPress disconnected', ...);
+setConnectedUrl('');  // NEW: Clear local URL on disconnect
+onSyncComplete?.();
 ```
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/components/agents/locations/WordPressIntegrationSheet.tsx` | Fix conditional rendering to exclude all in-progress steps |
+| File | Changes |
+|------|---------|
+| `src/hooks/useWordPressConnection.ts` | Add `connectedUrl` state, set it in `connectWithDiscovery`, use it in `fetchSamplePost`, reset it in `resetConnectionFlow` and `disconnect` |
 
-## Technical Details
+## Expected Flow After Fix
 
-The fix adds additional step exclusions to two conditions:
+```text
+1. URL Entry → User enters "example.com"
+2. Discovering → connectWithDiscovery saves URL, sets connectedUrl = "example.com"
+3. Endpoint Mapping → User selects endpoints
+4. Field Mapping → fetchSamplePost uses connectedUrl (not empty!), returns data
+   - Shows community field mapping first
+   - Then property field mapping
+5. Connected → User saves mappings
+```
 
-1. **Connected view condition (line 406)**: Currently only excludes `'mapping'`. Need to also exclude `'discovering'` and `'field-mapping'`.
+## Why This Works
 
-2. **Sync sections condition (line 641)**: Currently excludes `'mapping'` and `'discovering'`. Need to also exclude `'field-mapping'`.
-
-This is a minimal, targeted fix that addresses the race condition without restructuring the component or hook logic.
+By storing the URL locally in `connectedUrl` immediately when the connection succeeds, we have access to it before the React Query cache updates with the refetched agent data. This eliminates the race condition entirely.
