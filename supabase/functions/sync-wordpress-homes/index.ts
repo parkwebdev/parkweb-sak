@@ -179,6 +179,36 @@ function extractZipFromAddress(address: string | null): string | null {
   return match ? match[1] : null;
 }
 
+/**
+ * Normalize price type value to valid database enum
+ * Handles taxonomy term names, common variations, and invalid values
+ */
+function normalizePriceType(value: unknown): 'sale' | 'rent_monthly' | 'rent_weekly' {
+  if (value == null) return 'sale';
+  
+  const strValue = String(value).toLowerCase().trim();
+  
+  // Check if it's a numeric taxonomy ID - can't use directly, default to sale
+  if (/^\d+$/.test(strValue)) {
+    console.log(`⚠️ price_type is numeric (${strValue}), defaulting to 'sale'`);
+    return 'sale';
+  }
+  
+  // Map common WordPress/real estate terms to enum values
+  if (strValue.includes('rent') || strValue.includes('lease')) {
+    if (strValue.includes('week')) return 'rent_weekly';
+    return 'rent_monthly';
+  }
+  
+  if (strValue.includes('sale') || strValue.includes('buy') || strValue.includes('purchase')) {
+    return 'sale';
+  }
+  
+  // Default to sale for unknown values
+  console.log(`⚠️ Unknown price_type value: "${strValue}", defaulting to 'sale'`);
+  return 'sale';
+}
+
 function normalizeSiteUrl(url: string): string {
   let normalized = url.trim();
   
@@ -811,7 +841,8 @@ async function syncHomesToProperties(
         zip = getValueByPath(home as Record<string, unknown>, fieldMappings.zip) as string | null;
         const priceValue = getValueByPath(home as Record<string, unknown>, fieldMappings.price);
         if (priceValue != null) price = Math.round(parseFloat(String(priceValue)) * 100);
-        priceType = (getValueByPath(home as Record<string, unknown>, fieldMappings.price_type) as string) || 'sale';
+        const rawPriceType = getValueByPath(home as Record<string, unknown>, fieldMappings.price_type);
+        priceType = normalizePriceType(rawPriceType);
         const bedsValue = getValueByPath(home as Record<string, unknown>, fieldMappings.beds);
         if (bedsValue != null) beds = parseInt(String(bedsValue), 10) || null;
         const bathsValue = getValueByPath(home as Record<string, unknown>, fieldMappings.baths);
@@ -839,7 +870,7 @@ async function syncHomesToProperties(
           if (!state) state = aiData.state || null;
           if (!zip) zip = aiData.zip || null;
           if (price == null && aiData.price != null) price = Math.round(aiData.price * 100);
-          if (!priceType || priceType === 'sale') priceType = aiData.price_type || 'sale';
+          if (!priceType || priceType === 'sale') priceType = normalizePriceType(aiData.price_type);
           if (beds == null) beds = aiData.beds || null;
           if (baths == null) baths = aiData.baths || null;
           if (sqft == null) sqft = aiData.sqft || null;
@@ -880,7 +911,7 @@ async function syncHomesToProperties(
         if (priceValue != null) price = Math.round(priceValue * 100);
       }
       
-      if (!priceType || priceType === 'sale') priceType = extractAcfField(acf, 'price_type', 'listing_type') || 'sale';
+      if (!priceType || priceType === 'sale') priceType = normalizePriceType(extractAcfField(acf, 'price_type', 'listing_type'));
       if (beds == null) beds = extractAcfNumber(acf, 'beds', 'bedrooms', 'bed', 'bedroom');
       if (baths == null) baths = extractAcfNumber(acf, 'baths', 'bathrooms', 'bath', 'bathroom');
       if (sqft == null) sqft = extractAcfNumber(acf, 'sqft', 'square_feet', 'sq_ft', 'square_footage', 'size');
