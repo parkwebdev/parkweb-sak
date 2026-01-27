@@ -6,7 +6,7 @@
  * based on the current page using the TopBarContext.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { TopBar, TopBarProvider, useTopBarContext } from '@/components/layout/TopBar';
@@ -18,7 +18,20 @@ interface AppLayoutProps {
 
 function AppLayoutInner({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('sidebar_collapsed') === 'true';
+  });
   const { config } = useTopBarContext();
+  
+  // Persist sidebar collapsed state to localStorage
+  useEffect(() => {
+    localStorage.setItem('sidebar_collapsed', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+  
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => !prev);
+  }, []);
   
   // Initialize keyboard shortcuts at app level
   useKeyboardShortcuts();
@@ -49,7 +62,7 @@ function AppLayoutInner({ children }: AppLayoutProps) {
       
       {/* Desktop Sidebar - floating card */}
       <div className="hidden lg:block shrink-0">
-        <Sidebar />
+        <Sidebar isCollapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
       </div>
       
       {/* Main Content Container - floating card */}
