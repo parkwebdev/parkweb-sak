@@ -233,7 +233,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { action, agentId, siteUrl, homeEndpoint, useAiExtraction, modifiedAfter } = await req.json();
+    const { action, agentId, siteUrl, homeEndpoint, useAiExtraction, modifiedAfter, forceFullSync } = await req.json();
 
     const { data: agent, error: agentError } = await supabase
       .from('agents')
@@ -304,7 +304,7 @@ Deno.serve(async (req: Request) => {
       
       // Determine if this is an incremental sync
       const lastSync = modifiedAfter || wpConfig?.last_home_sync;
-      const isIncremental = !!lastSync;
+      let isIncremental = !!lastSync && !forceFullSync;
       
       if (!urlToSync) {
         return new Response(
@@ -313,8 +313,6 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      console.log(`Starting WordPress homes sync for agent ${agentId} from ${urlToSync}${endpoint ? ` using endpoint /${endpoint}` : ''} (${isIncremental ? 'incremental' : 'full'})`);
-
       // Get or create WordPress knowledge source
       const knowledgeSourceId = await getOrCreateWordPressSource(
         supabase,
@@ -322,6 +320,23 @@ Deno.serve(async (req: Request) => {
         agent.user_id,
         urlToSync
       );
+
+      // Smart detection: Force full sync if local properties are missing
+      if (isIncremental && !forceFullSync) {
+        const { count: localCount } = await supabase
+          .from('properties')
+          .select('id', { count: 'exact', head: true })
+          .eq('agent_id', agentId)
+          .eq('knowledge_source_id', knowledgeSourceId);
+        
+        // If we have 0 local properties but config says we had some, force full sync
+        if (localCount === 0 && wpConfig?.home_count && wpConfig.home_count > 0) {
+          console.log(`Detected missing local properties (0 vs ${wpConfig.home_count} expected). Forcing full sync.`);
+          isIncremental = false;
+        }
+      }
+
+      console.log(`Starting WordPress homes sync for agent ${agentId} from ${urlToSync}${endpoint ? ` using endpoint /${endpoint}` : ''} (${isIncremental ? 'incremental' : 'full'}${forceFullSync ? ', forced' : ''})`);
 
       // Get locations with WordPress community term IDs for auto-matching
       const { data: locations } = await supabase
