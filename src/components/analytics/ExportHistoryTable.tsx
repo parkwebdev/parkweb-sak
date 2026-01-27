@@ -10,11 +10,14 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 import { createExportHistoryColumns } from '@/components/data-table/columns/export-history-columns';
 import { useReportExports, type ReportExport } from '@/hooks/useReportExports';
 import { downloadFile, downloadFilesAsZip } from '@/lib/file-download';
@@ -140,10 +143,14 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
       sorting,
       rowSelection,
     },
+    initialState: {
+      pagination: { pageSize: 25 },
+    },
     onSortingChange: setSorting,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     enableRowSelection: true,
   });
 
@@ -165,12 +172,18 @@ export function ExportHistoryTable({ loading: externalLoading }: ExportHistoryTa
 
   return (
     <>
+      {/* Results info */}
+      {exports.length > 0 && <DataTableResultsInfo table={table} label="exports" />}
+
       <DataTable
         table={table}
         columns={columns}
         isLoading={loading}
         emptyMessage={emptyMessage}
       />
+
+      {/* Pagination */}
+      {exports.length > 0 && <DataTablePagination table={table} showRowsPerPage />}
 
       {/* Floating bar for bulk actions */}
       <DataTableFloatingBar table={table}>

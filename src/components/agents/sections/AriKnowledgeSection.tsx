@@ -5,12 +5,13 @@
  * infinite scroll, and click-to-open details sheet.
  */
 
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { 
   useReactTable, 
   getCoreRowModel, 
   getSortedRowModel, 
-  getFilteredRowModel, 
+  getFilteredRowModel,
+  getPaginationRowModel,
   type SortingState, 
   type RowSelectionState 
 } from '@tanstack/react-table';
@@ -38,6 +39,8 @@ import { getErrorMessage } from '@/types/errors';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
 import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 import { createKnowledgeColumns, type KnowledgeSourceWithMeta } from '@/components/data-table/columns';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import type { KnowledgeSourceMetadata } from '@/types/metadata';
@@ -112,9 +115,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [locationFilter, setLocationFilter] = useState<string[]>([]);
 
-  // Infinite scroll state
-  const [displayCount, setDisplayCount] = useState(20);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  // Pagination state removed - using TanStack Table pagination
 
   // Memoize parent sources to prevent infinite re-renders
   const parentSources = useMemo(() => {
@@ -230,35 +231,6 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
     setLocationFilter([]);
   };
 
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && displayCount < filteredSources.length) {
-          setDisplayCount(prev => Math.min(prev + 20, filteredSources.length));
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [filteredSources.length, displayCount]);
-
-  // Reset display count when filters change
-  useEffect(() => {
-    setDisplayCount(20);
-  }, [typeFilter, statusFilter, locationFilter, globalFilter]);
-
-  // Displayed sources with pagination
-  const displayedSources = useMemo(
-    () => filteredSources.slice(0, displayCount),
-    [filteredSources, displayCount]
-  );
-
   // Handler to view source details
   const handleViewSource = useCallback((source: KnowledgeSourceWithMeta) => {
     setSelectedSource(source);
@@ -291,12 +263,15 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
 
   // Create table instance
   const table = useReactTable({
-    data: displayedSources,
+    data: filteredSources,
     columns,
     state: {
       sorting,
       globalFilter,
       rowSelection,
+    },
+    initialState: {
+      pagination: { pageSize: 25 },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -304,6 +279,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     enableRowSelection: true,
   });
 
@@ -563,14 +539,17 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
           />
         ) : (
           <>
-            {/* DataTable with toolbar and filters */}
+            {/* Results count and toolbar */}
             <div className="flex items-center justify-between gap-2">
-              <DataTableToolbar
-                table={table}
-                searchPlaceholder="Search sources..."
-                globalFilter
-              />
-              {FilterPopover}
+              <DataTableResultsInfo table={table} label="sources" />
+              <div className="flex items-center gap-2">
+                <DataTableToolbar
+                  table={table}
+                  searchPlaceholder="Search sources..."
+                  globalFilter
+                />
+                {FilterPopover}
+              </div>
             </div>
 
             {/* Active filter chips */}
@@ -609,12 +588,8 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
               emptyMessage="No knowledge sources found."
             />
 
-            {/* Infinite scroll trigger */}
-            {displayCount < filteredSources.length && (
-              <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-                <span className="text-sm text-muted-foreground">Loading more...</span>
-              </div>
-            )}
+            {/* Pagination */}
+            <DataTablePagination table={table} showRowsPerPage showSelectedCount />
           </>
         )}
 

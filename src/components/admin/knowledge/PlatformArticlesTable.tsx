@@ -12,12 +12,15 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   createColumnHelper,
   ColumnDef,
   SortingState,
   RowSelectionState,
 } from '@tanstack/react-table';
 import { DataTable, DataTableFloatingBar } from '@/components/data-table';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 import { DataTableColumnHeader } from '@/components/data-table/DataTableColumnHeader';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { StatusBadge } from '@/components/admin/shared/StatusBadge';
@@ -187,17 +190,22 @@ export function PlatformArticlesTable({
       sorting,
       rowSelection,
     },
+    initialState: {
+      pagination: { pageSize: 25 },
+    },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const selectedCount = table.getFilteredSelectedRowModel().rows.length;
 
   return (
     <div className="space-y-4">
+      {articles.length > 0 && <DataTableResultsInfo table={table} label="articles" />}
       <DataTable
         table={table}
         columns={columns}
@@ -205,6 +213,7 @@ export function PlatformArticlesTable({
         emptyMessage="No articles yet. Create your first article to get started."
         onRowClick={onRowClick}
       />
+      {articles.length > 0 && <DataTablePagination table={table} showRowsPerPage />}
 
       {/* Floating action bar for bulk delete */}
       <DataTableFloatingBar table={table}>

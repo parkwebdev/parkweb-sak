@@ -7,8 +7,11 @@ import React from 'react';
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel,
 } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 import { createTeamColumns } from '@/components/data-table/columns/team-columns';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonTeamTable } from '@/components/ui/page-skeleton';
@@ -53,6 +56,10 @@ export const TeamMembersTable = React.memo(function TeamMembersTable({
     data: teamMembers,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: { pageSize: 25 },
+    },
   });
 
   if (loading) {
@@ -70,10 +77,14 @@ export const TeamMembersTable = React.memo(function TeamMembersTable({
   }
 
   return (
-    <DataTable
-      table={table}
-      columns={columns}
-      emptyMessage="No team members found"
-    />
+    <div className="space-y-4">
+      <DataTableResultsInfo table={table} label="members" />
+      <DataTable
+        table={table}
+        columns={columns}
+        emptyMessage="No team members found"
+      />
+      {teamMembers.length > 0 && <DataTablePagination table={table} showRowsPerPage />}
+    </div>
   );
 });

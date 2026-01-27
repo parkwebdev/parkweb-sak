@@ -6,9 +6,9 @@
  * Toggle between Communities and Properties views.
  */
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
+import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
@@ -35,6 +35,8 @@ import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog'
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
 import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingBar';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { DataTableResultsInfo } from '@/components/data-table/DataTableResultsInfo';
 import { createLocationsColumns, type LocationWithCounts, createPropertiesColumns, type PropertyWithLocation } from '@/components/data-table/columns';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MarkerPin01 } from '@untitledui/icons';
@@ -103,16 +105,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const [propertyStatusFilter, setPropertyStatusFilter] = useState<string[]>([]);
   const [validationFilter, setValidationFilter] = useState<string>('all');
 
-  // Infinite scroll state
-  const [displayCount, setDisplayCount] = useState(20);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-
-  // Reset filters when switching view modes
-  useEffect(() => {
-    setGlobalFilter('');
-    setRowSelection({});
-    setDisplayCount(20);
-  }, [viewMode]);
+  // Pagination now handled by TanStack Table
 
   // Enrich locations with calendar counts
   const locationsWithCounts: LocationWithCounts[] = useMemo(() => {
@@ -248,41 +241,6 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
     setValidationFilter('all');
   };
 
-  // Infinite scroll observer
-  useEffect(() => {
-    const currentData = viewMode === 'communities' ? filteredLocations : filteredProperties;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && displayCount < currentData.length) {
-          setDisplayCount(prev => Math.min(prev + 20, currentData.length));
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [filteredLocations.length, filteredProperties.length, displayCount, viewMode]);
-
-  // Reset display count when filters change
-  useEffect(() => {
-    setDisplayCount(20);
-  }, [calendarFilter, wordpressFilter, stateFilter, communityFilter, propertyStatusFilter, validationFilter, globalFilter]);
-
-  // Memoized displayed data
-  const displayedLocations = useMemo(
-    () => filteredLocations.slice(0, displayCount),
-    [filteredLocations, displayCount]
-  );
-
-  const displayedProperties = useMemo(
-    () => filteredProperties.slice(0, displayCount),
-    [filteredProperties, displayCount]
-  );
-
   const handleCreate = async (data: Parameters<typeof createLocation>[0]) => {
     const id = await createLocation(data);
     if (id) {
@@ -377,29 +335,15 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   const propertyColumns = useMemo(() => createPropertiesColumns(), []);
 
   const locationsTable = useReactTable({
-    data: displayedLocations,
+    data: filteredLocations,
     columns: locationColumns,
     state: {
       sorting,
       globalFilter,
       rowSelection,
     },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    enableRowSelection: true,
-  });
-
-  const propertiesTable = useReactTable({
-    data: displayedProperties,
-    columns: propertyColumns,
-    state: {
-      sorting,
-      globalFilter,
-      rowSelection,
+    initialState: {
+      pagination: { pageSize: 25 },
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
@@ -407,6 +351,28 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    enableRowSelection: true,
+  });
+
+  const propertiesTable = useReactTable({
+    data: filteredProperties,
+    columns: propertyColumns,
+    state: {
+      sorting,
+      globalFilter,
+      rowSelection,
+    },
+    initialState: {
+      pagination: { pageSize: 25 },
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: setRowSelection,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     enableRowSelection: true,
   });
 
@@ -759,12 +725,15 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                     />
                   ) : (
                     <div className="space-y-3">
-                      <DataTableToolbar
-                        table={locationsTable}
-                        searchPlaceholder="Search..."
-                        globalFilter
-                        hideSearch
-                      />
+                      <div className="flex items-center justify-between">
+                        <DataTableResultsInfo table={locationsTable} label="communities" />
+                        <DataTableToolbar
+                          table={locationsTable}
+                          searchPlaceholder="Search..."
+                          globalFilter
+                          hideSearch
+                        />
+                      </div>
 
                       {activeFilters.length > 0 && (
                         <div className="flex items-center gap-2 flex-wrap">
@@ -793,15 +762,8 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                         onRowClick={(row) => handleViewLocation(row)}
                       />
 
-                      {displayCount < filteredLocations.length && (
-                        <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-                          <span className="text-sm text-muted-foreground">Loading more...</span>
-                        </div>
-                      )}
-
-                      <p className="text-xs text-muted-foreground text-center">
-                        Showing {displayedLocations.length} of {filteredLocations.length} locations
-                      </p>
+                      {/* Pagination */}
+                      <DataTablePagination table={locationsTable} showRowsPerPage showSelectedCount />
                     </div>
                   )}
                 </motion.div>
@@ -824,12 +786,15 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                     />
                   ) : (
                     <div className="space-y-3">
-                      <DataTableToolbar
-                        table={propertiesTable}
-                        searchPlaceholder="Search..."
-                        globalFilter
-                        hideSearch
-                      />
+                      <div className="flex items-center justify-between">
+                        <DataTableResultsInfo table={propertiesTable} label="properties" />
+                        <DataTableToolbar
+                          table={propertiesTable}
+                          searchPlaceholder="Search..."
+                          globalFilter
+                          hideSearch
+                        />
+                      </div>
 
                       {activeFilters.length > 0 && (
                         <div className="flex items-center gap-2 flex-wrap">
@@ -857,15 +822,8 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                         columns={propertyColumns}
                       />
 
-                      {displayCount < filteredProperties.length && (
-                        <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-                          <span className="text-sm text-muted-foreground">Loading more...</span>
-                        </div>
-                      )}
-
-                      <p className="text-xs text-muted-foreground text-center">
-                        Showing {displayedProperties.length} of {filteredProperties.length} properties
-                      </p>
+                      {/* Pagination */}
+                      <DataTablePagination table={propertiesTable} showRowsPerPage showSelectedCount />
                     </div>
                   )}
                 </motion.div>
