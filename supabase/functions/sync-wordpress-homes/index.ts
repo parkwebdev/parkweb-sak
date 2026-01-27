@@ -136,6 +136,31 @@ function extractAcfArray(acf: Record<string, unknown> | undefined, ...keywords: 
   return [];
 }
 
+/**
+ * Get a value from an object using dot-notation path
+ * e.g., getValueByPath(obj, 'acf.phone') returns obj.acf.phone
+ */
+function getValueByPath(obj: Record<string, unknown>, path: string | undefined): unknown {
+  if (!path) return null;
+  
+  const parts = path.split('.');
+  let current: unknown = obj;
+  
+  for (const part of parts) {
+    if (current === null || current === undefined) return null;
+    if (typeof current !== 'object') return null;
+    current = (current as Record<string, unknown>)[part];
+  }
+  
+  if (current === null || current === undefined) return null;
+  if (typeof current === 'object') {
+    const asObj = current as Record<string, unknown>;
+    if ('rendered' in asObj) return asObj.rendered;
+    return null;
+  }
+  return current;
+}
+
 function extractZipFromAddress(address: string | null): string | null {
   if (!address) return null;
   const match = address.match(/\b(\d{5})(-\d{4})?\b/);
@@ -371,7 +396,8 @@ Deno.serve(async (req: Request) => {
         locationMaps,
         homes,
         isIncremental,
-        useAiExtraction ?? false
+        useAiExtraction ?? false,
+        wpConfig?.property_field_mappings
       );
 
       // Update agent's deployment_config with sync info
@@ -633,7 +659,8 @@ async function syncHomesToProperties(
   locationMaps: LocationMaps,
   homes: WordPressHome[],
   isIncremental: boolean,
-  useAiExtraction: boolean = false
+  useAiExtraction: boolean = false,
+  fieldMappings?: Record<string, string>
 ): Promise<SyncResult> {
   const result: SyncResult = { 
     created: 0, 
@@ -699,30 +726,56 @@ async function syncHomesToProperties(
       
       const acf = home.acf;
       
-      // Use AI extraction if enabled
-      if (useAiExtraction) {
+      // PRIORITY 1: Use explicit field mappings if provided
+      if (fieldMappings && Object.keys(fieldMappings).length > 0) {
+        console.log(`📋 Using custom field mappings for property: ${home.slug}`);
+        address = getValueByPath(home as Record<string, unknown>, fieldMappings.address) as string | null;
+        lotNumber = getValueByPath(home as Record<string, unknown>, fieldMappings.lot_number) as string | null;
+        city = getValueByPath(home as Record<string, unknown>, fieldMappings.city) as string | null;
+        state = getValueByPath(home as Record<string, unknown>, fieldMappings.state) as string | null;
+        zip = getValueByPath(home as Record<string, unknown>, fieldMappings.zip) as string | null;
+        const priceValue = getValueByPath(home as Record<string, unknown>, fieldMappings.price);
+        if (priceValue != null) price = Math.round(parseFloat(String(priceValue)) * 100);
+        priceType = (getValueByPath(home as Record<string, unknown>, fieldMappings.price_type) as string) || 'sale';
+        const bedsValue = getValueByPath(home as Record<string, unknown>, fieldMappings.beds);
+        if (bedsValue != null) beds = parseInt(String(bedsValue), 10) || null;
+        const bathsValue = getValueByPath(home as Record<string, unknown>, fieldMappings.baths);
+        if (bathsValue != null) baths = parseFloat(String(bathsValue)) || null;
+        const sqftValue = getValueByPath(home as Record<string, unknown>, fieldMappings.sqft);
+        if (sqftValue != null) sqft = parseInt(String(sqftValue), 10) || null;
+        const yearValue = getValueByPath(home as Record<string, unknown>, fieldMappings.year_built);
+        if (yearValue != null) yearBuilt = parseInt(String(yearValue), 10) || null;
+        status = (getValueByPath(home as Record<string, unknown>, fieldMappings.status) as string) || 'available';
+        description = getValueByPath(home as Record<string, unknown>, fieldMappings.description) as string | null;
+        // Features may need special handling for arrays
+        const featuresValue = getValueByPath(home as Record<string, unknown>, fieldMappings.features);
+        if (Array.isArray(featuresValue)) features = featuresValue.map(String);
+      }
+      
+      // PRIORITY 2: Use AI extraction if enabled (for fields still missing)
+      if (useAiExtraction && !address) {
         console.log(`🤖 Using AI extraction for property: ${home.slug}`);
         const aiData = await extractPropertyData(home);
         
         if (aiData) {
-          address = aiData.address || null;
-          lotNumber = aiData.lot_number || null;
-          city = aiData.city || null;
-          state = aiData.state || null;
-          zip = aiData.zip || null;
-          if (aiData.price != null) price = Math.round(aiData.price * 100);
-          priceType = aiData.price_type || 'sale';
-          beds = aiData.beds || null;
-          baths = aiData.baths || null;
-          sqft = aiData.sqft || null;
-          yearBuilt = aiData.year_built || null;
-          status = aiData.status || 'available';
-          description = aiData.description || null;
-          features = aiData.features || [];
+          if (!address) address = aiData.address || null;
+          if (!lotNumber) lotNumber = aiData.lot_number || null;
+          if (!city) city = aiData.city || null;
+          if (!state) state = aiData.state || null;
+          if (!zip) zip = aiData.zip || null;
+          if (price == null && aiData.price != null) price = Math.round(aiData.price * 100);
+          if (!priceType || priceType === 'sale') priceType = aiData.price_type || 'sale';
+          if (beds == null) beds = aiData.beds || null;
+          if (baths == null) baths = aiData.baths || null;
+          if (sqft == null) sqft = aiData.sqft || null;
+          if (yearBuilt == null) yearBuilt = aiData.year_built || null;
+          if (!status || status === 'available') status = aiData.status || 'available';
+          if (!description) description = aiData.description || null;
+          if (features.length === 0) features = aiData.features || [];
         }
       }
       
-      // Fall back to / supplement with ACF extraction
+      // PRIORITY 3: Fall back to keyword-based ACF extraction
       if (!address) address = extractAcfField(acf, 'address', 'full_address', 'street_address');
       if (!lotNumber) lotNumber = extractAcfField(acf, 'lot', 'lot_number', 'lot_num', 'site_number', 'unit_number', 'home_unit_number');
       if (!city) city = extractAcfField(acf, 'city');
