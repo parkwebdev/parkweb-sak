@@ -1,319 +1,312 @@
 
 
-# Plan: Fix Collapsed Sidebar - Show Logo and Navigation Icons
+# Plan: Move Locations Search to TopBar Center
 
-## Problem Analysis
+## Overview
 
-The current collapsed sidebar implementation is broken in two ways:
+Move the search input from `AriLocationsSection` (inline in the data table toolbar) to the TopBar's center slot, matching the pattern used by Help Center.
 
-1. **Toggle icon not centered**: The toggle button is placed at the top but not properly centered in the 48px column
-2. **Logo not visible**: When collapsed, the logo disappears completely
-3. **Navigation icons not visible**: All navigation content is hidden with `opacity-0 invisible h-0` - but users expect to see the navigation icons (like a traditional collapsed sidebar)
+---
 
-### Current Broken Structure (Sidebar.tsx lines 204-254)
+## Current Architecture
+
 ```
-When isCollapsed === true:
-┌────────┐
-│  [◧]   │  ← Only toggle button (not properly centered)
-│        │
-│        │  ← ALL content hidden (opacity-0 invisible h-0)
-│        │
-│        │
-└────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│ TopBar                                                               │
+│ ┌──────────────┬──────────────────────┬───────────────────────────┐ │
+│ │ Left         │ Center (empty)       │ Right                     │ │
+│ │ Ari > Locat..│                      │ [WordPress] [Add Location]│ │
+│ └──────────────┴──────────────────────┴───────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ AriLocationsSection                                                  │
+│ ┌───────────────────────────────────────────────────────────────────┐│
+│ │ [Communities] [Properties]  [Filter]  ← ViewToggle + FilterPopover││
+│ └───────────────────────────────────────────────────────────────────┘│
+│ ┌───────────────────────────────────────────────────────────────────┐│
+│ │ [🔍 Search...]                        ← DataTableToolbar          ││
+│ └───────────────────────────────────────────────────────────────────┘│
+│ ┌───────────────────────────────────────────────────────────────────┐│
+│ │ Data Table                                                        ││
+│ └───────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Expected Structure (What User Wants)
+## Target Architecture
+
 ```
-When isCollapsed === true:
-┌────────┐
-│ [logo] │  ← Logo centered at top
-│ [◧]    │  ← Toggle button below logo
-│────────│
-│  [🏠]  │  ← Dashboard icon
-│  [✨]  │  ← Ari icon  
-│  [💬]  │  ← Inbox icon
-│  [👥]  │  ← Leads icon
-│  ...   │
-│────────│
-│  [⚙️]  │  ← Settings icon (bottom)
-└────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│ TopBar                                                               │
+│ ┌──────────────┬──────────────────────┬───────────────────────────┐ │
+│ │ Left         │ Center               │ Right                     │ │
+│ │ Ari > Locat..│ [🔍 Search...]       │ [WordPress] [Add Location]│ │
+│ └──────────────┴──────────────────────┴───────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ AriLocationsSection                                                  │
+│ ┌───────────────────────────────────────────────────────────────────┐│
+│ │ [Communities] [Properties]  [Filter]  ← ViewToggle + FilterPopover││
+│ └───────────────────────────────────────────────────────────────────┘│
+│ ┌───────────────────────────────────────────────────────────────────┐│
+│ │ Data Table (no inline search)                                     ││
+│ └───────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Technical Solution
+## Technical Approach
 
-### File: `src/components/Sidebar.tsx`
+### Option Analysis
 
-The fix requires restructuring the collapsed state to show:
-1. **Logo** - centered at top (always visible)
-2. **Toggle button** - below or beside the logo
-3. **Navigation icons** - icon-only navigation items (no labels)
-4. **Bottom items** - icon-only at the bottom
+| Approach | Pros | Cons |
+|----------|------|------|
+| **A. Extend AriSectionActionsContext** | Single context for all section content, consistent pattern | More complexity in existing context |
+| **B. Create new AriSectionCenterContext** | Separation of concerns, clear responsibility | Another context to manage |
+| **C. Lift state to AriConfigurator** | Simpler, direct control | Adds props drilling, couples parent to section logic |
 
-### Changes Required
+**Chosen: Option A** - Extend `AriSectionActionsContext` to support a `centerContent` ReactNode in addition to `actions`.
 
-#### 1. Header Section (lines 201-249)
-**Problem**: Header only shows toggle when collapsed, hiding the logo
-**Fix**: Always show the logo, adjust layout for collapsed state
+---
+
+## Implementation Details
+
+### 1. Extend AriSectionActionsContext
+**File:** `src/contexts/AriSectionActionsContext.tsx`
+
+Add support for center content:
 
 ```tsx
-{/* Header with logo - always visible */}
-<header className={cn(
-  "w-full mb-6 flex flex-col items-center",
-  isCollapsed ? "px-0 pt-2" : "px-2"
-)}>
-  {/* Logo - always visible, centered when collapsed */}
-  <div className={cn(
-    "flex items-center",
-    isCollapsed ? "justify-center w-full" : "justify-between w-full"
-  )}>
-    {isPilotTeamMember && isOnAdminRoute ? (
-      isCollapsed ? (
-        <PilotLogo className="h-5 w-5 text-white flex-shrink-0" />
-      ) : (
-        <div className="flex items-center gap-2">
-          <PilotLogo className="h-6 w-6 text-white flex-shrink-0" />
-          <span className="text-sm font-semibold text-white">Admin</span>
-        </div>
-      )
-    ) : (
-      <PilotLogo className={cn(
-        "text-white flex-shrink-0",
-        isCollapsed ? "h-5 w-5" : "h-6 w-6"
-      )} />
-    )}
-    
-    {/* Desktop collapse toggle - only visible when expanded */}
-    {!isCollapsed && onToggleCollapse && (
-      <button
-        onClick={onToggleCollapse}
-        className="hidden lg:flex p-1.5 rounded-md hover:bg-white/5 text-white/60 hover:text-white"
-        aria-label="Collapse sidebar"
-      >
-        <LayoutPanelLeft filled={true} className="h-4 w-4" />
-      </button>
-    )}
-    
-    {/* Mobile close button */}
-    {!isCollapsed && onClose && (
-      <button onClick={onClose} className="lg:hidden p-1 rounded-md hover:bg-white/5">
-        <X size={16} />
-      </button>
-    )}
+// Add to interface
+interface AriSectionActionsContextValue {
+  actions: SectionAction[];
+  centerContent: ReactNode | null;  // NEW
+  registerActions: (sectionId: string, actions: SectionAction[]) => void;
+  unregisterActions: (sectionId: string) => void;
+  registerCenterContent: (sectionId: string, content: ReactNode) => void;  // NEW
+  unregisterCenterContent: (sectionId: string) => void;  // NEW
+  currentSection: string | null;
+  setCurrentSection: (sectionId: string | null) => void;
+}
+
+// Add new state
+const [centerContentBySection, setCenterContentBySection] = 
+  useState<Record<string, ReactNode>>({});
+
+const registerCenterContent = useCallback((sectionId: string, content: ReactNode) => {
+  setCenterContentBySection(prev => ({ ...prev, [sectionId]: content }));
+}, []);
+
+const unregisterCenterContent = useCallback((sectionId: string) => {
+  setCenterContentBySection(prev => {
+    const next = { ...prev };
+    delete next[sectionId];
+    return next;
+  });
+}, []);
+
+const centerContent = currentSection 
+  ? centerContentBySection[currentSection] || null 
+  : null;
+```
+
+Add hook for sections to register center content:
+
+```tsx
+export function useRegisterSectionCenterContent(
+  sectionId: string, 
+  content: ReactNode
+) {
+  const { registerCenterContent, unregisterCenterContent } = useAriSectionActions();
+  
+  useEffect(() => {
+    registerCenterContent(sectionId, content);
+    return () => unregisterCenterContent(sectionId);
+  }, [sectionId, content, registerCenterContent, unregisterCenterContent]);
+}
+```
+
+---
+
+### 2. Create LocationsTopBarSearch Component
+**File:** `src/components/agents/locations/LocationsTopBarSearch.tsx`
+
+Self-contained search component that manages its own state (like HCTopBarSearch):
+
+```tsx
+import { useState, memo } from 'react';
+import { TopBarSearch } from '@/components/layout/TopBar';
+
+interface LocationsTopBarSearchProps {
+  /** Current global filter value from parent */
+  value: string;
+  /** Callback when search changes */
+  onChange: (value: string) => void;
+  /** Placeholder based on view mode */
+  placeholder?: string;
+}
+
+export const LocationsTopBarSearch = memo(function LocationsTopBarSearch({
+  value,
+  onChange,
+  placeholder = 'Search...',
+}: LocationsTopBarSearchProps) {
+  return (
+    <TopBarSearch
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      showPopover={false}  // No dropdown results - just filters the table
+      className="w-48 lg:w-64"
+    />
+  );
+});
+```
+
+---
+
+### 3. Update AriLocationsSection
+**File:** `src/components/agents/sections/AriLocationsSection.tsx`
+
+**Changes:**
+1. Import `useRegisterSectionCenterContent`
+2. Create memoized search component with current state
+3. Register center content via the hook
+4. Remove search from `DataTableToolbar` (set `searchColumn` to undefined or hide it)
+
+```tsx
+import { useRegisterSectionCenterContent } from '@/contexts/AriSectionActionsContext';
+import { LocationsTopBarSearch } from '@/components/agents/locations/LocationsTopBarSearch';
+
+// Inside the component:
+
+// Register center content for TopBar (search bar)
+const searchPlaceholder = viewMode === 'communities' 
+  ? 'Search communities...' 
+  : 'Search properties...';
+
+const centerContent = useMemo(() => (
+  <LocationsTopBarSearch
+    value={globalFilter}
+    onChange={setGlobalFilter}
+    placeholder={searchPlaceholder}
+  />
+), [globalFilter, searchPlaceholder]);
+
+useRegisterSectionCenterContent('locations', centerContent);
+
+// Update DataTableToolbar to hide search - use a custom prop or wrapper
+// Option: Remove search entirely by not rendering DataTableToolbar's search
+```
+
+**For removing inline search:**
+Since `DataTableToolbar` always renders search, we have two options:
+
+A. Add a `hideSearch` prop to `DataTableToolbar`
+B. Create a simpler `LocationsToolbar` component that doesn't include search
+
+**Chosen: Option A** - Add `hideSearch?: boolean` prop to `DataTableToolbar`
+
+---
+
+### 4. Update DataTableToolbar
+**File:** `src/components/data-table/DataTableToolbar.tsx`
+
+Add optional `hideSearch` prop:
+
+```tsx
+interface DataTableToolbarProps<TData> {
+  // ... existing props
+  /** Hide the search input (when search is in TopBar) */
+  hideSearch?: boolean;
+}
+
+// In render:
+{!hideSearch && (
+  <div className={cn('relative w-full max-w-sm', searchClassName)}>
+    {/* Search input */}
   </div>
-  
-  {/* Toggle button - shown below logo when collapsed */}
-  {isCollapsed && onToggleCollapse && (
-    <button
-      onClick={onToggleCollapse}
-      className="mt-2 p-2 rounded-md hover:bg-white/5 text-white/60 hover:text-white"
-      aria-label="Expand sidebar"
-    >
-      <LayoutPanelLeft filled={false} className="h-4 w-4" />
-    </button>
-  )}
-</header>
-```
-
-#### 2. Main Navigation Section (lines 283-339)
-**Problem**: Entire nav wrapped in `opacity-0 invisible h-0` when collapsed
-**Fix**: Show icons in collapsed state, hide labels
-
-Replace the current content wrapper with a structure that:
-- Always renders the navigation links
-- Conditionally shows/hides the labels
-- Adjusts link padding for collapsed state
-
-```tsx
-{/* Search bar - hidden when collapsed */}
-{!isCollapsed && (
-  <motion.div className="items-center flex w-full py-0.5 mb-2">
-    {/* Search button content */}
-  </motion.div>
 )}
-
-{/* Main navigation - always visible, icons-only when collapsed */}
-<section className="w-full">
-  {filteredNavigationItems.map((item, index) => {
-    const isActive = /* ... existing logic ... */;
-    
-    return (
-      <motion.div key={item.id} className="items-center flex w-full py-0.5">
-        <Link 
-          to={item.path}
-          aria-current={isActive ? 'page' : undefined}
-          className={cn(
-            "items-center flex w-full rounded-md transition-colors text-sm",
-            isCollapsed 
-              ? "p-2 justify-center"  // Smaller padding, centered
-              : "p-[11px]",
-            isActive 
-              ? 'bg-white/10 text-white'
-              : 'bg-transparent hover:bg-white/5 text-white/60 hover:text-white'
-          )}
-          title={isCollapsed ? item.label : undefined}  // Tooltip when collapsed
-        >
-          <div className={cn(
-            "items-center flex my-auto",
-            isCollapsed ? "" : "gap-2 w-full"
-          )}>
-            <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center relative">
-              {isActive && item.activeIcon ? (
-                <item.activeIcon size={14} />
-              ) : (
-                <item.icon size={14} />
-              )}
-            </div>
-            
-            {/* Label - hidden when collapsed */}
-            {!isCollapsed && (
-              <div className="flex items-center justify-between flex-1 overflow-hidden">
-                <div className={`text-sm font-normal leading-4 whitespace-nowrap ${isActive ? 'font-medium' : ''}`}>
-                  {item.label}
-                </div>
-                {/* Badge for unread count */}
-                {item.id === 'conversations' && unreadConversationsCount > 0 && (
-                  <motion.div className="bg-destructive text-destructive-foreground text-2xs font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center ml-auto">
-                    {unreadConversationsCount}
-                  </motion.div>
-                )}
-              </div>
-            )}
-            
-            {/* Collapsed badge - dot indicator for unread */}
-            {isCollapsed && item.id === 'conversations' && unreadConversationsCount > 0 && (
-              <div 
-                className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full"
-                aria-label={`${unreadConversationsCount} unread`}
-              />
-            )}
-          </div>
-        </Link>
-      </motion.div>
-    );
-  })}
-</section>
 ```
 
-#### 3. Footer Section (lines 343-491)
-**Problem**: Footer with bottom nav items uses `opacity-0 invisible h-0` when collapsed
-**Fix**: Always show icons, hide labels when collapsed
+---
+
+### 5. Update AriConfigurator
+**File:** `src/pages/AriConfigurator.tsx`
+
+Add center content from context to TopBar config:
 
 ```tsx
-{/* Footer with bottom nav items - always visible, icons-only when collapsed */}
-<div className={cn(
-  "pt-4",
-  isCollapsed ? "mt-auto" : ""  // Push to bottom when collapsed
-)}>
-  {filteredBottomItems.map((item, index) => {
-    const isActive = location.pathname === item.path;
-    const isGetSetUp = item.id === 'get-set-up';
-    
-    const renderIcon = () => { /* ... existing renderIcon logic ... */ };
-    
-    return (
-      <motion.div key={item.id} className="items-center flex w-full py-0.5">
-        <Link 
-          to={item.path}
-          aria-current={isActive ? 'page' : undefined}
-          className={cn(
-            "items-center flex w-full rounded-md transition-colors text-sm",
-            isCollapsed ? "p-2 justify-center" : "p-[11px]",
-            isActive 
-              ? 'bg-white/10 text-white' 
-              : 'bg-transparent hover:bg-white/5 text-white/60 hover:text-white'
-          )}
-          title={isCollapsed ? item.label : undefined}
-        >
-          <div className={cn(
-            "items-center flex my-auto",
-            isCollapsed ? "" : "gap-2 w-full"
-          )}>
-            <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
-              {renderIcon()}
-            </div>
-            {!isCollapsed && (
-              <div className="flex items-center justify-between flex-1 overflow-hidden">
-                <div className={`text-sm font-normal leading-4 whitespace-nowrap ${isActive ? 'font-medium' : ''}`}>
-                  {item.label}
-                </div>
-              </div>
-            )}
-          </div>
-        </Link>
-      </motion.div>
-    );
-  })}
-  
-  {/* Back to Dashboard / Admin Dashboard links - same pattern */}
-  {/* ... apply same isCollapsed conditional rendering ... */}
-</div>
+// Add to AriTopBarActions or create new component
+function AriTopBarCenter() {
+  const { centerContent } = useAriSectionActions();
+  return <>{centerContent}</>;
+}
+
+// Update topBarConfig
+const topBarConfig = useMemo(() => ({
+  left: <TopBarPageContext ... />,
+  center: <AriTopBarCenter />,  // NEW
+  right: <AriTopBarActions />,
+}), [currentSectionLabel]);
 ```
 
 ---
 
-## Visual Comparison
-
-### Before (Broken)
-```
-┌────┐               ┌────────────────────────────┐
-│[◧] │               │ [Logo]              [◧]    │
-│    │               ├────────────────────────────┤
-│    │   ← Nothing   │ [🔍 Search...]             │
-│    │     visible   │ ──────────────────         │
-│    │               │ [🏠] Dashboard             │
-│    │               │ [✨] Ari                   │
-└────┘               └────────────────────────────┘
-Collapsed            Expanded
-```
-
-### After (Fixed)
-```
-┌────┐               ┌────────────────────────────┐
-│[◎] │ ← Logo        │ [Logo]              [◧]    │
-│[◧] │ ← Toggle      ├────────────────────────────┤
-│────│               │ [🔍 Search...]             │
-│[🏠]│ ← Dashboard   │ ──────────────────         │
-│[✨]│ ← Ari         │ [🏠] Dashboard             │
-│[💬]│ ← Inbox       │ [✨] Ari                   │
-│[👥]│ ← Leads       │ [💬] Inbox                 │
-│... │               │ [👥] Leads                 │
-│────│               │ ...                        │
-│[⚙️]│ ← Settings    │ [⚙️] Settings              │
-└────┘               └────────────────────────────┘
-Collapsed            Expanded
-```
-
----
-
-## Accessibility Considerations
-
-1. **Tooltips**: Add `title` attribute to links when collapsed (shows label on hover)
-2. **Aria labels**: Maintain existing aria-current for active state
-3. **Focus rings**: Ensure all collapsed icons maintain visible focus states
-4. **Unread badge**: Use dot indicator with aria-label for screen readers
-
----
-
-## Files to Change
+## File Changes Summary
 
 | File | Changes |
 |------|---------|
-| `src/components/Sidebar.tsx` | Complete restructure of collapsed state rendering |
+| `src/contexts/AriSectionActionsContext.tsx` | Add `centerContent`, `registerCenterContent`, `unregisterCenterContent`, `useRegisterSectionCenterContent` |
+| `src/components/agents/locations/LocationsTopBarSearch.tsx` | **NEW** - Simple search wrapper component |
+| `src/components/agents/sections/AriLocationsSection.tsx` | Register center content, update DataTableToolbar usage |
+| `src/components/data-table/DataTableToolbar.tsx` | Add `hideSearch` prop |
+| `src/pages/AriConfigurator.tsx` | Add `AriTopBarCenter` component, update topBarConfig |
 
 ---
 
-## Implementation Checklist
+## Visual Result
 
-1. [ ] Header section: Always show logo, centered when collapsed
-2. [ ] Header section: Toggle button position (beside when expanded, below when collapsed)
-3. [ ] Search bar: Hide entirely when collapsed
-4. [ ] Main nav: Always render icons, conditionally show labels
-5. [ ] Main nav: Adjust padding/centering for collapsed state (`p-2 justify-center`)
-6. [ ] Main nav: Unread badge becomes dot indicator when collapsed
-7. [ ] Bottom nav: Same pattern as main nav
-8. [ ] Admin links (Back to Dashboard, Admin Dashboard): Same pattern
-9. [ ] Add `title` attributes for hover tooltips
-10. [ ] Test both user-side and admin-side navigation
+**Before:**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Ari > Locations                      [WordPress] [Add Location] │
+├──────────────────────────────────────────────────────────────────┤
+│ [Communities] [Properties]                         [🔧 Filters] │
+├──────────────────────────────────────────────────────────────────┤
+│ [🔍 Search...]                                                   │ ← HERE
+├──────────────────────────────────────────────────────────────────┤
+│ | Name | State | Calendar | WordPress |                         │
+│ ...                                                              │
+```
+
+**After:**
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Ari > Locations   [🔍 Search...]     [WordPress] [Add Location] │ ← MOVED
+├──────────────────────────────────────────────────────────────────┤
+│ [Communities] [Properties]                         [🔧 Filters] │
+├──────────────────────────────────────────────────────────────────┤
+│ | Name | State | Calendar | WordPress |                         │
+│ ...                                                              │
+```
+
+---
+
+## Edge Cases Handled
+
+1. **View mode switch**: Search placeholder updates dynamically based on `viewMode`
+2. **Section navigation**: Center content auto-clears when leaving Locations section (context handles this)
+3. **Empty state**: Search still appears in TopBar even when table has no data (consistent UX)
+4. **Responsive**: TopBarSearch has responsive widths (`w-48 lg:w-64`)
+
+---
+
+## Accessibility
+
+- Search maintains keyboard focus and Escape to clear behavior
+- `aria-label` preserved on clear button
+- No changes to screen reader experience
 
