@@ -739,10 +739,10 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
               {viewMode === 'communities' && (
                 <motion.div
                   key="communities"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
                 >
                   {locationsWithCounts.length === 0 ? (
                     <EmptyState
@@ -811,10 +811,10 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
               {viewMode === 'properties' && (
                 <motion.div
                   key="properties"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
                 >
                   {propertiesWithLocation.length === 0 ? (
                     <EmptyState
