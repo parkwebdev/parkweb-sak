@@ -28,6 +28,10 @@ interface WordPressConfig {
   community_count?: number;
   community_sync_interval?: string;
   home_sync_interval?: string;
+  /** Field mappings: target field → source field path */
+  community_field_mappings?: Record<string, string>;
+  /** Field mappings: target field → source field path */
+  property_field_mappings?: Record<string, string>;
 }
 
 interface WordPressCommunity {
@@ -103,6 +107,33 @@ function extractAcfField(acf: Record<string, unknown> | undefined, ...keywords: 
   }
   
   return null;
+}
+
+/**
+ * Get a value from an object using dot-notation path
+ * e.g., getValueByPath(obj, 'acf.phone') returns obj.acf.phone
+ */
+function getValueByPath(obj: Record<string, unknown>, path: string | undefined): unknown {
+  if (!path) return null;
+  
+  const parts = path.split('.');
+  let current: unknown = obj;
+  
+  for (const part of parts) {
+    if (current === null || current === undefined) return null;
+    if (typeof current !== 'object') return null;
+    current = (current as Record<string, unknown>)[part];
+  }
+  
+  // Convert value to string if it exists and isn't already
+  if (current === null || current === undefined) return null;
+  if (typeof current === 'object') {
+    // For objects like {rendered: "text"}, try to get rendered value
+    const asObj = current as Record<string, unknown>;
+    if ('rendered' in asObj) return asObj.rendered;
+    return null;
+  }
+  return current;
 }
 
 /**
@@ -660,6 +691,26 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Handle fetch-sample action - get sample post and available fields for mapping
+    if (action === 'fetch-sample') {
+      const { endpoint: sampleEndpoint, type: mappingType } = await req.clone().json();
+      
+      if (!siteUrl || !sampleEndpoint) {
+        return new Response(
+          JSON.stringify({ error: 'Site URL and endpoint are required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const normalizedUrl = normalizeSiteUrl(siteUrl);
+      const sampleResult = await fetchSamplePostForMapping(normalizedUrl, sampleEndpoint, mappingType || 'community');
+      
+      return new Response(
+        JSON.stringify(sampleResult),
+        { status: sampleResult.success ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Handle test connection action
     if (action === 'test') {
       if (!siteUrl) {
@@ -732,7 +783,8 @@ Deno.serve(async (req: Request) => {
         communities,
         taxonomyTerms,
         isIncremental,
-        useAiExtraction ?? false
+        useAiExtraction ?? false,
+        wpConfig?.community_field_mappings
       );
 
       // Update agent's deployment_config with sync info
@@ -828,7 +880,7 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use "test", "connect", "sync", "save", "discover", or "disconnect"' }),
+      JSON.stringify({ error: 'Invalid action. Use "test", "connect", "sync", "save", "discover", "fetch-sample", or "disconnect"' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -932,6 +984,233 @@ async function testWordPressConnection(
       success: false, 
       message: `Connection failed: ${error.message}`,
       normalizedUrl,
+    };
+  }
+}
+
+interface AvailableField {
+  path: string;
+  sampleValue: string | number | boolean | null;
+  type: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'null';
+}
+
+interface SamplePostResult {
+  success: boolean;
+  samplePost?: { id: number; title: string };
+  availableFields: AvailableField[];
+  suggestedMappings: Record<string, string>;
+  error?: string;
+}
+
+/**
+ * Flatten an object to dot-notation paths
+ */
+function flattenObject(
+  obj: Record<string, unknown>,
+  prefix = '',
+  result: AvailableField[] = [],
+  maxDepth = 3,
+  currentDepth = 0
+): AvailableField[] {
+  if (currentDepth >= maxDepth) return result;
+
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip internal WordPress fields
+    if (key.startsWith('_') && key !== '_embedded') continue;
+    
+    const path = prefix ? `${prefix}.${key}` : key;
+    
+    if (value === null || value === undefined) {
+      result.push({ path, sampleValue: null, type: 'null' });
+    } else if (Array.isArray(value)) {
+      // For arrays, show the first element or the array itself
+      if (value.length > 0 && typeof value[0] === 'string') {
+        result.push({ path, sampleValue: value.slice(0, 3).join(', '), type: 'array' });
+      } else if (value.length > 0 && typeof value[0] === 'object') {
+        // Skip complex nested arrays for simplicity
+        result.push({ path, sampleValue: `[${value.length} items]`, type: 'array' });
+      } else {
+        result.push({ path, sampleValue: value.length > 0 ? String(value[0]) : '[]', type: 'array' });
+      }
+    } else if (typeof value === 'object') {
+      // Recurse into objects (like acf, title, etc.)
+      flattenObject(value as Record<string, unknown>, path, result, maxDepth, currentDepth + 1);
+    } else if (typeof value === 'boolean') {
+      result.push({ path, sampleValue: value, type: 'boolean' });
+    } else if (typeof value === 'number') {
+      result.push({ path, sampleValue: value, type: 'number' });
+    } else {
+      result.push({ path, sampleValue: String(value), type: 'string' });
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Generate suggested field mappings based on field name similarity
+ */
+function generateSuggestedMappings(
+  availableFields: AvailableField[],
+  type: 'community' | 'property'
+): Record<string, string> {
+  const suggestions: Record<string, string> = {};
+  const fieldPaths = availableFields.map(f => f.path.toLowerCase());
+  const usedPaths = new Set<string>();
+
+  // Define target fields and their keyword patterns
+  const communityPatterns: Record<string, string[]> = {
+    name: ['title.rendered', 'name', 'community_name', 'park_name'],
+    address: ['address', 'full_address', 'street', 'street_address', 'location'],
+    city: ['city', 'town'],
+    state: ['state', 'province'],
+    zip: ['zip', 'zipcode', 'postal', 'postal_code'],
+    phone: ['phone', 'telephone', 'tel', 'phone_number', 'contact_phone'],
+    email: ['email', 'mail', 'email_address', 'contact_email'],
+    latitude: ['latitude', 'lat', 'geo_lat'],
+    longitude: ['longitude', 'lng', 'long', 'geo_lng', 'geo_long'],
+    description: ['description', 'content.rendered', 'excerpt.rendered', 'summary'],
+    age_category: ['age', 'age_category', 'age_restriction', 'age_restricted'],
+    community_type: ['type', 'community_type', 'park_type'],
+  };
+
+  const propertyPatterns: Record<string, string[]> = {
+    name: ['title.rendered', 'name', 'listing_title'],
+    address: ['address', 'full_address', 'street', 'street_address'],
+    lot_number: ['lot', 'lot_number', 'lot_num', 'site_number', 'unit', 'unit_number'],
+    city: ['city', 'town'],
+    state: ['state', 'province'],
+    zip: ['zip', 'zipcode', 'postal', 'postal_code'],
+    price: ['price', 'asking_price', 'list_price', 'sale_price'],
+    price_type: ['price_type', 'listing_type', 'sale_type'],
+    beds: ['beds', 'bedrooms', 'bed', 'bedroom'],
+    baths: ['baths', 'bathrooms', 'bath', 'bathroom'],
+    sqft: ['sqft', 'square_feet', 'sq_ft', 'square_footage', 'size'],
+    year_built: ['year_built', 'year', 'built'],
+    status: ['status', 'listing_status', 'availability'],
+    description: ['description', 'content.rendered', 'excerpt.rendered', 'summary', 'details'],
+    features: ['features', 'amenities', 'highlights'],
+  };
+
+  const patterns = type === 'community' ? communityPatterns : propertyPatterns;
+
+  for (const [targetField, keywords] of Object.entries(patterns)) {
+    for (const keyword of keywords) {
+      // First try exact match
+      const exactMatch = availableFields.find(
+        f => f.path.toLowerCase() === keyword && !usedPaths.has(f.path)
+      );
+      if (exactMatch) {
+        suggestions[targetField] = exactMatch.path;
+        usedPaths.add(exactMatch.path);
+        break;
+      }
+
+      // Then try ends-with match (for ACF fields like acf.community_city)
+      const suffixMatch = availableFields.find(
+        f => (f.path.toLowerCase().endsWith(`.${keyword}`) || 
+              f.path.toLowerCase().endsWith(`_${keyword}`)) &&
+             !usedPaths.has(f.path)
+      );
+      if (suffixMatch) {
+        suggestions[targetField] = suffixMatch.path;
+        usedPaths.add(suffixMatch.path);
+        break;
+      }
+
+      // Finally try contains match
+      const containsMatch = availableFields.find(
+        f => f.path.toLowerCase().includes(keyword) && !usedPaths.has(f.path)
+      );
+      if (containsMatch) {
+        suggestions[targetField] = containsMatch.path;
+        usedPaths.add(containsMatch.path);
+        break;
+      }
+    }
+  }
+
+  return suggestions;
+}
+
+/**
+ * Fetch a sample post from an endpoint and extract available fields for mapping
+ */
+async function fetchSamplePostForMapping(
+  siteUrl: string,
+  endpoint: string,
+  type: 'community' | 'property'
+): Promise<SamplePostResult> {
+  const normalizedUrl = siteUrl.replace(/\/$/, '');
+
+  try {
+    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=1`;
+    console.log(`Fetching sample post for field mapping: ${apiUrl}`);
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Pilot/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      return {
+        success: false,
+        availableFields: [],
+        suggestedMappings: {},
+        error: `Endpoint /${endpoint} returned status ${response.status}`,
+      };
+    }
+
+    const posts = await response.json();
+    if (!Array.isArray(posts) || posts.length === 0) {
+      return {
+        success: false,
+        availableFields: [],
+        suggestedMappings: {},
+        error: 'No posts found in this endpoint',
+      };
+    }
+
+    const sample = posts[0];
+    const title = sample.title?.rendered || sample.name || `Post #${sample.id}`;
+
+    // Flatten the post object to get all available fields
+    const availableFields = flattenObject(sample);
+
+    // Sort fields: title first, then acf fields, then others
+    availableFields.sort((a, b) => {
+      const aIsTitle = a.path.startsWith('title');
+      const bIsTitle = b.path.startsWith('title');
+      const aIsAcf = a.path.startsWith('acf');
+      const bIsAcf = b.path.startsWith('acf');
+
+      if (aIsTitle && !bIsTitle) return -1;
+      if (!aIsTitle && bIsTitle) return 1;
+      if (aIsAcf && !bIsAcf) return -1;
+      if (!aIsAcf && bIsAcf) return 1;
+      return a.path.localeCompare(b.path);
+    });
+
+    // Generate suggested mappings
+    const suggestedMappings = generateSuggestedMappings(availableFields, type);
+
+    console.log(`Found ${availableFields.length} fields, suggested ${Object.keys(suggestedMappings).length} mappings`);
+
+    return {
+      success: true,
+      samplePost: { id: sample.id, title: decodeHtmlEntities(title) },
+      availableFields,
+      suggestedMappings,
+    };
+  } catch (error: unknown) {
+    console.error('Error fetching sample post:', error);
+    return {
+      success: false,
+      availableFields: [],
+      suggestedMappings: {},
+      error: error instanceof Error ? error.message : 'Failed to fetch sample post',
     };
   }
 }
@@ -1078,7 +1357,8 @@ async function syncCommunitiesToLocations(
   communities: WordPressCommunity[],
   taxonomyTerms: Map<string, number>,
   isIncremental: boolean,
-  useAiExtraction: boolean = false
+  useAiExtraction: boolean = false,
+  fieldMappings?: Record<string, string>
 ): Promise<SyncResult> {
   const result: SyncResult = { 
     created: 0, 
@@ -1124,9 +1404,15 @@ async function syncCommunitiesToLocations(
     }
   }
 
+  // Log if using field mappings
+  if (fieldMappings && Object.keys(fieldMappings).length > 0) {
+    console.log(`📋 Using custom field mappings: ${JSON.stringify(fieldMappings)}`);
+  }
+
   // Create/update locations from WordPress
   for (const community of communities) {
     try {
+      let name: string | null = null;
       let address: string | null = null;
       let city: string | null = null;
       let state: string | null = null;
@@ -1136,28 +1422,51 @@ async function syncCommunitiesToLocations(
       let latitude: number | null = null;
       let longitude: number | null = null;
       let description: string | null = null;
+      let ageCategory: string | null = null;
+      let communityType: string | null = null;
       
       const acf = community.acf;
       
-      // Use AI extraction if enabled
+      // PRIORITY 1: Use explicit field mappings if provided
+      if (fieldMappings && Object.keys(fieldMappings).length > 0) {
+        name = getValueByPath(community, fieldMappings.name) as string | null;
+        address = getValueByPath(community, fieldMappings.address) as string | null;
+        city = getValueByPath(community, fieldMappings.city) as string | null;
+        state = getValueByPath(community, fieldMappings.state) as string | null;
+        zip = getValueByPath(community, fieldMappings.zip) as string | null;
+        phone = getValueByPath(community, fieldMappings.phone) as string | null;
+        email = getValueByPath(community, fieldMappings.email) as string | null;
+        const latValue = getValueByPath(community, fieldMappings.latitude);
+        latitude = latValue != null ? parseFloat(String(latValue)) : null;
+        if (latitude != null && isNaN(latitude)) latitude = null;
+        const lngValue = getValueByPath(community, fieldMappings.longitude);
+        longitude = lngValue != null ? parseFloat(String(lngValue)) : null;
+        if (longitude != null && isNaN(longitude)) longitude = null;
+        description = getValueByPath(community, fieldMappings.description) as string | null;
+        ageCategory = getValueByPath(community, fieldMappings.age_category) as string | null;
+        communityType = getValueByPath(community, fieldMappings.community_type) as string | null;
+      }
+      
+      // PRIORITY 2: Use AI extraction if enabled and fields not already filled
       if (useAiExtraction) {
         console.log(`🤖 Using AI extraction for community: ${community.slug}`);
         const aiData = await extractCommunityData(community);
         
         if (aiData) {
-          address = aiData.address || null;
-          city = aiData.city || null;
-          state = aiData.state || null;
-          zip = aiData.zip || null;
-          phone = aiData.phone || null;
-          email = aiData.email || null;
-          latitude = aiData.latitude || null;
-          longitude = aiData.longitude || null;
-          description = aiData.description || null;
+          if (!address) address = aiData.address || null;
+          if (!city) city = aiData.city || null;
+          if (!state) state = aiData.state || null;
+          if (!zip) zip = aiData.zip || null;
+          if (!phone) phone = aiData.phone || null;
+          if (!email) email = aiData.email || null;
+          if (latitude == null) latitude = aiData.latitude || null;
+          if (longitude == null) longitude = aiData.longitude || null;
+          if (!description) description = aiData.description || null;
         }
       }
       
-      // Fall back to / supplement with ACF extraction
+      // PRIORITY 3: Fall back to keyword-based ACF extraction
+      if (!name) name = decodeHtmlEntities(community.title.rendered);
       if (!address) address = extractAcfField(acf, 'full_address', 'address', 'street');
       if (!city) city = extractAcfField(acf, 'city');
       if (!state) state = extractAcfField(acf, 'state');
@@ -1166,6 +1475,8 @@ async function syncCommunitiesToLocations(
       if (!email) email = extractAcfField(acf, 'email', 'mail', 'email_address', 'contact_email', 'e_mail');
       if (latitude == null) latitude = extractAcfNumber(acf, 'latitude', 'lat');
       if (longitude == null) longitude = extractAcfNumber(acf, 'longitude', 'lng', 'long');
+      if (!ageCategory) ageCategory = extractAcfField(acf, 'age', 'age_category', 'age_restriction');
+      if (!communityType) communityType = extractAcfField(acf, 'type', 'community_type');
       
       const timezone = inferTimezone(state, latitude, longitude);
       
@@ -1173,16 +1484,17 @@ async function syncCommunitiesToLocations(
       if (latitude != null) metadata.latitude = latitude;
       if (longitude != null) metadata.longitude = longitude;
       if (description) metadata.description = description;
-      const ageCategory = extractAcfField(acf, 'age', 'age_category', 'age_restriction');
       if (ageCategory) metadata.age_category = ageCategory;
-      const communityType = extractAcfField(acf, 'type', 'community_type');
       if (communityType) metadata.community_type = communityType;
 
       const termId = findMatchingTermId(taxonomyTerms, community.slug);
       
+      // Use mapped name or default to title
+      const finalName = name || decodeHtmlEntities(community.title.rendered);
+      
       // Data to be hashed for change detection
       const hashableData = {
-        name: decodeHtmlEntities(community.title.rendered),
+        name: finalName,
         address,
         city,
         state,
@@ -1200,7 +1512,7 @@ async function syncCommunitiesToLocations(
       const locationData = {
         agent_id: agentId,
         user_id: userId,
-        name: decodeHtmlEntities(community.title.rendered),
+        name: finalName,
         wordpress_community_id: community.id,
         wordpress_community_term_id: termId || null,
         wordpress_slug: community.slug,

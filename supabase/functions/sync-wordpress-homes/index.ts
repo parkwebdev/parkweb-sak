@@ -28,6 +28,10 @@ interface WordPressConfig {
   home_count?: number;
   last_community_sync?: string;
   community_count?: number;
+  /** Field mappings: target field → source field path */
+  community_field_mappings?: Record<string, string>;
+  /** Field mappings: target field → source field path */
+  property_field_mappings?: Record<string, string>;
 }
 
 interface WordPressHome {
