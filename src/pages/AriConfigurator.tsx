@@ -79,6 +79,15 @@ function AriTopBarActions() {
 }
 
 /**
+ * Component that renders Ari section center content from context
+ * Used for things like search bars that should appear in TopBar center
+ */
+function AriTopBarCenter() {
+  const { centerContent } = useAriSectionActions();
+  return <>{centerContent}</>;
+}
+
+/**
  * Inner component that uses the section actions context
  */
 function AriConfiguratorContent() {
@@ -117,13 +126,14 @@ function AriConfiguratorContent() {
   }, [activeSection]);
   
   // Configure top bar for this page
-  // AriTopBarActions reads from context directly and re-renders independently
+  // AriTopBarActions and AriTopBarCenter read from context directly and re-render independently
   const topBarConfig = useMemo(() => ({
     left: <TopBarPageContext 
       icon={() => <AriAgentsIcon className="h-3.5 w-3.5" />} 
       title="Ari" 
       subtitle={currentSectionLabel}
     />,
+    center: <AriTopBarCenter />,
     right: <AriTopBarActions />,
   }), [currentSectionLabel]);
   useTopBar(topBarConfig, 'ari');

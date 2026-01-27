@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { FeatureGate } from '@/components/subscription';
-import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
+import { useRegisterSectionActions, useRegisterSectionCenterContent, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { Trash01, XClose, X, FilterLines, AlertTriangle, Home01 } from '@untitledui/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -37,6 +37,7 @@ import { DataTableFloatingBar } from '@/components/data-table/DataTableFloatingB
 import { createLocationsColumns, type LocationWithCounts, createPropertiesColumns, type PropertyWithLocation } from '@/components/data-table/columns';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MarkerPin01 } from '@untitledui/icons';
+import { LocationsTopBarSearch } from '@/components/agents/locations/LocationsTopBarSearch';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -439,6 +440,21 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
   
   useRegisterSectionActions('locations', sectionActions);
 
+  // Register center content for TopBar (search bar)
+  const searchPlaceholder = viewMode === 'communities' 
+    ? 'Search communities...' 
+    : 'Search properties...';
+
+  const centerContent = useMemo(() => (
+    <LocationsTopBarSearch
+      value={globalFilter}
+      onChange={setGlobalFilter}
+      placeholder={searchPlaceholder}
+    />
+  ), [globalFilter, searchPlaceholder]);
+
+  useRegisterSectionCenterContent('locations', centerContent);
+
   if (loading) {
     return <SkeletonTableSection rows={5} />;
   }
@@ -720,6 +736,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                       table={locationsTable}
                       searchPlaceholder="Search..."
                       globalFilter
+                      hideSearch
                     />
 
                     {activeFilters.length > 0 && (
@@ -778,6 +795,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
                       table={propertiesTable}
                       searchPlaceholder="Search..."
                       globalFilter
+                      hideSearch
                     />
 
                     {activeFilters.length > 0 && (
