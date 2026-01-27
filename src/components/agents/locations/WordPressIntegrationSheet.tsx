@@ -403,7 +403,7 @@ export function WordPressIntegrationSheet({
               <CardContent className="p-4">
                 <AnimatePresence mode="wait">
                   {/* Step: Connected */}
-                  {isConnected && !isEditing && connectionStep !== 'mapping' ? (
+                  {isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && connectionStep !== 'field-mapping' ? (
                     <motion.div
                       key="connected"
                       initial={{ opacity: 0 }}
@@ -638,7 +638,7 @@ export function WordPressIntegrationSheet({
             </Card>
 
             {/* Sync sections - only when fully connected (not during mapping) */}
-            {isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && (
+            {isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && connectionStep !== 'field-mapping' && (
               <>
                 {/* Data Extraction Mode Card */}
                 <Card>
