@@ -2,7 +2,8 @@
  * WordPress Integration Sheet
  * 
  * Clean, card-based layout for managing WordPress connection and sync settings.
- * Now includes multi-step connection flow with intelligent endpoint discovery.
+ * Now includes multi-step connection flow with intelligent endpoint discovery
+ * and field mapping.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -65,8 +66,10 @@ import { DataExtractionIcon, LightningBoltFilled } from '@/components/icons/Word
 import { useWordPressConnection, type ConnectionStep } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
 import { WordPressEndpointMapper } from './WordPressEndpointMapper';
+import { WordPressFieldMapper } from './WordPressFieldMapper';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
+import type { AvailableField } from '@/types/wordpress';
 
 interface DiscoveredEndpoint {
   slug: string;
@@ -223,6 +226,9 @@ export function WordPressIntegrationSheet({
   // Selected endpoints during mapping step
   const [selectedCommunityEndpoint, setSelectedCommunityEndpoint] = useState<string | null>(null);
   const [selectedPropertyEndpoint, setSelectedPropertyEndpoint] = useState<string | null>(null);
+  
+  // Field mapping step state
+  const [fieldMappingType, setFieldMappingType] = useState<'community' | 'property'>('community');
 
   const {
     siteUrl,
@@ -236,10 +242,14 @@ export function WordPressIntegrationSheet({
     isSyncing: connectionSyncing,
     isSaving,
     isDiscovering,
+    isFetchingSample,
     testResult: connectionTestResult,
     discoveredEndpoints,
     isConnected,
     connectionStep,
+    samplePostData,
+    communityFieldMappings,
+    propertyFieldMappings,
     testConnection,
     importCommunities,
     updateSyncInterval,
@@ -248,6 +258,10 @@ export function WordPressIntegrationSheet({
     discoverEndpoints,
     connectWithDiscovery,
     saveEndpointMappings,
+    saveFieldMappings,
+    skipFieldMapping,
+    setCommunityFieldMappings,
+    setPropertyFieldMappings,
     resetConnectionFlow,
     setConnectionStep,
     clearTestResult,
@@ -318,16 +332,41 @@ export function WordPressIntegrationSheet({
     const propertyEp = selectedPropertyEndpoint ?? 
       discoveredEndpoints?.homeEndpoints[0]?.rest_base ?? null;
     
-    const success = await saveEndpointMappings(communityEp, propertyEp);
-    if (success) {
-      setIsEditing(false);
+    await saveEndpointMappings(communityEp, propertyEp);
+    // Note: saveEndpointMappings now automatically transitions to field-mapping step
+  };
+
+  const handleFieldMappingConfirm = async () => {
+    // If we're on community and have property data, switch to property next
+    if (fieldMappingType === 'community' && samplePostData.property) {
+      setFieldMappingType('property');
+      return;
     }
+    
+    // Save all field mappings and complete connection
+    await saveFieldMappings(communityFieldMappings, propertyFieldMappings);
+  };
+
+  const handleFieldMappingBack = () => {
+    // If we're on property, go back to community
+    if (fieldMappingType === 'property' && samplePostData.community) {
+      setFieldMappingType('community');
+      return;
+    }
+    
+    // Otherwise go back to endpoint mapping
+    setConnectionStep('mapping');
+  };
+
+  const handleSkipFieldMapping = () => {
+    skipFieldMapping();
   };
 
   const handleCancelMapping = () => {
     resetConnectionFlow();
     setSelectedCommunityEndpoint(null);
     setSelectedPropertyEndpoint(null);
+    setFieldMappingType('community');
   };
 
   const handleDisconnect = async () => {
@@ -337,12 +376,13 @@ export function WordPressIntegrationSheet({
     setDeleteConfirmation('');
     setUrlInput('');
     resetConnectionFlow();
+    setFieldMappingType('community');
   };
 
   const handleSyncCommunities = (forceFullSync = false) => importCommunities(undefined, undefined, extractionMode === 'ai', forceFullSync);
   const handleSyncHomes = (forceFullSync = false) => syncHomes(undefined, extractionMode === 'ai', undefined, forceFullSync);
 
-  const isLoading = connectionTesting || connectionSyncing || homesSyncing || isDiscovering || isSaving;
+  const isLoading = connectionTesting || connectionSyncing || homesSyncing || isDiscovering || isSaving || isFetchingSample;
 
   return (
     <>
@@ -462,8 +502,78 @@ export function WordPressIntegrationSheet({
                         onPropertySelect={setSelectedPropertyEndpoint}
                         onConfirm={handleConfirmMapping}
                         onCancel={handleCancelMapping}
-                        isLoading={isSaving}
+                        isLoading={isSaving || isFetchingSample}
                       />
+                    </motion.div>
+                  ) : connectionStep === 'field-mapping' ? (
+                    /* Step: Field mapping */
+                    <motion.div
+                      key="field-mapping"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      {isFetchingSample ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Database01 size={16} className="text-primary animate-pulse" aria-hidden="true" />
+                            <span className="text-sm font-medium">Loading sample data...</span>
+                          </div>
+                          <div className="space-y-2">
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-3/4" />
+                          </div>
+                        </div>
+                      ) : (
+                        <WordPressFieldMapper
+                          type={fieldMappingType}
+                          availableFields={
+                            fieldMappingType === 'community' 
+                              ? (samplePostData.community?.availableFields || []) as AvailableField[]
+                              : (samplePostData.property?.availableFields || []) as AvailableField[]
+                          }
+                          currentMappings={
+                            fieldMappingType === 'community' 
+                              ? communityFieldMappings 
+                              : propertyFieldMappings
+                          }
+                          suggestedMappings={
+                            fieldMappingType === 'community'
+                              ? samplePostData.community?.suggestedMappings || {}
+                              : samplePostData.property?.suggestedMappings || {}
+                          }
+                          onMappingsChange={(mappings) => {
+                            if (fieldMappingType === 'community') {
+                              setCommunityFieldMappings(mappings);
+                            } else {
+                              setPropertyFieldMappings(mappings);
+                            }
+                          }}
+                          onConfirm={handleFieldMappingConfirm}
+                          onBack={handleFieldMappingBack}
+                          isSaving={isSaving}
+                          samplePostTitle={
+                            fieldMappingType === 'community'
+                              ? samplePostData.community?.samplePost?.title
+                              : samplePostData.property?.samplePost?.title
+                          }
+                        />
+                      )}
+                      
+                      {/* Skip button */}
+                      {!isFetchingSample && (
+                        <div className="mt-3 pt-3 border-t">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleSkipFieldMapping}
+                            className="w-full text-muted-foreground"
+                          >
+                            Skip field mapping (use auto-detection)
+                          </Button>
+                        </div>
+                      )}
                     </motion.div>
                   ) : (
                     /* Step: URL entry */
