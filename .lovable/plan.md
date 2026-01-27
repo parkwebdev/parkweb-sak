@@ -1,202 +1,181 @@
 
-
-# Plan: Add Collapsible Sidebar Menus
+# Plan: Consolidate Preview Panel Headers
 
 ## Overview
-Add collapse/expand functionality to the left-side section menus on both the **Ari Configurator** (`/ari`) and **Admin Prompts** pages. The sidebars will match the existing pattern from the Inbox conversations list, using the `LayoutPanelLeft` icon in the header that toggles between full width (240px) and collapsed width (48px).
+Remove the duplicate "Preview"/"Test Chat" header row from the wrapper components and integrate the collapse toggle directly into the existing header row within `PreviewChat` and `PromptTestChat`. Also remove the redundant refresh button since "Clear conversation" is already in the dropdown menu.
 
-## Visual Pattern
-
+## Current Structure Problem
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                      PAGE LAYOUT                              │
-├───────────┬──────────────────────────────┬───────────────────┤
-│  Section  │                              │      Preview      │
-│   Menu    │       Content Area           │       Panel       │
-│ (240px)   │                              │     (375px)       │
-│    ▼      │                              │         ▼         │
-│ [◨] Icon  │                              │      [◧] Icon     │
-│  Filled   │                              │       Filled      │
-│  when     │                              │       when        │
-│  visible  │                              │       visible     │
-└───────────┴──────────────────────────────┴───────────────────┘
+AriPreviewColumn
+├── Header Row (with "Preview" + collapse button) ← REMOVE THIS
+└── PreviewChat
+    ├── Header Row (with "Preview" + dots + refresh) ← ADD COLLAPSE HERE
+    └── Messages + Input
 
-Collapsed state:
-┌───┬─────────────────────────────────────┬───────────────────┐
-│[◨]│         Content Area (flex-1)        │      Preview      │
-│48px│                                     │                   │
-└───┴─────────────────────────────────────┴───────────────────┘
+AdminPromptPreviewPanel  
+├── Header Row (with "Test Chat" + collapse button) ← REMOVE THIS
+└── PromptTestChat
+    ├── Header Row (with "Preview" + dots + refresh) ← ADD COLLAPSE HERE
+    └── Messages + Input
 ```
 
-## Technical Details
+## Target Structure
+```
+AriPreviewColumn
+└── PreviewChat
+    ├── Header Row (with "Preview" + dots + COLLAPSE) ← Unified
+    └── Messages + Input
 
-### Icon States
-- **`LayoutPanelLeft`** - Used for left sidebars (section menus)
-- **`LayoutPanelRight`** - Used for right panels (preview chat)
-- Icons are **filled when the panel is visible**, unfilled when collapsed
-
-### State Persistence
-Each collapsed state is saved to localStorage with unique keys:
-- `ari_sidebar_collapsed` - Ari Configurator sidebar
-- `admin_prompts_sidebar_collapsed` - Admin Prompts sidebar
+AdminPromptPreviewPanel
+└── PromptTestChat
+    ├── Header Row (with "Preview" + badge + dots + COLLAPSE) ← Unified
+    └── Messages + Input
+```
 
 ---
 
-## Changes by File
+## Technical Changes
 
-### 1. AriSectionMenu Component
-**File:** `src/components/agents/AriSectionMenu.tsx`
+### 1. Update PreviewChat Component
+**File:** `src/components/agents/PreviewChat.tsx`
 
-Add collapse props and header with toggle button:
+Changes:
+- Add `isCollapsed` and `onToggleCollapse` props
+- Remove the `RefreshCw01` refresh button (line 251-258)
+- Add `LayoutPanelRight` collapse button after the dots menu
+- Import `LayoutPanelRight` from `@/components/icons/LayoutPanelIcons`
 
 ```tsx
-interface AriSectionMenuProps {
-  activeSection: AriSection;
-  onSectionChange: (section: AriSection) => void;
-  isCollapsed: boolean;            // NEW
-  onToggleCollapse: () => void;    // NEW
+interface PreviewChatProps {
+  agentId: string;
+  primaryColor?: string;
+  contactFormPreview?: ContactFormConfig;
+  isCollapsed?: boolean;        // NEW
+  onToggleCollapse?: () => void; // NEW
 }
 ```
 
+Updated header (lines 229-260):
+```tsx
+<div className="flex items-center justify-between px-4 py-3 border-b">
+  <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
+    Preview
+  </span>
+  <div className="flex items-center gap-1">
+    <DropdownMenu>
+      {/* ... existing dots menu ... */}
+    </DropdownMenu>
+    {/* Remove refresh button */}
+    {/* Add collapse button */}
+    {onToggleCollapse && (
+      <IconButton 
+        variant="ghost" 
+        size="sm" 
+        label={isCollapsed ? "Expand preview" : "Collapse preview"}
+        onClick={onToggleCollapse}
+      >
+        <LayoutPanelRight filled={!isCollapsed} size={16} />
+      </IconButton>
+    )}
+  </div>
+</div>
+```
+
+### 2. Update PromptTestChat Component
+**File:** `src/components/admin/prompts/PromptTestChat.tsx`
+
 Changes:
-- Import `LayoutPanelLeft` from `@/components/icons/LayoutPanelIcons`
-- Import `Button` from `@/components/ui/button`
-- Add `h-14` header row with collapse button (matching InboxNavSidebar pattern)
-- Conditionally show nav items based on `isCollapsed`
-- Animate width transition (240px → 48px)
-
-Header structure when expanded:
-```tsx
-<div className="h-14 border-b flex items-center justify-between px-3">
-  <span className="text-sm font-medium">Ari</span>
-  <Button variant="ghost" size="sm" onClick={onToggleCollapse}>
-    <LayoutPanelLeft filled={!isCollapsed} />
-  </Button>
-</div>
-```
-
-Header structure when collapsed:
-```tsx
-<div className="h-14 border-b flex items-center justify-center">
-  <Button variant="ghost" size="sm" onClick={onToggleCollapse}>
-    <LayoutPanelLeft filled={false} />
-  </Button>
-</div>
-```
-
-### 2. AdminPromptSectionMenu Component
-**File:** `src/components/admin/prompts/AdminPromptSectionMenu.tsx`
-
-Same pattern as AriSectionMenu:
+- Add `isCollapsed` and `onToggleCollapse` props
+- Remove the `RefreshCw01` refresh button (line 198-205)
+- Add `LayoutPanelRight` collapse button after the dots menu
+- Import `LayoutPanelRight` from `@/components/icons/LayoutPanelIcons`
 
 ```tsx
-interface AdminPromptSectionMenuProps {
-  activeSection: PromptSection;
-  onSectionChange: (section: PromptSection) => void;
-  isCollapsed: boolean;            // NEW
-  onToggleCollapse: () => void;    // NEW
+interface PromptTestChatProps {
+  draftPrompts?: PromptOverrides;
+  testDraftMode?: boolean;
+  isCollapsed?: boolean;        // NEW
+  onToggleCollapse?: () => void; // NEW
 }
 ```
 
+### 3. Update AriPreviewColumn Wrapper
+**File:** `src/components/agents/AriPreviewColumn.tsx`
+
 Changes:
-- Import `LayoutPanelLeft` and `Button`
-- Add header with "Prompts" title and collapse toggle
-- Conditionally render nav content
-- Width transition (240px → 48px)
-
-### 3. AriConfigurator Page
-**File:** `src/pages/AriConfigurator.tsx`
-
-Add sidebar collapse state management:
+- Remove the header row entirely (lines 48-65)
+- Pass `isCollapsed` and `onToggleCollapse` props to `PreviewChat`
+- Simplify to just the container with content
 
 ```tsx
-// Sidebar collapse state with localStorage persistence
-const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-  const saved = localStorage.getItem('ari_sidebar_collapsed');
-  return saved === 'true';
-});
-
-useEffect(() => {
-  localStorage.setItem('ari_sidebar_collapsed', String(sidebarCollapsed));
-}, [sidebarCollapsed]);
-
-const handleToggleSidebar = useCallback(() => {
-  setSidebarCollapsed(prev => !prev);
-}, []);
+export function AriPreviewColumn({
+  agentId,
+  primaryColor,
+  contactFormPreview,
+  isCollapsed,
+  onToggleCollapse,
+}: AriPreviewColumnProps) {
+  return (
+    <div 
+      className={cn(
+        "flex-shrink-0 border-l bg-card hidden xl:flex flex-col transition-all duration-200 ease-in-out overflow-hidden",
+        isCollapsed ? "w-12" : "w-[375px]"
+      )}
+    >
+      {/* No separate header - PreviewChat has its own */}
+      <div 
+        className={cn(
+          "flex-1 min-h-0 flex flex-col transition-opacity duration-200",
+          isCollapsed ? "opacity-0 invisible" : "opacity-100 visible"
+        )}
+      >
+        <PreviewChat 
+          agentId={agentId}
+          primaryColor={primaryColor}
+          contactFormPreview={contactFormPreview || undefined}
+          isCollapsed={isCollapsed}
+          onToggleCollapse={onToggleCollapse}
+        />
+      </div>
+    </div>
+  );
+}
 ```
 
-Pass props to `AriSectionMenu`:
-```tsx
-<AriSectionMenu
-  activeSection={activeSection}
-  onSectionChange={setActiveSection}
-  isCollapsed={sidebarCollapsed}
-  onToggleCollapse={handleToggleSidebar}
-/>
-```
+### 4. Update AdminPromptPreviewPanel Wrapper
+**File:** `src/components/admin/prompts/AdminPromptPreviewPanel.tsx`
 
-### 4. AdminPrompts Page
-**File:** `src/pages/admin/AdminPrompts.tsx`
-
-Add sidebar collapse state management (same pattern):
-
-```tsx
-// Sidebar collapse state with localStorage persistence
-const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-  const saved = localStorage.getItem('admin_prompts_sidebar_collapsed');
-  return saved === 'true';
-});
-
-useEffect(() => {
-  localStorage.setItem('admin_prompts_sidebar_collapsed', String(sidebarCollapsed));
-}, [sidebarCollapsed]);
-
-const handleToggleSidebar = useCallback(() => {
-  setSidebarCollapsed(prev => !prev);
-}, []);
-```
-
-Pass props to `AdminPromptSectionMenu`:
-```tsx
-<AdminPromptSectionMenu
-  activeSection={activeSection}
-  onSectionChange={handleSectionChange}
-  isCollapsed={sidebarCollapsed}
-  onToggleCollapse={handleToggleSidebar}
-/>
-```
+Changes:
+- Remove the header row entirely (lines 42-59)
+- Pass `isCollapsed` and `onToggleCollapse` props to `PromptTestChat`
+- Keep the draft toggle bar (it shows below the header when there are unsaved changes)
 
 ---
 
 ## Visual Result
 
-### Expanded State
+**Before (2 header rows):**
 ```
-┌────────────────────────────────────┐
-│ Ari                          [◨◉] │ ← Filled icon (panel visible)
-├────────────────────────────────────┤
-│ CORE                               │
-│ ▸ System Prompt                    │
-│   Appearance                       │
-│   Welcome Messages                 │
-├────────────────────────────────────┤
-│ ENGAGEMENT                         │
-│   Lead Capture                     │
-│   ...                              │
-└────────────────────────────────────┘
-w-[240px]
+┌─────────────────────────────┐
+│ Preview          [collapse] │  ← Wrapper header (REMOVE)
+├─────────────────────────────┤
+│ PREVIEW        [⋮] [↻]      │  ← Chat header
+├─────────────────────────────┤
+│                             │
+│     (messages area)         │
+│                             │
+└─────────────────────────────┘
 ```
 
-### Collapsed State
+**After (single header row):**
 ```
-┌────┐
-│[◨]│ ← Unfilled icon (panel hidden)
-├────┤
-│    │
-│    │
-│    │
-└────┘
-w-12 (48px)
+┌─────────────────────────────┐
+│ PREVIEW        [⋮] [◧]      │  ← Unified header with collapse
+├─────────────────────────────┤
+│                             │
+│     (messages area)         │
+│                             │
+└─────────────────────────────┘
 ```
 
 ---
@@ -205,8 +184,7 @@ w-12 (48px)
 
 | File | Change |
 |------|--------|
-| `src/components/agents/AriSectionMenu.tsx` | Add collapse props, header with toggle, conditional content |
-| `src/components/admin/prompts/AdminPromptSectionMenu.tsx` | Add collapse props, header with toggle, conditional content |
-| `src/pages/AriConfigurator.tsx` | Add sidebar collapse state with localStorage |
-| `src/pages/admin/AdminPrompts.tsx` | Add sidebar collapse state with localStorage |
-
+| `src/components/agents/PreviewChat.tsx` | Add collapse props, remove refresh, add collapse button |
+| `src/components/admin/prompts/PromptTestChat.tsx` | Add collapse props, remove refresh, add collapse button |
+| `src/components/agents/AriPreviewColumn.tsx` | Remove header row, pass props to PreviewChat |
+| `src/components/admin/prompts/AdminPromptPreviewPanel.tsx` | Remove header row, pass props to PromptTestChat |
