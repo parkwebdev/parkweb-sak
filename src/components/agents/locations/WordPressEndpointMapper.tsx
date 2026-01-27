@@ -166,8 +166,8 @@ export function WordPressEndpointMapper({
             </div>
             
             <RadioGroup
-              value={effectiveCommunityEndpoint || 'none'}
-              onValueChange={(value) => onCommunitySelect(value === 'none' ? null : value)}
+              value={effectiveCommunityEndpoint ? `community-${effectiveCommunityEndpoint}` : 'community-none'}
+              onValueChange={(value) => onCommunitySelect(value === 'community-none' ? null : value.replace('community-', ''))}
               className="space-y-2"
             >
               {allEndpoints.map((endpoint) => (
@@ -176,7 +176,7 @@ export function WordPressEndpointMapper({
                   endpoint={endpoint}
                   isSelected={effectiveCommunityEndpoint === endpoint.rest_base}
                   onSelect={() => onCommunitySelect(endpoint.rest_base)}
-                  radioValue={endpoint.rest_base}
+                  radioValue={`community-${endpoint.rest_base}`}
                 />
               ))}
               
@@ -190,7 +190,7 @@ export function WordPressEndpointMapper({
                 )}
                 onClick={() => onCommunitySelect(null)}
               >
-                <RadioGroupItem value="none" id="community-none" />
+                <RadioGroupItem value="community-none" id="community-none" />
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">
                     Don't sync communities
@@ -208,8 +208,8 @@ export function WordPressEndpointMapper({
             </div>
             
             <RadioGroup
-              value={effectivePropertyEndpoint || 'none'}
-              onValueChange={(value) => onPropertySelect(value === 'none' ? null : value)}
+              value={effectivePropertyEndpoint ? `property-${effectivePropertyEndpoint}` : 'property-none'}
+              onValueChange={(value) => onPropertySelect(value === 'property-none' ? null : value.replace('property-', ''))}
               className="space-y-2"
             >
               {allEndpoints.map((endpoint) => (
@@ -218,7 +218,7 @@ export function WordPressEndpointMapper({
                   endpoint={endpoint}
                   isSelected={effectivePropertyEndpoint === endpoint.rest_base}
                   onSelect={() => onPropertySelect(endpoint.rest_base)}
-                  radioValue={endpoint.rest_base}
+                  radioValue={`property-${endpoint.rest_base}`}
                 />
               ))}
               
@@ -232,7 +232,7 @@ export function WordPressEndpointMapper({
                 )}
                 onClick={() => onPropertySelect(null)}
               >
-                <RadioGroupItem value="none" id="property-none" />
+                <RadioGroupItem value="property-none" id="property-none" />
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">
                     Don't sync properties
