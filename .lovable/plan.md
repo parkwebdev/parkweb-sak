@@ -1,141 +1,103 @@
 
-
-# Plan: Move Help Articles Search to TopBar Center
+# Plan: Use Custom CSV Icon for Import/Download CSV Actions
 
 ## Overview
 
-Move the search input from `HelpArticlesManager` (inline in the DataTableToolbar) to the TopBar's center slot, matching the pattern just implemented for Locations.
+Replace generic UntitledUI icons (`Upload01`, `Download01`) with the custom `CsvExportIcon` for all CSV-related import and download actions, matching the pattern used with `JsonExportIcon` for JSON operations.
 
 ---
 
-## Current Architecture
+## Current State
 
+The project has a beautiful custom `CsvExportIcon` component (`src/components/admin/shared/CsvExportIcon.tsx`) that displays a document with a green "CSV" badge. However, several places still use generic UntitledUI icons for CSV operations.
+
+---
+
+## Files to Update
+
+### 1. HelpArticlesManager.tsx - TopBar "Import CSV" Action
+
+**Location:** Line 582  
+**Current:** Uses `Upload01` icon  
+**Change:** Use `CsvExportIcon` (the document icon provides clear context; "Import CSV" label indicates direction)
+
+```tsx
+// Before
+icon: <Upload01 size={16} aria-hidden="true" />,
+
+// After
+icon: <CsvExportIcon size={16} />,
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ TopBar                                                                       │
-│ ┌──────────────┬────────────────────┬─────────────────────────────────────┐ │
-│ │ Left         │ Center (empty)     │ Right                               │ │
-│ │ Ari > Help.. │                    │ [Embed All] [Import] [Cat] [+Add]   │ │
-│ └──────────────┴────────────────────┴─────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ HelpArticlesManager                                                          │
-│ ┌───────────────────────────────────────────────────────────────────────────┐│
-│ │ [🔍 Search articles...]              [🔧 Filters]   ← DataTableToolbar    ││
-│ └───────────────────────────────────────────────────────────────────────────┘│
-│ ┌───────────────────────────────────────────────────────────────────────────┐│
-│ │ DataTable                                                                 ││
-│ └───────────────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────────┘
+### 2. HelpArticlesManager.tsx - Fallback "Import CSV" Button  
+
+**Location:** Line 786-787  
+**Current:** Button has no icon  
+**Change:** Add `CsvExportIcon` for consistency
+
+```tsx
+// Before
+<Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)}>
+  Import CSV
+</Button>
+
+// After
+<Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)}>
+  <CsvExportIcon size={16} className="mr-1.5" />
+  Import CSV
+</Button>
 ```
 
-## Target Architecture
+### 3. BulkImportDialog.tsx - "Download sample template" Link
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ TopBar                                                                       │
-│ ┌──────────────┬────────────────────┬─────────────────────────────────────┐ │
-│ │ Left         │ Center             │ Right                               │ │
-│ │ Ari > Help.. │ [🔍 Search...]     │ [Embed All] [Import] [Cat] [+Add]   │ │
-│ └──────────────┴────────────────────┴─────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
+**Location:** Line 322-325  
+**Current:** Uses generic `Download01` icon  
+**Change:** Use `CsvExportIcon` since it's downloading a CSV file
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ HelpArticlesManager                                                          │
-│ ┌───────────────────────────────────────────────────────────────────────────┐│
-│ │ [🔧 Filters]  [Active Filter Chips...]    ← Filters only, no search      ││
-│ └───────────────────────────────────────────────────────────────────────────┘│
-│ ┌───────────────────────────────────────────────────────────────────────────┐│
-│ │ DataTable                                                                 ││
-│ └───────────────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────────┘
+```tsx
+// Before
+<Download01 className="w-3.5 h-3.5" />
+Download sample template
+
+// After
+<CsvExportIcon size={14} />
+Download sample template
 ```
 
 ---
 
-## Technical Approach
+## Import Changes Required
 
-Since the `AriSectionActionsContext` was already extended to support `centerContent` and `useRegisterSectionCenterContent` for Locations, we can reuse that exact same pattern:
+### HelpArticlesManager.tsx
+```tsx
+// Add import
+import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
 
-1. Create a new `HelpArticlesTopBarSearch` component (mirroring `LocationsTopBarSearch`)
-2. Register it as center content in `HelpArticlesManager` using the existing hook
-3. Hide the inline search in `DataTableToolbar` using the `hideSearch` prop
+// Can remove Upload01 from the untitledui imports if no longer needed elsewhere
+```
+
+### BulkImportDialog.tsx
+```tsx
+// Add import
+import { CsvExportIcon } from '@/components/admin/shared/CsvExportIcon';
+
+// Remove Download01 from the imports (line 15) since it won't be used
+```
 
 ---
 
-## Implementation Details
+## Visual Consistency
 
-### 1. Create HelpArticlesTopBarSearch Component
-**File:** `src/components/agents/articles/HelpArticlesTopBarSearch.tsx` (NEW)
+After this change, all CSV-related buttons will show the distinctive green CSV document icon:
 
-Simple search wrapper component that passes value/onChange to `TopBarSearch`:
-
-```tsx
-import { memo } from 'react';
-import { TopBarSearch } from '@/components/layout/TopBar';
-
-interface HelpArticlesTopBarSearchProps {
-  /** Current global filter value from parent */
-  value: string;
-  /** Callback when search changes */
-  onChange: (value: string) => void;
-}
-
-/**
- * Search component for the Help Articles section TopBar.
- * No popover/dropdown - just filters the data table directly.
- */
-export const HelpArticlesTopBarSearch = memo(function HelpArticlesTopBarSearch({
-  value,
-  onChange,
-}: HelpArticlesTopBarSearchProps) {
-  return (
-    <TopBarSearch
-      placeholder="Search articles..."
-      value={value}
-      onChange={onChange}
-      showPopover={false}
-      className="w-48 lg:w-64"
-    />
-  );
-});
-```
-
-### 2. Update HelpArticlesManager
-**File:** `src/components/agents/HelpArticlesManager.tsx`
-
-**Changes:**
-
-**A. Add imports:**
-```tsx
-import { useRegisterSectionCenterContent } from '@/contexts/AriSectionActionsContext';
-import { HelpArticlesTopBarSearch } from './articles/HelpArticlesTopBarSearch';
-```
-
-**B. Register center content (after line 604, after `useRegisterSectionActions`):**
-```tsx
-// Register center content for TopBar (search bar)
-const centerContent = useMemo(() => (
-  <HelpArticlesTopBarSearch
-    value={globalFilter}
-    onChange={setGlobalFilter}
-  />
-), [globalFilter]);
-
-useRegisterSectionCenterContent('help-articles', centerContent);
-```
-
-**C. Update DataTableToolbar to hide search (lines 786-791):**
-```tsx
-<DataTableToolbar
-  table={table}
-  searchPlaceholder="Search articles..."
-  globalFilter
-  searchClassName="max-w-xs"
-  hideSearch  // NEW - hide inline search, moved to TopBar
-/>
-```
+| Component | Action | Icon |
+|-----------|--------|------|
+| Help Articles TopBar | Import CSV | 📄 CSV (green) |
+| Help Articles Fallback | Import CSV | 📄 CSV (green) |
+| Bulk Import Dialog | Download template | 📄 CSV (green) |
+| Leads TopBar | Export CSV | 📄 CSV (green) ✅ (already correct) |
+| Admin Accounts | Export | 📄 CSV (green) ✅ (already correct) |
+| Admin Audit Log | Export CSV | 📄 CSV (green) ✅ (already correct) |
 
 ---
 
@@ -143,55 +105,11 @@ useRegisterSectionCenterContent('help-articles', centerContent);
 
 | File | Changes |
 |------|---------|
-| `src/components/agents/articles/HelpArticlesTopBarSearch.tsx` | **NEW** - Simple search wrapper component |
-| `src/components/agents/HelpArticlesManager.tsx` | Import new hook, register center content, add `hideSearch` to toolbar |
+| `src/components/agents/HelpArticlesManager.tsx` | Import `CsvExportIcon`, use for Import CSV action and button |
+| `src/components/agents/BulkImportDialog.tsx` | Import `CsvExportIcon`, replace `Download01` for template download |
 
 ---
 
-## Visual Result
+## Design Rationale
 
-**Before:**
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ Ari > Help Articles        [Embed] [Import] [Categories] [+Add] │
-├──────────────────────────────────────────────────────────────────┤
-│ [🔍 Search articles...]                           [🔧 Filters]  │ ← HERE
-├──────────────────────────────────────────────────────────────────┤
-│ | Title | Category | Status |                                   │
-│ ...                                                              │
-```
-
-**After:**
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ Ari > Help..  [🔍 Search...]   [Embed] [Import] [Cat] [+Add]    │ ← MOVED
-├──────────────────────────────────────────────────────────────────┤
-│                                                   [🔧 Filters]  │
-├──────────────────────────────────────────────────────────────────┤
-│ | Title | Category | Status |                                   │
-│ ...                                                              │
-```
-
----
-
-## Dependencies
-
-This implementation relies on infrastructure already created for Locations:
-
-- ✅ `useRegisterSectionCenterContent` hook in `AriSectionActionsContext.tsx`
-- ✅ `centerContent` state management in context
-- ✅ `AriTopBarCenter` component in `AriConfigurator.tsx`
-- ✅ `hideSearch` prop in `DataTableToolbar.tsx`
-- ✅ `TopBarSearch` component with `showPopover={false}` support
-
-No changes needed to the context or AriConfigurator - they already support this pattern.
-
----
-
-## Technical Notes
-
-1. **Section ID**: Uses `'help-articles'` to match the existing `useRegisterSectionActions` call
-2. **Global Filter**: Reuses the existing `globalFilter` / `setGlobalFilter` state from TanStack Table
-3. **Toolbar simplification**: The toolbar will only show the Filters button, not the search input
-4. **Empty state**: Search still appears in TopBar even when no articles exist (helps with empty search feedback)
-
+Using the same CSV document icon for both import and export follows the existing pattern with `JsonExportIcon` (used for both "Import" and "Export" in the prompts dropdown). The action label ("Import CSV", "Export CSV", "Download template") provides the directional context, while the distinctive file-type icon (green CSV badge) immediately communicates what type of file is involved.
