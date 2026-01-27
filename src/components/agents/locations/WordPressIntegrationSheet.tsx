@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from '@/lib/toast';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AnimatePresence, motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
@@ -300,12 +301,13 @@ export function WordPressIntegrationSheet({
   const handleConnect = async () => {
     if (!urlInput.trim()) return;
     
-    // Use the new connect with discovery flow
+    clearTestResult();
     const result = await connectWithDiscovery(urlInput.trim());
     
     if (!result.success) {
-      // Show error toast - the hook already handles this
-      clearTestResult();
+      toast.error('Failed to discover endpoints', {
+        description: result.error || 'Could not connect to WordPress site'
+      });
     }
   };
 

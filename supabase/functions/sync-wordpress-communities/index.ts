@@ -828,7 +828,7 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use "test", "sync", "save", "discover", or "disconnect"' }),
+      JSON.stringify({ error: 'Invalid action. Use "test", "connect", "sync", "save", "discover", or "disconnect"' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
