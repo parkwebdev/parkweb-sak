@@ -3,6 +3,7 @@
  * 
  * Context for Ari sections to register their action buttons,
  * which are then rendered in the TopBar's right section.
+ * Also supports center content slot for things like search bars.
  */
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
@@ -22,8 +23,11 @@ export interface SectionAction {
 
 interface AriSectionActionsContextValue {
   actions: SectionAction[];
+  centerContent: ReactNode | null;
   registerActions: (sectionId: string, actions: SectionAction[]) => void;
   unregisterActions: (sectionId: string) => void;
+  registerCenterContent: (sectionId: string, content: ReactNode) => void;
+  unregisterCenterContent: (sectionId: string) => void;
   currentSection: string | null;
   setCurrentSection: (sectionId: string | null) => void;
 }
@@ -36,6 +40,7 @@ interface AriSectionActionsProviderProps {
 
 export function AriSectionActionsProvider({ children }: AriSectionActionsProviderProps) {
   const [actionsBySection, setActionsBySection] = useState<Record<string, SectionAction[]>>({});
+  const [centerContentBySection, setCenterContentBySection] = useState<Record<string, ReactNode>>({});
   const [currentSection, setCurrentSection] = useState<string | null>(null);
 
   const registerActions = useCallback((sectionId: string, actions: SectionAction[]) => {
@@ -50,14 +55,30 @@ export function AriSectionActionsProvider({ children }: AriSectionActionsProvide
     });
   }, []);
 
+  const registerCenterContent = useCallback((sectionId: string, content: ReactNode) => {
+    setCenterContentBySection(prev => ({ ...prev, [sectionId]: content }));
+  }, []);
+
+  const unregisterCenterContent = useCallback((sectionId: string) => {
+    setCenterContentBySection(prev => {
+      const next = { ...prev };
+      delete next[sectionId];
+      return next;
+    });
+  }, []);
+
   const actions = currentSection ? actionsBySection[currentSection] || [] : [];
+  const centerContent = currentSection ? centerContentBySection[currentSection] || null : null;
 
   return (
     <AriSectionActionsContext.Provider
       value={{
         actions,
+        centerContent,
         registerActions,
         unregisterActions,
+        registerCenterContent,
+        unregisterCenterContent,
         currentSection,
         setCurrentSection,
       }}
@@ -70,8 +91,11 @@ export function AriSectionActionsProvider({ children }: AriSectionActionsProvide
 // Default context value for when hook is used outside provider (e.g., TopBar rendering before page mounts)
 const defaultContextValue: AriSectionActionsContextValue = {
   actions: [],
+  centerContent: null,
   registerActions: () => {},
   unregisterActions: () => {},
+  registerCenterContent: () => {},
+  unregisterCenterContent: () => {},
   currentSection: null,
   setCurrentSection: () => {},
 };
@@ -99,4 +123,17 @@ export function useRegisterSectionActions(sectionId: string, actions: SectionAct
     registerActions(sectionId, actions);
     return () => unregisterActions(sectionId);
   }, [sectionId, actionsKey, registerActions, unregisterActions]);
+}
+
+/**
+ * Hook for sections to register center content (e.g., search bar).
+ * Content is automatically unregistered when the component unmounts.
+ */
+export function useRegisterSectionCenterContent(sectionId: string, content: ReactNode) {
+  const { registerCenterContent, unregisterCenterContent } = useAriSectionActions();
+  
+  useEffect(() => {
+    registerCenterContent(sectionId, content);
+    return () => unregisterCenterContent(sectionId);
+  }, [sectionId, content, registerCenterContent, unregisterCenterContent]);
 }
