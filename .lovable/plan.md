@@ -1,195 +1,255 @@
 
+# Plan: Remove Infinite Loading & Add Pagination to All Tables
 
-# Plan: Premium Content Transition Animation for Locations
+## Executive Summary
 
-## Current State
-
-The existing animation uses a basic directional slide with fixed timing:
-```tsx
-initial={{ opacity: 0, x: -20 }}
-animate={{ opacity: 1, x: 0 }}
-exit={{ opacity: 0, x: 20 }}
-transition={{ duration: 0.2, ease: 'easeOut' }}
-```
-
-**Issues:**
-- Linear timing feels mechanical
-- No spring physics = lacks organic feel
-- Doesn't respect reduced motion preferences
-- Direction change is abrupt on exit
-- Missing subtle scale for depth perception
+This plan standardizes all data tables across the application to use traditional pagination instead of infinite scroll, and adds a consistent "Showing X of Y" results indicator above each table.
 
 ---
 
-## Enhanced Animation Strategy
+## Tables Inventory
 
-### 1. Use Spring Physics Instead of Fixed Duration
+After thorough codebase analysis, here are all tables that need modification:
 
-Replace `duration: 0.2, ease: 'easeOut'` with `springs.smooth` from motion-variants for natural, organic movement:
+### Tables WITH Infinite Scroll (Need Conversion)
+| Component | Location | Current Pattern |
+|-----------|----------|-----------------|
+| **AriKnowledgeSection** | `src/components/agents/sections/AriKnowledgeSection.tsx` | `displayCount` + IntersectionObserver |
+| **HelpArticlesManager** | `src/components/agents/HelpArticlesManager.tsx` | `displayCount` + IntersectionObserver |
+| **AriLocationsSection** (Communities + Properties) | `src/components/agents/sections/AriLocationsSection.tsx` | `displayCount` + IntersectionObserver |
+| **Leads Page** | `src/pages/Leads.tsx` | Server-side infinite via `useInfiniteLeads` |
+| **Conversations Page** | `src/pages/Conversations.tsx` | Server-side infinite via `useInfiniteConversations` |
 
-```tsx
-transition: springs.smooth  // { type: 'spring', stiffness: 300, damping: 30 }
+### Tables WITHOUT Pagination (Need Addition)
+| Component | Location | Notes |
+|-----------|----------|-------|
+| **TeamMembersTable** | `src/components/team/TeamMembersTable.tsx` | No pagination at all |
+| **PlansTable** | `src/components/admin/plans/PlansTable.tsx` | No pagination |
+| **SubscriptionsTable** | `src/components/admin/plans/SubscriptionsTable.tsx` | No pagination |
+| **EmailTemplateList** | `src/components/admin/emails/EmailTemplateList.tsx` | No pagination |
+| **EmailDeliveryLogs** | `src/components/admin/emails/EmailDeliveryLogs.tsx` | No pagination |
+| **PilotTeamTable** | `src/components/admin/team/PilotTeamTable.tsx` | No pagination |
+| **PlatformArticlesTable** | `src/components/admin/knowledge/PlatformArticlesTable.tsx` | No pagination |
+| **ExportHistoryTable** | `src/components/analytics/ExportHistoryTable.tsx` | No pagination |
+
+### Tables WITH Proper Pagination (Already Good)
+| Component | Location | Status |
+|-----------|----------|--------|
+| **LandingPagesTable** | `src/components/analytics/LandingPagesTable.tsx` | ✅ Has `getPaginationRowModel` + `DataTablePagination` |
+| **CustomerFeedbackCard** | `src/components/analytics/CustomerFeedbackCard.tsx` | ✅ Has pagination (only shows if > 10 items) |
+| **AccountsTable** | `src/components/admin/accounts/AccountsTable.tsx` | ✅ Has server-side pagination with "Showing X of Y" |
+
+---
+
+## Implementation Strategy
+
+### Phase 1: Create Shared Results Indicator Component
+
+Create a reusable component for the "Showing X of Y" pattern:
+
+```text
+src/components/data-table/DataTableResultsInfo.tsx (NEW)
 ```
 
-### 2. Add Subtle Scale for Depth Perception
-
-Combine slide + fade + slight scale creates a more immersive "panel" effect:
-
 ```tsx
-// Entering: slightly smaller → full size (feels like emerging)
-initial={{ opacity: 0, x: direction, scale: 0.98 }}
+interface DataTableResultsInfoProps<TData> {
+  table: Table<TData>;
+  totalCount?: number; // For server-side pagination
+  label?: string; // e.g., "results", "articles", "sources"
+}
 
-// Exiting: full size → slightly smaller (feels like receding)
-exit={{ opacity: 0, x: -direction, scale: 0.98 }}
+// Output: "Showing 1 to 10 of 50 results"
+// Or with selection: "3 of 50 selected"
 ```
 
-### 3. Track Direction State for Intelligent Animation
+### Phase 2: Convert Infinite Scroll Tables
 
-Use a `useRef` to track which direction the user is navigating, so animations feel contextually correct:
+For each table using client-side infinite scroll (`displayCount` pattern):
 
-```tsx
-const prevViewMode = useRef<ViewMode>(viewMode);
+**Changes Required:**
+1. Remove `displayCount` state and `loadMoreRef` ref
+2. Remove IntersectionObserver `useEffect`
+3. Add `getPaginationRowModel` to table config
+4. Add `initialState: { pagination: { pageSize: 25 } }`
+5. Replace `displayedX` with full `filteredX` data
+6. Remove the "Loading more..." trigger div
+7. Add `<DataTableResultsInfo>` above table
+8. Add `<DataTablePagination>` below table
 
-// Determine animation direction based on navigation
-const direction = viewMode === 'properties' ? 1 : -1;  // Right = positive, Left = negative
-```
+### Phase 3: Convert Server-Side Infinite Scroll
 
-### 4. Respect Reduced Motion Preferences
+For Leads and Conversations pages, the approach is different since they fetch from the server. These need to be converted to server-side pagination:
 
-Add `useReducedMotion()` check (accessibility best practice already established in the codebase):
+**Option A (Recommended):** Keep infinite scroll for these high-volume lists but remove visible infinite loading UI - convert to "Load More" button pattern.
 
-```tsx
-const prefersReducedMotion = useReducedMotion();
+**Option B:** Convert to traditional server-side pagination (more complex, requires modifying hooks).
 
-// For reduced motion: instant opacity, no movement
-initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24 * direction, scale: 0.98 }}
-```
-
-### 5. Use `mode="popLayout"` for Smoother Exits
-
-Change from `mode="wait"` to `mode="popLayout"` for a crossfade effect where the new content doesn't wait for the old to fully exit:
-
-```tsx
-<AnimatePresence mode="popLayout" initial={false}>
-```
-
-This creates an overlapping transition that feels more fluid.
+Recommend **Option A** for Leads/Conversations as they are the primary working lists, and pagination would disrupt workflow. For the settings/config tables, traditional pagination is better.
 
 ---
 
 ## Technical Changes
 
-### File: `src/components/agents/sections/AriLocationsSection.tsx`
+### 1. New Component: DataTableResultsInfo
 
-#### 1. Add Import for Reduced Motion Hook and Springs
+**File: `src/components/data-table/DataTableResultsInfo.tsx`**
 
 ```tsx
-// Add to existing imports
-import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { springs } from '@/lib/motion-variants';
+import { Table } from '@tanstack/react-table';
+
+interface DataTableResultsInfoProps<TData> {
+  table: Table<TData>;
+  totalCount?: number;
+  label?: string;
+  className?: string;
+}
+
+export function DataTableResultsInfo<TData>({
+  table,
+  totalCount,
+  label = 'results',
+}: DataTableResultsInfoProps<TData>) {
+  const { pageIndex, pageSize } = table.getState().pagination;
+  const filteredCount = totalCount ?? table.getFilteredRowModel().rows.length;
+  const startRow = filteredCount === 0 ? 0 : pageIndex * pageSize + 1;
+  const endRow = Math.min((pageIndex + 1) * pageSize, filteredCount);
+
+  const selectedCount = table.getFilteredSelectedRowModel().rows.length;
+
+  if (selectedCount > 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {selectedCount} of {filteredCount.toLocaleString()} selected
+      </p>
+    );
+  }
+
+  return (
+    <p className="text-sm text-muted-foreground">
+      Showing {startRow.toLocaleString()} to {endRow.toLocaleString()} of{' '}
+      {filteredCount.toLocaleString()} {label}
+    </p>
+  );
+}
 ```
 
-#### 2. Add Direction Tracking State
+### 2. Update DataTable Index Export
 
-Inside the component, add:
-```tsx
-const prefersReducedMotion = useReducedMotion();
-const prevViewMode = useRef<ViewMode>(viewMode);
+**File: `src/components/data-table/index.ts`**
 
-// Track direction for animations
-const animationDirection = viewMode === 'properties' ? 1 : -1;
+Add export for the new component.
 
-// Update prev on change
-useEffect(() => {
-  prevViewMode.current = viewMode;
-}, [viewMode]);
-```
+### 3. AriKnowledgeSection Conversion
 
-#### 3. Update AnimatePresence and Motion Divs
+**File: `src/components/agents/sections/AriKnowledgeSection.tsx`**
 
-**Communities View (lines 737-807):**
-```tsx
-<AnimatePresence mode="popLayout" initial={false}>
-  {viewMode === 'communities' && (
-    <motion.div
-      key="communities"
-      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -24, scale: 0.98 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24, scale: 0.98 }}
-      transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
-    >
-      {/* Communities content */}
-    </motion.div>
-  )}
-```
+**Remove:**
+- Lines 115-117: `displayCount` state and `loadMoreRef`
+- Lines 233-249: IntersectionObserver effect
+- Lines 251-254: Reset displayCount effect
+- Lines 256-260: `displayedSources` memo (use `filteredSources` directly)
+- Lines 612-617: "Loading more..." div
 
-**Properties View (lines 810-end):**
-```tsx
-  {viewMode === 'properties' && (
-    <motion.div
-      key="properties"
-      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24, scale: 0.98 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -24, scale: 0.98 }}
-      transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
-    >
-      {/* Properties content */}
-    </motion.div>
-  )}
-</AnimatePresence>
-```
+**Add:**
+- `getPaginationRowModel` import and usage
+- `initialState: { pagination: { pageSize: 25 } }`
+- `DataTableResultsInfo` above the table
+- `DataTablePagination` after the table
+
+### 4. HelpArticlesManager Conversion
+
+**File: `src/components/agents/HelpArticlesManager.tsx`**
+
+Similar pattern - remove infinite scroll, add pagination.
+
+### 5. AriLocationsSection Conversion
+
+**File: `src/components/agents/sections/AriLocationsSection.tsx`**
+
+Both Communities and Properties tables need conversion.
+
+### 6. Admin Tables Without Pagination
+
+For simpler tables that just need pagination added:
+
+**PlansTable, SubscriptionsTable, EmailTemplateList, EmailDeliveryLogs, PilotTeamTable, PlatformArticlesTable, ExportHistoryTable, TeamMembersTable**
+
+Add:
+- `getPaginationRowModel()` to table config
+- `initialState: { pagination: { pageSize: 25 } }`
+- `DataTableResultsInfo` component above table
+- `DataTablePagination` component below table
+
+### 7. Leads & Conversations (Server-Side Infinite)
+
+**Recommendation:** Keep these as-is but ensure smooth scrolling behavior. These are working lists where users actively scroll through items. Converting to pagination would:
+- Require significant hook changes
+- Disrupt user workflow
+- Add friction to lead/conversation management
+
+If the user specifically wants these converted, we can modify `useInfiniteLeads` and `useInfiniteConversations` to support page-based fetching instead.
 
 ---
 
-## Visual Comparison
+## Summary of Files to Modify
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| Timing | Fixed 200ms ease-out | Spring physics (natural) |
-| Movement | x: ±20px only | x: ±24px + scale: 0.98 (depth) |
-| Exit mode | `wait` (sequential) | `popLayout` (overlapping) |
-| Reduced motion | Not respected | Instant fade only |
-| Feel | Mechanical | Organic, premium |
+| File | Changes |
+|------|---------|
+| `src/components/data-table/DataTableResultsInfo.tsx` | **NEW** - Create results indicator component |
+| `src/components/data-table/index.ts` | Add new export |
+| `src/components/agents/sections/AriKnowledgeSection.tsx` | Remove infinite scroll, add pagination |
+| `src/components/agents/HelpArticlesManager.tsx` | Remove infinite scroll, add pagination |
+| `src/components/agents/sections/AriLocationsSection.tsx` | Remove infinite scroll, add pagination (both views) |
+| `src/components/team/TeamMembersTable.tsx` | Add pagination |
+| `src/components/admin/plans/PlansTable.tsx` | Add pagination |
+| `src/components/admin/plans/SubscriptionsTable.tsx` | Add pagination |
+| `src/components/admin/emails/EmailTemplateList.tsx` | Add pagination |
+| `src/components/admin/emails/EmailDeliveryLogs.tsx` | Add pagination |
+| `src/components/admin/team/PilotTeamTable.tsx` | Add pagination |
+| `src/components/admin/knowledge/PlatformArticlesTable.tsx` | Add pagination |
+| `src/components/analytics/ExportHistoryTable.tsx` | Add pagination |
 
 ---
 
-## Animation Physics Explained
+## Visual Layout
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│                        SPRING SMOOTH                            │
-│  stiffness: 300  │  damping: 30  │  ~250-300ms natural settle  │
+│ Showing 1 to 25 of 150 sources            [Search] [Filters ▾] │
 ├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Position ──────────────────────────────────────────────────►   │
-│     │                                                           │
-│  1.0│         ╭──────────────────────────────────              │
-│     │       ╱                                                   │
-│  0.5│     ╱                                                     │
-│     │   ╱     ← Natural deceleration curve                      │
-│  0.0│ ╱                                                         │
-│     └────────────────────────────────────────────────► Time     │
-│       0    50   100  150  200  250  300ms                       │
+│ ┌─────────────────────────────────────────────────────────────┐ │
+│ │                         DATA TABLE                          │ │
+│ │                        (25 rows)                            │ │
+│ └─────────────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────┤
+│ Showing 1 to 25 of 150    Rows per page [25▾]  Page 1 of 6 ◀ ▶ │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## File Changes Summary
+## Backward Compatibility
 
-| File | Changes |
-|------|---------|
-| `src/components/agents/sections/AriLocationsSection.tsx` | Import hooks/springs, add reduced motion check, update AnimatePresence mode, enhance motion.div with scale + spring physics |
+- All existing functionality (filtering, sorting, selection, bulk actions) remains intact
+- Row click behavior unchanged
+- Real-time updates continue to work (table data is still reactive)
+- Filter chips and search work exactly the same
 
 ---
 
-## Design Rationale
+## Default Page Sizes
 
-This approach follows the existing patterns in the codebase:
-- **Settings.tsx** uses `springs.smooth` for tab transitions
-- **ThemeSwitcher** uses spring physics for indicator
-- **AriConfigurator** respects `prefersReducedMotion`
-- **AnimatedItem** component combines scale + slide for premium feel
+| Table Type | Default Page Size |
+|------------|-------------------|
+| Primary data tables (Knowledge, Articles, Locations) | 25 |
+| Admin tables | 25 |
+| Analytics tables | 10-25 |
+| Team member tables | 25 |
 
-The result is a cohesive, accessible animation that matches the quality of transitions elsewhere in the app.
+---
 
+## Questions for Clarification
+
+1. **Leads & Conversations Pages:** Should these also be converted from infinite scroll to pagination? They use server-side fetching which requires more significant changes to the hooks.
+
+2. **Page size options:** Should all tables use the same page size options `[10, 25, 50, 100]` or customize per table?
