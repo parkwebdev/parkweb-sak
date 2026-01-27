@@ -1,34 +1,79 @@
 
 
-# Plan: Compact ViewToggle & Filters in Locations Section
-
-## Overview
-
-Update the Locations section's ViewToggle (Communities/Properties) and Filters button to use smaller, TopBar-consistent sizing, wrapped in a pill-style container.
-
----
+# Plan: Premium Content Transition Animation for Locations
 
 ## Current State
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ [Communities (12)]  [Properties (345)]        [Filters ▾]       │
-│  ↑                   ↑                          ↑               │
-│  Default size        Default size               Default size    │
-│  No container        No container               h-10 button     │
-└──────────────────────────────────────────────────────────────────┘
+The existing animation uses a basic directional slide with fixed timing:
+```tsx
+initial={{ opacity: 0, x: -20 }}
+animate={{ opacity: 1, x: 0 }}
+exit={{ opacity: 0, x: 20 }}
+transition={{ duration: 0.2, ease: 'easeOut' }}
 ```
 
-## Target State
+**Issues:**
+- Linear timing feels mechanical
+- No spring physics = lacks organic feel
+- Doesn't respect reduced motion preferences
+- Direction change is abrupt on exit
+- Missing subtle scale for depth perception
 
+---
+
+## Enhanced Animation Strategy
+
+### 1. Use Spring Physics Instead of Fixed Duration
+
+Replace `duration: 0.2, ease: 'easeOut'` with `springs.smooth` from motion-variants for natural, organic movement:
+
+```tsx
+transition: springs.smooth  // { type: 'spring', stiffness: 300, damping: 30 }
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ ╭─────────────────────────────────────────────╮                  │
-│ │ [Communities (12)] [Properties (345)]       │  [Filters ▾]    │
-│ ╰─────────────────────────────────────────────╯   ↑              │
-│   ↑ bg-muted rounded container with sm buttons   size="sm" h-8  │
-└──────────────────────────────────────────────────────────────────┘
+
+### 2. Add Subtle Scale for Depth Perception
+
+Combine slide + fade + slight scale creates a more immersive "panel" effect:
+
+```tsx
+// Entering: slightly smaller → full size (feels like emerging)
+initial={{ opacity: 0, x: direction, scale: 0.98 }}
+
+// Exiting: full size → slightly smaller (feels like receding)
+exit={{ opacity: 0, x: -direction, scale: 0.98 }}
 ```
+
+### 3. Track Direction State for Intelligent Animation
+
+Use a `useRef` to track which direction the user is navigating, so animations feel contextually correct:
+
+```tsx
+const prevViewMode = useRef<ViewMode>(viewMode);
+
+// Determine animation direction based on navigation
+const direction = viewMode === 'properties' ? 1 : -1;  // Right = positive, Left = negative
+```
+
+### 4. Respect Reduced Motion Preferences
+
+Add `useReducedMotion()` check (accessibility best practice already established in the codebase):
+
+```tsx
+const prefersReducedMotion = useReducedMotion();
+
+// For reduced motion: instant opacity, no movement
+initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24 * direction, scale: 0.98 }}
+```
+
+### 5. Use `mode="popLayout"` for Smoother Exits
+
+Change from `mode="wait"` to `mode="popLayout"` for a crossfade effect where the new content doesn't wait for the old to fully exit:
+
+```tsx
+<AnimatePresence mode="popLayout" initial={false}>
+```
+
+This creates an overlapping transition that feels more fluid.
 
 ---
 
@@ -36,130 +81,97 @@ Update the Locations section's ViewToggle (Communities/Properties) and Filters b
 
 ### File: `src/components/agents/sections/AriLocationsSection.tsx`
 
-#### 1. Update ViewToggle Component (lines 463-486)
+#### 1. Add Import for Reduced Motion Hook and Springs
 
-Wrap the buttons in a pill container and use `size="sm"` for smaller buttons:
-
-**Before:**
 ```tsx
-const ViewToggle = (
-  <div className="flex items-center gap-1">
-    <Button 
-      variant={viewMode === 'communities' ? 'secondary' : 'ghost'}
-      onClick={() => setViewMode('communities')}
-      className={viewMode === 'communities' ? 'bg-muted hover:bg-muted/80' : ''}
-    >
-      Communities
-      <Badge variant="outline" size="counter" className="ml-1.5">
-        {locations.length}
-      </Badge>
-    </Button>
-    <Button 
-      variant={viewMode === 'properties' ? 'secondary' : 'ghost'}
-      onClick={() => setViewMode('properties')}
-      className={viewMode === 'properties' ? 'bg-muted hover:bg-muted/80' : ''}
-    >
-      Properties
-      <Badge variant="outline" size="counter" className="ml-1.5">
-        {propertiesWithLocation.length}
-      </Badge>
-    </Button>
-  </div>
-);
+// Add to existing imports
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 ```
 
-**After:**
+#### 2. Add Direction Tracking State
+
+Inside the component, add:
 ```tsx
-const ViewToggle = (
-  <div className="inline-flex items-center gap-1 rounded-md bg-muted p-1">
-    <Button 
-      size="sm"
-      variant={viewMode === 'communities' ? 'secondary' : 'ghost'}
-      onClick={() => setViewMode('communities')}
-      className={viewMode === 'communities' 
-        ? 'bg-background shadow-sm hover:bg-background/90' 
-        : 'hover:bg-transparent'
-      }
-    >
-      Communities
-      <Badge variant="outline" size="counter" className="ml-1.5">
-        {locations.length}
-      </Badge>
-    </Button>
-    <Button 
-      size="sm"
-      variant={viewMode === 'properties' ? 'secondary' : 'ghost'}
-      onClick={() => setViewMode('properties')}
-      className={viewMode === 'properties' 
-        ? 'bg-background shadow-sm hover:bg-background/90' 
-        : 'hover:bg-transparent'
-      }
-    >
-      Properties
-      <Badge variant="outline" size="counter" className="ml-1.5">
-        {propertiesWithLocation.length}
-      </Badge>
-    </Button>
-  </div>
-);
+const prefersReducedMotion = useReducedMotion();
+const prevViewMode = useRef<ViewMode>(viewMode);
+
+// Track direction for animations
+const animationDirection = viewMode === 'properties' ? 1 : -1;
+
+// Update prev on change
+useEffect(() => {
+  prevViewMode.current = viewMode;
+}, [viewMode]);
 ```
 
-**Key changes:**
-- Container: `inline-flex items-center gap-1 rounded-md bg-muted p-1`
-- Buttons: Add `size="sm"` for h-8 height
-- Active style: `bg-background shadow-sm` (matches TabsList active state pattern)
-- Inactive ghost: `hover:bg-transparent` to prevent double-hover effect inside container
+#### 3. Update AnimatePresence and Motion Divs
 
-#### 2. Update FilterPopover Button (lines 500-509)
-
-Add `size="sm"` to the Filters button:
-
-**Before:**
+**Communities View (lines 737-807):**
 ```tsx
-<Button variant="outline" className="gap-1.5">
-  <FilterLines size={16} />
-  Filters
-  {activeFilters.length > 0 && (
-    <Badge variant="secondary" size="counter" className="ml-1">
-      {activeFilters.length}
-    </Badge>
+<AnimatePresence mode="popLayout" initial={false}>
+  {viewMode === 'communities' && (
+    <motion.div
+      key="communities"
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -24, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24, scale: 0.98 }}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
+    >
+      {/* Communities content */}
+    </motion.div>
   )}
-</Button>
 ```
 
-**After:**
+**Properties View (lines 810-end):**
 ```tsx
-<Button variant="outline" size="sm" className="gap-1.5">
-  <FilterLines size={16} />
-  Filters
-  {activeFilters.length > 0 && (
-    <Badge variant="secondary" size="counter" className="ml-1">
-      {activeFilters.length}
-    </Badge>
+  {viewMode === 'properties' && (
+    <motion.div
+      key="properties"
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -24, scale: 0.98 }}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
+    >
+      {/* Properties content */}
+    </motion.div>
   )}
-</Button>
+</AnimatePresence>
 ```
 
 ---
 
 ## Visual Comparison
 
-| Element | Before | After |
-|---------|--------|-------|
-| ViewToggle container | No container | `rounded-md bg-muted p-1` pill |
-| ViewToggle buttons | Default (h-10) | `size="sm"` (h-8) |
-| Active button style | `bg-muted` | `bg-background shadow-sm` |
-| Filters button | Default (h-10) | `size="sm"` (h-8) |
+| Aspect | Before | After |
+|--------|--------|-------|
+| Timing | Fixed 200ms ease-out | Spring physics (natural) |
+| Movement | x: ±20px only | x: ±24px + scale: 0.98 (depth) |
+| Exit mode | `wait` (sequential) | `popLayout` (overlapping) |
+| Reduced motion | Not respected | Instant fade only |
+| Feel | Mechanical | Organic, premium |
 
 ---
 
-## Design Pattern Reference
+## Animation Physics Explained
 
-This matches existing patterns in the codebase:
-- **TabsList**: `inline-flex h-10 items-center justify-center rounded-md bg-muted p-1`
-- **AnimatedTabsList**: `relative inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1`
-- **ThemeSwitcher**: `inline-flex items-center gap-1 rounded-md bg-muted p-1`
-- **TopBar actions**: All use `size="sm"` (h-8 buttons)
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                        SPRING SMOOTH                            │
+│  stiffness: 300  │  damping: 30  │  ~250-300ms natural settle  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Position ──────────────────────────────────────────────────►   │
+│     │                                                           │
+│  1.0│         ╭──────────────────────────────────              │
+│     │       ╱                                                   │
+│  0.5│     ╱                                                     │
+│     │   ╱     ← Natural deceleration curve                      │
+│  0.0│ ╱                                                         │
+│     └────────────────────────────────────────────────► Time     │
+│       0    50   100  150  200  250  300ms                       │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -167,5 +179,17 @@ This matches existing patterns in the codebase:
 
 | File | Changes |
 |------|---------|
-| `src/components/agents/sections/AriLocationsSection.tsx` | Wrap ViewToggle in container, add `size="sm"` to all buttons |
+| `src/components/agents/sections/AriLocationsSection.tsx` | Import hooks/springs, add reduced motion check, update AnimatePresence mode, enhance motion.div with scale + spring physics |
+
+---
+
+## Design Rationale
+
+This approach follows the existing patterns in the codebase:
+- **Settings.tsx** uses `springs.smooth` for tab transitions
+- **ThemeSwitcher** uses spring physics for indicator
+- **AriConfigurator** respects `prefersReducedMotion`
+- **AnimatedItem** component combines scale + slide for premium feel
+
+The result is a cohesive, accessible animation that matches the quality of transitions elsewhere in the app.
 
