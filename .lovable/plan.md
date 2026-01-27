@@ -1,256 +1,140 @@
 
 
-# Plan: Move Locations Search to TopBar Center
+# Plan: Move Help Articles Search to TopBar Center
 
 ## Overview
 
-Move the search input from `AriLocationsSection` (inline in the data table toolbar) to the TopBar's center slot, matching the pattern used by Help Center.
+Move the search input from `HelpArticlesManager` (inline in the DataTableToolbar) to the TopBar's center slot, matching the pattern just implemented for Locations.
 
 ---
 
 ## Current Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│ TopBar                                                               │
-│ ┌──────────────┬──────────────────────┬───────────────────────────┐ │
-│ │ Left         │ Center (empty)       │ Right                     │ │
-│ │ Ari > Locat..│                      │ [WordPress] [Add Location]│ │
-│ └──────────────┴──────────────────────┴───────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TopBar                                                                       │
+│ ┌──────────────┬────────────────────┬─────────────────────────────────────┐ │
+│ │ Left         │ Center (empty)     │ Right                               │ │
+│ │ Ari > Help.. │                    │ [Embed All] [Import] [Cat] [+Add]   │ │
+│ └──────────────┴────────────────────┴─────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────┐
-│ AriLocationsSection                                                  │
-│ ┌───────────────────────────────────────────────────────────────────┐│
-│ │ [Communities] [Properties]  [Filter]  ← ViewToggle + FilterPopover││
-│ └───────────────────────────────────────────────────────────────────┘│
-│ ┌───────────────────────────────────────────────────────────────────┐│
-│ │ [🔍 Search...]                        ← DataTableToolbar          ││
-│ └───────────────────────────────────────────────────────────────────┘│
-│ ┌───────────────────────────────────────────────────────────────────┐│
-│ │ Data Table                                                        ││
-│ └───────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ HelpArticlesManager                                                          │
+│ ┌───────────────────────────────────────────────────────────────────────────┐│
+│ │ [🔍 Search articles...]              [🔧 Filters]   ← DataTableToolbar    ││
+│ └───────────────────────────────────────────────────────────────────────────┘│
+│ ┌───────────────────────────────────────────────────────────────────────────┐│
+│ │ DataTable                                                                 ││
+│ └───────────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Target Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│ TopBar                                                               │
-│ ┌──────────────┬──────────────────────┬───────────────────────────┐ │
-│ │ Left         │ Center               │ Right                     │ │
-│ │ Ari > Locat..│ [🔍 Search...]       │ [WordPress] [Add Location]│ │
-│ └──────────────┴──────────────────────┴───────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TopBar                                                                       │
+│ ┌──────────────┬────────────────────┬─────────────────────────────────────┐ │
+│ │ Left         │ Center             │ Right                               │ │
+│ │ Ari > Help.. │ [🔍 Search...]     │ [Embed All] [Import] [Cat] [+Add]   │ │
+│ └──────────────┴────────────────────┴─────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────┐
-│ AriLocationsSection                                                  │
-│ ┌───────────────────────────────────────────────────────────────────┐│
-│ │ [Communities] [Properties]  [Filter]  ← ViewToggle + FilterPopover││
-│ └───────────────────────────────────────────────────────────────────┘│
-│ ┌───────────────────────────────────────────────────────────────────┐│
-│ │ Data Table (no inline search)                                     ││
-│ └───────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ HelpArticlesManager                                                          │
+│ ┌───────────────────────────────────────────────────────────────────────────┐│
+│ │ [🔧 Filters]  [Active Filter Chips...]    ← Filters only, no search      ││
+│ └───────────────────────────────────────────────────────────────────────────┘│
+│ ┌───────────────────────────────────────────────────────────────────────────┐│
+│ │ DataTable                                                                 ││
+│ └───────────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Technical Approach
 
-### Option Analysis
+Since the `AriSectionActionsContext` was already extended to support `centerContent` and `useRegisterSectionCenterContent` for Locations, we can reuse that exact same pattern:
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| **A. Extend AriSectionActionsContext** | Single context for all section content, consistent pattern | More complexity in existing context |
-| **B. Create new AriSectionCenterContext** | Separation of concerns, clear responsibility | Another context to manage |
-| **C. Lift state to AriConfigurator** | Simpler, direct control | Adds props drilling, couples parent to section logic |
-
-**Chosen: Option A** - Extend `AriSectionActionsContext` to support a `centerContent` ReactNode in addition to `actions`.
+1. Create a new `HelpArticlesTopBarSearch` component (mirroring `LocationsTopBarSearch`)
+2. Register it as center content in `HelpArticlesManager` using the existing hook
+3. Hide the inline search in `DataTableToolbar` using the `hideSearch` prop
 
 ---
 
 ## Implementation Details
 
-### 1. Extend AriSectionActionsContext
-**File:** `src/contexts/AriSectionActionsContext.tsx`
+### 1. Create HelpArticlesTopBarSearch Component
+**File:** `src/components/agents/articles/HelpArticlesTopBarSearch.tsx` (NEW)
 
-Add support for center content:
-
-```tsx
-// Add to interface
-interface AriSectionActionsContextValue {
-  actions: SectionAction[];
-  centerContent: ReactNode | null;  // NEW
-  registerActions: (sectionId: string, actions: SectionAction[]) => void;
-  unregisterActions: (sectionId: string) => void;
-  registerCenterContent: (sectionId: string, content: ReactNode) => void;  // NEW
-  unregisterCenterContent: (sectionId: string) => void;  // NEW
-  currentSection: string | null;
-  setCurrentSection: (sectionId: string | null) => void;
-}
-
-// Add new state
-const [centerContentBySection, setCenterContentBySection] = 
-  useState<Record<string, ReactNode>>({});
-
-const registerCenterContent = useCallback((sectionId: string, content: ReactNode) => {
-  setCenterContentBySection(prev => ({ ...prev, [sectionId]: content }));
-}, []);
-
-const unregisterCenterContent = useCallback((sectionId: string) => {
-  setCenterContentBySection(prev => {
-    const next = { ...prev };
-    delete next[sectionId];
-    return next;
-  });
-}, []);
-
-const centerContent = currentSection 
-  ? centerContentBySection[currentSection] || null 
-  : null;
-```
-
-Add hook for sections to register center content:
+Simple search wrapper component that passes value/onChange to `TopBarSearch`:
 
 ```tsx
-export function useRegisterSectionCenterContent(
-  sectionId: string, 
-  content: ReactNode
-) {
-  const { registerCenterContent, unregisterCenterContent } = useAriSectionActions();
-  
-  useEffect(() => {
-    registerCenterContent(sectionId, content);
-    return () => unregisterCenterContent(sectionId);
-  }, [sectionId, content, registerCenterContent, unregisterCenterContent]);
-}
-```
-
----
-
-### 2. Create LocationsTopBarSearch Component
-**File:** `src/components/agents/locations/LocationsTopBarSearch.tsx`
-
-Self-contained search component that manages its own state (like HCTopBarSearch):
-
-```tsx
-import { useState, memo } from 'react';
+import { memo } from 'react';
 import { TopBarSearch } from '@/components/layout/TopBar';
 
-interface LocationsTopBarSearchProps {
+interface HelpArticlesTopBarSearchProps {
   /** Current global filter value from parent */
   value: string;
   /** Callback when search changes */
   onChange: (value: string) => void;
-  /** Placeholder based on view mode */
-  placeholder?: string;
 }
 
-export const LocationsTopBarSearch = memo(function LocationsTopBarSearch({
+/**
+ * Search component for the Help Articles section TopBar.
+ * No popover/dropdown - just filters the data table directly.
+ */
+export const HelpArticlesTopBarSearch = memo(function HelpArticlesTopBarSearch({
   value,
   onChange,
-  placeholder = 'Search...',
-}: LocationsTopBarSearchProps) {
+}: HelpArticlesTopBarSearchProps) {
   return (
     <TopBarSearch
-      placeholder={placeholder}
+      placeholder="Search articles..."
       value={value}
       onChange={onChange}
-      showPopover={false}  // No dropdown results - just filters the table
+      showPopover={false}
       className="w-48 lg:w-64"
     />
   );
 });
 ```
 
----
-
-### 3. Update AriLocationsSection
-**File:** `src/components/agents/sections/AriLocationsSection.tsx`
+### 2. Update HelpArticlesManager
+**File:** `src/components/agents/HelpArticlesManager.tsx`
 
 **Changes:**
-1. Import `useRegisterSectionCenterContent`
-2. Create memoized search component with current state
-3. Register center content via the hook
-4. Remove search from `DataTableToolbar` (set `searchColumn` to undefined or hide it)
 
+**A. Add imports:**
 ```tsx
 import { useRegisterSectionCenterContent } from '@/contexts/AriSectionActionsContext';
-import { LocationsTopBarSearch } from '@/components/agents/locations/LocationsTopBarSearch';
+import { HelpArticlesTopBarSearch } from './articles/HelpArticlesTopBarSearch';
+```
 
-// Inside the component:
-
+**B. Register center content (after line 604, after `useRegisterSectionActions`):**
+```tsx
 // Register center content for TopBar (search bar)
-const searchPlaceholder = viewMode === 'communities' 
-  ? 'Search communities...' 
-  : 'Search properties...';
-
 const centerContent = useMemo(() => (
-  <LocationsTopBarSearch
+  <HelpArticlesTopBarSearch
     value={globalFilter}
     onChange={setGlobalFilter}
-    placeholder={searchPlaceholder}
   />
-), [globalFilter, searchPlaceholder]);
+), [globalFilter]);
 
-useRegisterSectionCenterContent('locations', centerContent);
-
-// Update DataTableToolbar to hide search - use a custom prop or wrapper
-// Option: Remove search entirely by not rendering DataTableToolbar's search
+useRegisterSectionCenterContent('help-articles', centerContent);
 ```
 
-**For removing inline search:**
-Since `DataTableToolbar` always renders search, we have two options:
-
-A. Add a `hideSearch` prop to `DataTableToolbar`
-B. Create a simpler `LocationsToolbar` component that doesn't include search
-
-**Chosen: Option A** - Add `hideSearch?: boolean` prop to `DataTableToolbar`
-
----
-
-### 4. Update DataTableToolbar
-**File:** `src/components/data-table/DataTableToolbar.tsx`
-
-Add optional `hideSearch` prop:
-
+**C. Update DataTableToolbar to hide search (lines 786-791):**
 ```tsx
-interface DataTableToolbarProps<TData> {
-  // ... existing props
-  /** Hide the search input (when search is in TopBar) */
-  hideSearch?: boolean;
-}
-
-// In render:
-{!hideSearch && (
-  <div className={cn('relative w-full max-w-sm', searchClassName)}>
-    {/* Search input */}
-  </div>
-)}
-```
-
----
-
-### 5. Update AriConfigurator
-**File:** `src/pages/AriConfigurator.tsx`
-
-Add center content from context to TopBar config:
-
-```tsx
-// Add to AriTopBarActions or create new component
-function AriTopBarCenter() {
-  const { centerContent } = useAriSectionActions();
-  return <>{centerContent}</>;
-}
-
-// Update topBarConfig
-const topBarConfig = useMemo(() => ({
-  left: <TopBarPageContext ... />,
-  center: <AriTopBarCenter />,  // NEW
-  right: <AriTopBarActions />,
-}), [currentSectionLabel]);
+<DataTableToolbar
+  table={table}
+  searchPlaceholder="Search articles..."
+  globalFilter
+  searchClassName="max-w-xs"
+  hideSearch  // NEW - hide inline search, moved to TopBar
+/>
 ```
 
 ---
@@ -259,11 +143,8 @@ const topBarConfig = useMemo(() => ({
 
 | File | Changes |
 |------|---------|
-| `src/contexts/AriSectionActionsContext.tsx` | Add `centerContent`, `registerCenterContent`, `unregisterCenterContent`, `useRegisterSectionCenterContent` |
-| `src/components/agents/locations/LocationsTopBarSearch.tsx` | **NEW** - Simple search wrapper component |
-| `src/components/agents/sections/AriLocationsSection.tsx` | Register center content, update DataTableToolbar usage |
-| `src/components/data-table/DataTableToolbar.tsx` | Add `hideSearch` prop |
-| `src/pages/AriConfigurator.tsx` | Add `AriTopBarCenter` component, update topBarConfig |
+| `src/components/agents/articles/HelpArticlesTopBarSearch.tsx` | **NEW** - Simple search wrapper component |
+| `src/components/agents/HelpArticlesManager.tsx` | Import new hook, register center content, add `hideSearch` to toolbar |
 
 ---
 
@@ -272,41 +153,45 @@ const topBarConfig = useMemo(() => ({
 **Before:**
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ Ari > Locations                      [WordPress] [Add Location] │
+│ Ari > Help Articles        [Embed] [Import] [Categories] [+Add] │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Communities] [Properties]                         [🔧 Filters] │
+│ [🔍 Search articles...]                           [🔧 Filters]  │ ← HERE
 ├──────────────────────────────────────────────────────────────────┤
-│ [🔍 Search...]                                                   │ ← HERE
-├──────────────────────────────────────────────────────────────────┤
-│ | Name | State | Calendar | WordPress |                         │
+│ | Title | Category | Status |                                   │
 │ ...                                                              │
 ```
 
 **After:**
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ Ari > Locations   [🔍 Search...]     [WordPress] [Add Location] │ ← MOVED
+│ Ari > Help..  [🔍 Search...]   [Embed] [Import] [Cat] [+Add]    │ ← MOVED
 ├──────────────────────────────────────────────────────────────────┤
-│ [Communities] [Properties]                         [🔧 Filters] │
+│                                                   [🔧 Filters]  │
 ├──────────────────────────────────────────────────────────────────┤
-│ | Name | State | Calendar | WordPress |                         │
+│ | Title | Category | Status |                                   │
 │ ...                                                              │
 ```
 
 ---
 
-## Edge Cases Handled
+## Dependencies
 
-1. **View mode switch**: Search placeholder updates dynamically based on `viewMode`
-2. **Section navigation**: Center content auto-clears when leaving Locations section (context handles this)
-3. **Empty state**: Search still appears in TopBar even when table has no data (consistent UX)
-4. **Responsive**: TopBarSearch has responsive widths (`w-48 lg:w-64`)
+This implementation relies on infrastructure already created for Locations:
+
+- ✅ `useRegisterSectionCenterContent` hook in `AriSectionActionsContext.tsx`
+- ✅ `centerContent` state management in context
+- ✅ `AriTopBarCenter` component in `AriConfigurator.tsx`
+- ✅ `hideSearch` prop in `DataTableToolbar.tsx`
+- ✅ `TopBarSearch` component with `showPopover={false}` support
+
+No changes needed to the context or AriConfigurator - they already support this pattern.
 
 ---
 
-## Accessibility
+## Technical Notes
 
-- Search maintains keyboard focus and Escape to clear behavior
-- `aria-label` preserved on clear button
-- No changes to screen reader experience
+1. **Section ID**: Uses `'help-articles'` to match the existing `useRegisterSectionActions` call
+2. **Global Filter**: Reuses the existing `globalFilter` / `setGlobalFilter` state from TanStack Table
+3. **Toolbar simplification**: The toolbar will only show the Filters button, not the search input
+4. **Empty state**: Search still appears in TopBar even when no articles exist (helps with empty search feedback)
 
