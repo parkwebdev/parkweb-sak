@@ -74,6 +74,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [discoveredEndpoints, setDiscoveredEndpoints] = useState<DiscoveredEndpoints | null>(null);
   const [connectionStep, setConnectionStep] = useState<ConnectionStep>('url');
+  const [connectedUrl, setConnectedUrl] = useState<string>('');  // Track URL locally to avoid race condition
   
   // Sample post data for field mapping
   const [samplePostData, setSamplePostData] = useState<SamplePostData>({ community: null, property: null });
@@ -474,6 +475,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       toast.success('WordPress disconnected', {
         description: deleteLocations ? 'All synced locations have been deleted' : 'Configuration cleared',
       });
+      setConnectedUrl('');  // Clear local URL on disconnect
       onSyncComplete?.();
       return true;
     } catch (error: unknown) {
@@ -527,6 +529,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
           unclassifiedEndpoints: data.unclassifiedEndpoints || [],
         };
         setDiscoveredEndpoints(endpoints);
+        setConnectedUrl(url.trim());  // Store URL locally for field mapping
         setConnectionStep('mapping');
         return { success: true, endpoints };
       }
@@ -549,7 +552,9 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     endpoint: string,
     type: 'community' | 'property'
   ): Promise<SamplePostResult | null> => {
-    if (!agent?.id || !storedSiteUrl) return null;
+    // Use local connectedUrl first (set during connection flow), fallback to stored
+    const siteUrlToUse = connectedUrl || storedSiteUrl;
+    if (!agent?.id || !siteUrlToUse) return null;
 
     setIsFetchingSample(true);
 
@@ -564,7 +569,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
         body: {
           action: 'fetch-sample',
           agentId: agent.id,
-          siteUrl: storedSiteUrl,
+          siteUrl: siteUrlToUse,
           endpoint,
           type,
         },
@@ -578,7 +583,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     } finally {
       setIsFetchingSample(false);
     }
-  }, [agent?.id, storedSiteUrl]);
+  }, [agent?.id, storedSiteUrl, connectedUrl]);
 
   /**
    * Save endpoint mappings and transition to field mapping step.
@@ -725,6 +730,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     setSamplePostData({ community: null, property: null });
     setCommunityFieldMappings({});
     setPropertyFieldMappings({});
+    setConnectedUrl('');  // Clear local URL on reset
   }, []);
 
   return {
