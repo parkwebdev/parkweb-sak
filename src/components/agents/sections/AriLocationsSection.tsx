@@ -7,6 +7,7 @@
  */
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'motion/react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -459,37 +460,47 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
     return <SkeletonTableSection rows={5} />;
   }
 
-  // View toggle component - pill container with compact buttons
+  // View toggle component - pill container with animated sliding indicator
   const ViewToggle = (
     <div className="inline-flex items-center gap-1 rounded-md bg-muted p-1">
-      <Button 
-        size="sm"
-        variant={viewMode === 'communities' ? 'secondary' : 'ghost'}
+      <button
+        type="button"
         onClick={() => setViewMode('communities')}
-        className={viewMode === 'communities' 
-          ? 'bg-background shadow-sm hover:bg-background/90' 
-          : 'hover:bg-transparent'
-        }
+        className="relative z-10 inline-flex h-8 items-center gap-2 rounded-md px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        Communities
-        <Badge variant="outline" size="counter" className="ml-1.5">
+        {viewMode === 'communities' && (
+          <motion.div
+            layoutId="locations-view-indicator"
+            className="absolute inset-0 rounded-md bg-background shadow-sm"
+            transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+          />
+        )}
+        <span className={`relative z-10 ${viewMode === 'communities' ? 'text-foreground' : 'text-muted-foreground'}`}>
+          Communities
+        </span>
+        <Badge variant="outline" size="counter" className="relative z-10">
           {locations.length}
         </Badge>
-      </Button>
-      <Button 
-        size="sm"
-        variant={viewMode === 'properties' ? 'secondary' : 'ghost'}
+      </button>
+      <button
+        type="button"
         onClick={() => setViewMode('properties')}
-        className={viewMode === 'properties' 
-          ? 'bg-background shadow-sm hover:bg-background/90' 
-          : 'hover:bg-transparent'
-        }
+        className="relative z-10 inline-flex h-8 items-center gap-2 rounded-md px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        Properties
-        <Badge variant="outline" size="counter" className="ml-1.5">
+        {viewMode === 'properties' && (
+          <motion.div
+            layoutId="locations-view-indicator"
+            className="absolute inset-0 rounded-md bg-background shadow-sm"
+            transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+          />
+        )}
+        <span className={`relative z-10 ${viewMode === 'properties' ? 'text-foreground' : 'text-muted-foreground'}`}>
+          Properties
+        </span>
+        <Badge variant="outline" size="counter" className="relative z-10">
           {propertiesWithLocation.length}
         </Badge>
-      </Button>
+      </button>
     </div>
   );
 
