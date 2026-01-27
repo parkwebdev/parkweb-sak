@@ -40,6 +40,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   RefreshCw01, 
   Check, 
@@ -543,20 +549,31 @@ export function WordPressIntegrationSheet({
                           </Badge>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleSyncHomes}
-                        disabled={isLoading}
-                        className="h-8 w-8 p-0"
-                      >
-                        <RefreshCw01 
-                          size={16} 
-                          className={homesSyncing ? 'animate-spin' : ''} 
-                          aria-hidden="true" 
-                        />
-                        <span className="sr-only">Sync properties</span>
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={isLoading}
+                            className="h-8 w-8 p-0"
+                          >
+                            <RefreshCw01 
+                              size={16} 
+                              className={homesSyncing ? 'animate-spin' : ''} 
+                              aria-hidden="true" 
+                            />
+                            <span className="sr-only">Sync properties</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => syncHomes(undefined, extractionMode === 'ai')}>
+                            Quick Sync
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => syncHomes(undefined, extractionMode === 'ai', undefined, true)}>
+                            Full Resync
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                     
                     <div className="text-xs text-muted-foreground">
