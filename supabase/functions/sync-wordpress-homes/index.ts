@@ -14,6 +14,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { extractPropertyData, type ExtractedPropertyData } from '../_shared/ai/wordpress-extraction.ts';
+import { parseAddressComponents } from '../_shared/utils/address-parser.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -772,6 +773,24 @@ async function syncHomesToProperties(
           if (!status || status === 'available') status = aiData.status || 'available';
           if (!description) description = aiData.description || null;
           if (features.length === 0) features = aiData.features || [];
+        }
+      }
+      
+      // PRIORITY 2.5: Parse combined address if city/state/zip still empty
+      // This runs before keyword extraction to avoid wasting cycles on fields we can parse
+      if (address && (!city || !state || !zip)) {
+        const parsed = parseAddressComponents(address);
+        if (!city && parsed.city) {
+          city = parsed.city;
+          console.log(`📍 Parsed city from address: ${city}`);
+        }
+        if (!state && parsed.state) {
+          state = parsed.state;
+          console.log(`📍 Parsed state from address: ${state}`);
+        }
+        if (!zip && parsed.zip) {
+          zip = parsed.zip;
+          console.log(`📍 Parsed zip from address: ${zip}`);
         }
       }
       
