@@ -6,10 +6,8 @@
  * Toggle between Communities and Properties views.
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { springs } from '@/lib/motion-variants';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -107,10 +105,7 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
 
   // Infinite scroll state
   const [displayCount, setDisplayCount] = useState(20);
-  const loadMoreRef = { current: null as HTMLDivElement | null };
-  
-  // Animation preferences
-  const prefersReducedMotion = useReducedMotion();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Reset filters when switching view modes
   useEffect(() => {
@@ -739,15 +734,15 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
             </div>
 
             {/* Animated content area */}
-            <AnimatePresence mode="popLayout" initial={false}>
+            <AnimatePresence mode="wait">
               {/* Communities View */}
               {viewMode === 'communities' && (
                 <motion.div
                   key="communities"
-                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -24, scale: 0.98 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24, scale: 0.98 }}
-                  transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
                 >
                   {locationsWithCounts.length === 0 ? (
                     <EmptyState
@@ -816,10 +811,10 @@ export function AriLocationsSection({ agentId, userId }: AriLocationsSectionProp
               {viewMode === 'properties' && (
                 <motion.div
                   key="properties"
-                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 24, scale: 0.98 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -24, scale: 0.98 }}
-                  transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
                 >
                   {propertiesWithLocation.length === 0 ? (
                     <EmptyState
