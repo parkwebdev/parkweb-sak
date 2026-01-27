@@ -11,6 +11,8 @@
 import { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { LayoutPanelRight } from '@/components/icons/LayoutPanelIcons';
 import { PromptTestChat } from './PromptTestChat';
 import { cn } from '@/lib/utils';
 import type { PromptOverrides } from '@/widget/api';
@@ -37,10 +39,26 @@ export function AdminPromptPreviewPanel({
         isCollapsed ? "w-12" : "w-[360px]"
       )}
     >
+      {/* Collapsed state - just show the expand button */}
+      {isCollapsed && (
+        <div className="flex items-center justify-center h-14 border-b">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={onToggleCollapse}
+            aria-label="Expand preview"
+          >
+            <LayoutPanelRight filled={false} className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Expanded state - show full content */}
       <div 
         className={cn(
           "flex-1 min-h-0 flex flex-col transition-opacity duration-200",
-          isCollapsed ? "opacity-0 invisible" : "opacity-100 visible"
+          isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible"
         )}
       >
         {/* Draft toggle - only show when there are unsaved changes */}

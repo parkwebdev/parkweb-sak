@@ -8,6 +8,8 @@
  * @module components/agents/AriPreviewColumn
  */
 
+import { Button } from '@/components/ui/button';
+import { LayoutPanelRight } from '@/components/icons/LayoutPanelIcons';
 import { PreviewChat } from './PreviewChat';
 import { cn } from '@/lib/utils';
 import type { CustomField, FormStep } from '@/hooks/useEmbeddedChatConfig';
@@ -43,10 +45,26 @@ export function AriPreviewColumn({
         isCollapsed ? "w-12" : "w-[375px]"
       )}
     >
+      {/* Collapsed state - just show the expand button */}
+      {isCollapsed && (
+        <div className="flex items-center justify-center h-14 border-b">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={onToggleCollapse}
+            aria-label="Expand preview"
+          >
+            <LayoutPanelRight filled={false} className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Expanded state - show full PreviewChat */}
       <div 
         className={cn(
           "flex-1 min-h-0 flex flex-col transition-opacity duration-200",
-          isCollapsed ? "opacity-0 invisible" : "opacity-100 visible"
+          isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible"
         )}
       >
         <PreviewChat 
