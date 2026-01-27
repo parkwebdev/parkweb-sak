@@ -31,7 +31,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { RefreshCw01, Check, AlertCircle, ArrowRight, ChevronRight, Zap, Home01, Trash01, LinkExternal01, Building01, Settings01, SearchRefraction } from '@untitledui/icons';
+import { RefreshCw01, Check, AlertCircle, ArrowRight, ChevronRight, Zap, Home01, Trash01, LinkExternal01, Building01, Settings01, SearchRefraction, ChevronDown } from '@untitledui/icons';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
@@ -473,24 +479,32 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                         >
                           {homesTesting ? 'Testing...' : 'Test'}
                         </Button>
-                        <Button
-                          size="sm"
-                          onClick={handleSyncHomes}
-                          disabled={homesSyncing}
-                          className="h-7"
-                        >
-                          {homesSyncing ? (
-                            <>
-                              <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                              Syncing...
-                            </>
-                          ) : (
-                            <>
-                              <RefreshCw01 className="h-3.5 w-3.5 mr-1.5" />
-                              Sync Homes
-                            </>
-                          )}
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" disabled={homesSyncing} className="h-7">
+                              {homesSyncing ? (
+                                <>
+                                  <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" aria-hidden="true" />
+                                  Syncing...
+                                </>
+                              ) : (
+                                <>
+                                  <RefreshCw01 className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                                  Sync
+                                  <ChevronDown className="h-3 w-3 ml-1" aria-hidden="true" />
+                                </>
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => syncHomes(undefined, useAiExtraction)}>
+                              Quick Sync
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => syncHomes(undefined, useAiExtraction, undefined, true)}>
+                              Full Resync
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
 
