@@ -11,6 +11,7 @@
 import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { X, Grid01 as Grid, SearchMd, Shield01, ArrowLeft } from '@untitledui/icons';
+import { LayoutPanelLeft } from '@/components/icons/LayoutPanelIcons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -90,6 +91,10 @@ const adminNavigationItems: NavigationItem[] = ADMIN_SECTIONS.map(adminSectionTo
 interface SidebarProps {
   /** Optional callback when mobile close button is clicked */
   onClose?: () => void;
+  /** Whether the sidebar is collapsed (desktop only) */
+  isCollapsed?: boolean;
+  /** Callback to toggle sidebar collapse state */
+  onToggleCollapse?: () => void;
 }
 
 /**
@@ -105,7 +110,7 @@ interface SidebarProps {
  * // Mobile with close button
  * <Sidebar onClose={() => setMobileMenuOpen(false)} />
  */
-function SidebarComponent({ onClose }: SidebarProps) {
+function SidebarComponent({ onClose, isCollapsed, onToggleCollapse }: SidebarProps) {
   const location = useLocation();
   const { conversations } = useConversations();
   const prefersReducedMotion = useReducedMotion();
@@ -188,33 +193,65 @@ function SidebarComponent({ onClose }: SidebarProps) {
   }).length;
 
   return (
-    <aside className="flex h-full w-[240px] rounded-xl border bg-sidebar border-sidebar-border">
+    <aside className={cn(
+      "flex h-full rounded-xl border bg-sidebar border-sidebar-border transition-all duration-200 ease-in-out",
+      isCollapsed ? "w-12" : "w-[240px]"
+    )}>
       <nav className="w-full flex flex-col pt-6 px-3 pb-4 text-sidebar-foreground" aria-label="Main navigation">
         {/* Header with logo */}
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
-            {isPilotTeamMember && isOnAdminRoute ? (
-              // Admin mode header
-              <div className="flex items-center gap-2">
-                <PilotLogo className="h-6 w-6 text-white flex-shrink-0" />
-                <span className="text-sm font-semibold text-white">Admin</span>
-              </div>
-            ) : (
-              <PilotLogo className="h-6 w-6 text-white flex-shrink-0" />
-            )}
-            {onClose && (
+            {isCollapsed ? (
+              // Collapsed: show only toggle button centered
               <button
-                onClick={onClose}
-                className="lg:hidden p-1 rounded-md hover:bg-white/5 text-white/60 hover:text-white"
-                aria-label="Close menu"
+                onClick={onToggleCollapse}
+                className="p-2 rounded-md hover:bg-white/5 text-white/60 hover:text-white mx-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
+                aria-label="Expand sidebar"
               >
-                <X size={16} />
+                <LayoutPanelLeft filled={false} className="h-4 w-4" />
               </button>
+            ) : (
+              <>
+                {isPilotTeamMember && isOnAdminRoute ? (
+                  // Admin mode header
+                  <div className="flex items-center gap-2">
+                    <PilotLogo className="h-6 w-6 text-white flex-shrink-0" />
+                    <span className="text-sm font-semibold text-white">Admin</span>
+                  </div>
+                ) : (
+                  <PilotLogo className="h-6 w-6 text-white flex-shrink-0" />
+                )}
+                
+                {/* Desktop collapse toggle */}
+                {onToggleCollapse && (
+                  <button
+                    onClick={onToggleCollapse}
+                    className="hidden lg:flex p-1.5 rounded-md hover:bg-white/5 text-white/60 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
+                    aria-label="Collapse sidebar"
+                  >
+                    <LayoutPanelLeft filled={true} className="h-4 w-4" />
+                  </button>
+                )}
+                
+                {/* Mobile close button */}
+                {onClose && (
+                  <button
+                    onClick={onClose}
+                    className="lg:hidden p-1 rounded-md hover:bg-white/5 text-white/60 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
+                    aria-label="Close menu"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </>
             )}
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto">
+        <div className={cn(
+          "flex-1 overflow-auto transition-opacity duration-200",
+          isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible"
+        )}>
           {/* Search bar - above main navigation */}
           <motion.div 
             className="items-center flex w-full py-0.5 mb-2"
@@ -304,7 +341,10 @@ function SidebarComponent({ onClose }: SidebarProps) {
         </div>
 
         {/* Footer with bottom nav items */}
-        <div className="pt-4">
+        <div className={cn(
+          "pt-4 transition-opacity duration-200",
+          isCollapsed ? "opacity-0 invisible h-0" : "opacity-100 visible"
+        )}>
           {/* Bottom navigation (get set up, settings) - permission filtered */}
           {filteredBottomItems.map((item, index) => {
             const isActive = location.pathname === item.path;
