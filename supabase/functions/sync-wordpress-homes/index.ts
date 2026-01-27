@@ -396,8 +396,14 @@ Deno.serve(async (req: Request) => {
       const locationMaps: LocationMaps = { termIdMap };
       console.log(`Built location map with ${termIdMap.size} WordPress taxonomy term IDs`);
 
+      // Compute required fields from property_field_mappings
+      const extraFields = getRequiredFieldsFromMappings(wpConfig?.property_field_mappings);
+      if (extraFields.length > 0) {
+        console.log(`📋 Field mappings require these top-level fields: ${extraFields.join(', ')}`);
+      }
+
       // Fetch homes from WordPress using configured endpoint
-      const homes = await fetchWordPressHomes(urlToSync, endpoint, isIncremental ? lastSync : undefined);
+      const homes = await fetchWordPressHomes(urlToSync, endpoint, isIncremental ? lastSync : undefined, extraFields);
       console.log(`Fetched ${homes.length} homes from WordPress`);
 
       // Sync homes to properties with optimizations
@@ -431,6 +437,15 @@ Deno.serve(async (req: Request) => {
 
       const duration = Date.now() - startTime;
       console.log(`WordPress homes sync completed in ${duration}ms: ${result.created} created, ${result.updated} updated, ${result.unchanged} unchanged, ${result.deleted} deleted`);
+      
+      // Log errors if any occurred
+      if (result.errors.length > 0) {
+        console.warn(`⚠️ Sync completed with ${result.errors.length} errors:`);
+        result.errors.slice(0, 3).forEach((err, i) => console.warn(`  ${i + 1}. ${err}`));
+        if (result.errors.length > 3) {
+          console.warn(`  ... and ${result.errors.length - 3} more errors`);
+        }
+      }
 
       return new Response(
         JSON.stringify({
@@ -535,12 +550,35 @@ async function testWordPressHomesEndpoint(
 }
 
 /**
+ * Extract top-level field roots from field mappings
+ * e.g., "property_meta.fave_property_address" → "property_meta"
+ */
+function getRequiredFieldsFromMappings(mappings?: Record<string, string>): string[] {
+  if (!mappings) return [];
+  
+  const roots = new Set<string>();
+  for (const path of Object.values(mappings)) {
+    if (path && typeof path === 'string') {
+      const firstPart = path.split('.')[0];
+      if (firstPart) roots.add(firstPart);
+    }
+  }
+  
+  return Array.from(roots);
+}
+
+/**
  * Fetch homes from WordPress with optional incremental sync
+ * @param siteUrl - The WordPress site URL
+ * @param endpoint - Optional specific endpoint to use
+ * @param modifiedAfter - ISO date string for incremental sync
+ * @param extraFields - Additional top-level fields to request (e.g., from field mappings)
  */
 async function fetchWordPressHomes(
   siteUrl: string, 
   endpoint?: string,
-  modifiedAfter?: string
+  modifiedAfter?: string,
+  extraFields?: string[]
 ): Promise<WordPressHome[]> {
   let formattedUrl = siteUrl.trim();
   if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
@@ -577,19 +615,34 @@ async function fetchWordPressHomes(
 
   console.log(`Using homes endpoint: /${activeEndpoint}`);
 
+  // Build _fields parameter if extra fields are requested
+  // Always include essential fields for the sync to work properly
+  let fieldsParam = '';
+  if (extraFields && extraFields.length > 0) {
+    const baseFields = [
+      'id', 'slug', 'link', 'title', 'content', 'excerpt', 'status', 'modified',
+      '_embedded', 'home_community', 'acf', 'yoast_head_json',
+      // Common taxonomy arrays that sites may use
+      'property_city', 'property_state', 'property_status', 'property_type'
+    ];
+    const allFields = [...new Set([...baseFields, ...extraFields])];
+    fieldsParam = `&_fields=${encodeURIComponent(allFields.join(','))}`;
+    console.log(`📋 Requesting additional fields: ${extraFields.join(', ')}`);
+  }
+
   const homes: WordPressHome[] = [];
   let page = 1;
   const perPage = 100;
 
   while (true) {
-    let apiUrl = `${formattedUrl}/wp-json/wp/v2/${activeEndpoint}?per_page=${perPage}&page=${page}&_embed`;
+    let apiUrl = `${formattedUrl}/wp-json/wp/v2/${activeEndpoint}?per_page=${perPage}&page=${page}&_embed${fieldsParam}`;
     
     // Add modified_after for incremental sync
     if (modifiedAfter) {
       apiUrl += `&modified_after=${encodeURIComponent(modifiedAfter)}`;
     }
     
-    console.log(`Fetching WordPress homes page ${page}: ${apiUrl}`);
+    console.log(`Fetching WordPress homes page ${page}${fieldsParam ? ' (with _fields)' : ''}`);
 
     const response = await fetch(apiUrl, {
       headers: { 'Accept': 'application/json', 'User-Agent': 'Pilot/1.0' },
@@ -605,6 +658,16 @@ async function fetchWordPressHomes(
     const data = await response.json();
     if (!Array.isArray(data) || data.length === 0) {
       break;
+    }
+
+    // Log sample of first property to verify fields are present (only on page 1)
+    if (page === 1 && data.length > 0) {
+      const sample = data[0];
+      const sampleKeys = Object.keys(sample);
+      const hasPropertyMeta = 'property_meta' in sample;
+      const hasAcf = 'acf' in sample;
+      console.log(`📦 Sample property keys: ${sampleKeys.slice(0, 10).join(', ')}${sampleKeys.length > 10 ? '...' : ''}`);
+      console.log(`📦 property_meta present: ${hasPropertyMeta}, acf present: ${hasAcf}`);
     }
 
     homes.push(...data);
