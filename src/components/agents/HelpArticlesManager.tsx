@@ -830,7 +830,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           )}
 
           {/* Pagination */}
-          <DataTablePagination table={table} showRowsPerPage showSelectedCount />
+          <DataTablePagination table={table} showRowsPerPage />
         </>
       )}
 

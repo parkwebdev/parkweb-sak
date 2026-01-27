@@ -589,7 +589,7 @@ function AriKnowledgeSectionComponent({ agentId, userId }: AriKnowledgeSectionPr
             />
 
             {/* Pagination */}
-            <DataTablePagination table={table} showRowsPerPage showSelectedCount />
+            <DataTablePagination table={table} showRowsPerPage />
           </>
         )}
 
