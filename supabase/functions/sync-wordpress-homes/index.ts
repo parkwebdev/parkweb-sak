@@ -890,10 +890,13 @@ async function syncHomesToProperties(
         }
       }
       
-      // PRIORITY 2.5: Parse combined address if city/state/zip still empty
-      // This runs before keyword extraction to avoid wasting cycles on fields we can parse
-      if (address && (!city || !state || !zip)) {
+      // PRIORITY 2.5: Parse combined address for city/state/zip extraction AND street cleanup
+      // This ALWAYS runs if address exists to handle the case where field mappings provide
+      // both a combined address AND separate city/state/zip fields
+      if (address) {
         const parsed = parseAddressComponents(address);
+        
+        // Fill in missing city/state/zip from parsed address
         if (!city && parsed.city) {
           city = parsed.city;
           console.log(`📍 Parsed city from address: ${city}`);
@@ -906,7 +909,8 @@ async function syncHomesToProperties(
           zip = parsed.zip;
           console.log(`📍 Parsed zip from address: ${zip}`);
         }
-        // Extract just the street component if we successfully parsed city/state/zip
+        
+        // ALWAYS extract just the street component if address contains city/state/zip patterns
         if (parsed.street && (parsed.city || parsed.state || parsed.zip)) {
           address = parsed.street;
           console.log(`📍 Extracted street address: ${address}`);
