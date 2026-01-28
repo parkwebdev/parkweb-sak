@@ -1039,14 +1039,40 @@ function flattenObject(
     if (value === null || value === undefined) {
       result.push({ path, sampleValue: null, type: 'null' });
     } else if (Array.isArray(value)) {
-      // For arrays, show the first element or the array itself
-      if (value.length > 0 && typeof value[0] === 'string') {
-        result.push({ path, sampleValue: value.slice(0, 3).join(', '), type: 'array' });
-      } else if (value.length > 0 && typeof value[0] === 'object') {
-        // Skip complex nested arrays for simplicity
-        result.push({ path, sampleValue: `[${value.length} items]`, type: 'array' });
+      // For arrays, extract meaningful preview content
+      if (value.length === 0) {
+        result.push({ path, sampleValue: '[]', type: 'array' });
+      } else if (typeof value[0] === 'string') {
+        // String arrays: show first 3 items joined
+        result.push({ path, sampleValue: value.slice(0, 3).join(', ') + (value.length > 3 ? `, +${value.length - 3} more` : ''), type: 'array' });
+      } else if (typeof value[0] === 'number') {
+        // Number arrays: show first 3 items
+        result.push({ path, sampleValue: value.slice(0, 3).join(', ') + (value.length > 3 ? `, +${value.length - 3} more` : ''), type: 'array' });
+      } else if (typeof value[0] === 'object' && value[0] !== null) {
+        // Object arrays: extract name/title/label from first 3 objects
+        const extracted = value.slice(0, 3).map((item: Record<string, unknown>) => {
+          // Try common name fields
+          return item.name || item.title || item.label || item.value || 
+                 (item.rendered as string) || item.slug || item.id || 
+                 JSON.stringify(item).slice(0, 30);
+        }).filter(Boolean);
+        
+        if (extracted.length > 0) {
+          result.push({ 
+            path, 
+            sampleValue: extracted.join(', ') + (value.length > 3 ? `, +${value.length - 3} more` : ''), 
+            type: 'array' 
+          });
+        } else {
+          // Fallback: show count with hint about structure
+          const keys = Object.keys(value[0]).slice(0, 3).join(', ');
+          result.push({ path, sampleValue: `[${value.length} objects with: ${keys}]`, type: 'array' });
+        }
+        
+        // Also recurse into first array item to expose nested fields
+        flattenObject(value[0] as Record<string, unknown>, `${path}[0]`, result, maxDepth, currentDepth + 1);
       } else {
-        result.push({ path, sampleValue: value.length > 0 ? String(value[0]) : '[]', type: 'array' });
+        result.push({ path, sampleValue: String(value[0]), type: 'array' });
       }
     } else if (typeof value === 'object') {
       // Recurse into objects (like acf, title, etc.)
