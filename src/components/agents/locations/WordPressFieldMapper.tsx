@@ -25,15 +25,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ArrowLeft, Check, ChevronDown } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import type { AvailableField } from '@/types/wordpress';
 
-/** Field available from WordPress API */
-export interface AvailableField {
-  path: string;
-  sampleValue: string | number | boolean | null;
-  type: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'null';
-}
+// Re-export from types for backwards compatibility
+export type { AvailableField } from '@/types/wordpress';
 
 /** Target field definition */
 interface TargetField {
@@ -96,13 +98,37 @@ export interface WordPressFieldMapperProps {
   samplePostTitle?: string;
 }
 
-function formatSampleValue(value: string | number | boolean | null): string {
+/** Type badge for field data types */
+function TypeBadge({ type }: { type: AvailableField['type'] }) {
+  const labels: Record<AvailableField['type'], string> = {
+    string: 'STR',
+    number: 'NUM',
+    boolean: 'BOOL',
+    array: 'ARR',
+    object: 'OBJ',
+    null: 'NULL',
+  };
+  
+  return (
+    <span className="text-3xs font-medium text-muted-foreground/60 uppercase tracking-wider px-1 py-0.5 bg-muted/50 rounded shrink-0">
+      {labels[type]}
+    </span>
+  );
+}
+
+function formatSampleValue(value: string | number | boolean | null, maxLength = 60): string {
   if (value === null || value === undefined) return '(empty)';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (typeof value === 'number') return String(value);
   const str = String(value);
-  if (str.length > 40) return str.substring(0, 40) + '...';
+  if (str.length > maxLength) return str.substring(0, maxLength) + '...';
   return str;
+}
+
+function getFullValue(value: string | number | boolean | null): string {
+  if (value === null || value === undefined) return '(empty)';
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  return String(value);
 }
 
 /** Searchable field select using Popover + Command pattern */
@@ -120,6 +146,7 @@ function SearchableFieldSelect({
   isMapped,
 }: SearchableFieldSelectProps) {
   const [open, setOpen] = useState(false);
+  const selectedField = availableFields.find(f => f.path === selectedSource);
   
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -129,27 +156,36 @@ function SearchableFieldSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "h-10 w-full justify-between bg-background border-border/60",
+            "h-auto min-h-10 w-full justify-between bg-background border-border/60 py-2",
             "hover:border-primary/50 transition-colors",
             "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             isMapped && "border-primary/30"
           )}
         >
-          {selectedSource ? (
-            <code className="font-mono text-xs truncate">{selectedSource}</code>
-          ) : (
-            <span className="text-muted-foreground italic">Don't import</span>
-          )}
+          <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1">
+            {selectedSource ? (
+              <>
+                <code className="font-mono text-xs truncate w-full text-left">{selectedSource}</code>
+                {selectedField && (
+                  <span className="text-2xs text-muted-foreground truncate w-full text-left">
+                    {formatSampleValue(selectedField.sampleValue, 40)}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-muted-foreground italic text-sm">Don't import</span>
+            )}
+          </div>
           <ChevronDown size={16} className="ml-2 shrink-0 opacity-50" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="min-w-[320px] w-auto max-w-[400px] p-0 bg-popover" 
+        className="min-w-[400px] w-auto max-w-[500px] p-0 bg-popover" 
         align="start"
       >
         <Command>
-          <CommandInput placeholder="Search fields..." />
-          <CommandList className="max-h-[300px]">
+          <CommandInput placeholder="Search fields or sample values..." />
+          <CommandList className="max-h-[350px]">
             <CommandEmpty>No fields found.</CommandEmpty>
             <CommandGroup>
               <CommandItem
@@ -158,31 +194,59 @@ function SearchableFieldSelect({
                   onSelect(null);
                   setOpen(false);
                 }}
-                className="text-muted-foreground italic"
+                className="text-muted-foreground italic py-2"
               >
                 {selectedSource === null && (
-                  <Check size={16} className="mr-2 shrink-0" aria-hidden="true" />
+                  <Check size={14} className="mr-2 shrink-0" aria-hidden="true" />
                 )}
-                Don't import
+                Don't import this field
               </CommandItem>
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup>
-              {availableFields.map((field) => (
-                <CommandItem
-                  key={field.path}
-                  value={field.path}
-                  onSelect={() => {
-                    onSelect(field.path);
-                    setOpen(false);
-                  }}
-                >
-                  {selectedSource === field.path && (
-                    <Check size={16} className="mr-2 shrink-0" aria-hidden="true" />
-                  )}
-                  <code className="font-mono text-xs">{field.path}</code>
-                </CommandItem>
-              ))}
+              {availableFields.map((field) => {
+                const fullValue = getFullValue(field.sampleValue);
+                const displayValue = formatSampleValue(field.sampleValue);
+                const isTruncated = fullValue.length > 60;
+                
+                return (
+                  <CommandItem
+                    key={field.path}
+                    value={`${field.path} ${fullValue}`}
+                    onSelect={() => {
+                      onSelect(field.path);
+                      setOpen(false);
+                    }}
+                    className="flex flex-col items-start gap-1 py-2"
+                  >
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {selectedSource === field.path && (
+                          <Check size={14} className="shrink-0 text-primary" aria-hidden="true" />
+                        )}
+                        <code className="font-mono text-xs truncate">{field.path}</code>
+                      </div>
+                      <TypeBadge type={field.type} />
+                    </div>
+                    {isTruncated ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-xs text-muted-foreground truncate w-full pl-5 cursor-help">
+                            {displayValue}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-[300px]">
+                          <p className="text-xs break-words">{fullValue}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <p className="text-xs text-muted-foreground truncate w-full pl-5">
+                        {displayValue}
+                      </p>
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>
@@ -241,7 +305,6 @@ function MappingRow({
   onSelect,
   isLast,
 }: MappingRowProps) {
-  const sourceField = availableFields.find(f => f.path === selectedSource);
   const isMapped = !!selectedSource;
   const isAutoDetected = selectedSource === suggestedSource && suggestedSource !== undefined;
   
@@ -252,18 +315,13 @@ function MappingRow({
       isMapped ? "bg-card" : "bg-background hover:bg-muted/20"
     )}>
       {/* Source Cell */}
-      <div className="px-4 py-4 space-y-2">
+      <div className="px-4 py-3">
         <SearchableFieldSelect
           availableFields={availableFields}
           selectedSource={selectedSource}
           onSelect={onSelect}
           isMapped={isMapped}
         />
-        {sourceField && (
-          <p className="text-xs text-muted-foreground truncate pl-0.5">
-            {formatSampleValue(sourceField.sampleValue)}
-          </p>
-        )}
       </div>
       
       {/* Connector Cell */}
@@ -272,7 +330,7 @@ function MappingRow({
       </div>
       
       {/* Target Cell */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-3 flex flex-col justify-center">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-semibold text-foreground">
             {targetField.label}
