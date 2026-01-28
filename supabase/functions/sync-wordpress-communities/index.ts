@@ -1475,7 +1475,15 @@ async function syncCommunitiesToLocations(
           amenities = amenitiesValue.split(',').map(s => s.trim()).filter(Boolean);
         }
         
-        petPolicy = getValueByPath(community, fieldMappings.pet_policy) as string | null;
+        // Pet Policy - handle both string and repeater array
+        const petPolicyValue = getValueByPath(community, fieldMappings.pet_policy);
+        if (Array.isArray(petPolicyValue)) {
+          // Flatten repeater and join into single policy string
+          const policies = flattenRepeaterArray(petPolicyValue);
+          petPolicy = policies.length > 0 ? policies.join('; ') : null;
+        } else if (typeof petPolicyValue === 'string' && petPolicyValue.trim()) {
+          petPolicy = petPolicyValue.trim();
+        }
         
         const utilitiesValue = getValueByPath(community, fieldMappings.utilities_included);
         if (utilitiesValue && typeof utilitiesValue === 'object') {
@@ -1547,8 +1555,24 @@ async function syncCommunitiesToLocations(
       }
       
       if (!petPolicy) {
-        petPolicy = extractAcfStringField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly') || 
-                    extractAcfField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly');
+        // Try string extraction first
+        petPolicy = extractAcfStringField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly');
+        
+        // If not found, try array extraction (for repeaters)
+        if (!petPolicy) {
+          const petPolicies = extractAcfArrayField(acf, 
+            'community_pet_policies_repeater', 'pet_policies_repeater', 'pet_policies', 
+            'pet_rules', 'pets_allowed'
+          );
+          if (petPolicies.length > 0) {
+            petPolicy = petPolicies.join('; ');
+          }
+        }
+        
+        // Original fallback
+        if (!petPolicy) {
+          petPolicy = extractAcfField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly');
+        }
       }
       
       if (!utilitiesIncluded) {

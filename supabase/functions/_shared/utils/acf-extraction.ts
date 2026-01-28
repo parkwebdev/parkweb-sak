@@ -9,8 +9,13 @@
 
 // Common subfield names used in ACF repeaters
 const REPEATER_SUBFIELD_NAMES = [
+  // Original
   'amenity', 'feature', 'item', 'value', 'name', 
-  'label', 'text', 'title', 'option', 'entry'
+  'label', 'text', 'title', 'option', 'entry',
+  // Pet policy specific
+  'policy', 'rule', 'pet', 'pet_type', 'pet_policy',
+  // General description fields
+  'description', 'desc', 'detail', 'info', 'note'
 ];
 
 /**
