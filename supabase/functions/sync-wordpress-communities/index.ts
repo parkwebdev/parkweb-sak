@@ -1176,7 +1176,45 @@ function generateSuggestedMappings(
 }
 
 /**
- * Fetch a sample post from an endpoint and extract available fields for mapping
+ * Check if a sample value is considered empty/null
+ */
+function isValueEmpty(value: string | number | boolean | null): boolean {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'string') {
+    return value === '' || value === '[]' || value === '(empty)';
+  }
+  return false;
+}
+
+/**
+ * Merge field values from multiple posts, keeping the first non-empty value
+ * for each field path. This ensures users see the richest available data.
+ */
+function aggregateFieldsFromPosts(
+  posts: Record<string, unknown>[]
+): AvailableField[] {
+  const fieldMap = new Map<string, AvailableField>();
+  
+  for (const post of posts) {
+    const fields = flattenObject(post);
+    for (const field of fields) {
+      const existing = fieldMap.get(field.path);
+      
+      // Keep the field if:
+      // 1. We haven't seen this path yet, OR
+      // 2. Existing value is empty/null but this one has data
+      if (!existing || (isValueEmpty(existing.sampleValue) && !isValueEmpty(field.sampleValue))) {
+        fieldMap.set(field.path, field);
+      }
+    }
+  }
+  
+  return Array.from(fieldMap.values());
+}
+
+/**
+ * Fetch sample posts from an endpoint and extract available fields for mapping.
+ * Fetches up to 5 posts and aggregates field values to show the richest data.
  */
 async function fetchSamplePostForMapping(
   siteUrl: string,
@@ -1186,8 +1224,9 @@ async function fetchSamplePostForMapping(
   const normalizedUrl = siteUrl.replace(/\/$/, '');
 
   try {
-    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=1`;
-    console.log(`Fetching sample post for field mapping: ${apiUrl}`);
+    // Fetch up to 5 posts to aggregate field values
+    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=5`;
+    console.log(`Fetching sample posts for field mapping: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
       headers: {
@@ -1215,11 +1254,12 @@ async function fetchSamplePostForMapping(
       };
     }
 
-    const sample = posts[0];
-    const title = sample.title?.rendered || sample.name || `Post #${sample.id}`;
+    // Use first post for title display
+    const primarySample = posts[0];
+    const title = primarySample.title?.rendered || primarySample.name || `Post #${primarySample.id}`;
 
-    // Flatten the post object to get all available fields
-    const availableFields = flattenObject(sample);
+    // Aggregate fields from ALL fetched posts to get richest data
+    const availableFields = aggregateFieldsFromPosts(posts as Record<string, unknown>[]);
 
     // Sort fields: title first, then acf fields, then others
     availableFields.sort((a, b) => {
@@ -1238,21 +1278,22 @@ async function fetchSamplePostForMapping(
     // Generate suggested mappings
     const suggestedMappings = generateSuggestedMappings(availableFields, type);
 
-    console.log(`Found ${availableFields.length} fields, suggested ${Object.keys(suggestedMappings).length} mappings`);
+    console.log(`Analyzed ${posts.length} posts, found ${availableFields.length} fields, suggested ${Object.keys(suggestedMappings).length} mappings`);
 
     return {
       success: true,
-      samplePost: { id: sample.id, title: decodeHtmlEntities(title) },
+      samplePost: { id: primarySample.id, title: decodeHtmlEntities(title) },
+      sampleCount: posts.length,
       availableFields,
       suggestedMappings,
     };
   } catch (error: unknown) {
-    console.error('Error fetching sample post:', error);
+    console.error('Error fetching sample posts:', error);
     return {
       success: false,
       availableFields: [],
       suggestedMappings: {},
-      error: error instanceof Error ? error.message : 'Failed to fetch sample post',
+      error: error instanceof Error ? error.message : 'Failed to fetch sample posts',
     };
   }
 }

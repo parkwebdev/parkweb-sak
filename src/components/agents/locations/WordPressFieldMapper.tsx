@@ -96,6 +96,8 @@ export interface WordPressFieldMapperProps {
   isLoading?: boolean;
   isSaving?: boolean;
   samplePostTitle?: string;
+  /** Number of posts analyzed for field values */
+  sampleCount?: number;
 }
 
 /** Type badge for field data types */
@@ -363,6 +365,7 @@ export function WordPressFieldMapper({
   isLoading = false,
   isSaving = false,
   samplePostTitle,
+  sampleCount,
 }: WordPressFieldMapperProps) {
   const targetFields = type === 'community' ? COMMUNITY_TARGET_FIELDS : PROPERTY_TARGET_FIELDS;
   
@@ -408,11 +411,15 @@ export function WordPressFieldMapper({
           <h2 className="text-lg font-semibold tracking-tight">
             Map {type === 'community' ? 'Community' : 'Property'} Fields
           </h2>
-          {samplePostTitle && (
+          {sampleCount && sampleCount > 1 ? (
+            <p className="text-sm text-muted-foreground">
+              Analyzed <span className="font-medium text-foreground">{sampleCount} posts</span> for best field values
+            </p>
+          ) : samplePostTitle ? (
             <p className="text-sm text-muted-foreground">
               Using sample: <span className="font-medium text-foreground">{samplePostTitle}</span>
             </p>
-          )}
+          ) : null}
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
