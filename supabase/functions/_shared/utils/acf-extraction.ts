@@ -2,28 +2,154 @@
  * ACF Field Extraction Utilities
  * 
  * Handles extraction of values from ACF repeater fields and other complex structures.
- * Used by WordPress sync functions for communities and properties.
+ * Uses score-based field selection to intelligently identify value fields.
  * 
  * @module _shared/utils/acf-extraction
  */
 
-// Common subfield names used in ACF repeaters
-const REPEATER_SUBFIELD_NAMES = [
-  // Original
-  'amenity', 'feature', 'item', 'value', 'name', 
-  'label', 'text', 'title', 'option', 'entry',
-  // Pet policy specific
-  'policy', 'rule', 'pet', 'pet_type', 'pet_policy',
-  // General description fields
+// Fields that are clearly metadata, not values
+const METADATA_FIELD_NAMES = new Set([
+  'id', 'row_id', 'index', 'order', 'sort_order', 
+  'acf_fc_layout', 'layout', 'type',
+  'created_at', 'updated_at', 'modified',
+  '_id', '__typename'
+]);
+
+// Field names that strongly indicate "this is the value"
+const VALUE_FIELD_NAMES = new Set([
+  'name', 'value', 'text', 'label', 'title', 
+  'item', 'option', 'entry', 'content'
+]);
+
+// Suffixes that suggest a value field
+const VALUE_SUFFIXES = [
+  '_name', '_value', '_text', '_label', '_title',
+  '_item', '_option', '_entry'
+];
+
+// Domain-specific hints for this application
+const DOMAIN_HINTS = [
+  'amenity', 'feature', 'policy', 'pet', 'rule',
+  'utility', 'highlight', 'benefit', 'service',
   'description', 'desc', 'detail', 'info', 'note'
 ];
 
+interface FieldScore {
+  key: string;
+  value: unknown;
+  score: number;
+}
+
+/**
+ * Score a field to determine likelihood it's "the value" in a repeater row.
+ * Higher scores indicate more likely to be the display value.
+ */
+function scoreField(key: string, value: unknown): number {
+  const lowerKey = key.toLowerCase();
+  let score = 0;
+  
+  // Strongly penalize metadata fields
+  if (METADATA_FIELD_NAMES.has(lowerKey)) {
+    return -50;
+  }
+  
+  // Score based on value type
+  if (typeof value === 'string') {
+    score += 10;
+    // Short strings are more likely display values
+    if (value.length < 100) score += 5;
+    // Very short might be abbreviations
+    if (value.length < 3) score -= 3;
+    // Empty strings are not values
+    if (!value.trim()) return -100;
+  } else if (typeof value === 'number') {
+    score += 5;
+  } else if (typeof value === 'object' && value !== null) {
+    // Objects/arrays are rarely the display value
+    score -= 20;
+  } else if (value == null) {
+    return -100;
+  }
+  
+  // Score based on field name - exact match on value words
+  if (VALUE_FIELD_NAMES.has(lowerKey)) {
+    score += 20;
+  }
+  
+  // Check for value suffixes
+  for (const suffix of VALUE_SUFFIXES) {
+    if (lowerKey.endsWith(suffix)) {
+      score += 15;
+      break;
+    }
+  }
+  
+  // Check for domain-specific hints
+  for (const hint of DOMAIN_HINTS) {
+    if (lowerKey.includes(hint)) {
+      score += 10;
+      break;
+    }
+  }
+  
+  // Shorter field names are often the main field
+  if (key.length < 10) score += 3;
+  if (key.length < 6) score += 2;
+  
+  return score;
+}
+
+/**
+ * Select the best value field from a repeater row object using scoring.
+ */
+function selectBestValue(obj: Record<string, unknown>): string | null {
+  const entries = Object.entries(obj);
+  
+  // Single field - use it (no ambiguity)
+  if (entries.length === 1) {
+    const [, value] = entries[0];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+    if (typeof value === 'number') {
+      return String(value);
+    }
+    return null;
+  }
+  
+  // Score all fields
+  const scored: FieldScore[] = entries.map(([key, value]) => ({
+    key,
+    value,
+    score: scoreField(key, value)
+  }));
+  
+  // Sort by score descending
+  scored.sort((a, b) => b.score - a.score);
+  
+  // Return highest scoring string/number value
+  for (const { value, score } of scored) {
+    if (score < 0) continue; // Skip negatively scored fields
+    
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+    if (typeof value === 'number') {
+      return String(value);
+    }
+  }
+  
+  return null;
+}
+
 /**
  * Flatten an ACF repeater array to simple strings.
+ * Uses score-based field selection for objects to intelligently pick the value field.
+ * 
  * Handles:
  * - Simple string arrays: ["Pool", "Gym"]
- * - Object arrays with known subfields: [{amenity: "Pool"}, {feature: "Gym"}]
- * - Mixed objects with fallback to first string value
+ * - Object arrays: [{amenity: "Pool"}, {the_feature_name: "Gym"}]
+ * - Mixed content with metadata fields: [{id: 1, value: "Pool"}]
  */
 export function flattenRepeaterArray(arr: unknown[]): string[] {
   return arr
@@ -34,29 +160,9 @@ export function flattenRepeaterArray(arr: unknown[]): string[] {
       // Number - convert to string
       if (typeof item === 'number') return String(item);
       
-      // Object - try to extract value from known subfields
+      // Object - use smart field selection
       if (typeof item === 'object' && item !== null) {
-        const obj = item as Record<string, unknown>;
-        
-        // Check common ACF repeater subfield names
-        for (const fieldName of REPEATER_SUBFIELD_NAMES) {
-          if (fieldName in obj && obj[fieldName] != null) {
-            const value = obj[fieldName];
-            if (typeof value === 'string' && value.trim()) {
-              return value.trim();
-            }
-            if (typeof value === 'number') {
-              return String(value);
-            }
-          }
-        }
-        
-        // Fallback: use first non-empty string value found
-        for (const value of Object.values(obj)) {
-          if (typeof value === 'string' && value.trim()) {
-            return value.trim();
-          }
-        }
+        return selectBestValue(item as Record<string, unknown>);
       }
       
       return null;
