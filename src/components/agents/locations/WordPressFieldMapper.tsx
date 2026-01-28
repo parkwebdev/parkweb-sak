@@ -2,8 +2,8 @@
  * WordPress Field Mapper Component
  * 
  * Premium Airtable-style two-column UI for mapping WordPress API fields 
- * to target database fields. Features card-based rows, animated connectors,
- * and clear visual hierarchy.
+ * to target database fields. Features table-based layout with consistent
+ * column widths and searchable dropdowns.
  * 
  * @module components/agents/locations/WordPressFieldMapper
  */
@@ -129,8 +129,8 @@ function SearchableFieldSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "h-11 w-full justify-between bg-background border-border/60",
-            "hover:border-primary/50 transition-colors rounded-lg shadow-sm",
+            "h-10 w-full justify-between bg-background border-border/60",
+            "hover:border-primary/50 transition-colors",
             "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             isMapped && "border-primary/30"
           )}
@@ -143,7 +143,10 @@ function SearchableFieldSelect({
           <ChevronDown size={16} className="ml-2 shrink-0 opacity-50" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent 
+        className="min-w-[280px] w-[var(--radix-popover-trigger-width)] p-0 bg-popover" 
+        align="start"
+      >
         <Command>
           <CommandInput placeholder="Search fields..." />
           <CommandList className="max-h-[300px]">
@@ -198,19 +201,18 @@ function SearchableFieldSelect({
   );
 }
 
-/** Premium SVG connection line between source and target */
+/** Compact SVG connection line between source and target */
 function ConnectionLine({ isActive }: { isActive: boolean }) {
   return (
-    <div className="relative w-full h-8 flex items-center justify-center">
+    <div className="flex items-center justify-center h-full">
       <svg 
-        className="w-full h-6" 
-        viewBox="0 0 80 24" 
+        className="w-8 h-4" 
+        viewBox="0 0 32 16" 
         fill="none"
         aria-hidden="true"
       >
-        {/* Background line */}
         <line 
-          x1="4" y1="12" x2="72" y2="12" 
+          x1="0" y1="8" x2="24" y2="8" 
           stroke="currentColor" 
           strokeWidth="2"
           strokeDasharray={isActive ? "0" : "4 4"}
@@ -219,20 +221,8 @@ function ConnectionLine({ isActive }: { isActive: boolean }) {
             isActive ? "text-primary" : "text-muted-foreground/30"
           )}
         />
-        
-        {/* Arrow head */}
         <polygon 
-          points="68,7 76,12 68,17" 
-          fill="currentColor"
-          className={cn(
-            "transition-all duration-300",
-            isActive ? "text-primary" : "text-muted-foreground/30"
-          )}
-        />
-        
-        {/* Active dot at start */}
-        <circle 
-          cx="4" cy="12" r="3" 
+          points="22,4 30,8 22,12" 
           fill="currentColor"
           className={cn(
             "transition-all duration-300",
@@ -250,6 +240,7 @@ interface MappingRowProps {
   selectedSource: string | null;
   suggestedSource?: string;
   onSelect: (source: string | null) => void;
+  isLast: boolean;
 }
 
 function MappingRow({
@@ -258,6 +249,7 @@ function MappingRow({
   selectedSource,
   suggestedSource,
   onSelect,
+  isLast,
 }: MappingRowProps) {
   const sourceField = availableFields.find(f => f.path === selectedSource);
   const isMapped = !!selectedSource;
@@ -265,59 +257,49 @@ function MappingRow({
   
   return (
     <div className={cn(
-      "group relative rounded-xl border transition-all duration-200",
-      isMapped 
-        ? "bg-card border-border shadow-sm" 
-        : "bg-muted/30 border-transparent hover:border-border/50 hover:bg-card/50"
+      "grid grid-cols-[1fr_48px_1fr] transition-colors",
+      !isLast && "border-b border-border",
+      isMapped ? "bg-card" : "bg-background hover:bg-muted/20"
     )}>
-      <div className="grid grid-cols-[1fr_80px_1fr] gap-4 p-5 items-center">
-        {/* Source Column */}
-        <div className="space-y-3">
-          <SearchableFieldSelect
-            availableFields={availableFields}
-            selectedSource={selectedSource}
-            onSelect={onSelect}
-            isMapped={isMapped}
-          />
-          
-          {/* Sample value preview */}
-          {sourceField && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg border border-border/30">
-              <span className="text-2xs uppercase tracking-wide text-muted-foreground font-medium shrink-0">
-                Preview
-              </span>
-              <span className="text-xs text-foreground truncate flex-1">
-                {formatSampleValue(sourceField.sampleValue)}
-              </span>
-            </div>
-          )}
-        </div>
-        
-        {/* Connector Column */}
-        <div className="flex justify-center items-center">
-          <ConnectionLine isActive={isMapped} />
-        </div>
-        
-        {/* Target Column */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-semibold text-foreground">
-              {targetField.label}
-              {targetField.required && (
-                <span className="text-destructive ml-1">*</span>
-              )}
-            </span>
-            {isAutoDetected && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10 text-success text-2xs font-medium shrink-0">
-                <CheckCircle size={12} aria-hidden="true" />
-                Auto
-              </span>
+      {/* Source Cell */}
+      <div className="px-4 py-4 space-y-2">
+        <SearchableFieldSelect
+          availableFields={availableFields}
+          selectedSource={selectedSource}
+          onSelect={onSelect}
+          isMapped={isMapped}
+        />
+        {sourceField && (
+          <p className="text-xs text-muted-foreground truncate">
+            <span className="font-medium">Preview:</span> {formatSampleValue(sourceField.sampleValue)}
+          </p>
+        )}
+      </div>
+      
+      {/* Connector Cell */}
+      <div className="flex items-center justify-center">
+        <ConnectionLine isActive={isMapped} />
+      </div>
+      
+      {/* Target Cell */}
+      <div className="px-4 py-4">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-semibold text-foreground">
+            {targetField.label}
+            {targetField.required && (
+              <span className="text-destructive ml-1">*</span>
             )}
-          </div>
-          {targetField.description && (
-            <p className="text-xs text-muted-foreground">{targetField.description}</p>
+          </span>
+          {isAutoDetected && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10 text-success text-2xs font-medium shrink-0">
+              <CheckCircle size={12} aria-hidden="true" />
+              Auto
+            </span>
           )}
         </div>
+        {targetField.description && (
+          <p className="text-xs text-muted-foreground mt-1">{targetField.description}</p>
+        )}
       </div>
     </div>
   );
@@ -374,7 +356,7 @@ export function WordPressFieldMapper({
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between pb-6 border-b shrink-0">
+      <div className="flex items-center justify-between pb-4 shrink-0">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold tracking-tight">
             Map {type === 'community' ? 'Community' : 'Property'} Fields
@@ -400,37 +382,43 @@ export function WordPressFieldMapper({
         </div>
       </div>
       
-      {/* Column Headers */}
-      <div className="grid grid-cols-[1fr_80px_1fr] gap-4 py-4 px-5 border-b sticky top-0 bg-background z-10 shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-primary" />
-          <span className="text-sm font-semibold text-foreground">Source Field</span>
-          <span className="text-xs text-muted-foreground">(WordPress)</span>
+      {/* Unified Table Container */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="border border-border rounded-xl overflow-hidden">
+          {/* Column Headers - Inside the table */}
+          <div className="grid grid-cols-[1fr_48px_1fr] bg-muted/50 border-b border-border sticky top-0 z-10">
+            <div className="px-4 py-3 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary" />
+              <span className="text-sm font-semibold text-foreground">Source Field</span>
+              <span className="text-xs text-muted-foreground">(WordPress)</span>
+            </div>
+            <div className="flex items-center justify-center">
+              {/* Connector header placeholder */}
+            </div>
+            <div className="px-4 py-3 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-foreground" />
+              <span className="text-sm font-semibold text-foreground">Target Field</span>
+              <span className="text-xs text-muted-foreground">(Database)</span>
+            </div>
+          </div>
+          
+          {/* Rows */}
+          {targetFields.map((field, index) => (
+            <MappingRow
+              key={field.key}
+              targetField={field}
+              availableFields={availableFields}
+              selectedSource={currentMappings[field.key] || null}
+              suggestedSource={suggestedMappings[field.key]}
+              onSelect={(source) => handleFieldSelect(field.key, source)}
+              isLast={index === targetFields.length - 1}
+            />
+          ))}
         </div>
-        <div /> {/* Connector spacer */}
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-foreground" />
-          <span className="text-sm font-semibold text-foreground">Target Field</span>
-          <span className="text-xs text-muted-foreground">(Database)</span>
-        </div>
-      </div>
-      
-      {/* Scrollable Mapping Rows */}
-      <div className="flex-1 overflow-y-auto py-4 space-y-3 min-h-0">
-        {targetFields.map((field) => (
-          <MappingRow
-            key={field.key}
-            targetField={field}
-            availableFields={availableFields}
-            selectedSource={currentMappings[field.key] || null}
-            suggestedSource={suggestedMappings[field.key]}
-            onSelect={(source) => handleFieldSelect(field.key, source)}
-          />
-        ))}
       </div>
       
       {/* Footer Actions */}
-      <div className="flex items-center justify-between pt-6 border-t shrink-0">
+      <div className="flex items-center justify-between pt-4 shrink-0">
         <Button
           variant="ghost"
           onClick={onBack}
