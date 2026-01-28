@@ -1,50 +1,61 @@
 
+# Plan: Fix Field Mapper Column Widths & Auto Badge Design
 
-# Plan: True Column-Aligned Field Mapper Layout
+## Problem Analysis
 
-## Problem
-The current card-per-row approach causes inconsistent column widths because:
-- Each row has its own independent grid
-- Dropdown widths vary based on content
-- The sample preview box appears conditionally, causing height inconsistency
-- Visual alignment between rows is lost
+From the screenshot, I can see two distinct issues:
 
-## Solution: Table-Style Layout
-Switch from individual cards to a true **column-aligned table layout** where:
-- A single parent grid controls column widths for ALL rows
-- Source and Target columns have consistent, fixed widths
-- Each row is a sub-element within the grid, not an independent card
-- Dropdowns stretch to fill their column consistently
+1. **Dropdown widths are inconsistent** - Each dropdown button is sized to fit its content (e.g., `acf.community_zip_code` is narrower than `acf.community_phone_number`). Despite using a unified grid with `1fr` columns, the **Button component inside uses `w-full` but doesn't enforce a minimum width**, so the content shrinks the button.
+
+2. **"Auto" badge looks cheap** - The current green pill with checkmark (`bg-success/10 text-success`) clashes with the overall aesthetic. It's too attention-grabbing and doesn't feel integrated into the design.
 
 ---
 
-## Visual Design
+## Root Cause
 
-```text
-┌────────────────────────────────────────────────────────────────────────────────┐
-│  ● Source Field (WordPress)           │      │  ● Target Field (Database)     │
-├────────────────────────────────────────┼──────┼────────────────────────────────┤
-│  ┌──────────────────────────────────┐  │      │                                │
-│  │  acf.community_name          ▾   │  │ ───► │  Community Name *              │
-│  └──────────────────────────────────┘  │      │  Primary name/title            │
-│  Preview: "Prairie View MHC"           │      │                         ✓ Auto │
-├────────────────────────────────────────┼──────┼────────────────────────────────┤
-│  ┌──────────────────────────────────┐  │      │                                │
-│  │  acf.address                 ▾   │  │ ───► │  Street Address                │
-│  └──────────────────────────────────┘  │      │                                │
-├────────────────────────────────────────┼──────┼────────────────────────────────┤
-│  ┌──────────────────────────────────┐  │      │                                │
-│  │  Don't import                ▾   │  │ - - -│  City                          │
-│  └──────────────────────────────────┘  │      │                                │
-└────────────────────────────────────────┴──────┴────────────────────────────────┘
+The grid uses `grid-cols-[1fr_48px_1fr]` which should give equal widths, but the issue is:
+- The sheet is `sm:max-w-2xl` (672px max)
+- After padding (px-4 × 2 = 32px), header (48px), and margins, each `1fr` column is roughly ~296px
+- But the **Source Cell** has `space-y-2` with optional preview text below the dropdown
+- The **dropdown Button doesn't stretch** because it's sized by the monospace code text inside
+
+The fix requires enforcing the dropdown to **always fill its container width**.
+
+---
+
+## Solution
+
+### 1. Enforce Full-Width Dropdowns
+
+Change the grid to use **fixed pixel widths** for the source column instead of `1fr`:
+
+```tsx
+// Current: grid-cols-[1fr_48px_1fr]
+// New: grid-cols-[240px_48px_1fr]
 ```
 
-**Key Visual Changes:**
-- All source dropdowns have **identical width** 
-- All target labels align perfectly
-- Connector column is a fixed-width separator
-- Rows are separated by subtle borders, not individual cards
-- Preview text is inline below dropdown (only when mapped)
+Or, keep `1fr` but ensure the Button has `w-full` applied correctly with an outer container.
+
+### 2. Redesigned Auto Badge
+
+Replace the green pill with a more subtle, integrated indicator:
+
+**Option A - Subtle text suffix:**
+```tsx
+<span className="text-xs text-muted-foreground ml-1 font-normal">(auto)</span>
+```
+
+**Option B - Small icon only (no text):**
+```tsx
+<Sparkles size={14} className="text-primary opacity-60" />
+```
+
+**Option C - Muted badge (recommended):**
+```tsx
+<span className="text-2xs text-muted-foreground font-medium bg-muted px-1.5 py-0.5 rounded">
+  auto
+</span>
+```
 
 ---
 
@@ -52,129 +63,78 @@ Switch from individual cards to a true **column-aligned table layout** where:
 
 ### File: `src/components/agents/locations/WordPressFieldMapper.tsx`
 
-**1. New Layout Structure**
+**1. Fixed Column Width for Source Field**
 
-Replace independent row cards with a unified grid container:
+The source column should have a fixed minimum width to prevent content-based sizing:
 
 ```tsx
-{/* Unified Table Container */}
-<div className="flex-1 overflow-y-auto min-h-0">
-  <div className="border rounded-xl overflow-hidden">
-    {/* Column Headers - Inside the table */}
-    <div className="grid grid-cols-[1fr_48px_1fr] bg-muted/30 border-b sticky top-0 z-10">
-      <div className="px-4 py-3 flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-primary" />
-        <span className="text-sm font-semibold">Source Field</span>
-        <span className="text-xs text-muted-foreground">(WordPress)</span>
-      </div>
-      <div className="flex items-center justify-center">
-        {/* Connector header placeholder */}
-      </div>
-      <div className="px-4 py-3 flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-foreground" />
-        <span className="text-sm font-semibold">Target Field</span>
-        <span className="text-xs text-muted-foreground">(Database)</span>
-      </div>
-    </div>
-    
-    {/* Rows */}
-    {targetFields.map((field, index) => (
-      <MappingRow key={field.key} ... isLast={index === targetFields.length - 1} />
-    ))}
+// Change grid template from flexible to fixed source column
+// Header and rows both use:
+<div className="grid grid-cols-[minmax(200px,1fr)_48px_1fr] transition-colors">
+```
+
+Or wrap the dropdown in a width-enforcing container:
+
+```tsx
+{/* Source Cell */}
+<div className="px-4 py-4 space-y-2">
+  <div className="w-full"> {/* Force full width */}
+    <SearchableFieldSelect ... />
   </div>
+  {/* Preview text */}
 </div>
 ```
 
-**2. Simplified MappingRow as Table Row**
+**2. Increase Sheet Width**
 
-Each row uses the same grid columns as the parent:
+Given the long field paths like `acf.community_phone_number`, increasing the sheet width will give more breathing room:
 
+In `WordPressIntegrationSheet.tsx`:
 ```tsx
-function MappingRow({ ..., isLast }: MappingRowProps & { isLast: boolean }) {
-  return (
-    <div className={cn(
-      "grid grid-cols-[1fr_48px_1fr] transition-colors",
-      !isLast && "border-b",
-      isMapped ? "bg-card" : "bg-background hover:bg-muted/20"
-    )}>
-      {/* Source Cell */}
-      <div className="px-4 py-4 space-y-2">
-        <SearchableFieldSelect ... />
-        {sourceField && (
-          <p className="text-xs text-muted-foreground truncate">
-            <span className="font-medium">Preview:</span> {formatSampleValue(sourceField.sampleValue)}
-          </p>
-        )}
-      </div>
-      
-      {/* Connector Cell */}
-      <div className="flex items-center justify-center">
-        <ConnectionLine isActive={isMapped} />
-      </div>
-      
-      {/* Target Cell */}
-      <div className="px-4 py-4">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-semibold">
-            {targetField.label}
-            {targetField.required && <span className="text-destructive ml-1">*</span>}
-          </span>
-          {isAutoDetected && (
-            <span className="...">✓ Auto</span>
-          )}
-        </div>
-        {targetField.description && (
-          <p className="text-xs text-muted-foreground mt-1">{targetField.description}</p>
-        )}
-      </div>
-    </div>
-  );
-}
+// Current: sm:max-w-2xl (672px)
+// New: sm:max-w-3xl (768px) for field-mapping step only
+<SheetContent className={cn(
+  "overflow-y-auto flex flex-col",
+  connectionStep === 'field-mapping' ? "sm:max-w-3xl" : "sm:max-w-2xl"
+)}>
 ```
 
-**3. Narrower Connector Column**
+**3. Subtle Auto Badge Redesign**
 
-Reduce connector from 80px to 48px for tighter spacing:
-
-```tsx
-// Old: grid-cols-[1fr_80px_1fr]
-// New: grid-cols-[1fr_48px_1fr]
-
-function ConnectionLine({ isActive }: { isActive: boolean }) {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <svg className="w-8 h-4" viewBox="0 0 32 16" ...>
-        <line x1="0" y1="8" x2="24" y2="8" ... />
-        <polygon points="22,4 30,8 22,12" ... />
-      </svg>
-    </div>
-  );
-}
-```
-
-**4. Dropdown Fixed Width**
-
-The popover content width now uses a fixed min-width instead of trigger width:
+Replace the current loud green badge with a muted, elegant indicator:
 
 ```tsx
-<PopoverContent 
-  className="min-w-[280px] w-[var(--radix-popover-trigger-width)] p-0" 
-  align="start"
->
+{isAutoDetected && (
+  <span className="text-2xs text-muted-foreground/70 font-medium uppercase tracking-wide">
+    auto
+  </span>
+)}
 ```
+
+**4. Preview Text Cleanup**
+
+Make the preview text more compact and consistent:
+
+```tsx
+{sourceField && (
+  <p className="text-xs text-muted-foreground truncate pl-0.5">
+    {formatSampleValue(sourceField.sampleValue)}
+  </p>
+)}
+```
+
+Remove the "Preview:" label to reduce visual noise.
 
 ---
 
-## Summary of Changes
+## Visual Comparison
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| **Layout** | Independent card per row | Unified table with shared grid columns |
-| **Column widths** | Vary per card | Fixed and consistent across all rows |
-| **Connector width** | 80px | 48px (tighter) |
-| **Row separation** | Margin + border per card | Single border between rows |
-| **Preview** | Separate box with border | Inline text below dropdown |
-| **Visual alignment** | Poor (grid per row) | Perfect (single grid for all) |
+| Element | Before | After |
+|---------|--------|-------|
+| **Source column** | Content-sized (inconsistent) | Fixed min-width (consistent) |
+| **Sheet width** | 672px | 768px on field-mapping step |
+| **Auto badge** | Green pill with icon | Muted uppercase text label |
+| **Preview label** | "Preview: value" | Just the value (cleaner) |
 
 ---
 
@@ -182,14 +142,14 @@ The popover content width now uses a fixed min-width instead of trigger width:
 
 | File | Changes |
 |------|---------|
-| `src/components/agents/locations/WordPressFieldMapper.tsx` | Convert to table-based layout with unified grid |
+| `src/components/agents/locations/WordPressFieldMapper.tsx` | Fixed grid columns, subtle auto badge, cleaner preview |
+| `src/components/agents/locations/WordPressIntegrationSheet.tsx` | Wider sheet for field-mapping step |
 
 ---
 
 ## Expected Result
 
 - All source dropdowns are **exactly the same width**
-- All target labels align **perfectly** across rows
-- The entire mapper looks like a proper **data table**, not disconnected cards
-- Cleaner, more professional appearance matching Airtable's column-to-column mapping style
-
+- Auto-mapped fields show a subtle, non-distracting "auto" label
+- More horizontal space for long WordPress field paths
+- Cleaner overall appearance matching professional data mapping tools
