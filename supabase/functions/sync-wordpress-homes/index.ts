@@ -15,6 +15,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { extractPropertyData, type ExtractedPropertyData } from '../_shared/ai/wordpress-extraction.ts';
 import { parseAddressComponents } from '../_shared/utils/address-parser.ts';
+import { flattenRepeaterArray, extractAcfArrayField, extractAcfStringField, extractAcfNumberField } from '../_shared/utils/acf-extraction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -114,28 +115,8 @@ function extractAcfNumber(acf: Record<string, unknown> | undefined, ...keywords:
   return isNaN(num) ? null : num;
 }
 
-function extractAcfArray(acf: Record<string, unknown> | undefined, ...keywords: string[]): string[] {
-  if (!acf) return [];
-  
-  const keys = Object.keys(acf);
-  
-  for (const keyword of keywords) {
-    const lowerKeyword = keyword.toLowerCase();
-    
-    const match = keys.find(k => {
-      const lowerK = k.toLowerCase();
-      return lowerK === lowerKeyword || 
-             lowerK.endsWith(`_${lowerKeyword}`) || 
-             lowerK.includes(lowerKeyword);
-    });
-    
-    if (match && Array.isArray(acf[match])) {
-      return acf[match] as string[];
-    }
-  }
-  
-  return [];
-}
+// NOTE: extractAcfArray has been replaced by extractAcfArrayField from shared utilities
+// which properly handles ACF repeater objects like [{feature: "Pool"}, {feature: "Gym"}]
 
 /**
  * Get a value from an object using dot-notation path
@@ -155,15 +136,18 @@ function getValueByPath(obj: Record<string, unknown>, path: string | undefined):
   
   if (current === null || current === undefined) return null;
   if (typeof current === 'object') {
-    // Handle arrays - extract first element (WordPress often wraps values in arrays)
+    // Handle arrays
     if (Array.isArray(current)) {
       if (current.length === 0) return null;
+      
+      // Check if it's an array of {rendered: ...} objects (WP content blocks)
       const firstItem = current[0];
-      // If first item is an object with 'rendered', extract it
       if (typeof firstItem === 'object' && firstItem !== null && 'rendered' in firstItem) {
         return (firstItem as Record<string, unknown>).rendered;
       }
-      return firstItem;
+      
+      // Return full array for repeater fields - let caller handle flattening
+      return current;
     }
     // For objects like {rendered: "text"}, try to get rendered value
     const asObj = current as Record<string, unknown>;
@@ -859,9 +843,13 @@ async function syncHomesToProperties(
         if (yearValue != null) yearBuilt = parseInt(String(yearValue), 10) || null;
         status = (getValueByPath(home as Record<string, unknown>, fieldMappings.status) as string) || 'available';
         description = getValueByPath(home as Record<string, unknown>, fieldMappings.description) as string | null;
-        // Features may need special handling for arrays
+        // Features - use shared utility to flatten repeater arrays
         const featuresValue = getValueByPath(home as Record<string, unknown>, fieldMappings.features);
-        if (Array.isArray(featuresValue)) features = featuresValue.map(String);
+        if (Array.isArray(featuresValue)) {
+          features = flattenRepeaterArray(featuresValue);
+        } else if (typeof featuresValue === 'string') {
+          features = featuresValue.split(',').map(s => s.trim()).filter(Boolean);
+        }
         
         // NEW FIELDS: Extract from field mappings (Priority 1)
         manufacturer = getValueByPath(home as Record<string, unknown>, fieldMappings.manufacturer) as string | null;
@@ -944,13 +932,16 @@ async function syncHomesToProperties(
                       home.content?.rendered?.replace(/<[^>]*>/g, '').substring(0, 500).trim();
       }
       
-      if (features.length === 0) features = extractAcfArray(acf, 'features', 'amenities', 'highlights');
+      // Use shared utility for features extraction (handles repeaters properly)
+      if (features.length === 0) {
+        features = extractAcfArrayField(acf, 'features', 'home_features', 'property_features', 'amenities', 'highlights');
+      }
       
-      // NEW FIELDS: Extract from ACF keywords (Priority 3)
-      if (!manufacturer) manufacturer = extractAcfField(acf, 'manufacturer', 'make', 'builder', 'brand');
-      if (!model) model = extractAcfField(acf, 'model', 'model_name', 'home_model');
+      // NEW FIELDS: Extract from ACF keywords (Priority 3) using shared utilities
+      if (!manufacturer) manufacturer = extractAcfStringField(acf, 'manufacturer', 'make', 'builder', 'brand') || extractAcfField(acf, 'manufacturer', 'make', 'builder', 'brand');
+      if (!model) model = extractAcfStringField(acf, 'model', 'model_name', 'home_model') || extractAcfField(acf, 'model', 'model_name', 'home_model');
       if (lotRent == null) {
-        const lotRentValue = extractAcfNumber(acf, 'lot_rent', 'space_rent', 'site_rent', 'lot_fee');
+        const lotRentValue = extractAcfNumberField(acf, 'lot_rent', 'space_rent', 'site_rent', 'lot_fee') ?? extractAcfNumber(acf, 'lot_rent', 'space_rent', 'site_rent', 'lot_fee');
         if (lotRentValue != null) lotRent = Math.round(lotRentValue * 100);
       }
       if (!virtualTourUrl) virtualTourUrl = extractAcfField(acf, 'virtual_tour', 'tour_url', 'matterport', '3d_tour', 'video_tour');
