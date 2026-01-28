@@ -1,50 +1,28 @@
 
 
-# Plan: Industry-Grade Field Mapper with Rich Previews
+# Plan: Multi-Sample Field Aggregation for Complete Data Discovery
 
-## Problem Analysis
+## Problem
 
-After reviewing the codebase, I identified three key limitations:
+Currently, we fetch **ONE** sample post to display field previews. This creates a major UX problem:
 
-1. **Previews only visible after selection** - Users can't see sample values while browsing the dropdown, making field selection a guessing game
-2. **Truncation cuts off data** - 40-character limit hides critical information
-3. **No type indicators** - Users can't tell if a field is a string, array, or object
+- **False negatives** - If the sample post has an empty `acf.phone` field, users assume ALL posts lack phone data
+- **Incomplete picture** - Different posts may have different fields populated (some have phone, some have email, etc.)
+- **User confusion** - "Why isn't this field showing data?" when it exists in other posts
 
-## Industry Standard (Airtable/Zapier/n8n Pattern)
+## Solution: Smart Multi-Sample Aggregation
 
-Professional data mappers show:
-- **Sample value inline with each option** in the dropdown
-- **Data type badge** (string, array, number) for clarity
-- **Full value on hover** via tooltip for truncated values
-- **Consistent two-column layout** with field path on left, preview on right
-
----
-
-## Visual Design: Enhanced Dropdown Item
+Fetch **5 posts instead of 1**, then merge their field values to show the **richest available sample** for each field. If field A is empty in post 1 but populated in post 3, we show post 3's value.
 
 ```text
 ┌────────────────────────────────────────────────────────────────┐
-│  🔍 Search fields...                                           │
+│  Post 1: { phone: null,   email: "a@b.com", city: "Denver" }   │
+│  Post 2: { phone: null,   email: null,      city: "Austin" }   │
+│  Post 3: { phone: "555",  email: null,      city: null }       │
 ├────────────────────────────────────────────────────────────────┤
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  acf.community_name                    STR               │  │
-│  │  ○ "Prairie View Manufactured Ho..."   [hover: full]     │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  acf.amenities                         ARR               │  │
-│  │  ○ "Pool, Clubhouse, Laundry"                            │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  acf.city                              STR               │  │
-│  │  ○ "Springfield"                                         │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│  Merged: { phone: "555",  email: "a@b.com", city: "Denver" }   │ ← Best of each
 └────────────────────────────────────────────────────────────────┘
 ```
-
-Each dropdown item shows:
-- **Field path** (monospace, primary)
-- **Type badge** (STR, NUM, ARR, OBJ) - tiny, muted
-- **Sample value** (secondary line, dimmed, with tooltip on hover)
 
 ---
 
@@ -52,134 +30,136 @@ Each dropdown item shows:
 
 ### File 1: `supabase/functions/sync-wordpress-communities/index.ts`
 
-**Increase `maxDepth` for deeper JSON traversal:**
+**1. Fetch 5 posts instead of 1:**
 
 ```typescript
-// Line ~1028
-function flattenObject(
-  obj: Record<string, unknown>,
-  prefix = '',
-  result: AvailableField[] = [],
-  maxDepth = 5,  // Increased from 3 to 5
-  currentDepth = 0
+// Line ~1189 - Change from 1 to 5
+const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=5`;
+```
+
+**2. Create a field aggregation function:**
+
+```typescript
+/**
+ * Merge field values from multiple posts, keeping the first non-empty value
+ * for each field path.
+ */
+function aggregateFieldsFromPosts(
+  posts: Record<string, unknown>[]
 ): AvailableField[] {
-```
-
-This allows access to deeply nested ACF fields like `acf.location.coordinates.lat`.
-
----
-
-### File 2: `src/components/agents/locations/WordPressFieldMapper.tsx`
-
-**1. Update Type Badge Component**
-
-Create a small helper for type indicators:
-
-```tsx
-function TypeBadge({ type }: { type: AvailableField['type'] }) {
-  const labels: Record<AvailableField['type'], string> = {
-    string: 'STR',
-    number: 'NUM',
-    boolean: 'BOOL',
-    array: 'ARR',
-    object: 'OBJ',
-    null: 'NULL',
-  };
+  const fieldMap = new Map<string, AvailableField>();
   
-  return (
-    <span className="text-3xs font-medium text-muted-foreground/60 uppercase tracking-wider px-1 py-0.5 bg-muted/50 rounded shrink-0">
-      {labels[type]}
-    </span>
-  );
+  for (const post of posts) {
+    const fields = flattenObject(post);
+    for (const field of fields) {
+      const existing = fieldMap.get(field.path);
+      
+      // Keep the field if:
+      // 1. We haven't seen this path yet, OR
+      // 2. Existing value is empty/null but this one has data
+      if (!existing || isValueEmpty(existing.sampleValue) && !isValueEmpty(field.sampleValue)) {
+        fieldMap.set(field.path, field);
+      }
+    }
+  }
+  
+  return Array.from(fieldMap.values());
+}
+
+function isValueEmpty(value: string | number | boolean | null): boolean {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'string') {
+    return value === '' || value === '[]' || value === '(empty)';
+  }
+  return false;
 }
 ```
 
-**2. Enhanced `formatSampleValue` Function**
+**3. Update `fetchSamplePostForMapping` to use aggregation:**
 
-Increase truncation limit and add tooltip support:
-
-```tsx
-function formatSampleValue(value: string | number | boolean | null, maxLength = 60): string {
-  if (value === null || value === undefined) return '(empty)';
-  if (typeof value === 'boolean') return value ? 'true' : 'false';
-  if (typeof value === 'number') return String(value);
-  const str = String(value);
-  if (str.length > maxLength) return str.substring(0, maxLength) + '...';
-  return str;
+```typescript
+const posts = await response.json();
+if (!Array.isArray(posts) || posts.length === 0) {
+  // ... error handling
 }
 
-function getFullValue(value: string | number | boolean | null): string {
-  if (value === null || value === undefined) return '(empty)';
-  if (typeof value === 'boolean') return value ? 'true' : 'false';
-  return String(value);
-}
+// Use first post for title display
+const primarySample = posts[0];
+const title = primarySample.title?.rendered || primarySample.name || `Post #${primarySample.id}`;
+
+// Aggregate fields from ALL fetched posts
+const availableFields = aggregateFieldsFromPosts(posts);
 ```
-
-**3. Enhanced Dropdown Item with Preview**
-
-Update the CommandItem in SearchableFieldSelect to show inline previews:
-
-```tsx
-<CommandItem
-  key={field.path}
-  value={`${field.path} ${getFullValue(field.sampleValue)}`}  // Include sample in search
-  onSelect={() => { onSelect(field.path); setOpen(false); }}
-  className="flex flex-col items-start gap-1 py-2"
->
-  <div className="flex items-center justify-between w-full gap-2">
-    <div className="flex items-center gap-2 min-w-0">
-      {selectedSource === field.path && (
-        <Check size={14} className="shrink-0 text-primary" aria-hidden="true" />
-      )}
-      <code className="font-mono text-xs truncate">{field.path}</code>
-    </div>
-    <TypeBadge type={field.type} />
-  </div>
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <p className="text-xs text-muted-foreground truncate w-full pl-5">
-        {formatSampleValue(field.sampleValue)}
-      </p>
-    </TooltipTrigger>
-    <TooltipContent side="right" className="max-w-[300px]">
-      <p className="text-xs break-words">{getFullValue(field.sampleValue)}</p>
-    </TooltipContent>
-  </Tooltip>
-</CommandItem>
-```
-
-**4. Wider Popover for Better Readability**
-
-```tsx
-<PopoverContent 
-  className="min-w-[400px] w-auto max-w-[500px] p-0 bg-popover" 
-  align="start"
->
-```
-
-**5. Include Sample Value in Search**
-
-The `value` prop on CommandItem now includes the sample value, so users can search by field path OR sample content:
-
-```tsx
-value={`${field.path} ${getFullValue(field.sampleValue)}`}
-```
-
-This means typing "Springfield" will find `acf.city` if its sample value is "Springfield".
 
 ---
 
-## Enhanced Features Summary
+### File 2: `src/types/wordpress.ts`
 
-| Feature | Before | After |
-|---------|--------|-------|
-| **Preview visibility** | Only after selection | Inline in dropdown |
-| **Truncation limit** | 40 chars | 60 chars |
-| **Full value access** | Not available | Tooltip on hover |
-| **Type indicators** | None | STR/NUM/ARR/OBJ badges |
-| **Search scope** | Field path only | Path + sample value |
-| **JSON depth** | 3 levels | 5 levels |
-| **Popover width** | 320-400px | 400-500px |
+**Update `SamplePostResult` to show sample count:**
+
+```typescript
+export interface SamplePostResult {
+  success: boolean;
+  samplePost?: {
+    id: number;
+    title: string;
+  };
+  sampleCount?: number; // NEW: How many posts were analyzed
+  availableFields: AvailableField[];
+  suggestedMappings: Record<string, string>;
+  error?: string;
+}
+```
+
+---
+
+### File 3: `src/components/agents/locations/WordPressFieldMapper.tsx`
+
+**Update header to show sample count context:**
+
+Current:
+```tsx
+<p className="text-sm text-muted-foreground">
+  Using sample: <span className="font-medium text-foreground">{samplePostTitle}</span>
+</p>
+```
+
+New:
+```tsx
+<p className="text-sm text-muted-foreground">
+  Analyzed {sampleCount} posts for best field values
+</p>
+```
+
+This sets accurate expectations - users understand we're showing the best available data from multiple records.
+
+---
+
+## Edge Cases Handled
+
+| Scenario | Behavior |
+|----------|----------|
+| **Only 1 post exists** | Works exactly as before |
+| **All 5 posts have empty field** | Shows `(empty)` - user knows field is truly unused |
+| **Type mismatch across posts** | First non-empty value determines type |
+| **Array vs string in different posts** | Takes first populated value's type |
+
+---
+
+## UI Enhancement: Empty Field Indicator
+
+Add a subtle indicator when a field is empty across ALL samples:
+
+```tsx
+// In SearchableFieldSelect dropdown item
+{field.sampleValue === null && (
+  <span className="text-2xs text-muted-foreground/50 ml-1">(no data found)</span>
+)}
+```
+
+This differentiates between:
+- **"(empty)"** - Field exists but is empty in sample data
+- **"no data found"** - Field path exists but ALL posts have no data
 
 ---
 
@@ -187,17 +167,16 @@ This means typing "Springfield" will find `acf.city` if its sample value is "Spr
 
 | File | Changes |
 |------|---------|
-| `src/components/agents/locations/WordPressFieldMapper.tsx` | Rich dropdown items with previews, type badges, tooltips |
-| `supabase/functions/sync-wordpress-communities/index.ts` | Increase maxDepth from 3 to 5 |
+| `supabase/functions/sync-wordpress-communities/index.ts` | Multi-sample fetching, field aggregation |
+| `src/types/wordpress.ts` | Add `sampleCount` to result type |
+| `src/components/agents/locations/WordPressFieldMapper.tsx` | Updated header text, empty field indicator |
 
 ---
 
-## Expected Result
+## Result
 
-- Every field option shows its **sample value** directly in the dropdown
-- Users can **search by content** (e.g., type "Springfield" to find city field)
-- **Type badges** help identify arrays vs strings at a glance
-- **Tooltips** reveal full values for truncated content
-- **Deeper nesting** captures complex ACF structures
-- Industry-leading UX matching Airtable, Zapier, and n8n
+- Fields show the **richest available data** from up to 5 posts
+- Users won't be misled by a single post's empty fields
+- Clear messaging: "Analyzed 5 posts for best field values"
+- Subtle indicators for truly empty fields across all samples
 
