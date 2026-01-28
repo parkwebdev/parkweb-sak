@@ -25,7 +25,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { ArrowLeft, CheckCircle, Check, ChevronDown } from '@untitledui/icons';
+import { ArrowLeft, Check, ChevronDown } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
 /** Field available from WordPress API */
@@ -270,8 +270,8 @@ function MappingRow({
           isMapped={isMapped}
         />
         {sourceField && (
-          <p className="text-xs text-muted-foreground truncate">
-            <span className="font-medium">Preview:</span> {formatSampleValue(sourceField.sampleValue)}
+          <p className="text-xs text-muted-foreground truncate pl-0.5">
+            {formatSampleValue(sourceField.sampleValue)}
           </p>
         )}
       </div>
@@ -291,9 +291,8 @@ function MappingRow({
             )}
           </span>
           {isAutoDetected && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10 text-success text-2xs font-medium shrink-0">
-              <CheckCircle size={12} aria-hidden="true" />
-              Auto
+            <span className="text-2xs text-muted-foreground/70 font-medium uppercase tracking-wide shrink-0">
+              auto
             </span>
           )}
         </div>

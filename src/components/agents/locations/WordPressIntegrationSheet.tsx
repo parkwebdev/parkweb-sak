@@ -68,6 +68,7 @@ import { useWordPressHomes } from '@/hooks/useWordPressHomes';
 import { WordPressEndpointMapper } from './WordPressEndpointMapper';
 import { WordPressFieldMapper } from './WordPressFieldMapper';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
 import type { AvailableField } from '@/types/wordpress';
 
@@ -387,7 +388,10 @@ export function WordPressIntegrationSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-2xl overflow-y-auto flex flex-col">
+        <SheetContent className={cn(
+          "overflow-y-auto flex flex-col",
+          connectionStep === 'field-mapping' ? "sm:max-w-3xl" : "sm:max-w-2xl"
+        )}>
           <SheetHeader>
             <SheetTitle>
               WordPress Integration
