@@ -1436,6 +1436,10 @@ async function syncCommunitiesToLocations(
       let description: string | null = null;
       let ageCategory: string | null = null;
       let communityType: string | null = null;
+      // NEW FIELDS for enhanced community data
+      let amenities: string[] = [];
+      let petPolicy: string | null = null;
+      let utilitiesIncluded: Record<string, boolean> | null = null;
       
       const acf = community.acf;
       
@@ -1457,6 +1461,25 @@ async function syncCommunitiesToLocations(
         description = getValueByPath(community, fieldMappings.description) as string | null;
         ageCategory = getValueByPath(community, fieldMappings.age_category) as string | null;
         communityType = getValueByPath(community, fieldMappings.community_type) as string | null;
+        
+        // NEW FIELDS: Extract from field mappings (Priority 1)
+        const amenitiesValue = getValueByPath(community, fieldMappings.amenities);
+        if (Array.isArray(amenitiesValue)) {
+          amenities = amenitiesValue.map(a => 
+            typeof a === 'object' && a !== null && 'amenity' in a 
+              ? String((a as Record<string, unknown>).amenity) 
+              : String(a)
+          ).filter(Boolean);
+        } else if (typeof amenitiesValue === 'string') {
+          amenities = amenitiesValue.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        
+        petPolicy = getValueByPath(community, fieldMappings.pet_policy) as string | null;
+        
+        const utilitiesValue = getValueByPath(community, fieldMappings.utilities_included);
+        if (utilitiesValue && typeof utilitiesValue === 'object') {
+          utilitiesIncluded = utilitiesValue as Record<string, boolean>;
+        }
       }
       
       // PRIORITY 2: Use AI extraction if enabled and fields not already filled
@@ -1474,6 +1497,12 @@ async function syncCommunitiesToLocations(
           if (latitude == null) latitude = aiData.latitude || null;
           if (longitude == null) longitude = aiData.longitude || null;
           if (!description) description = aiData.description || null;
+          
+          // NEW FIELDS: Extract from AI (Priority 2)
+          if (amenities.length === 0 && aiData.amenities) amenities = aiData.amenities;
+          if (!petPolicy) petPolicy = aiData.pet_policy || null;
+          if (!ageCategory) ageCategory = aiData.age_category || null;
+          if (!utilitiesIncluded && aiData.utilities_included) utilitiesIncluded = aiData.utilities_included;
         }
       }
       
@@ -1508,14 +1537,38 @@ async function syncCommunitiesToLocations(
       if (!ageCategory) ageCategory = extractAcfField(acf, 'age', 'age_category', 'age_restriction');
       if (!communityType) communityType = extractAcfField(acf, 'type', 'community_type');
       
+      // NEW FIELDS: Extract from ACF keywords (Priority 3)
+      if (amenities.length === 0) {
+        const amenitiesRepeater = acf?.community_amenities_repeater || acf?.amenities_repeater || acf?.amenities;
+        if (Array.isArray(amenitiesRepeater)) {
+          amenities = amenitiesRepeater
+            .map(item => typeof item === 'object' && item !== null && 'amenity' in item 
+              ? String((item as Record<string, unknown>).amenity) 
+              : String(item))
+            .filter(Boolean);
+        }
+      }
+      
+      if (!petPolicy) petPolicy = extractAcfField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly');
+      
+      if (!utilitiesIncluded) {
+        const waterTrash = acf?.water_trash_electric || acf?.utilities;
+        if (waterTrash && typeof waterTrash === 'object') {
+          const utils = waterTrash as Record<string, unknown>;
+          utilitiesIncluded = {
+            water: utils.water === true || utils.water === 'yes' || utils.water === '1',
+            trash: utils.trash === true || utils.trash === 'yes' || utils.trash === '1',
+            electric: utils.electric === true || utils.electric === 'yes' || utils.electric === '1',
+          };
+        }
+      }
+      
       const timezone = inferTimezone(state, latitude, longitude);
       
+      // Metadata now ONLY contains lat/lng (other fields have proper columns)
       const metadata: Record<string, unknown> = {};
       if (latitude != null) metadata.latitude = latitude;
       if (longitude != null) metadata.longitude = longitude;
-      if (description) metadata.description = description;
-      if (ageCategory) metadata.age_category = ageCategory;
-      if (communityType) metadata.community_type = communityType;
 
       const termId = findMatchingTermId(taxonomyTerms, community.slug);
       
@@ -1535,6 +1588,12 @@ async function syncCommunitiesToLocations(
         metadata,
         wordpress_slug: community.slug,
         wordpress_community_term_id: termId,
+        // NEW FIELDS included in hash
+        description,
+        age_category: ageCategory,
+        amenities: amenities.length > 0 ? amenities : null,
+        pet_policy: petPolicy,
+        utilities_included: utilitiesIncluded,
       };
       
       const contentHash = generateContentHash(hashableData);
@@ -1556,6 +1615,12 @@ async function syncCommunitiesToLocations(
         metadata: Object.keys(metadata).length > 0 ? metadata : null,
         content_hash: contentHash,
         updated_at: new Date().toISOString(),
+        // NEW FIELDS saved to proper database columns
+        description,
+        age_category: ageCategory,
+        amenities: amenities.length > 0 ? amenities : null,
+        pet_policy: petPolicy,
+        utilities_included: utilitiesIncluded,
       };
 
       // Check if location already exists using our lookup map

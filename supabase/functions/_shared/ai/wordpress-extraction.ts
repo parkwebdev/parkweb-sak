@@ -28,6 +28,9 @@ export interface ExtractedCommunityData {
   office_hours?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  // New fields for enhanced community data
+  age_category?: string | null;
+  utilities_included?: { water?: boolean; trash?: boolean; electric?: boolean } | null;
 }
 
 export interface ExtractedPropertyData {
@@ -46,6 +49,12 @@ export interface ExtractedPropertyData {
   status?: 'available' | 'pending' | 'sold' | 'rented' | 'off_market' | null;
   description?: string | null;
   features?: string[];
+  // New fields for enhanced property data
+  manufacturer?: string | null;
+  model?: string | null;
+  lot_rent?: number | null;  // in dollars (convert to cents after)
+  virtual_tour_url?: string | null;
+  community_type?: string | null;
 }
 
 interface WordPressPost {
@@ -269,8 +278,13 @@ Extract the following fields if present. Return null for fields that cannot be d
 - status: One of "available", "pending", "sold", "rented", or "off_market"
 - description: Brief property description
 - features: List of features/amenities
+- manufacturer: Home manufacturer/builder name (e.g., "Clayton", "Champion", "Skyline")
+- model: Home model name (e.g., "The Breeze", "Northwind")
+- lot_rent: Monthly lot/site rent in dollars (numeric)
+- virtual_tour_url: Link to virtual tour, 3D walkthrough, or video tour
+- community_type: Type of community (e.g., "55+", "All Ages", "Family", "Senior")
 
-Be accurate and only extract information that is clearly stated. For price, extract the numeric value only.`;
+Be accurate and only extract information that is clearly stated. For price and lot_rent, extract numeric values only.`;
 
   const schema = {
     type: 'object',
@@ -290,6 +304,11 @@ Be accurate and only extract information that is clearly stated. For price, extr
       status: { type: 'string', enum: ['available', 'pending', 'sold', 'rented', 'off_market'], description: 'Listing status' },
       description: { type: 'string', description: 'Brief property description' },
       features: { type: 'array', items: { type: 'string' }, description: 'List of features/amenities' },
+      manufacturer: { type: 'string', description: 'Home manufacturer/builder name' },
+      model: { type: 'string', description: 'Home model name' },
+      lot_rent: { type: 'number', description: 'Monthly lot/site rent in dollars' },
+      virtual_tour_url: { type: 'string', description: 'Link to virtual tour or video' },
+      community_type: { type: 'string', description: 'Type of community (55+, All Ages, etc.)' },
     },
     required: ['name'],
   };
