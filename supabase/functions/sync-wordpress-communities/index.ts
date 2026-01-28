@@ -15,6 +15,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { extractCommunityData, type ExtractedCommunityData } from '../_shared/ai/wordpress-extraction.ts';
 import { parseAddressComponents } from '../_shared/utils/address-parser.ts';
+import { flattenRepeaterArray, extractAcfArrayField, extractAcfStringField } from '../_shared/utils/acf-extraction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -129,15 +130,18 @@ function getValueByPath(obj: Record<string, unknown>, path: string | undefined):
   // Convert value to string if it exists and isn't already
   if (current === null || current === undefined) return null;
   if (typeof current === 'object') {
-    // Handle arrays - extract first element (WordPress often wraps values in arrays)
+    // Handle arrays
     if (Array.isArray(current)) {
       if (current.length === 0) return null;
+      
+      // Check if it's an array of {rendered: ...} objects (WP content blocks)
       const firstItem = current[0];
-      // If first item is an object with 'rendered', extract it
       if (typeof firstItem === 'object' && firstItem !== null && 'rendered' in firstItem) {
         return (firstItem as Record<string, unknown>).rendered;
       }
-      return firstItem;
+      
+      // Return full array for repeater fields - let caller handle flattening
+      return current;
     }
     // For objects like {rendered: "text"}, try to get rendered value
     const asObj = current as Record<string, unknown>;
@@ -1465,11 +1469,8 @@ async function syncCommunitiesToLocations(
         // NEW FIELDS: Extract from field mappings (Priority 1)
         const amenitiesValue = getValueByPath(community, fieldMappings.amenities);
         if (Array.isArray(amenitiesValue)) {
-          amenities = amenitiesValue.map(a => 
-            typeof a === 'object' && a !== null && 'amenity' in a 
-              ? String((a as Record<string, unknown>).amenity) 
-              : String(a)
-          ).filter(Boolean);
+          // Use shared utility to flatten repeater arrays with various subfield names
+          amenities = flattenRepeaterArray(amenitiesValue);
         } else if (typeof amenitiesValue === 'string') {
           amenities = amenitiesValue.split(',').map(s => s.trim()).filter(Boolean);
         }
@@ -1537,19 +1538,18 @@ async function syncCommunitiesToLocations(
       if (!ageCategory) ageCategory = extractAcfField(acf, 'age', 'age_category', 'age_restriction');
       if (!communityType) communityType = extractAcfField(acf, 'type', 'community_type');
       
-      // NEW FIELDS: Extract from ACF keywords (Priority 3)
+      // NEW FIELDS: Extract from ACF keywords (Priority 3) using shared utility
       if (amenities.length === 0) {
-        const amenitiesRepeater = acf?.community_amenities_repeater || acf?.amenities_repeater || acf?.amenities;
-        if (Array.isArray(amenitiesRepeater)) {
-          amenities = amenitiesRepeater
-            .map(item => typeof item === 'object' && item !== null && 'amenity' in item 
-              ? String((item as Record<string, unknown>).amenity) 
-              : String(item))
-            .filter(Boolean);
-        }
+        amenities = extractAcfArrayField(acf, 
+          'community_amenities_repeater', 'amenities_repeater', 'amenities', 
+          'community_features', 'features'
+        );
       }
       
-      if (!petPolicy) petPolicy = extractAcfField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly');
+      if (!petPolicy) {
+        petPolicy = extractAcfStringField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly') || 
+                    extractAcfField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly');
+      }
       
       if (!utilitiesIncluded) {
         const waterTrash = acf?.water_trash_electric || acf?.utilities;
