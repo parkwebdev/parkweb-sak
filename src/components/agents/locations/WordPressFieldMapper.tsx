@@ -1,13 +1,14 @@
 /**
  * WordPress Field Mapper Component
  * 
- * Two-column CSV-importer-style UI for mapping WordPress API fields 
- * to target database fields. Shows sample values and auto-suggests mappings.
+ * Premium Airtable-style two-column UI for mapping WordPress API fields 
+ * to target database fields. Features card-based rows, animated connectors,
+ * and clear visual hierarchy.
  * 
  * @module components/agents/locations/WordPressFieldMapper
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -19,7 +20,7 @@ import {
   SelectValue,
   SelectSeparator,
 } from '@/components/ui/select';
-import { ArrowRight, ArrowLeft } from '@untitledui/icons';
+import { ArrowLeft, CheckCircle } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
 /** Field available from WordPress API */
@@ -97,8 +98,54 @@ function formatSampleValue(value: string | number | boolean | null): string {
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (typeof value === 'number') return String(value);
   const str = String(value);
-  if (str.length > 50) return str.substring(0, 50) + '...';
+  if (str.length > 40) return str.substring(0, 40) + '...';
   return str;
+}
+
+/** Premium SVG connection line between source and target */
+function ConnectionLine({ isActive }: { isActive: boolean }) {
+  return (
+    <div className="relative w-full h-8 flex items-center justify-center">
+      <svg 
+        className="w-full h-6" 
+        viewBox="0 0 80 24" 
+        fill="none"
+        aria-hidden="true"
+      >
+        {/* Background line */}
+        <line 
+          x1="4" y1="12" x2="72" y2="12" 
+          stroke="currentColor" 
+          strokeWidth="2"
+          strokeDasharray={isActive ? "0" : "4 4"}
+          className={cn(
+            "transition-all duration-300",
+            isActive ? "text-primary" : "text-muted-foreground/30"
+          )}
+        />
+        
+        {/* Arrow head */}
+        <polygon 
+          points="68,7 76,12 68,17" 
+          fill="currentColor"
+          className={cn(
+            "transition-all duration-300",
+            isActive ? "text-primary" : "text-muted-foreground/30"
+          )}
+        />
+        
+        {/* Active dot at start */}
+        <circle 
+          cx="4" cy="12" r="3" 
+          fill="currentColor"
+          className={cn(
+            "transition-all duration-300",
+            isActive ? "text-primary" : "text-muted-foreground/30"
+          )}
+        />
+      </svg>
+    </div>
+  );
 }
 
 interface MappingRowProps {
@@ -122,64 +169,84 @@ function MappingRow({
   
   return (
     <div className={cn(
-      "grid grid-cols-[1fr_40px_1fr] gap-3 items-start py-3 px-3 rounded-lg transition-colors",
-      isMapped ? "bg-muted/40" : "bg-transparent hover:bg-muted/20"
+      "group relative rounded-xl border transition-all duration-200",
+      isMapped 
+        ? "bg-card border-border shadow-sm" 
+        : "bg-muted/30 border-transparent hover:border-border/50 hover:bg-card/50"
     )}>
-      {/* Source Column */}
-      <div className="space-y-1.5">
-        <Select
-          value={selectedSource || SKIP_VALUE}
-          onValueChange={(value) => onSelect(value === SKIP_VALUE ? null : value)}
-        >
-          <SelectTrigger className="h-9 bg-background text-xs">
-            <SelectValue placeholder="Select source field..." />
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
-            <SelectItem value={SKIP_VALUE} className="text-muted-foreground italic">
-              Don't import
-            </SelectItem>
-            <SelectSeparator />
-            {availableFields.map((field) => (
-              <SelectItem key={field.path} value={field.path}>
-                <code className="font-mono text-xs">{field.path}</code>
+      <div className="grid grid-cols-[1fr_80px_1fr] gap-4 p-5 items-center">
+        {/* Source Column */}
+        <div className="space-y-3">
+          <Select
+            value={selectedSource || SKIP_VALUE}
+            onValueChange={(value) => onSelect(value === SKIP_VALUE ? null : value)}
+          >
+            <SelectTrigger 
+              className={cn(
+                "h-11 bg-background border-border/60 hover:border-primary/50",
+                "focus:border-primary transition-colors rounded-lg shadow-sm",
+                isMapped && "border-primary/30"
+              )}
+            >
+              <SelectValue placeholder="Select source field...">
+                {selectedSource ? (
+                  <code className="font-mono text-xs">{selectedSource}</code>
+                ) : (
+                  <span className="text-muted-foreground italic">Don't import</span>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              <SelectItem value={SKIP_VALUE} className="text-muted-foreground italic">
+                Don't import
               </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        {/* Sample value preview */}
-        {sourceField && (
-          <div className="px-2.5 py-1.5 bg-muted/60 rounded text-xs text-muted-foreground truncate border border-border/50">
-            {formatSampleValue(sourceField.sampleValue)}
-          </div>
-        )}
-      </div>
-      
-      {/* Arrow Column */}
-      <div className="flex justify-center pt-2">
-        {isMapped ? (
-          <ArrowRight size={18} className="text-primary" aria-hidden="true" />
-        ) : (
-          <div className="w-4 border-t border-dashed border-muted-foreground/30 mt-2" />
-        )}
-      </div>
-      
-      {/* Target Column */}
-      <div className="space-y-0.5 pt-1.5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium">
-            {targetField.label}
-            {targetField.required && <span className="text-destructive ml-0.5">*</span>}
-          </span>
-          {isAutoDetected && (
-            <Badge variant="secondary" size="sm" className="text-2xs">
-              auto
-            </Badge>
+              <SelectSeparator />
+              {availableFields.map((field) => (
+                <SelectItem key={field.path} value={field.path}>
+                  <code className="font-mono text-xs">{field.path}</code>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Sample value preview */}
+          {sourceField && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg border border-border/30">
+              <span className="text-2xs uppercase tracking-wide text-muted-foreground font-medium shrink-0">
+                Preview
+              </span>
+              <span className="text-xs text-foreground truncate flex-1">
+                {formatSampleValue(sourceField.sampleValue)}
+              </span>
+            </div>
           )}
         </div>
-        {targetField.description && (
-          <p className="text-xs text-muted-foreground">{targetField.description}</p>
-        )}
+        
+        {/* Connector Column */}
+        <div className="flex justify-center items-center">
+          <ConnectionLine isActive={isMapped} />
+        </div>
+        
+        {/* Target Column */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-semibold text-foreground">
+              {targetField.label}
+              {targetField.required && (
+                <span className="text-destructive ml-1">*</span>
+              )}
+            </span>
+            {isAutoDetected && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10 text-success text-2xs font-medium shrink-0">
+                <CheckCircle size={12} aria-hidden="true" />
+                Auto
+              </span>
+            )}
+          </div>
+          {targetField.description && (
+            <p className="text-xs text-muted-foreground">{targetField.description}</p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -236,42 +303,49 @@ export function WordPressFieldMapper({
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b shrink-0">
-        <div>
-          <h2 className="text-base font-semibold">
+      <div className="flex items-center justify-between pb-6 border-b shrink-0">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold tracking-tight">
             Map {type === 'community' ? 'Community' : 'Property'} Fields
           </h2>
           {samplePostTitle && (
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Sample: <span className="font-medium text-foreground">{samplePostTitle}</span>
+            <p className="text-sm text-muted-foreground">
+              Using sample: <span className="font-medium text-foreground">{samplePostTitle}</span>
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {mappedCount} of {totalFields} mapped
-          </span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-foreground tabular-nums">
+              {mappedCount}
+            </span>
+            <span className="text-sm text-muted-foreground">of {totalFields} mapped</span>
+          </div>
           <Progress 
             value={progressPercent} 
-            className="w-20 h-2" 
-            variant={mappedCount > 0 ? "success" : "default"}
+            className="w-24 h-2.5" 
+            variant={progressPercent === 100 ? "success" : "default"}
           />
         </div>
       </div>
       
       {/* Column Headers */}
-      <div className="grid grid-cols-[1fr_40px_1fr] gap-3 py-3 px-3 border-b sticky top-0 bg-background z-10 shrink-0">
-        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Source (WordPress)
+      <div className="grid grid-cols-[1fr_80px_1fr] gap-4 py-4 px-5 border-b sticky top-0 bg-background z-10 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-primary" />
+          <span className="text-sm font-semibold text-foreground">Source Field</span>
+          <span className="text-xs text-muted-foreground">(WordPress)</span>
         </div>
-        <div /> {/* Arrow column spacer */}
-        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Target (Database)
+        <div /> {/* Connector spacer */}
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-foreground" />
+          <span className="text-sm font-semibold text-foreground">Target Field</span>
+          <span className="text-xs text-muted-foreground">(Database)</span>
         </div>
       </div>
       
       {/* Scrollable Mapping Rows */}
-      <div className="flex-1 overflow-y-auto py-2 space-y-0.5 min-h-0">
+      <div className="flex-1 overflow-y-auto py-4 space-y-3 min-h-0">
         {targetFields.map((field) => (
           <MappingRow
             key={field.key}
@@ -285,28 +359,25 @@ export function WordPressFieldMapper({
       </div>
       
       {/* Footer Actions */}
-      <div className="flex items-center justify-between pt-4 border-t shrink-0">
+      <div className="flex items-center justify-between pt-6 border-t shrink-0">
         <Button
           variant="ghost"
-          size="sm"
           onClick={onBack}
           disabled={isSaving}
         >
-          <ArrowLeft size={16} className="mr-1.5" aria-hidden="true" />
+          <ArrowLeft size={16} className="mr-2" aria-hidden="true" />
           Back
         </Button>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            size="sm"
             onClick={() => onMappingsChange({})}
             disabled={isSaving || mappedCount === 0}
           >
             Clear All
           </Button>
           <Button
-            size="sm"
             onClick={onConfirm}
             disabled={isSaving || !allRequiredMapped}
           >
