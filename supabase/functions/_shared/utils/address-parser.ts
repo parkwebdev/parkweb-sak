@@ -7,12 +7,17 @@
  * 
  * @example
  * ```typescript
- * import { parseAddressComponents } from "../_shared/utils/address-parser.ts";
+ * import { parseAddressComponents, normalizeAndParseAddress } from "../_shared/utils/address-parser.ts";
  * 
  * const parsed = parseAddressComponents("123 Main St, Phoenix, AZ 85001");
  * // { street: "123 Main St", city: "Phoenix", state: "AZ", zip: "85001" }
+ * 
+ * const normalized = normalizeAndParseAddress("456 Oak Ave Los Angeles California 90210");
+ * // { street: "456 Oak Ave", city: "Los Angeles", state: "CA", zip: "90210" }
  * ```
  */
+
+import { normalizeStateToAbbreviation } from './state-mapping.ts';
 
 /**
  * US State abbreviations and full names for matching.
@@ -25,11 +30,78 @@ const STATE_PATTERN = /\b(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|
  */
 const ZIP_PATTERN = /\b(\d{5})(-\d{4})?\b/;
 
+/**
+ * Common multi-word city names that need special handling
+ */
+const MULTI_WORD_CITIES = new Set([
+  'los angeles', 'new york', 'san francisco', 'san diego', 'las vegas',
+  'salt lake city', 'kansas city', 'new orleans', 'oklahoma city',
+  'santa monica', 'san jose', 'el paso', 'fort worth', 'palm springs',
+  'palm beach', 'west palm beach', 'st louis', 'st. louis', 'saint louis',
+  'st paul', 'st. paul', 'saint paul', 'san antonio', 'santa fe',
+  'santa barbara', 'santa cruz', 'santa ana', 'costa mesa', 'newport beach',
+  'long beach', 'virginia beach', 'daytona beach', 'miami beach',
+  'panama city', 'cedar rapids', 'grand rapids', 'colorado springs',
+  'sioux falls', 'sioux city', 'north las vegas', 'north hollywood',
+  'south bend', 'ann arbor', 'bowling green', 'cedar city', 'corpus christi',
+  'el cajon', 'fort collins', 'fort lauderdale', 'fort myers', 'fort wayne',
+  'green bay', 'high point', 'jersey city', 'lake charles', 'lake havasu city',
+  'little rock', 'new haven', 'new bedford', 'north charleston', 'palo alto',
+  'port charlotte', 'port st lucie', 'rancho cucamonga', 'redwood city',
+  'rio rancho', 'rock hill', 'san bernardino', 'san marcos', 'san mateo',
+  'san rafael', 'santa clarita', 'santa rosa', 'west covina', 'west jordan',
+  'white plains', 'wilkes barre', 'winston salem',
+]);
+
 export interface ParsedAddress {
   street: string | null;
   city: string | null;
   state: string | null;
   zip: string | null;
+}
+
+/**
+ * Normalize and clean address string before parsing.
+ * 
+ * @param rawAddress - The raw address string
+ * @returns Normalized address string
+ */
+function normalizeAddressString(rawAddress: string): string {
+  return rawAddress
+    .trim()
+    .replace(/\s+/g, ' ')                    // Collapse whitespace
+    .replace(/,{2,}/g, ',')                  // Collapse multiple commas
+    .replace(/\bApt\.?\s*/gi, 'Apt ')        // Normalize apartment
+    .replace(/\bSte\.?\s*/gi, 'Suite ')      // Normalize suite
+    .replace(/\bN\.?\s+/g, 'North ')         // Expand directionals
+    .replace(/\bS\.?\s+/g, 'South ')
+    .replace(/\bE\.?\s+/g, 'East ')
+    .replace(/\bW\.?\s+/g, 'West ')
+    .replace(/\bSt\.\s/g, 'Street ')         // Expand street abbreviations
+    .replace(/\bAve\.\s/g, 'Avenue ')
+    .replace(/\bBlvd\.\s/g, 'Boulevard ')
+    .replace(/\bDr\.\s/g, 'Drive ')
+    .replace(/\bLn\.\s/g, 'Lane ')
+    .replace(/\bRd\.\s/g, 'Road ');
+}
+
+/**
+ * Detect if words form a known multi-word city.
+ * 
+ * @param words - Array of words to check
+ * @returns Object with city name and number of words consumed, or null
+ */
+function detectMultiWordCity(words: string[]): { city: string; consumed: number } | null {
+  // Check 3-word, then 2-word combinations from the end
+  for (let len = 3; len >= 2; len--) {
+    if (words.length >= len) {
+      const candidate = words.slice(-len).join(' ').toLowerCase();
+      if (MULTI_WORD_CITIES.has(candidate)) {
+        return { city: words.slice(-len).join(' '), consumed: len };
+      }
+    }
+  }
+  return null;
 }
 
 /**
@@ -58,9 +130,10 @@ export function parseAddressComponents(fullAddress: string | null): ParsedAddres
   const zipMatch = trimmed.match(ZIP_PATTERN);
   const zip = zipMatch ? zipMatch[1] : null;
   
-  // Extract state
+  // Extract state and normalize to abbreviation
   const stateMatch = trimmed.match(STATE_PATTERN);
-  const state = stateMatch ? stateMatch[1] : null;
+  const rawState = stateMatch ? stateMatch[1] : null;
+  const state = rawState ? normalizeStateToAbbreviation(rawState) : null;
   
   // Parse city - typically the part before state, after the last comma before state
   let city: string | null = null;
@@ -117,13 +190,13 @@ export function parseAddressComponents(fullAddress: string | null): ParsedAddres
         // Last word before state is likely the city
         const words = beforeState.split(/\s+/);
         if (words.length >= 2) {
-          // Check if last 2 words might be a city (e.g., "Los Angeles")
-          const lastTwo = words.slice(-2).join(' ');
-          // Common city patterns with spaces
-          if (/^(New|Los|San|Las|Salt|Saint|St\.?)\s/i.test(lastTwo)) {
-            city = lastTwo;
-            street = words.slice(0, -2).join(' ').trim() || null;
+          // Check for multi-word cities first
+          const multiWord = detectMultiWordCity(words);
+          if (multiWord) {
+            city = multiWord.city;
+            street = words.slice(0, -multiWord.consumed).join(' ').trim() || null;
           } else {
+            // Single word city
             city = words[words.length - 1];
             street = words.slice(0, -1).join(' ').trim() || null;
           }
@@ -148,6 +221,22 @@ export function parseAddressComponents(fullAddress: string | null): ParsedAddres
   }
 
   return { street, city, state, zip };
+}
+
+/**
+ * Smart address normalization and parsing.
+ * Normalizes the address string before parsing for better results.
+ * 
+ * @param rawAddress - The raw address string
+ * @returns Parsed address components with normalized state
+ */
+export function normalizeAndParseAddress(rawAddress: string | null): ParsedAddress {
+  if (!rawAddress) {
+    return { street: null, city: null, state: null, zip: null };
+  }
+  
+  const normalized = normalizeAddressString(rawAddress);
+  return parseAddressComponents(normalized);
 }
 
 /**

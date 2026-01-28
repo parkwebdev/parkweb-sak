@@ -56,34 +56,7 @@ export const useProperties = (agentId?: string) => {
       const [propertiesResult, locationsResult] = await Promise.all([
         supabase
           .from('properties')
-          .select(`
-            id,
-            agent_id,
-            knowledge_source_id,
-            location_id,
-            external_id,
-            lot_number,
-            address,
-            city,
-            state,
-            zip,
-            beds,
-            baths,
-            sqft,
-            price,
-            price_type,
-            status,
-            description,
-            features,
-            images,
-            listing_url,
-            year_built,
-            content_hash,
-            first_seen_at,
-            last_seen_at,
-            created_at,
-            updated_at
-          `)
+          .select('*')
           .eq('agent_id', agentId)
           .order('created_at', { ascending: false }),
         supabase
