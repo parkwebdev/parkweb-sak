@@ -1,355 +1,257 @@
 
 
-# Plan: Comprehensive WordPress Data Parsing & Schema Enhancement (Revised)
+# Plan: Complete WordPress Data Integration - Missing Field Implementation
 
-## Executive Summary
+## Problem Summary
 
-This plan focuses on:
-1. **Schema Enhancement** - Add fields that improve property/community listings and user experience
-2. **Robust Data Parsing** - Handle all edge cases for addresses, states, prices, and other fields
+The database schema, types, parsing utilities, and frontend UI are complete, BUT the actual sync functions that write data to the database are NOT using the new fields. Data extraction and saving is incomplete.
 
-**Excluded**: Latitude/longitude (remains in metadata for AI context if available)
+## Issues Identified
 
----
-
-## Part 1: Database Schema Enhancements
-
-### Properties Table - New Columns
-
-| Column | Type | Purpose | Business Value |
-|--------|------|---------|----------------|
-| `manufacturer` | TEXT | Home manufacturer/brand (e.g., "Clayton", "Champion") | Buyers search by brand |
-| `model` | TEXT | Home model name | Important for specifications |
-| `lot_rent` | INTEGER | Monthly lot rent in cents | Critical for total cost calculation |
-| `virtual_tour_url` | TEXT | 3D tour/video link | High-conversion feature |
-| `community_type` | TEXT | "55+", "All Ages", "Family" | Key filter criteria |
-
-### Locations Table - New Columns
-
-| Column | Type | Purpose | Business Value |
-|--------|------|---------|----------------|
-| `amenities` | TEXT[] | Structured amenity list | Searchable features |
-| `pet_policy` | TEXT | Pet restrictions/rules | Common buyer question |
-| `utilities_included` | JSONB | Water/trash/electric details | Cost transparency |
-| `age_category` | TEXT | "55+", "All Ages", etc. | Critical filter |
-| `description` | TEXT | Community description | SEO and user info |
-
-### Migration SQL
-
-```sql
--- Properties table enhancements
-ALTER TABLE public.properties
-  ADD COLUMN IF NOT EXISTS manufacturer TEXT,
-  ADD COLUMN IF NOT EXISTS model TEXT,
-  ADD COLUMN IF NOT EXISTS lot_rent INTEGER,
-  ADD COLUMN IF NOT EXISTS virtual_tour_url TEXT,
-  ADD COLUMN IF NOT EXISTS community_type TEXT;
-
--- Locations table enhancements  
-ALTER TABLE public.locations
-  ADD COLUMN IF NOT EXISTS amenities TEXT[] DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS pet_policy TEXT,
-  ADD COLUMN IF NOT EXISTS utilities_included JSONB DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS age_category TEXT,
-  ADD COLUMN IF NOT EXISTS description TEXT;
-
--- Index for community type filtering
-CREATE INDEX IF NOT EXISTS idx_properties_community_type 
-  ON properties(community_type) 
-  WHERE community_type IS NOT NULL;
-
-CREATE INDEX IF NOT EXISTS idx_locations_age_category 
-  ON locations(age_category) 
-  WHERE age_category IS NOT NULL;
-```
-
----
-
-## Part 2: Robust Data Parsing Utilities
-
-### 2.1 Enhanced Address Parser
-
-**File:** `supabase/functions/_shared/utils/address-parser.ts`
-
-**New Capabilities:**
-- Handle addresses without commas (pattern matching)
-- Detect multi-word cities (Los Angeles, Salt Lake City, etc.)
-- Normalize directionals (N. → North)
-- Handle apartment/suite variations
-
-```typescript
-// Multi-word city detection
-const MULTI_WORD_CITIES = new Set([
-  'los angeles', 'new york', 'san francisco', 'san diego', 'las vegas',
-  'salt lake city', 'kansas city', 'new orleans', 'oklahoma city',
-  'santa monica', 'san jose', 'el paso', 'fort worth', 'palm springs',
-  // ... comprehensive list
-]);
-
-export function normalizeAndParseAddress(rawAddress: string | null): ParsedAddress {
-  // Step 1: Normalize whitespace and punctuation
-  // Step 2: Try comma-delimited parsing first
-  // Step 3: Fall back to pattern matching with multi-word city detection
-  // Step 4: Return structured components
-}
-```
-
-### 2.2 State Normalization
-
-**File:** `supabase/functions/_shared/utils/state-mapping.ts`
-
-```typescript
-// Store states as 2-letter abbreviations consistently
-export function normalizeStateToAbbreviation(input: string | null): string | null {
-  // Handle: "Arizona" → "AZ", "Ariz." → "AZ", "CALIF" → "CA"
-  
-  const TYPO_MAP: Record<string, string> = {
-    'ARIZ': 'AZ', 'ARIZ.': 'AZ', 'ARIZON': 'AZ',
-    'CALIF': 'CA', 'CALIF.': 'CA', 'CALI': 'CA',
-    'FLA': 'FL', 'FLA.': 'FL',
-    'TEX': 'TX', 'TEX.': 'TX',
-    'WASH': 'WA', 'WASH.': 'WA',
-    // ... comprehensive variations
-  };
-}
-```
-
-### 2.3 Price Parsing
-
-**File:** `supabase/functions/_shared/utils/price-parser.ts` (NEW)
-
-```typescript
-/**
- * Parse price from various formats → cents
- * 
- * "$125,000" → 12500000
- * "125000" → 12500000  
- * "$1,200/mo" → 120000
- * "Call for pricing" → null
- */
-export function parsePriceToCents(input: unknown): number | null;
-
-/**
- * Infer price type from context
- * "$1,200/mo" → "rent_monthly"
- * "For Sale: $125,000" → "sale"
- */
-export function inferPriceType(rawValue: unknown, explicitType?: string): PriceType;
-```
-
-### 2.4 Phone Number Normalization
-
-**File:** `supabase/functions/_shared/utils/phone-parser.ts` (NEW)
-
-```typescript
-/**
- * Normalize to E.164 format
- * "(602) 555-1234" → "+16025551234"
- * "602.555.1234" → "+16025551234"
- */
-export function normalizePhoneNumber(input: string | null): string | null;
-```
-
-### 2.5 Numeric Field Parsing
-
-**File:** `supabase/functions/_shared/utils/numeric-parser.ts` (NEW)
-
-```typescript
-// Baths: "2.5", "2 1/2", "2½" → 2.5
-export function parseBathCount(input: unknown): number | null;
-
-// Sqft: "1,500 sq ft" → 1500
-export function parseSqft(input: unknown): number | null;
-
-// Year: validates 1900-current+1
-export function parseYearBuilt(input: unknown): number | null;
-```
-
-### 2.6 Status Normalization
-
-**Enhanced mapping for all variations:**
-
-| Input Variations | Output |
-|-----------------|--------|
-| "Active", "For Sale", "Just Listed", "New" | `available` |
-| "Pending", "Under Contract", "Contingent", "In Escrow" | `pending` |
-| "Sold", "Closed" | `sold` |
-| "Rented", "Leased" | `rented` |
-| "Coming Soon", "Pre-Market" | `coming_soon` |
-| "Off Market", "Withdrawn", "Expired" | `off_market` |
-
----
-
-## Part 3: Sync Function Enhancements
-
-### 3.1 Property Sync Updates
-
+### Issue 1: Properties Sync Not Saving New Fields
 **File:** `supabase/functions/sync-wordpress-homes/index.ts`
 
-Add extraction for new fields with 4-tier priority:
+The `propertyData` object (lines 965-989) is missing:
+- `manufacturer`
+- `model`
+- `lot_rent`
+- `virtual_tour_url`
+- `community_type`
 
-```typescript
-// New field extraction
-let manufacturer: string | null = null;
-let model: string | null = null;
-let lotRent: number | null = null;
-let virtualTourUrl: string | null = null;
-let communityType: string | null = null;
+These fields need to be:
+1. Extracted from field mappings (Priority 1)
+2. Extracted from AI (Priority 2)
+3. Extracted from ACF keywords (Priority 3)
+4. Included in `propertyData` when saving
 
-// PRIORITY 1: User field mappings
-if (fieldMappings) {
-  manufacturer = getValueByPath(home, fieldMappings.manufacturer);
-  model = getValueByPath(home, fieldMappings.model);
-  lotRent = parsePriceToCents(getValueByPath(home, fieldMappings.lot_rent));
-  virtualTourUrl = getValueByPath(home, fieldMappings.virtual_tour_url);
-  communityType = getValueByPath(home, fieldMappings.community_type);
-}
-
-// PRIORITY 2: AI extraction (already handled)
-
-// PRIORITY 3: ACF keyword fallback
-if (!manufacturer) manufacturer = extractAcfField(acf, 'manufacturer', 'make', 'builder');
-if (!model) model = extractAcfField(acf, 'model', 'model_name');
-if (lotRent == null) {
-  const raw = extractAcfNumber(acf, 'lot_rent', 'space_rent', 'site_rent');
-  lotRent = raw != null ? Math.round(raw * 100) : null;
-}
-if (!virtualTourUrl) virtualTourUrl = extractAcfField(acf, 'virtual_tour', 'matterport', '3d_tour');
-if (!communityType) communityType = extractAcfField(acf, 'community_type', 'age_restriction');
-```
-
-### 3.2 Community Sync Updates
-
+### Issue 2: Communities Sync Putting New Fields in Metadata Instead of Columns
 **File:** `supabase/functions/sync-wordpress-communities/index.ts`
 
-Add extraction for new fields:
+The `locationData` object (lines 1542-1558) is missing:
+- `amenities` (currently not extracted at all)
+- `pet_policy` (currently not extracted at all)
+- `utilities_included` (currently not extracted at all)
+- `age_category` (extracted but put in metadata)
+- `description` (extracted but put in metadata)
 
-```typescript
-// New field extraction
-let amenities: string[] = [];
-let petPolicy: string | null = null;
-let utilitiesIncluded: Record<string, boolean> = {};
-let ageCategory: string | null = null;
-let description: string | null = null;
+### Issue 3: AI Extraction Schema Incomplete
+**File:** `supabase/functions/_shared/ai/wordpress-extraction.ts`
 
-// Handle repeater format for amenities
-const repeater = acf?.community_amenities_repeater;
-if (Array.isArray(repeater)) {
-  amenities = repeater
-    .map(item => typeof item === 'object' && 'amenity' in item ? String(item.amenity) : String(item))
-    .filter(Boolean);
-}
+`ExtractedPropertyData` interface (lines 33-49) missing:
+- `manufacturer`
+- `model`
+- `lot_rent`
+- `virtual_tour_url`
+- `community_type`
 
-// Extract utilities object
-if (acf?.water_trash_electric) {
-  const utils = acf.water_trash_electric;
-  utilitiesIncluded = {
-    water: utils.water === true || utils.water === 'yes',
-    trash: utils.trash === true || utils.trash === 'yes', 
-    electric: utils.electric === true || utils.electric === 'yes',
-  };
-}
-```
+Claude tool schema for `extract_property` doesn't include these fields.
+
+`ExtractedCommunityData` interface (lines 17-31) is already correct with `amenities`, `pet_policy`.
 
 ---
 
-## Part 4: AI Extraction Schema Updates
+## Implementation Details
+
+### Part 1: Update AI Extraction Schema
 
 **File:** `supabase/functions/_shared/ai/wordpress-extraction.ts`
 
-Update interfaces and Claude tool schemas:
-
+Add to `ExtractedPropertyData` interface:
 ```typescript
 export interface ExtractedPropertyData {
   // ... existing fields ...
   manufacturer?: string | null;
   model?: string | null;
-  lot_rent?: number | null;  // in dollars, convert to cents after
-  virtual_tour_url?: string | null;
-  community_type?: string | null;
-}
-
-export interface ExtractedCommunityData {
-  // ... existing fields ...
-  amenities?: string[];
-  pet_policy?: string | null;
-  utilities_included?: { water?: boolean; trash?: boolean; electric?: boolean };
-  age_category?: string | null;
-  description?: string | null;
-}
-```
-
----
-
-## Part 5: Field Mapping UI Updates
-
-**File:** `src/components/ari/wordpress/WordPressFieldMapper.tsx`
-
-Add new target fields to mapper:
-
-**Properties:**
-- `manufacturer` - "Manufacturer/Builder"
-- `model` - "Model Name"
-- `lot_rent` - "Monthly Lot Rent"
-- `virtual_tour_url` - "Virtual Tour URL"
-- `community_type` - "Community Type (55+, etc.)"
-
-**Communities:**
-- `amenities` - "Amenities (array)"
-- `pet_policy` - "Pet Policy"
-- `utilities_included` - "Utilities Included"
-- `age_category` - "Age Category"
-- `description` - "Description"
-
----
-
-## Part 6: Type Updates
-
-**File:** `src/types/properties.ts`
-
-```typescript
-export interface Property {
-  // ... existing fields ...
-  manufacturer?: string | null;
-  model?: string | null;
-  lot_rent?: number | null;
+  lot_rent?: number | null;  // in dollars
   virtual_tour_url?: string | null;
   community_type?: string | null;
 }
 ```
 
-**File:** `src/types/locations.ts`
+Update the Claude tool schema in `extractPropertyData()` to include these fields in the `properties` object.
 
+Update the system prompt to instruct Claude to extract:
+- manufacturer: Home manufacturer/builder name
+- model: Home model name
+- lot_rent: Monthly lot/site rent in dollars
+- virtual_tour_url: Link to virtual tour/3D walkthrough
+- community_type: Type of community (55+, All Ages, Family, etc.)
+
+### Part 2: Update Properties Sync Function
+
+**File:** `supabase/functions/sync-wordpress-homes/index.ts`
+
+**Step A: Add new field variables (after line 830):**
 ```typescript
-export interface LocationMetadata {
-  // ... existing fields ...
-  // Remove lat/long - stays in metadata if needed
-}
+let manufacturer: string | null = null;
+let model: string | null = null;
+let lotRent: number | null = null;
+let virtualTourUrl: string | null = null;
+let communityType: string | null = null;
+```
 
-// New interface for Location with enhanced fields
-export interface LocationWithDetails extends Location {
-  amenities?: string[] | null;
-  pet_policy?: string | null;
-  utilities_included?: {
-    water?: boolean;
-    trash?: boolean;
-    electric?: boolean;
-  } | null;
-  age_category?: string | null;
-  description?: string | null;
+**Step B: Extract from field mappings (Priority 1, after line 858):**
+```typescript
+if (fieldMappings) {
+  manufacturer = getValueByPath(home, fieldMappings.manufacturer) as string | null;
+  model = getValueByPath(home, fieldMappings.model) as string | null;
+  const lotRentValue = getValueByPath(home, fieldMappings.lot_rent);
+  if (lotRentValue != null) lotRent = Math.round(parseFloat(String(lotRentValue)) * 100);
+  virtualTourUrl = getValueByPath(home, fieldMappings.virtual_tour_url) as string | null;
+  communityType = getValueByPath(home, fieldMappings.community_type) as string | null;
 }
 ```
 
----
+**Step C: Extract from AI (Priority 2, after line 880):**
+```typescript
+if (aiData) {
+  if (!manufacturer) manufacturer = aiData.manufacturer || null;
+  if (!model) model = aiData.model || null;
+  if (lotRent == null && aiData.lot_rent != null) lotRent = Math.round(aiData.lot_rent * 100);
+  if (!virtualTourUrl) virtualTourUrl = aiData.virtual_tour_url || null;
+  if (!communityType) communityType = aiData.community_type || null;
+}
+```
 
-## Implementation Order
+**Step D: Extract from ACF keywords (Priority 3, after line 926):**
+```typescript
+if (!manufacturer) manufacturer = extractAcfField(acf, 'manufacturer', 'make', 'builder', 'brand');
+if (!model) model = extractAcfField(acf, 'model', 'model_name', 'home_model');
+if (lotRent == null) {
+  const lotRentValue = extractAcfNumber(acf, 'lot_rent', 'space_rent', 'site_rent', 'lot_fee');
+  if (lotRentValue != null) lotRent = Math.round(lotRentValue * 100);
+}
+if (!virtualTourUrl) virtualTourUrl = extractAcfField(acf, 'virtual_tour', 'tour_url', 'matterport', '3d_tour', 'video_tour');
+if (!communityType) communityType = extractAcfField(acf, 'community_type', 'age_restriction', 'age_category', '55_plus');
+```
 
-1. **Database Migration** - Add new columns to properties and locations
-2. **Parsing Utilities** - Create price-parser, phone-parser, numeric-parser; enhance address-parser and state-mapping
-3. **Sync Functions** - Update extraction logic for new fields
-4. **AI Extraction** - Update Claude schemas for new fields
-5. **Frontend** - Update field mapper and types
-6. **Testing** - Full resync with sample feeds
+**Step E: Include in hashable data (line 943-961):**
+```typescript
+const hashableData = {
+  // ... existing fields ...
+  manufacturer,
+  model,
+  lot_rent: lotRent,
+  virtual_tour_url: virtualTourUrl,
+  community_type: communityType,
+};
+```
+
+**Step F: Include in propertyData (lines 965-989):**
+```typescript
+const propertyData = {
+  // ... existing fields ...
+  manufacturer,
+  model,
+  lot_rent: lotRent,
+  virtual_tour_url: virtualTourUrl,
+  community_type: communityType,
+};
+```
+
+### Part 3: Update Communities Sync Function
+
+**File:** `supabase/functions/sync-wordpress-communities/index.ts`
+
+**Step A: Add new field variables (after line 1438):**
+```typescript
+let amenities: string[] = [];
+let petPolicy: string | null = null;
+let utilitiesIncluded: Record<string, boolean> | null = null;
+// Note: description and ageCategory already exist
+```
+
+**Step B: Extract from field mappings (Priority 1, after line 1459):**
+```typescript
+if (fieldMappings) {
+  // Handle amenities array
+  const amenitiesValue = getValueByPath(community, fieldMappings.amenities);
+  if (Array.isArray(amenitiesValue)) {
+    amenities = amenitiesValue.map(a => 
+      typeof a === 'object' && a !== null && 'amenity' in a 
+        ? String(a.amenity) 
+        : String(a)
+    ).filter(Boolean);
+  } else if (typeof amenitiesValue === 'string') {
+    amenities = amenitiesValue.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  
+  petPolicy = getValueByPath(community, fieldMappings.pet_policy) as string | null;
+  
+  // Handle utilities - could be object or individual fields
+  const utilitiesValue = getValueByPath(community, fieldMappings.utilities_included);
+  if (utilitiesValue && typeof utilitiesValue === 'object') {
+    utilitiesIncluded = utilitiesValue as Record<string, boolean>;
+  }
+}
+```
+
+**Step C: Extract from AI (Priority 2, enhance existing block ~line 1467):**
+```typescript
+if (aiData) {
+  // ... existing assignments ...
+  if (amenities.length === 0 && aiData.amenities) amenities = aiData.amenities;
+  if (!petPolicy) petPolicy = aiData.pet_policy || null;
+}
+```
+
+**Step D: Extract from ACF keywords (Priority 3, after line 1509):**
+```typescript
+// Amenities - handle repeater format
+if (amenities.length === 0) {
+  const amenitiesRepeater = acf?.community_amenities_repeater || acf?.amenities_repeater || acf?.amenities;
+  if (Array.isArray(amenitiesRepeater)) {
+    amenities = amenitiesRepeater
+      .map(item => typeof item === 'object' && item !== null && 'amenity' in item 
+        ? String(item.amenity) 
+        : String(item))
+      .filter(Boolean);
+  }
+}
+
+if (!petPolicy) petPolicy = extractAcfField(acf, 'pet_policy', 'pets', 'pet_rules', 'pet_friendly');
+
+// Utilities
+if (!utilitiesIncluded) {
+  const waterTrash = acf?.water_trash_electric || acf?.utilities;
+  if (waterTrash && typeof waterTrash === 'object') {
+    const utils = waterTrash as Record<string, unknown>;
+    utilitiesIncluded = {
+      water: utils.water === true || utils.water === 'yes' || utils.water === '1',
+      trash: utils.trash === true || utils.trash === 'yes' || utils.trash === '1',
+      electric: utils.electric === true || utils.electric === 'yes' || utils.electric === '1',
+    };
+  }
+}
+```
+
+**Step E: Remove these from metadata object (lines 1513-1518):**
+Remove `description`, `age_category`, `community_type` from metadata since they now have proper columns.
+
+**Step F: Update hashableData (lines 1525-1538):**
+```typescript
+const hashableData = {
+  // ... existing fields ...
+  amenities: amenities.length > 0 ? amenities : null,
+  pet_policy: petPolicy,
+  utilities_included: utilitiesIncluded,
+  age_category: ageCategory,
+  description,
+};
+```
+
+**Step G: Update locationData (lines 1542-1558):**
+```typescript
+const locationData = {
+  // ... existing fields ...
+  amenities: amenities.length > 0 ? amenities : null,
+  pet_policy: petPolicy,
+  utilities_included: utilitiesIncluded,
+  age_category: ageCategory,
+  description,
+  metadata: Object.keys(metadata).length > 0 ? metadata : null, // Now only contains lat/lng
+};
+```
 
 ---
 
@@ -357,33 +259,18 @@ export interface LocationWithDetails extends Location {
 
 | File | Change |
 |------|--------|
-| `supabase/migrations/YYYYMMDD_enhance_wp_schema.sql` | New columns for properties and locations |
-| `supabase/functions/_shared/utils/address-parser.ts` | Enhanced address parsing with multi-word cities |
-| `supabase/functions/_shared/utils/state-mapping.ts` | Add abbreviation normalization |
-| `supabase/functions/_shared/utils/price-parser.ts` | NEW - Price parsing utilities |
-| `supabase/functions/_shared/utils/phone-parser.ts` | NEW - Phone normalization |
-| `supabase/functions/_shared/utils/numeric-parser.ts` | NEW - Beds/baths/sqft parsing |
-| `supabase/functions/sync-wordpress-homes/index.ts` | Add new field extraction |
-| `supabase/functions/sync-wordpress-communities/index.ts` | Add new field extraction |
-| `supabase/functions/_shared/ai/wordpress-extraction.ts` | Update schemas for new fields |
-| `src/components/ari/wordpress/WordPressFieldMapper.tsx` | Add new mappable fields |
-| `src/types/properties.ts` | Add new property fields |
-| `src/types/locations.ts` | Add new location fields |
+| `supabase/functions/_shared/ai/wordpress-extraction.ts` | Add new property fields to interface and Claude schema |
+| `supabase/functions/sync-wordpress-homes/index.ts` | Extract and save manufacturer, model, lot_rent, virtual_tour_url, community_type |
+| `supabase/functions/sync-wordpress-communities/index.ts` | Extract and save amenities, pet_policy, utilities_included, age_category, description to proper columns |
 
 ---
 
-## Edge Cases Covered
+## Testing Plan
 
-| Scenario | Solution |
-|----------|----------|
-| Address: "123 Main St Phoenix AZ 85001" (no commas) | Pattern matching with state detection |
-| Address: "456 Oak Ave, Los Angeles, California" | State normalization + multi-word city |
-| State: "Ariz." or "CALIF" | Typo/abbreviation mapping |
-| Price: "$125,000" vs "125000" vs "Call for pricing" | Flexible parsing with null handling |
-| Price: "$1,200/mo" | Infer rent_monthly from context |
-| Baths: "2.5" vs "2 1/2" vs "2½" | Handle all fraction formats |
-| Phone: "(602) 555-1234" vs "602.555.1234" | Normalize to E.164 |
-| Status: "Active" vs "For Sale" vs "Coming Soon!" | Comprehensive status mapping |
-| Amenities as repeater array | Handle `[{amenity: "Pool"}, {amenity: "Gym"}]` format |
-| Missing fields | Graceful null handling throughout |
+After implementation:
+1. Run a Full Resync for properties with a WordPress site that has manufacturer/model data (MHP Communities)
+2. Verify new fields appear in the properties table
+3. Run a Full Resync for communities
+4. Verify amenities, pet_policy, utilities_included, age_category, description appear in proper columns (not just metadata)
+5. Verify AI extraction populates these fields when ACF data is missing
 
