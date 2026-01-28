@@ -213,6 +213,8 @@ Extract the following fields if present. Return null for fields that cannot be d
 - office_hours: Office hours if mentioned
 - latitude: GPS latitude if available
 - longitude: GPS longitude if available
+- age_category: Type of community (55+, All Ages, Family, Senior, etc.)
+- utilities_included: Which utilities are included (water, trash, electric)
 
 Be accurate and only extract information that is clearly stated.`;
 
@@ -232,6 +234,16 @@ Be accurate and only extract information that is clearly stated.`;
       office_hours: { type: 'string', description: 'Office hours' },
       latitude: { type: 'number', description: 'GPS latitude' },
       longitude: { type: 'number', description: 'GPS longitude' },
+      age_category: { type: 'string', description: 'Community age restriction (55+, All Ages, Family, Senior, etc.)' },
+      utilities_included: { 
+        type: 'object', 
+        properties: {
+          water: { type: 'boolean', description: 'Water included in lot rent' },
+          trash: { type: 'boolean', description: 'Trash included in lot rent' },
+          electric: { type: 'boolean', description: 'Electric included in lot rent' },
+        },
+        description: 'Which utilities are included in lot rent' 
+      },
     },
     required: ['name'],
   };
