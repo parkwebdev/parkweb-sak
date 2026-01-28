@@ -1,31 +1,26 @@
 
-
-# Plan: Fix Address Field to Only Store Street Address
+# Plan: Fix Street Address Extraction When City/State/Zip Are Pre-Filled
 
 ## Problem Summary
 
-When clicking a location in the sheet, the "Street Address" field shows the full combined address (e.g., "101 Polaris Ave, Pierre, SD 57501") instead of just the street component ("101 Polaris Ave").
+The street address extraction fix isn't working because the parsing block is conditionally gated:
 
-### Root Cause
-
-In `sync-wordpress-communities/index.ts`, when parsing a combined address to extract city/state/zip, the code **does not update the `address` variable** with the parsed street component. The full address string is stored in the `address` column while city/state/zip are correctly extracted.
-
-**Current code (lines 1520-1534):**
 ```typescript
 if (address && (!city || !state || !zip)) {
-  const parsed = parseAddressComponents(address);
-  if (!city && parsed.city) city = parsed.city;
-  if (!state && parsed.state) state = parsed.state;
-  if (!zip && parsed.zip) zip = parsed.zip;
-  // ❌ Missing: address = parsed.street
+  // Parse address and extract street
 }
 ```
+
+When the user has WordPress field mappings that provide **both** a combined address field AND separate city/state/zip fields, the condition `(!city || !state || !zip)` is `FALSE` because all three are already filled from Priority 1 field mappings. The address parsing block is never executed, so the full combined address remains in the `address` variable.
 
 ---
 
 ## Solution
 
-After parsing the combined address, update the `address` variable with just the street component if successfully parsed.
+Split the address parsing into two concerns:
+
+1. **City/State/Zip extraction** - Only run if those fields are empty (existing behavior)
+2. **Street extraction** - Always run if address contains city/state/zip patterns (new behavior)
 
 ---
 
@@ -33,13 +28,29 @@ After parsing the combined address, update the `address` variable with just the 
 
 ### File: `supabase/functions/sync-wordpress-communities/index.ts`
 
-**Lines 1518-1534** - Update to also extract street:
+**Change lines 1518-1539** from:
 
 ```typescript
 // PRIORITY 2.5: Parse combined address if city/state/zip still empty
-// This runs before keyword extraction to avoid wasting cycles on fields we can parse
 if (address && (!city || !state || !zip)) {
   const parsed = parseAddressComponents(address);
+  if (!city && parsed.city) { city = parsed.city; }
+  if (!state && parsed.state) { state = parsed.state; }
+  if (!zip && parsed.zip) { zip = parsed.zip; }
+  if (parsed.street && (parsed.city || parsed.state || parsed.zip)) {
+    address = parsed.street;
+  }
+}
+```
+
+**To:**
+
+```typescript
+// PRIORITY 2.5: Parse combined address for city/state/zip extraction AND street cleanup
+if (address) {
+  const parsed = parseAddressComponents(address);
+  
+  // Fill in missing city/state/zip from parsed address
   if (!city && parsed.city) {
     city = parsed.city;
     console.log(`📍 Parsed city from address: ${city}`);
@@ -52,7 +63,10 @@ if (address && (!city || !state || !zip)) {
     zip = parsed.zip;
     console.log(`📍 Parsed zip from address: ${zip}`);
   }
-  // NEW: Update address to just the street component if we successfully parsed it
+  
+  // ALWAYS extract just the street component if address contains city/state/zip
+  // This handles the case where field mappings provide both a combined address
+  // AND separate city/state/zip fields - we still want just the street in `address`
   if (parsed.street && (parsed.city || parsed.state || parsed.zip)) {
     address = parsed.street;
     console.log(`📍 Extracted street address: ${address}`);
@@ -60,11 +74,45 @@ if (address && (!city || !state || !zip)) {
 }
 ```
 
-### Also Apply to Properties Sync
+### File: `supabase/functions/sync-wordpress-homes/index.ts`
 
-**File:** `supabase/functions/sync-wordpress-homes/index.ts`
+Apply the same fix to the properties sync function.
 
-Apply the same fix to the properties sync function if it has similar address parsing logic.
+---
+
+## Logic Change Summary
+
+| Scenario | Before | After |
+|----------|--------|-------|
+| Address only, no city/state/zip mappings | ✅ Parses and extracts street | ✅ Parses and extracts street |
+| Combined address + separate city/state/zip mappings | ❌ Skips parsing entirely | ✅ Still extracts street component |
+| Street-only address (no city/state/zip in string) | ✅ No change | ✅ No change (parsed.city/state/zip will be null) |
+
+---
+
+## Example Flow
+
+**WordPress Data:**
+- `acf.community_street_address`: "1011 Albany PL SE, Orange City, IA 51041"
+- `acf.community_city`: "Orange City"
+- `acf.community_state`: "IA"
+- `acf.community_zip_code`: "51041"
+
+**Priority 1 (Field Mappings):**
+- `address` = "1011 Albany PL SE, Orange City, IA 51041"
+- `city` = "Orange City"
+- `state` = "IA"  
+- `zip` = "51041"
+
+**Priority 2.5 (BEFORE fix):**
+- Condition: `address && (!city || !state || !zip)` = `true && (false || false || false)` = **FALSE**
+- Result: **Skipped** - address remains as full combined address ❌
+
+**Priority 2.5 (AFTER fix):**
+- Condition: `address` = **TRUE**
+- Parses: `{ street: "1011 Albany PL SE", city: "Orange City", state: "IA", zip: "51041" }`
+- City/state/zip already set, so no updates there
+- Street extracted: `address = "1011 Albany PL SE"` ✅
 
 ---
 
@@ -72,39 +120,15 @@ Apply the same fix to the properties sync function if it has similar address par
 
 | File | Change |
 |------|--------|
-| `supabase/functions/sync-wordpress-communities/index.ts` | Update address variable with parsed.street when parsing combined addresses |
-| `supabase/functions/sync-wordpress-homes/index.ts` | Same fix for properties (if applicable) |
+| `supabase/functions/sync-wordpress-communities/index.ts` | Remove `(!city \|\| !state \|\| !zip)` condition, always parse and extract street |
+| `supabase/functions/sync-wordpress-homes/index.ts` | Same fix for properties |
 
 ---
 
-## Example Transformation
+## Testing
 
-| Before Sync | After Sync |
-|-------------|------------|
-| address: "101 Polaris Ave, Pierre, SD 57501" | address: "101 Polaris Ave" |
-| city: null | city: "Pierre" |
-| state: null | state: "SD" |
-| zip: null | zip: "57501" |
-
----
-
-## Data Migration Note
-
-Existing locations in the database already have the full address stored. After deploying this fix:
-
-1. **New syncs** will store correctly separated address components
-2. **Existing data** will need a full resync to fix the address field
-
-Alternatively, we could run a one-time SQL migration to re-parse existing addresses, but a full resync is simpler and ensures all data is up-to-date.
-
----
-
-## Testing Plan
-
-1. Deploy the updated edge functions
-2. Trigger a WordPress sync for a community with combined addresses
-3. Verify in the database that:
-   - `address` column contains only street address
-   - `city`, `state`, `zip` are properly separated
-4. Open the location sheet in the UI and confirm the street address field shows only the street
-
+After deployment:
+1. Trigger a full resync for communities
+2. Verify the edge function logs show "Extracted street address" messages
+3. Check database: `address` column should contain only street addresses
+4. Open location sheet in UI: Street Address field should show only the street
