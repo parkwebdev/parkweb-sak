@@ -48,11 +48,11 @@ const COMMUNITY_TARGET_FIELDS: TargetField[] = [
   { key: 'zip', label: 'ZIP Code', required: false, category: 'address' },
   { key: 'phone', label: 'Phone', required: false, category: 'contact' },
   { key: 'email', label: 'Email', required: false, category: 'contact' },
-  { key: 'latitude', label: 'Latitude', required: false, category: 'details' },
-  { key: 'longitude', label: 'Longitude', required: false, category: 'details' },
-  { key: 'description', label: 'Description', required: false, category: 'advanced' },
+  { key: 'description', label: 'Description', required: false, category: 'details' },
+  { key: 'amenities', label: 'Amenities', required: false, category: 'details', description: 'Array of amenities' },
+  { key: 'pet_policy', label: 'Pet Policy', required: false, category: 'details' },
   { key: 'age_category', label: 'Age Category', required: false, category: 'advanced', description: '55+, all ages, etc.' },
-  { key: 'community_type', label: 'Community Type', required: false, category: 'advanced', description: 'MHC, RV Park, etc.' },
+  { key: 'utilities_included', label: 'Utilities Included', required: false, category: 'advanced', description: 'Water, trash, electric' },
 ];
 
 /** Property target fields */
@@ -69,7 +69,12 @@ const PROPERTY_TARGET_FIELDS: TargetField[] = [
   { key: 'baths', label: 'Bathrooms', required: false, category: 'details' },
   { key: 'sqft', label: 'Square Footage', required: false, category: 'details' },
   { key: 'year_built', label: 'Year Built', required: false, category: 'details' },
+  { key: 'manufacturer', label: 'Manufacturer', required: false, category: 'advanced', description: 'Home manufacturer/builder' },
+  { key: 'model', label: 'Model', required: false, category: 'advanced', description: 'Home model name' },
+  { key: 'lot_rent', label: 'Lot Rent', required: false, category: 'advanced', description: 'Monthly lot rent' },
   { key: 'status', label: 'Listing Status', required: false, category: 'advanced', description: 'available, pending, sold' },
+  { key: 'virtual_tour_url', label: 'Virtual Tour URL', required: false, category: 'advanced' },
+  { key: 'community_type', label: 'Community Type', required: false, category: 'advanced', description: '55+, all ages' },
   { key: 'description', label: 'Description', required: false, category: 'advanced' },
   { key: 'features', label: 'Features', required: false, category: 'advanced', description: 'Array of feature strings' },
 ];

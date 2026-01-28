@@ -1292,23 +1292,28 @@ export type Database = {
       locations: {
         Row: {
           address: string | null
+          age_category: string | null
           agent_id: string
+          amenities: string[] | null
           business_hours: Json | null
           city: string | null
           content_hash: string | null
           country: string | null
           created_at: string
+          description: string | null
           email: string | null
           id: string
           is_active: boolean | null
           metadata: Json | null
           name: string
+          pet_policy: string | null
           phone: string | null
           state: string | null
           timezone: string | null
           updated_at: string
           url_patterns: string[] | null
           user_id: string
+          utilities_included: Json | null
           wordpress_community_id: number | null
           wordpress_community_term_id: number | null
           wordpress_slug: string | null
@@ -1316,23 +1321,28 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          age_category?: string | null
           agent_id: string
+          amenities?: string[] | null
           business_hours?: Json | null
           city?: string | null
           content_hash?: string | null
           country?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
           metadata?: Json | null
           name: string
+          pet_policy?: string | null
           phone?: string | null
           state?: string | null
           timezone?: string | null
           updated_at?: string
           url_patterns?: string[] | null
           user_id: string
+          utilities_included?: Json | null
           wordpress_community_id?: number | null
           wordpress_community_term_id?: number | null
           wordpress_slug?: string | null
@@ -1340,23 +1350,28 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          age_category?: string | null
           agent_id?: string
+          amenities?: string[] | null
           business_hours?: Json | null
           city?: string | null
           content_hash?: string | null
           country?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           id?: string
           is_active?: boolean | null
           metadata?: Json | null
           name?: string
+          pet_policy?: string | null
           phone?: string | null
           state?: string | null
           timezone?: string | null
           updated_at?: string
           url_patterns?: string[] | null
           user_id?: string
+          utilities_included?: Json | null
           wordpress_community_id?: number | null
           wordpress_community_term_id?: number | null
           wordpress_slug?: string | null
@@ -1933,6 +1948,7 @@ export type Database = {
           baths: number | null
           beds: number | null
           city: string | null
+          community_type: string | null
           content_hash: string | null
           created_at: string
           description: string | null
@@ -1946,12 +1962,16 @@ export type Database = {
           listing_url: string | null
           location_id: string | null
           lot_number: string | null
+          lot_rent: number | null
+          manufacturer: string | null
+          model: string | null
           price: number | null
           price_type: Database["public"]["Enums"]["property_price_type"] | null
           sqft: number | null
           state: string | null
           status: Database["public"]["Enums"]["property_status"] | null
           updated_at: string
+          virtual_tour_url: string | null
           year_built: number | null
           zip: string | null
         }
@@ -1961,6 +1981,7 @@ export type Database = {
           baths?: number | null
           beds?: number | null
           city?: string | null
+          community_type?: string | null
           content_hash?: string | null
           created_at?: string
           description?: string | null
@@ -1974,12 +1995,16 @@ export type Database = {
           listing_url?: string | null
           location_id?: string | null
           lot_number?: string | null
+          lot_rent?: number | null
+          manufacturer?: string | null
+          model?: string | null
           price?: number | null
           price_type?: Database["public"]["Enums"]["property_price_type"] | null
           sqft?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["property_status"] | null
           updated_at?: string
+          virtual_tour_url?: string | null
           year_built?: number | null
           zip?: string | null
         }
@@ -1989,6 +2014,7 @@ export type Database = {
           baths?: number | null
           beds?: number | null
           city?: string | null
+          community_type?: string | null
           content_hash?: string | null
           created_at?: string
           description?: string | null
@@ -2002,12 +2028,16 @@ export type Database = {
           listing_url?: string | null
           location_id?: string | null
           lot_number?: string | null
+          lot_rent?: number | null
+          manufacturer?: string | null
+          model?: string | null
           price?: number | null
           price_type?: Database["public"]["Enums"]["property_price_type"] | null
           sqft?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["property_status"] | null
           updated_at?: string
+          virtual_tour_url?: string | null
           year_built?: number | null
           zip?: string | null
         }
