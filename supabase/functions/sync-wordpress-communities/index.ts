@@ -1531,6 +1531,11 @@ async function syncCommunitiesToLocations(
           zip = parsed.zip;
           console.log(`📍 Parsed zip from address: ${zip}`);
         }
+        // Extract just the street component if we successfully parsed city/state/zip
+        if (parsed.street && (parsed.city || parsed.state || parsed.zip)) {
+          address = parsed.street;
+          console.log(`📍 Extracted street address: ${address}`);
+        }
       }
       
       // PRIORITY 3: Fall back to keyword-based ACF extraction
