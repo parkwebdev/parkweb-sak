@@ -387,7 +387,10 @@ export function WordPressIntegrationSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-2xl overflow-y-auto">
+        <SheetContent 
+          size={connectionStep === 'field-mapping' ? 'full' : 'default'}
+          className={connectionStep === 'field-mapping' ? 'sm:max-w-none overflow-hidden flex flex-col' : 'sm:max-w-2xl overflow-y-auto'}
+        >
           <SheetHeader>
             <SheetTitle>
               WordPress Integration
@@ -397,13 +400,79 @@ export function WordPressIntegrationSheet({
             </SheetDescription>
           </SheetHeader>
 
+          {/* Field mapping step - rendered outside card for full height */}
+          {connectionStep === 'field-mapping' ? (
+            <div className="flex-1 flex flex-col min-h-0 mt-4">
+              {isFetchingSample ? (
+                <div className="space-y-3 p-4">
+                  <div className="flex items-center gap-2">
+                    <Database01 size={16} className="text-primary animate-pulse" aria-hidden="true" />
+                    <span className="text-sm font-medium">Loading sample data...</span>
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-3/4" />
+                  </div>
+                </div>
+              ) : (
+                <WordPressFieldMapper
+                  type={fieldMappingType}
+                  availableFields={
+                    fieldMappingType === 'community' 
+                      ? (samplePostData.community?.availableFields || []) as AvailableField[]
+                      : (samplePostData.property?.availableFields || []) as AvailableField[]
+                  }
+                  currentMappings={
+                    fieldMappingType === 'community' 
+                      ? communityFieldMappings 
+                      : propertyFieldMappings
+                  }
+                  suggestedMappings={
+                    fieldMappingType === 'community'
+                      ? samplePostData.community?.suggestedMappings || {}
+                      : samplePostData.property?.suggestedMappings || {}
+                  }
+                  onMappingsChange={(mappings) => {
+                    if (fieldMappingType === 'community') {
+                      setCommunityFieldMappings(mappings);
+                    } else {
+                      setPropertyFieldMappings(mappings);
+                    }
+                  }}
+                  onConfirm={handleFieldMappingConfirm}
+                  onBack={handleFieldMappingBack}
+                  isSaving={isSaving}
+                  samplePostTitle={
+                    fieldMappingType === 'community'
+                      ? samplePostData.community?.samplePost?.title
+                      : samplePostData.property?.samplePost?.title
+                  }
+                />
+              )}
+              
+              {/* Skip button */}
+              {!isFetchingSample && (
+                <div className="mt-3 pt-3 border-t shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSkipFieldMapping}
+                    className="w-full text-muted-foreground"
+                  >
+                    Skip field mapping (use auto-detection)
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
           <div className="mt-6 space-y-4">
             {/* Connection Card */}
             <Card>
               <CardContent className="p-4">
                 <AnimatePresence mode="wait">
                   {/* Step: Connected */}
-                  {isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && connectionStep !== 'field-mapping' ? (
+                  {isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' ? (
                     <motion.div
                       key="connected"
                       initial={{ opacity: 0 }}
@@ -505,76 +574,6 @@ export function WordPressIntegrationSheet({
                         isLoading={isSaving || isFetchingSample}
                       />
                     </motion.div>
-                  ) : connectionStep === 'field-mapping' ? (
-                    /* Step: Field mapping */
-                    <motion.div
-                      key="field-mapping"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      {isFetchingSample ? (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <Database01 size={16} className="text-primary animate-pulse" aria-hidden="true" />
-                            <span className="text-sm font-medium">Loading sample data...</span>
-                          </div>
-                          <div className="space-y-2">
-                            <Skeleton className="h-8 w-full" />
-                            <Skeleton className="h-8 w-full" />
-                            <Skeleton className="h-8 w-3/4" />
-                          </div>
-                        </div>
-                      ) : (
-                        <WordPressFieldMapper
-                          type={fieldMappingType}
-                          availableFields={
-                            fieldMappingType === 'community' 
-                              ? (samplePostData.community?.availableFields || []) as AvailableField[]
-                              : (samplePostData.property?.availableFields || []) as AvailableField[]
-                          }
-                          currentMappings={
-                            fieldMappingType === 'community' 
-                              ? communityFieldMappings 
-                              : propertyFieldMappings
-                          }
-                          suggestedMappings={
-                            fieldMappingType === 'community'
-                              ? samplePostData.community?.suggestedMappings || {}
-                              : samplePostData.property?.suggestedMappings || {}
-                          }
-                          onMappingsChange={(mappings) => {
-                            if (fieldMappingType === 'community') {
-                              setCommunityFieldMappings(mappings);
-                            } else {
-                              setPropertyFieldMappings(mappings);
-                            }
-                          }}
-                          onConfirm={handleFieldMappingConfirm}
-                          onBack={handleFieldMappingBack}
-                          isSaving={isSaving}
-                          samplePostTitle={
-                            fieldMappingType === 'community'
-                              ? samplePostData.community?.samplePost?.title
-                              : samplePostData.property?.samplePost?.title
-                          }
-                        />
-                      )}
-                      
-                      {/* Skip button */}
-                      {!isFetchingSample && (
-                        <div className="mt-3 pt-3 border-t">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleSkipFieldMapping}
-                            className="w-full text-muted-foreground"
-                          >
-                            Skip field mapping (use auto-detection)
-                          </Button>
-                        </div>
-                      )}
-                    </motion.div>
                   ) : (
                     /* Step: URL entry */
                     <motion.div
@@ -638,7 +637,7 @@ export function WordPressIntegrationSheet({
             </Card>
 
             {/* Sync sections - only when fully connected (not during mapping) */}
-            {isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && connectionStep !== 'field-mapping' && (
+            {isConnected && !isEditing && connectionStep !== 'mapping' && connectionStep !== 'discovering' && (
               <>
                 {/* Data Extraction Mode Card */}
                 <Card>
@@ -967,6 +966,7 @@ export function WordPressIntegrationSheet({
               </>
             )}
           </div>
+          )}
         </SheetContent>
       </Sheet>
 
