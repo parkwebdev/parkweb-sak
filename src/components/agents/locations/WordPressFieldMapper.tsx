@@ -8,19 +8,24 @@
  * @module components/agents/locations/WordPressFieldMapper
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  SelectSeparator,
-} from '@/components/ui/select';
-import { ArrowLeft, CheckCircle } from '@untitledui/icons';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { ArrowLeft, CheckCircle, Check, ChevronDown } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
 /** Field available from WordPress API */
@@ -91,8 +96,6 @@ export interface WordPressFieldMapperProps {
   samplePostTitle?: string;
 }
 
-const SKIP_VALUE = '__skip__';
-
 function formatSampleValue(value: string | number | boolean | null): string {
   if (value === null || value === undefined) return '(empty)';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
@@ -100,6 +103,99 @@ function formatSampleValue(value: string | number | boolean | null): string {
   const str = String(value);
   if (str.length > 40) return str.substring(0, 40) + '...';
   return str;
+}
+
+/** Searchable field select using Popover + Command pattern */
+interface SearchableFieldSelectProps {
+  availableFields: AvailableField[];
+  selectedSource: string | null;
+  onSelect: (source: string | null) => void;
+  isMapped: boolean;
+}
+
+function SearchableFieldSelect({
+  availableFields,
+  selectedSource,
+  onSelect,
+  isMapped,
+}: SearchableFieldSelectProps) {
+  const [open, setOpen] = useState(false);
+  
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "h-11 w-full justify-between bg-background border-border/60",
+            "hover:border-primary/50 transition-colors rounded-lg shadow-sm",
+            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            isMapped && "border-primary/30"
+          )}
+        >
+          {selectedSource ? (
+            <code className="font-mono text-xs truncate">{selectedSource}</code>
+          ) : (
+            <span className="text-muted-foreground italic">Don't import</span>
+          )}
+          <ChevronDown size={16} className="ml-2 shrink-0 opacity-50" aria-hidden="true" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search fields..." />
+          <CommandList className="max-h-[300px]">
+            <CommandEmpty>No fields found.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="__skip__"
+                onSelect={() => {
+                  onSelect(null);
+                  setOpen(false);
+                }}
+                className="text-muted-foreground italic"
+              >
+                <Check
+                  size={16}
+                  className={cn(
+                    "mr-2 shrink-0",
+                    selectedSource === null ? "opacity-100" : "opacity-0"
+                  )}
+                  aria-hidden="true"
+                />
+                Don't import
+              </CommandItem>
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup>
+              {availableFields.map((field) => (
+                <CommandItem
+                  key={field.path}
+                  value={field.path}
+                  onSelect={() => {
+                    onSelect(field.path);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    size={16}
+                    className={cn(
+                      "mr-2 shrink-0",
+                      selectedSource === field.path ? "opacity-100" : "opacity-0"
+                    )}
+                    aria-hidden="true"
+                  />
+                  <code className="font-mono text-xs">{field.path}</code>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 /** Premium SVG connection line between source and target */
@@ -177,37 +273,12 @@ function MappingRow({
       <div className="grid grid-cols-[1fr_80px_1fr] gap-4 p-5 items-center">
         {/* Source Column */}
         <div className="space-y-3">
-          <Select
-            value={selectedSource || SKIP_VALUE}
-            onValueChange={(value) => onSelect(value === SKIP_VALUE ? null : value)}
-          >
-            <SelectTrigger 
-              className={cn(
-                "h-11 bg-background border-border/60 hover:border-primary/50",
-                "focus:border-primary transition-colors rounded-lg shadow-sm",
-                isMapped && "border-primary/30"
-              )}
-            >
-              <SelectValue placeholder="Select source field...">
-                {selectedSource ? (
-                  <code className="font-mono text-xs">{selectedSource}</code>
-                ) : (
-                  <span className="text-muted-foreground italic">Don't import</span>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              <SelectItem value={SKIP_VALUE} className="text-muted-foreground italic">
-                Don't import
-              </SelectItem>
-              <SelectSeparator />
-              {availableFields.map((field) => (
-                <SelectItem key={field.path} value={field.path}>
-                  <code className="font-mono text-xs">{field.path}</code>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableFieldSelect
+            availableFields={availableFields}
+            selectedSource={selectedSource}
+            onSelect={onSelect}
+            isMapped={isMapped}
+          />
           
           {/* Sample value preview */}
           {sourceField && (
