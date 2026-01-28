@@ -828,6 +828,12 @@ async function syncHomesToProperties(
       let status: string | null = 'available';
       let description: string | null = null;
       let features: string[] = [];
+      // New fields for enhanced property data
+      let manufacturer: string | null = null;
+      let model: string | null = null;
+      let lotRent: number | null = null;
+      let virtualTourUrl: string | null = null;
+      let communityType: string | null = null;
       
       const acf = home.acf;
       
@@ -856,6 +862,14 @@ async function syncHomesToProperties(
         // Features may need special handling for arrays
         const featuresValue = getValueByPath(home as Record<string, unknown>, fieldMappings.features);
         if (Array.isArray(featuresValue)) features = featuresValue.map(String);
+        
+        // NEW FIELDS: Extract from field mappings (Priority 1)
+        manufacturer = getValueByPath(home as Record<string, unknown>, fieldMappings.manufacturer) as string | null;
+        model = getValueByPath(home as Record<string, unknown>, fieldMappings.model) as string | null;
+        const lotRentValue = getValueByPath(home as Record<string, unknown>, fieldMappings.lot_rent);
+        if (lotRentValue != null) lotRent = Math.round(parseFloat(String(lotRentValue)) * 100);
+        virtualTourUrl = getValueByPath(home as Record<string, unknown>, fieldMappings.virtual_tour_url) as string | null;
+        communityType = getValueByPath(home as Record<string, unknown>, fieldMappings.community_type) as string | null;
       }
       
       // PRIORITY 2: Use AI extraction if enabled (for fields still missing)
@@ -878,6 +892,13 @@ async function syncHomesToProperties(
           if (!status || status === 'available') status = aiData.status || 'available';
           if (!description) description = aiData.description || null;
           if (features.length === 0) features = aiData.features || [];
+          
+          // NEW FIELDS: Extract from AI (Priority 2)
+          if (!manufacturer) manufacturer = aiData.manufacturer || null;
+          if (!model) model = aiData.model || null;
+          if (lotRent == null && aiData.lot_rent != null) lotRent = Math.round(aiData.lot_rent * 100);
+          if (!virtualTourUrl) virtualTourUrl = aiData.virtual_tour_url || null;
+          if (!communityType) communityType = aiData.community_type || null;
         }
       }
       
@@ -925,6 +946,16 @@ async function syncHomesToProperties(
       
       if (features.length === 0) features = extractAcfArray(acf, 'features', 'amenities', 'highlights');
       
+      // NEW FIELDS: Extract from ACF keywords (Priority 3)
+      if (!manufacturer) manufacturer = extractAcfField(acf, 'manufacturer', 'make', 'builder', 'brand');
+      if (!model) model = extractAcfField(acf, 'model', 'model_name', 'home_model');
+      if (lotRent == null) {
+        const lotRentValue = extractAcfNumber(acf, 'lot_rent', 'space_rent', 'site_rent', 'lot_fee');
+        if (lotRentValue != null) lotRent = Math.round(lotRentValue * 100);
+      }
+      if (!virtualTourUrl) virtualTourUrl = extractAcfField(acf, 'virtual_tour', 'tour_url', 'matterport', '3d_tour', 'video_tour');
+      if (!communityType) communityType = extractAcfField(acf, 'community_type', 'age_restriction', 'age_category', '55_plus');
+      
       // Get images
       const images: Array<{ url: string; alt?: string }> = [];
       if (home._embedded?.['wp:featuredmedia']?.[0]) {
@@ -958,6 +989,12 @@ async function syncHomesToProperties(
         features,
         images,
         location_id: locationId,
+        // NEW FIELDS included in hash
+        manufacturer,
+        model,
+        lot_rent: lotRent,
+        virtual_tour_url: virtualTourUrl,
+        community_type: communityType,
       };
       
       const contentHash = generateContentHash(hashableData);
@@ -986,6 +1023,12 @@ async function syncHomesToProperties(
         content_hash: contentHash,
         last_seen_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        // NEW FIELDS saved to database
+        manufacturer,
+        model,
+        lot_rent: lotRent,
+        virtual_tour_url: virtualTourUrl,
+        community_type: communityType,
       };
 
       // Check if property already exists using our lookup map
