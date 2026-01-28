@@ -20,6 +20,8 @@ export interface SamplePostResult {
     id: number;
     title: string;
   };
+  /** Number of posts analyzed for field aggregation */
+  sampleCount?: number;
   availableFields: AvailableField[];
   suggestedMappings: Record<string, string>;
   error?: string;

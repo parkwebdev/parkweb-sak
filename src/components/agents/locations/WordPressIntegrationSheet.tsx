@@ -449,6 +449,11 @@ export function WordPressIntegrationSheet({
                       ? samplePostData.community?.samplePost?.title
                       : samplePostData.property?.samplePost?.title
                   }
+                  sampleCount={
+                    fieldMappingType === 'community'
+                      ? samplePostData.community?.sampleCount
+                      : samplePostData.property?.sampleCount
+                  }
                 />
               )}
               
