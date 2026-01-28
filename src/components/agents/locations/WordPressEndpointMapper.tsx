@@ -48,15 +48,55 @@ function getConfidenceStyle(confidence: number): { label: string; className: str
   return { label: 'Low match', className: 'text-muted-foreground' };
 }
 
+/**
+ * Calculate display confidence based on section context
+ * - If endpoint classification matches section type → use raw confidence
+ * - If endpoint classification is opposite → reduce to low confidence
+ * - If unknown → moderate penalty
+ */
+function getContextualConfidence(
+  endpoint: DiscoveredEndpoint,
+  sectionType: 'community' | 'property'
+): number {
+  const classification = endpoint.classification;
+  const rawConfidence = endpoint.confidence || 0;
+
+  // Matching classification - use raw confidence
+  if (
+    (sectionType === 'community' && classification === 'community') ||
+    (sectionType === 'property' && classification === 'home')
+  ) {
+    return rawConfidence;
+  }
+
+  // Opposite classification - significantly reduce confidence
+  if (
+    (sectionType === 'community' && classification === 'home') ||
+    (sectionType === 'property' && classification === 'community')
+  ) {
+    return Math.max(0.1, 0.3 - rawConfidence * 0.3);
+  }
+
+  // Unknown classification - moderate confidence
+  return 0.35;
+}
+
 interface EndpointOptionProps {
   endpoint: DiscoveredEndpoint;
   isSelected: boolean;
   onSelect: () => void;
   radioValue: string;
+  sectionType: 'community' | 'property';
 }
 
-function EndpointOption({ endpoint, isSelected, onSelect, radioValue }: EndpointOptionProps) {
-  const confidence = getConfidenceStyle(endpoint.confidence || 0);
+function EndpointOption({ endpoint, isSelected, onSelect, radioValue, sectionType }: EndpointOptionProps) {
+  const contextualConfidence = getContextualConfidence(endpoint, sectionType);
+  const confidence = getConfidenceStyle(contextualConfidence);
+
+  // Check if this endpoint is the "wrong type" for this section
+  const isWrongType =
+    (sectionType === 'community' && endpoint.classification === 'home') ||
+    (sectionType === 'property' && endpoint.classification === 'community');
   
   return (
     <div
@@ -80,28 +120,40 @@ function EndpointOption({ endpoint, isSelected, onSelect, radioValue }: Endpoint
             </Badge>
           )}
         </div>
-        {endpoint.signals && endpoint.signals.length > 0 && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <p className={cn('text-xs mt-0.5 cursor-help', confidence.className)}>
-                  {confidence.label}
-                  {endpoint.confidence && endpoint.confidence >= 0.7 && (
-                    <Check size={12} className="inline ml-1" aria-hidden="true" />
-                  )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className={cn('text-xs mt-0.5 cursor-help', confidence.className)}>
+                {confidence.label}
+                {!isWrongType && contextualConfidence >= 0.7 && (
+                  <Check size={12} className="inline ml-1" aria-hidden="true" />
+                )}
+                {isWrongType && (
+                  <span className="text-muted-foreground ml-1">
+                    (classified as {endpoint.classification})
+                  </span>
+                )}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="max-w-xs">
+              {isWrongType && (
+                <p className="text-xs text-warning mb-2">
+                  This endpoint was classified as a {endpoint.classification === 'home' ? 'Property' : 'Community'} type
                 </p>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p className="text-xs font-medium mb-1">Detection signals:</p>
-                <ul className="text-2xs text-muted-foreground space-y-0.5">
-                  {endpoint.signals.map((signal, i) => (
-                    <li key={i}>• {signal}</li>
-                  ))}
-                </ul>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+              )}
+              {endpoint.signals && endpoint.signals.length > 0 && (
+                <>
+                  <p className="text-xs font-medium mb-1">Detection signals:</p>
+                  <ul className="text-2xs text-muted-foreground space-y-0.5">
+                    {endpoint.signals.map((signal, i) => (
+                      <li key={i}>• {signal}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
@@ -124,6 +176,15 @@ export function WordPressEndpointMapper({
     ...(discoveredEndpoints.unclassifiedEndpoints || []),
   ];
 
+  // Sort endpoints by relevance for each section
+  const communityOrderedEndpoints = [...allEndpoints].sort((a, b) => {
+    return getContextualConfidence(b, 'community') - getContextualConfidence(a, 'community');
+  });
+
+  const propertyOrderedEndpoints = [...allEndpoints].sort((a, b) => {
+    return getContextualConfidence(b, 'property') - getContextualConfidence(a, 'property');
+  });
+
   // Check if same endpoint selected for both
   const hasDuplicateSelection =
     selectedCommunityEndpoint &&
@@ -131,8 +192,8 @@ export function WordPressEndpointMapper({
     selectedCommunityEndpoint === selectedPropertyEndpoint;
 
   // Pre-select best matches if nothing selected
-  const suggestedCommunity = discoveredEndpoints.communityEndpoints[0]?.rest_base || null;
-  const suggestedProperty = discoveredEndpoints.homeEndpoints[0]?.rest_base || null;
+  const suggestedCommunity = communityOrderedEndpoints[0]?.rest_base || null;
+  const suggestedProperty = propertyOrderedEndpoints[0]?.rest_base || null;
 
   const effectiveCommunityEndpoint = selectedCommunityEndpoint ?? suggestedCommunity;
   const effectivePropertyEndpoint = selectedPropertyEndpoint ?? suggestedProperty;
@@ -170,13 +231,14 @@ export function WordPressEndpointMapper({
               onValueChange={(value) => onCommunitySelect(value === 'community-none' ? null : value.replace('community-', ''))}
               className="space-y-2"
             >
-              {allEndpoints.map((endpoint) => (
+              {communityOrderedEndpoints.map((endpoint) => (
                 <EndpointOption
                   key={`community-${endpoint.rest_base}`}
                   endpoint={endpoint}
                   isSelected={effectiveCommunityEndpoint === endpoint.rest_base}
                   onSelect={() => onCommunitySelect(endpoint.rest_base)}
                   radioValue={`community-${endpoint.rest_base}`}
+                  sectionType="community"
                 />
               ))}
               
@@ -212,13 +274,14 @@ export function WordPressEndpointMapper({
               onValueChange={(value) => onPropertySelect(value === 'property-none' ? null : value.replace('property-', ''))}
               className="space-y-2"
             >
-              {allEndpoints.map((endpoint) => (
+              {propertyOrderedEndpoints.map((endpoint) => (
                 <EndpointOption
                   key={`property-${endpoint.rest_base}`}
                   endpoint={endpoint}
                   isSelected={effectivePropertyEndpoint === endpoint.rest_base}
                   onSelect={() => onPropertySelect(endpoint.rest_base)}
                   radioValue={`property-${endpoint.rest_base}`}
+                  sectionType="property"
                 />
               ))}
               
