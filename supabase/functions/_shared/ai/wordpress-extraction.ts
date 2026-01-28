@@ -1,13 +1,14 @@
 /**
  * WordPress AI Extraction Utility
  * 
- * Uses Gemini 2.5 Flash to extract structured data from WordPress posts
+ * Uses Claude Haiku 4.5 via OpenRouter to extract structured data from WordPress posts
  * when standard ACF mapping fails or is insufficient.
  * 
  * @module _shared/ai/wordpress-extraction
  */
 
-const GOOGLE_API_KEY = Deno.env.get('GOOGLE_GEMINI_API_KEY') || Deno.env.get('GOOGLE_API_KEY');
+const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+const EXTRACTION_MODEL = 'anthropic/claude-haiku-4.5';
 
 // ============================================
 // INTERFACES
@@ -113,57 +114,62 @@ function buildPostContext(post: WordPressPost): string {
 }
 
 /**
- * Call Gemini API with structured output
+ * Call Claude via OpenRouter with tool calling for structured output
  */
-async function callGemini<T>(
+async function callClaude<T>(
   systemPrompt: string,
   userContent: string,
-  schema: Record<string, unknown>
+  toolSchema: Record<string, unknown>,
+  toolName: string
 ): Promise<T | null> {
-  if (!GOOGLE_API_KEY) {
-    console.error('No Google API key configured for AI extraction');
+  if (!OPENROUTER_API_KEY) {
+    console.error('No OpenRouter API key configured for AI extraction');
     return null;
   }
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GOOGLE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemPrompt}\n\n${userContent}` }],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: schema,
-            temperature: 0.1,
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: EXTRACTION_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent },
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: toolName,
+            description: `Extract structured ${toolName.replace('_', ' ')} data from the provided content`,
+            parameters: toolSchema,
           },
-        }),
-      }
-    );
+        }],
+        tool_choice: { type: 'function', function: { name: toolName } },
+        temperature: 0.1,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Gemini API error: ${response.status} - ${errorText}`);
+      console.error(`Claude API error: ${response.status} - ${errorText}`);
       return null;
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     
-    if (!text) {
-      console.error('No text in Gemini response');
+    if (!toolCall?.function?.arguments) {
+      console.error('No tool call in Claude response');
       return null;
     }
 
-    return JSON.parse(text) as T;
+    return JSON.parse(toolCall.function.arguments) as T;
   } catch (error: unknown) {
-    console.error('Error calling Gemini for extraction:', error);
+    console.error('Error calling Claude for extraction:', error);
     return null;
   }
 }
@@ -204,27 +210,28 @@ Be accurate and only extract information that is clearly stated.`;
   const schema = {
     type: 'object',
     properties: {
-      name: { type: 'string' },
-      address: { type: ['string', 'null'] },
-      city: { type: ['string', 'null'] },
-      state: { type: ['string', 'null'] },
-      zip: { type: ['string', 'null'] },
-      phone: { type: ['string', 'null'] },
-      email: { type: ['string', 'null'] },
-      description: { type: ['string', 'null'] },
-      amenities: { type: 'array', items: { type: 'string' } },
-      pet_policy: { type: ['string', 'null'] },
-      office_hours: { type: ['string', 'null'] },
-      latitude: { type: ['number', 'null'] },
-      longitude: { type: ['number', 'null'] },
+      name: { type: 'string', description: 'The community name' },
+      address: { type: 'string', description: 'Street address' },
+      city: { type: 'string', description: 'City name' },
+      state: { type: 'string', description: 'State (2-letter abbreviation preferred)' },
+      zip: { type: 'string', description: 'ZIP/postal code' },
+      phone: { type: 'string', description: 'Contact phone number' },
+      email: { type: 'string', description: 'Contact email' },
+      description: { type: 'string', description: 'Brief description of the community' },
+      amenities: { type: 'array', items: { type: 'string' }, description: 'List of amenities' },
+      pet_policy: { type: 'string', description: 'Pet policy details' },
+      office_hours: { type: 'string', description: 'Office hours' },
+      latitude: { type: 'number', description: 'GPS latitude' },
+      longitude: { type: 'number', description: 'GPS longitude' },
     },
     required: ['name'],
   };
 
-  const result = await callGemini<ExtractedCommunityData>(
+  const result = await callClaude<ExtractedCommunityData>(
     systemPrompt,
     context,
-    schema
+    schema,
+    'extract_community'
   );
   
   if (result) {
@@ -268,29 +275,30 @@ Be accurate and only extract information that is clearly stated. For price, extr
   const schema = {
     type: 'object',
     properties: {
-      name: { type: 'string' },
-      address: { type: ['string', 'null'] },
-      lot_number: { type: ['string', 'null'] },
-      city: { type: ['string', 'null'] },
-      state: { type: ['string', 'null'] },
-      zip: { type: ['string', 'null'] },
-      price: { type: ['number', 'null'] },
-      price_type: { type: ['string', 'null'], enum: ['sale', 'rent', 'lease', null] },
-      beds: { type: ['number', 'null'] },
-      baths: { type: ['number', 'null'] },
-      sqft: { type: ['number', 'null'] },
-      year_built: { type: ['number', 'null'] },
-      status: { type: ['string', 'null'], enum: ['available', 'pending', 'sold', 'rented', 'off_market', null] },
-      description: { type: ['string', 'null'] },
-      features: { type: 'array', items: { type: 'string' } },
+      name: { type: 'string', description: 'Property name or title' },
+      address: { type: 'string', description: 'Street address' },
+      lot_number: { type: 'string', description: 'Lot, unit, or site number' },
+      city: { type: 'string', description: 'City name' },
+      state: { type: 'string', description: 'State (2-letter abbreviation preferred)' },
+      zip: { type: 'string', description: 'ZIP/postal code' },
+      price: { type: 'number', description: 'Price in dollars' },
+      price_type: { type: 'string', enum: ['sale', 'rent', 'lease'], description: 'Type of price' },
+      beds: { type: 'number', description: 'Number of bedrooms' },
+      baths: { type: 'number', description: 'Number of bathrooms' },
+      sqft: { type: 'number', description: 'Square footage' },
+      year_built: { type: 'number', description: 'Year built' },
+      status: { type: 'string', enum: ['available', 'pending', 'sold', 'rented', 'off_market'], description: 'Listing status' },
+      description: { type: 'string', description: 'Brief property description' },
+      features: { type: 'array', items: { type: 'string' }, description: 'List of features/amenities' },
     },
     required: ['name'],
   };
 
-  const result = await callGemini<ExtractedPropertyData>(
+  const result = await callClaude<ExtractedPropertyData>(
     systemPrompt,
     context,
-    schema
+    schema,
+    'extract_property'
   );
   
   if (result) {
