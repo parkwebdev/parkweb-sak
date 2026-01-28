@@ -387,10 +387,7 @@ export function WordPressIntegrationSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent 
-          size={connectionStep === 'field-mapping' ? 'full' : 'default'}
-          className={connectionStep === 'field-mapping' ? 'sm:max-w-none overflow-hidden flex flex-col' : 'sm:max-w-2xl overflow-y-auto'}
-        >
+        <SheetContent className="sm:max-w-2xl overflow-y-auto flex flex-col">
           <SheetHeader>
             <SheetTitle>
               WordPress Integration
