@@ -1,305 +1,298 @@
 
-# Plan: Redesign WordPress Field Mapper UI
+# Plan: Premium Airtable-Style Field Mapper UI
 
 ## Problem Summary
+The current field mapper UI has multiple visual issues:
+- Arrow/connector looks cheap (just a basic icon or dashed line)
+- Dropdowns look bad (plain selects with poor styling)
+- Visual hierarchy is unclear (everything blends together)
+- Too cramped/dense (not enough breathing room)
 
-The current field mapper UI is cramped, confusing, and difficult to use. It shows target fields on the left with a small dropdown on the right, grouped by category with collapsibles. This pattern is unintuitive compared to standard CSV importers that users are familiar with.
-
----
-
-## Design Goals
-
-1. **Wider sheet** - Expand to cover the main container completely
-2. **Two-column table layout** - Like CSV importers: Source (left) → Target (right)
-3. **Visual sample data preview** - Show what data will be imported
-4. **Clear 1:1 mapping visualization** - Arrow or connector between columns
-5. **No nested collapsibles** - All fields visible, scrollable
-6. **Progress indication** - Show how many fields are mapped
+You want an **Airtable-inspired** premium look with overall visual polish as the priority.
 
 ---
 
-## UI Design
+## Design Approach
 
-### Sheet Width
+### Airtable Visual Patterns
+- **Clean card-based rows** with subtle borders and generous padding
+- **Animated connection lines** between source and target (not just arrows)
+- **Visual states** that clearly show mapped vs unmapped fields
+- **Premium typography** with proper weight and spacing hierarchy
+- **Soft colors** for backgrounds, not harsh contrasts
 
-Expand from `sm:max-w-2xl` (672px) to a new `size="full"` variant that fills the main container area. Use `sm:max-w-[calc(100vw-80px)]` to account for sidebar width (collapsed ~48px + padding).
+---
 
-### Two-Column Table Layout
+## UI Redesign
+
+### Row Design (Card-Based)
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  WordPress Field Mapping                                   [Skip] [Confirm]  │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  Sample: "Prairie View MHC"                              6 of 12 fields mapped │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────┐     ┌─────────────────────────────────────┐ │
-│  │  SOURCE (WordPress)         │     │  TARGET (Your Database)             │ │
-│  ├─────────────────────────────┤     ├─────────────────────────────────────┤ │
-│  │                             │     │                                     │ │
-│  │  acf.community_name         │ ──▶ │  Community Name *                   │ │
-│  │  "Prairie View MHC"         │     │                                     │ │
-│  │                             │     │                                     │ │
-│  ├─────────────────────────────┤     ├─────────────────────────────────────┤ │
-│  │                             │     │                                     │ │
-│  │  acf.street_address         │ ──▶ │  Street Address                     │ │
-│  │  "1234 Main Street"         │     │                                     │ │
-│  │                             │     │                                     │ │
-│  ├─────────────────────────────┤     ├─────────────────────────────────────┤ │
-│  │                             │     │                                     │ │
-│  │  [Select source field ▼]    │ ──▶ │  City                               │ │
-│  │                             │     │                                     │ │
-│  │                             │     │                                     │ │
-│  └─────────────────────────────┘     └─────────────────────────────────────┘ │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│  ┌──────────────────────────────────────┐       ┌─────────────────────────────┐ │
+│  │                                      │       │                             │ │
+│  │  acf.community_name            ▾    ├───────┤  Community Name  *          │ │
+│  │                                      │       │  Primary name/title         │ │
+│  │  ┌────────────────────────────────┐  │       │                             │ │
+│  │  │ "Prairie View MHC"             │  │       │                   ✓ auto    │ │
+│  │  └────────────────────────────────┘  │       │                             │ │
+│  │                                      │       │                             │ │
+│  └──────────────────────────────────────┘       └─────────────────────────────┘ │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Key UI Components
+### Key Visual Changes
 
-**Row Structure (for each target field):**
-- Left side: Source field dropdown with sample value preview below
-- Center: Visual arrow/connector (→) showing the mapping
-- Right side: Target field label with description
-
-**Source Field Dropdown:**
-- Full-width within its column
-- Shows field path in monospace font
-- Sample value preview below when selected
-- "Don't import" option at top (styled differently)
-
-**Visual Indicators:**
-- Mapped rows: Solid arrow, full opacity
-- Unmapped rows: Dashed line, muted opacity
-- Required fields: Red asterisk on target label
-- Auto-detected: Small badge on source side
+| Element | Before | After |
+|---------|--------|-------|
+| **Row container** | Flat bg-muted/40 highlight | Subtle card with border, hover shadow lift |
+| **Connector** | ArrowRight icon or dashed line | SVG curved/straight line with animated gradient |
+| **Source dropdown** | Plain select trigger | Pill-style with monospace text, subtle border |
+| **Sample preview** | Small muted box below | Integrated preview chip inside the dropdown area |
+| **Target label** | Plain text | Bold with proper typography hierarchy |
+| **Auto badge** | Secondary badge | Pill with subtle success color |
+| **Spacing** | py-3 px-3 (cramped) | py-5 px-5 (generous breathing room) |
 
 ---
 
 ## Technical Implementation
 
-### Part 1: Add Sheet Size Variant
+### File: `src/components/agents/locations/WordPressFieldMapper.tsx`
 
-**File:** `src/components/ui/sheet.tsx`
+**1. Row Component Redesign**
 
-Add a `size` prop to `SheetContent` with a `full` variant:
+Replace the cramped grid with a premium card-based design:
 
 ```tsx
-const sheetVariants = cva(
-  "fixed z-50 bg-background p-6 rounded-[0.60rem] border shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
-  {
-    variants: {
-      side: { /* existing */ },
-      size: {
-        default: "",
-        full: "!w-[calc(100vw-100px)]", // Override w-3/4 and sm:max-w-*
-      }
-    },
-    defaultVariants: {
-      side: "right",
-      size: "default",
-    },
-  }
-)
-```
-
-### Part 2: Rewrite WordPressFieldMapper Component
-
-**File:** `src/components/agents/locations/WordPressFieldMapper.tsx`
-
-Complete rewrite with new layout:
-
-**Structure:**
-```tsx
-<div className="flex flex-col h-full">
-  {/* Header */}
-  <div className="flex items-center justify-between pb-4 border-b">
-    <div>
-      <h2 className="text-base font-semibold">Map Fields</h2>
-      <p className="text-sm text-muted-foreground">
-        Sample: {samplePostTitle}
-      </p>
-    </div>
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-muted-foreground">
-        {mappedCount} of {totalFields} fields mapped
-      </span>
-      <Progress value={(mappedCount / totalFields) * 100} className="w-24 h-2" />
-    </div>
-  </div>
-  
-  {/* Column Headers */}
-  <div className="grid grid-cols-[1fr_48px_1fr] gap-4 py-3 border-b sticky top-0 bg-background z-10">
-    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-      Source (WordPress)
-    </div>
-    <div /> {/* Arrow column */}
-    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-      Target (Database)
-    </div>
-  </div>
-  
-  {/* Scrollable Mapping Rows */}
-  <div className="flex-1 overflow-y-auto py-2 space-y-1">
-    {targetFields.map((field) => (
-      <MappingRow 
-        key={field.key}
-        targetField={field}
-        sourceFields={availableFields}
-        selectedSource={currentMappings[field.key]}
-        suggestedSource={suggestedMappings[field.key]}
-        onSelect={(source) => handleFieldSelect(field.key, source)}
-      />
-    ))}
-  </div>
-  
-  {/* Footer Actions */}
-  <div className="flex items-center justify-between pt-4 border-t">
-    <Button variant="ghost" onClick={onBack}>Back</Button>
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={onSkip}>Skip</Button>
-      <Button onClick={onConfirm} disabled={!allRequiredMapped}>
-        Save Mappings
-      </Button>
-    </div>
-  </div>
-</div>
-```
-
-**MappingRow Component:**
-```tsx
-function MappingRow({ targetField, sourceFields, selectedSource, suggestedSource, onSelect }) {
-  const sourceField = sourceFields.find(f => f.path === selectedSource);
-  const isMapped = !!selectedSource;
-  
+function MappingRow({ ... }) {
   return (
     <div className={cn(
-      "grid grid-cols-[1fr_48px_1fr] gap-4 items-center py-3 px-2 rounded-lg",
-      isMapped ? "bg-muted/30" : "bg-transparent"
+      "group relative rounded-xl border transition-all duration-200",
+      isMapped 
+        ? "bg-card border-border shadow-sm" 
+        : "bg-muted/30 border-transparent hover:border-border/50 hover:bg-card/50"
     )}>
-      {/* Source Column */}
-      <div className="space-y-1">
-        <Select value={selectedSource || '__skip__'} onValueChange={...}>
-          <SelectTrigger className="h-10 bg-background">
-            <SelectValue placeholder="Select source field..." />
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
-            <SelectItem value="__skip__" className="text-muted-foreground">
-              Don't import
-            </SelectItem>
-            <SelectSeparator />
-            {sourceFields.map(field => (
-              <SelectItem key={field.path} value={field.path}>
-                <code className="font-mono text-xs">{field.path}</code>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        {/* Sample value preview */}
-        {sourceField && (
-          <div className="px-3 py-1.5 bg-muted rounded text-xs text-muted-foreground truncate">
-            {formatSampleValue(sourceField.sampleValue)}
-          </div>
-        )}
-      </div>
-      
-      {/* Arrow Column */}
-      <div className="flex justify-center">
-        {isMapped ? (
-          <ArrowRight size={20} className="text-primary" />
-        ) : (
-          <div className="w-5 border-t border-dashed border-muted-foreground/40" />
-        )}
-      </div>
-      
-      {/* Target Column */}
-      <div className="space-y-0.5">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
-            {targetField.label}
-            {targetField.required && <span className="text-destructive ml-0.5">*</span>}
-          </span>
-          {selectedSource === suggestedSource && suggestedSource && (
-            <Badge variant="secondary" size="sm">auto</Badge>
+      <div className="grid grid-cols-[1fr_80px_1fr] gap-4 p-5 items-center">
+        {/* Source Card */}
+        <div className="space-y-3">
+          <Select ...>
+            <SelectTrigger className="h-11 bg-background border-border/60 
+              hover:border-primary/50 focus:border-primary 
+              transition-colors rounded-lg shadow-sm">
+              <SelectValue ... />
+            </SelectTrigger>
+            ...
+          </Select>
+          
+          {/* Inline sample preview */}
+          {sourceField && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 
+              rounded-lg border border-border/30">
+              <span className="text-2xs uppercase tracking-wide 
+                text-muted-foreground font-medium">Preview</span>
+              <span className="text-xs text-foreground truncate flex-1">
+                {formatSampleValue(sourceField.sampleValue)}
+              </span>
+            </div>
           )}
         </div>
-        {targetField.description && (
-          <p className="text-xs text-muted-foreground">{targetField.description}</p>
-        )}
+        
+        {/* Connector */}
+        <div className="flex justify-center items-center">
+          <ConnectionLine isActive={isMapped} />
+        </div>
+        
+        {/* Target Card */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-base font-semibold text-foreground">
+              {targetField.label}
+              {targetField.required && (
+                <span className="text-destructive ml-1">*</span>
+              )}
+            </span>
+            {isAutoDetected && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 
+                rounded-full bg-success/10 text-success text-2xs font-medium">
+                <CheckCircle size={12} />
+                Auto
+              </span>
+            )}
+          </div>
+          {targetField.description && (
+            <p className="text-sm text-muted-foreground">
+              {targetField.description}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 ```
 
-### Part 3: Update WordPressIntegrationSheet
+**2. Premium Connection Line Component**
 
-**File:** `src/components/agents/locations/WordPressIntegrationSheet.tsx`
-
-When in `field-mapping` step, use the full-width sheet:
+Create an SVG-based connector that looks premium:
 
 ```tsx
-<Sheet open={open} onOpenChange={onOpenChange}>
-  <SheetContent 
-    className={cn(
-      "overflow-y-auto",
-      connectionStep === 'field-mapping' 
-        ? "sm:max-w-[calc(100vw-100px)]" 
-        : "sm:max-w-2xl"
-    )}
-  >
+function ConnectionLine({ isActive }: { isActive: boolean }) {
+  return (
+    <div className="relative w-full h-8 flex items-center justify-center">
+      <svg 
+        className="w-full h-6" 
+        viewBox="0 0 80 24" 
+        fill="none"
+        aria-hidden="true"
+      >
+        {/* Background line */}
+        <line 
+          x1="0" y1="12" x2="80" y2="12" 
+          stroke="currentColor" 
+          strokeWidth="2"
+          strokeDasharray={isActive ? "0" : "4 4"}
+          className={cn(
+            "transition-all duration-300",
+            isActive ? "text-primary" : "text-muted-foreground/30"
+          )}
+        />
+        
+        {/* Arrow head */}
+        <polygon 
+          points="72,6 80,12 72,18" 
+          fill="currentColor"
+          className={cn(
+            "transition-all duration-300",
+            isActive ? "text-primary" : "text-muted-foreground/30"
+          )}
+        />
+        
+        {/* Active dot at start */}
+        {isActive && (
+          <circle cx="4" cy="12" r="4" fill="currentColor" className="text-primary" />
+        )}
+      </svg>
+    </div>
+  );
+}
 ```
 
-Also update the field mapping section to give it full height:
+**3. Header Redesign**
+
+Make the header more prominent and spacious:
 
 ```tsx
-{connectionStep === 'field-mapping' && (
-  <div className="flex-1 min-h-0">
-    <WordPressFieldMapper
-      type={fieldMappingType}
-      availableFields={...}
-      currentMappings={...}
-      suggestedMappings={...}
-      onMappingsChange={...}
-      onConfirm={handleFieldMappingConfirm}
-      onBack={handleFieldMappingBack}
-      onSkip={handleSkipFieldMapping}
-      samplePostTitle={...}
+<div className="flex items-center justify-between pb-6 border-b">
+  <div className="space-y-1">
+    <h2 className="text-lg font-semibold tracking-tight">
+      Map {type === 'community' ? 'Community' : 'Property'} Fields
+    </h2>
+    {samplePostTitle && (
+      <p className="text-sm text-muted-foreground">
+        Using sample: <span className="font-medium text-foreground">{samplePostTitle}</span>
+      </p>
+    )}
+  </div>
+  
+  <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
+      <span className="text-sm font-medium text-foreground tabular-nums">
+        {mappedCount}
+      </span>
+      <span className="text-sm text-muted-foreground">of {totalFields} mapped</span>
+    </div>
+    <Progress 
+      value={progressPercent} 
+      className="w-24 h-2.5" 
+      variant={progressPercent === 100 ? "success" : "default"}
     />
   </div>
-)}
+</div>
+```
+
+**4. Column Headers Redesign**
+
+Cleaner, more prominent column headers:
+
+```tsx
+<div className="grid grid-cols-[1fr_80px_1fr] gap-4 py-4 px-5">
+  <div className="flex items-center gap-2">
+    <div className="w-2 h-2 rounded-full bg-primary" />
+    <span className="text-sm font-semibold text-foreground">
+      Source Field
+    </span>
+    <span className="text-xs text-muted-foreground">(WordPress)</span>
+  </div>
+  <div /> {/* Connector spacer */}
+  <div className="flex items-center gap-2">
+    <div className="w-2 h-2 rounded-full bg-foreground" />
+    <span className="text-sm font-semibold text-foreground">
+      Target Field
+    </span>
+    <span className="text-xs text-muted-foreground">(Database)</span>
+  </div>
+</div>
+```
+
+**5. Footer Redesign**
+
+Cleaner button layout with proper spacing:
+
+```tsx
+<div className="flex items-center justify-between pt-6 border-t bg-muted/20 
+  -mx-6 px-6 -mb-6 pb-6 rounded-b-[0.60rem]">
+  <Button variant="ghost" size="default" onClick={onBack} disabled={isSaving}>
+    <ArrowLeft size={16} className="mr-2" aria-hidden="true" />
+    Back
+  </Button>
+  
+  <div className="flex items-center gap-3">
+    <Button
+      variant="outline"
+      onClick={() => onMappingsChange({})}
+      disabled={isSaving || mappedCount === 0}
+    >
+      Clear All
+    </Button>
+    <Button onClick={onConfirm} disabled={isSaving || !allRequiredMapped}>
+      {isSaving ? 'Saving...' : 'Save Mappings'}
+    </Button>
+  </div>
+</div>
 ```
 
 ---
 
-## Visual Improvements Summary
+## Visual Polish Details
 
-| Before | After |
-|--------|-------|
-| Target on left, source dropdown on right | Source on left, target on right (natural reading flow) |
-| Grouped by category with collapsibles | Flat list, all visible |
-| Small 200px dropdown | Full-width dropdown with sample preview |
-| No progress indication | Progress bar + "X of Y mapped" |
-| Cramped sm:max-w-2xl sheet | Full-width sheet covering main content |
-| Text-only connection | Visual arrow between source → target |
+| Aspect | Implementation |
+|--------|---------------|
+| **Spacing** | Increase row padding from `p-3` to `p-5` |
+| **Row gaps** | Increase from `space-y-0.5` to `space-y-3` |
+| **Border radius** | Use `rounded-xl` (16px) for rows |
+| **Shadows** | Add `shadow-sm` on mapped rows, `hover:shadow-md` on hover |
+| **Transitions** | Add `transition-all duration-200` for smooth state changes |
+| **Typography** | Target labels use `text-base font-semibold` |
+| **Colors** | Use `bg-success/10 text-success` for auto badge |
 
 ---
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `src/components/ui/sheet.tsx` | Add size variant for full-width sheets |
-| `src/components/agents/locations/WordPressFieldMapper.tsx` | Complete rewrite with two-column table layout |
-| `src/components/agents/locations/WordPressIntegrationSheet.tsx` | Use full-width sheet for field mapping step |
+| File | Changes |
+|------|---------|
+| `src/components/agents/locations/WordPressFieldMapper.tsx` | Complete visual overhaul with premium styling |
 
 ---
 
-## Accessibility
+## Expected Result
 
-- All dropdowns have proper labels
-- Arrow icons are decorative (`aria-hidden="true"`)
-- Progress bar has `aria-valuenow` and `aria-valuemax`
-- Required fields indicated with both asterisk and `aria-required`
-- Keyboard navigation works through all rows
+A field mapper that:
+- Feels premium and polished like Airtable
+- Has clear visual hierarchy (headers, rows, states)
+- Uses generous spacing without feeling bloated
+- Shows elegant animated connectors between fields
+- Has smooth hover/focus transitions
+- Clearly distinguishes mapped vs unmapped fields
