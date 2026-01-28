@@ -8,10 +8,10 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Trash01 } from '@untitledui/icons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { US_TIMEZONES } from '@/types/locations';
-import { WordPressIcon } from '@/components/icons/WordPressIcon';
 import type { Tables } from '@/integrations/supabase/types';
 
 export type Location = Tables<'locations'>;
@@ -100,6 +100,87 @@ export const createLocationsColumns = ({
     cell: ({ row }) => (
       <span className="text-sm whitespace-nowrap">{getTimezoneLabel(row.original.timezone)}</span>
     ),
+  },
+  {
+    accessorKey: 'age_category',
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Age" />,
+    cell: ({ row }) => {
+      const ageCategory = row.original.age_category;
+      if (!ageCategory) return <span className="text-muted-foreground">—</span>;
+      
+      const is55Plus = ageCategory.toLowerCase().includes('55') || 
+                       ageCategory.toLowerCase().includes('senior');
+      
+      return (
+        <Badge variant={is55Plus ? 'secondary' : 'outline'}>
+          {is55Plus ? '55+' : 'All-Age'}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: 'pet_policy',
+    size: 120,
+    minSize: 80,
+    maxSize: 150,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Pets" />,
+    cell: ({ row }) => {
+      const petPolicy = row.original.pet_policy;
+      if (!petPolicy) return <span className="text-muted-foreground">—</span>;
+      
+      const truncated = petPolicy.length > 20 
+        ? petPolicy.substring(0, 20) + '...' 
+        : petPolicy;
+      
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-sm cursor-help">{truncated}</span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[300px]">
+            <p className="text-sm">{petPolicy}</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    },
+  },
+  {
+    accessorKey: 'amenities',
+    size: 100,
+    minSize: 70,
+    maxSize: 130,
+    header: () => <span className="text-xs font-medium">Amenities</span>,
+    cell: ({ row }) => {
+      const amenities = row.original.amenities as string[] | null;
+      if (!amenities || amenities.length === 0) {
+        return <span className="text-muted-foreground">—</span>;
+      }
+      
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="secondary" className="cursor-help">
+              {amenities.length}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[300px]">
+            <ul className="text-sm list-disc pl-4">
+              {amenities.slice(0, 10).map((amenity, i) => (
+                <li key={i}>{amenity}</li>
+              ))}
+              {amenities.length > 10 && (
+                <li className="text-muted-foreground">
+                  +{amenities.length - 10} more
+                </li>
+              )}
+            </ul>
+          </TooltipContent>
+        </Tooltip>
+      );
+    },
   },
   {
     id: 'calendars',
