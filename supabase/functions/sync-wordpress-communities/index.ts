@@ -1025,7 +1025,7 @@ function flattenObject(
   obj: Record<string, unknown>,
   prefix = '',
   result: AvailableField[] = [],
-  maxDepth = 3,
+  maxDepth = 5,
   currentDepth = 0
 ): AvailableField[] {
   if (currentDepth >= maxDepth) return result;
