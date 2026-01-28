@@ -144,7 +144,7 @@ function SearchableFieldSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="min-w-[280px] w-[var(--radix-popover-trigger-width)] p-0 bg-popover" 
+        className="min-w-[320px] w-auto max-w-[400px] p-0 bg-popover" 
         align="start"
       >
         <Command>
@@ -160,14 +160,9 @@ function SearchableFieldSelect({
                 }}
                 className="text-muted-foreground italic"
               >
-                <Check
-                  size={16}
-                  className={cn(
-                    "mr-2 shrink-0",
-                    selectedSource === null ? "opacity-100" : "opacity-0"
-                  )}
-                  aria-hidden="true"
-                />
+                {selectedSource === null && (
+                  <Check size={16} className="mr-2 shrink-0" aria-hidden="true" />
+                )}
                 Don't import
               </CommandItem>
             </CommandGroup>
@@ -182,14 +177,9 @@ function SearchableFieldSelect({
                     setOpen(false);
                   }}
                 >
-                  <Check
-                    size={16}
-                    className={cn(
-                      "mr-2 shrink-0",
-                      selectedSource === field.path ? "opacity-100" : "opacity-0"
-                    )}
-                    aria-hidden="true"
-                  />
+                  {selectedSource === field.path && (
+                    <Check size={16} className="mr-2 shrink-0" aria-hidden="true" />
+                  )}
                   <code className="font-mono text-xs">{field.path}</code>
                 </CommandItem>
               ))}
