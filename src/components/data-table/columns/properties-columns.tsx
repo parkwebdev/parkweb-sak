@@ -56,21 +56,12 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
     maxSize: 280,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
     cell: ({ row }) => {
-      const address = row.original.address;
-      const city = row.original.city;
-      const state = row.original.state;
-      const fullAddress = address || 'No address';
-      const location = [city, state].filter(Boolean).join(', ');
+      const address = row.original.address || 'No address';
       
       return (
-        <div className="flex flex-col min-w-0">
-          <span className="font-medium text-sm truncate max-w-[260px]" title={fullAddress}>{fullAddress}</span>
-          {location && (
-            <span className="text-xs text-muted-foreground truncate max-w-[260px]" title={location}>
-              {location}
-            </span>
-          )}
-        </div>
+        <span className="font-medium text-sm truncate max-w-[260px]" title={address}>
+          {address}
+        </span>
       );
     },
   },
