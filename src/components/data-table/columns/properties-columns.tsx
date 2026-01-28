@@ -150,6 +150,128 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
     },
   },
   {
+    accessorKey: 'sqft',
+    size: 90,
+    minSize: 70,
+    maxSize: 110,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Sqft" />,
+    cell: ({ row }) => {
+      const sqft = row.original.sqft;
+      if (!sqft) return <span className="text-muted-foreground text-sm">—</span>;
+      return (
+        <span className="text-sm tabular-nums">
+          {sqft.toLocaleString()}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: 'year_built',
+    size: 70,
+    minSize: 60,
+    maxSize: 90,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Year" />,
+    cell: ({ row }) => {
+      const year = row.original.year_built;
+      if (!year) return <span className="text-muted-foreground text-sm">—</span>;
+      return <span className="text-sm tabular-nums">{year}</span>;
+    },
+  },
+  {
+    id: 'make_model',
+    size: 140,
+    minSize: 100,
+    maxSize: 180,
+    header: () => <span className="text-xs font-medium">Make/Model</span>,
+    cell: ({ row }) => {
+      const manufacturer = row.original.manufacturer;
+      const model = row.original.model;
+      
+      if (!manufacturer && !model) {
+        return <span className="text-muted-foreground text-sm">—</span>;
+      }
+      
+      const combined = [manufacturer, model].filter(Boolean).join(' ');
+      const truncated = combined.length > 18 
+        ? combined.substring(0, 18) + '...' 
+        : combined;
+      
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-sm truncate block max-w-[160px] cursor-help">
+              {truncated}
+            </span>
+          </TooltipTrigger>
+          {combined.length > 18 && (
+            <TooltipContent>
+              <p>{combined}</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      );
+    },
+  },
+  {
+    accessorKey: 'lot_rent',
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Lot Rent" />,
+    cell: ({ row }) => {
+      const lotRent = row.original.lot_rent;
+      if (!lotRent) return <span className="text-muted-foreground text-sm">—</span>;
+      
+      const formatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(lotRent / 100);
+      
+      return (
+        <span className="text-sm tabular-nums whitespace-nowrap">
+          {formatted}/mo
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: 'features',
+    size: 90,
+    minSize: 70,
+    maxSize: 110,
+    header: () => <span className="text-xs font-medium">Features</span>,
+    cell: ({ row }) => {
+      const features = row.original.features as string[] | null;
+      if (!features || features.length === 0) {
+        return <span className="text-muted-foreground text-sm">—</span>;
+      }
+      
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="secondary" className="cursor-help">
+              {features.length}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[300px]">
+            <ul className="text-sm list-disc pl-4">
+              {features.slice(0, 10).map((feature, i) => (
+                <li key={i}>{feature}</li>
+              ))}
+              {features.length > 10 && (
+                <li className="text-muted-foreground">
+                  +{features.length - 10} more
+                </li>
+              )}
+            </ul>
+          </TooltipContent>
+        </Tooltip>
+      );
+    },
+  },
+  {
     accessorKey: 'price',
     size: 120,
     minSize: 90,
