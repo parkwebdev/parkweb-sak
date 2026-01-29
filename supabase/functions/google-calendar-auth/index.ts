@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
         // Get account from database
         const { data: account, error: fetchError } = await supabase
           .from('connected_accounts')
-          .select('*')
+          .select('id, user_id, refresh_token, access_token, token_expires_at, sync_error')
           .eq('id', accountId)
           .single();
 
@@ -396,7 +396,7 @@ Deno.serve(async (req) => {
         // Get account from database
         const { data: account, error: fetchError } = await supabase
           .from('connected_accounts')
-          .select('*')
+          .select('id, user_id, access_token, refresh_token, token_expires_at, calendar_id')
           .eq('id', accountId)
           .single();
 

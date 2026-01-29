@@ -59,7 +59,7 @@ export function ProfileSettings() {
       // Fetch profile for the account owner (supports impersonation)
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('user_id, display_name, email, avatar_url')
         .eq('user_id', accountOwnerId)
         .maybeSingle();
 

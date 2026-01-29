@@ -85,7 +85,7 @@ export function useServiceWorker() {
       try {
         await state.registration.update();
         logger.info('Checked for service worker updates');
-      } catch (error) {
+      } catch (error: unknown) {
         logger.error('Failed to check for SW updates:', error);
       }
     }

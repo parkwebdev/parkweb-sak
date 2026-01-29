@@ -18,6 +18,7 @@ import { getErrorMessage } from '@/types/errors';
 import { useSupabaseQuery } from './useSupabaseQuery';
 import { useAccountOwnerId } from './useAccountOwnerId';
 import { queryKeys } from '@/lib/query-keys';
+import { LOCATION_COLUMNS } from '@/lib/db-selects';
 import type { Tables, TablesInsert, Json } from '@/integrations/supabase/types';
 import type { LocationFormData, BusinessHours } from '@/types/locations';
 
@@ -41,12 +42,12 @@ export const useLocations = (agentId?: string) => {
       
       const { data, error } = await supabase
         .from('locations')
-        .select('*')
+        .select(LOCATION_COLUMNS)
         .eq('agent_id', agentId)
         .order('name', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as Location[];
     },
     realtime: agentId ? {
       table: 'locations',

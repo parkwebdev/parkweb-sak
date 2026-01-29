@@ -35,7 +35,7 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
       self.registration.showNotification(data.title || 'Pilot', options)
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error handling push notification:', error);
   }
 });

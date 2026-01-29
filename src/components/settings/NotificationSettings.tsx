@@ -99,7 +99,16 @@ export function NotificationSettings() {
     try {
       const { data, error } = await supabase
         .from('notification_preferences')
-        .select('*')
+        .select(`
+          id, user_id, email_notifications, browser_notifications, sound_notifications,
+          background_push_enabled, conversation_notifications, lead_notifications,
+          agent_notifications, team_notifications, report_notifications,
+          booking_email_notifications, lead_email_notifications, team_email_notifications,
+          agent_email_notifications, report_email_notifications, product_email_notifications,
+          weekly_report_enabled, weekly_report_timezone,
+          push_lead_notifications, push_conversation_notifications, push_booking_notifications,
+          push_team_notifications, push_message_notifications, created_at, updated_at
+        `)
         .eq('user_id', user.id)
         .single();
 

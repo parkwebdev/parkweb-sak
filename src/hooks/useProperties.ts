@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { queryKeys } from '@/lib/query-keys';
+import { PROPERTY_LIST_COLUMNS } from '@/lib/db-selects';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Property = Tables<'properties'>;
@@ -56,7 +57,7 @@ export const useProperties = (agentId?: string) => {
       const [propertiesResult, locationsResult] = await Promise.all([
         supabase
           .from('properties')
-          .select('*')
+          .select(PROPERTY_LIST_COLUMNS)
           .eq('agent_id', agentId)
           .order('created_at', { ascending: false }),
         supabase
@@ -69,7 +70,7 @@ export const useProperties = (agentId?: string) => {
       if (locationsResult.error) throw locationsResult.error;
       
       return {
-        properties: propertiesResult.data || [],
+        properties: (propertiesResult.data || []) as Property[],
         locations: locationsResult.data || [],
       };
     },

@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
 
     const { data: account, error: accountError } = await supabase
       .from('connected_accounts')
-      .select('*')
+      .select('id, user_id, access_token, refresh_token, token_expires_at, calendar_id, last_synced_at')
       .eq('webhook_channel_id', channelId)
       .single();
 

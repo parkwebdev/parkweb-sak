@@ -555,3 +555,77 @@ export const AGENT_TOOL_COLUMNS = `
   created_at
 `;
 
+/**
+ * Columns for notification preferences.
+ */
+export const NOTIFICATION_PREFS_COLUMNS = `
+  id,
+  user_id,
+  email_notifications,
+  browser_notifications,
+  sound_notifications,
+  background_push_enabled,
+  conversation_notifications,
+  lead_notifications,
+  agent_notifications,
+  team_notifications,
+  report_notifications,
+  booking_email_notifications,
+  lead_email_notifications,
+  team_email_notifications,
+  agent_email_notifications,
+  report_email_notifications,
+  product_email_notifications,
+  weekly_report_enabled,
+  weekly_report_timezone,
+  push_lead_notifications,
+  push_conversation_notifications,
+  push_booking_notifications,
+  push_team_notifications,
+  push_message_notifications,
+  created_at,
+  updated_at
+`;
+
+/**
+ * Columns for audit log entries.
+ */
+export const AUDIT_LOG_COLUMNS = `
+  id,
+  admin_user_id,
+  action,
+  target_type,
+  target_id,
+  target_email,
+  details,
+  ip_address,
+  user_agent,
+  created_at
+`;
+
+/**
+ * Columns for connected accounts (OAuth).
+ */
+export const CONNECTED_ACCOUNT_COLUMNS = `
+  id,
+  user_id,
+  agent_id,
+  location_id,
+  provider,
+  account_email,
+  access_token,
+  refresh_token,
+  token_expires_at,
+  is_active,
+  calendar_id,
+  calendar_name,
+  webhook_channel_id,
+  webhook_resource_id,
+  webhook_expires_at,
+  sync_error,
+  last_synced_at,
+  metadata,
+  created_at,
+  updated_at
+`;
+

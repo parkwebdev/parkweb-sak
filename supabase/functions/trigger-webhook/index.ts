@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     // Get webhook configuration
     const { data: webhook, error: webhookError } = await supabase
       .from('webhooks')
-      .select('*')
+      .select('id, agent_id, user_id, name, url, method, events, headers, auth_type, auth_config, conditions, response_actions, active')
       .eq('id', webhookId)
       .single();
 

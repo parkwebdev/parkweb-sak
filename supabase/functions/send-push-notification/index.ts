@@ -398,9 +398,9 @@ async function sendPushToSubscription(
     }
 
     return { success: true };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error sending push:', error);
-    return { success: false, error: String(error) };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -495,10 +495,10 @@ serve(async (req: Request) => {
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in send-push-notification:', error);
     return new Response(
-      JSON.stringify({ error: String(error) }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
