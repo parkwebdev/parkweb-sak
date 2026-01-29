@@ -1,234 +1,140 @@
 
-# Plan: Complete RowActions Pattern for All Remaining Tables
+# Plan: Standardize Edit Icons to Edit05 (Pencil with Square)
 
 ## Overview
 
-You're right - several tables still use the old inline button pattern instead of the new Stripe-style hover actions + dropdown menu. This plan will update ALL remaining tables to use the consistent `RowActions` pattern.
+Ensure all **edit action buttons** across the app consistently use `Edit05` (pencil with square border) instead of the plain pencil variants (`Edit02`, `Edit03`).
 
 ---
 
-## Tables Needing Update
+## Icon Reference
 
-| Table | Current Actions | Proposed Quick Actions | Proposed Menu |
-|-------|-----------------|------------------------|---------------|
-| `knowledge-columns.tsx` | Reprocess, Delete buttons | Reprocess, Delete | Reprocess Source, Delete Source |
-| `help-articles-columns.tsx` | Move Up, Move Down, Edit, Delete | Edit, Delete | Edit, Move Up, Move Down, Delete |
-| `export-history-columns.tsx` | Download, Delete | Download, Delete | Download Report, Delete Report |
-| `locations-columns.tsx` | Delete only | Delete | View Details, Delete Location |
-| `properties-columns.tsx` | External Link only | External Link | View Listing (external) |
-| `sessions-columns.tsx` | "Remove" text button | Remove (destructive) | Revoke Session |
-| `AuditLogTable.tsx` | Eye view button | View | View Details |
+| Icon | Visual | Usage |
+|------|--------|-------|
+| `Edit05` | Pencil with square | **Standard for edit actions** (buttons, menus) |
+| `Edit02` | Plain pencil | Activity logs, status indicators (not actions) |
+| `Edit03` | Different pencil | Should not be used |
 
 ---
 
-## Implementation Details
+## Files to Update
 
-### 1. `knowledge-columns.tsx`
+### 1. `src/components/admin/plans/PlanActions.tsx`
 
-**Current:** Two inline icon buttons (Reprocess, Delete)  
-**New:**
-```typescript
-const quickActions: QuickAction[] = [
-  { icon: RefreshCcw01, label: 'Reprocess', onClick: () => onReprocess(source), disabled: isProcessing },
-  { icon: Trash01, label: 'Delete', onClick: () => onDelete(source), variant: 'destructive' },
-];
+**Change:** `Edit02` → `Edit05`
 
-<RowActions
-  quickActions={quickActions}
-  menuContent={
-    <>
-      <DropdownMenuItem onClick={() => onReprocess(source)} disabled={isProcessing}>
-        <RefreshCcw01 size={14} className="mr-2" />
-        Reprocess Source
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => onDelete(source)} className="text-destructive">
-        <Trash01 size={14} className="mr-2" />
-        Delete Source
-      </DropdownMenuItem>
-    </>
-  }
-/>
+```tsx
+// Before
+import { Edit02, Trash01 } from '@untitledui/icons';
+
+// After
+import { Edit05, Trash01 } from '@untitledui/icons';
 ```
 
+Update both the quick action icon and menu item icon.
+
 ---
 
-### 2. `help-articles-columns.tsx`
+### 2. `src/components/admin/emails/EmailTemplateList.tsx`
 
-**Current:** Up/Down arrows + Delete buttons inline  
-**New:** Edit & Delete as quick actions, reorder in menu
-```typescript
-const quickActions: QuickAction[] = [
-  { icon: Edit05, label: 'Edit', onClick: () => onView(article) },
-  { icon: Trash01, label: 'Delete', onClick: () => onDelete(article), variant: 'destructive' },
-];
+**Change:** `Edit02` → `Edit05`
 
-<RowActions
-  quickActions={quickActions}
-  menuContent={
-    <>
-      <DropdownMenuItem onClick={() => onView(article)}>
-        <Edit05 size={14} className="mr-2" />
-        Edit Article
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => onMoveUp(article)} disabled={!canUp}>
-        <ChevronUp size={14} className="mr-2" />
-        Move Up
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => onMoveDown(article)} disabled={!canDown}>
-        <ChevronDown size={14} className="mr-2" />
-        Move Down
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => onDelete(article)} className="text-destructive">
-        <Trash01 size={14} className="mr-2" />
-        Delete Article
-      </DropdownMenuItem>
-    </>
-  }
-/>
+```tsx
+// Before
+import { Eye, Edit02, Send01, ... } from '@untitledui/icons';
+
+// After
+import { Eye, Edit05, Send01, ... } from '@untitledui/icons';
 ```
 
+Update the edit button in the actions cell.
+
 ---
 
-### 3. `export-history-columns.tsx`
+### 3. `src/components/agents/locations/WordPressIntegrationSheet.tsx`
 
-**Current:** Download + Delete icon buttons  
-**New:**
-```typescript
-const quickActions: QuickAction[] = [
-  { icon: Download01, label: 'Download', onClick: () => onDownload(exportItem) },
-  { icon: Trash01, label: 'Delete', onClick: () => onDelete(exportItem), variant: 'destructive' },
-];
+**Change:** `Edit02` → `Edit05`
 
-<RowActions
-  quickActions={quickActions}
-  menuContent={...}
-/>
+```tsx
+// Before
+import { ..., Edit02, ... } from '@untitledui/icons';
+
+// After
+import { ..., Edit05, ... } from '@untitledui/icons';
 ```
 
+Update the "Edit URL" button.
+
 ---
 
-### 4. `locations-columns.tsx`
+### 4. `src/components/agents/sections/AriWebhooksSection.tsx`
 
-**Current:** Single Delete button  
-**New:**
-```typescript
-const quickActions: QuickAction[] = [
-  { icon: Trash01, label: 'Delete', onClick: () => onDelete(location), variant: 'destructive' },
-];
+**Change:** `Edit03` → `Edit05`
 
-<RowActions
-  quickActions={quickActions}
-  menuContent={
-    <>
-      <DropdownMenuItem onClick={() => onView(location)}>
-        <Eye size={14} className="mr-2" />
-        View Details
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => onDelete(location)} className="text-destructive">
-        <Trash01 size={14} className="mr-2" />
-        Delete Location
-      </DropdownMenuItem>
-    </>
-  }
-/>
+```tsx
+// Before
+import { Link03, Trash01, Eye, Edit03, PlayCircle, Code01 } from '@untitledui/icons';
+
+// After
+import { Link03, Trash01, Eye, Edit05, PlayCircle, Code01 } from '@untitledui/icons';
 ```
 
+Update the edit webhook button.
+
 ---
 
-### 5. `properties-columns.tsx`
+### 5. `src/components/agents/sections/AriCustomToolsSection.tsx`
 
-**Current:** External link button  
-**Note:** Since this only has one action (view external listing), we'll keep it simpler but still add hover visibility
-```typescript
-const quickActions: QuickAction[] = [
-  { icon: LinkExternal01, label: 'View Listing', onClick: () => window.open(listingUrl, '_blank') },
-];
+**Change:** `Edit03` → `Edit05`
 
-<RowActions quickActions={quickActions} />
+```tsx
+// Before
+import { Trash01, Link03, Edit03, PlayCircle, ... } from '@untitledui/icons';
+
+// After
+import { Trash01, Link03, Edit05, PlayCircle, ... } from '@untitledui/icons';
 ```
 
+Update the edit tool button.
+
 ---
 
-### 6. `sessions-columns.tsx`
+### 6. `src/components/admin/knowledge/VideoNodeView.tsx`
 
-**Current:** "Remove" text button  
-**New:**
-```typescript
-const quickActions: QuickAction[] = [
-  { icon: Trash01, label: 'Revoke', onClick: () => onRevoke(session.id), variant: 'destructive' },
-];
+**Change:** `Edit03` → `Edit05`
 
-<RowActions
-  quickActions={quickActions}
-  menuContent={
-    <DropdownMenuItem onClick={() => onRevoke(session.id)} className="text-destructive">
-      <Trash01 size={14} className="mr-2" />
-      Revoke Session
-    </DropdownMenuItem>
-  }
-/>
+```tsx
+// Before
+import { Edit03, Trash01 } from '@untitledui/icons';
+
+// After
+import { Edit05, Trash01 } from '@untitledui/icons';
 ```
 
----
-
-### 7. `AuditLogTable.tsx`
-
-**Current:** Eye icon button  
-**New:**
-```typescript
-const quickActions: QuickAction[] = [
-  { icon: Eye, label: 'View', onClick: () => setSelectedEntry(entry) },
-];
-
-<RowActions
-  quickActions={quickActions}
-  menuContent={
-    <DropdownMenuItem onClick={() => setSelectedEntry(entry)}>
-      <Eye size={14} className="mr-2" />
-      View Details
-    </DropdownMenuItem>
-  }
-/>
-```
+Update the edit video button.
 
 ---
 
-## Files to Modify
+## Files NOT Changing (Correct Usage)
 
-| File | Changes |
-|------|---------|
-| `src/components/data-table/columns/knowledge-columns.tsx` | Replace inline buttons with RowActions |
-| `src/components/data-table/columns/help-articles-columns.tsx` | Replace inline buttons with RowActions |
-| `src/components/data-table/columns/export-history-columns.tsx` | Replace IconButtons with RowActions |
-| `src/components/data-table/columns/locations-columns.tsx` | Replace Delete button with RowActions |
-| `src/components/data-table/columns/properties-columns.tsx` | Replace link button with RowActions |
-| `src/components/data-table/columns/sessions-columns.tsx` | Replace Remove button with RowActions |
-| `src/components/admin/audit/AuditLogTable.tsx` | Replace Eye button with RowActions |
+These files use `Edit02` for **activity/event indicators** (not action buttons), which is the correct semantic use:
+
+| File | Usage | Why Edit02 is correct |
+|------|-------|----------------------|
+| `LeadActivityPanel.tsx` | `field_updated` activity icon | Represents "was edited" (past tense) |
+| `AuditLogTable.tsx` | `plan_update`, `article_update` event icons | Represents historical events |
 
 ---
 
-## Consistency Benefits
+## Summary
 
-After this update:
-- **ALL tables** use the same interaction pattern
-- Hover reveals quick action icons with tooltips
-- Horizontal dots opens full dropdown menu
-- "ACTIONS" header label in all menus
-- Destructive actions consistently styled red
+| File | Before | After |
+|------|--------|-------|
+| `PlanActions.tsx` | Edit02 | Edit05 |
+| `EmailTemplateList.tsx` | Edit02 | Edit05 |
+| `WordPressIntegrationSheet.tsx` | Edit02 | Edit05 |
+| `AriWebhooksSection.tsx` | Edit03 | Edit05 |
+| `AriCustomToolsSection.tsx` | Edit03 | Edit05 |
+| `VideoNodeView.tsx` | Edit03 | Edit05 |
 
----
-
-## Testing Checklist
-
-After implementation:
-- [ ] Knowledge sources table: hover shows Reprocess/Delete, menu works
-- [ ] Help articles table: hover shows Edit/Delete, menu has reorder options
-- [ ] Export history table: hover shows Download/Delete
-- [ ] Locations table: hover shows Delete, menu has View/Delete
-- [ ] Properties table: hover shows external link icon
-- [ ] Sessions table: hover shows revoke icon
-- [ ] Audit log table: hover shows view icon
+**Total:** 6 files updated for icon consistency
