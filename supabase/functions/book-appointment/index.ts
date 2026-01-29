@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getErrorMessage } from '../_shared/errors.ts';
 import { dispatchPushIfEnabled } from '../_shared/push-notifications.ts';
+import { CONNECTED_ACCOUNT_COLUMNS } from '../_shared/db-columns.ts';
 import type { SupabaseClientType } from '../_shared/types/supabase.ts';
 import type { GoogleCalendarEventBody, MicrosoftCalendarEventBody, ScheduleItem } from '../_shared/types.ts';
 
@@ -411,7 +412,7 @@ serve(async (req) => {
     // First try location-specific calendar
     const { data: locationAccount, error: locationAccountError } = await supabase
       .from('connected_accounts')
-      .select('*')
+      .select(CONNECTED_ACCOUNT_COLUMNS)
       .eq('location_id', booking.location_id)
       .eq('is_active', true)
       .single();
@@ -423,7 +424,7 @@ serve(async (req) => {
       // Fall back to agent-level default calendar (location_id is null)
       const { data: agentAccount, error: agentAccountError } = await supabase
         .from('connected_accounts')
-        .select('*')
+        .select(CONNECTED_ACCOUNT_COLUMNS)
         .eq('agent_id', location.agent_id)
         .is('location_id', null)
         .eq('is_active', true)

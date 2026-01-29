@@ -27,6 +27,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { CONNECTED_ACCOUNT_COLUMNS } from '../_shared/db-columns.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -119,7 +120,7 @@ Deno.serve(async (req) => {
       // Find the connected account by subscription ID (stored in webhook_channel_id)
       const { data: account, error: accountError } = await supabase
         .from('connected_accounts')
-        .select('*')
+        .select(CONNECTED_ACCOUNT_COLUMNS)
         .eq('webhook_channel_id', notification.subscriptionId)
         .single();
 

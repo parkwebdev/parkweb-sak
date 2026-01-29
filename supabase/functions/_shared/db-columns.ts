@@ -117,3 +117,30 @@ export const PENDING_INVITATION_COLUMNS = `
   created_at,
   updated_at
 `;
+
+/**
+ * Columns for agent tools.
+ */
+export const AGENT_TOOL_COLUMNS = `
+  id,
+  agent_id,
+  name,
+  description,
+  endpoint_url,
+  parameters,
+  headers,
+  timeout_ms,
+  enabled,
+  created_at
+`;
+
+/**
+ * Columns for user preferences.
+ */
+export const USER_PREFERENCES_COLUMNS = `
+  id,
+  user_id,
+  default_project_view,
+  created_at,
+  updated_at
+`;

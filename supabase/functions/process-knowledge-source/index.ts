@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Readability } from "npm:@mozilla/readability@0.5.0";
 import { DOMParser } from "npm:linkedom@0.18.4";
+import { KNOWLEDGE_SOURCE_COLUMNS } from '../_shared/db-columns.ts';
 import type { SupabaseClientType } from '../_shared/types/supabase.ts';
 
 // Local type for knowledge source metadata (edge functions can't import from src/)
@@ -1014,7 +1015,7 @@ Deno.serve(async (req) => {
     // Get the knowledge source
     const { data: source, error: sourceError } = await supabase
       .from('knowledge_sources')
-      .select('*')
+      .select(KNOWLEDGE_SOURCE_COLUMNS)
       .eq('id', sourceId)
       .single();
 

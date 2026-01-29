@@ -527,7 +527,7 @@ Deno.serve(async (req) => {
         // Get account from database
         const { data: account, error: fetchError } = await supabase
           .from('connected_accounts')
-          .select('*')
+          .select(CONNECTED_ACCOUNT_COLUMNS)
           .eq('id', accountId)
           .single();
 
