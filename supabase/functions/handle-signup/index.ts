@@ -103,7 +103,10 @@ const handler = async (req: Request): Promise<Response> => {
     // Check if this email has a pending invitation (including Pilot team invites)
     const { data: invitation, error: invitationError } = await supabase
       .from('pending_invitations')
-      .select('*')
+      .select(`
+        id, invited_by, invited_by_name, email, invited_first_name, invited_last_name,
+        company_name, is_pilot_invite, pilot_role, pilot_admin_permissions, status, expires_at
+      `)
       .eq('email', email)
       .eq('status', 'pending')
       .maybeSingle();

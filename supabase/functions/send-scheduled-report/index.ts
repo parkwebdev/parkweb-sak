@@ -420,7 +420,10 @@ serve(async (req: Request): Promise<Response> => {
     // Fetch active scheduled reports
     let query = supabase
       .from('scheduled_reports')
-      .select('*')
+      .select(`
+        id, user_id, name, frequency, day_of_week, day_of_month, time_of_day,
+        timezone, recipients, report_config, active, last_sent_at, created_at, created_by
+      `)
       .eq('active', true);
     
     if (forceReportId) {

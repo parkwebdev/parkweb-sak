@@ -405,7 +405,7 @@ serve(async (req) => {
     // First try location-specific calendar
     const { data: locationAccount, error: locationAccountError } = await supabase
       .from('connected_accounts')
-      .select('*')
+      .select('id, user_id, provider, access_token, refresh_token, token_expires_at, is_active, calendar_id')
       .eq('location_id', location_id)
       .eq('is_active', true)
       .single();
@@ -417,7 +417,7 @@ serve(async (req) => {
       // Fall back to agent-level default calendar (location_id is null)
       const { data: agentAccount, error: agentAccountError } = await supabase
         .from('connected_accounts')
-        .select('*')
+        .select('id, user_id, provider, access_token, refresh_token, token_expires_at, is_active, calendar_id')
         .eq('agent_id', location.agent_id)
         .is('location_id', null)
         .eq('is_active', true)

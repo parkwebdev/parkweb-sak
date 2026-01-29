@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
     // Build the query for active webhooks
     let webhooksQuery = supabase
       .from('webhooks')
-      .select('*')
+      .select('id, agent_id, user_id, name, url, method, events, headers, auth_type, auth_config, conditions, response_actions, active')
       .eq('user_id', userId)
       .eq('active', true);
 

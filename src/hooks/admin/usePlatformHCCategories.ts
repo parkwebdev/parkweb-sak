@@ -33,7 +33,7 @@ export function usePlatformHCCategories(): UsePlatformHCCategoriesResult {
       const [categoriesResult, articlesResult] = await Promise.all([
         supabase
           .from('platform_hc_categories')
-          .select('*')
+          .select('id, label, color, icon_name, order_index, created_at, updated_at')
           .order('order_index'),
         supabase
           .from('platform_hc_articles')

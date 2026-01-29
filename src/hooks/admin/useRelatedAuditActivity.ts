@@ -45,7 +45,7 @@ export function useRelatedAuditActivity({
       // Build query for related entries
       let query = supabase
         .from('admin_audit_log')
-        .select('*')
+        .select('id, admin_user_id, action, target_type, target_id, target_email, details, ip_address, user_agent, created_at')
         .eq('target_id', targetId)
         .neq('id', excludeEntryId)
         .order('created_at', { ascending: false })
