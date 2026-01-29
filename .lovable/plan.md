@@ -1,261 +1,234 @@
 
-
-# Plan: Stripe-Style Row Actions with Hover Icons + Context Menu
+# Plan: Complete RowActions Pattern for All Remaining Tables
 
 ## Overview
 
-Transform all table action patterns from vertical 3-dot menus to the Stripe-inspired dual-interaction pattern:
-1. **Hover state**: Show quick action icons in a pill-like container (edit, delete)
-2. **Click on dots**: Open full context menu with icons + labels + extra options
-
-This provides faster access to common actions while maintaining discoverability.
+You're right - several tables still use the old inline button pattern instead of the new Stripe-style hover actions + dropdown menu. This plan will update ALL remaining tables to use the consistent `RowActions` pattern.
 
 ---
 
-## Visual Design (Based on Stripe Reference)
+## Tables Needing Update
 
-```text
-Default state (no hover):
-┌─────────────────────────────────────────────────────────────────────┐
-│  Row content...                                             ···    │
-└─────────────────────────────────────────────────────────────────────┘
-
-Hover state (shows quick actions):
-┌─────────────────────────────────────────────────────────────────────┐
-│  Row content...                                    [✎] [🗑] [···]  │
-└─────────────────────────────────────────────────────────────────────┘
-                                                     ↑     ↑    ↑
-                                             Edit  Delete  More menu
-
-Click on ··· opens full menu:
-                                                          ┌──────────────┐
-                                                          │ ACTIONS      │
-                                                          ├──────────────┤
-                                                          │ ✎  Edit      │
-                                                          │ 🗑  Delete    │
-                                                          │ ⎘  Copy ID   │
-                                                          └──────────────┘
-```
+| Table | Current Actions | Proposed Quick Actions | Proposed Menu |
+|-------|-----------------|------------------------|---------------|
+| `knowledge-columns.tsx` | Reprocess, Delete buttons | Reprocess, Delete | Reprocess Source, Delete Source |
+| `help-articles-columns.tsx` | Move Up, Move Down, Edit, Delete | Edit, Delete | Edit, Move Up, Move Down, Delete |
+| `export-history-columns.tsx` | Download, Delete | Download, Delete | Download Report, Delete Report |
+| `locations-columns.tsx` | Delete only | Delete | View Details, Delete Location |
+| `properties-columns.tsx` | External Link only | External Link | View Listing (external) |
+| `sessions-columns.tsx` | "Remove" text button | Remove (destructive) | Revoke Session |
+| `AuditLogTable.tsx` | Eye view button | View | View Details |
 
 ---
 
-## Technical Implementation
+## Implementation Details
 
-### Part 1: Create Reusable `RowActions` Component
+### 1. `knowledge-columns.tsx`
 
-**New file: `src/components/ui/row-actions.tsx`**
-
-A composable component that handles:
-- Hover detection on parent row
-- Quick action icon buttons (shown on hover)
-- Horizontal dots menu trigger
-- Full context menu on click
-
+**Current:** Two inline icon buttons (Reprocess, Delete)  
+**New:**
 ```typescript
-interface QuickAction {
-  icon: React.ComponentType<{ size?: number }>;
-  label: string;          // For aria-label
-  onClick: () => void;
-  variant?: 'default' | 'destructive';
-}
+const quickActions: QuickAction[] = [
+  { icon: RefreshCcw01, label: 'Reprocess', onClick: () => onReprocess(source), disabled: isProcessing },
+  { icon: Trash01, label: 'Delete', onClick: () => onDelete(source), variant: 'destructive' },
+];
 
-interface RowActionsProps {
-  quickActions: QuickAction[];
-  menuContent: React.ReactNode;  // Full dropdown menu items
-  isHovered?: boolean;           // Controlled hover state
-}
+<RowActions
+  quickActions={quickActions}
+  menuContent={
+    <>
+      <DropdownMenuItem onClick={() => onReprocess(source)} disabled={isProcessing}>
+        <RefreshCcw01 size={14} className="mr-2" />
+        Reprocess Source
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={() => onDelete(source)} className="text-destructive">
+        <Trash01 size={14} className="mr-2" />
+        Delete Source
+      </DropdownMenuItem>
+    </>
+  }
+/>
 ```
 
-Key features:
-- Uses `DotsHorizontal` from `@untitledui/icons` (not vertical)
-- Quick action icons appear with `opacity-0 group-hover:opacity-100` transition
-- Tooltips on hover for each icon
-- Click on dots opens full `DropdownMenu`
-
 ---
 
-### Part 2: Update All Action Components
+### 2. `help-articles-columns.tsx`
 
-#### Files to modify (DotsVertical -> DotsHorizontal + hover actions):
-
-| File | Quick Actions | Menu Items |
-|------|--------------|------------|
-| `AccountActions.tsx` | View, Impersonate | View, Impersonate, Suspend/Activate, Delete |
-| `PlanActions.tsx` | Edit, Delete | Edit, Delete |
-| `PlatformArticleActions.tsx` | Delete | Delete |
-| `PilotTeamActions.tsx` | Edit, Remove | Manage Permissions, Remove Member |
-| `leads-columns.tsx` | View | View details |
-| `team-columns.tsx` | (already horizontal) | Manage Role, Edit Profile, Remove |
-| `MetricCardWithChart.tsx` | - | (keep as-is, not table row) |
-| `PreviewChat.tsx` | - | (keep as-is, not table row) |
-| `PromptTestChat.tsx` | - | (keep as-is, not table row) |
-
----
-
-### Part 3: Table Row Hover State Integration
-
-Update `DataTable.tsx` to pass hover state to action cells:
-
+**Current:** Up/Down arrows + Delete buttons inline  
+**New:** Edit & Delete as quick actions, reorder in menu
 ```typescript
-// In DataTable.tsx - TableRow needs "group" class for CSS hover
-<TableRow
-  className={cn(
-    'group transition-colors',  // Add "group" for child hover detection
-    onRowClick && 'cursor-pointer hover:bg-muted/50'
-  )}
->
-```
+const quickActions: QuickAction[] = [
+  { icon: Edit05, label: 'Edit', onClick: () => onView(article) },
+  { icon: Trash01, label: 'Delete', onClick: () => onDelete(article), variant: 'destructive' },
+];
 
-Action cells can then use `group-hover:opacity-100` for visibility.
-
----
-
-### Part 4: Implementation Details per Component
-
-#### `src/components/admin/accounts/AccountActions.tsx`
-
-**Before:**
-```tsx
-<DotsVertical size={16} aria-hidden="true" />
-```
-
-**After:**
-```tsx
-<div className="flex items-center gap-0.5">
-  {/* Quick actions - visible on row hover */}
-  <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <IconButton variant="ghost" size="icon-sm" label="View details" onClick={onView}>
-          <Eye size={14} />
-        </IconButton>
-      </TooltipTrigger>
-      <TooltipContent>View</TooltipContent>
-    </Tooltip>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <IconButton variant="ghost" size="icon-sm" label="Impersonate" onClick={onImpersonate}>
-          <SwitchHorizontal01 size={14} />
-        </IconButton>
-      </TooltipTrigger>
-      <TooltipContent>Impersonate</TooltipContent>
-    </Tooltip>
-  </div>
-  
-  {/* Full menu trigger - always visible */}
-  <DropdownMenu modal={false}>
-    <DropdownMenuTrigger asChild>
-      <IconButton variant="ghost" size="icon-sm" label="More actions">
-        <DotsHorizontal size={16} />
-      </IconButton>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
-      <DropdownMenuLabel>ACTIONS</DropdownMenuLabel>
-      {/* ... all menu items with icons */}
-    </DropdownMenuContent>
-  </DropdownMenu>
-</div>
+<RowActions
+  quickActions={quickActions}
+  menuContent={
+    <>
+      <DropdownMenuItem onClick={() => onView(article)}>
+        <Edit05 size={14} className="mr-2" />
+        Edit Article
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={() => onMoveUp(article)} disabled={!canUp}>
+        <ChevronUp size={14} className="mr-2" />
+        Move Up
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => onMoveDown(article)} disabled={!canDown}>
+        <ChevronDown size={14} className="mr-2" />
+        Move Down
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={() => onDelete(article)} className="text-destructive">
+        <Trash01 size={14} className="mr-2" />
+        Delete Article
+      </DropdownMenuItem>
+    </>
+  }
+/>
 ```
 
 ---
 
-#### `src/components/admin/plans/PlanActions.tsx`
+### 3. `export-history-columns.tsx`
 
-Quick actions: Edit (pencil), Delete (trash)
-Full menu: Edit Plan, Delete Plan
+**Current:** Download + Delete icon buttons  
+**New:**
+```typescript
+const quickActions: QuickAction[] = [
+  { icon: Download01, label: 'Download', onClick: () => onDownload(exportItem) },
+  { icon: Trash01, label: 'Delete', onClick: () => onDelete(exportItem), variant: 'destructive' },
+];
 
----
-
-#### `src/components/admin/knowledge/PlatformArticleActions.tsx`
-
-Quick actions: Delete only (trash icon)
-Full menu: Delete Article
-
----
-
-#### `src/components/admin/team/PilotTeamActions.tsx`
-
-Quick actions: Settings (if canEdit), Trash (if canDelete)
-Full menu: Manage Permissions, Remove Member
-
----
-
-#### `src/components/data-table/columns/leads-columns.tsx`
-
-Quick actions: Eye icon for View
-Full menu: View details
-
----
-
-### Part 5: Icon Imports Update
-
-Replace across all files:
-```tsx
-// Before
-import { DotsVertical, ... } from '@untitledui/icons';
-
-// After  
-import { DotsHorizontal, ... } from '@untitledui/icons';
+<RowActions
+  quickActions={quickActions}
+  menuContent={...}
+/>
 ```
 
 ---
 
-### Part 6: Menu Header Label
+### 4. `locations-columns.tsx`
 
-Following Stripe's pattern, add a subtle "ACTIONS" header label:
+**Current:** Single Delete button  
+**New:**
+```typescript
+const quickActions: QuickAction[] = [
+  { icon: Trash01, label: 'Delete', onClick: () => onDelete(location), variant: 'destructive' },
+];
 
-```tsx
-<DropdownMenuContent>
-  <DropdownMenuLabel className="text-2xs text-muted-foreground uppercase tracking-wider">
-    Actions
-  </DropdownMenuLabel>
-  <DropdownMenuSeparator />
-  {/* items */}
-</DropdownMenuContent>
+<RowActions
+  quickActions={quickActions}
+  menuContent={
+    <>
+      <DropdownMenuItem onClick={() => onView(location)}>
+        <Eye size={14} className="mr-2" />
+        View Details
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={() => onDelete(location)} className="text-destructive">
+        <Trash01 size={14} className="mr-2" />
+        Delete Location
+      </DropdownMenuItem>
+    </>
+  }
+/>
 ```
 
 ---
 
-## Files to Create
+### 5. `properties-columns.tsx`
 
-| File | Purpose |
-|------|---------|
-| `src/components/ui/row-actions.tsx` | Reusable row actions component with hover + menu |
+**Current:** External link button  
+**Note:** Since this only has one action (view external listing), we'll keep it simpler but still add hover visibility
+```typescript
+const quickActions: QuickAction[] = [
+  { icon: LinkExternal01, label: 'View Listing', onClick: () => window.open(listingUrl, '_blank') },
+];
+
+<RowActions quickActions={quickActions} />
+```
+
+---
+
+### 6. `sessions-columns.tsx`
+
+**Current:** "Remove" text button  
+**New:**
+```typescript
+const quickActions: QuickAction[] = [
+  { icon: Trash01, label: 'Revoke', onClick: () => onRevoke(session.id), variant: 'destructive' },
+];
+
+<RowActions
+  quickActions={quickActions}
+  menuContent={
+    <DropdownMenuItem onClick={() => onRevoke(session.id)} className="text-destructive">
+      <Trash01 size={14} className="mr-2" />
+      Revoke Session
+    </DropdownMenuItem>
+  }
+/>
+```
+
+---
+
+### 7. `AuditLogTable.tsx`
+
+**Current:** Eye icon button  
+**New:**
+```typescript
+const quickActions: QuickAction[] = [
+  { icon: Eye, label: 'View', onClick: () => setSelectedEntry(entry) },
+];
+
+<RowActions
+  quickActions={quickActions}
+  menuContent={
+    <DropdownMenuItem onClick={() => setSelectedEntry(entry)}>
+      <Eye size={14} className="mr-2" />
+      View Details
+    </DropdownMenuItem>
+  }
+/>
+```
+
+---
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/admin/accounts/AccountActions.tsx` | DotsHorizontal, hover icons, menu label |
-| `src/components/admin/plans/PlanActions.tsx` | DotsHorizontal, hover icons, menu label |
-| `src/components/admin/knowledge/PlatformArticleActions.tsx` | DotsHorizontal, hover icons, menu label |
-| `src/components/admin/team/PilotTeamActions.tsx` | DotsHorizontal, hover icons, menu label |
-| `src/components/data-table/columns/leads-columns.tsx` | DotsHorizontal, hover icons, menu label |
-| `src/components/data-table/columns/team-columns.tsx` | Add hover icons (already uses horizontal) |
-| `src/components/data-table/DataTable.tsx` | Add `group` class to TableRow |
-| `src/components/analytics/MetricCardWithChart.tsx` | DotsHorizontal (minor, not table) |
-| `src/components/agents/PreviewChat.tsx` | DotsHorizontal (minor, header menu) |
-| `src/components/admin/prompts/PromptTestChat.tsx` | DotsHorizontal (minor, header menu) |
+| `src/components/data-table/columns/knowledge-columns.tsx` | Replace inline buttons with RowActions |
+| `src/components/data-table/columns/help-articles-columns.tsx` | Replace inline buttons with RowActions |
+| `src/components/data-table/columns/export-history-columns.tsx` | Replace IconButtons with RowActions |
+| `src/components/data-table/columns/locations-columns.tsx` | Replace Delete button with RowActions |
+| `src/components/data-table/columns/properties-columns.tsx` | Replace link button with RowActions |
+| `src/components/data-table/columns/sessions-columns.tsx` | Replace Remove button with RowActions |
+| `src/components/admin/audit/AuditLogTable.tsx` | Replace Eye button with RowActions |
 
 ---
 
-## Accessibility Considerations
+## Consistency Benefits
 
-- All quick action icons have `aria-label` via IconButton's required `label` prop
-- Tooltips provide visual labels on hover
-- Full menu remains accessible via keyboard navigation
-- Focus ring visible on all interactive elements
+After this update:
+- **ALL tables** use the same interaction pattern
+- Hover reveals quick action icons with tooltips
+- Horizontal dots opens full dropdown menu
+- "ACTIONS" header label in all menus
+- Destructive actions consistently styled red
 
 ---
 
 ## Testing Checklist
 
 After implementation:
-- Hover over table rows to verify quick action icons appear
-- Click quick action icons to verify they trigger correct actions
-- Click horizontal dots to verify full menu opens
-- Verify menu has "ACTIONS" header
-- Test keyboard navigation through menu items
-- Verify tooltips appear on quick action hover
-- Test on mobile (touch) - quick actions may need alternate trigger
-
+- [ ] Knowledge sources table: hover shows Reprocess/Delete, menu works
+- [ ] Help articles table: hover shows Edit/Delete, menu has reorder options
+- [ ] Export history table: hover shows Download/Delete
+- [ ] Locations table: hover shows Delete, menu has View/Delete
+- [ ] Properties table: hover shows external link icon
+- [ ] Sessions table: hover shows revoke icon
+- [ ] Audit log table: hover shows view icon
