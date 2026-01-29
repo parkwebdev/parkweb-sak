@@ -6,13 +6,17 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash01 } from '@untitledui/icons';
+import { Trash01, Eye } from '@untitledui/icons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { US_TIMEZONES } from '@/types/locations';
 import type { Tables } from '@/integrations/supabase/types';
+import { RowActions, QuickAction } from '@/components/ui/row-actions';
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 export type Location = Tables<'locations'>;
 
@@ -202,22 +206,48 @@ export const createLocationsColumns = ({
   },
   {
     id: 'actions',
-    size: 80,
-    minSize: 60,
-    maxSize: 90,
-    header: () => <span className="text-xs font-medium">Actions</span>,
-    cell: ({ row }) => (
-      canManage ? (
-        <div className="flex items-center justify-end">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(row.original)}
-          >
-            <Trash01 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-          </Button>
-        </div>
-      ) : null
-    ),
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
+    header: () => <span className="sr-only">Actions</span>,
+    cell: ({ row }) => {
+      if (!canManage) return null;
+      
+      const location = row.original;
+      
+      const quickActions: QuickAction[] = [
+        { 
+          icon: Trash01, 
+          label: 'Delete', 
+          onClick: (e) => {
+            e.stopPropagation();
+            onDelete(location);
+          },
+          variant: 'destructive' as const,
+        },
+      ];
+      
+      return (
+        <RowActions
+          quickActions={quickActions}
+          menuContent={
+            <>
+              <DropdownMenuItem onClick={() => onView(location)}>
+                <Eye size={14} className="mr-2" aria-hidden="true" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => onDelete(location)} 
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash01 size={14} className="mr-2" aria-hidden="true" />
+                Delete Location
+              </DropdownMenuItem>
+            </>
+          }
+        />
+      );
+    },
   },
 ];

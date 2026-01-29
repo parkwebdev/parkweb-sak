@@ -7,13 +7,17 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, 
   Clock, Globe01, Building07, AlertCircle 
 } from '@untitledui/icons';
+import { RowActions, QuickAction } from '@/components/ui/row-actions';
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { formatShortTime } from '@/lib/time-formatting';
 import type { Tables } from '@/integrations/supabase/types';
@@ -372,49 +376,58 @@ export const createKnowledgeColumns = ({
   // Actions column - only show if user can manage
   ...(canManage ? [{
     id: 'actions',
-    size: 90,
-    minSize: 70,
-    maxSize: 100,
-    header: () => <span>Actions</span>,
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
+    header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }: { row: { original: KnowledgeSourceWithMeta } }) => {
       const source = row.original;
       const isProcessing = source.status === 'processing' || source.status === 'pending';
       
+      const quickActions: QuickAction[] = [
+        { 
+          icon: RefreshCcw01, 
+          label: isProcessing ? 'Processing...' : 'Reprocess', 
+          onClick: (e) => {
+            e.stopPropagation();
+            onReprocess(source);
+          },
+          show: !isProcessing,
+        },
+        { 
+          icon: Trash01, 
+          label: 'Delete', 
+          onClick: (e) => {
+            e.stopPropagation();
+            onDelete(source);
+          },
+          variant: 'destructive' as const,
+        },
+      ];
+      
       return (
-        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onReprocess(source)}
+        <RowActions
+          quickActions={quickActions}
+          menuContent={
+            <>
+              <DropdownMenuItem 
+                onClick={() => onReprocess(source)} 
                 disabled={isProcessing}
-                className="h-8 w-8 p-0"
               >
-                <RefreshCcw01 className={`h-4 w-4 text-muted-foreground hover:text-foreground ${isProcessing ? 'animate-spin' : ''}`} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{isProcessing ? 'Processing...' : 'Reprocess'}</p>
-            </TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(source)}
-                className="h-8 w-8 p-0"
+                <RefreshCcw01 size={14} className="mr-2" aria-hidden="true" />
+                {isProcessing ? 'Processing...' : 'Reprocess Source'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => onDelete(source)} 
+                className="text-destructive focus:text-destructive"
               >
-                <Trash01 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Delete</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+                <Trash01 size={14} className="mr-2" aria-hidden="true" />
+                Delete Source
+              </DropdownMenuItem>
+            </>
+          }
+        />
       );
     },
   }] as ColumnDef<KnowledgeSourceWithMeta>[] : []),

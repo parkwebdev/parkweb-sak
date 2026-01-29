@@ -9,9 +9,10 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Monitor01, Phone01 } from '@untitledui/icons';
+import { Monitor01, Phone01, Trash01 } from '@untitledui/icons';
 import { formatShortTime } from '@/lib/time-formatting';
+import { RowActions, QuickAction } from '@/components/ui/row-actions';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 export interface SessionData {
   id: string;
@@ -97,23 +98,39 @@ export const createSessionColumns = ({
     size: 100,
     minSize: 80,
     maxSize: 120,
-    header: () => <span className="text-xs font-medium sr-only">Actions</span>,
+    header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => {
       const session = row.original;
       
       // Don't show revoke for current session
       if (session.is_current) return null;
       
+      const quickActions: QuickAction[] = [
+        { 
+          icon: Trash01, 
+          label: 'Revoke', 
+          onClick: (e) => {
+            e.stopPropagation();
+            onRevoke(session.id);
+          },
+          variant: 'destructive' as const,
+        },
+      ];
+      
       return (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onRevoke(session.id)}
-          disabled={isRevoking === session.id}
-          className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50 hover:bg-destructive/10"
-        >
-          Remove
-        </Button>
+        <RowActions
+          quickActions={quickActions}
+          menuContent={
+            <DropdownMenuItem 
+              onClick={() => onRevoke(session.id)}
+              disabled={isRevoking === session.id}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash01 size={14} className="mr-2" aria-hidden="true" />
+              Revoke Session
+            </DropdownMenuItem>
+          }
+        />
       );
     },
   },

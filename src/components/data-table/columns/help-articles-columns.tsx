@@ -7,7 +7,6 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
@@ -18,6 +17,11 @@ import {
   Globe01, DownloadCloud01, Link01, PlayCircle, Gift01,
   Truck01, MessageChatCircle, Building07
 } from '@untitledui/icons';
+import { RowActions, QuickAction } from '@/components/ui/row-actions';
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { formatShortTime } from '@/lib/time-formatting';
 /**
@@ -288,69 +292,67 @@ export const createHelpArticlesColumns = ({
     size: 100,
     minSize: 80,
     maxSize: 120,
-    header: () => null,
+    header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }: { row: { original: HelpArticleWithMeta } }) => {
       const article = row.original;
       const canUp = canMoveUp(article);
       const canDown = canMoveDown(article);
       
+      const quickActions: QuickAction[] = [
+        { 
+          icon: Edit05, 
+          label: 'Edit', 
+          onClick: (e) => {
+            e.stopPropagation();
+            onView(article);
+          },
+        },
+        { 
+          icon: Trash01, 
+          label: 'Delete', 
+          onClick: (e) => {
+            e.stopPropagation();
+            onDelete(article);
+          },
+          variant: 'destructive' as const,
+        },
+      ];
+      
       return (
-        <div className="flex items-center justify-end gap-0" onClick={(e) => e.stopPropagation()}>
-          {/* Reorder buttons */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onMoveUp(article)}
+        <RowActions
+          quickActions={quickActions}
+          menuContent={
+            <>
+              <DropdownMenuItem onClick={() => onView(article)}>
+                <Edit05 size={14} className="mr-2" aria-hidden="true" />
+                Edit Article
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => onMoveUp(article)} 
                 disabled={!canUp}
-                className="h-7 w-7 p-0"
-                aria-label="Move up"
               >
-                <ChevronUp className={`h-3.5 w-3.5 ${canUp ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground/30'}`} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Move up</p>
-            </TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onMoveDown(article)}
+                <ChevronUp size={14} className="mr-2" aria-hidden="true" />
+                Move Up
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onMoveDown(article)} 
                 disabled={!canDown}
-                className="h-7 w-7 p-0"
-                aria-label="Move down"
               >
-                <ChevronDown className={`h-3.5 w-3.5 ${canDown ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground/30'}`} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Move down</p>
-            </TooltipContent>
-          </Tooltip>
-          
-          {/* Delete button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(article)}
-                className="h-7 w-7 p-0"
-                aria-label="Delete article"
+                <ChevronDown size={14} className="mr-2" aria-hidden="true" />
+                Move Down
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => onDelete(article)} 
+                className="text-destructive focus:text-destructive"
               >
-                <Trash01 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Delete</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+                <Trash01 size={14} className="mr-2" aria-hidden="true" />
+                Delete Article
+              </DropdownMenuItem>
+            </>
+          }
+        />
       );
     },
   }] as ColumnDef<HelpArticleWithMeta>[] : []),
