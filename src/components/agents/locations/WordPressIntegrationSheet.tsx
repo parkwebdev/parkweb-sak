@@ -57,7 +57,7 @@ import {
   LinkExternal01, 
   Settings02,
   ChevronDown,
-  Edit02,
+  Edit05,
   XClose,
   Database01,
   SearchRefraction,
@@ -506,7 +506,7 @@ export function WordPressIntegrationSheet({
                             onClick={() => setIsEditing(true)}
                             className="h-8 w-8 p-0"
                           >
-                            <Edit02 size={16} aria-hidden="true" />
+                            <Edit05 size={16} aria-hidden="true" />
                             <span className="sr-only">Edit URL</span>
                           </Button>
                           <Button

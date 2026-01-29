@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { HelpCenterVideoPlayer } from '@/components/help-center/HelpCenterVideoPlayer';
 import { IconButton } from '@/components/ui/icon-button';
-import { Edit03, Trash01 } from '@untitledui/icons';
+import { Edit05, Trash01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { VideoInputDialog } from './VideoInputDialog';
 import { deleteVideoThumbnail } from '@/lib/video-thumbnail-upload';
@@ -71,7 +71,7 @@ export function VideoNodeView({ node, updateAttributes, deleteNode, selected }: 
             label="Edit video URL"
             className="bg-background/90 backdrop-blur-sm shadow-sm"
           >
-            <Edit03 size={14} aria-hidden="true" />
+            <Edit05 size={14} aria-hidden="true" />
           </IconButton>
           <IconButton
             variant="destructive"
