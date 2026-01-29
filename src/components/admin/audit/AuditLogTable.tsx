@@ -17,7 +17,6 @@ import { DataTable } from '@/components/data-table/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  FilterLines, 
   ChevronLeft, 
   ChevronRight,
   Settings01,
@@ -28,8 +27,9 @@ import {
   Send01,
   SwitchHorizontal01
 } from '@untitledui/icons';
-import { IconButton } from '@/components/ui/icon-button';
 import { format } from 'date-fns';
+import { RowActions, QuickAction } from '@/components/ui/row-actions';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { getAuditActionLabel, getTargetTypeLabel } from '@/lib/admin/audit-actions';
 import type { AuditLogEntry, AuditAction, AuditLogFilters as AuditLogFiltersType } from '@/types/admin';
 import {
@@ -151,16 +151,32 @@ export function AuditLogTable({
       columnHelper.display({
         id: 'actions',
         header: '',
-        cell: ({ row }) => (
-          <IconButton
-            label="View details"
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedEntry(row.original)}
-          >
-            <Eye size={14} />
-          </IconButton>
-        ),
+        cell: ({ row }) => {
+          const entry = row.original;
+          
+          const quickActions: QuickAction[] = [
+            { 
+              icon: Eye, 
+              label: 'View', 
+              onClick: (e) => {
+                e.stopPropagation();
+                setSelectedEntry(entry);
+              },
+            },
+          ];
+          
+          return (
+            <RowActions
+              quickActions={quickActions}
+              menuContent={
+                <DropdownMenuItem onClick={() => setSelectedEntry(entry)}>
+                  <Eye size={14} className="mr-2" aria-hidden="true" />
+                  View Details
+                </DropdownMenuItem>
+              }
+            />
+          );
+        },
       }),
     ],
     []

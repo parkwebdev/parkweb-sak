@@ -1,12 +1,13 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { AlertTriangle, LinkExternal01 } from '@untitledui/icons';
 import { formatPrice, type PropertyStatus } from '@/types/properties';
 import type { PropertyWithLocation } from '@/hooks/useProperties';
+import { RowActions, QuickAction } from '@/components/ui/row-actions';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 const statusVariants: Record<PropertyStatus, 'default' | 'secondary' | 'outline'> = {
   available: 'default',
@@ -297,28 +298,38 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
   },
   {
     id: 'actions',
-    size: 60,
-    minSize: 50,
-    maxSize: 70,
-    header: () => <span className="text-xs font-medium">Actions</span>,
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
+    header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => {
       const listingUrl = row.original.listing_url;
       
       if (!listingUrl) return null;
       
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={(e) => {
+      const quickActions: QuickAction[] = [
+        { 
+          icon: LinkExternal01, 
+          label: 'View Listing', 
+          onClick: (e) => {
             e.stopPropagation();
             window.open(listingUrl, '_blank', 'noopener,noreferrer');
-          }}
-        >
-          <LinkExternal01 size={16} />
-          <span className="sr-only">View listing</span>
-        </Button>
+          },
+        },
+      ];
+      
+      return (
+        <RowActions
+          quickActions={quickActions}
+          menuContent={
+            <DropdownMenuItem 
+              onClick={() => window.open(listingUrl, '_blank', 'noopener,noreferrer')}
+            >
+              <LinkExternal01 size={14} className="mr-2" aria-hidden="true" />
+              View Listing
+            </DropdownMenuItem>
+          }
+        />
       );
     },
   },

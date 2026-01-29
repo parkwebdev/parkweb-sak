@@ -7,9 +7,7 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
-
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { IconButton } from '@/components/ui/icon-button';
 import { Download01, Trash01 } from '@untitledui/icons';
 import { PdfIcon, CsvIcon } from '@/components/analytics/ExportIcons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
@@ -17,6 +15,11 @@ import { formatDateRangeFromStrings, formatFileSize } from '@/lib/formatting-uti
 import { format } from 'date-fns';
 import { formatShortTime } from '@/lib/time-formatting';
 import type { ReportExport } from '@/hooks/useReportExports';
+import { RowActions, QuickAction } from '@/components/ui/row-actions';
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 /**
  * Props for creating export history columns
@@ -165,42 +168,50 @@ export const createExportHistoryColumns = ({
     minSize: 80,
     maxSize: 120,
     meta: { align: 'right' as const },
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Actions" />
-    ),
+    header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => {
       const exportItem = row.original;
       
+      const quickActions: QuickAction[] = [
+        { 
+          icon: Download01, 
+          label: 'Download', 
+          onClick: (e) => {
+            e.stopPropagation();
+            onDownload(exportItem);
+          },
+        },
+        { 
+          icon: Trash01, 
+          label: 'Delete', 
+          onClick: (e) => {
+            e.stopPropagation();
+            onDelete(exportItem);
+          },
+          variant: 'destructive' as const,
+        },
+      ];
+      
       return (
-        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <IconButton
-                variant="ghost"
-                size="sm"
-                label="Download report"
-                onClick={() => onDownload(exportItem)}
+        <RowActions
+          quickActions={quickActions}
+          menuContent={
+            <>
+              <DropdownMenuItem onClick={() => onDownload(exportItem)}>
+                <Download01 size={14} className="mr-2" aria-hidden="true" />
+                Download Report
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => onDelete(exportItem)} 
+                className="text-destructive focus:text-destructive"
               >
-                <Download01 className="h-4 w-4 text-muted-foreground" />
-              </IconButton>
-            </TooltipTrigger>
-            <TooltipContent>Download</TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <IconButton
-                variant="ghost"
-                size="sm"
-                label="Delete report"
-                onClick={() => onDelete(exportItem)}
-              >
-                <Trash01 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-              </IconButton>
-            </TooltipTrigger>
-            <TooltipContent>Delete</TooltipContent>
-          </Tooltip>
-        </div>
+                <Trash01 size={14} className="mr-2" aria-hidden="true" />
+                Delete Report
+              </DropdownMenuItem>
+            </>
+          }
+        />
       );
     },
   },
