@@ -6,7 +6,7 @@
  * @module components/admin/plans/PlanActions
  */
 
-import { Edit02, Trash01 } from '@untitledui/icons';
+import { Edit05, Trash01 } from '@untitledui/icons';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { RowActions, type QuickAction } from '@/components/ui/row-actions';
 
@@ -22,7 +22,7 @@ export function PlanActions({ onEdit, onDelete }: PlanActionsProps) {
   // Quick actions shown on hover
   const quickActions: QuickAction[] = [
     {
-      icon: Edit02,
+      icon: Edit05,
       label: 'Edit',
       onClick: (e) => { e.stopPropagation(); onEdit(); },
     },
@@ -45,7 +45,7 @@ export function PlanActions({ onEdit, onDelete }: PlanActionsProps) {
               onEdit();
             }}
           >
-            <Edit02 size={14} className="mr-2" aria-hidden="true" />
+            <Edit05 size={14} className="mr-2" aria-hidden="true" />
             Edit Plan
           </DropdownMenuItem>
           <DropdownMenuItem

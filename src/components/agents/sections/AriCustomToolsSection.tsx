@@ -13,7 +13,7 @@ import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { FeatureGate } from '@/components/subscription';
 import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Trash01, Link03, Edit03, PlayCircle, ChevronDown, Lightbulb02, Code01 } from '@untitledui/icons';
+import { Trash01, Link03, Edit05, PlayCircle, ChevronDown, Lightbulb02, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonListSection } from '@/components/ui/skeleton';
 import { AriSectionHeader } from './AriSectionHeader';
@@ -365,7 +365,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
                       {canManageTools && (
                         <>
                           <Button variant="ghost" size="sm" onClick={() => setEditingTool(tool)}>
-                            <Edit03 size={14} />
+                            <Edit05 size={14} />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => deleteTool(tool.id)}>
                             <Trash01 size={14} className="text-destructive" />

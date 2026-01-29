@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCanManage } from '@/hooks/useCanManage';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useRegisterSectionActions, type SectionAction } from '@/contexts/AriSectionActionsContext';
-import { Link03, Trash01, Eye, Edit03, PlayCircle, Code01 } from '@untitledui/icons';
+import { Link03, Trash01, Eye, Edit05, PlayCircle, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useWebhooks } from '@/hooks/useWebhooks';
 import { WebhookLogsDialog } from '@/components/agents/webhooks/WebhookLogsDialog';
@@ -231,7 +231,7 @@ export function AriWebhooksSection({ agentId }: AriWebhooksSectionProps) {
                     {canManageWebhooks && (
                       <>
                         <Button variant="ghost" size="sm" onClick={() => setEditingWebhook(webhook)}>
-                          <Edit03 size={14} />
+                          <Edit05 size={14} />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => setDeleteWebhookId(webhook.id)}>
                           <Trash01 size={14} className="text-destructive" />

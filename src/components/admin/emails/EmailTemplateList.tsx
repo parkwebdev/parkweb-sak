@@ -24,7 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Eye, 
-  Edit02, 
+  Edit05, 
   Send01, 
   Mail01, 
   Check, 
@@ -115,7 +115,7 @@ export function EmailTemplateList({
               size="sm"
               onClick={() => onEdit(row.original)}
             >
-              <Edit02 size={14} aria-hidden="true" />
+              <Edit05 size={14} aria-hidden="true" />
             </Button>
           </div>
         ),
