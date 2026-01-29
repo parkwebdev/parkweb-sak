@@ -51,7 +51,7 @@ export function GeneralSettings() {
       // Fetch user preferences for the account owner
       const { data, error } = await supabase
         .from('user_preferences')
-        .select('*')
+        .select('id, user_id, default_project_view, created_at, updated_at')
         .eq('user_id', accountOwnerId)
         .single();
 

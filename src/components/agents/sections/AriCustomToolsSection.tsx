@@ -25,6 +25,7 @@ import { DebugConsole } from '@/components/agents/DebugConsole';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { AGENT_TOOL_COLUMNS } from '@/lib/db-selects';
 import type { Tables, Json } from '@/integrations/supabase/types';
 
 type AgentTool = Tables<'agent_tools'>;
@@ -93,7 +94,7 @@ export function AriCustomToolsSection({ agentId }: AriCustomToolsSectionProps) {
     try {
       const { data, error } = await supabase
         .from('agent_tools')
-        .select('*')
+        .select(AGENT_TOOL_COLUMNS)
         .eq('agent_id', agentId)
         .order('created_at', { ascending: false });
 

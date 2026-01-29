@@ -15,6 +15,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { CONNECTED_ACCOUNT_COLUMNS } from '../_shared/db-columns.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -105,7 +106,7 @@ async function renewGoogleWebhooks(
   
   const { data: expiringAccounts, error: fetchError } = await supabase
     .from('connected_accounts')
-    .select('*')
+    .select(CONNECTED_ACCOUNT_COLUMNS)
     .eq('provider', 'google_calendar')
     .eq('is_active', true)
     .not('webhook_channel_id', 'is', null)
@@ -179,7 +180,7 @@ async function renewOutlookWebhooks(
   
   const { data: expiringAccounts, error: fetchError } = await supabase
     .from('connected_accounts')
-    .select('*')
+    .select(CONNECTED_ACCOUNT_COLUMNS)
     .eq('provider', 'outlook_calendar')
     .eq('is_active', true)
     .not('webhook_channel_id', 'is', null)
