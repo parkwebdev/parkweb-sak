@@ -1,14 +1,12 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { RoleBadge } from '@/components/admin/shared/RoleBadge';
-import { IconButton } from '@/components/ui/icon-button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { DotsHorizontal, Settings02, Edit05, X } from '@untitledui/icons';
+import { RowActions, type QuickAction } from '@/components/ui/row-actions';
+import { Settings02, Edit05, Trash01 } from '@untitledui/icons';
 import { TeamMember } from '@/types/team';
 import { getInitials } from '@/lib/formatting-utils';
 
@@ -72,9 +70,9 @@ export const createTeamColumns = ({
   },
   {
     id: 'actions',
-    size: 80,
-    minSize: 60,
-    maxSize: 100,
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: () => <span className="text-xs font-medium">Actions</span>,
     cell: ({ row }) => {
       const member = row.original;
@@ -82,38 +80,63 @@ export const createTeamColumns = ({
       const isAdmin = currentUserRole === 'admin';
       // Hide "Manage Role" for admins viewing their own row
       const showManageRole = canManageRoles && !(isOwnRow && isAdmin);
+      const showRemove = canManageRoles && member.user_id !== currentUserId;
+
+      // Quick actions shown on hover
+      const quickActions: QuickAction[] = [
+        {
+          icon: Settings02,
+          label: 'Manage Role',
+          onClick: (e) => { e.stopPropagation(); onEditRole(member); },
+          show: showManageRole,
+        },
+        {
+          icon: Edit05,
+          label: 'Edit Profile',
+          onClick: (e) => { e.stopPropagation(); onEditProfile?.(member); },
+          show: !!onEditProfile,
+        },
+        {
+          icon: Trash01,
+          label: 'Remove',
+          onClick: (e) => { e.stopPropagation(); onRemove(member); },
+          variant: 'destructive',
+          show: showRemove,
+        },
+      ];
       
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <IconButton label="Open menu" variant="ghost" size="icon-sm">
-              <DotsHorizontal className="h-4 w-4" />
-            </IconButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {showManageRole && (
-              <DropdownMenuItem onClick={() => onEditRole(member)}>
-                <Settings02 className="mr-2 h-4 w-4" />
-                Manage Role
-              </DropdownMenuItem>
-            )}
-            {onEditProfile && (
-              <DropdownMenuItem onClick={() => onEditProfile(member)}>
-                <Edit05 className="mr-2 h-4 w-4" />
-                Edit Profile
-              </DropdownMenuItem>
-            )}
-            {canManageRoles && member.user_id !== currentUserId && (
-              <DropdownMenuItem
-                onClick={() => onRemove(member)}
-                className="text-destructive focus:text-destructive"
-              >
-                <X className="mr-2 h-4 w-4 border border-border rounded" />
-                Remove Member
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <RowActions
+          quickActions={quickActions}
+          menuContent={
+            <>
+              {showManageRole && (
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditRole(member); }}>
+                  <Settings02 size={14} className="mr-2" aria-hidden="true" />
+                  Manage Role
+                </DropdownMenuItem>
+              )}
+              {onEditProfile && (
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditProfile(member); }}>
+                  <Edit05 size={14} className="mr-2" aria-hidden="true" />
+                  Edit Profile
+                </DropdownMenuItem>
+              )}
+              {showRemove && (
+                <>
+                  {(showManageRole || onEditProfile) && <DropdownMenuSeparator />}
+                  <DropdownMenuItem
+                    onClick={(e) => { e.stopPropagation(); onRemove(member); }}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash01 size={14} className="mr-2" aria-hidden="true" />
+                    Remove Member
+                  </DropdownMenuItem>
+                </>
+              )}
+            </>
+          }
+        />
       );
     },
   },

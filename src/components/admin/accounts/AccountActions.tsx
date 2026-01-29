@@ -1,21 +1,18 @@
 /**
  * AccountActions Component
  * 
- * Dropdown menu for account management actions.
+ * Dropdown menu for account management actions with hover quick actions.
  * 
  * @module components/admin/accounts/AccountActions
  */
 
 import { useState } from 'react';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { IconButton } from '@/components/ui/icon-button';
-import { DotsVertical, Eye, SwitchHorizontal01, Check, XClose, Trash01 } from '@untitledui/icons';
+import { RowActions, type QuickAction } from '@/components/ui/row-actions';
+import { Eye, SwitchHorizontal01, Check, XClose, Trash01 } from '@untitledui/icons';
 import { toast } from 'sonner';
 import { useAccountActions } from '@/hooks/admin/useAccountActions';
 import { SuspendAccountDialog } from './SuspendAccountDialog';
@@ -69,50 +66,57 @@ export function AccountActions({ account, onView, onImpersonate }: AccountAction
     toast.info('Delete functionality will be implemented');
   };
 
+  // Quick actions shown on hover
+  const quickActions: QuickAction[] = [
+    {
+      icon: Eye,
+      label: 'View',
+      onClick: (e) => { e.stopPropagation(); onView(); },
+    },
+    {
+      icon: SwitchHorizontal01,
+      label: 'Impersonate',
+      onClick: (e) => { e.stopPropagation(); onImpersonate(); },
+    },
+  ];
+
   return (
     <>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <IconButton
-            variant="ghost"
-            size="sm"
-            label="Account actions"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <DotsVertical size={16} aria-hidden="true" />
-          </IconButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onView(); }}>
-            <Eye size={14} className="mr-2" aria-hidden="true" />
-            View Details
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onImpersonate(); }}>
-            <SwitchHorizontal01 size={14} className="mr-2" aria-hidden="true" />
-            Impersonate
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {account.status === 'active' ? (
-            <DropdownMenuItem onClick={handleSuspendClick}>
-              <XClose size={14} className="mr-2" aria-hidden="true" />
-              Suspend Account
+      <RowActions
+        quickActions={quickActions}
+        menuContent={
+          <>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onView(); }}>
+              <Eye size={14} className="mr-2" aria-hidden="true" />
+              View Details
             </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem onClick={handleActivateClick}>
-              <Check size={14} className="mr-2" aria-hidden="true" />
-              Activate Account
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onImpersonate(); }}>
+              <SwitchHorizontal01 size={14} className="mr-2" aria-hidden="true" />
+              Impersonate
             </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={handleDelete}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash01 size={14} className="mr-2" aria-hidden="true" />
-            Delete Account
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuSeparator />
+            {account.status === 'active' ? (
+              <DropdownMenuItem onClick={handleSuspendClick}>
+                <XClose size={14} className="mr-2" aria-hidden="true" />
+                Suspend Account
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={handleActivateClick}>
+                <Check size={14} className="mr-2" aria-hidden="true" />
+                Activate Account
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleDelete}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash01 size={14} className="mr-2" aria-hidden="true" />
+              Delete Account
+            </DropdownMenuItem>
+          </>
+        }
+      />
 
       <SuspendAccountDialog
         account={account}

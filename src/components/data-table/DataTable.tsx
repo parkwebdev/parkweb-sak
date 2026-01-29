@@ -118,7 +118,7 @@ export function DataTable<TData, TValue>({
                 key={row.id}
                 data-state={row.getIsSelected() ? 'selected' : undefined}
                 className={cn(
-                  'transition-colors',
+                  'group transition-colors',
                   onRowClick && 'cursor-pointer hover:bg-muted/50',
                   row.getIsSelected() && 'bg-muted/50'
                 )}

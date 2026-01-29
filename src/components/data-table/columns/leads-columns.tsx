@@ -1,18 +1,13 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { formatShortTime } from '@/lib/time-formatting';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { RowActions, type QuickAction } from '@/components/ui/row-actions';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { LeadAssigneePicker } from '@/components/leads/LeadAssigneePicker';
 import { normalizePriority } from '@/lib/priority-config';
 import { PHONE_FIELD_KEYS } from '@/lib/field-keys';
-import { DotsVertical, Eye } from '@untitledui/icons';
+import { Eye } from '@untitledui/icons';
 import type { Tables } from '@/integrations/supabase/types';
 
 export type Lead = Tables<'leads'> & {
@@ -323,30 +318,32 @@ export const createLeadsColumns = ({
   // Actions column
   {
     id: 'actions',
-    size: 48,
-    minSize: 48,
-    maxSize: 48,
+    size: 80,
+    minSize: 80,
+    maxSize: 100,
     header: () => null,
     cell: ({ row }) => {
       const lead = row.original;
       
+      // Quick actions shown on hover
+      const quickActions: QuickAction[] = [
+        {
+          icon: Eye,
+          label: 'View',
+          onClick: (e) => { e.stopPropagation(); onView(lead); },
+        },
+      ];
+      
       return (
-        <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <DotsVertical size={16} aria-hidden="true" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onView(lead)}>
-                <Eye size={14} className="mr-2" aria-hidden="true" />
-                View details
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <RowActions
+          quickActions={quickActions}
+          menuContent={
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onView(lead); }}>
+              <Eye size={14} className="mr-2" aria-hidden="true" />
+              View details
+            </DropdownMenuItem>
+          }
+        />
       );
     },
     enableSorting: false,

@@ -11,7 +11,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { logger } from '@/utils/logger';
-import { DotsVertical, Send01 } from '@untitledui/icons';
+import { DotsHorizontal, Send01 } from '@untitledui/icons';
 import { LayoutPanelRight } from '@/components/icons/LayoutPanelIcons';
 import { 
   DropdownMenu, 
@@ -189,7 +189,7 @@ export function PromptTestChat({ draftPrompts, testDraftMode = false, isCollapse
                 size="sm" 
                 label="Preview options"
               >
-                <DotsVertical size={16} />
+                <DotsHorizontal size={16} />
               </IconButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

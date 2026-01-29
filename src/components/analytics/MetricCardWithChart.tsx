@@ -4,7 +4,7 @@
  */
 
 import React, { useId, useMemo } from "react";
-import { TrendUp01, TrendDown01, DotsVertical } from "@untitledui/icons";
+import { TrendUp01, TrendDown01, DotsHorizontal } from "@untitledui/icons";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -149,7 +149,7 @@ export const MetricCardWithChart = React.memo(function MetricCardWithChart({
         {showMenu && (
           <div className="absolute top-4 right-4 md:top-5 md:right-5">
             <button className="p-1 rounded-md hover:bg-muted transition-colors">
-              <DotsVertical className="h-4 w-4 text-muted-foreground" />
+              <DotsHorizontal className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>
         )}
